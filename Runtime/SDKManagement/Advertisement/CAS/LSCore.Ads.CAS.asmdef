@@ -11,7 +11,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "autoReferenced": true,
-    "defineConstraints": [],
+    "defineConstraints": ["CAS"],
     "versionDefines": [],
     "noEngineReferences": false
 }

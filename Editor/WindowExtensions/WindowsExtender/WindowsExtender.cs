@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using HarmonyLib;
+//using HarmonyLib;
 using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -9,7 +9,7 @@ using UnityEngine;
 [InitializeOnLoad]
 internal static class WindowsExtender
 {
-    public static Harmony Harmony { get; }
+    //public static Harmony Harmony { get; }
     public static MethodInfo OnPreGUIMethod { get; }
     public static MethodInfo OnPostGUIMethod { get; }
     public static Dictionary<Type, BaseWindowExtender> Extenders { get; } = new();
@@ -22,7 +22,7 @@ internal static class WindowsExtender
         
         var assembly = Assembly.Load("LGCore.Editor.WindowExtensions");
         var types = assembly.GetTypes();
-        Harmony = new Harmony("com.yourname.yourproject");
+        //Harmony = new Harmony("com.yourname.yourproject");
         var baseType = typeof(BaseWindowExtender);
         
         for (int i = 0; i < types.Length; i++)

@@ -5,9 +5,9 @@ namespace LSCore.ConfigModule.Editor
     public static partial class ConfigUtils
     {
         [Conditional("UNITY_EDITOR")]
-        public static void SetAsDefault<T>() where T : BaseResourcesConfig<T>, new()
+        public static void Save<T>() where T : BaseConfig<T>, new()
         {
-            BaseResourcesConfig<T>.Editor_Save();
+            BaseConfig<T>.Save();
         }
     }
 }

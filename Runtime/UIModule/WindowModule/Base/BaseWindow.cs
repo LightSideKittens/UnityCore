@@ -22,6 +22,7 @@ namespace LSCore
 
         protected virtual Transform Parent => null;
         public RectTransform RectTransform { get; private set; }
+        public static Canvas Canvas { get; private set; }
         public virtual int SortingOrder => 0;
         
         protected virtual float DefaultAlpha => 0;
@@ -32,8 +33,12 @@ namespace LSCore
             base.Init();
             canvasGroup = GetComponent<CanvasGroup>();
             canvasGroup.alpha = DefaultAlpha;
-            GetComponent<Canvas>().sortingOrder = SortingOrder;
-            
+            var canvas = GetComponent<Canvas>();
+            Canvas = canvas;
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = Camera.main;
+            canvas.sortingOrder = SortingOrder + 30000;
+
             transform.SetParent(Parent, false);
             RectTransform = (RectTransform)transform;
             
