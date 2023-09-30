@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.SDKManagement",
+    "name": "LSCore.SDKManagement",
     "rootNamespace": "",
     "references": [
         "AppsFlyer",

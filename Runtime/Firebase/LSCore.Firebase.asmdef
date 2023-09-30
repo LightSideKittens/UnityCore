@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.Firebase",
+    "name": "LSCore.Firebase",
     "rootNamespace": "",
     "references": [
         "GUID:e2d262c07fab33347bf583c077610e88"

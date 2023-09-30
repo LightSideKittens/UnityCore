@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.UniTask",
+    "name": "LSCore.UniTask",
     "rootNamespace": "",
     "references": [],
     "includePlatforms": [],

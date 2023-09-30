@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.Firebase.Leaderboard",
+    "name": "LSCore.Firebase.Leaderboard",
     "rootNamespace": "",
     "references": [
         "GUID:832620040c033e744b5d645b98e8cda9",

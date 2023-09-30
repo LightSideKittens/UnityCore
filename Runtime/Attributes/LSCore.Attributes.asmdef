@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.Attributes",
+    "name": "LSCore.Attributes",
     "rootNamespace": "",
     "references": [
         "GUID:92e5c6464f52b4648beebefec1c8f137"

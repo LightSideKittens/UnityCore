@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.TutorialSystem",
+    "name": "LSCore.TutorialSystem",
     "rootNamespace": "",
     "references": [
         "GUID:488fbb5f4bad8a94daedd0c8d1239e93",

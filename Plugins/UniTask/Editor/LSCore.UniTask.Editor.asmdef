@@ -1,8 +1,8 @@
 {
-    "name": "LGCore.UniTask.Editor",
+    "name": "LSCore.UniTask.Editor",
     "rootNamespace": "",
     "references": [
-        "LGCore.UniTask"
+        "LSCore.UniTask"
     ],
     "includePlatforms": [
         "Editor"

@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.Debugger.Options",
+    "name": "LSCore.Debugger.Options",
     "rootNamespace": "",
     "references": [
         "GUID:bcc75752368a72b4aba4043ea13b2a1a",

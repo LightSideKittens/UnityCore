@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.RainbowAssets",
+    "name": "LSCore.RainbowAssets",
     "rootNamespace": "",
     "references": ["GUID:69547e512bbc336429fe7b1bd8b8d3b2"],
     "includePlatforms": [

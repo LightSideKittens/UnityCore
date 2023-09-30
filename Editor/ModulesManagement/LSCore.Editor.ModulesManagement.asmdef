@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.Editor.ModulesManagement",
+    "name": "LSCore.Editor.ModulesManagement",
     "rootNamespace": "",
     "references": [
         "GUID:bb5ab3e5517faff4287376ae8f1fc9fc",

@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.Network",
+    "name": "LSCore.Network",
     "rootNamespace": "",
     "references": [
         "GUID:abdb412d47da4d7cbd82350f22656ad5",

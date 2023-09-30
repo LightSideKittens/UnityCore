@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.Yaml.Unity",
+    "name": "LSCore.Yaml.Unity",
     "rootNamespace": "",
     "references": [
         "GUID:b3f49edfedc855a48aa1a9e5d3cba438",

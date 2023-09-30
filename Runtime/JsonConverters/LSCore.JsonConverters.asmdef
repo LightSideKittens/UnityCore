@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.JsonConverters",
+    "name": "LSCore.JsonConverters",
     "rootNamespace": "",
     "references": [],
     "includePlatforms": [],

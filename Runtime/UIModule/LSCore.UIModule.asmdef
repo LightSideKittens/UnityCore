@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.UIModule",
+    "name": "LSCore.UIModule",
     "rootNamespace": "",
     "references": [
         "GUID:75992adb30bf51f40a7a0f3283432aa2",

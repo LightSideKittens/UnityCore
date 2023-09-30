@@ -1,6 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("LGCore.UniTask.Linq")]
-[assembly: InternalsVisibleTo("LGCore.UniTask.Addressables")]
-[assembly: InternalsVisibleTo("LGCore.UniTask.DOTween")]
-[assembly: InternalsVisibleTo("LGCore.UniTask.TextMeshPro")]
+[assembly: InternalsVisibleTo("LSCore.UniTask.Linq")]
+[assembly: InternalsVisibleTo("LSCore.UniTask.Addressables")]
+[assembly: InternalsVisibleTo("LSCore.UniTask.DOTween")]
+[assembly: InternalsVisibleTo("LSCore.UniTask.TextMeshPro")]

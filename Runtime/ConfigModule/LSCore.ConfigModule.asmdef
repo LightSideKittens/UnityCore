@@ -1,6 +1,6 @@
 {
-    "name": "LGCore.ConfigModule",
-    "rootNamespace": "LGCore.ConfigModule",
+    "name": "LSCore.ConfigModule",
+    "rootNamespace": "LSCore.ConfigModule",
     "references": [
         "GUID:f51ebe6a0ceec4240a699833d6309b23",
         "GUID:e2d262c07fab33347bf583c077610e88",

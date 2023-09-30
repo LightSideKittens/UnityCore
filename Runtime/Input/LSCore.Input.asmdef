@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.Input",
+    "name": "LSCore.Input",
     "rootNamespace": "",
     "references": [
         "GUID:e2d262c07fab33347bf583c077610e88",

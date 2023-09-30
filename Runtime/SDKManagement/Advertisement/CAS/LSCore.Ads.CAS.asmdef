@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.Ads.CAS",
+    "name": "LSCore.Ads.CAS",
     "rootNamespace": "",
     "references": [
         "GUID:e0b345b7ac9b17846babd41e07814f4a",

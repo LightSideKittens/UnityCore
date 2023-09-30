@@ -1,5 +1,5 @@
 {
-    "name": "LGCore.SourceGenerators",
+    "name": "LSCore.SourceGenerators",
     "rootNamespace": "",
     "references": [],
     "includePlatforms": [],
