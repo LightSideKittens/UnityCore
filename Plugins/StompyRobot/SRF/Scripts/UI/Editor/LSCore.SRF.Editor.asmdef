@@ -1,0 +1,17 @@
+{
+    "name": "LGCore.SRF.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:05dbf8cd246c9274c8a78a65142e5f8a"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

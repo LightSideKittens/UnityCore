@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="1cb05180-2f0c-4e64-8b3f-aa1870cb8f88" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../Async/LGCore.Async.asmdef" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Async/LGCore.Async.asmdef.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Async/Wait.AllActions.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Async/Wait.AllActions.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Async/Wait.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Async/Wait.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Network.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Network/LGCore.Network.asmdef" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Network/LGCore.Network.asmdef.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Network/Network.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Network/Network.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Other/AdrVar_Editor.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../Other/AdrVar_Editor.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Editor.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Editor/LGCore.World.Editor.asmdef.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Editor/WorldsHierarchy.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Editor/WorldsHierarchy.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LinkedWorlds.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/LinkedWorlds.cs.meta" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SubWorld.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/SubWorld.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AddressableAssetsData/AddressableAssetSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../AddressableAssetsData/AddressableAssetSettings.asset" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AddressableAssetsData/Android/addressables_content_state.bin" beforeDir="false" afterPath="$PROJECT_DIR$/../../../AddressableAssetsData/Android/addressables_content_state.bin" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AddressableAssetsData/AssetGroups/Backgrounds.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AddressableAssetsData/AssetGroups/Backgrounds.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AddressableAssetsData/AssetGroups/LevelData.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AddressableAssetsData/AssetGroups/LevelData.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AddressableAssetsData/AssetGroups/Musics.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AddressableAssetsData/AssetGroups/Musics.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AddressableAssetsData/AssetGroups/Other.asset" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../AddressableAssetsData/AssetGroups/Other.asset.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../AddressablesVariables.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../AddressablesVariables.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../Editor/LGCore.Editor.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/../../Editor/LGCore.Editor.asmdef" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AddressablesModule/AssetReferences/AssetRef.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../AddressablesModule/AssetReferences/AssetRef.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AddressablesModule/LGCore.AddressablesModule.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/../AddressablesModule/LGCore.AddressablesModule.asmdef" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AddressablesModule/LoadWithDependencies.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../AddressablesModule/LoadWithDependencies.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AddressablesModule/WhenAll.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../AddressablesModule/WhenAll.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../AnimationsModule/AnimSequencer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../AnimationsModule/AnimSequencer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Common.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Common/LGCore.Common.asmdef" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Common/LGCore.Common.asmdef.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Common/MessageWindow.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Common/MessageWindow.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Common/Prefabs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Common/Prefabs/MessageWindow.prefab" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Common/Prefabs/MessageWindow.prefab.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ConfigModule/BaseConfig.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../ConfigModule/BaseConfig.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Handlers.meta" beforeDir="false" afterPath="$PROJECT_DIR$/../World.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Handlers/LGCore.Handlers.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/LGCore.World.asmdef" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Handlers/LGCore.Handlers.asmdef.meta" beforeDir="false" afterPath="$PROJECT_DIR$/LGCore.World.asmdef.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Handlers/UnityEventsHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/World.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Handlers/UnityEventsHandler.cs.meta" beforeDir="false" afterPath="$PROJECT_DIR$/World.cs.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Input/LGInput.AndroidBackButton.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../Input/LGInput.AndroidBackButton.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Input/LGInput.Simulator.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../Input/LGInput.Simulator.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Other/LGCore.Other.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/../Other/LGCore.Other.asmdef" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Other/LGCorePaths.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../Other/LGCorePaths.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SDKManagement/LGCore.SDKManagement.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/../SDKManagement/LGCore.SDKManagement.asmdef" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SDKManagement/SDKInitializer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../SDKManagement/SDKInitializer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../SingleServiceModule/SingleService.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../SingleServiceModule/SingleService.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer.meta" beforeDir="false" afterPath="$PROJECT_DIR$/../Async.meta" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer/CountDownTimer.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer/CountDownTimer.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer/CountUpTimer.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer/CountUpTimer.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer/LGCore.Timer.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/Editor/LGCore.World.Editor.asmdef" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer/LGCore.Timer.asmdef.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer/Timer.Base.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer/Timer.Base.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer/Timer.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Timer/Timer.cs.meta" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../MusiversCore/MusicEventSystem/MusicController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../../MusiversCore/MusicEventSystem/MusicController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../MusiversCore/MusicListeners/LongNoteListener.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../../MusiversCore/MusicListeners/LongNoteListener.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../MusiversCore/MusicListeners/ShortNoteListener.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../../MusiversCore/MusicListeners/ShortNoteListener.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../MusiversCore/MusicListeners/TactListener.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../../MusiversCore/MusicListeners/TactListener.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../MusiversCore/MusiversCore.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/../../../MusiversCore/MusiversCore.asmdef" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../Scripts/Launcher/Launcher.asmdef" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Scripts/Launcher/Launcher.asmdef" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../Scripts/Launcher/LauncherWorld.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Scripts/Launcher/LauncherWorld.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../Scripts/Launcher/LauncherWorld_Initializer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Scripts/Launcher/LauncherWorld_Initializer.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../Scripts/Launcher/SingleServices/GameController/GameController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/../../../Scripts/Launcher/SingleServices/GameController/GameController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../../../Library/EditorUserBuildSettings.asset" beforeDir="false" afterPath="$PROJECT_DIR$/../../../../Library/EditorUserBuildSettings.asset" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/World.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/../../../Scripts/Launcher/LauncherWorld.cs" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="ProjectId" id="2T3dqmAirqdkKdV4W7gxQVs5zUq" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "rider.external.source.directories": [
+      "C:\\Users\\MalvisLight\\AppData\\Roaming\\JetBrains\\Rider2023.1\\resharper-host\\DecompilerCache",
+      "C:\\Users\\MalvisLight\\AppData\\Roaming\\JetBrains\\Rider2023.1\\resharper-host\\SourcesCache",
+      "C:\\Users\\MalvisLight\\AppData\\Local\\Symbols\\src"
+    ]
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="1cb05180-2f0c-4e64-8b3f-aa1870cb8f88" name="Changes" comment="" />
+      <created>1690275893489</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1690275893489</updated>
+      <workItem from="1690275895049" duration="113000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+</project>

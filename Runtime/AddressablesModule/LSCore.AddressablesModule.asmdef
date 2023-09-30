@@ -1,0 +1,23 @@
+{
+    "name": "LGCore.AddressablesModule",
+    "rootNamespace": "",
+    "references": [
+        "GUID:9e24947de15b9834991c9d8411ea37cf",
+        "GUID:84651a3751eca9349aac36a66bba901b",
+        "GUID:e2d262c07fab33347bf583c077610e88",
+        "GUID:5bb0561ab59f4090b284fb2dc8ab2482",
+        "GUID:69448af7b92c7f342b298e06a37122aa",
+        "GUID:92e5c6464f52b4648beebefec1c8f137",
+        "GUID:5c1ff9bd975acec488150743d53a93ca",
+        "GUID:58d36a8de6484fa1904a1be4fb03ac3a",
+        "GUID:69547e512bbc336429fe7b1bd8b8d3b2"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

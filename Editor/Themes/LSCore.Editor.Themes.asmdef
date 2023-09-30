@@ -1,0 +1,15 @@
+{
+    "name": "LGCore.Editor.Themes",
+    "rootNamespace": "",
+    "references": ["GUID:69547e512bbc336429fe7b1bd8b8d3b2"],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

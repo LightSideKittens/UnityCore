@@ -1,0 +1,20 @@
+{
+    "name": "LGCore.TutorialSystem",
+    "rootNamespace": "",
+    "references": [
+        "GUID:488fbb5f4bad8a94daedd0c8d1239e93",
+        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
+        "GUID:75992adb30bf51f40a7a0f3283432aa2",
+        "GUID:a6b7f487c8a89734f91e6aeb16bba6ca",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:4fadfd6fa55024f4cbd14fe58cbd05cc"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,20 @@
+{
+    "name": "LGCore.Attributes.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
+        "GUID:bb5ab3e5517faff4287376ae8f1fc9fc",
+        "GUID:92e5c6464f52b4648beebefec1c8f137",
+        "GUID:a8db40cbaf444aa3aedf3bb887de5433"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,15 @@
+{
+    "name": "LGCore.CurrencySystem",
+    "rootNamespace": "",
+    "references": [
+        "GUID:488fbb5f4bad8a94daedd0c8d1239e93"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,17 @@
+{
+    "name": "LGCore.WindowModule",
+    "rootNamespace": "",
+    "references": [
+        "GUID:75992adb30bf51f40a7a0f3283432aa2",
+        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
+        "GUID:c5a4bb4647048364bbcbbe6191a94727"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

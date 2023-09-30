@@ -1,0 +1,17 @@
+﻿using System;
+using Core.Server;
+
+namespace LSCore.Firebase
+{
+    public partial class RemoteConfig
+    {
+        private RemoteConfig(string name, object value) { }
+
+        public static RemoteConfig CreateDefault(string name, object value) => new(name, value);
+
+        public RemoteConfig AddDefault(string name, object value) => this;
+        public static void FetchAndActivate(Action onComplete, Action onError = null) => onComplete.SafeInvoke();
+
+        public void Activate(Action onComplete, Action onError = null) => onComplete.SafeInvoke();
+    }
+}

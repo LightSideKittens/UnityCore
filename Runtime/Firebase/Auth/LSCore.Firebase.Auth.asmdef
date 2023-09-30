@@ -1,0 +1,20 @@
+{
+    "name": "LGCore.Firebase.Auth",
+    "rootNamespace": "",
+    "references": [
+        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
+        "GUID:488fbb5f4bad8a94daedd0c8d1239e93",
+        "GUID:5bb0561ab59f4090b284fb2dc8ab2482",
+        "GUID:3bf7de22d034a6e44a3c4c8f1c7a329e"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [
+        "FIREBASE_AUTH"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

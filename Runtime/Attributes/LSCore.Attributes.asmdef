@@ -1,0 +1,15 @@
+{
+    "name": "LGCore.Attributes",
+    "rootNamespace": "",
+    "references": [
+        "GUID:92e5c6464f52b4648beebefec1c8f137"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

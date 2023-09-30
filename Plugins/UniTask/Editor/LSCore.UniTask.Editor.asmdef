@@ -1,0 +1,17 @@
+{
+    "name": "LGCore.UniTask.Editor",
+    "rootNamespace": "",
+    "references": [
+        "LGCore.UniTask"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

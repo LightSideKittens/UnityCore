@@ -1,0 +1,629 @@
+.TabWindowBackground {
+    background-color: rgba(45, 44, 53, 1);
+}
+
+.ScrollViewAlt {
+    background-color: rgba(45, 44, 53, 1);
+}
+
+.IN-BigTitle {
+    background-color: rgba(45, 44, 53, 1);
+}
+
+.IN-BigTitle-Post {
+    background-color: rgba(45, 44, 53, 1);
+}
+
+.FrameBox {
+    background-color: rgba(53, 52, 62, 1);
+}
+
+.label {
+    background-color: rgba(45, 44, 53, 1);
+}
+
+.ProjectBrowserTopBarBg {
+    background-color: rgba(45, 44, 53, 1);
+}
+
+.ProjectBrowserBottomBarBg {
+    background-color: rgba(45, 44, 53, 1);
+}
+
+.dockHeader {
+    background-color: rgba(32, 29, 51, 1);
+}
+
+.TV LineBold {
+    background-color: rgba(32, 29, 53, 1);
+}
+
+.ToolbarDropDownToogleRight {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+.ToolbarPopupLeft {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+.ToolbarPopup {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+.PreToolbar {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+.AppToolbar {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+.GameViewBackground {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+.CN EntryInfoSmall {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+.Toolbar {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+.RL-Background
+{
+    background-color: rgba(56, 47, 104, 1);
+}
+
+.RL-Element {
+    background-color: rgba(56, 47, 104, 1);
+}
+
+.FoldoutHeader
+{
+    background-color: rgba(56, 47, 104, 1);
+}
+
+.FoldoutHeader:hover {
+    background-color: rgba(69, 59, 130, 1);
+}
+
+.FoldoutHeader:active {
+    background-color: rgba(76, 64, 142, 1);
+}
+
+.FoldoutHeader:enabled {
+    background-color: rgba(76, 64, 142, 1);
+}
+
+.FoldoutHeader:checked {
+    background-color: rgba(76, 64, 142, 1);
+}
+
+.FoldoutHeader:focus {
+    background-color: rgba(76, 64, 142, 1);
+}
+
+.FoldoutHeader:inactive {
+    background-color: rgba(76, 64, 142, 1);
+}
+
+.FoldoutHeader:disabled {
+    background-color: rgba(76, 64, 142, 1);
+}
+
+
+/*-----TABS------*/
+/*-----MIDDLE------*/
+.Tab-middle {
+    background-color: rgba(56, 47, 104, 1);
+}
+
+.Tab-middle:hover {
+    background-color: rgba(69, 59, 130, 1);
+}
+
+.Tab-middle:checked {
+    background-color: rgba(68, 57, 128, 1);
+}
+
+.Tab-middle:active {
+    background-color: rgba(76, 64, 142, 1);
+}
+
+
+/*-----FIRST------*/
+.Tab-first {
+    background-color: rgba(56, 47, 104, 1);
+}
+
+.Tab-first:hover {
+    background-color: rgba(69, 59, 130, 1);
+}
+
+.Tab-first:checked {
+    background-color: rgba(68, 57, 128, 1);
+}
+
+.Tab-first:active {
+    background-color: rgba(76, 64, 142, 1);
+}
+
+
+/*-----LAST------*/
+.Tab-last {
+    background-color: rgba(56, 47, 104, 1);
+}
+
+.Tab-last:hover {
+    background-color: rgba(69, 59, 130, 1);
+}
+
+.Tab-last:checked {
+    background-color: rgba(68, 57, 128, 1);
+}
+
+.Tab-last:active {
+    background-color: rgba(76, 64, 142, 1);
+}
+
+/*-----TABS------*/
+
+.toolbarbutton {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+.toolbarbutton:hover {
+    background-color: rgba(55, 52, 72, 1);
+}
+
+.toolbarbutton:active {
+    background-color: rgba(67, 56, 124, 1);
+}
+
+.toolbarbutton:checked {
+    background-color: rgba(61, 52, 114, 1);
+}
+
+.PreBackground {
+    background-color: rgba(46, 44, 54, 1);
+}
+
+.toolbarbuttonRight {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+.ProjectBrowserIconAreaBg {
+    background-color: rgba(45, 43, 59, 1);
+}
+
+/*--------TABS--------*/
+.dragtab:active {
+    background-image: none;
+    background-color: rgba(60, 51, 112, 1);
+}
+
+.dragtab:checked {
+    background-image: none;
+    background-color: rgba(60, 51, 112, 1);
+}
+
+.dragtab:hover {
+    background-color: rgba(68, 58, 128, 1);
+}
+
+.dragtab-first:active {
+    background-image: none;
+    background-color: rgba(60, 51, 112, 1);
+}
+
+.dragtab-first:checked {
+    background-image: none;
+    background-color: rgba(60, 51, 112, 1);
+}
+
+.dragtab-first:hover {
+    background-color: rgba(68, 58, 128, 1);
+}
+
+/*--------TABS--------*/
+
+
+/*--------FIELDS--------*/
+
+/*--------SEARCH--------*/
+.ToolbarSeachTextField {
+    background-color: rgba(64, 61, 83, 1);
+}
+
+.ToolbarSeachTextFieldPopup {
+    background-color: rgba(64, 61, 83, 1);
+}
+
+.ToolbarSearchTextFieldWithJumpPopup {
+    background-color: rgba(64, 61, 83, 1);
+}
+
+/*--------SEARCH--------*/
+
+Box {
+    color: rgba(37, 35, 50, 1);
+}
+
+ObjectField {
+    background-color: rgba(37, 35, 50, 1);
+}
+
+TextField {
+    background-color: rgba(37, 35, 50, 1);
+}
+
+/*--------FIELDS--------*/
+
+
+/*--------BUTTON--------*/
+.button {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.button:hover {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.button:enabled {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.button:focus {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.button:active {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+/*--------BUTTON--------*/
+
+
+.WhiteBackground {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.WhiteBackground:hover {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.WhiteBackground:enabled {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.WhiteBackground:focus {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.WhiteBackground:active {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.WhiteBackground:checked {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.WhiteBackground:inactive {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.WhiteBackground:disabled {
+    background-image: none;
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.IN-LockButton:hover {
+    background-color: rgba(42, 38, 68, 1);
+}
+
+.toolbarbuttonRight:hover {
+    background-color: rgba(42, 38, 68, 1);
+}
+
+.SceneTopBarBg {
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.SceneTopBarBg:hover {
+    background-color: rgba(33, 30, 52, 1);
+}
+
+.SceneTopBarBg:inactive {
+    background-color: rgba(33, 30, 52, 1);
+}
+
+
+Button {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+Button:hover {
+    background-color: rgba(68, 57, 127, 1);
+}
+
+Button:active {
+    background-color: rgba(75, 63, 140, 1);
+}
+
+.AC-Button {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.AC-Button:hover {
+    background-color: rgba(68, 57, 127, 1);
+}
+
+.AC-Button:active {
+    background-color: rgba(75, 63, 140, 1);
+}
+
+.minibuttonleft {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.minibuttonleft:hover {
+    background-color: rgba(68, 57, 127, 1);
+}
+
+.minibuttonleft:active {
+    background-color: rgba(75, 63, 140, 1);
+}
+
+.minibuttonright {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.minibuttonright:hover {
+    background-color: rgba(68, 57, 127, 1);
+}
+
+.minibuttonright:active {
+    background-color: rgba(75, 63, 140, 1);
+}
+
+
+.minibutton:inactive {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.minibutton:hover {
+    background-color: rgba(68, 57, 127, 1);
+}
+
+.minibutton:active {
+    background-color: rgba(75, 63, 140, 1);
+}
+
+
+MiniPopup {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+MiniPopup:hover {
+    background-color: rgba(68, 57, 127, 1);
+}
+
+MiniPullDown {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+MiniPullDown:hover {
+    background-color: rgba(68, 57, 127, 1);
+}
+
+
+.CN-EntryBackOdd {
+    background-color: rgba(46, 44, 54, 1);
+}
+
+.CN-EntryBackOdd:checked {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.CN-EntryBackEven {
+    background-color: rgba(39, 38, 47, 1);
+}
+
+.CN-EntryBackEven:checked {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+
+.OL-EntryBackOdd {
+    background-color: rgba(46, 44, 54, 1);
+}
+
+.OL-EntryBackOdd:checked {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.OL-EntryBackEven {
+    background-color: rgba(39, 38, 47, 1);
+}
+
+.OL-EntryBackEven:checked {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+
+.odinListToolbar {
+    background-color: rgba(60, 51, 112, 1);
+}
+
+
+.ScrollViewAlt {
+    background-color: rgba(39, 38, 47, 1);
+}
+
+.TV-Selection {
+    background-image: none;
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.TV-Selection:hover {
+    background-image: none;
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.TV-Selection:focus {
+    background-image: none;
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.TV-Selection:enabled {
+    background-image: none;
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.TV-Selection:inactive {
+    background-image: none;
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.TV-Selection:checked {
+    background-image: none;
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.TV-Selection:disabled {
+    background-image: none;
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.TV-Selection:active {
+    background-image: none;
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.IN-Title {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.IN-Title {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.IN-Title:hover {
+    background-color: rgba(68, 57, 127, 1);
+}
+
+.IN-Title:active {
+    background-color: rgba(75, 63, 140, 1);
+}
+
+.unity-scroll-view {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.unity-scroll-view__content-viewport {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+.unity-scroll-view__content-viewport--vertical {
+    background-color: rgba(61, 51, 113, 1);
+}
+
+ProgressBar {
+    background-color: rgba(61, 51, 113, 1);
+    color: rgba(61, 51, 113, 1);
+}
+
+DropDownToggleButton {
+    background-color: rgba(61, 51, 113, 1);
+    color: rgba(61, 51, 113, 1);
+}
+
+Scroller {
+    background-color: rgba(61, 51, 113, 1);
+    color: rgba(61, 51, 113, 1);
+}
+
+
+Slider {
+    background-color: rgba(61, 51, 113, 1);
+    color: rgba(61, 51, 113, 1);
+}
+
+
+LinkLabel {
+    color: rgba(61, 51, 113, 1);
+}
+
+
+.AppCommandLeft {
+    background-color: rgba(32, 29, 53, 1);
+}
+
+.AppCommandMid {
+    background-color: rgba(61, 52, 114, 1);
+}
+
+.AppCommand {
+    background-color: rgba(61, 52, 114, 1);
+}
+
+.AppToolbarButtonLeft {
+    background-color: rgba(32, 29, 53, 1);
+}
+
+.AppToolbarButtonRight {
+    background-color: rgba(32, 29, 53, 1);
+}
+
+.DropDown {
+    background-color: rgba(32, 29, 53, 1);
+}
+
+.SceneTopBarBg {
+    background-color: rgba(90, 90, 90, 1);
+}
+
+.MiniPopup {
+    background-color: rgba(90, 90, 90, 1);
+}
+
+.TV Selection {
+    background-color: rgba(90, 90, 90, 1);
+}
+
+.ExposablePopupMenu {
+    background-color: rgba(90, 90, 90, 1);
+}
+
+.minibutton {
+    background-color: rgba(90, 90, 90, 1);
+}
+
+.ToolbarSearchTextField {
+    background-color: rgba(90, 90, 90, 1);
+}
+
+.dockarea {
+    background-color: rgba(62, 62, 64, 1);
+}
+
+.ToolbarSearchTextFieldWithJump {
+    background-color: rgba(32, 29, 51, 1);
+}
+
+.PaneOptions:hover {
+    background-color: rgba(41, 36, 64, 1);
+}

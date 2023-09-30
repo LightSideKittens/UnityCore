@@ -1,0 +1,4 @@
+﻿{
+  "name": "LGCore.Async",
+  "references":[ "GUID:e2d262c07fab33347bf583c077610e88", "GUID:58d36a8de6484fa1904a1be4fb03ac3a" ]
+}

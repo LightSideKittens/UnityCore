@@ -1,0 +1,17 @@
+{
+    "name": "LGCore.Hierarchy2.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:301929b7186ac9542b7511b3e4692309"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,17 @@
+{
+    "name": "LGCore.Network",
+    "rootNamespace": "",
+    "references": [
+        "GUID:abdb412d47da4d7cbd82350f22656ad5",
+        "GUID:488fbb5f4bad8a94daedd0c8d1239e93",
+        "GUID:58d36a8de6484fa1904a1be4fb03ac3a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

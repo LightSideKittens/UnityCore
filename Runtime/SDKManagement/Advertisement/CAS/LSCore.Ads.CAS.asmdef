@@ -1,0 +1,17 @@
+{
+    "name": "LGCore.Ads.CAS",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e0b345b7ac9b17846babd41e07814f4a",
+        "GUID:0a8a27ce388bcfd4faae2bfc46d94ccc",
+        "GUID:b0231c70e1748cd4592184cbc0511c8e"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

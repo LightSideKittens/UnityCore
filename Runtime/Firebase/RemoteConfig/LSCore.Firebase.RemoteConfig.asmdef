@@ -1,0 +1,15 @@
+{
+    "name": "LGCore.Firebase.RemoteConfig",
+    "rootNamespace": "",
+    "references": [
+        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

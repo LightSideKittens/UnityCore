@@ -1,0 +1,18 @@
+{
+    "name": "LGCore.Ads.Admob",
+    "rootNamespace": "",
+    "references": [
+        "GUID:0a8a27ce388bcfd4faae2bfc46d94ccc",
+        "GUID:e0b345b7ac9b17846babd41e07814f4a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [
+        "ADMOB"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

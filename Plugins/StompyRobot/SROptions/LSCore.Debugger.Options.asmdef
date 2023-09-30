@@ -1,0 +1,24 @@
+{
+    "name": "LGCore.Debugger.Options",
+    "rootNamespace": "",
+    "references": [
+        "GUID:bcc75752368a72b4aba4043ea13b2a1a",
+        "GUID:05dbf8cd246c9274c8a78a65142e5f8a",
+        "GUID:a6b7f487c8a89734f91e6aeb16bba6ca",
+        "GUID:75992adb30bf51f40a7a0f3283432aa2",
+        "GUID:214ab2c084e74cd2842d70312f8dc3dd",
+        "GUID:0a8a27ce388bcfd4faae2bfc46d94ccc",
+        "GUID:18a01e89fcc91ae44895263decbca89a",
+        "GUID:58d36a8de6484fa1904a1be4fb03ac3a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [
+        "DEBUG || DEBUGGER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
