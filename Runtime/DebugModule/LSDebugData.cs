@@ -1,10 +1,10 @@
-﻿using LSCore.ConfigModule;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace LSCore
 {
-    public partial class DebugData : BaseConfig<DebugData>
+    public partial class LSDebugData : BaseDebugData<LSDebugData>
     {
+        protected override string FileName => nameof(LSDebugData);
         public string country;
         [JsonProperty] private string environment = LSConsts.Env.Dev;
 

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 public static class LSConsts
 {
@@ -6,6 +7,15 @@ public static class LSConsts
     {
         public const string Dev = nameof(Dev);
         public const string Prod = nameof(Prod);
+        
+        public static IEnumerable<string> Environments
+        {
+            get
+            {
+                yield return Dev;
+                yield return Prod;
+            }
+        }
     }
 
     public static class Path

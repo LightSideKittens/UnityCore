@@ -9,16 +9,16 @@ public partial class SROptions
     [Preserve]
     public string Country
     {
-        get => DebugData.Country;
-        set => DebugData.Country = value;
+        get => LSDebugData.Country;
+        set => LSDebugData.Country = value;
     }
     
     [Category("Debug Data")]
     [Preserve]
     public string Environment
     {
-        get => DebugData.Environment;
-        set => DebugData.Environment = value;
+        get => LSDebugData.Environment;
+        set => LSDebugData.Environment = value;
     }
 }
 

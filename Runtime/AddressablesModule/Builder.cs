@@ -9,7 +9,7 @@ namespace LSCore.AddressablesModule
 {
     public class Builder : BuildScriptPackedMode
     {
-        public override string Name => $"Build for {DebugData.Environment}";
+        public override string Name => $"Build for {LSDebugData.Environment}";
 
         protected override string ConstructAssetBundleName(AddressableAssetGroup assetGroup, BundledAssetGroupSchema schema, BundleDetails info, string assetBundleName)
         {

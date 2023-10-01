@@ -18,7 +18,7 @@ namespace LSCore
         private static void Init()
         {
 #if DEBUG
-            Country = DebugData.Country ?? Country;
+            Country = LSDebugData.Country ?? Country;
             OnComplete(null);
             return;
             #endif
