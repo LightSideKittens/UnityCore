@@ -75,7 +75,7 @@ namespace LSCore
             onInitializing += action;
         }
 
-        protected virtual void Awake()
+        private void Awake()
         {
             if (!isInited)
             {
