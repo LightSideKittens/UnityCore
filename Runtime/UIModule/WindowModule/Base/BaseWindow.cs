@@ -39,7 +39,7 @@ namespace LSCore
             canvas.worldCamera = Camera.main;
             canvas.sortingOrder = SortingOrder + 30000;
 
-            transform.SetParent(Parent, false);
+            transform.SetParent(Parent, true);
             RectTransform = (RectTransform)transform;
             
             if(showTween.IsActive() || hideTween.IsActive()) return;
