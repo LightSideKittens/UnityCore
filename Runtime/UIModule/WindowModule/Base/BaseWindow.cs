@@ -33,13 +33,13 @@ namespace LSCore
             base.Init();
             canvasGroup = GetComponent<CanvasGroup>();
             canvasGroup.alpha = DefaultAlpha;
+            transform.SetParent(Parent, false);
             var canvas = GetComponent<Canvas>();
             Canvas = canvas;
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = Camera.main;
             canvas.sortingOrder = SortingOrder + 30000;
 
-            transform.SetParent(Parent, true);
             RectTransform = (RectTransform)transform;
             
             if(showTween.IsActive() || hideTween.IsActive()) return;
