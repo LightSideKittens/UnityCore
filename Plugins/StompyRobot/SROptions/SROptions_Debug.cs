@@ -5,7 +5,7 @@ using UnityEngine.Scripting;
 
 public partial class SROptions
 {
-    [Category("Debug Data")]
+    [Category("LS Debug Data")]
     [Preserve]
     public string Country
     {
@@ -13,7 +13,7 @@ public partial class SROptions
         set => LSDebugData.Country = value;
     }
     
-    [Category("Debug Data")]
+    [Category("LS Debug Data")]
     [Preserve]
     public string Environment
     {
