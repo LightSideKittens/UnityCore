@@ -31,20 +31,36 @@ namespace LSCore
         protected override void Init()
         {
             base.Init();
+            
             canvasGroup = GetComponent<CanvasGroup>();
             canvasGroup.alpha = DefaultAlpha;
+            
             transform.SetParent(Parent, false);
+            
             var canvas = GetComponent<Canvas>();
             Canvas = canvas;
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvas.worldCamera = Camera.main;
-            canvas.sortingOrder = SortingOrder + 30000;
 
-            RectTransform = (RectTransform)transform;
-            
+            var rectTransform = (RectTransform)transform;
+            RectTransform = rectTransform;
+
+            if (Parent is RectTransform parentRectTransform)
+            {
+                var anchor = Vector2.one / 2;
+                rectTransform.anchorMin = anchor;
+                rectTransform.anchorMax = anchor;
+                rectTransform.anchoredPosition = Vector2.zero;
+                rectTransform.sizeDelta = parentRectTransform.sizeDelta;
+            }
+            else
+            {
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = Camera.main;
+                canvas.sortingOrder = SortingOrder + 30000;
+            }
+
             if(showTween.IsActive() || hideTween.IsActive()) return;
             if (ShowByDefault) Show();
-            else if(!ShowByDefault) Hide();
+            else Hide();
         }
 
         private void InternalShow()
