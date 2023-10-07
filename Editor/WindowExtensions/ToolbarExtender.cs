@@ -45,6 +45,9 @@ namespace UnityToolbarExtender
 			ToolbarCallback.OnToolbarGUILeft = GUILeft;
 			ToolbarCallback.OnToolbarGUIRight = GUIRight;
 		}
+		
+		public static void Repaint() => ToolbarCallback.Repaint();
+
 
 #if UNITY_2019_3_OR_NEWER
 		public const float space = 8;

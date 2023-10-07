@@ -37,6 +37,8 @@ namespace UnityToolbarExtender
 		public static Action OnToolbarGUIRight;
 		public static IMGUIContainer container;
 		
+		public static void Repaint() => container.MarkDirtyRepaint();
+		
 		static ToolbarCallback() => EditorApplication.update += OnUpdate;
 
 		private static void OnUpdate()

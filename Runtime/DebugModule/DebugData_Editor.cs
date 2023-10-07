@@ -8,11 +8,12 @@ namespace LSCore
     [InitializeOnLoad]
     public partial class LSDebugData
     {
-        private static NavigationPopup popup;
+        private static NavigationPopup popupContent;
+        
         static LSDebugData()
         {
             ToolbarExtender.RightToolbarGUI.Add(OnToolbarRightGUI);
-            popup = new NavigationPopup();
+            popupContent = new NavigationPopup();
         }
 
         private static void OnToolbarRightGUI()
@@ -21,10 +22,8 @@ namespace LSCore
             
             if (GUI.Button(rect, Environment))
             {
-                PopupWindow.Show(rect, popup);
+                PopupWindow.Show(rect, popupContent);
             }
-            
-            GUI.changed = true;
         }
 
         public class NavigationPopup : PopupWindowContent
@@ -39,6 +38,7 @@ namespace LSCore
                     {
                         Environment = environment;
                         Save();
+                        ToolbarExtender.Repaint();
                     }
                 }
             }
