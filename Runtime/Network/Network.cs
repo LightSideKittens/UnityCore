@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -12,7 +11,7 @@ namespace LSCore
         private static bool isCompleted;
 
         public static string Country { get; private set; } = "World";
-        private static Dictionary<string, object> ip;
+        private static JToken ip;
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
@@ -21,13 +20,16 @@ namespace LSCore
             Country = LSDebugData.Country ?? Country;
             OnComplete(null);
             return;
-            #endif
+#endif
             GetCountry();
         }
 
         private static void GetCountry()
         {
-            var www = UnityWebRequest.Get("http://ip-api.com/json");
+            var www = UnityWebRequest.Get("https://geoip.maxmind.com/geoip/v2.1/city/me");
+            www.SetRequestHeader("Origin", "https://www.maxmind.com");
+            www.SetRequestHeader("Referer", "https://www.maxmind.com/");
+            
             var request = www.SendWebRequest();
             
             request.completed += _ =>
@@ -38,8 +40,8 @@ namespace LSCore
                 }
                 else
                 {
-                    ip = JsonConvert.DeserializeObject<Dictionary<string, object>>(www.downloadHandler.text);
-                    Country = (string)ip["country"];
+                    ip = JToken.Parse(www.downloadHandler.text);
+                    Country = (string)ip["country"]["names"]["en"];
 
                     Burger.Log($"[{nameof(Network)}] Country: " + Country);
                 }

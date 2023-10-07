@@ -13,9 +13,7 @@ namespace LSCore.SDKManagement
             
             protected override void Internal_Init(Action<string> onComplete)
             {
-                var oneSignal = OneSignalSDK.OneSignal.Default;
-                oneSignal.Initialize(appId);
-                oneSignal.PromptForPushNotificationsWithUserResponse();
+                OneSignalSDK.OneSignal.Initialize(appId);
                 onComplete(string.Empty);
             }
         }
