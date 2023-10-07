@@ -9,7 +9,7 @@
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "autoReferenced": false,
-    "defineConstraints": ["FIREBASE"],
+    "defineConstraints": ["FIREBASE_REMOTE_CONFIG"],
     "versionDefines": [],
     "noEngineReferences": false
 }

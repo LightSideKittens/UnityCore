@@ -71,19 +71,23 @@ namespace LSCore.AddressablesModule.AssetReferences
         
         public static void LoadLoop<T>(this AssetRef<T> reference, float delay, Action<T> onSuccess, Func<bool> onError) where T : Object
         {
+#if DEBUG
             CustomLogHandler.Enable = true;
             CustomLogHandler.LogHandler
                 .AddFilter("Cannot release")
                 .AddFilter("System.Exception")
                 .AddFilter("OperationException")
                 .AddFilter("RemoteProviderException");
+#endif
             
             reference.LoadAsync().OnSuccess(OnSuccess).OnError(Reload);
 
             void OnSuccess(T asset)
             {
+#if DEBUG
                 CustomLogHandler.LogHandler.ClearFilters();
                 CustomLogHandler.Enable = false;
+#endif
                 onSuccess?.Invoke(asset);
             }
             

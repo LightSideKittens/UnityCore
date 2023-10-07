@@ -64,14 +64,19 @@ namespace LSCore.Async
 
             public Action WaitAction()
             {
-                string trace = UniTrace.Create(1);
                 dependenciesCount++;
+#if UNITY_EDITOR
+                string trace = UniTrace.Create(1);
                 RegisterAction(trace);
+#endif
+
 
                 return OnResolved;
                 void OnResolved()
                 {
+#if UNITY_EDITOR
                     UnRegisterAction(trace);
+#endif
                     resolvedDependenciesCount++;
                 }
             }

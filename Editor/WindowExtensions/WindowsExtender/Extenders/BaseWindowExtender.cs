@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using HarmonyLib;
 //using HarmonyLib;
 using UnityEditor;
 using UnityEngine;
@@ -22,7 +23,7 @@ public abstract class BaseWindowExtender
         Extenders.Add(GetType(), this);
         var prefix = OnPreGUIMethod.MakeGenericMethod(GetType());
         var postfix = OnPostGUIMethod.MakeGenericMethod(GetType());
-        //WindowsExtender.Harmony.Patch(originalOnGui, new HarmonyMethod(prefix), new HarmonyMethod(postfix));
+        WindowsExtender.Harmony.Patch(originalOnGui, new HarmonyMethod(prefix), new HarmonyMethod(postfix));
     }
 
     public void SetWindowIfNull()

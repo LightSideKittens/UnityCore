@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("LGCore.Ads.Admob")]
-[assembly: InternalsVisibleTo("LGCore.Ads.CAS")]
+[assembly: InternalsVisibleTo("LSCore.Ads.Admob")]
+[assembly: InternalsVisibleTo("LSCore.Ads.CAS")]
 
 namespace LSCore.SDKManagement.Advertisement
 { 

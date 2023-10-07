@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Reflection;
 using Sirenix.Utilities;
 using UnityEditor.AddressableAssets;
-using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
 
 internal class AddressablesWindowExt : BaseWindowExtender
