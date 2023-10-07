@@ -13,6 +13,7 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using TreeView = UnityEditor.IMGUI.Controls.TreeView;
 
 namespace Hierarchy2
 {
