@@ -14,11 +14,16 @@ namespace LSCore
         
         protected virtual void Awake()
         {
+            Services.Clear();
             for (int i = 0; i < services.Count; i++)
             {
                 var service = services[i];
-                CheckServiceNull(service);
-                Services.Add(service.Type, service);
+                var isError = false;
+                CheckServiceNull(service, ref isError);
+                if (!isError)
+                {
+                    Services.Add(service.Type, service);
+                }
             }
         }
 
@@ -46,16 +51,17 @@ namespace LSCore
         }
         
         [Conditional("UNITY_EDITOR")]
-        private static void CheckServiceNull(BaseSingleService service)
+        private static void CheckServiceNull(BaseSingleService service, ref bool isError)
         {
-            if (service == null)
+            isError = service == null;
+            if (isError)
             {
-                var exeption = new NullReferenceException($"[{service.Type}] Service is null")
+                var exeption = new NullReferenceException($"Service is null")
                 {
                     Source = Type.Name
                 };
 
-                throw exeption;
+                Burger.Error(exeption);
             }
         }
     }
