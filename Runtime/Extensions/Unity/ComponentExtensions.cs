@@ -6,59 +6,60 @@ namespace LSCore.Extensions.Unity
 {
     public static partial class ComponentExtensions
     {
-        public static void GetAllChild<TComponent>(this TComponent component, Action<Transform> onChild, Action<Transform> onParent) where TComponent : Component
-        {
-            component.Internal_GetAllChild(onChild, onParent);
-        }
-        
-        public static void GetAllChild<TComponent>(this TComponent component, List<Transform> childs) where TComponent : Component
+        public static void GetAllChild(this Transform target, List<Transform> childs)
         {
             childs.Clear();
-            component.GetAllChildWithoutClear(childs);
+            target.GetAllChild(childs.Add, childs.Add);
         }
         
-        private static void Internal_GetAllChild<TComponent>(this TComponent component, Action<Transform> onChild, Action<Transform> onParent) where TComponent : Component
+        public static void GetAllChildWithCurrent(this Transform target, List<Transform> childs)
         {
-            var transfrom = component.transform;
-            var childCount = transfrom.childCount;
-
-            if (childCount == 0)
+            childs.Clear();
+            target.GetAllChildWithCurrent(childs.Add, childs.Add);
+        }
+        
+        public static void GetAllChild(this Transform target, Action<Transform> onParent, Action<Transform> onChild)
+        {
+            for (int i = 0; i < target.childCount; i++)
             {
-                return;
-            }
-
-            for (int i = 0; i < childCount; i++)
-            {
-                var child = transfrom.GetChild(i);
-                onChild(child);
-                child.Internal_GetAllChild2(onChild, onParent);
+                GetAllChildWithCurrent(target.GetChild(i), onParent, onChild);
             }
         }
         
-        private static void Internal_GetAllChild2<TComponent>(this TComponent component, Action<Transform> onChild, Action<Transform> onParent) where TComponent : Component
+        public static void GetAllChildWithCurrent(this Transform target, Action<Transform> onParent, Action<Transform> onChild)
         {
-            var transfrom = component.transform;
-            var childCount = transfrom.childCount;
-
-            if (childCount == 0)
-            {
-                return;
-            }
-        
-            onParent(transfrom);
+            onParent(target);
             
-            for (int i = 0; i < childCount; i++)
+            for (int i = 0; i < target.childCount; i++)
             {
-                var child = transfrom.GetChild(i);
+                var child = target.GetChild(i);
                 onChild(child);
-                child.Internal_GetAllChild2(onChild, onParent);
+                GetAllChild(child, onParent, onChild);
             }
         }
         
-        
-        private static void GetAllChildWithoutClear<TComponent>(this TComponent component, List<Transform> childs) where TComponent : Component
+        public static IEnumerable<Transform> GetAllChildWithCurrent(this Transform parentTransform)
         {
-            component.Internal_GetAllChild(childs.Add, childs.Add);
+            yield return parentTransform;
+            
+            for (int i = 0; i < parentTransform.childCount; i++)
+            {
+                foreach (Transform child in GetAllChildWithCurrent(parentTransform.GetChild(i)))
+                {
+                    yield return child;
+                }
+            }
+        }
+        
+        public static IEnumerable<Transform> GetAllChild(this Transform parentTransform)
+        {
+            for (int i = 0; i < parentTransform.childCount; i++)
+            {
+                foreach (Transform child in GetAllChildWithCurrent(parentTransform.GetChild(i)))
+                {
+                    yield return child;
+                }
+            }
         }
     }
 }

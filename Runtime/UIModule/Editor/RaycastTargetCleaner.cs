@@ -33,16 +33,10 @@ namespace LSCore.UIModule.Editor
 
         private static void Clean(GameObject gameObject)
         {
-            var transforms = new List<Transform>();
-            gameObject.transform.GetAllChild(transforms);
-            Clean(gameObject.transform);
-        
-            for (int i = 0; i < transforms.Count; i++)
+            foreach (var target in gameObject.GetAllChildWithCurrent())
             {
-                Clean(transforms[i]);
+                Clean(target);
             }
-        
-            transforms.Clear();
         }
 
         private static void Clean(Component component)

@@ -1,6 +1,8 @@
 using System;
 using DG.Tweening;
+using LSCore.Extensions.Unity;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace LSCore
 {
@@ -20,13 +22,15 @@ namespace LSCore
         private Tween showTween;
         private Tween hideTween;
 
-        protected virtual Transform Parent => null;
+        protected virtual Transform Parent => DaddyCanvas.Instance.transform;
+        protected virtual Button BackButton { get; } = null;
         public RectTransform RectTransform { get; private set; }
         public static Canvas Canvas { get; private set; }
         public virtual int SortingOrder => 0;
         
         protected virtual float DefaultAlpha => 0;
         protected virtual bool ShowByDefault => false;
+        private static bool isCalledFromStatic = false;
 
         protected override void Init()
         {
@@ -58,11 +62,24 @@ namespace LSCore
                 canvas.sortingOrder = SortingOrder + 30000;
             }
 
-            if(showTween.IsActive() || hideTween.IsActive()) return;
+            if (BackButton != null)
+            {
+                BackButton.AddListener(OnBackButton);
+            }
+            
+            if(isCalledFromStatic) return;
             if (ShowByDefault) Show();
             else Hide();
         }
 
+        protected override void DeInit()
+        {
+            base.DeInit();
+            isCalledFromStatic = false;
+        }
+
+        protected virtual void OnBackButton() => Hide();
+        
         private void InternalShow()
         {
             if (showTween.IsActive() && showTween.IsInitialized()) return;
@@ -117,8 +134,16 @@ namespace LSCore
 
         protected virtual Tween HideAnim => canvasGroup.DOFade(0, fadeSpeed);
 
-        public static void Show() => Instance.InternalShow();
+        public static void Show()
+        {
+            isCalledFromStatic = true;
+            Instance.InternalShow();
+        }
 
-        public static void Hide() => Instance.InternalHide();
+        public static void Hide()
+        {
+            isCalledFromStatic = true;
+            Instance.InternalHide();
+        }
     }
 }
