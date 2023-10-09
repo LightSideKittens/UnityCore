@@ -8,6 +8,7 @@ using System.IO;
 using LSCore.Extensions;
 using LSCore;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static LSCore.ConfigModule.FolderNames;
 
@@ -98,10 +99,8 @@ namespace LSCore.ConfigModule
         protected virtual void OnSaving(){}
         protected virtual void OnSaved(){}
 
-        protected static T Load()
+        private static string GetJsonText()
         {
-            instance.OnLoading();
-            
             var fullFileName = instance.FullFileName;
             string json;
 
@@ -111,9 +110,18 @@ namespace LSCore.ConfigModule
             }
             else
             {
-                json = Resources.Load<TextAsset>(System.IO.Path.Combine(instance.FolderName, instance.FileName))?.text;
+                json = Resources.Load<TextAsset>(Path.Combine(instance.FolderName, instance.FileName))?.text;
             }
 
+            return json;
+        }
+        
+        protected static T Load()
+        {
+            instance.OnLoading();
+
+            var json = GetJsonText();
+            
             if (string.IsNullOrEmpty(json) == false)
             {
                 Deserialize(json);
@@ -142,6 +150,12 @@ namespace LSCore.ConfigModule
             
             File.WriteAllText(instance.FullFileName,json);
             instance.OnSaved();
+        }
+
+        internal static JToken GetJToken()
+        {
+            var json = GetJsonText();
+            return JToken.Parse(json);
         }
 
         private static void Deserialize(string json)

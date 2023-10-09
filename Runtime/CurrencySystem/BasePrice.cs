@@ -2,7 +2,7 @@
 using UnityEngine;
 
 [Serializable]
-public abstract class BaseWallet
+public abstract class BasePrice
 {
     public int value;
     public abstract void Earn();

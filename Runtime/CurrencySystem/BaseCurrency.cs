@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 public abstract class BaseCurrency<T> : BaseConfig<T> where T : BaseCurrency<T>, new()
 {
     [Serializable]
-    public class Wallet : BaseWallet
+    public class Price : BasePrice
     {
         public override void Earn()
         {
