@@ -8,15 +8,22 @@ namespace LSCore.AnimationsModule.Animations
     public class RotateAnim : BaseAnim<Vector3>
     {
         public Transform target;
+        public bool useLocalSpace;
 
         protected override void Internal_Init()
         {
+            if (useLocalSpace)
+            {
+                target.localEulerAngles = startValue;
+                return;
+            }
+            
             target.eulerAngles = startValue;
         }
         
         protected override Tween Internal_Animate()
         {
-            return target.DORotate(endValue, duration);
+            return useLocalSpace ? target.DOLocalRotate(endValue, duration) : target.DORotate(endValue, duration);
         }
     }
 }

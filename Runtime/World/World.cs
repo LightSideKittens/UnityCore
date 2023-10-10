@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace LSCore
 {
+    [DefaultExecutionOrder(-1000)]
     public class World : MonoBehaviour
     {
         public static event Action ApplicationPaused;
@@ -57,6 +58,7 @@ namespace LSCore
 
         private void OnApplicationQuit()
         {
+            IsPlaying = false;
             OnApplicationPause(true);
         }
     }
