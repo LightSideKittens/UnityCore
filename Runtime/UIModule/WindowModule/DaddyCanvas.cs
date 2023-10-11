@@ -2,7 +2,7 @@
 {
     public class DaddyCanvas : BaseWindow<DaddyCanvas>
     {
-        public new static DaddyCanvas Instance => IsNull ? null : BaseWindow<DaddyCanvas>.Instance;
+        public new static DaddyCanvas Instance => IsExistsInManager ? BaseWindow<DaddyCanvas>.Instance : null;
         protected override bool ShowByDefault => true;
     }
 }

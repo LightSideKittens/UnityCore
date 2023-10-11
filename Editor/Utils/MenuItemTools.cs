@@ -17,7 +17,7 @@ public class MenuItemTools : MonoBehaviour
             
             if (obj.IsFolder(out var path))
             {
-                ForceSaveAssets(AssetDatabaseUtils.LoadAllAssetsAtPath<Object>(path));
+                ForceSaveAssets(AssetDatabaseUtils.LoadAllAssets<Object>(path));
             }
             else
             {

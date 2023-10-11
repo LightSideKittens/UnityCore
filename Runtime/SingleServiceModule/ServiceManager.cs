@@ -35,10 +35,15 @@ namespace LSCore
             return (TService)Services[typeof(TService)];
         }
 
+        internal static bool IsExists<TService>()
+        {
+            return Services.ContainsKey(typeof(TService));
+        }
+
         [Conditional("UNITY_EDITOR")]
         private static void CheckIsServiceExist<TService>()
         {
-            if (Services.ContainsKey(typeof(TService)) == false)
+            if (IsExists<TService>() == false)
             {
                 var exeption = new Exception(
                     $"[{typeof(TService)}] Check if the prefab with {typeof(TService)} type is exist in the ServiceManager prefab" +

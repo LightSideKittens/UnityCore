@@ -35,11 +35,11 @@ public static class AssetDatabaseUtils
         return AssetDatabase.FindAssets("t:" + typeof(T).Name, path);
     }
     
-    public static List<T> LoadAllAssetsAtPath<T>(params string[] paths) where T : Object
+    public static List<T> LoadAllAssets<T>(string filter = "", params string[] paths) where T : Object
     {
         var list = new List<T>();
         var assetType = typeof(T).Name;
-        var guids = AssetDatabase.FindAssets("t:" + assetType, paths);
+        var guids = AssetDatabase.FindAssets($"t:{assetType} {filter}", paths);
 
         for (int i = 0; i < guids.Length; i++)
         {
@@ -54,6 +54,6 @@ public static class AssetDatabaseUtils
 
     public static T LoadAny<T>(params string[] paths) where T : Object
     {
-        return LoadAllAssetsAtPath<T>(paths).FirstOrDefault();
+        return LoadAllAssets<T>(paths: paths).FirstOrDefault();
     }
 }
