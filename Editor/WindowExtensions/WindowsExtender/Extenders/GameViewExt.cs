@@ -14,7 +14,7 @@ public class GameViewExt : BaseWindowExtender
         var type = Type.GetType("UnityEditor.GameView,UnityEditor");
         viewRectMethod = type.GetProperty("targetInView", BindingFlags.NonPublic | BindingFlags.Instance);
         screenSizeMethod = type.GetMethod("GetSizeOfMainGameView", BindingFlags.NonPublic | BindingFlags.Static);
-        return Type.GetType("UnityEditor.GameView,UnityEditor");
+        return type;
     }
 
     public override void OnPreGUI() { }
