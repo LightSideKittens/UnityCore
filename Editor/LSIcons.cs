@@ -5,9 +5,9 @@ namespace LSCore.Editor
 {
     public static class LSIcons
     {
-        public static Texture2D Get(string iconName)
+        public static Texture2D Get(string iconName, string extension = "png")
         {
-            return AssetDatabase.LoadAssetAtPath<Texture2D>($"Assets/{LSConsts.Path.Icons}/{iconName}");
+            return AssetDatabase.LoadAssetAtPath<Texture2D>($"Assets/{LSConsts.Path.Icons}/{iconName}.{extension}");
         }
     }
 }
