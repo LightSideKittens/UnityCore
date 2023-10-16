@@ -18,11 +18,7 @@ public class UniTrace
 
     public static implicit operator string(UniTrace trace)
     {
-        trace.FilePath(out var path)
-            .MethodName(out var method)
-            .Line(out var line);
-        
-        return $"{path}\n: {method}\n: {line}";
+        return trace.stackTrace.ToString();
     }
 
     public static UniTrace Create(int frameOffset = 0)

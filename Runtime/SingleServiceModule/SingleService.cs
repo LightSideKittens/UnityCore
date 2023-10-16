@@ -20,7 +20,8 @@ namespace LSCore
         {
             Editor_Init();
             staticConstructor = StaticConstructor;
-            
+            return;
+
             [Conditional("UNITY_EDITOR")]
             static void Editor_Init()
             {

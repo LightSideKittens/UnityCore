@@ -1,21 +1,29 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Core.Server;
 using Firebase.Auth;
+using Firebase.Firestore;
 using LSCore.Async;
 using LSCore.ConfigModule;
+using LSCore.Extensions;
 using LSCore.Firebase;
 using Newtonsoft.Json;
-using Random = UnityEngine.Random;
+using UnityEditor;
+using UnityEngine;
 
 namespace LSCore.Server
 {
     public class User : BaseConfig<User>
     {
         public const long MaxAllowedSize = 4 * 1024 * 1024;
+        private const string FailAuthError = "Failed authentication attempt";
         private const string Undefined = nameof(Undefined);
-        [JsonProperty] private string id = Undefined;
-        [JsonProperty] private string nickName = "Non-Authorized";
+        public static string Id => Auth.CurrentUser.UserId;
+        
+        [JsonProperty] private string nickname;
+        [JsonProperty] private string countryCode;
+        public static string Nickname => Config.nickname;
+        public static string CountryCode => Config.countryCode;
+        public static new User Config => BaseConfig<User>.Config;
 
         private static readonly string[] nickNames = 
         {
@@ -30,85 +38,152 @@ namespace LSCore.Server
             "Dr. Doughnutstein",
             "The Burgermeister",
         };
-
-        public static string Id
-        {
-            get => Config.id;
-            private set
-            {
-                var config = Config;
-                config.id = value;
-                config.nickName = nickNames[Random.Range(0, nickNames.Length)];
-            }
-        }
         
-        public static string NickName => Config.nickName;
-        public static bool FakeSignIn { get; set; }
-
-        private static FirebaseAuth Auth => FirebaseAuth.DefaultInstance;
+        public static FirebaseAuth Auth => FirebaseAuth.DefaultInstance;
+        public static FirebaseFirestore Database => FirebaseFirestore.DefaultInstance;
 
         static User() => Disposer.Disposed += () => Auth.Dispose();
         
-        public static void SignIn(Action onSuccess, Action onError = null)
-        {
-            var userId = Id;
-            if (userId == Undefined)
-            {
-                var utc = DateTime.UtcNow;
-                Id = $"Y{utc.Year}M{utc.Month}D{utc.Day}h{utc.Hour}m{utc.Minute}s{utc.Second}ms{utc.Millisecond}";
-                SignInByEmail(true, onSuccess, onError);
-            }
-            else if(Auth.CurrentUser == null)
-            {
-                SignInByEmail(false, onSuccess, onError);
-            }
-            else
-            {
-                onSuccess.SafeInvoke();
-            }
-        }
+        private static CollectionReference usersMainInfo;
         
 
-        private static void SignInByEmail(bool isNewUser, Action onSuccess, Action onError)
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Init()
         {
-            if (FakeSignIn)
+            usersMainInfo = Database.Collection("UsersMainInfo");
+        }
+
+        [MenuItem(LSConsts.Path.MenuItem.Root + "/Firebase/SignOut")]
+        private static void SignOut() => Auth.SignOut();
+
+        public static LSTask SignIn()
+        {
+            if (Auth.CurrentUser != null)
             {
-                onSuccess.SafeInvoke();
-                return;
+                return LSTask.Completed;
             }
             
-            GetTask(isNewUser).OnComplete(task =>
+            var authTask = LSTask.Create();
+            var nicknameTask = LSTask.Create();
+            var setCountryTask = LSTask.Create();
+
+
+            Auth.SignInAnonymouslyAsync().OnComplete(task =>
             {
-                if (task.IsCompletedSuccessfully)
+                if (task.IsSuccess)
                 {
-                    Burger.Log(isNewUser
-                        ? $"[{nameof(User)}] New user created! UserId: {Id}"
-                        : $"[{nameof(User)}] Sign In! UserId: {Id}");
-                    onSuccess.SafeInvoke();
+                    Burger.Log($"[{nameof(User)}] New user created! UserId: {Id}");
+                    var nickname = nickNames.Random();
+                    SetNickName(nickname).SetupOnComplete(nicknameTask);
+                    authTask.Success();
+                    
+                    Network.GetCountry().OnComplete(countryCode =>
+                    {
+                        if (string.IsNullOrEmpty(countryCode.Result))
+                        {
+                            setCountryTask.Error();
+                        }
+                        else
+                        {
+                            SetRegion(countryCode.Result).SetupOnComplete(setCountryTask);
+                        }
+                    });
                 }
                 else
                 {
-                    var exceptionText = task.Exception.ToString();
+                    var error = task.Exception;
+                    var exceptionText = error.ToString();
                     
                     if (exceptionText.Contains("One or more errors occurred"))
                     {
                         exceptionText = "The Authentication service may not be enabled in the Firebase console. Link: https://console.firebase.google.com";
                     }
                     
-                    Burger.Error($"[{nameof(User)}] { task.Exception} {exceptionText}");
-                    onError.SafeInvoke();
+                    Burger.Error($"[{nameof(User)}] {error} {exceptionText}");
+                    authTask.Error();
+                }
+            });
+            
+            return Task.WhenAll(authTask, nicknameTask, setCountryTask).OnComplete(result =>
+            {
+                if (result.IsError || result.IsCanceled)
+                {
+                    Auth.CurrentUser?.DeleteAsync();
                 }
             });
         }
 
-        private static Task GetTask(bool isNewUser)
+        public static void RunMainInfoTransaction(LSTask result, string userId, Action<Transaction, DocumentReference> onTransaction)
         {
-            var email = $"{Id}@player.com";
-            var password = Id;
-
-            return isNewUser
-                ? Auth.CreateUserWithEmailAndPasswordAsync(email, password)
-                : Auth.SignInWithEmailAndPasswordAsync(email, password);
+            var mainInfoDoc = GetMainInfoDoc(userId);
+            
+            Database.RunTransactionAsync(transaction =>
+            {
+                return transaction.GetSnapshotAsync(mainInfoDoc).ContinueWith(memberSnapshotTask =>
+                {
+                    if (memberSnapshotTask.IsCompletedSuccessfully && memberSnapshotTask.Result.Exists)
+                    {
+                        onTransaction(transaction, mainInfoDoc);
+                        return;
+                    }
+                    
+                    result.Error();
+                });
+            }).SetupOnComplete(result);
         }
+
+        public static LSTask Request(Action<LSTask> onAuthSuccess)
+        {
+            return Request(WrapAction(onAuthSuccess));
+        }
+        
+        public static LSTask<T> Request<T>(Action<LSTask<T>> onAuthSuccess)
+        {
+            var task = LSTask<T>.Create();
+            SignIn().OnComplete(authTask =>
+            {
+                if (authTask.IsSuccess)
+                {
+                    onAuthSuccess(task);
+                    return;
+                }
+                
+                task.Error(FailAuthError);
+            });
+
+            return task;
+        }
+
+        public static LSTask SetNickName(string nickname) => SetMainInfoField("nickname", nickname).OnComplete(task =>
+        {
+            if (task.IsSuccess)
+            {
+                Config.nickname = nickname;
+            }
+        });
+        
+        public static LSTask SetRegion(string countryCode) => SetMainInfoField("region", countryCode).OnComplete(task =>
+        {
+            if (task.IsSuccess)
+            {
+                Config.countryCode = countryCode;
+            }
+        });
+        
+        public static LSTask SetMainInfoField(string fieldName, object value)
+        {
+            var data = FirebaseData.Create(fieldName, value);
+            return GetMainInfoDoc().SetAsync(data, SetOptions.MergeAll);
+        }
+
+        public static DocumentReference GetMainInfoDoc() => GetMainInfoDoc(Id);
+        
+        public static DocumentReference GetMainInfoDoc(string userId)
+        {
+            return usersMainInfo.Document(userId);
+        }
+        
+        public static Action<LSTask<object>> WrapAction(Action<LSTask> action) => task => action(task);
+        public static Action<LSTask<object>> WrapNullAction(Action<LSTask> action) => task => action?.Invoke(task);
     }
 }

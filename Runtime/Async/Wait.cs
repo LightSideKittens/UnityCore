@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 
@@ -8,19 +7,6 @@ namespace LSCore.Async
 {
     public static partial class Wait
     {
-        public static Task OnComplete(this Task task, Action<Task> onComplete)
-        {
-            World.Updated += Update;
-            return task;
-
-            void Update()
-            {
-                if (!task.IsCompleted) return;
-                World.Updated -= Update;
-                onComplete(task);
-            }
-        }
-        
         public static Tween Run(in float time, TweenCallback<float> update) => DOVirtual.Float(0, 1, time, update);
         public static Tween Run(in float time, TweenCallback update) =>  DOTween.Sequence().AppendInterval(time).OnUpdate(update);
         public static Tween Delay(in float time, TweenCallback onComplete) => DOTween.Sequence().AppendInterval(time).OnComplete(onComplete);

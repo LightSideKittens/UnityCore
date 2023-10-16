@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+﻿/*#if UNITY_EDITOR
 using System;
 using Core.Server;
 using Firebase;
@@ -47,4 +47,4 @@ namespace LSCore.Auth
         }
     }
 }
-#endif
+#endif*/

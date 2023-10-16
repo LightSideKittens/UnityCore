@@ -1,12 +1,11 @@
-using System;
 using System.Collections.Generic;
-using Core.Server;
 using Firebase.Database;
 using Firebase.Extensions;
+using LSCore.Async;
 using LSCore.Firebase;
 using LSCore.Server;
 
-namespace LSCore.Leaderboard
+namespace LSCore
 {
     public static class Leaderboard
     {
@@ -15,26 +14,36 @@ namespace LSCore.Leaderboard
 
         static Leaderboard() => Disposer.Disposed += () => databaseReference = null;
         
-        private static void Init(Action onAuth, Action onError)
+        private static LSTask Init()
         {
             databaseReference ??= FirebaseDatabase.DefaultInstance.RootReference.Child("players");
-            User.SignIn(onAuth, onError);
+            return User.SignIn();
         }
 
-        public static void AddScore(int score)
+        public static LSTask AddScore(int score, string nickname)
         {
-            Init(() =>
+            return Init().OnComplete(task =>
             {
-                DatabaseReference playerRef = databaseReference.Child(User.Id);
-                playerRef.Child("nickName").SetValueAsync(User.NickName);
+                if(!task.IsSuccess) return;
+                
+                var playerRef = databaseReference.Child(User.Id);
+                playerRef.Child("nickName").SetValueAsync(nickname);
                 playerRef.Child("score").SetValueAsync(score);
-            }, null);
+            });
         }
         
-        public static void FetchLeaderboardData(Action onComplete = null, Action onError = null)
+        public static LSTask FetchLeaderboardData()
         {
-            Init(() =>
+            var result = LSTask.Create();
+            
+            Init().OnComplete(authTask =>
             {
+                if (!authTask.IsSuccess)
+                {
+                    result.Error();
+                    return;
+                }
+                
                 Entries.Clear();
                 var query = databaseReference.OrderByChild("score");
 
@@ -44,7 +53,7 @@ namespace LSCore.Leaderboard
 
                     if (snapshot == null)
                     {
-                        onError.SafeInvoke();
+                        result.Error();
                         return;
                     }
                 
@@ -57,9 +66,11 @@ namespace LSCore.Leaderboard
                     }
 
                     Entries.Reverse();
-                    onComplete.SafeInvoke();
+                    result.Success();
                 });
-            }, onError);
+            });
+
+            return result;
         }
     }
 }
