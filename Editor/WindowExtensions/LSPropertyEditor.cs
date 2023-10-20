@@ -88,6 +88,18 @@ public class LSPropertyEditor
             obj = null;
             return false;
         }
+        
+        public static bool TryGetInspectedObject(out Object obj)
+        {
+            foreach (var propertyEditor in GetAll())
+            {
+                obj = propertyEditor.InspectedObject; 
+                return true;
+            }
+
+            obj = null;
+            return false;
+        }
     }
     
     public static class Hovered

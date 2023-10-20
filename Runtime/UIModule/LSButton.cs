@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace LSCore
 {
-    public class ButtonAnim : Button
+    public class LSButton : Button
     {
         private Tween current;
         private Vector3 lastScale;
