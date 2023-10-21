@@ -22,7 +22,7 @@ namespace LSCore
         private Tween showTween;
         private Tween hideTween;
 
-        protected virtual Transform Parent => DaddyCanvas.Instance.transform;
+        protected virtual Transform Parent => IsExistsInManager ? DaddyCanvas.Instance.transform : null;
         protected virtual Button BackButton { get; } = null;
         public RectTransform RectTransform { get; private set; }
         public static Canvas Canvas { get; private set; }

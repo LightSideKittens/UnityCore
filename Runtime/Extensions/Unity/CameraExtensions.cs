@@ -31,8 +31,9 @@ namespace LSCore.Extensions.Unity
         
         public static Rect GetRect(this Camera camera)
         {
-            return new Rect(camera.transform.position, sizeGetter(camera));
+            return new Rect(camera.transform.position, sizeGetter(camera) * 2);
         }
+        
 
         private static Vector3 GetSizeOnPortraitMode(Camera camera)
         {
