@@ -4,7 +4,6 @@ using UnityEditor;
 using UnityEditor.UI;
 #endif
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.Sprites;
 using UnityEngine.UI;
 
@@ -12,18 +11,56 @@ namespace LSCore
 {
     public class LSImage : Image
     {
-        public enum GradientMode
+        public enum GradientDirection
         {
             None,
             Horizontal,
             Vertical,
         }
         
-        [SerializeField] private GradientMode gradientMode;
-        
+        [SerializeField] private GradientDirection gradientMode;
         [SerializeField] private int rotateId = 0;
         [SerializeField] private bool invert;
         [SerializeField] private Gradient gradient;
+        
+        public GradientDirection GradientMode
+        {
+            get => gradientMode;
+            set
+            {
+                gradientMode = value;
+                UpdateColorEvaluateFunc();
+            }
+        }
+        
+        public int RotateId
+        {
+            get => rotateId;
+            set
+            {
+                rotateId = value;
+                UpdateColorEvaluateFunc();
+            }
+        }
+        
+        public bool Invert
+        {
+            get => invert;
+            set
+            {
+                invert = value;
+                UpdateColorEvaluateFunc();
+            }
+        }
+        public Gradient Gradient
+        {
+            get => gradient;
+            set
+            {
+                gradient = value;
+                SetVerticesDirty();
+            }
+        }
 
         private static readonly Vector2[] vertScratch = new Vector2[4];
         private static readonly Vector2[] uVScratch = new Vector2[4];
@@ -57,24 +94,38 @@ namespace LSCore
 
         private InFunc<Vector3, Color> GetHorizontalColorEvaluate() => invert ? InvertedHorizontalColorEvaluate : HorizontalColorEvaluate;
         private InFunc<Vector3, Color> GetVerticalColorEvaluate() => invert ? InvertedVerticalColorEvaluate : VerticalColorEvaluate;
+        
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
             base.OnValidate();
-            
+            UpdateColorEvaluateFunc();
+        }
+#endif
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            UpdateColorEvaluateFunc();
+        }
+
+        private void UpdateColorEvaluateFunc()
+        {
             var isRotated = rotateId % 2 == 1;
             colorEvaluate = DefaulColor;
             
-            if (gradientMode == GradientMode.Horizontal)
+            if (gradientMode == GradientDirection.Horizontal)
             {
                 colorEvaluate = isRotated ? GetVerticalColorEvaluate() : GetHorizontalColorEvaluate();
             }
-            else if(gradientMode == GradientMode.Vertical)
+            else if(gradientMode == GradientDirection.Vertical)
             {
                 colorEvaluate = isRotated ? GetHorizontalColorEvaluate() : GetVerticalColorEvaluate();
             }
+            
+            SetVerticesDirty();
         }
-#endif
+        
         protected override void UpdateGeometry()
         {
             base.UpdateGeometry();
