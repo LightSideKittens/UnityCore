@@ -2,6 +2,7 @@
 using UnityEditor;
 using UnityEditor.UI;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.Sprites;
 using UnityEngine.UI;
 
@@ -9,32 +10,72 @@ namespace LSCore
 {
     public class LSImage : Image
     {
-        public enum Gradient
+        public enum GradientMode
         {
             None,
             Horizontal,
             Vertical,
         }
         
-        [SerializeField] private Gradient gradient;
-        [SerializeField] private Color[] colors =
-        {
-            Color.white, 
-            Color.white, 
-        };
+        [SerializeField] private GradientMode gradientMode;
         
         [SerializeField] private int rotateId = 0;
-        
+        [SerializeField] private bool invert;
+        [SerializeField] private Gradient gradient;
+
         private static readonly Vector2[] vertScratch = new Vector2[4];
         private static readonly Vector2[] uVScratch = new Vector2[4];
         
         private static readonly Vector3[] s_Xy = new Vector3[4];
         private static readonly Vector3[] s_Uv = new Vector3[4];
+        
+        private InFunc<Vector3, Color> colorEvaluate;
+
+        private Color DefaulColor(in Vector3 pos) => color;
+
+        private Color HorizontalColorEvaluate(in Vector3 pos)
+        {
+            return gradient.Evaluate(currentRect.width / pos.x);
+        }
+        
+        private Color VerticalColorEvaluate(in Vector3 pos)
+        {
+            return gradient.Evaluate(currentRect.height / pos.y);
+        }
+        
+        private Color InvertedHorizontalColorEvaluate(in Vector3 pos)
+        {
+            return gradient.Evaluate(1 - currentRect.width / pos.x);
+        }
+        
+        private Color InvertedVerticalColorEvaluate(in Vector3 pos)
+        {
+            return gradient.Evaluate(1 - currentRect.height / pos.y);
+        }
+
+        private InFunc<Vector3, Color> GetHorizontalColorEvaluate() => invert ? InvertedHorizontalColorEvaluate : HorizontalColorEvaluate;
+        private InFunc<Vector3, Color> GetVerticalColorEvaluate() => invert ? InvertedVerticalColorEvaluate : VerticalColorEvaluate;
+
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+            
+            var isRotated = rotateId % 2 == 1;
+            colorEvaluate = DefaulColor;
+            
+            if (gradientMode == GradientMode.Horizontal)
+            {
+                colorEvaluate = isRotated ? GetVerticalColorEvaluate() : GetHorizontalColorEvaluate();
+            }
+            else if(gradientMode == GradientMode.Vertical)
+            {
+                colorEvaluate = isRotated ? GetHorizontalColorEvaluate() : GetVerticalColorEvaluate();
+            }
+        }
 
         protected override void UpdateGeometry()
         {
             base.UpdateGeometry();
-            
             if(rotateId == 0) return;
             
             var vertices = workerMesh.vertices;
@@ -77,10 +118,6 @@ namespace LSCore
                 return;
             }
 
-            allColors[0] = color;
-            allColors[1] = colors[0];
-            allColors[2] = colors[1];
-            
             switch (type)
             {
                 case Type.Simple:
@@ -100,6 +137,9 @@ namespace LSCore
                     break;
             }
         }
+
+        private Rect currentRect;
+        
         
         private void GenerateSlicedSprite(VertexHelper toFill)
         {
@@ -128,7 +168,6 @@ namespace LSCore
             }
 
             Rect rect = GetPixelAdjustedRect();
-
             Vector4 adjustedBorders = GetAdjustedBorders(border / multipliedPixelsPerUnit, rect);
             padding = padding / multipliedPixelsPerUnit;
 
@@ -140,6 +179,7 @@ namespace LSCore
                 rect.position = pos;
             }
             
+            currentRect = rect;
             vertScratch[0] = new Vector2(padding.x, padding.y);
             vertScratch[3] = new Vector2(rect.width - padding.z, rect.height - padding.w);
 
@@ -177,14 +217,12 @@ namespace LSCore
                     AddQuad(toFill,
                         new Vector2(vertScratch[x].x, vertScratch[y].y),
                         new Vector2(vertScratch[x2].x, vertScratch[y2].y),
-                        color,
+                        
                         new Vector2(uVScratch[x].x, uVScratch[y].y),
                         new Vector2(uVScratch[x2].x, uVScratch[y2].y));
                 }
             }
         }
-
-        private static Color[] allColors = new Color[3];
         
         void GenerateSimpleSprite(VertexHelper vh, bool lPreserveAspect)
         {
@@ -192,24 +230,12 @@ namespace LSCore
             Vector4 v = GetDrawingDimensions(lPreserveAspect);
             var uv = (activeSprite != null) ? DataUtility.GetOuterUV(activeSprite) : Vector4.zero;
             
-            int[] colorIndexes = new[] { 0, 0, 0, 0};
-            var isRotated = rotateId % 2 == 1;
-            
-            if (gradient == Gradient.Horizontal)
-            {
-                colorIndexes = isRotated ? new[] { 2, 1, 1, 2} : new[] { 1, 1, 2, 2};
-            }
-            else if(gradient == Gradient.Vertical)
-            {
-                colorIndexes = isRotated ? new[] { 1, 1, 2, 2} : new[] { 2, 1, 1, 2};
-            }
-            
             vh.Clear();
             
-            vh.AddVert(new Vector3(v.x, v.y), allColors[colorIndexes[0]], new Vector2(uv.x, uv.y));
-            vh.AddVert(new Vector3(v.x, v.w), allColors[colorIndexes[1]], new Vector2(uv.x, uv.w));
-            vh.AddVert(new Vector3(v.z, v.w), allColors[colorIndexes[2]], new Vector2(uv.z, uv.w));
-            vh.AddVert(new Vector3(v.z, v.y), allColors[colorIndexes[3]], new Vector2(uv.z, uv.y));
+            AddVert(vh, new Vector3(v.x, v.y), new Vector2(uv.x, uv.y));
+            AddVert(vh, new Vector3(v.x, v.w), new Vector2(uv.x, uv.w));
+            AddVert(vh, new Vector3(v.z, v.w), new Vector2(uv.z, uv.w));
+            AddVert(vh, new Vector3(v.z, v.y), new Vector2(uv.z, uv.y));
 
             vh.AddTriangle(0, 1, 2);
             vh.AddTriangle(2, 3, 0);
@@ -246,6 +272,8 @@ namespace LSCore
                 rect.position = pos;
             }
             
+            currentRect = rect;
+            
             v = new Vector4(
                 rect.x + rect.width * v.x,
                 rect.y + rect.height * v.y,
@@ -265,6 +293,7 @@ namespace LSCore
             var spritePivot = activeSprite.pivot / spriteSize;
             var rectPivot = rectTransform.pivot;
             Rect r = GetPixelAdjustedRect();
+            currentRect = r;
 
             if (lPreserveAspect & spriteSize.sqrMagnitude > 0.0f)
             {
@@ -345,28 +374,33 @@ namespace LSCore
             return border;
         }
         
-        static void AddQuad(VertexHelper vertexHelper, Vector3[] quadPositions, Color32 color, Vector3[] quadUVs)
+        void AddQuad(VertexHelper vertexHelper, Vector3[] quadPositions, Vector3[] quadUVs)
         {
             int startIndex = vertexHelper.currentVertCount;
 
             for (int i = 0; i < 4; ++i)
-                vertexHelper.AddVert(quadPositions[i], color, quadUVs[i]);
+                AddVert(vertexHelper, quadPositions[i], quadUVs[i]);
 
             vertexHelper.AddTriangle(startIndex, startIndex + 1, startIndex + 2);
             vertexHelper.AddTriangle(startIndex + 2, startIndex + 3, startIndex);
         }
 
-        static void AddQuad(VertexHelper vertexHelper, Vector2 posMin, Vector2 posMax, Color32 color, Vector2 uvMin, Vector2 uvMax)
+        void AddQuad(VertexHelper vertexHelper, Vector2 posMin, Vector2 posMax, Vector2 uvMin, Vector2 uvMax)
         {
             int startIndex = vertexHelper.currentVertCount;
 
-            vertexHelper.AddVert(new Vector3(posMin.x, posMin.y, 0), color, new Vector2(uvMin.x, uvMin.y));
-            vertexHelper.AddVert(new Vector3(posMin.x, posMax.y, 0), color, new Vector2(uvMin.x, uvMax.y));
-            vertexHelper.AddVert(new Vector3(posMax.x, posMax.y, 0), color, new Vector2(uvMax.x, uvMax.y));
-            vertexHelper.AddVert(new Vector3(posMax.x, posMin.y, 0), color, new Vector2(uvMax.x, uvMin.y));
+            AddVert(vertexHelper, new Vector3(posMin.x, posMin.y, 0), new Vector2(uvMin.x, uvMin.y));
+            AddVert(vertexHelper, new Vector3(posMin.x, posMax.y, 0), new Vector2(uvMin.x, uvMax.y));
+            AddVert(vertexHelper, new Vector3(posMax.x, posMax.y, 0), new Vector2(uvMax.x, uvMax.y));
+            AddVert(vertexHelper, new Vector3(posMax.x, posMin.y, 0), new Vector2(uvMax.x, uvMin.y));
 
             vertexHelper.AddTriangle(startIndex, startIndex + 1, startIndex + 2);
             vertexHelper.AddTriangle(startIndex + 2, startIndex + 3, startIndex);
+        }
+
+        private void AddVert(in VertexHelper vertexHelper, in Vector3 position, in Vector4 uv0)
+        {
+            vertexHelper.AddVert(position, colorEvaluate(position), uv0);
         }
         
         void GenerateTiledSprite(VertexHelper toFill)
@@ -405,6 +439,7 @@ namespace LSCore
                 rect.position = pos;
             }
             
+            currentRect = rect;
             var uvMin = new Vector2(inner.x, inner.y);
             var uvMax = new Vector2(inner.z, inner.w);
 
@@ -529,7 +564,7 @@ namespace LSCore
                                 clipped.x = uvMin.x + (uvMax.x - uvMin.x) * (xMax - x1) / (x2 - x1);
                                 x2 = xMax;
                             }
-                            AddQuad(toFill, new Vector2(x1, y1) + rect.position, new Vector2(x2, y2) + rect.position, color, uvMin, clipped);
+                            AddQuad(toFill, new Vector2(x1, y1) + rect.position, new Vector2(x2, y2) + rect.position,  uvMin, clipped);
                         }
                     }
                 }
@@ -548,13 +583,13 @@ namespace LSCore
                         AddQuad(toFill,
                             new Vector2(0, y1) + rect.position,
                             new Vector2(xMin, y2) + rect.position,
-                            color,
+                            
                             new Vector2(outer.x, uvMin.y),
                             new Vector2(uvMin.x, clipped.y));
                         AddQuad(toFill,
                             new Vector2(xMax, y1) + rect.position,
                             new Vector2(rect.width, y2) + rect.position,
-                            color,
+                            
                             new Vector2(uvMax.x, uvMin.y),
                             new Vector2(outer.z, clipped.y));
                     }
@@ -573,13 +608,13 @@ namespace LSCore
                         AddQuad(toFill,
                             new Vector2(x1, 0) + rect.position,
                             new Vector2(x2, yMin) + rect.position,
-                            color,
+                            
                             new Vector2(uvMin.x, outer.y),
                             new Vector2(clipped.x, uvMin.y));
                         AddQuad(toFill,
                             new Vector2(x1, yMax) + rect.position,
                             new Vector2(x2, rect.height) + rect.position,
-                            color,
+                            
                             new Vector2(uvMin.x, uvMax.y),
                             new Vector2(clipped.x, outer.w));
                     }
@@ -588,25 +623,25 @@ namespace LSCore
                     AddQuad(toFill,
                         new Vector2(0, 0) + rect.position,
                         new Vector2(xMin, yMin) + rect.position,
-                        color,
+                        
                         new Vector2(outer.x, outer.y),
                         new Vector2(uvMin.x, uvMin.y));
                     AddQuad(toFill,
                         new Vector2(xMax, 0) + rect.position,
                         new Vector2(rect.width, yMin) + rect.position,
-                        color,
+                        
                         new Vector2(uvMax.x, outer.y),
                         new Vector2(outer.z, uvMin.y));
                     AddQuad(toFill,
                         new Vector2(0, yMax) + rect.position,
                         new Vector2(xMin, rect.height) + rect.position,
-                        color,
+                        
                         new Vector2(outer.x, uvMax.y),
                         new Vector2(uvMin.x, outer.w));
                     AddQuad(toFill,
                         new Vector2(xMax, yMax) + rect.position,
                         new Vector2(rect.width, rect.height) + rect.position,
-                        color,
+                        
                         new Vector2(uvMax.x, uvMax.y),
                         new Vector2(outer.z, outer.w));
                 }
@@ -618,7 +653,7 @@ namespace LSCore
 
                 if (fillCenter)
                 {
-                    AddQuad(toFill, new Vector2(xMin, yMin) + rect.position, new Vector2(xMax, yMax) + rect.position, color, Vector2.Scale(uvMin, uvScale), Vector2.Scale(uvMax, uvScale));
+                    AddQuad(toFill, new Vector2(xMin, yMin) + rect.position, new Vector2(xMax, yMax) + rect.position,  Vector2.Scale(uvMin, uvScale), Vector2.Scale(uvMax, uvScale));
                 }
             }
         }
@@ -692,7 +727,7 @@ namespace LSCore
                     if (fillMethod == FillMethod.Radial90)
                     {
                         if (RadialCut(s_Xy, s_Uv, fillAmount, fillClockwise, fillOrigin))
-                            AddQuad(toFill, s_Xy, color, s_Uv);
+                            AddQuad(toFill, s_Xy,  s_Uv);
                     }
                     else if (fillMethod == FillMethod.Radial180)
                     {
@@ -756,7 +791,7 @@ namespace LSCore
 
                             if (RadialCut(s_Xy, s_Uv, Mathf.Clamp01(val), fillClockwise, ((side + fillOrigin + 3) % 4)))
                             {
-                                AddQuad(toFill, s_Xy, color, s_Uv);
+                                AddQuad(toFill, s_Xy,  s_Uv);
                             }
                         }
                     }
@@ -814,13 +849,13 @@ namespace LSCore
                                 fillAmount * 4f - (3 - ((corner + fillOrigin) % 4));
 
                             if (RadialCut(s_Xy, s_Uv, Mathf.Clamp01(val), fillClockwise, ((corner + 2) % 4)))
-                                AddQuad(toFill, s_Xy, color, s_Uv);
+                                AddQuad(toFill, s_Xy,  s_Uv);
                         }
                     }
                 }
                 else
                 {
-                    AddQuad(toFill, s_Xy, color, s_Uv);
+                    AddQuad(toFill, s_Xy,  s_Uv);
                 }
             }
         }
@@ -942,7 +977,8 @@ namespace LSCore
     public class LSImageEditor : ImageEditor
     {
         SerializedProperty rotateId;
-        SerializedProperty colors;
+        SerializedProperty invert;
+        SerializedProperty gradientMode;
         SerializedProperty gradient;
         private int selectedIndex = -1; 
         private bool isDragging; 
@@ -951,7 +987,8 @@ namespace LSCore
         {
             base.OnEnable();
             rotateId = serializedObject.FindProperty("rotateId");
-            colors = serializedObject.FindProperty("colors");
+            invert = serializedObject.FindProperty("invert");
+            gradientMode = serializedObject.FindProperty("gradientMode");
             gradient = serializedObject.FindProperty("gradient");
         }
 
@@ -960,64 +997,12 @@ namespace LSCore
             base.OnInspectorGUI();
             serializedObject.Update();
 
-            EditorGUILayout.PropertyField(gradient);
+            EditorGUILayout.PropertyField(gradientMode);
             
-            if (gradient.enumValueIndex != 0)
+            if (gradientMode.enumValueIndex != 0)
             {
-                for (int i = 0; i < colors.arraySize; i++)
-                {
-                    EditorGUILayout.BeginHorizontal();
-                    Rect dragAreaRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight, GUILayout.MaxWidth(30));
-                    Rect elementRect = EditorGUILayout.GetControlRect(false, EditorGUIUtility.singleLineHeight);
-                    EditorGUILayout.EndHorizontal();
-                    
-                    GUI.Box(dragAreaRect, "", GUI.skin.button);
-                    EditorGUI.PropertyField(elementRect, colors.GetArrayElementAtIndex(i), GUIContent.none);
-
-                    if (dragAreaRect.Contains(Event.current.mousePosition))
-                    {
-                        switch (Event.current.type)
-                        {
-                            case EventType.MouseDown:
-                                selectedIndex = i;
-                                isDragging = true;
-                                Event.current.Use();
-                                break;
-                            case EventType.MouseDrag:
-                                if (selectedIndex > -1)
-                                {
-                                    Repaint();
-                                    Event.current.Use();
-                                }
-                                break;
-                            case EventType.MouseUp:
-                                if (selectedIndex > -1 && selectedIndex != i)
-                                {
-                                    colors.MoveArrayElement(selectedIndex, i);
-                                    Event.current.Use();
-                                }
-                                
-                                selectedIndex = -1;
-                                isDragging = false;
-                                break;
-                        }
-     
-                    }
-                }
-
-                if (Event.current.type == EventType.MouseUp)
-                {
-                    selectedIndex = -1;
-                    isDragging = false;
-                }
-                
-                // Draw a representation of the selected item under the cursor
-                if (isDragging && selectedIndex > -1)
-                {
-                    var mousePosition = Event.current.mousePosition;
-                    var flyRect = new Rect(mousePosition.x, mousePosition.y, 100, 20);
-                    GUI.Box(flyRect, $"{selectedIndex} color", GUI.skin.button);
-                }
+                EditorGUILayout.PropertyField(invert);
+                EditorGUILayout.PropertyField(gradient);
             }
 
             if (GUILayout.Button("Rotate"))
@@ -1026,12 +1011,6 @@ namespace LSCore
             }
             
             serializedObject.ApplyModifiedProperties();
-        }
-        
-        private void SwapArrayElements(int indexA, int indexB)
-        {
-            Debug.Log($"Swapped {indexA} {indexB}");
-            colors.MoveArrayElement(indexA, indexB);
         }
     }
 #endif
