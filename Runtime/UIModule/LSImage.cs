@@ -1,6 +1,8 @@
 ﻿using System;
 using UnityEditor;
+#if UNITY_EDITOR
 using UnityEditor.UI;
+#endif
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.Sprites;
@@ -55,7 +57,7 @@ namespace LSCore
 
         private InFunc<Vector3, Color> GetHorizontalColorEvaluate() => invert ? InvertedHorizontalColorEvaluate : HorizontalColorEvaluate;
         private InFunc<Vector3, Color> GetVerticalColorEvaluate() => invert ? InvertedVerticalColorEvaluate : VerticalColorEvaluate;
-
+#if UNITY_EDITOR
         protected override void OnValidate()
         {
             base.OnValidate();
@@ -72,7 +74,7 @@ namespace LSCore
                 colorEvaluate = isRotated ? GetHorizontalColorEvaluate() : GetVerticalColorEvaluate();
             }
         }
-
+#endif
         protected override void UpdateGeometry()
         {
             base.UpdateGeometry();

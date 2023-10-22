@@ -53,8 +53,10 @@ namespace LSCore.Server
             usersMainInfo = Database.Collection("UsersMainInfo");
         }
 
+#if UNITY_EDITOR
         [MenuItem(LSConsts.Path.MenuItem.Root + "/Firebase/SignOut")]
         private static void SignOut() => Auth.SignOut();
+#endif
 
         public static LSTask SignIn()
         {

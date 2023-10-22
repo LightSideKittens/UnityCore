@@ -24,5 +24,11 @@ namespace LSCore
             current?.Complete();
             current = transform.DOScale(0.2f * Mathf.Abs(lastScale.x), 0.5f).SetEase(Ease.OutElastic).SetRelative();
         }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            current?.Kill();
+        }
     }
 }

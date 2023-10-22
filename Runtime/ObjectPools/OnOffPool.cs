@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace LSCore
 {
@@ -35,13 +36,32 @@ namespace LSCore
 
             stack = new Stack<T>(defaultCapacity);
             set = new HashSet<T>(defaultCapacity);
-            this.createFunc = createFunc ?? throw new ArgumentNullException(nameof(createFunc));
+            this.createFunc = createFunc;
             this.maxSize = maxSize;
             this.actionOnGet = actionOnGet;
             this.actionOnRelease = actionOnRelease;
             this.actionOnDestroy = actionOnDestroy;
         }
 
+        private readonly T prefab;
+        
+        public OnOffPool(
+            T prefab,
+            Action<T> actionOnGet = null,
+            Action<T> actionOnRelease = null,
+            Action<T> actionOnDestroy = null,
+            int defaultCapacity = 10,
+            int maxSize = 10000) : this(default(Func<T>), actionOnGet, actionOnRelease, actionOnDestroy, defaultCapacity, maxSize)
+        {
+            this.prefab = prefab;
+            createFunc = InstantiatePrefab;
+        }
+
+        private T InstantiatePrefab()
+        {
+            return Object.Instantiate(prefab);
+        }
+        
         public T Get()
         {
             T obj;
@@ -58,6 +78,13 @@ namespace LSCore
 
             obj.gameObject.SetActive(true);
             actionOnGet?.Invoke(obj);
+            return obj;
+        }
+
+        public T Get(Vector3 position)
+        {
+            var obj = Get();
+            obj.transform.position = position;
             return obj;
         }
 
