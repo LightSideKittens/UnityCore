@@ -55,6 +55,7 @@ namespace LSCore
                 rectTransform.anchorMax = anchor;
                 rectTransform.anchoredPosition = Vector2.zero;
                 rectTransform.sizeDelta = parentRectTransform.sizeDelta;
+                rectTransform.localScale = Vector3.one;
             }
             else
             {
