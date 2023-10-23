@@ -162,12 +162,29 @@ namespace LSCore
             canvasRenderer.SetMesh(workerMesh);
         }
 
+        private void GenerateDefaultSprite(VertexHelper vh)
+        {
+            var rect = GetPixelAdjustedRect();
+            TryRotateRect(ref rect);
+            currentRect = rect;
+            var v = new Vector4(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height);
+            
+            vh.Clear();
+            AddVert(vh, new Vector3(v.x, v.y), new Vector2(0f, 0f));
+            AddVert(vh, new Vector3(v.x, v.w), new Vector2(0f, 1f));
+            AddVert(vh, new Vector3(v.z, v.w), new Vector2(1f, 1f));
+            AddVert(vh, new Vector3(v.z, v.y), new Vector2(1f, 0f));
+
+            vh.AddTriangle(0, 1, 2);
+            vh.AddTriangle(2, 3, 0);
+        }
+
         protected override void OnPopulateMesh(VertexHelper toFill)
         {
             var activeSprite = overrideSprite;
             if (activeSprite == null)
             {
-                base.OnPopulateMesh(toFill);
+                GenerateDefaultSprite(toFill);
                 return;
             }
 
@@ -223,16 +240,10 @@ namespace LSCore
             Rect rect = GetPixelAdjustedRect();
             Vector4 adjustedBorders = GetAdjustedBorders(border / multipliedPixelsPerUnit, rect);
             padding = padding / multipliedPixelsPerUnit;
-
-            if (rotateId % 2 == 1)
-            {
-                (rect.width, rect.height) = (rect.height, rect.width);
-                var pos = rect.position;
-                (pos.x, pos.y) = (pos.y, pos.x);
-                rect.position = pos;
-            }
             
+            TryRotateRect(ref rect);
             currentRect = rect;
+            
             vertScratch[0] = new Vector2(padding.x, padding.y);
             vertScratch[3] = new Vector2(rect.width - padding.z, rect.height - padding.w);
 
@@ -316,15 +327,8 @@ namespace LSCore
             {
                 PreserveSpriteAspectRatio(ref rect, size);
             }
-
-            if (rotateId % 2 == 1)
-            {
-                (rect.width, rect.height) = (rect.height, rect.width);
-                var pos = rect.position;
-                (pos.x, pos.y) = (pos.y, pos.x);
-                rect.position = pos;
-            }
             
+            TryRotateRect(ref rect);
             currentRect = rect;
             
             v = new Vector4(
@@ -336,6 +340,17 @@ namespace LSCore
 
             return v;
         }
+
+        private void TryRotateRect(ref Rect rect)
+        {
+            if (rotateId % 2 == 1)
+            {
+                (rect.width, rect.height) = (rect.height, rect.width);
+                var pos = rect.position;
+                (pos.x, pos.y) = (pos.y, pos.x);
+                rect.position = pos;
+            }
+        }
         
         private void GenerateSprite(VertexHelper vh, bool lPreserveAspect)
         {
@@ -345,28 +360,29 @@ namespace LSCore
             // Covert sprite pivot into normalized space.
             var spritePivot = activeSprite.pivot / spriteSize;
             var rectPivot = rectTransform.pivot;
-            Rect r = GetPixelAdjustedRect();
-            currentRect = r;
-
+            Rect rect = GetPixelAdjustedRect();
+            
             if (lPreserveAspect & spriteSize.sqrMagnitude > 0.0f)
             {
-                PreserveSpriteAspectRatio(ref r, spriteSize);
+                PreserveSpriteAspectRatio(ref rect, spriteSize);
             }
-
-            var drawingSize = new Vector2(r.width, r.height);
+            
+            TryRotateRect(ref rect);
+            currentRect = rect;
+            
+            var drawingSize = new Vector2(rect.width, rect.height);
             var spriteBoundSize = activeSprite.bounds.size;
 
             // Calculate the drawing offset based on the difference between the two pivots.
             var drawOffset = (rectPivot - spritePivot) * drawingSize;
-
-            var color32 = color;
+            
             vh.Clear();
 
             Vector2[] vertices = activeSprite.vertices;
             Vector2[] uvs = activeSprite.uv;
             for (int i = 0; i < vertices.Length; ++i)
             {
-                vh.AddVert(new Vector3((vertices[i].x / spriteBoundSize.x) * drawingSize.x - drawOffset.x, (vertices[i].y / spriteBoundSize.y) * drawingSize.y - drawOffset.y), color32, new Vector2(uvs[i].x, uvs[i].y));
+                AddVert(vh, new Vector3((vertices[i].x / spriteBoundSize.x) * drawingSize.x - drawOffset.x, (vertices[i].y / spriteBoundSize.y) * drawingSize.y - drawOffset.y), new Vector2(uvs[i].x, uvs[i].y));
             }
 
             UInt16[] triangles = activeSprite.triangles;
@@ -483,16 +499,10 @@ namespace LSCore
             float tileHeight = (spriteSize.y - border.y - border.w) / multipliedPixelsPerUnit;
             
             border = GetAdjustedBorders(border / multipliedPixelsPerUnit, rect);
-
-            if (rotateId % 2 == 1)
-            {
-                (rect.width, rect.height) = (rect.height, rect.width);
-                var pos = rect.position;
-                (pos.x, pos.y) = (pos.y, pos.x);
-                rect.position = pos;
-            }
             
+            TryRotateRect(ref rect);
             currentRect = rect;
+            
             var uvMin = new Vector2(inner.x, inner.y);
             var uvMax = new Vector2(inner.z, inner.w);
 
