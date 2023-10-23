@@ -16,7 +16,7 @@ namespace LSCore
         
         public void OnPointerDown()
         {
-            current.Kill();
+            current.Complete();
             defaultScale = transform.localScale;
             current = transform.DOScale(defaultScale * 0.8f, 0.3f);
         }
