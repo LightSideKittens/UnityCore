@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 namespace LSCore
 {
-    public class LSImage : Image
+    public partial class LSButton : Image
     {
         public enum GradientDirection
         {
@@ -1035,7 +1035,7 @@ namespace LSCore
     
 #if UNITY_EDITOR
     
-    [CustomEditor(typeof(LSImage), true)]
+    [CustomEditor(typeof(LSButton), true)]
     [CanEditMultipleObjects]
     public class LSImageEditor : ImageEditor
     {
@@ -1043,6 +1043,7 @@ namespace LSCore
         SerializedProperty invert;
         SerializedProperty gradientMode;
         SerializedProperty gradient;
+        LSButton button;
         private int selectedIndex = -1; 
         private bool isDragging; 
         
@@ -1053,6 +1054,7 @@ namespace LSCore
             invert = serializedObject.FindProperty("invert");
             gradientMode = serializedObject.FindProperty("gradientMode");
             gradient = serializedObject.FindProperty("gradient");
+            button = (LSButton)target;
         }
 
         public override void OnInspectorGUI()
@@ -1068,6 +1070,8 @@ namespace LSCore
                 EditorGUILayout.PropertyField(gradient);
             }
 
+            button.Anim.Editor_Draw();
+            GUILayout.Space(10);
             if (GUILayout.Button("Rotate"))
             {
                 rotateId.intValue = (rotateId.intValue + 1) % 4;

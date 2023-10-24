@@ -1,5 +1,6 @@
 ﻿using System;
 using TMPro;
+using UnityEngine;
 using UnityEngine.EventSystems;
 #if UNITY_EDITOR
 using TMPro.EditorUtilities;
@@ -10,19 +11,19 @@ namespace LSCore
 {
     public class LSText : TextMeshProUGUI, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
     {
-        private ClickAnim anim;
-        public event Action Clicked;
+        [SerializeField] private ClickAnim anim;
+        public ref ClickAnim Anim => ref anim;
 
         protected override void Awake()
         {
             base.Awake();
-            anim = new ClickAnim(transform);
+            anim.Init(transform);
         }
 
         public void OnPointerClick(PointerEventData eventData)
         {
             anim.OnPointerClick();
-            Clicked?.Invoke();
+            clicked?.Invoke();
         }
 
         public void OnPointerDown(PointerEventData eventData) => anim.OnPointerDown();
@@ -33,6 +34,11 @@ namespace LSCore
             base.OnDisable();
             anim.OnDisable();
         }
+        
+        private Action clicked;
+        public void Listen(Action action) => clicked += action;
+        public void UnListen(Action action) => clicked -= action;
+        public void UnListenAll(Action action) => clicked -= action;
     }
     
 #if UNITY_EDITOR
@@ -40,10 +46,12 @@ namespace LSCore
     public class LSTextEditor : TMP_EditorPanelUI
     {
         SerializedProperty padding;
+        LSText text;
         
         protected override void OnEnable()
         {
             base.OnEnable();
+            text = (LSText)target;
             padding = serializedObject.FindProperty("m_RaycastPadding");
             SceneView.duringSceneGui += DrawAnchorsOnSceneView;
         }
@@ -60,6 +68,7 @@ namespace LSCore
         protected override void DrawExtraSettings()
         {
             base.DrawExtraSettings();
+            text.Anim.Editor_Draw();
             if (Foldout.extraSettings)
             {
                 EditorGUILayout.PropertyField(padding);

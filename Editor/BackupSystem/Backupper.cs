@@ -1,5 +1,4 @@
-﻿
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace LSCore.Editor.BackupSystem
@@ -9,16 +8,21 @@ namespace LSCore.Editor.BackupSystem
     {
         private const int EditsThreshold = 10;
         private static int editCount;
-        private static bool isHooked;
 
         static Backupper()
         {
-            Undo.postprocessModifications += OnEdit;
+            Undo.willFlushUndoRecord += OnEdit;
+            Undo.undoRedoEvent += OnEdit;
         }
 
-        private static UndoPropertyModification[] OnEdit(UndoPropertyModification[] modifications)
+        private static void OnEdit(in UndoRedoInfo _)
         {
-            return modifications;
+            Debug.Log("Undo");
+        }
+
+        private static void OnEdit()
+        {
+            Debug.Log($"OnEdit {Event.current.type}");
         }
     }
 }

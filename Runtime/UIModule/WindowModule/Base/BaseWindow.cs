@@ -24,7 +24,7 @@ namespace LSCore
 
         protected virtual Transform Parent => IsExistsInManager ? DaddyCanvas.Instance.transform : null;
         [field: Header("Optional")]
-        [field: SerializeField] protected virtual Button BackButton { get; private set; }
+        [field: SerializeField] protected virtual LSButton BackButton { get; private set; }
         public RectTransform RectTransform { get; private set; }
         public static Canvas Canvas { get; private set; }
         public virtual int SortingOrder => 0;
@@ -66,7 +66,7 @@ namespace LSCore
 
             if (BackButton != null)
             {
-                BackButton.AddListener(OnBackButton);
+                BackButton.Listen(OnBackButton);
             }
             
             if(isCalledFromStatic) return;
