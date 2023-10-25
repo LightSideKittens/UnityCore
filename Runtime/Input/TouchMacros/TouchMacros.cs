@@ -13,7 +13,7 @@ public partial class TouchMacros : MonoBehaviour
     {
         GameViewExt.PostGUI -= OnGui;
         GameViewExt.PostGUI += OnGui;
-        touchTexture = LSIcons.Get("touch.png");
+        touchTexture = LSIcons.Get("touch");
     }
     
     private void OnDisable()
