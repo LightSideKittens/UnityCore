@@ -75,6 +75,12 @@ namespace LSCore
                 EditorGUILayout.PropertyField(padding);
             }
         }
+        
+        [MenuItem("GameObject/LSCore/Text")]
+        private static void CreateButton()
+        {
+            new GameObject("LSText").AddComponent<LSText>();
+        }
     }
 #endif
 }

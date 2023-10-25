@@ -9,8 +9,9 @@ using UnityEngine.UI;
 
 namespace LSCore
 {
-    public partial class LSButton : Image
+    public class LSImage : Image
     {
+        
         public enum GradientDirection
         {
             None,
@@ -1033,9 +1034,10 @@ namespace LSCore
         }
     }
     
+        
 #if UNITY_EDITOR
     
-    [CustomEditor(typeof(LSButton), true)]
+    [CustomEditor(typeof(LSImage), true)]
     [CanEditMultipleObjects]
     public class LSImageEditor : ImageEditor
     {
@@ -1043,7 +1045,6 @@ namespace LSCore
         SerializedProperty invert;
         SerializedProperty gradientMode;
         SerializedProperty gradient;
-        LSButton button;
         private int selectedIndex = -1; 
         private bool isDragging; 
         
@@ -1054,7 +1055,6 @@ namespace LSCore
             invert = serializedObject.FindProperty("invert");
             gradientMode = serializedObject.FindProperty("gradientMode");
             gradient = serializedObject.FindProperty("gradient");
-            button = (LSButton)target;
         }
 
         public override void OnInspectorGUI()
@@ -1069,15 +1069,25 @@ namespace LSCore
                 EditorGUILayout.PropertyField(invert);
                 EditorGUILayout.PropertyField(gradient);
             }
+            
+            DrawRotateButton();
+            
+            serializedObject.ApplyModifiedProperties();
+        }
 
-            button.Anim.Editor_Draw();
+        protected virtual void DrawRotateButton()
+        {
             GUILayout.Space(10);
             if (GUILayout.Button("Rotate"))
             {
                 rotateId.intValue = (rotateId.intValue + 1) % 4;
             }
-            
-            serializedObject.ApplyModifiedProperties();
+        }
+        
+        [MenuItem("GameObject/LSCore/Image")]
+        private static void CreateButton()
+        {
+            new GameObject("LSImage").AddComponent<LSImage>();
         }
     }
 #endif

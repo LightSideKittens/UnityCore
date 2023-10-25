@@ -1,11 +1,14 @@
-using System;
+﻿using System;
+using UnityEditor;
+#if UNITY_EDITOR
+using UnityEditor.UI;
+#endif
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Serialization;
 
 namespace LSCore
 {
-    public partial class LSButton : IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
+    public class LSButton : LSImage,  IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
     {
         [SerializeField] private ClickAnim anim;
         public ref ClickAnim Anim => ref anim;
@@ -37,4 +40,31 @@ namespace LSCore
         public void UnListen(Action action) => clicked -= action;
         public void UnListenAll() => clicked = null;
     }
+    
+#if UNITY_EDITOR
+    
+    [CustomEditor(typeof(LSButton), true)]
+    [CanEditMultipleObjects]
+    public class LSButtonEditor : LSImageEditor
+    {
+        private LSButton button;
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            button = (LSButton)target;
+        }
+
+        protected override void DrawRotateButton()
+        {
+            button.Anim.Editor_Draw();
+            base.DrawRotateButton();
+        }
+
+        [MenuItem("GameObject/LSCore/Button")]
+        private static void CreateButton()
+        {
+            new GameObject("LSButton").AddComponent<LSButton>();
+        }
+    }
+#endif
 }
