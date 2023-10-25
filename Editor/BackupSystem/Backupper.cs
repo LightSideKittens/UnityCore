@@ -9,7 +9,7 @@ namespace LSCore.Editor.BackupSystem
         private const int EditsThreshold = 10;
         private static int editCount;
 
-        static Backupper()
+        /*static Backupper()
         {
             Undo.willFlushUndoRecord += OnEdit;
             Undo.undoRedoEvent += OnEdit;
@@ -23,7 +23,7 @@ namespace LSCore.Editor.BackupSystem
         private static void OnEdit()
         {
             Debug.Log($"OnEdit {Event.current.type}");
-        }
+        }*/
     }
 }
 

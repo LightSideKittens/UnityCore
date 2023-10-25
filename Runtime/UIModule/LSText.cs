@@ -36,9 +36,10 @@ namespace LSCore
         }
         
         private Action clicked;
+        public void OnClick(Action action) => clicked = action;
         public void Listen(Action action) => clicked += action;
         public void UnListen(Action action) => clicked -= action;
-        public void UnListenAll(Action action) => clicked -= action;
+        public void UnListenAll() => clicked = null;
     }
     
 #if UNITY_EDITOR
