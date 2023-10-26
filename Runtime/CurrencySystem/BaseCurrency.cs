@@ -1,75 +1,70 @@
 ﻿using System;
-using LSCore.ConfigModule;
-using Newtonsoft.Json;
 
-public abstract class BaseCurrency<T> : BaseConfig<T> where T : BaseCurrency<T>, new()
+namespace LSCore
 {
-    [Serializable]
-    public class Price : BasePrice
+    public abstract class BaseCurrency<T> where T : BaseCurrency<T>, new()
     {
-        public override void Earn()
+        [Serializable]
+        public class Price : BasePrice
         {
-            BaseCurrency<T>.Earn(value);
-        }
-
-        public override bool TrySpend()
-        {
-            return BaseCurrency<T>.TrySpend(value);
-        }
-    }
-    
-    protected override string FolderName => "Currencies";
-    protected virtual int DefaultValue { get; }
-    [JsonProperty] private int value;
-    public static event Action Changing;
-    public static event Action Changed;
-
-    public static int Value
-    {
-        get => Config.value;
-        private set
-        {
-            if (Config.value != value)
+            public override void Earn()
             {
-                Changing?.Invoke();
-                Config.value = value;
-                Changed?.Invoke();
+                BaseCurrency<T>.Earn(value);
+            }
+    
+            public override bool TrySpend()
+            {
+                return BaseCurrency<T>.TrySpend(value);
             }
         }
-    }
 
-    protected override void SetDefault()
-    {
-        base.SetDefault();
-        value = DefaultValue;
-    }
+        public static event Action Changing;
+        public static event Action Changed;
+        private static T instance = new T();
 
-    public static void Earn(int value)
-    {
-        Value += value;
-    }
-
-    public static bool TrySpend(int value)
-    {
-        var canSpend = value <= Value;
-
-        if (canSpend)
+        public static int Value
         {
-            Value -= value;
+            get => Currencies.GetValue<T>();
+            private set
+            {
+                var currentValue = Currencies.GetValue<T>();
+                if (currentValue != value)
+                {
+                    Changing?.Invoke();
+                    Currencies.SetValue<T>(value);
+                    Changed?.Invoke();
+                }
+            }
         }
 
-        return canSpend;
-    }
-
-    public static bool TryConvertTo<T1>(int fromUnitCount, int toUnitCount) where T1 : BaseCurrency<T1>, new()
-    {
-        var isSpent = TrySpend(fromUnitCount);
-
-        if (isSpent)
+        public static void Earn(int value)
         {
-            BaseCurrency<T1>.Earn(toUnitCount);
+            Value += value;
         }
-
-        return isSpent;
+    
+        public static bool TrySpend(int value)
+        {
+            var canSpend = value <= Value;
+    
+            if (canSpend)
+            {
+                Value -= value;
+            }
+    
+            return canSpend;
+        }
+    
+        public static bool TryConvertTo<T1>(int fromUnitCount, int toUnitCount) where T1 : BaseCurrency<T1>, new()
+        {
+            var isSpent = TrySpend(fromUnitCount);
+    
+            if (isSpent)
+            {
+                BaseCurrency<T1>.Earn(toUnitCount);
+            }
+    
+            return isSpent;
+        }
     }
 }
+
