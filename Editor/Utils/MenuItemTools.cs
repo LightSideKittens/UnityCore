@@ -34,7 +34,7 @@ public class MenuItemTools : MonoBehaviour
         }
     }
     
-    [MenuItem(LSConsts.Path.MenuItem.Tools + "/Clear Cache")]
+    [MenuItem(LSPaths.MenuItem.Tools + "/Clear Cache")]
     private static void ClearCache()
     {
         if (Caching.ClearCache())
@@ -47,7 +47,7 @@ public class MenuItemTools : MonoBehaviour
         }
     }
 
-    [MenuItem(LSConsts.Path.MenuItem.Tools + "/Anchors to Corners %[")]
+    [MenuItem(LSPaths.MenuItem.Tools + "/Anchors to Corners %[")]
     private static void AnchorsToCorners()
     {
         var rects = Selection.transforms;

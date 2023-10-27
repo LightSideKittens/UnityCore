@@ -54,7 +54,7 @@ namespace LSCore.Server
         }
 
 #if UNITY_EDITOR
-        [MenuItem(LSConsts.Path.MenuItem.Root + "/Firebase/SignOut")]
+        [MenuItem(LSPaths.MenuItem.Root + "/Firebase/SignOut")]
         private static void SignOut() => Auth.SignOut();
 #endif
 

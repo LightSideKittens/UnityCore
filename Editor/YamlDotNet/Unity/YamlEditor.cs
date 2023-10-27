@@ -11,7 +11,7 @@ namespace LSCore.Editor.YamlDotNet.Unity
 {
     internal class YamlEditor : OdinEditorWindow
     {
-        [MenuItem(LSConsts.Path.Windows.YamlEditor)]
+        [MenuItem(LSPaths.Windows.YamlEditor)]
         private static void OpenWindow()
         {
             GetWindow<YamlEditor>().Show();

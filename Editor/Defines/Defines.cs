@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
-using Path = LSConsts.Path;
+using Path = LSPaths;
 
 namespace LSCore.Editor
 {

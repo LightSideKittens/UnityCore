@@ -6,7 +6,7 @@ namespace LSCore.Editor
 {
     internal partial class ModulesManager : OdinEditorWindow
     {
-        [MenuItem(LSConsts.Path.Windows.ModulesManager)]
+        [MenuItem(LSPaths.Windows.ModulesManager)]
         private static void OpenWindow()
         {
             GetWindow<ModulesManager>().Show();

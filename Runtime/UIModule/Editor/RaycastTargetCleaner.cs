@@ -10,7 +10,7 @@ namespace LSCore.UIModule.Editor
 {
     public static class RaycastTargetCleaner
     {
-        [MenuItem(LSConsts.Path.MenuItem.Tools + "/Disable Raycast Target")]
+        [MenuItem(LSPaths.MenuItem.Tools + "/Disable Raycast Target")]
         public static void Clean()
         {
             var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();

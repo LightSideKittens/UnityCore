@@ -5,7 +5,7 @@ using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
-using Path = LSConsts.Path;
+using Path = LSPaths;
 
 namespace LSCore.Editor.EditorThemes
 {
@@ -17,7 +17,7 @@ namespace LSCore.Editor.EditorThemes
         [Range(0f, 2f)] [SerializeField] private float brightness = 1f;
         [Range(0f, 2f)] [SerializeField] private float saturation = 1f;
 
-        [MenuItem(LSConsts.Path.Windows.ThemeEditor)]
+        [MenuItem(LSPaths.Windows.ThemeEditor)]
         private static void OpenWindow()
         {
             GetWindow<ThemeEditor>().Show();

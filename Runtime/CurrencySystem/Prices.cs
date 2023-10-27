@@ -11,9 +11,23 @@ namespace LSCore
     [Serializable]
     public class Prices : IEnumerable<BasePrice>
     {
-#if UNITY_EDITOR
-
         [OdinSerialize] private HashSet<BasePrice> prices = new();
+        public IEnumerator<BasePrice> GetEnumerator() => prices.GetEnumerator();
+        
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Earn()
+        {
+            foreach (var price in prices)
+            {
+                price.Earn();
+            }
+        }
+        
+#if UNITY_EDITOR
         private PricesPopup popup;
         private Type[] types;
         public PricesPopup Popup => popup;
@@ -37,13 +51,6 @@ namespace LSCore
         public void Remove(Type type)
         {
             prices.Remove((BasePrice)Activator.CreateInstance(type));
-        }
-
-        public IEnumerator<BasePrice> GetEnumerator() => prices.GetEnumerator();
-        
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
 
         public class PricesPopup : PopupWindowContent

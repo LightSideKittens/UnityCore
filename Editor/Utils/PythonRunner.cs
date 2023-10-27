@@ -1,5 +1,5 @@
 ﻿using System.Diagnostics;
-using static LSConsts.Path;
+using static LSPaths;
 
 public static class PythonRunner
 {

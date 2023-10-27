@@ -2,11 +2,10 @@
     "name": "LSCore.ConfigModule",
     "rootNamespace": "LSCore.ConfigModule",
     "references": [
-        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:e203c3ad7a7046548ca22a43fa4eb0de",
         "GUID:e2d262c07fab33347bf583c077610e88",
         "GUID:96d4cfcb39a2f6449b14b08c0f026129",
-        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
-        "GUID:69547e512bbc336429fe7b1bd8b8d3b2"
+        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
