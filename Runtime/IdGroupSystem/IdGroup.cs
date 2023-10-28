@@ -19,7 +19,7 @@ public class IdGroup : SerializedScriptableObject
     
 #if UNITY_EDITOR
     [SerializeField] [OnValueChanged("OnInit")] private bool includeAll;
-    private FileSystemWatcher watcher = new();
+    private FileSystemWatcher watcher;
     private SynchronizationContext context;
     
     [InitializeOnLoadMethod]
@@ -34,6 +34,8 @@ public class IdGroup : SerializedScriptableObject
 
     private void Listen()
     {
+        watcher?.Dispose();
+        watcher = new FileSystemWatcher();
         context = SynchronizationContext.Current;
         watcher.Path = Path.GetFullPath(this.GetFolderPath().AssetsPathToFull());
         watcher.NotifyFilter = NotifyFilters.LastWrite
@@ -50,7 +52,7 @@ public class IdGroup : SerializedScriptableObject
     {
         context.Post(_ =>
         {
-            OnInit();
+            Setup();
         }, null);
     }
 
@@ -58,13 +60,19 @@ public class IdGroup : SerializedScriptableObject
     {
         context.Post(_ =>
         {
-            OnInit();
+            Setup();
         }, null);
     }
 
 
     [OnInspectorInit]
     private void OnInit()
+    {
+        Listen();
+        Setup();
+    }
+
+    private void Setup()
     {
         if (includeAll)
         {
