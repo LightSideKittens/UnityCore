@@ -1,0 +1,19 @@
+{
+    "name": "GameCore.Battle.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:0383e17b21214350bace8de976684bdb",
+        "GUID:e203c3ad7a7046548ca22a43fa4eb0de"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

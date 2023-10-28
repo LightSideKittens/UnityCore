@@ -1,0 +1,16 @@
+{
+    "name": "LSCore.IdGroupSystem",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e203c3ad7a7046548ca22a43fa4eb0de"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

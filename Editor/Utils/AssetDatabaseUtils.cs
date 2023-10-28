@@ -22,12 +22,12 @@ public static class AssetDatabaseUtils
 
     public static string GetFolderPath(this Object target)
     {
-        return System.IO.Path.GetDirectoryName(AssetDatabase.GetAssetPath(target));
+        return Path.GetDirectoryName(AssetDatabase.GetAssetPath(target));
     }
     
     public static string GetFolderName(this Object target)
     {
-        return System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(AssetDatabase.GetAssetPath(target)));
+        return Path.GetFileName(Path.GetDirectoryName(AssetDatabase.GetAssetPath(target)));
     }
     
     public static string[] FindAssets<T>(params string[] path) where T : Object
@@ -52,8 +52,8 @@ public static class AssetDatabaseUtils
         return list;
     }
 
-    public static T LoadAny<T>(params string[] paths) where T : Object
+    public static T LoadAny<T>(string filter = "", params string[] paths) where T : Object
     {
-        return LoadAllAssets<T>(paths: paths).FirstOrDefault();
+        return LoadAllAssets<T>(filter, paths).FirstOrDefault();
     }
 }

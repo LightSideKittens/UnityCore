@@ -1,0 +1,19 @@
+{
+    "name": "LSCore.LevelSystem",
+    "rootNamespace": "",
+    "references": [
+        "GUID:488fbb5f4bad8a94daedd0c8d1239e93",
+        "GUID:e203c3ad7a7046548ca22a43fa4eb0de",
+        "GUID:0383e17b21214350bace8de976684bdb",
+        "GUID:bb5ab3e5517faff4287376ae8f1fc9fc"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
