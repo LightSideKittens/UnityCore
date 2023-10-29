@@ -1,4 +1,5 @@
 ﻿using System;
+using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -6,16 +7,17 @@ using UnityEngine;
 [Serializable]
 public abstract class BasePrice
 {
-    public int value;
+    [CustomValueDrawer("Editor_Draw")] public int value;
     public abstract void Earn();
-    public abstract bool TrySpend();
+    public abstract void Spend(Func<bool> confirmation);
 
 #if UNITY_EDITOR
     private Texture2D icon;
-    private string test;
-    public virtual bool Editor_Draw()
+    [NonSerialized] public bool isControls;
+    protected abstract Texture2D Icon { get; }
+    protected virtual int Editor_Draw(int value, GUIContent _)
     {
-        icon ??= AssetDatabase.LoadAssetAtPath<Texture2D>(GetType().GetGenericArguments()[0].GetAttribute<IconAttribute>().path);
+        icon ??= Icon;
         EditorGUILayout.BeginHorizontal();
         var rect = EditorGUILayout.GetControlRect(GUILayout.Height(30));
         var boxRect = rect.TakeFromLeft(30);
@@ -24,26 +26,10 @@ public abstract class BasePrice
         {
             fontSize = 25
         };
-        EditorGUI.BeginChangeCheck();
         value = EditorGUI.IntField(rect, value, textAreaStyle);
-        var isChanged = EditorGUI.EndChangeCheck();
         EditorGUILayout.EndHorizontal();
-        return isChanged;
+        return value;
     }
-    
-    public override bool Equals(object obj)
-    {
-        if (obj is BasePrice drawer)
-        {
-            return Equals(drawer);
-        }
-
-        return false;
-    }
-        
-    public bool Equals(BasePrice other) => GetType() == other.GetType();
-
-    public override int GetHashCode() => GetType().GetHashCode();
     
 #endif
 }

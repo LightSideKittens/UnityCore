@@ -1,18 +1,18 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Id : ScriptableObject
+namespace LSCore
 {
-    public static implicit operator string(Id id) => id.name;
-    public override string ToString() => name;
+    public class Id : ScriptableObject
+    {
+        public static implicit operator string(Id id) => id.name;
+        public override string ToString() => name;
 
 #if UNITY_EDITOR
-    public HashSet<IdGroup> AllGroups
-    {
-        get
+        public HashSet<TIdGroup> GetAllGroups<TIdGroup>() where TIdGroup : IdGroup
         {
-            var set = new HashSet<IdGroup>();
-            var allGroups = AssetDatabaseUtils.LoadAllAssets<IdGroup>();
+            var set = new HashSet<TIdGroup>();
+            var allGroups = AssetDatabaseUtils.LoadAllAssets<TIdGroup>();
 
             foreach (var group in allGroups)
             {
@@ -24,6 +24,6 @@ public class Id : ScriptableObject
 
             return set;
         }
-    }
 #endif
+    }
 }

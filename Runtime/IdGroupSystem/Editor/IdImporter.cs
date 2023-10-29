@@ -1,23 +1,46 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using LSCore.Editor;
+using UnityEditor;
 using UnityEditor.AssetImporters;
 using UnityEngine;
 
-[ScriptedImporter(2, "id")]
-public class IdImporter : ScriptedImporter
+namespace LSCore
 {
-    public override void OnImportAsset(AssetImportContext ctx)
+    [ScriptedImporter(2, "id")]
+    [InitializeOnLoad]
+    public class IdImporter : ScriptedImporter
     {
-        var fileName = Path.GetFileNameWithoutExtension(ctx.assetPath);
-
-        if (IdGroup.AllIdNames.Contains(fileName))
+        private static HashSet<string> allIdNames = new();
+        
+        static IdImporter()
         {
-            Debug.LogError("[IdImporter] Id with the same name already exists");
-            return;
+            EditorApplication.update += RunOnceAfterProjectIsLoaded;
+        }
+
+        private static void RunOnceAfterProjectIsLoaded()
+        {
+            foreach (var id in AssetDatabaseUtils.LoadAllAssets<Id>())
+            {
+                allIdNames.Add(id);
+            }
+            
+            EditorApplication.update -= RunOnceAfterProjectIsLoaded;
         }
         
-        var idAsset = ScriptableObject.CreateInstance<Id>();
-        ctx.AddObjectToAsset("main", idAsset, LSIcons.Get("fire-icon"));
-        ctx.SetMainObject(idAsset);
+        public override void OnImportAsset(AssetImportContext ctx)
+        {
+            var fileName = Path.GetFileNameWithoutExtension(ctx.assetPath);
+
+            if (allIdNames.Contains(fileName))
+            {
+                Debug.LogError("[IdImporter] Id with the same name already exists");
+                return;
+            }
+
+            var idAsset = ScriptableObject.CreateInstance<Id>();
+            ctx.AddObjectToAsset("main", idAsset, LSIcons.Get("fire-icon"));
+            ctx.SetMainObject(idAsset);
+        }
     }
 }

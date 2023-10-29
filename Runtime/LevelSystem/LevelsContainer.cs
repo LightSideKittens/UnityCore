@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using LSCore;
 using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;

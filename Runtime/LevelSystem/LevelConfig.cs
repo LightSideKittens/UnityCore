@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using LSCore.LevelSystem;
 using Attributes;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
@@ -24,7 +23,9 @@ namespace LSCore.LevelSystem
         [ListDrawerSettings(HideAddButton = true, OnTitleBarGUI = "OtherUpgradesGui")]
         public List<GroupGameProps> OtherUpgrades { get; private set; } = new();
 
-        //[OdinSerialize] [HideReferenceObjectPicker] public Prices Prices { get; set; } = new();
+        [OdinSerialize] 
+        [HideReferenceObjectPicker]
+        public Prices Prices { get; set; } = new();
         
 #if UNITY_EDITOR
         public override string ToString() => name;
@@ -47,6 +48,11 @@ namespace LSCore.LevelSystem
             {
                 Container = AssetDatabaseUtils.LoadAny<LevelsContainer>(paths: this.GetFolderPath());
             }
+
+            Prices.isControls = true;
+            Prices.group = Container.Manager.CurrencyGroup;
+            Prices.Control();
+            
             OnGui();
         }
 
@@ -54,6 +60,7 @@ namespace LSCore.LevelSystem
         private void OnGui()
         {
             currentInspected = this;
+            Prices.Control();
         }
 #endif
         

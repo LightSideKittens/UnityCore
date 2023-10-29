@@ -11,8 +11,6 @@ namespace LSCore.LevelSystem
     public partial class LevelsManager
     {
         private IEnumerable<LevelsContainer> AvailableContainer => AssetDatabaseUtils.LoadAllAssets<LevelsContainer>(paths: folderPath);
-        private IEnumerable<IdGroup> AvailableGroups => AssetDatabaseUtils.LoadAllAssets<IdGroup>();
-        private IEnumerable<Id> AvailableIds => Groups.SelectMany(group => group.Ids);
         
         [field: NonSerialized] public HashSet<Id> Ids { get; private set; } = new();
         private string folderPath;
@@ -21,6 +19,7 @@ namespace LSCore.LevelSystem
         private void OnInit()
         {
             folderPath = this.GetFolderPath();
+            Ids ??= new HashSet<Id>();
             Ids.Clear();
             foreach (var level in AvailableContainer)
             {
@@ -40,7 +39,7 @@ namespace LSCore.LevelSystem
             
             public override void OnGUI(Rect rect)
             {
-                foreach (var id in manager.AvailableIds)
+                foreach (var id in manager.Group)
                 {
                     if (manager.Ids.Contains(id))
                     {

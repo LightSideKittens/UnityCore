@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using Sirenix.OdinInspector.Editor.Drawers;
 
-namespace Battle.Editor
+namespace LSCore
 {
     public class IdAttributeDrawer : BaseValueDropdownDrawer<IdAttribute>
     {

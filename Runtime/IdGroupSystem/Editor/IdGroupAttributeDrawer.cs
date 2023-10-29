@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
-using Sirenix.OdinInspector.Editor.Drawers;
+using UnityEngine;
 
-namespace Battle.Editor
+namespace LSCore
 {
     public class IdGroupAttributeDrawer : BaseValueDropdownDrawer<IdGroupAttribute>
     {
         protected override object GetValue()
         {
-            IEnumerable<IdGroup> groups = AssetDatabaseUtils.LoadAllAssets<IdGroup>();
+            IEnumerable<Object> groups = AssetDatabaseUtils.LoadAllAssets(Property.ValueEntry.TypeOfValue);
             return groups;
         }
     }

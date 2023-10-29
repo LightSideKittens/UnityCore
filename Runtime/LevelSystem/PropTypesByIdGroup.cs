@@ -1,75 +1,34 @@
 ﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
-using Sirenix.Serialization;
 
 namespace LSCore.LevelSystem
 {
-    public class PropTypesByIdGroup : SerializedScriptableObject
+    public class PropTypesByIdGroup : ValuesByIdGroup<LevelIdGroup, HashSet<Type>>
     {
-        [Serializable]
-        private class Data
-        {
-            [IdGroup]
-            public IdGroup group;
-            
-            [ValueDropdown("Types", IsUniqueList = true)]
-            [HideReferenceObjectPicker]
-            public HashSet<Type> types = new ();
-
-            private static IEnumerable<Type> Types => BaseGameProperty.AllPropertyTypes;
-        }
+        private static readonly SingleObject<PropTypesByIdGroup> singleObject = new();
+        public static PropTypesByIdGroup Instance => singleObject.Get(x => x.Init());
         
-        private static PropTypesByIdGroup instance;
-        public static PropTypesByIdGroup Instance
+        public static HashSet<Type> GetAllObjectsById(Id id)
         {
-            get
-            {
-                if (instance == null)
-                {
-                    instance = AssetDatabaseUtils.LoadAny<PropTypesByIdGroup>();
-                }
-
-                instance.Init();
-                return instance;
-            }
-        }
-
-        [OdinSerialize] 
-        [HideReferenceObjectPicker]
-        private List<Data> typesByGroup = new();
-        
-        public static Dictionary<IdGroup, HashSet<Type>> Types => Instance.types;
-        private Dictionary<IdGroup, HashSet<Type>> types = new();
-
-        public static HashSet<Type> GetAllTypesById(Id id)
-        {
-            var allIdGroups = id.AllGroups;
+            var allIdGroups = id.GetAllGroups<LevelIdGroup>();
             var set = new HashSet<Type>();
 
             foreach (var group in allIdGroups)
             {
-                if (Types.TryGetValue(group, out var types))
+                if (Instance.ByKey.TryGetValue(group, out var objects))
                 {
-                    set.UnionWith(types);
+                    set.UnionWith(objects);
                 }
             }
 
             return set;
         }
-        
-        
-        private void Init()
+
+        protected override void OnKeyProcessAttributes(List<Attribute> attributes)
         {
-            types.Clear();
-            
-            foreach (var data in typesByGroup)
-            {
-                types.Add(data.group, data.types);
-            }
-            
+            attributes.Add(new ValueDropdownAttribute("@LSCore.LevelSystem.BaseGameProperty.AllPropertyTypes"){IsUniqueList = true});
         }
     }
 }

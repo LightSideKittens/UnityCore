@@ -1,4 +1,10 @@
 ﻿using System;
+using Sirenix.Utilities;
+using UnityEngine;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace LSCore
 {
@@ -11,50 +17,45 @@ namespace LSCore
             {
                 BaseCurrency<T>.Earn(value);
             }
-    
-            public override bool TrySpend()
+
+            public override void Spend(Func<bool> confirmation)
             {
-                return BaseCurrency<T>.TrySpend(value);
+                BaseCurrency<T>.Spend(value, confirmation);
             }
-        }
+            
+#if UNITY_EDITOR
+            protected override Texture2D Icon => AssetDatabase.LoadAssetAtPath<Texture2D>(GetType().GetGenericArguments()[0].GetAttribute<IconAttribute>().path);
 
-        public static event Action Changing;
-        public static event Action Changed;
-        private static T instance = new T();
-
-        public static int Value
-        {
-            get => Currencies.GetValue<T>();
-            private set
+            public override bool Equals(object obj)
             {
-                var currentValue = Currencies.GetValue<T>();
-                if (currentValue != value)
+                if (obj is BasePrice drawer)
                 {
-                    Changing?.Invoke();
-                    Currencies.SetValue<T>(value);
-                    Changed?.Invoke();
+                    return Equals(drawer);
                 }
+
+                return false;
             }
+        
+            public bool Equals(BasePrice other) => GetType() == other.GetType();
+
+            public override int GetHashCode() => GetType().GetHashCode();
+#endif
         }
+        
+        private static T instance = new T();
+        private static string name = typeof(T).Name;
 
         public static void Earn(int value)
         {
-            Value += value;
+            Currencies.Earn(name, value);
         }
     
-        public static bool TrySpend(int value)
+        public static void Spend(int value, Func<bool> confirmation)
         {
-            var canSpend = value <= Value;
-    
-            if (canSpend)
-            {
-                Value -= value;
-            }
-    
-            return canSpend;
+            Currencies.Spend(name, value, confirmation);
         }
     
-        public static bool TryConvertTo<T1>(int fromUnitCount, int toUnitCount) where T1 : BaseCurrency<T1>, new()
+        /*public static bool TryConvertTo<T1>(int fromUnitCount, int toUnitCount) where T1 : BaseCurrency<T1>, new()
         {
             var isSpent = TrySpend(fromUnitCount);
     
@@ -64,7 +65,7 @@ namespace LSCore
             }
     
             return isSpent;
-        }
+        }*/
     }
 }
 

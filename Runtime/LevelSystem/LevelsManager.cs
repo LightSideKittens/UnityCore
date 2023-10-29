@@ -9,14 +9,19 @@ namespace LSCore.LevelSystem
     {
         public event Action LevelUpgraded;
 
-        [ValueDropdown("AvailableGroups", IsUniqueList = true)]
+        [IdGroup]
         [OdinSerialize]
         [HideReferenceObjectPicker]
-        public HashSet<IdGroup> Groups { get; private set; } = new();
+        public LevelIdGroup Group { get; private set; }
         
         [TableList, OdinSerialize, ValueDropdown("AvailableContainer", IsUniqueList = true)]
         [HideReferenceObjectPicker]
         private HashSet<LevelsContainer> levelsContainers = new();
+        
+        [IdGroup]
+        [OdinSerialize]
+        [HideReferenceObjectPicker]
+        public CurrencyIdGroup CurrencyGroup { get; private set; }
         
         private readonly Dictionary<string, List<LevelConfig>> levelsById = new();
 
@@ -33,26 +38,23 @@ namespace LSCore.LevelSystem
             RecomputeAllLevels();
         }
 
-        public bool CanUpgrade(Id id)
+        public bool CanUpgrade(Id id, out LevelConfig level)
         {
             UnlockedLevels.LevelById.TryGetValue(id, out var currentLevel);
             var levels = levelsById[id];
+            level = levels[currentLevel];
             return currentLevel < levels.Count;
         }
 
         public void UpgradeLevel(Id id)
         {
-            if (CanUpgrade(id))
+            if (CanUpgrade(id, out var level))
             {
-                var levelById = UnlockedLevels.LevelById;
-                levelById.TryGetValue(id, out var currentLevel);
-                var level = levelsById[id][currentLevel];
-                
                 level.Apply();
                 UnlockedLevels.UpgradeLevel(level);
                 
                 LevelUpgraded?.Invoke();
-                Burger.Log($"{id} Upgraded to {currentLevel}");
+                Burger.Log($"{id} Upgraded to {level.Id}");
             }
         }
 

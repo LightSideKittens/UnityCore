@@ -24,7 +24,7 @@ namespace LSCore.LevelSystem
         public static List<UpgradeData> IdByUpgradesOrder => Config.entityIdByUpgradesOrder;
         public static Dictionary<string, int> LevelById => Config.levelById;
         
-        public static void UpgradeLevel(LevelConfig levelConfig)
+        internal static void UpgradeLevel(LevelConfig levelConfig)
         {
             var data = (levelConfig.Id, levelConfig.Level);
             IdByUpgradesOrder.Add(new UpgradeData(){id = data.Id, level = data.Level});

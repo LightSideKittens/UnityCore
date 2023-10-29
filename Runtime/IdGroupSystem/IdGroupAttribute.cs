@@ -2,12 +2,15 @@
 using System.Diagnostics;
 using Sirenix.OdinInspector;
 
-[AttributeUsage(AttributeTargets.All)]
-[Conditional("UNITY_EDITOR")]
-public class IdGroupAttribute : ValueDropdownAttribute
+namespace LSCore
 {
-    public IdGroupAttribute(string name = "") : base(name)
+    [AttributeUsage(AttributeTargets.All)]
+    [Conditional("UNITY_EDITOR")]
+    public class IdGroupAttribute : ValueDropdownAttribute
     {
-        IsUniqueList = true;
+        public IdGroupAttribute() : base("")
+        {
+            IsUniqueList = true;
+        }
     }
 }

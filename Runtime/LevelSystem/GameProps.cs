@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace LSCore.LevelSystem
 {
@@ -32,7 +31,7 @@ namespace LSCore.LevelSystem
             }
         }
         
-        protected virtual HashSet<Type> PropTypes => PropTypesByIdGroup.GetAllTypesById(LevelConfig.currentInspected.Id);
+        protected virtual HashSet<Type> PropTypes => PropTypesByIdGroup.GetAllObjectsById(LevelConfig.currentInspected.Id);
 #endif
     }
 
@@ -41,15 +40,15 @@ namespace LSCore.LevelSystem
     {
         [field: SerializeField] 
         [field: ValueDropdown("Groups", IsUniqueList = true)] 
-        public IdGroup Group { get; private set; }
+        public LevelIdGroup Group { get; private set; }
 
 #if UNITY_EDITOR
-        private IEnumerable<IdGroup> Groups => LevelConfig.currentInspected.Id.AllGroups;
+        private IEnumerable<LevelIdGroup> Groups => LevelConfig.currentInspected.Id.GetAllGroups<LevelIdGroup>();
         protected override HashSet<Type> PropTypes
         {
             get
             {
-                if (Group != null && PropTypesByIdGroup.Types.TryGetValue(Group, out var types))
+                if (Group != null && PropTypesByIdGroup.Instance.ByKey.TryGetValue(Group, out var types))
                 {
                     return types;
                 }
