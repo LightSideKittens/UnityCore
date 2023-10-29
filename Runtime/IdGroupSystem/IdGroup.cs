@@ -1,11 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using UnityEditor;
 using UnityEngine;
 
+[assembly: InternalsVisibleTo("LSCore.IdGroupSystem.Editor")]
 public class IdGroup : SerializedScriptableObject
 {
     [OdinSerialize] [HideReferenceObjectPicker]
@@ -21,6 +24,7 @@ public class IdGroup : SerializedScriptableObject
     [SerializeField] [OnValueChanged("OnInit")] private bool includeAll;
     private FileSystemWatcher watcher;
     private SynchronizationContext context;
+    internal static HashSet<string> AllIdNames { get; private set; }
     
     [InitializeOnLoadMethod]
     private static void Init()
@@ -105,13 +109,18 @@ public class IdGroup : SerializedScriptableObject
         get
         {
             var path = this.GetFolderPath();
-            var allIds = AssetDatabaseUtils.LoadAllAssets<Id>(paths: path);
+            var allIds = AssetDatabaseUtils.LoadAllAssets<Id>(paths: path).ToHashSet();
             
-            
-            foreach (var id in allIds)
+            if (AllIdNames == null)
             {
-                yield return id;
+                AllIdNames = new HashSet<string>();
+                foreach (var id in  AssetDatabaseUtils.LoadAllAssets<Id>())
+                {
+                    AllIdNames.Add(id);
+                }
             }
+            
+            return allIds;
         }
     }
 #endif

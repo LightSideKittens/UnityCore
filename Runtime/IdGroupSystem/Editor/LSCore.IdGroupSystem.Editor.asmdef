@@ -1,5 +1,5 @@
 {
-    "name": "Battle.Editor",
+    "name": "LSCore.IdGroupSystem.Editor",
     "rootNamespace": "",
     "references": [
         "GUID:0383e17b21214350bace8de976684bdb",
