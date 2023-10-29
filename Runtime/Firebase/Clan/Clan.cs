@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Firebase.Firestore;
 using LSCore.Async;
 using LSCore.Firebase;
@@ -31,7 +30,7 @@ namespace LSCore
 
         public static LSTask Request(Action<LSTask> onAuthSuccess)
         {
-            return Request(User.WrapAction(onAuthSuccess));
+            return Request(LSTask.WrapAction(onAuthSuccess));
         }
 
         public static LSTask<T> Request<T>(Action<LSTask<T>> onSuccess)
@@ -51,8 +50,6 @@ namespace LSCore
                 });
             });
         }
-        
-        
 
         public static LSTask<Data> Create(string clanName)
         {

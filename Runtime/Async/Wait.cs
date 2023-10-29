@@ -11,49 +11,22 @@ namespace LSCore.Async
         public static Tween Run(in float time, TweenCallback update) =>  DOTween.Sequence().AppendInterval(time).OnUpdate(update);
         public static Tween Delay(in float time, TweenCallback onComplete) => DOTween.Sequence().AppendInterval(time).OnComplete(onComplete);
         public static Tween InfinityLoop(in float delay, TweenCallback onLoop) => DOTween.Sequence().AppendInterval(delay).SetLoops(-1).OnStepComplete(onLoop);
-        public static Coroutine Frames(in int count, Action onComplete) => World.RunCoroutine(WaitFrames(count, onComplete));
-        public static WaitTime Time(in float time) => new (time);
-
-        private static IEnumerator WaitFrames(int count, Action onComplete)
+        public static Tween Frames(int count, Action onComplete)
         {
-            for (int i = 0; i < count; i++)
+            var current = 0;
+            var tween = DOTween.Sequence().AppendInterval(float.MaxValue);
+            tween.OnUpdate(() =>
             {
-                yield return null;
-            }
-
-            onComplete();
-        }
-    }
-
-    public class WaitTime : CustomYieldInstruction
-    {
-        public float time;
-        public float current;
-        public float Remain => time - current;
-        public bool isRunning;
-        
-        internal WaitTime(float time)
-        {
-            this.time = time;
-        }
-
-        public override bool keepWaiting => current >= time;
-
-        public void Run()
-        {
-            World.RunCoroutine(Routine());
-        }
-        
-        private IEnumerator Routine()
-        {
-            if (isRunning) yield break;
-            isRunning = true;
+                if (current >= count)
+                {
+                    tween.Kill();
+                    onComplete();
+                }
+                
+                current++;
+            });
             
-            yield return this;
-            
-            time = 0;
-            current = 0;
-            isRunning = false;
+            return tween;
         }
     }
 }

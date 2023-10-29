@@ -5,8 +5,11 @@ namespace LSCore.Async
 {
     public struct LSTask
     {
-        internal TaskCompletionSource<object> source;
-        public Task Task { get; private set; }
+        public static Action<LSTask<object>> WrapAction(Action<LSTask> action) => task => action(task);
+        public static Action<LSTask<object>> WrapNullAction(Action<LSTask> action) => task => action?.Invoke(task);
+        
+        private TaskCompletionSource<object> source;
+        private Task Task { get; set; }
 
 #if DEBUG
         private string stackTrace;
@@ -43,9 +46,9 @@ namespace LSCore.Async
             task.success = source.TrySetResult;
             task.error = source.TrySetException;
             task.cancel = source.TrySetCanceled;
-#if DEBUG
+/*#if DEBUG
             task.stackTrace = UniTrace.Create();   
-#endif
+#endif*/
             return task;
         }
         
@@ -53,9 +56,9 @@ namespace LSCore.Async
         {
             var lsTask = new LSTask();
             lsTask.Task = task;
-#if DEBUG
+/*#if DEBUG
             lsTask.stackTrace = UniTrace.Create();   
-#endif
+#endif*/
             return lsTask;
         }
 
@@ -87,8 +90,8 @@ namespace LSCore.Async
 
     public struct LSTask<T>
     {
-        internal TaskCompletionSource<T> source;
-        public Task<T> Task { get; private set; }
+        private TaskCompletionSource<T> source;
+        private Task<T> Task { get; set; }
         public T Result => Task.Result;
         public bool IsSuccess => Task.IsCompletedSuccessfully;
         public bool IsCanceled => Task.IsCanceled;
@@ -111,9 +114,9 @@ namespace LSCore.Async
             var source = new TaskCompletionSource<T>();
             task.source = source;
             task.Task = source.Task;
-#if DEBUG
+/*#if DEBUG
             task.stackTrace = UniTrace.Create();   
-#endif
+#endif*/
             return task;
         }
         
@@ -121,9 +124,9 @@ namespace LSCore.Async
         {
             var lsTask = new LSTask<T>();
             lsTask.Task = task;
-#if DEBUG
+/*#if DEBUG
             lsTask.stackTrace = UniTrace.Create();   
-#endif
+#endif*/
             return lsTask;
         }
 

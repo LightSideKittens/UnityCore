@@ -136,7 +136,7 @@ namespace LSCore.Server
 
         public static LSTask Request(Action<LSTask> onAuthSuccess)
         {
-            return Request(WrapAction(onAuthSuccess));
+            return Request(LSTask.WrapAction(onAuthSuccess));
         }
         
         public static LSTask<T> Request<T>(Action<LSTask<T>> onAuthSuccess)
@@ -184,8 +184,5 @@ namespace LSCore.Server
         {
             return usersMainInfo.Document(userId);
         }
-        
-        public static Action<LSTask<object>> WrapAction(Action<LSTask> action) => task => action(task);
-        public static Action<LSTask<object>> WrapNullAction(Action<LSTask> action) => task => action?.Invoke(task);
     }
 }
