@@ -9,15 +9,15 @@ public abstract class BasePrice
 {
     [CustomValueDrawer("Editor_Draw")] public int value;
     public abstract void Earn();
-    public abstract void Spend(Func<bool> confirmation);
+    public abstract bool Spend(out Action spend);
 
 #if UNITY_EDITOR
     private Texture2D icon;
     [NonSerialized] public bool isControls;
-    protected abstract Texture2D Icon { get; }
+    protected abstract void SetIcon(ref Texture2D icon);
     protected virtual int Editor_Draw(int value, GUIContent _)
     {
-        icon ??= Icon;
+        SetIcon(ref icon);
         EditorGUILayout.BeginHorizontal();
         var rect = EditorGUILayout.GetControlRect(GUILayout.Height(30));
         var boxRect = rect.TakeFromLeft(30);

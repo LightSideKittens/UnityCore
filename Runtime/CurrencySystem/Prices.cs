@@ -32,6 +32,26 @@ namespace LSCore
                 price.Earn();
             }
         }
+        
+        public bool Spend(out Action spend)
+        {
+            var allCanSpend = true;
+            spend = delegate {  };
+            
+            foreach (var price in prices)
+            {
+                if (price.Spend(out var newSpend))
+                {
+                    spend += newSpend;
+                    continue;
+                }
+
+                allCanSpend = false;
+                break;
+            }
+
+            return allCanSpend;
+        }
 
 #if UNITY_EDITOR
         [NonSerialized] public bool isControls;

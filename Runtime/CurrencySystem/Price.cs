@@ -14,28 +14,25 @@ namespace LSCore
             Currencies.Earn(id, value);
         }
 
-        public override void Spend(Func<bool> confirmation)
+        public override bool Spend(out Action spend)
         {
-            Currencies.Spend(id, value, confirmation);
+            return Currencies.Spend(id, value, out spend);
         }
 
 #if UNITY_EDITOR
         public override string ToString() => id == null ? "Null" : id;
 
-        protected override Texture2D Icon
+        protected override void SetIcon(ref Texture2D icon)
         {
-            get
+            if (id == null || !IconsById.Instance.ByKey.TryGetValue(id, out var sprite))
             {
-                if (id == null || !IconsById.Instance.ByKey.TryGetValue(id, out var sprite))
-                {
-                    return EditorUtils.GetTextureByColor(Color.white);
-                }
-                
-                
-                return sprite.texture;
+                icon = EditorUtils.GetTextureByColor(Color.white);
+                return;
             }
+                
+            icon = sprite.texture;
         }
-        
+
         public override bool Equals(object obj)
         {
             if (obj is Price price)

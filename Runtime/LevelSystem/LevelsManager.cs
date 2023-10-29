@@ -50,11 +50,15 @@ namespace LSCore.LevelSystem
         {
             if (CanUpgrade(id, out var level))
             {
-                level.Apply();
-                UnlockedLevels.UpgradeLevel(level);
-                
-                LevelUpgraded?.Invoke();
-                Burger.Log($"{id} Upgraded to {level.Id}");
+                if (level.Prices.Spend(out var spend))
+                {
+                    level.Apply();
+                    UnlockedLevels.UpgradeLevel(level);
+
+                    spend();
+                    LevelUpgraded?.Invoke();
+                    Burger.Log($"{id} Upgraded to {level.Id}");
+                }
             }
         }
 

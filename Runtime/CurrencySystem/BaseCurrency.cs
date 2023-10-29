@@ -18,13 +18,16 @@ namespace LSCore
                 BaseCurrency<T>.Earn(value);
             }
 
-            public override void Spend(Func<bool> confirmation)
+            public override bool Spend(out Action spend)
             {
-                BaseCurrency<T>.Spend(value, confirmation);
+                return BaseCurrency<T>.Spend(value, out spend);
             }
             
 #if UNITY_EDITOR
-            protected override Texture2D Icon => AssetDatabase.LoadAssetAtPath<Texture2D>(GetType().GetGenericArguments()[0].GetAttribute<IconAttribute>().path);
+            protected override void SetIcon(ref Texture2D icon)
+            {
+                icon ??= AssetDatabase.LoadAssetAtPath<Texture2D>(GetType().GetGenericArguments()[0].GetAttribute<IconAttribute>().path);
+            }
 
             public override bool Equals(object obj)
             {
@@ -50,9 +53,9 @@ namespace LSCore
             Currencies.Earn(name, value);
         }
     
-        public static void Spend(int value, Func<bool> confirmation)
+        public static bool Spend(int value, out Action spend)
         {
-            Currencies.Spend(name, value, confirmation);
+            return Currencies.Spend(name, value, out spend);
         }
     
         /*public static bool TryConvertTo<T1>(int fromUnitCount, int toUnitCount) where T1 : BaseCurrency<T1>, new()

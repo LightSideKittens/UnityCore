@@ -25,16 +25,17 @@ namespace LSCore
             SetValue(name, value + GetValue(name));
         }
 
-        internal static void Spend(string name, int value, Func<bool> confirmation)
+        internal static bool Spend(string name, int value, out Action spend)
         {
             var currentValue = GetValue(name);
             if (currentValue >= value)
             {
-                if (confirmation())
-                {
-                    SetValue(name, currentValue - value);
-                }
+                spend = () => SetValue(name, currentValue - value);
+                return true;
             }
+
+            spend = null;
+            return false;
         }
     }
 }
