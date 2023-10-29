@@ -1,0 +1,17 @@
+{
+    "name": "LSCore.UniTask.Editor",
+    "rootNamespace": "",
+    "references": [
+        "LSCore.UniTask"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
