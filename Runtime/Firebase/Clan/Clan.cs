@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Firebase.Firestore;
 using LSCore.Async;
 using LSCore.Firebase;
@@ -165,7 +166,6 @@ namespace LSCore
         public static LSTask AssignRole(string userId, Role role)
         {
             var result = LSTask.Create();
-
             CheckRole(Role.Leader).OnComplete(roleTask =>
             {
                 if (IsFailedRoleTask(roleTask, result, "to assign the role."))

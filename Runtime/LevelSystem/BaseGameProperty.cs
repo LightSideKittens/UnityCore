@@ -4,7 +4,7 @@ using System.Reflection;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Battle.Data.GameProperty
+namespace LSCore.LevelSystem
 {
     [Serializable]
     public abstract class BaseGameProperty 

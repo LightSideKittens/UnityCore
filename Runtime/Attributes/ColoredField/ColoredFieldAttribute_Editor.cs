@@ -2,7 +2,7 @@
 using UnityEditor;
 using static EditorUtils;
 
-namespace GameCore.Attributes
+namespace Attributes
 {
     public partial class ColoredFieldAttribute
     {

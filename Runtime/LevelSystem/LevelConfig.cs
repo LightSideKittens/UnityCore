@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
-using Battle.Data.GameProperty;
-using GameCore.Attributes;
+using LSCore.LevelSystem;
+using Attributes;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 #if UNITY_EDITOR
@@ -8,7 +8,7 @@ using Sirenix.Utilities.Editor;
 #endif
 using UnityEngine;
 
-namespace Battle.Data
+namespace LSCore.LevelSystem
 {
     [CreateAssetMenu(fileName = nameof(LevelConfig), menuName = "Battle/" + nameof(LevelConfig), order = 0)]
     public class LevelConfig : SerializedScriptableObject
@@ -43,6 +43,10 @@ namespace Battle.Data
         [OnInspectorInit]
         private void OnInit()
         {
+            if (Container == null)
+            {
+                Container = AssetDatabaseUtils.LoadAny<LevelsContainer>(paths: this.GetFolderPath());
+            }
             OnGui();
         }
 

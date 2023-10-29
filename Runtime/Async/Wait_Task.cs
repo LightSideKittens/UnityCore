@@ -168,40 +168,28 @@ namespace LSCore.Async
     {
         public static LSTask OnComplete(this Task task, Action<LSTask> onComplete)
         {
+            LSTask lsTask = task;
             if (task.IsCompleted)
             {
-                onComplete(task);
-                return task;
+                onComplete(lsTask);
+                return lsTask;
             }
             
-            World.Updated += Update;
-            return task;
-
-            void Update()
-            {
-                if (!task.IsCompleted) return;
-                World.Updated -= Update;
-                onComplete(task);
-            }
+            task.GetAwaiter().OnCompleted(() => onComplete(lsTask));
+            return lsTask;
         }
         
         public static LSTask<T> OnComplete<T>(this Task<T> task, Action<LSTask<T>> onComplete)
         {
+            LSTask<T> lsTask = task;
             if (task.IsCompleted)
             {
-                onComplete(task);
-                return task;
+                onComplete(lsTask);
+                return lsTask;
             }
             
-            World.Updated += Update;
-            return task;
-
-            void Update()
-            {
-                if (!task.IsCompleted) return;
-                World.Updated -= Update;
-                onComplete(task);
-            }
+            task.GetAwaiter().OnCompleted(() => onComplete(lsTask));
+            return lsTask;
         }
         
         public static LSTask SetupOnComplete(this Task task, LSTask target)

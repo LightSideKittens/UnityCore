@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 
-namespace Battle.Data
+namespace LSCore.LevelSystem
 {
     public partial class LevelsManager : SerializedScriptableObject
     {

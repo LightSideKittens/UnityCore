@@ -1,4 +1,4 @@
-﻿using GameCore.Attributes;
+﻿using Attributes;
 using Sirenix.Utilities.Editor;
 using UnityEngine;
 

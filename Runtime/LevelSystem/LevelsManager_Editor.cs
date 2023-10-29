@@ -6,7 +6,7 @@ using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
 
-namespace Battle.Data
+namespace LSCore.LevelSystem
 {
     public partial class LevelsManager
     {

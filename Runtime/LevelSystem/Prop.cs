@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
-namespace Battle.Data.GameProperty
+namespace LSCore.LevelSystem
 {
     public class PropConverter : JsonConverter<Prop>
     {

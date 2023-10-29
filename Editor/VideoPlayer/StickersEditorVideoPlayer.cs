@@ -1,4 +1,4 @@
-﻿namespace GameCore.Common.EditorVideoPlayers
+﻿namespace LSCore.Editor
 {
     public class StickersEditorVideoPlayer : BaseEditorVideoPlayer<StickersEditorVideoPlayer>
     {

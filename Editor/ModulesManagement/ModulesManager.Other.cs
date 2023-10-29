@@ -1,5 +1,5 @@
 ﻿using System;
-using GameCore.Attributes;
+using Attributes;
 using JetBrains.Annotations;
 using UnityEngine;
 using static LSCore.Editor.Defines.Names;

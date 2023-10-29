@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Battle.Data;
+using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
 #if UNITY_EDITOR

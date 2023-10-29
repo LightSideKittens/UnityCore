@@ -1,5 +1,5 @@
 {
-    "name": "GameCore.Battle.Editor",
+    "name": "Battle.Editor",
     "rootNamespace": "",
     "references": [
         "GUID:0383e17b21214350bace8de976684bdb",

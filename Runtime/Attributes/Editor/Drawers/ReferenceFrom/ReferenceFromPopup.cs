@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LSCore.Extensions.Unity;
-using GameCore.Common.EditorVideoPlayers;
+using LSCore.Editor;
 using Sirenix.Utilities.Editor;
 using UnityEngine;
 using UnityEditor;

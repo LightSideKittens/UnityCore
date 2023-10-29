@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Battle.Data.GameProperty;
+using LSCore.LevelSystem;
 using LSCore.ConfigModule;
 using Newtonsoft.Json;
 
-namespace Battle.Data
+namespace LSCore.LevelSystem
 {
     public class EntiProps : BaseConfig<EntiProps>
     {
@@ -19,11 +19,6 @@ namespace Battle.Data
                 return this[typeof(T).Name].Value[FloatAndPercent.ValueKey];
             }
         }
-
-        protected override JsonSerializerSettings Settings { get; } = new()
-        {
-            Converters = new List<JsonConverter> { new PropConverter() },
-        };
         
         [JsonProperty("props")] private PropsByEntityId props = new();
 

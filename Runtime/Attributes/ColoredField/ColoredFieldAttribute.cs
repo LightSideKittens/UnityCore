@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Sirenix.OdinInspector;
 
-namespace GameCore.Attributes
+namespace Attributes
 {
     [Conditional("UNITY_EDITOR")]
     public partial class ColoredFieldAttribute : PropertyGroupAttribute

@@ -7,7 +7,7 @@ using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEngine;
 
-namespace Battle.Data.GameProperty
+namespace LSCore.LevelSystem
 {
     [Serializable]
     public abstract class GamePropertyDrawer

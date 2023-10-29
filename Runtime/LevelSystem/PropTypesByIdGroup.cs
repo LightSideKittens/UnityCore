@@ -1,11 +1,11 @@
 ﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using Battle.Data.GameProperty;
+using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 
-namespace Battle.Data
+namespace LSCore.LevelSystem
 {
     public class PropTypesByIdGroup : SerializedScriptableObject
     {
@@ -59,6 +59,8 @@ namespace Battle.Data
 
             return set;
         }
+        
+        
         private void Init()
         {
             types.Clear();
@@ -67,6 +69,7 @@ namespace Battle.Data
             {
                 types.Add(data.group, data.types);
             }
+            
         }
     }
 }

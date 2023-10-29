@@ -1,5 +1,5 @@
 ﻿using LSCore.Extensions;
-using GameCore.Attributes;
+using Attributes;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.OdinInspector.Editor.Drawers;

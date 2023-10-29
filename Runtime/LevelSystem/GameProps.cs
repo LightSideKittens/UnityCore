@@ -5,7 +5,7 @@ using Sirenix.Serialization;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-namespace Battle.Data.GameProperty
+namespace LSCore.LevelSystem
 {
     [Serializable]
     public class GameProps
