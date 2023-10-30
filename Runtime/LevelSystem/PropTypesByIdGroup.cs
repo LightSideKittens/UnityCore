@@ -26,7 +26,7 @@ namespace LSCore.LevelSystem
             return set;
         }
 
-        protected override void OnKeyProcessAttributes(List<Attribute> attributes)
+        protected override void OnValueProcessAttributes(List<Attribute> attributes)
         {
             attributes.Add(new ValueDropdownAttribute("@LSCore.LevelSystem.BaseGameProperty.AllPropertyTypes"){IsUniqueList = true});
         }

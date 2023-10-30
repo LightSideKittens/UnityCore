@@ -51,17 +51,12 @@ namespace LSCore
                                    | NotifyFilters.DirectoryName;
             watcher.Filter = "*.id";
             watcher.IncludeSubdirectories = true;
-            watcher.Created += OnCreated;
-            watcher.Deleted += OnDeleted;
+            watcher.Created += OnChanged;
+            watcher.Deleted += OnChanged;
             watcher.EnableRaisingEvents = true;
         }
 
-        private void OnCreated(object sender, FileSystemEventArgs e)
-        {
-            context.Post(_ => { Setup(); }, null);
-        }
-
-        private void OnDeleted(object sender, FileSystemEventArgs e)
+        private void OnChanged(object sender, FileSystemEventArgs e)
         {
             context.Post(_ => { Setup(); }, null);
         }
