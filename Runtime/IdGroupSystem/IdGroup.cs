@@ -86,7 +86,7 @@ namespace LSCore
 
             foreach (var id in ids)
             {
-                if (id == null)
+                if (id == null || !AllIds.Contains(id))
                 {
                     toRemove.Add(id);
                     EditorUtility.SetDirty(this);
@@ -97,7 +97,7 @@ namespace LSCore
             AssetDatabase.SaveAssetIfDirty(this);
         }
 
-        private IEnumerable<Id> AllIds
+        private HashSet<Id> AllIds
         {
             get
             {
