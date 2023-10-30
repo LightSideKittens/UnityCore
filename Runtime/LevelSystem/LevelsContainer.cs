@@ -4,6 +4,7 @@ using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
 #if UNITY_EDITOR
+using System.IO;
 using UnityEditor;
 #endif
 
@@ -41,11 +42,25 @@ public class LevelsContainer : SerializedScriptableObject
     [Button]
     private void CreateLevel()
     {
+        var number = 1;
+        var targetName = $"{Id}_{number}";
+        var paths = AssetDatabaseUtils.GetPaths<LevelConfig>(paths: path);
+        for (int i = 0; i < paths.Length; i++)
+        {
+            var levelName = Path.GetFileNameWithoutExtension(paths[i]);
+            
+            if (levelName != targetName)
+            {
+                break;
+            }
+            
+            targetName = $"{Id}_{++number}";
+        }
         var level = CreateInstance<LevelConfig>();
         level.Container = this;
-        level.name = $"{Id}_{AllLevels.Count + 1}";
-        AssetDatabase.CreateAsset(level, $"{path}/{level.name}.asset");
-        levels.Add(level);
+        level.name = targetName;
+        AssetDatabase.CreateAsset(level, $"{path}/{targetName}.asset");
+        levels.Insert(number - 1, level);
     }
     
 #endif

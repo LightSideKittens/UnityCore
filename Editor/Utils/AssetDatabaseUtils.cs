@@ -30,10 +30,33 @@ public static class AssetDatabaseUtils
     {
         return Path.GetFileName(Path.GetDirectoryName(AssetDatabase.GetAssetPath(target)));
     }
-    
-    public static string[] FindAssets<T>(params string[] path) where T : Object
+
+    public static string[] GetPaths<T>(string filter = "", params string[] paths) where T : Object
     {
-        return AssetDatabase.FindAssets("t:" + typeof(T).Name, path);
+        return GetPaths(typeof(T), filter, paths);
+    }
+
+    public static string[] GetPaths(Type type, string filter = "", params string[] paths)
+    {
+        var guids = GetGUIDs(type, filter, paths);
+        var result = new string[guids.Length];
+
+        for (int i = 0; i < guids.Length; i++)
+        {
+            result[i] = AssetDatabase.GUIDToAssetPath(guids[i]);
+        }
+
+        return result;
+    }
+    
+    public static string[] GetGUIDs<T>(string filter = "", params string[] paths) where T : Object
+    {
+        return GetGUIDs(typeof(T), filter, paths);
+    }
+    
+    public static string[] GetGUIDs(Type type, string filter = "", params string[] paths)
+    {
+        return AssetDatabase.FindAssets($"t:{type.Name} {filter}", paths);
     }
     
     public static List<T> LoadAllAssets<T>(string filter = "", params string[] paths) where T : Object
@@ -44,14 +67,11 @@ public static class AssetDatabaseUtils
     public static List<Object> LoadAllAssets(Type type, string filter = "", params string[] paths)
     {
         var list = new List<Object>();
-        var assetType = type.Name;
-        var guids = AssetDatabase.FindAssets($"t:{assetType} {filter}", paths);
+        var allPaths = GetPaths(type, filter, paths);
 
-        for (int i = 0; i < guids.Length; i++)
+        for (int i = 0; i < allPaths.Length; i++)
         {
-            var guid = guids[i];
-            var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-            var asset = AssetDatabase.LoadAssetAtPath(assetPath, type);
+            var asset = AssetDatabase.LoadAssetAtPath(allPaths[i], type);
             list.Add(asset);
         }
 
