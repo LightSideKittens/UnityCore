@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore.LevelSystem;
 using LSCore.ConfigModule;
 using Newtonsoft.Json;
 
 namespace LSCore.LevelSystem
 {
-    public class EntiProps : BaseConfig<EntiProps>
+    public partial class EntiProps : BaseConfig<EntiProps>
     {
+        static EntiProps() => RegisterMigrations();
+        static partial void RegisterMigrations();
+        
+        
         [Serializable]
         public class PropsByEntityId : Dictionary<string, Props> { }
 

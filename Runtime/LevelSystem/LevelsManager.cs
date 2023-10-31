@@ -42,8 +42,14 @@ namespace LSCore.LevelSystem
         {
             UnlockedLevels.LevelById.TryGetValue(id, out var currentLevel);
             var levels = levelsById[id];
-            level = levels[currentLevel];
-            return currentLevel < levels.Count;
+            if (currentLevel < levels.Count)
+            {
+                level = levels[currentLevel];
+                return true;
+            }
+
+            level = null;
+            return false;
         }
 
         public void UpgradeLevel(Id id)

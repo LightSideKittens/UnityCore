@@ -3,10 +3,10 @@
 #endif
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using LSCore.Extensions;
-using LSCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -38,6 +38,7 @@ namespace LSCore.ConfigModule
         protected virtual string FileName => $"{char.ToLower(typeof(T).Name[0])}{typeof(T).Name[1..]}";
         protected virtual string GeneralFolderName => SaveData;
         protected virtual string FolderName => string.Empty;
+        [JsonProperty(Order = -100)] private int version;
 
         [JsonIgnore] protected virtual JsonSerializerSettings Settings { get; } = new()
         {
@@ -124,7 +125,9 @@ namespace LSCore.ConfigModule
             
             if (string.IsNullOrEmpty(json) == false)
             {
-                Deserialize(json);
+                var token = JToken.Parse(json);
+                Migration.Migrate<T>(token);
+                Deserialize(token.ToString());
             }
             else
             {
