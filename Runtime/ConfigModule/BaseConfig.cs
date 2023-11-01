@@ -126,7 +126,7 @@ namespace LSCore.ConfigModule
             if (string.IsNullOrEmpty(json) == false)
             {
                 var token = JToken.Parse(json);
-                Migration.Migrate<T>(token);
+                Migration.Migrate(token);
                 Deserialize(token.ToString());
             }
             else
@@ -173,6 +173,37 @@ namespace LSCore.ConfigModule
             var json = JsonConvert.SerializeObject(config, config.Settings);
 
             return json;
+        }
+        
+        public class Migration : List<Action<JToken>>
+        {
+            private static Migration migration = new();
+
+            private Migration(){}
+            
+            public static Migration Create(Action<JToken> migrator)
+            {
+                migration = new Migration { migrator };
+                return migration;
+            }
+            
+            public new Migration Add(Action<JToken> migrator)
+            {
+                base.Add(migrator);
+                return this;
+            }
+
+            public static void Migrate(JToken token)
+            {
+                var version = token["version"].ToObject<int>();
+                int i;
+                for (i = version; i < migration.Count; i++)
+                {
+                    migration[i](token);
+                }
+
+                token["version"] = i;
+            }
         }
     }
 }

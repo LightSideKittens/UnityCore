@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using LSCore.ConfigModule;
 using Newtonsoft.Json.Linq;
 
 namespace LSCore.LevelSystem
@@ -9,11 +6,9 @@ namespace LSCore.LevelSystem
     {
         static partial void RegisterMigrations()
         {
-            var migrations = new List<Action<JToken>>();
-            migrations.Add(To1);
-            migrations.Add(To2);
-            
-            Migration.Register<EntiProps>(migrations);
+            Migration.Create(To1)
+                .Add(To2)
+                ;
         }
 
         private static void To1(JToken token)
