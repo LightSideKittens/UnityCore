@@ -38,7 +38,6 @@ namespace LSCore.ConfigModule
         protected virtual string FileName => $"{char.ToLower(typeof(T).Name[0])}{typeof(T).Name[1..]}";
         protected virtual string GeneralFolderName => SaveData;
         protected virtual string FolderName => string.Empty;
-        [JsonProperty(Order = -100)] private int version;
 
         [JsonIgnore] protected virtual JsonSerializerSettings Settings { get; } = new()
         {
@@ -195,14 +194,27 @@ namespace LSCore.ConfigModule
 
             public static void Migrate(JToken token)
             {
-                var version = token["version"].ToObject<int>();
-                int i;
-                for (i = version; i < migration.Count; i++)
+                if (migration.Count > 0)
                 {
-                    migration[i](token);
-                }
+                    int version;
+                    if (token["version"] == null)
+                    {
+                        token["version"] = 0;
+                        version = 0;
+                    }
+                    else
+                    {
+                        version = token["version"].ToObject<int>();
+                    }
+                    
+                    int i;
+                    for (i = version; i < migration.Count; i++)
+                    {
+                        migration[i](token);
+                    }
 
-                token["version"] = i;
+                    token["version"] = i;
+                }
             }
         }
     }

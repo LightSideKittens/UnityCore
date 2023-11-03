@@ -12,6 +12,7 @@ public class LSPropertyEditor
     private static FieldInfo getPropertyEditors;
     private static MethodInfo hoveredPropertyEditor;
     private static MethodInfo focusedPropertyEditor;
+    private static MethodInfo openPropertyEditor;
     private object window;
     private static LSPropertyEditor hovered = new();
 
@@ -34,7 +35,10 @@ public class LSPropertyEditor
         type = Type.GetType("UnityEditor.PropertyEditor,UnityEditor");
         getInspectedObject = type.GetMethod("GetInspectedObject", BindingFlags.Instance | BindingFlags.NonPublic);
         getPropertyEditors = type.GetField("m_AllPropertyEditors", BindingFlags.Static | BindingFlags.NonPublic);
-        
+
+        var types = new[] { typeof(Object), typeof(bool)};
+        openPropertyEditor = type.GetMethod("OpenPropertyEditor", BindingFlags.Static | BindingFlags.NonPublic, null, types, null);
+
         hoveredPropertyEditor = type.GetProperty("HoveredPropertyEditor", BindingFlags.Static | BindingFlags.NonPublic).GetGetMethod(true);
         focusedPropertyEditor = type.GetProperty("FocusedPropertyEditor", BindingFlags.Static | BindingFlags.NonPublic).GetGetMethod(true);
     }
@@ -56,6 +60,11 @@ public class LSPropertyEditor
     }
 
     public Object InspectedObject => (Object)getInspectedObject.Invoke(window, null);
+
+    public static void Show(Object obj, bool showWindow = true)
+    {
+        openPropertyEditor.Invoke(null, new object[]{obj, showWindow});
+    }
     
     public static bool TryGetInspectedObjectFromHoveredEditor<T>(out T obj) where T : Object
     {
