@@ -11,7 +11,7 @@ namespace LSCore
     public abstract class BaseCurrency<T> where T : BaseCurrency<T>, new()
     {
         [Serializable]
-        public class Price : BasePrice
+        public class Fund : BaseFund
         {
             public override void Earn()
             {
@@ -31,15 +31,15 @@ namespace LSCore
 
             public override bool Equals(object obj)
             {
-                if (obj is BasePrice drawer)
+                if (obj is BaseFund currency)
                 {
-                    return Equals(drawer);
+                    return Equals(currency);
                 }
 
                 return false;
             }
         
-            public bool Equals(BasePrice other) => GetType() == other.GetType();
+            public bool Equals(BaseFund other) => GetType() == other.GetType();
 
             public override int GetHashCode() => GetType().GetHashCode();
 #endif

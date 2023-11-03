@@ -177,7 +177,7 @@ namespace LSCore.Editor.BackupSystem
 
         private static void OnEdit()
         {
-            if (canSave)
+            if (canSave && !Application.isPlaying)
             {
                 if (!TrySaveCurrentPrefab())
                 {

@@ -56,7 +56,7 @@ namespace LSCore.LevelSystem
         {
             if (CanUpgrade(id, out var level))
             {
-                if (level.Prices.Spend(out var spend))
+                if (level.Funds.Spend(out var spend))
                 {
                     level.Apply();
                     UnlockedLevels.UpgradeLevel(level);

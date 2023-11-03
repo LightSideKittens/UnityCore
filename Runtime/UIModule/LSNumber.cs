@@ -7,6 +7,7 @@ namespace LSCore
     public class LSNumber : LSText
     {
         [field: SerializeField] public int Number { get; private set; }
+        public static implicit operator int(LSNumber number) => number.Number;
     }
     
 #if UNITY_EDITOR

@@ -1,0 +1,4 @@
+﻿{
+  "name": "LSCore.Shop",
+  "references":[ "GUID:b1948212cf454ef6887ce1d3694c0f89", "GUID:d426b638445cc2f428ed8ba7c1325767", "GUID:839d192ed89f40669b5a074d3bae11e0" ]
+}

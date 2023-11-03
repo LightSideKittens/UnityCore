@@ -5,9 +5,11 @@ using Newtonsoft.Json;
 
 namespace LSCore
 {
-    internal class Currencies : BaseConfig<Currencies>
+    public class Currencies : BaseConfig<Currencies>
     {
         [JsonProperty] private Dictionary<string, int> currencies = new();
+        internal static readonly Dictionary<string, Action<int>> onChangedActions = new();
+        
         internal static int GetValue(string name)
         {
             var currencies = Config.currencies;
@@ -18,7 +20,11 @@ namespace LSCore
             return value;
         }
 
-        internal static int SetValue(string name, int value) => Config.currencies[name] = value;
+        internal static void SetValue(string name, int value)
+        { 
+            Config.currencies[name] = value;
+            TryInvokeOnChanged(name, value);
+        }
 
         internal static void Earn(string name, int value)
         {
@@ -36,6 +42,14 @@ namespace LSCore
 
             spend = null;
             return false;
+        }
+        
+        private static void TryInvokeOnChanged(string name, int value)
+        {
+            if (onChangedActions.TryGetValue(name, out var action))
+            {
+                action(value);
+            }
         }
     }
 }

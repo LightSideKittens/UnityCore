@@ -1,14 +1,11 @@
 ﻿using System;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace LSCore
 {
     [Serializable]
-    public class Price : BasePrice
+    public class Fund : BaseFund
     {
-        [HideIf("isControls")] public Id id;
-        
         public override void Earn()
         {
             Currencies.Earn(id, value);
@@ -24,26 +21,26 @@ namespace LSCore
 
         protected override void SetIcon(ref Texture2D icon)
         {
-            if (id == null || !IconsById.Instance.ByKey.TryGetValue(id, out var sprite))
+            if (IconsById.Instance.TryGetMainIcon(id, out var sprite))
             {
-                icon = EditorUtils.GetTextureByColor(Color.white);
+                icon = sprite.texture;
                 return;
             }
-                
-            icon = sprite.texture;
+            
+            icon = EditorUtils.GetTextureByColor(Color.white);
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is Price price)
+            if (obj is Fund fund)
             {
-                return Equals(price);
+                return Equals(fund);
             }
 
             return false;
         }
         
-        public bool Equals(Price other) => id == other.id;
+        public bool Equals(Fund other) => id == other.id;
 
         public override int GetHashCode() => id.GetHashCode();
 #endif

@@ -1,12 +1,14 @@
 ﻿using System;
+using LSCore;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
 
 [Serializable]
-public abstract class BasePrice
+public abstract class BaseFund
 {
+    [HideIf("isControls")] public Id id;
     [CustomValueDrawer("Editor_Draw")] public int value;
     public abstract void Earn();
     public abstract bool Spend(out Action spend);

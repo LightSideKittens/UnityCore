@@ -25,7 +25,7 @@ namespace LSCore.LevelSystem
 
         [OdinSerialize] 
         [HideReferenceObjectPicker]
-        public Prices Prices { get; set; } = new();
+        public Funds Funds { get; set; } = new();
         
 #if UNITY_EDITOR
         public override string ToString() => name;
@@ -49,9 +49,9 @@ namespace LSCore.LevelSystem
                 Container = AssetDatabaseUtils.LoadAny<LevelsContainer>(paths: this.GetFolderPath());
             }
 
-            Prices.isControls = true;
-            Prices.group = Container.Manager.CurrencyGroup;
-            Prices.Control();
+            Funds.isControls = true;
+            Funds.group = Container.Manager.CurrencyGroup;
+            Funds.Control();
             
             OnGui();
         }
@@ -60,7 +60,7 @@ namespace LSCore.LevelSystem
         private void OnGui()
         {
             currentInspected = this;
-            Prices.Control();
+            Funds.Control();
         }
 #endif
         
