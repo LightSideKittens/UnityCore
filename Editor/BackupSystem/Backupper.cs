@@ -201,7 +201,6 @@ namespace LSCore.Editor.BackupSystem
                 return;
             }
             canSave = true;
-            Debug.Log("Can Save");
             CheckForCanSave();
         }
         
@@ -216,7 +215,6 @@ namespace LSCore.Editor.BackupSystem
                 Linker.PathByName[fileName] = scene.path.AssetsPathToFull();
                 ConfigUtils.Save<Linker>();
                 Window.TryAdd(backupPath);
-                Debug.Log($"Current scene saved to: {Linker.PathByName[fileName]}");
             }
         }
 
@@ -248,7 +246,6 @@ namespace LSCore.Editor.BackupSystem
                 Linker.PathByName[fileName] = prefabStage.assetPath.AssetsPathToFull();
                 ConfigUtils.Save<Linker>();
                 Window.TryAdd(backupPath);
-                Debug.Log($"Current prefab saved to: {Linker.PathByName[fileName]}");
                 return true;
             }
 
