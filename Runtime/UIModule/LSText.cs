@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 #if UNITY_EDITOR
+using System.Text.RegularExpressions;
 using TMPro.EditorUtilities;
 using UnityEditor;
 #endif

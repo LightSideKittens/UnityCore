@@ -25,6 +25,12 @@ MonoBehaviour:
   maxBackupsCount: 5
   backups:
   - name: Launcher
+    dateTime: 03-05-19.unity
+    assetPath: C:/C-UnityProjects/LightGames/BeatRoyale/Assets/Scenes/Launcher.unity
+  - name: Launcher
+    dateTime: 03-05-17.unity
+    assetPath: C:/C-UnityProjects/LightGames/BeatRoyale/Assets/Scenes/Launcher.unity
+  - name: Launcher
     dateTime: 03-05-11.unity
     assetPath: C:/C-UnityProjects/LightGames/BeatRoyale/Assets/Scenes/Launcher.unity
   - name: Initializer
