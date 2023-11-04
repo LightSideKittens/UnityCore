@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using ICSharpCode.SharpZipLib.GZip;
@@ -17,10 +18,10 @@ namespace LSCore.ConfigModule
         [Serializable]
         private class Data
         {
-            [DisplayAsString] public string name;
+            [DisplayAsString(18)] public string name;
             [NonSerialized] public string path;
             
-            [Button]
+            [Button(25)]
             [TableColumnWidth(100, false)]
             public void Apply()
             {
@@ -47,7 +48,7 @@ namespace LSCore.ConfigModule
                 AssetDatabase.Refresh();
             }
 
-            [Button("X")]
+            [Button("X", 25)]
             [TableColumnWidth(30, false)]
             public void Delete()
             {
@@ -83,7 +84,7 @@ namespace LSCore.ConfigModule
             data.Add(new Data(){name = Regex.Replace(Path.GetFileName(filePath), @"\..+", string.Empty), path = filePath});
         }
 
-        [Button]
+        [Button(40)]
         private void Save()
         {
             var directoryPath = Path.Combine("Assets", FolderNames.Configs, FolderNames.SaveData);
@@ -110,6 +111,16 @@ namespace LSCore.ConfigModule
 
             Add(tarGzFileName);
             File.Delete(tarFileName);
+        }
+
+        [Button(30)]
+        private void DeleteCurrent()
+        {
+            var path = Path.Combine("Assets", FolderNames.Configs, FolderNames.SaveData);
+            var directories = Directory.GetDirectories(path);
+            var files = Directory.GetFiles(path);
+            AssetDatabase.DeleteAssets(directories.Concat(files).ToArray(), new List<string>());
+            AssetDatabase.Refresh();
         }
 
         private static void AddDirectoryFilesToTar(TarArchive tarArchive, DirectoryInfo directoryInfo)
