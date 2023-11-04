@@ -8,5 +8,6 @@ namespace LSCore.ConfigModule
         public const string DefaultSaveData = nameof(DefaultSaveData) + "/" + nameof(Resources);
         public const string SaveData = nameof(SaveData);
         public const string EditorConfigs = nameof(EditorConfigs);
+        public const string Debug = nameof(Debug);
     }
 }

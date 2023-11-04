@@ -60,7 +60,7 @@ namespace LSCore
         
         public bool Spend(out Action spend)
         {
-            var transactions = new Transactions();
+            var transactions = new Transactions(true);
             
             foreach (var funds in funds)
             {
@@ -88,7 +88,8 @@ namespace LSCore
             {
                 awailableFunds ??= new ValueDropdownList<Fund>();
                 awailableFunds.Clear();
-
+                if (group == null) return awailableFunds;
+                
                 foreach (var id in group)
                 {
                     awailableFunds.Add(id, new Fund {id = id});

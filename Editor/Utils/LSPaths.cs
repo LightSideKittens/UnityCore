@@ -14,6 +14,7 @@ public static class LSPaths
     {
         public const string Root = "LSCore";
         public const string Tools = Root + "/Tools";
+        public const string Configs = Root + "/Configs";
     }
 
     public static class Windows
@@ -23,6 +24,7 @@ public static class LSPaths
         public const string YamlEditor = Root + "/Yaml Editor";
         public const string ThemeEditor = Root + "/Theme Editor";
         public const string Backuper = Root + "/Backuper";
+        public const string Profiles = Root + "/Profiles";
     }
     
         

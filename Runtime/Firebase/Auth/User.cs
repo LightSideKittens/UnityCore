@@ -21,6 +21,8 @@ namespace LSCore.Server
         
         [JsonProperty] private string nickname;
         [JsonProperty] private string countryCode;
+        [JsonProperty] private long lastEntry;
+        
         public static string Nickname => Config.nickname;
         public static string CountryCode => Config.countryCode;
         public static new User Config => BaseConfig<User>.Config;
@@ -55,8 +57,9 @@ namespace LSCore.Server
 
 #if UNITY_EDITOR
         [MenuItem(LSPaths.MenuItem.Root + "/Firebase/SignOut")]
-        private static void SignOut() => Auth.SignOut();
 #endif
+        public static void SignOut() => Auth.SignOut();
+
 
         public static LSTask SignIn()
         {
@@ -183,6 +186,11 @@ namespace LSCore.Server
         public static DocumentReference GetMainInfoDoc(string userId)
         {
             return usersMainInfo.Document(userId);
+        }
+
+        protected override void OnSaving()
+        {
+            lastEntry = DateTime.UtcNow.Ticks;
         }
     }
 }

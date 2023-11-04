@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using LSCore.ConfigModule;
 using Newtonsoft.Json;
 using Sirenix.OdinInspector;
-using Sirenix.Serialization;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;

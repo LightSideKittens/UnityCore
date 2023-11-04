@@ -4,6 +4,6 @@ namespace LSCore
 {
     public class BaseDebugData<T> : BaseConfig<T> where T : BaseDebugData<T>, new()
     {
-        protected override string FolderName => "Debug";
+        protected override string GeneralFolderName => FolderNames.Debug;
     }
 }
