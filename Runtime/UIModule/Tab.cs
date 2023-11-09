@@ -30,9 +30,11 @@ namespace LSCore
             {
                 prevTab = data.tabPrefab;
                 data.Init(this);
-                prevTab.Init(data.reference);
+                prevTab.Init(data.reference, Parent);
                 prevTab.OnOpen(OnOpen);
                 tabs.Add(data, prevTab);
+                prevTab = null;
+                Open(data);
             }
 
             public Tab Open(Data data)
@@ -79,8 +81,9 @@ namespace LSCore
             
             internal Tab CreateTab(Controller controller)
             {
-                var tab = Instantiate(tabPrefab, controller.Parent);
-                tab.Init(reference);
+                var parent = controller.Parent;
+                var tab = Instantiate(tabPrefab, parent);
+                tab.Init(reference, parent);
                 
                 return tab;
             }
@@ -107,10 +110,10 @@ namespace LSCore
         private RectTransform reference;
         private Action<Tab> opened;
 
-        private void Init(RectTransform reference)
+        private void Init(RectTransform reference, RectTransform parent)
         {
             this.reference = reference;
-            parent = transform.parent as RectTransform;
+            this.parent = parent;
             group = GetComponent<CanvasGroup>();
         }
 

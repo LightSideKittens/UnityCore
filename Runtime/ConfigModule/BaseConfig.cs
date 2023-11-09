@@ -51,18 +51,35 @@ namespace LSCore.ConfigModule
                 [Conditional("UNITY_EDITOR")]
                 static void Editor_Init(string name)
                 {
-                    World.Destroyed += () => map[name].Save();
-                    World.Destroyed += () => LoadOnNextAccess(name);
+                    World.Destroyed += OnDestoy;
+                    return;
+
+                    void OnDestoy()
+                    {
+                        World.Destroyed -= OnDestoy;
+                        map[name].Save();
+                        LoadOnNextAccess(name);
+                    }
                 }
 
                 [Conditional("RUNTIME")]
                 static void Runtime_Init(string name)
                 {
-                    World.ApplicationPaused += () => map[name].Save();
+                    World.ApplicationPaused += OnPause;
+
+                    void OnPause()
+                    {
+                        World.ApplicationPaused -= OnPause;
+                        map[name].Save();
+                    }
                 }
             }
             
-            public static void LoadOnNextAccess(string name) => map.Remove(name);
+            public static void LoadOnNextAccess(string name)
+            {
+                map[name].OnDestroy();
+                map.Remove(name);
+            }
         }
         
         protected static string DataPath
@@ -99,6 +116,7 @@ namespace LSCore.ConfigModule
         protected virtual void OnLoaded(){}
         protected virtual void OnSaving(){}
         protected virtual void OnSaved(){}
+        protected virtual void OnDestroy(){}
 
         protected string GetJsonText()
         {
@@ -199,7 +217,7 @@ namespace LSCore.ConfigModule
         public static T Config => getter();
 
         protected override string FileName => $"{char.ToLower(typeof(T).Name[0])}{typeof(T).Name[1..]}";
-        
+        protected override void OnDestroy() => getter = Get;
         private static T Get()
         {
             getter = GetInstance;
