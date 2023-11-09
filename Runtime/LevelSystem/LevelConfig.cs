@@ -62,7 +62,7 @@ namespace LSCore.LevelSystem
 
         public void Apply()
         {
-            var entiProps = EntiProps.ByName;
+            var entiProps = EntiProps.Get(Container.Manager.Group.name).ByName;
             var allPropsById = new Dictionary<string, HashSet<string>>();
             var allIds = new HashSet<Id> {Id};
             

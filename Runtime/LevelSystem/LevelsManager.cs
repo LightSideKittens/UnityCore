@@ -40,7 +40,7 @@ namespace LSCore.LevelSystem
 
         public bool CanUpgrade(Id id, out LevelConfig level)
         {
-            UnlockedLevels.LevelById.TryGetValue(id, out var currentLevel);
+            UnlockedLevels.TryGetLevel(id, out var currentLevel);
             var levels = levelsById[id];
             if (currentLevel < levels.Count)
             {
@@ -57,7 +57,7 @@ namespace LSCore.LevelSystem
             if (CanUpgrade(id, out var level))
             {
                 level.Apply();
-                UnlockedLevels.UpgradeLevel(level);
+                UnlockedLevels.UpgradeLevel(Group, level);
                 
                 LevelUpgraded?.Invoke();
                 Burger.Log($"{id} Upgraded to {level.Id}");
@@ -70,15 +70,16 @@ namespace LSCore.LevelSystem
         private void RecomputeAllLevels()
         {
             Burger.Log($"[{nameof(LevelsManager)}] RecomputeAllLevels");
-            EntiProps.Clear();
-
-            var entityIds = UnlockedLevels.IdByUpgradesOrder;
+            EntiProps.Get(Group.name).Clear();
             
-            for (int i = 0; i < entityIds.Count; i++)
+            if (UnlockedLevels.TryGetUpgrades(Group, out var upgrades))
             {
-                var data = entityIds[i];
-                var level = levelsById[data.id][data.level-1];
-                level.Apply();
+                for (int i = 0; i < upgrades.Count; i++)
+                {
+                    var data = upgrades[i];
+                    var level = levelsById[data.id][data.level-1];
+                    level.Apply();
+                }
             }
         }
     }

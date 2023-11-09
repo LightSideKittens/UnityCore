@@ -37,7 +37,7 @@ namespace LSCore
                     if (GUILayout.Button(environment + (isSelected ? " ❤️" : "")))
                     {
                         Environment = environment;
-                        Save();
+                        Config.Save();
                         ToolbarExtender.Repaint();
                     }
                 }

@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace LSCore.LevelSystem
 {
-    public partial class EntiProps : BaseConfig<EntiProps>
+    public partial class EntiProps : Config<EntiProps>
     {
         static EntiProps() => RegisterMigrations();
         static partial void RegisterMigrations();
@@ -25,8 +25,8 @@ namespace LSCore.LevelSystem
         
         [JsonProperty("props")] private PropsByEntityId props = new();
 
-        public static PropsByEntityId ByName => Config.props;
-        public static Props GetProps(string entityId) => Config.props[entityId];
-        public static void Clear() => Config.props.Clear();
+        public PropsByEntityId ByName => props;
+        public Props GetProps(string entityId) => props[entityId];
+        public void Clear() => props.Clear();
     }
 }

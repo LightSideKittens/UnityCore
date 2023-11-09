@@ -19,16 +19,32 @@ namespace LSCore.LevelSystem
             }
         }
         
-        [JsonProperty("upgrades")] private List<UpgradeData> entityIdByUpgradesOrder = new();
+        [JsonProperty("upgrades")] private Dictionary<string, List<UpgradeData>> upgradesByGroupName = new();
         [JsonProperty("entitiesLevel")] private Dictionary<string, int> levelById = new();
-        public static List<UpgradeData> IdByUpgradesOrder => Config.entityIdByUpgradesOrder;
-        public static Dictionary<string, int> LevelById => Config.levelById;
         
-        internal static void UpgradeLevel(LevelConfig levelConfig)
+        public static bool TryGetUpgrades(LevelIdGroup group, out List<UpgradeData> upgrades)
+        {
+            return Config.upgradesByGroupName.TryGetValue(group.name, out upgrades);
+        }
+        
+        public static bool TryGetLevel(Id id, out int level)
+        {
+            return Config.levelById.TryGetValue(id, out level);
+        }
+        
+        internal static void UpgradeLevel(LevelIdGroup group, LevelConfig levelConfig)
         {
             var data = (levelConfig.Id, levelConfig.Level);
-            IdByUpgradesOrder.Add(new UpgradeData(){id = data.Id, level = data.Level});
-            LevelById[data.Id] = data.Level;
+            
+            if (!TryGetUpgrades(group, out var upgrades))
+            {
+                upgrades = new List<UpgradeData>();
+                Config.upgradesByGroupName.Add(group.name, upgrades);
+            }
+            
+            upgrades.Add(new UpgradeData(){id = data.Id, level = data.Level});
+            
+            Config.levelById[data.Id] = data.Level;
         }
         
         private class UpgradeDataConverter : JsonConverter<UpgradeData>

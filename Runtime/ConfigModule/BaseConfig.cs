@@ -15,11 +15,57 @@ using static LSCore.ConfigModule.FolderNames;
 namespace LSCore.ConfigModule
 {
     [Serializable]
-    public abstract class BaseConfig<T> where T : BaseConfig<T>, new()
+    public abstract class BaseConfig
     {
-        public static T Config => getter();
+        protected static class ByName<T> where T : BaseConfig, new()
+        {
+            private static readonly Dictionary<string, T> map = new();
+            
+            public static T Get(string name, bool isAutoSave = true)
+            {
+                if (map.TryGetValue(name, out var config)) return config;
+                
+                config = new T();
+                
+                if (string.IsNullOrEmpty(name))
+                {
+                    name = config.FileName;
+                }
+                else
+                {
+                    config.FileName = name;
+                }
+                
+                if (isAutoSave) SetupAutoSave(name);
+                config.Load();
+                map.Add(name, config);
 
-        private static string DataPath
+                return config;
+            }
+            
+            private static void SetupAutoSave(string name)
+            {
+                Editor_Init(name);
+                Runtime_Init(name);
+            
+                [Conditional("UNITY_EDITOR")]
+                static void Editor_Init(string name)
+                {
+                    World.Destroyed += () => map[name].Save();
+                    World.Destroyed += () => LoadOnNextAccess(name);
+                }
+
+                [Conditional("RUNTIME")]
+                static void Runtime_Init(string name)
+                {
+                    World.ApplicationPaused += () => map[name].Save();
+                }
+            }
+            
+            public static void LoadOnNextAccess(string name) => map.Remove(name);
+        }
+        
+        protected static string DataPath
         {
             get
             {
@@ -33,9 +79,9 @@ namespace LSCore.ConfigModule
         
         protected string FullFileName => Path.Combine(FolderPath, $"{FileName}.{Ext}");
         protected string FolderPath => Path.Combine(DataPath, Configs, GeneralFolderName, FolderName);
-
+        
         protected virtual string Ext => FileExtensions.Json;
-        protected virtual string FileName => $"{char.ToLower(typeof(T).Name[0])}{typeof(T).Name[1..]}";
+        protected virtual string FileName { get; private set; }
         protected virtual string GeneralFolderName => SaveData;
         protected virtual string FolderName => string.Empty;
         
@@ -47,55 +93,6 @@ namespace LSCore.ConfigModule
         {
             ContractResolver = UnityJsonContractResolver.Instance
         };
-        
-        protected static T instance;
-        private static Func<T> getter;
-
-        static BaseConfig()
-        {
-            LoadOnNextAccess();
-
-            var needInit = !typeof(T).IsSubclassOfRawGeneric(typeof(BaseResourcesConfig<>));
-            
-            if (needInit)
-            {
-                Init();
-            }
-        }
-
-        private static void Init()
-        {
-            Editor_Init();
-            Runtime_Init();
-            
-            [Conditional("UNITY_EDITOR")]
-            static void Editor_Init()
-            {
-                World.Destroyed += Save;
-                World.Destroyed += LoadOnNextAccess;
-            }
-
-            [Conditional("RUNTIME")]
-            static void Runtime_Init()
-            {
-                World.ApplicationPaused += Save;
-            }
-        }
-
-        public static void LoadOnNextAccess()
-        {
-            getter = StaticConstructor;
-        }
-
-        private static T StaticConstructor()
-        {
-            instance = new T();
-            Load();
-
-            return instance;
-        }
-        
-        private static T GetInstance() => instance;
 
         protected virtual void SetDefault(){}
         protected virtual void OnLoading(){}
@@ -103,9 +100,9 @@ namespace LSCore.ConfigModule
         protected virtual void OnSaving(){}
         protected virtual void OnSaved(){}
 
-        private static string GetJsonText()
+        protected string GetJsonText()
         {
-            var fullFileName = instance.FullFileName;
+            var fullFileName = FullFileName;
             string json;
 
             if (File.Exists(fullFileName))
@@ -114,97 +111,129 @@ namespace LSCore.ConfigModule
             }
             else
             {
-                json = Resources.Load<TextAsset>(Path.Combine(instance.FolderName, instance.FileName))?.text;
+                json = Resources.Load<TextAsset>(Path.Combine(FolderName, FileName))?.text;
             }
 
             return json;
         }
         
-        protected static T Load()
+        protected internal BaseConfig Load()
         {
-            instance.OnLoading();
-
+            OnLoading();
+            
             var json = GetJsonText();
             
             if (string.IsNullOrEmpty(json) == false)
             {
                 var token = JToken.Parse(json);
-                Migration.Migrate(token);
+                Migrations.Migrate(FileName, token);
                 Deserialize(token.ToString());
             }
             else
             {
-                instance.SetDefault();
+                SetDefault();
             }
             
-            getter = GetInstance;
-            instance.OnLoaded();
-            return instance;
+            OnLoaded();
+            return this;
         }
         
-        protected internal static void Save()
+        protected internal void Save()
         {
-            instance.OnSaving();
-            var folderPath = instance.FolderPath;
+            OnSaving();
+            var folderPath = FolderPath;
             
             if (Directory.Exists(folderPath) == false)
             {
                 Directory.CreateDirectory(folderPath);
             }
 
-            var json = Serialize(instance);
+            var json = Serialize();
             
-            File.WriteAllText(instance.FullFileName,json);
-            instance.OnSaved();
+            File.WriteAllText(FullFileName,json); 
+            OnSaved();
         }
 
-        internal static JToken GetJToken()
+        internal JToken GetJToken()
         {
             var json = GetJsonText();
             return JToken.Parse(json);
         }
 
-        private static void Deserialize(string json)
+        private void Deserialize(string json)
         {
-            Log($"[{typeof(T).Name}] Loaded (Deserialized)");
-            JsonConvert.PopulateObject(json, instance, instance.Settings);
+            Log($"[{FileName}] Loaded (Deserialized)");
+            JsonConvert.PopulateObject(json, this, Settings);
         }
 
-        private static string Serialize(T config)
+        private string Serialize()
         {
-            Log($"[{typeof(T).Name}] Saved (Serialized)");
-            var json = JsonConvert.SerializeObject(config, config.Settings);
+            Log($"[{FileName}] Saved (Serialized)");
+            var json = JsonConvert.SerializeObject(this, Settings);
 
             return json;
         }
 
         [Conditional("DEBUG")]
-        private static void Log(string message)
+        private void Log(string message)
         {
 #if UNITY_EDITOR
-            if (instance.LogEnabled)
+            if (LogEnabled)
 #endif
                 Burger.Log(message);
         }
-        public class Migration : List<Action<JToken>>
+    }
+
+    [Serializable]
+    public abstract class Config<T> : BaseConfig where T : BaseConfig, new()
+    {
+        public static T Get(string name, bool isAutoSave = true) => ByName<T>.Get(name, isAutoSave);
+        public static void LoadOnNextAccess(string name) => ByName<T>.LoadOnNextAccess(name);
+    }
+    
+    [Serializable]
+    public abstract class BaseConfig<T> : BaseConfig where T : BaseConfig<T>, new()
+    {
+        private static T instance;
+        private static Func<T> getter = Get;
+        public static T Config => getter();
+
+        protected override string FileName => $"{char.ToLower(typeof(T).Name[0])}{typeof(T).Name[1..]}";
+        
+        private static T Get()
         {
-            private static Migration migration = new();
+            getter = GetInstance;
+            return ByName<T>.Get(string.Empty);
+        }
 
-            private Migration(){}
-            
-            public static Migration Create(Action<JToken> migrator)
+        private static T GetInstance() => instance;
+
+        public static void LoadOnNextAccess()
+        {
+            if(instance == null) return;
+            ByName<T>.LoadOnNextAccess(instance.FileName);
+            getter = Get;
+        }
+    }
+    
+    public static class Migrations
+    {
+        private static readonly Dictionary<string, List<Action<JToken>>> byKey = new();
+        
+        public static void Add(string key, Action<JToken> migrator)
+        {
+            if (!byKey.TryGetValue(key, out var migrators))
             {
-                migration = new Migration { migrator };
-                return migration;
+                migrators = new List<Action<JToken>>();
+                byKey.Add(key, migrators);
             }
             
-            public new Migration Add(Action<JToken> migrator)
-            {
-                base.Add(migrator);
-                return this;
-            }
+            migrators.Add(migrator);
+        }
 
-            public static void Migrate(JToken token)
+        internal static void Migrate(string key, JToken token)
+        {
+            if (byKey.TryGetValue(key, out var migration))
             {
                 if (migration.Count > 0)
                 {

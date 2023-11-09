@@ -8,12 +8,12 @@ namespace LSCore.ConfigModule
         [Conditional("UNITY_EDITOR")]
         public static void Save<T>() where T : BaseConfig<T>, new()
         {
-            BaseConfig<T>.Save();
+            BaseConfig<T>.Config.Save();
         }
         
         public static JToken GetJToken<T>() where T : BaseConfig<T>, new()
         {
-            return BaseConfig<T>.GetJToken();
+            return BaseConfig<T>.Config.GetJToken();
         }
     }
 }
