@@ -203,7 +203,8 @@ namespace LSCore.ConfigModule
         private static T Get()
         {
             getter = GetInstance;
-            return ByName<T>.Get(string.Empty);
+            instance = ByName<T>.Get(string.Empty);
+            return instance;
         }
 
         private static T GetInstance() => instance;
