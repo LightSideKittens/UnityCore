@@ -9,14 +9,7 @@ namespace LSCore
     {
         [SerializeField] private CurrencyIdGroup allCurrenciesGroup;
 
-        protected override void SetupDataSelector(ValueDropdownList<Data> list) => SetupByGroup(allCurrenciesGroup, list);
-
-        protected override void OnValueProcessAttributes(List<Attribute> attributes)
-        {
-            attributes.Add(new PreviewFieldAttribute());
-        }
-
-        public bool TryGetMainIcon(Id id, out Sprite sprite)
+        public static bool TryGetMainIcon(Id id, out Sprite sprite)
         {
             if (!Instance.ByKey.TryGetValue(id, out var sprites)
                 || sprites.Count == 0
@@ -33,6 +26,12 @@ namespace LSCore
 #if UNITY_EDITOR
         private static readonly SingleObject<IconsById> singleObject = new();
         public static IconsById Instance => singleObject.Get(x => x.Init());
+        protected override void SetupDataSelector(ValueDropdownList<Data> list) => SetupByGroup(allCurrenciesGroup, list);
+
+        protected override void OnValueProcessAttributes(List<Attribute> attributes)
+        {
+            attributes.Add(new PreviewFieldAttribute());
+        }
 #endif
     }
 }

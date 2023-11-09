@@ -52,20 +52,19 @@ namespace LSCore.LevelSystem
             return false;
         }
 
-        public void UpgradeLevel(Id id)
+        public bool TryUpgradeLevel(Id id)
         {
             if (CanUpgrade(id, out var level))
             {
-                if (level.Funds.Spend(out var spend))
-                {
-                    level.Apply();
-                    UnlockedLevels.UpgradeLevel(level);
-
-                    spend();
-                    LevelUpgraded?.Invoke();
-                    Burger.Log($"{id} Upgraded to {level.Id}");
-                }
+                level.Apply();
+                UnlockedLevels.UpgradeLevel(level);
+                
+                LevelUpgraded?.Invoke();
+                Burger.Log($"{id} Upgraded to {level.Id}");
+                return true;
             }
+
+            return false;
         }
 
         private void RecomputeAllLevels()

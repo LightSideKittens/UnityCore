@@ -31,13 +31,17 @@ namespace LSCore.ConfigModule
             }
         }
         
-        protected string FullFileName => System.IO.Path.Combine(FolderPath, $"{FileName}.{Ext}");
-        protected string FolderPath => System.IO.Path.Combine(DataPath, Configs, GeneralFolderName, FolderName);
+        protected string FullFileName => Path.Combine(FolderPath, $"{FileName}.{Ext}");
+        protected string FolderPath => Path.Combine(DataPath, Configs, GeneralFolderName, FolderName);
 
         protected virtual string Ext => FileExtensions.Json;
         protected virtual string FileName => $"{char.ToLower(typeof(T).Name[0])}{typeof(T).Name[1..]}";
         protected virtual string GeneralFolderName => SaveData;
         protected virtual string FolderName => string.Empty;
+        
+#if UNITY_EDITOR
+        protected virtual bool LogEnabled => true;
+#endif
 
         [JsonIgnore] protected virtual JsonSerializerSettings Settings { get; } = new()
         {
@@ -162,18 +166,26 @@ namespace LSCore.ConfigModule
 
         private static void Deserialize(string json)
         {
-            Burger.Log($"[{typeof(T).Name}] Loaded (Deserialized)");
+            Log($"[{typeof(T).Name}] Loaded (Deserialized)");
             JsonConvert.PopulateObject(json, instance, instance.Settings);
         }
 
         private static string Serialize(T config)
         {
-            Burger.Log($"[{typeof(T).Name}] Saved (Serialized)");
+            Log($"[{typeof(T).Name}] Saved (Serialized)");
             var json = JsonConvert.SerializeObject(config, config.Settings);
 
             return json;
         }
-        
+
+        [Conditional("DEBUG")]
+        private static void Log(string message)
+        {
+#if UNITY_EDITOR
+            if (instance.LogEnabled)
+#endif
+                Burger.Log(message);
+        }
         public class Migration : List<Action<JToken>>
         {
             private static Migration migration = new();

@@ -10,9 +10,9 @@ namespace LSCore
     {
         public string GroupName;
 
-        public IdAttribute(string name = "") : base(name)
+        public IdAttribute(string groupName = "") : base(groupName)
         {
-            GroupName = name;
+            GroupName = groupName;
             IsUniqueList = true;
         }
     }

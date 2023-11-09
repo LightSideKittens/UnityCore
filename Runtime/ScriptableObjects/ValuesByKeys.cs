@@ -48,7 +48,7 @@ namespace LSCore
 
             foreach (var data in byKey)
             {
-                ByKey.TryAdd(data.key, data.value);
+                ByKey.Add(data.key, data.value);
             }
         }
 
@@ -72,7 +72,7 @@ namespace LSCore
         [OnInspectorInit] private void OnInit() => OnGui();
         [OnInspectorGUI] private void OnGui() => currentInspected = this;
 
-        private void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
+        private void ProcessChildMemberAttributes(MemberInfo member, List<Attribute> attributes)
         {
             switch (member.Name)
             {
@@ -93,7 +93,7 @@ namespace LSCore
         {
             public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
             {
-                currentInspected.ProcessChildMemberAttributes(parentProperty, member, attributes);
+                currentInspected.ProcessChildMemberAttributes(member, attributes);
             }
         }
 #endif

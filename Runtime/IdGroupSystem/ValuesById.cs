@@ -5,6 +5,7 @@ namespace LSCore
 {
     public abstract class ValuesById<TValue> : ValuesByKeys<Id, TValue>
     {
+#if UNITY_EDITOR
         protected void SetupByIds(IEnumerable<Id> ids, ValueDropdownList<Data> list)
         {
             foreach (var id in ids)
@@ -17,5 +18,7 @@ namespace LSCore
         {
             if (group != null) SetupByIds(group.Ids, list);
         }
+#endif
+
     }
 }

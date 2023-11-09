@@ -214,6 +214,7 @@ namespace LSCore.Editor.BackupSystem
                 Linker.PathByName[fileName] = scene.path.AssetsPathToFull();
                 ConfigUtils.Save<Linker>();
                 Window.TryAdd(backupPath);
+                File.Delete($"{backupPath}.meta");
             }
         }
 
@@ -253,6 +254,10 @@ namespace LSCore.Editor.BackupSystem
         
         private class Linker : BaseDebugData<Linker>
         {
+#if UNITY_EDITOR
+            protected override bool LogEnabled => false;
+#endif
+            
             [JsonProperty] private readonly Dictionary<string, string> pathByName = new ();
             public static Dictionary<string, string> PathByName => Config.pathByName;
         }

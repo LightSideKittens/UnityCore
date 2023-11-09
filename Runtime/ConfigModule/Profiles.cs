@@ -21,7 +21,7 @@ namespace LSCore.ConfigModule
             [DisplayAsString(18)] public string name;
             [NonSerialized] public string path;
             
-            [Button(25)]
+            [Button(25, Icon = SdfIconType.CheckSquareFill)]
             [TableColumnWidth(100, false)]
             public void Apply()
             {
@@ -47,8 +47,8 @@ namespace LSCore.ConfigModule
 
                 AssetDatabase.Refresh();
             }
-
-            [Button("X", 25)]
+            
+            [Button(25, Icon = SdfIconType.XCircleFill)]
             [TableColumnWidth(30, false)]
             public void Delete()
             {
@@ -84,7 +84,7 @@ namespace LSCore.ConfigModule
             data.Add(new Data(){name = Regex.Replace(Path.GetFileName(filePath), @"\..+", string.Empty), path = filePath});
         }
 
-        [Button(40)]
+        [Button(40, Icon = SdfIconType.Save2Fill)]
         private void Save()
         {
             var directoryPath = Path.Combine("Assets", FolderNames.Configs, FolderNames.SaveData);
@@ -113,7 +113,7 @@ namespace LSCore.ConfigModule
             File.Delete(tarFileName);
         }
 
-        [Button(30)]
+        [Button(30, Icon = SdfIconType.XCircleFill)]
         private void DeleteCurrent()
         {
             var path = Path.Combine("Assets", FolderNames.Configs, FolderNames.SaveData);

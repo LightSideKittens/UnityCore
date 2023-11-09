@@ -10,7 +10,7 @@ namespace LSCore
             
             if (!string.IsNullOrEmpty(Attribute.GroupName))
             {
-                source = AssetDatabaseUtils.LoadAny<IdGroup>(Attribute.GroupName).Ids;
+                source = AssetDatabaseUtils.LoadAny<IdGroup>(Attribute.GroupName);
             }
             else
             {

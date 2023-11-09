@@ -1,4 +1,7 @@
-﻿using Sirenix.Utilities;
+﻿#if UNITY_EDITOR
+
+
+using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using System;
 using System.Collections;
@@ -365,3 +368,4 @@ namespace LSCore
         }
     }
 }
+#endif

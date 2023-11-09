@@ -22,10 +22,6 @@ namespace LSCore.LevelSystem
         [HideReferenceObjectPicker]
         [ListDrawerSettings(HideAddButton = true, OnTitleBarGUI = "OtherUpgradesGui")]
         public List<GroupGameProps> OtherUpgrades { get; private set; } = new();
-
-        [OdinSerialize] 
-        [HideReferenceObjectPicker]
-        public Funds Funds { get; set; } = new();
         
 #if UNITY_EDITOR
         public override string ToString() => name;
@@ -48,20 +44,12 @@ namespace LSCore.LevelSystem
             {
                 Container = AssetDatabaseUtils.LoadAny<LevelsContainer>(paths: this.GetFolderPath());
             }
-
-            Funds.isControls = true;
-            Funds.group = Container.Manager.CurrencyGroup;
-            Funds.Control();
             
             OnGui();
         }
 
         [OnInspectorGUI] 
-        private void OnGui()
-        {
-            currentInspected = this;
-            Funds.Control();
-        }
+        private void OnGui() => currentInspected = this;
 #endif
         
         public static int GetLevel(string configName)
