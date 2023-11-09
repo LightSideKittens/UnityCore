@@ -48,14 +48,17 @@ namespace LSCore
             var rectTransform = (RectTransform)transform;
             RectTransform = rectTransform;
 
-            if (Parent is RectTransform parentRectTransform)
+            if (Parent != null && Parent.TryGetComponent<Canvas>(out _))
             {
-                var anchor = Vector2.one / 2;
-                rectTransform.anchorMin = anchor;
-                rectTransform.anchorMax = anchor;
-                rectTransform.anchoredPosition = Vector2.zero;
-                rectTransform.sizeDelta = parentRectTransform.sizeDelta;
-                rectTransform.localScale = Vector3.one;
+                var zero = Vector2.zero;
+                var one = Vector2.one;
+                
+                rectTransform.anchorMin = zero;
+                rectTransform.anchorMax = one;
+                rectTransform.anchoredPosition = zero;
+                rectTransform.offsetMin = zero;
+                rectTransform.offsetMax = zero;
+                rectTransform.localScale = one;
             }
             else
             {
