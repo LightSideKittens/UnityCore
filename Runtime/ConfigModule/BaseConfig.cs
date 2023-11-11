@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using LSCore.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -144,7 +143,7 @@ namespace LSCore.ConfigModule
             if (string.IsNullOrEmpty(json) == false)
             {
                 var token = JToken.Parse(json);
-                Migrations.Migrate(FileName, token);
+                Migrator.Migrate(FileName, token);
                 Deserialize(token.ToString());
             }
             else
@@ -203,13 +202,6 @@ namespace LSCore.ConfigModule
     }
 
     [Serializable]
-    public abstract class Config<T> : BaseConfig where T : BaseConfig, new()
-    {
-        public static T Get(string name, bool isAutoSave = true) => ByName<T>.Get(name, isAutoSave);
-        public static void LoadOnNextAccess(string name) => ByName<T>.LoadOnNextAccess(name);
-    }
-    
-    [Serializable]
     public abstract class BaseConfig<T> : BaseConfig where T : BaseConfig<T>, new()
     {
         private static T instance;
@@ -232,50 +224,6 @@ namespace LSCore.ConfigModule
             if(instance == null) return;
             ByName<T>.LoadOnNextAccess(instance.FileName);
             getter = Get;
-        }
-    }
-    
-    public static class Migrations
-    {
-        private static readonly Dictionary<string, List<Action<JToken>>> byKey = new();
-        
-        public static void Add(string key, Action<JToken> migrator)
-        {
-            if (!byKey.TryGetValue(key, out var migrators))
-            {
-                migrators = new List<Action<JToken>>();
-                byKey.Add(key, migrators);
-            }
-            
-            migrators.Add(migrator);
-        }
-
-        internal static void Migrate(string key, JToken token)
-        {
-            if (byKey.TryGetValue(key, out var migration))
-            {
-                if (migration.Count > 0)
-                {
-                    int version;
-                    if (token["version"] == null)
-                    {
-                        token["version"] = 0;
-                        version = 0;
-                    }
-                    else
-                    {
-                        version = token["version"].ToObject<int>();
-                    }
-                    
-                    int i;
-                    for (i = version; i < migration.Count; i++)
-                    {
-                        migration[i](token);
-                    }
-
-                    token["version"] = i;
-                }
-            }
         }
     }
 }

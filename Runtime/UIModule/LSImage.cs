@@ -1,38 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEditor;
 #if UNITY_EDITOR
+using System.Reflection;
 using UnityEditor.UI;
 #endif
 using UnityEngine;
 using UnityEngine.Sprites;
 using UnityEngine.UI;
+using UnityToolbarExtender;
+using static UnityEngine.Mathf;
 
 namespace LSCore
 {
     public class LSImage : Image
     {
-        
-        public enum GradientDirection
-        {
-            None,
-            Horizontal,
-            Vertical,
-        }
-        
-        [SerializeField] private GradientDirection gradientMode;
         [SerializeField] private int rotateId = 0;
         [SerializeField] private bool invert;
         [SerializeField] private Gradient gradient;
-        
-        public GradientDirection GradientMode
-        {
-            get => gradientMode;
-            set
-            {
-                gradientMode = value;
-                UpdateColorEvaluateFunc();
-            }
-        }
+        [SerializeField] private Vector3 gradientStart;
+        [SerializeField] private Vector3 gradientEnd;
         
         public int RotateId
         {
@@ -62,39 +49,63 @@ namespace LSCore
                 SetVerticesDirty();
             }
         }
+        
+        public Vector3 GradientStart
+        {
+            get => gradientStart;
+            set
+            {
+                gradientStart = value;
+                SetVerticesDirty();
+            }
+        }
+        
+        public Vector3 GradientEnd
+        {
+            get => gradientEnd;
+            set
+            {
+                gradientEnd = value;
+                SetVerticesDirty();
+            }
+        }
 
         private static readonly Vector2[] vertScratch = new Vector2[4];
         private static readonly Vector2[] uVScratch = new Vector2[4];
         
         private static readonly Vector3[] s_Xy = new Vector3[4];
         private static readonly Vector3[] s_Uv = new Vector3[4];
-        
         private InFunc<Vector3, Color> colorEvaluate;
-
         private Color DefaulColor(in Vector3 pos) => color;
 
-        private Color HorizontalColorEvaluate(in Vector3 pos)
+        private float GetGradientValue(in Vector3 pos)
         {
-            return gradient.Evaluate(currentRect.width / pos.x);
+            var direction = gradientEnd - gradientStart;
+            var intersection = FindPerpendicularIntersection(pos, gradientStart, direction);
+            var ac = intersection - gradientStart;
+            var projection = Vector3.Project(ac, direction);
+            return projection.magnitude / direction.magnitude * (Vector3.Dot(direction.normalized, ac.normalized) < 0 ? -1 : 1);
         }
         
-        private Color VerticalColorEvaluate(in Vector3 pos)
+        private Color ColorEvaluate(in Vector3 pos)
         {
-            return gradient.Evaluate(currentRect.height / pos.y);
-        }
-        
-        private Color InvertedHorizontalColorEvaluate(in Vector3 pos)
-        {
-            return gradient.Evaluate(1 - currentRect.width / pos.x);
-        }
-        
-        private Color InvertedVerticalColorEvaluate(in Vector3 pos)
-        {
-            return gradient.Evaluate(1 - currentRect.height / pos.y);
+            return gradient.Evaluate(GetGradientValue(pos));
         }
 
-        private InFunc<Vector3, Color> GetHorizontalColorEvaluate() => invert ? InvertedHorizontalColorEvaluate : HorizontalColorEvaluate;
-        private InFunc<Vector3, Color> GetVerticalColorEvaluate() => invert ? InvertedVerticalColorEvaluate : VerticalColorEvaluate;
+        private Color Inverted_ColorEvaluate(in Vector3 pos)
+        {
+            return gradient.Evaluate(1 - GetGradientValue(pos));
+        }
+        
+        private InFunc<Vector3, Color> GetLeftToRightColorEvaluate() => invert ? Inverted_ColorEvaluate : ColorEvaluate;
+
+        private static Vector3 FindPerpendicularIntersection(in Vector3 point, in Vector3 rayOrigin, in Vector3 rayDirection)
+        {
+            var toPoint = point - rayOrigin;
+            var projectedVector = Vector3.Project(toPoint, rayDirection);
+            var intersection = rayOrigin + projectedVector;
+            return intersection;
+        }
         
 #if UNITY_EDITOR
         protected override void OnValidate()
@@ -104,24 +115,31 @@ namespace LSCore
         }
 #endif
 
+        protected override void Reset()
+        {
+            base.Reset();
+            gradient = new Gradient();
+            var rect = GetPixelAdjustedRect();
+            gradientStart = rect.min;
+            gradientEnd = rect.max;
+        }
+
         protected override void OnEnable()
         {
             base.OnEnable();
+            gradient ??= new Gradient();
             UpdateColorEvaluateFunc();
         }
 
         private void UpdateColorEvaluateFunc()
         {
-            var isRotated = rotateId % 2 == 1;
-            colorEvaluate = DefaulColor;
-            
-            if (gradientMode == GradientDirection.Horizontal)
+            if (gradient.colorKeys.Length > 1)
             {
-                colorEvaluate = isRotated ? GetVerticalColorEvaluate() : GetHorizontalColorEvaluate();
+                colorEvaluate = GetLeftToRightColorEvaluate();
             }
-            else if(gradientMode == GradientDirection.Vertical)
+            else
             {
-                colorEvaluate = isRotated ? GetHorizontalColorEvaluate() : GetVerticalColorEvaluate();
+                colorEvaluate = DefaulColor;
             }
             
             SetVerticesDirty();
@@ -315,8 +333,8 @@ namespace LSCore
             Rect rect = GetPixelAdjustedRect();
             // Debug.Log(string.Format("r:{2}, size:{0}, padding:{1}", size, padding, r));
             
-            int spriteW = Mathf.RoundToInt(size.x);
-            int spriteH = Mathf.RoundToInt(size.y);
+            int spriteW = RoundToInt(size.x);
+            int spriteH = RoundToInt(size.y);
 
             var v = new Vector4(
                 padding.x / spriteW,
@@ -831,29 +849,29 @@ namespace LSCore
                                 }
                             }
 
-                            s_Xy[0].x = Mathf.Lerp(v.x, v.z, fx0);
+                            s_Xy[0].x = Lerp(v.x, v.z, fx0);
                             s_Xy[1].x = s_Xy[0].x;
-                            s_Xy[2].x = Mathf.Lerp(v.x, v.z, fx1);
+                            s_Xy[2].x = Lerp(v.x, v.z, fx1);
                             s_Xy[3].x = s_Xy[2].x;
 
-                            s_Xy[0].y = Mathf.Lerp(v.y, v.w, fy0);
-                            s_Xy[1].y = Mathf.Lerp(v.y, v.w, fy1);
+                            s_Xy[0].y = Lerp(v.y, v.w, fy0);
+                            s_Xy[1].y = Lerp(v.y, v.w, fy1);
                             s_Xy[2].y = s_Xy[1].y;
                             s_Xy[3].y = s_Xy[0].y;
 
-                            s_Uv[0].x = Mathf.Lerp(tx0, tx1, fx0);
+                            s_Uv[0].x = Lerp(tx0, tx1, fx0);
                             s_Uv[1].x = s_Uv[0].x;
-                            s_Uv[2].x = Mathf.Lerp(tx0, tx1, fx1);
+                            s_Uv[2].x = Lerp(tx0, tx1, fx1);
                             s_Uv[3].x = s_Uv[2].x;
 
-                            s_Uv[0].y = Mathf.Lerp(ty0, ty1, fy0);
-                            s_Uv[1].y = Mathf.Lerp(ty0, ty1, fy1);
+                            s_Uv[0].y = Lerp(ty0, ty1, fy0);
+                            s_Uv[1].y = Lerp(ty0, ty1, fy1);
                             s_Uv[2].y = s_Uv[1].y;
                             s_Uv[3].y = s_Uv[0].y;
 
                             float val = fillClockwise ? fillAmount * 2f - side : fillAmount * 2f - (1 - side);
 
-                            if (RadialCut(s_Xy, s_Uv, Mathf.Clamp01(val), fillClockwise, ((side + fillOrigin + 3) % 4)))
+                            if (RadialCut(s_Xy, s_Uv, Clamp01(val), fillClockwise, ((side + fillOrigin + 3) % 4)))
                             {
                                 AddQuad(toFill, s_Xy,  s_Uv);
                             }
@@ -888,23 +906,23 @@ namespace LSCore
                             }
 
                             //TODO:
-                            s_Xy[0].x = Mathf.Lerp(v.x, v.z, fx0);
+                            s_Xy[0].x = Lerp(v.x, v.z, fx0);
                             s_Xy[1].x = s_Xy[0].x;
-                            s_Xy[2].x = Mathf.Lerp(v.x, v.z, fx1);
+                            s_Xy[2].x = Lerp(v.x, v.z, fx1);
                             s_Xy[3].x = s_Xy[2].x;
 
-                            s_Xy[0].y = Mathf.Lerp(v.y, v.w, fy0);
-                            s_Xy[1].y = Mathf.Lerp(v.y, v.w, fy1);
+                            s_Xy[0].y = Lerp(v.y, v.w, fy0);
+                            s_Xy[1].y = Lerp(v.y, v.w, fy1);
                             s_Xy[2].y = s_Xy[1].y;
                             s_Xy[3].y = s_Xy[0].y;
 
-                            s_Uv[0].x = Mathf.Lerp(tx0, tx1, fx0);
+                            s_Uv[0].x = Lerp(tx0, tx1, fx0);
                             s_Uv[1].x = s_Uv[0].x;
-                            s_Uv[2].x = Mathf.Lerp(tx0, tx1, fx1);
+                            s_Uv[2].x = Lerp(tx0, tx1, fx1);
                             s_Uv[3].x = s_Uv[2].x;
 
-                            s_Uv[0].y = Mathf.Lerp(ty0, ty1, fy0);
-                            s_Uv[1].y = Mathf.Lerp(ty0, ty1, fy1);
+                            s_Uv[0].y = Lerp(ty0, ty1, fy0);
+                            s_Uv[1].y = Lerp(ty0, ty1, fy1);
                             s_Uv[2].y = s_Uv[1].y;
                             s_Uv[3].y = s_Uv[0].y;
 
@@ -912,7 +930,7 @@ namespace LSCore
                                 fillAmount * 4f - ((corner + fillOrigin) % 4) :
                                 fillAmount * 4f - (3 - ((corner + fillOrigin) % 4));
 
-                            if (RadialCut(s_Xy, s_Uv, Mathf.Clamp01(val), fillClockwise, ((corner + 2) % 4)))
+                            if (RadialCut(s_Xy, s_Uv, Clamp01(val), fillClockwise, ((corner + 2) % 4)))
                                 AddQuad(toFill, s_Xy,  s_Uv);
                         }
                     }
@@ -941,13 +959,13 @@ namespace LSCore
             if (!invert && fill > 0.999f) return true;
 
             // Convert 0-1 value into 0 to 90 degrees angle in radians
-            float angle = Mathf.Clamp01(fill);
+            float angle = Clamp01(fill);
             if (invert) angle = 1f - angle;
-            angle *= 90f * Mathf.Deg2Rad;
+            angle *= 90f * Deg2Rad;
 
             // Calculate the effective X and Y factors
-            float cos = Mathf.Cos(angle);
-            float sin = Mathf.Sin(angle);
+            float cos = Cos(angle);
+            float sin = Sin(angle);
 
             RadialCut(xy, cos, sin, invert, corner);
             RadialCut(uv, cos, sin, invert, corner);
@@ -974,7 +992,7 @@ namespace LSCore
 
                     if (invert)
                     {
-                        xy[i1].x = Mathf.Lerp(xy[i0].x, xy[i2].x, cos);
+                        xy[i1].x = Lerp(xy[i0].x, xy[i2].x, cos);
                         xy[i2].x = xy[i1].x;
                     }
                 }
@@ -985,7 +1003,7 @@ namespace LSCore
 
                     if (!invert)
                     {
-                        xy[i2].y = Mathf.Lerp(xy[i0].y, xy[i2].y, sin);
+                        xy[i2].y = Lerp(xy[i0].y, xy[i2].y, sin);
                         xy[i3].y = xy[i2].y;
                     }
                 }
@@ -995,8 +1013,8 @@ namespace LSCore
                     sin = 1f;
                 }
 
-                if (!invert) xy[i3].x = Mathf.Lerp(xy[i0].x, xy[i2].x, cos);
-                else xy[i1].y = Mathf.Lerp(xy[i0].y, xy[i2].y, sin);
+                if (!invert) xy[i3].x = Lerp(xy[i0].x, xy[i2].x, cos);
+                else xy[i1].y = Lerp(xy[i0].y, xy[i2].y, sin);
             }
             else
             {
@@ -1007,7 +1025,7 @@ namespace LSCore
 
                     if (!invert)
                     {
-                        xy[i1].y = Mathf.Lerp(xy[i0].y, xy[i2].y, sin);
+                        xy[i1].y = Lerp(xy[i0].y, xy[i2].y, sin);
                         xy[i2].y = xy[i1].y;
                     }
                 }
@@ -1018,7 +1036,7 @@ namespace LSCore
 
                     if (invert)
                     {
-                        xy[i2].x = Mathf.Lerp(xy[i0].x, xy[i2].x, cos);
+                        xy[i2].x = Lerp(xy[i0].x, xy[i2].x, cos);
                         xy[i3].x = xy[i2].x;
                     }
                 }
@@ -1028,8 +1046,8 @@ namespace LSCore
                     sin = 1f;
                 }
 
-                if (invert) xy[i3].y = Mathf.Lerp(xy[i0].y, xy[i2].y, sin);
-                else xy[i1].x = Mathf.Lerp(xy[i0].x, xy[i2].x, cos);
+                if (invert) xy[i3].y = Lerp(xy[i0].y, xy[i2].y, sin);
+                else xy[i1].x = Lerp(xy[i0].x, xy[i2].x, cos);
             }
         }
     }
@@ -1043,38 +1061,74 @@ namespace LSCore
     {
         SerializedProperty rotateId;
         SerializedProperty invert;
-        SerializedProperty gradientMode;
         SerializedProperty gradient;
-        private int selectedIndex = -1; 
+        
+        SerializedProperty m_Sprite;
+        SerializedProperty m_Type;
+        SerializedProperty m_PreserveAspect;
+        SerializedProperty m_UseSpriteMesh;
+        FieldInfo m_bIsDriven;
+        private LSImage image;
+        private RectTransform rect;
         private bool isDragging; 
         
         protected override void OnEnable()
         {
             base.OnEnable();
+            
+            m_Sprite                = serializedObject.FindProperty("m_Sprite");
+            m_Type                  = serializedObject.FindProperty("m_Type");
+            m_PreserveAspect        = serializedObject.FindProperty("m_PreserveAspect");
+            m_UseSpriteMesh         = serializedObject.FindProperty("m_UseSpriteMesh");
+
             rotateId = serializedObject.FindProperty("rotateId");
             invert = serializedObject.FindProperty("invert");
-            gradientMode = serializedObject.FindProperty("gradientMode");
             gradient = serializedObject.FindProperty("gradient");
+            var type = GetType().BaseType;
+            m_bIsDriven = type.GetField("m_bIsDriven", BindingFlags.Instance | BindingFlags.NonPublic);
+            image = (LSImage)target;
+            rect = image.GetComponent<RectTransform>();
         }
 
         public override void OnInspectorGUI()
         {
-            base.OnInspectorGUI();
             serializedObject.Update();
+            //m_bIsDriven.SetValue(this, (rect.drivenByObject as Slider)?.fillRect == rect);
 
-            EditorGUILayout.PropertyField(gradientMode);
+            SpriteGUI();
+            EditorGUILayout.PropertyField(gradient);
+            EditorGUILayout.PropertyField(invert);
+            EditorGUILayout.PropertyField(m_Material);
+            RaycastControlsGUI();
+            MaskableControlsGUI();
             
-            if (gradientMode.enumValueIndex != 0)
+            TypeGUI();
+            SetShowNativeSize(false);
+            if (EditorGUILayout.BeginFadeGroup(m_ShowNativeSize.faded))
             {
-                EditorGUILayout.PropertyField(invert);
-                EditorGUILayout.PropertyField(gradient);
+                EditorGUI.indentLevel++;
+
+                if ((Image.Type)m_Type.enumValueIndex == Image.Type.Simple)
+                    EditorGUILayout.PropertyField(m_UseSpriteMesh);
+
+                EditorGUILayout.PropertyField(m_PreserveAspect);
+                EditorGUI.indentLevel--;
             }
+            EditorGUILayout.EndFadeGroup();
+            NativeSizeButtonGUI();
             
             DrawRotateButton();
             
             serializedObject.ApplyModifiedProperties();
         }
 
+        void SetShowNativeSize(bool instant)
+        {
+            Image.Type type = (Image.Type)m_Type.enumValueIndex;
+            bool showNativeSize = (type == Image.Type.Simple || type == Image.Type.Filled) && m_Sprite.objectReferenceValue != null;
+            base.SetShowNativeSize(showNativeSize, instant);
+        }
+        
         protected virtual void DrawRotateButton()
         {
             GUILayout.Space(10);
@@ -1082,6 +1136,84 @@ namespace LSCore
             {
                 rotateId.intValue = (rotateId.intValue + 1) % 4;
             }
+        }
+
+        private Dictionary<int, int> map = new();
+        
+        void OnSceneGUI()
+        {
+            EditorGUI.BeginChangeCheck();
+
+            var imagePosition = image.transform.position;
+            var start = imagePosition + image.GradientStart;
+            var end = imagePosition + image.GradientEnd;
+            float handle1Size = HandleUtility.GetHandleSize(start) * 0.1f;
+            float handle2Size = HandleUtility.GetHandleSize(end) * 0.1f;
+            Handles.DrawSolidDisc(start, Vector3.forward, handle1Size);
+            Handles.DrawSolidDisc(end, Vector3.forward, handle2Size);
+            var id1 = GUIUtility.GetControlID(FocusType.Passive);
+            var id2 = GUIUtility.GetControlID(FocusType.Passive);
+            if(id1 == -1)return;
+            map.Clear();
+            map.Add(id1, 0);
+            map.Add(id2, 1);
+            HandleInput(id1);
+            HandleInput(id2);
+            Vector3 newHandle1Pos = Handles.FreeMoveHandle(id1, start, handle1Size * 1.5f, Vector3.zero, Handles.CircleHandleCap) - imagePosition;
+            Vector3 newHandle2Pos = Handles.FreeMoveHandle(id2, end, handle2Size * 1.5f, Vector3.zero, Handles.CircleHandleCap) - imagePosition;
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(image, "Move Handle");
+                image.GradientStart = newHandle1Pos;
+                image.GradientEnd = newHandle2Pos;
+                EditorUtility.SetDirty(image);
+            }
+        }
+        private static readonly float DoubleClickTime = 0.3f; // Time threshold for double click
+        private float lastClickTime = 0f;
+        private int currentControlId;
+        
+        private void HandleInput(int controlId)
+        {
+            Event e = Event.current;
+            var type = e.GetTypeForControl(controlId);
+            
+            switch (type)
+            {
+                case EventType.MouseDown:
+                    if (HandleUtility.nearestControl == controlId && e.button == 0) // Left mouse button
+                    {
+                        float timeSinceLastClick = (float)(EditorApplication.timeSinceStartup - lastClickTime);
+                    
+                        if (timeSinceLastClick < DoubleClickTime)
+                        {
+                            OpenColorPicker(map[controlId]);
+                        }
+
+                        lastClickTime = (float)EditorApplication.timeSinceStartup;
+                    }
+                    break;
+                case EventType.ExecuteCommand:
+                    if (e.commandName == "ColorPickerChanged")
+                    {
+                        var colors = image.Gradient.colorKeys;
+                        var alphaKeys = image.Gradient.alphaKeys;
+                        colors[currentControlId].color = LSColorPicker.Color;
+                        alphaKeys[currentControlId].alpha = LSColorPicker.Color.a;
+                        image.Gradient.SetKeys(colors, alphaKeys);
+                        image.SetVerticesDirty();
+                    }
+                    break;
+            }
+        }
+        
+        private void OpenColorPicker(int cotrolID)
+        {
+            currentControlId = cotrolID;
+            var color = image.Gradient.colorKeys[cotrolID].color;
+            color.a = image.Gradient.alphaKeys[cotrolID].alpha;
+            
+            LSColorPicker.Show(newColor => { }, color);
         }
         
         [MenuItem("GameObject/LSCore/Image")]
