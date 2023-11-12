@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using LSCore.Extensions.Unity;
 using UnityEditor;
 #if UNITY_EDITOR
 using System.Reflection;
@@ -18,17 +20,16 @@ namespace LSCore
         [SerializeField] private int rotateId = 0;
         [SerializeField] private bool invert;
         [SerializeField] private Gradient gradient;
-        [SerializeField] private Vector3 gradientStart;
-        [SerializeField] private Vector3 gradientEnd;
-        
+        [SerializeField] private float angle = 45;
+        [SerializeField] private float gradientStart;
+        [SerializeField] private float gradientEnd;
+        private Vector2 gradientStartPoint;
+        private Vector2 gradientEndPoint;
+
         public int RotateId
         {
             get => rotateId;
-            set
-            {
-                rotateId = value;
-                UpdateColorEvaluateFunc();
-            }
+            set => rotateId = value;
         }
         
         public bool Invert
@@ -50,25 +51,77 @@ namespace LSCore
             }
         }
         
-        public Vector3 GradientStart
+        public float Angle
+        {
+            get => angle;
+            set
+            {
+                angle = value;
+                CalculatePerpendicularPoints(currentRect);
+                var direction = GradientDirection;
+                gradientStartPoint.x = minPoint.x + direction.x * gradientStart;
+                gradientStartPoint.y = minPoint.y + direction.y * gradientStart;
+                gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
+                gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
+
+                if (gradient.colorKeys.Length > 2 || gradient.alphaKeys.Length > 2)
+                {
+                    SetVerticesDirty();
+                }
+                else
+                {
+                    UpdateMeshColors();
+                }
+            }
+        }
+        
+        public float GradientStart
         {
             get => gradientStart;
             set
             {
                 gradientStart = value;
-                SetVerticesDirty();
+                var direction = GradientDirection;
+                gradientStartPoint.x = minPoint.x + direction.x * gradientStart;
+                gradientStartPoint.y = minPoint.y + direction.y * gradientStart;
+                UpdateMeshColors();
             }
         }
         
-        public Vector3 GradientEnd
+        public float GradientEnd
         {
             get => gradientEnd;
             set
             {
                 gradientEnd = value;
-                SetVerticesDirty();
+                var direction = GradientDirection;
+                gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
+                gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
+                UpdateMeshColors();
             }
         }
+        
+        internal Vector2 GradientStartPoint
+        {
+            get => gradientStartPoint;
+            set
+            {
+                gradientStartPoint = value;
+                UpdateMeshColors();
+            }
+        }
+        
+        internal Vector2 GradientEndPoint
+        {
+            get => gradientEndPoint;
+            set
+            {
+                gradientEndPoint = value;
+                UpdateMeshColors();
+            }
+        }
+
+        internal Vector2 GradientDirection { get; private set; }
 
         private static readonly Vector2[] vertScratch = new Vector2[4];
         private static readonly Vector2[] uVScratch = new Vector2[4];
@@ -76,37 +129,64 @@ namespace LSCore
         private static readonly Vector3[] s_Xy = new Vector3[4];
         private static readonly Vector3[] s_Uv = new Vector3[4];
         private InFunc<Vector3, Color> colorEvaluate;
+        
         private Color DefaulColor(in Vector3 pos) => color;
-
-        private float GetGradientValue(in Vector3 pos)
+        private float GetGradientValue(Vector2 pos)
         {
-            var direction = gradientEnd - gradientStart;
-            var intersection = FindPerpendicularIntersection(pos, gradientStart, direction);
-            var ac = intersection - gradientStart;
-            var projection = Vector3.Project(ac, direction);
-            return projection.magnitude / direction.magnitude * (Vector3.Dot(direction.normalized, ac.normalized) < 0 ? -1 : 1);
-        }
-        
-        private Color ColorEvaluate(in Vector3 pos)
-        {
-            return gradient.Evaluate(GetGradientValue(pos));
+            pos -= currentRect.center;
+            return pos.UnclampedInverseLerp(gradientStartPoint, gradientEndPoint);
         }
 
-        private Color Inverted_ColorEvaluate(in Vector3 pos)
-        {
-            return gradient.Evaluate(1 - GetGradientValue(pos));
-        }
-        
+        private Color ColorEvaluate(in Vector3 pos) => gradient.Evaluate(GetGradientValue(pos));
+        private Color Inverted_ColorEvaluate(in Vector3 pos) => gradient.Evaluate(1 - GetGradientValue(pos));
         private InFunc<Vector3, Color> GetLeftToRightColorEvaluate() => invert ? Inverted_ColorEvaluate : ColorEvaluate;
-
-        private static Vector3 FindPerpendicularIntersection(in Vector3 point, in Vector3 rayOrigin, in Vector3 rayDirection)
-        {
-            var toPoint = point - rayOrigin;
-            var projectedVector = Vector3.Project(toPoint, rayDirection);
-            var intersection = rayOrigin + projectedVector;
-            return intersection;
-        }
         
+        
+        private void CalculatePerpendicularPoints(in Rect rect)
+        {
+            float angleRad = angle * Deg2Rad;
+            var direction = new Vector2(Cos(angleRad), Sin(angleRad));
+            var radius = rect.CircumscribedCircleRadius();
+            float distanceForMinPoint = radius;
+            float distanceForMaxPoint = radius;
+            
+            Vector2 minPointRef = direction * -radius;
+            Vector2 maxPointRef = direction * radius;
+            
+            minPoint = minPointRef;
+            maxPoint = maxPointRef;
+            var corners = rect.Corners();
+
+            for (int i = 0; i < corners.Length; i++)
+            {
+                corners[i] -= rect.center;
+                CalculatePerpendicular(corners[i], minPointRef, ref minPoint, ref distanceForMinPoint);
+            }
+            
+            for (int i = 0; i < corners.Length; i++)
+            {
+                CalculatePerpendicular(corners[i], maxPointRef, ref maxPoint, ref distanceForMaxPoint);
+            }
+
+            direction = maxPoint - minPoint;
+            GradientDirection = direction;
+            gradientStartPoint.x = minPoint.x + direction.x * gradientStart;
+            gradientStartPoint.y = minPoint.y + direction.y * gradientStart;
+            gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
+            gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
+
+            void CalculatePerpendicular(in Vector2 rectCorner, in Vector2 refPoint, ref Vector2 point, ref float maxDistance)
+            {
+                var perpendicular = Vector3.Project(rectCorner, direction);
+                var distance = Vector3.Distance(perpendicular, refPoint);
+                if (distance < maxDistance)
+                {
+                    point = perpendicular;
+                    maxDistance = distance;
+                }
+            }
+        }
+
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
@@ -120,8 +200,7 @@ namespace LSCore
             base.Reset();
             gradient = new Gradient();
             var rect = GetPixelAdjustedRect();
-            gradientStart = rect.min;
-            gradientEnd = rect.max;
+            CalculatePerpendicularPoints(rect);
         }
 
         protected override void OnEnable()
@@ -141,8 +220,32 @@ namespace LSCore
             {
                 colorEvaluate = DefaulColor;
             }
+        }
+
+        internal void UpdateMeshColors()
+        {
+            var vertices = workerMesh.vertices;
+            var colors = workerMesh.colors;
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                colors[i] = colorEvaluate(vertices[i]);
+            }
             
-            SetVerticesDirty();
+            workerMesh.colors = colors;
+            canvasRenderer.SetMesh(workerMesh);
+        }
+        
+        private void UpdateMeshColors(VertexHelper vh)
+        {
+            UIVertex vert = new UIVertex();
+
+            for (int i = 0; i < vh.currentVertCount; i++)
+            {
+                vh.PopulateUIVertex(ref vert, i);
+                vert.color = colorEvaluate(vert.position);
+                vh.SetUIVertex(vert, i);
+            }
         }
         
         protected override void UpdateGeometry()
@@ -176,7 +279,7 @@ namespace LSCore
             }
 
             workerMesh.vertices = vertices;
-            workerMesh.RecalculateBounds(); // Recalculate bounds for the new vertex positions
+            workerMesh.RecalculateBounds();
             workerMesh.RecalculateNormals();
             canvasRenderer.SetMesh(workerMesh);
         }
@@ -204,6 +307,7 @@ namespace LSCore
             if (activeSprite == null)
             {
                 GenerateDefaultSprite(toFill);
+                CutMeshByGradient(toFill);
                 return;
             }
 
@@ -225,11 +329,154 @@ namespace LSCore
                     GenerateFilledSprite(toFill, preserveAspect);
                     break;
             }
+            
+            CutMeshByGradient(toFill);
+        }
+
+        private void CutMeshByGradient(VertexHelper vh)
+        {
+            CutMesh(vh);
+            UpdateMeshColors(vh);
+        }
+        
+        private void CutMesh(VertexHelper vh)
+        {
+            var tris = new List<UIVertex>();
+
+            vh.GetUIVertexStream(tris);
+
+            vh.Clear();
+
+            var list = new List<UIVertex>();
+
+            var d = GetCutDirection();
+
+            var cuts = gradient.alphaKeys.Select(x => x.time);
+            cuts = cuts.Union(gradient.colorKeys.Select(x => x.time));
+
+            foreach (var item in cuts)
+            {
+                list.Clear();
+                var point = GetCutOrigin(item);
+                if (item < 0.001 || item > 0.999)
+                {
+                    continue;
+                }
+                else
+                {
+                    for (int j = 0; j < tris.Count; j += 3)
+                    {
+                        CutTriangle(tris, j, list, d, point);
+                    }
+                }
+                tris.Clear();
+                tris.AddRange(list);
+            }
+            vh.AddUIVertexTriangleStream(tris);
+        }
+
+        Vector2 GetCutDirection()
+        {
+            var v = Vector2.up.Rotate(-angle);
+            v = new Vector2(v.x / this.currentRect.size.x,v.y / this.currentRect.size.y);
+            return v.Rotate(90);
+        }
+
+        Vector2 GetCutOrigin(in float f)
+        {
+            var v = Vector2.up.Rotate(-angle);
+
+            v = new Vector2(v.x / currentRect.size.x,v.y / currentRect.size.y);
+
+            Vector2 p1, p2;
+
+            if (angle % 180 < 90)
+            {
+                p1 = (Vector2.Scale(currentRect.size, Vector2.down + Vector2.left) * 0.5f).Project(v);
+                p2 = (Vector2.Scale(currentRect.size,Vector2.up + Vector2.right) * 0.5f).Project(v);
+            }
+            else
+            {
+                p1 = (Vector2.Scale(currentRect.size,Vector2.up + Vector2.left) * 0.5f).Project(v);
+                p2 = (Vector2.Scale(currentRect.size,Vector2.down + Vector2.right) * 0.5f).Project(v);
+            }
+            if (angle % 360 >= 180)
+            {
+                return Vector2.Lerp(p2, p1, f) + currentRect.center;
+            }
+
+            return Vector2.Lerp(p1, p2, f) + currentRect.center;
+        }
+
+        void CutTriangle(List<UIVertex> tris, int idx, List<UIVertex> list, in Vector2 cutDirection, in Vector2 point)
+        {
+            var a = tris[idx];
+            var b = tris[idx + 1];
+            var c = tris[idx + 2];
+
+            float bc = OnLine(b.position, c.position, point, cutDirection);
+            float ab = OnLine(a.position, b.position, point, cutDirection);
+            float ca = OnLine(c.position, a.position, point, cutDirection);
+
+            if (IsOnLine(ab))
+            {
+                if (IsOnLine(bc))
+                {
+                    var pab = UIVertexLerp(a, b, ab);
+                    var pbc = UIVertexLerp(b, c, bc);
+                    list.AddRange(new List<UIVertex>() { a, pab, c, pab, pbc, c, pab, b, pbc });
+                }
+                else
+                {
+                    var pab = UIVertexLerp(a, b, ab);
+                    var pca = UIVertexLerp(c, a, ca);
+                    list.AddRange(new List<UIVertex>() { c, pca, b, pca, pab, b, pca, a, pab });
+                }
+            }
+            else if (IsOnLine(bc))
+            {
+                var pbc = UIVertexLerp(b, c, bc);
+                var pca = UIVertexLerp(c, a, ca);
+                list.AddRange(new List<UIVertex>() { b, pbc, a, pbc, pca, a, pbc, c, pca });
+            }
+            else
+            {
+                list.AddRange(tris.GetRange(idx, 3));
+            }
+        }
+
+        float OnLine(in Vector2 p1, in Vector2 p2, in Vector2 o, in Vector2 dir)
+        {
+            float tmp = (p2.x - p1.x) * dir.y - (p2.y - p1.y) * dir.x;
+            if (tmp == 0)
+            {
+                return -1;
+            }
+            float mu = ((o.x - p1.x) * dir.y - (o.y - p1.y) * dir.x) / tmp;
+            return mu;
+        }
+
+        private static bool IsOnLine(in float f) => f <= 1 && f > 0;
+
+        private static UIVertex UIVertexLerp(in UIVertex v1, in UIVertex v2, in float f)
+        {
+            UIVertex vert = new UIVertex();
+
+            vert.position = Vector3.Lerp(v1.position, v2.position, f);
+            vert.color = Color.Lerp(v1.color, v2.color, f);
+            vert.uv0 = Vector2.Lerp(v1.uv0, v2.uv0, f);
+            vert.uv1 = Vector2.Lerp(v1.uv1, v2.uv1, f);
+            vert.uv2 = Vector2.Lerp(v1.uv2, v2.uv2, f);
+            vert.uv3 = Vector2.Lerp(v1.uv3, v2.uv3, f);
+
+            return vert;
         }
 
         private Rect currentRect;
-        
-        
+        internal Vector2 minPoint;
+        internal Vector2 maxPoint;
+
+
         private void GenerateSlicedSprite(VertexHelper toFill)
         {
             if (!hasBorder)
@@ -311,7 +558,7 @@ namespace LSCore
         {
             var activeSprite = overrideSprite;
             Vector4 v = GetDrawingDimensions(lPreserveAspect);
-            var uv = (activeSprite != null) ? DataUtility.GetOuterUV(activeSprite) : Vector4.zero;
+            var uv = activeSprite != null ? DataUtility.GetOuterUV(activeSprite) : Vector4.zero;
             
             vh.Clear();
             
@@ -369,13 +616,15 @@ namespace LSCore
                 (pos.x, pos.y) = (pos.y, pos.x);
                 rect.position = pos;
             }
+
+            CalculatePerpendicularPoints(rect);
         }
         
         private void GenerateSprite(VertexHelper vh, bool lPreserveAspect)
         {
             var activeSprite = overrideSprite;
             var spriteSize = new Vector2(activeSprite.rect.width, activeSprite.rect.height);
-
+            
             // Covert sprite pivot into normalized space.
             var spritePivot = activeSprite.pivot / spriteSize;
             var rectPivot = rectTransform.pivot;
@@ -401,7 +650,7 @@ namespace LSCore
             Vector2[] uvs = activeSprite.uv;
             for (int i = 0; i < vertices.Length; ++i)
             {
-                AddVert(vh, new Vector3((vertices[i].x / spriteBoundSize.x) * drawingSize.x - drawOffset.x, (vertices[i].y / spriteBoundSize.y) * drawingSize.y - drawOffset.y), new Vector2(uvs[i].x, uvs[i].y));
+                AddVert(vh, new Vector3(vertices[i].x / spriteBoundSize.x * drawingSize.x - drawOffset.x, vertices[i].y / spriteBoundSize.y * drawingSize.y - drawOffset.y), new Vector2(uvs[i].x, uvs[i].y));
             }
 
             UInt16[] triangles = activeSprite.triangles;
@@ -432,7 +681,7 @@ namespace LSCore
         
         private Vector4 GetAdjustedBorders(Vector4 border, Rect adjustedRect)
         {
-            Rect originalRect = rectTransform.rect;
+            Rect originalRect = currentRect;
 
             for (int axis = 0; axis <= 1; axis++)
             {
@@ -871,7 +1120,7 @@ namespace LSCore
 
                             float val = fillClockwise ? fillAmount * 2f - side : fillAmount * 2f - (1 - side);
 
-                            if (RadialCut(s_Xy, s_Uv, Clamp01(val), fillClockwise, ((side + fillOrigin + 3) % 4)))
+                            if (RadialCut(s_Xy, s_Uv, Clamp01(val), fillClockwise, (side + fillOrigin + 3) % 4))
                             {
                                 AddQuad(toFill, s_Xy,  s_Uv);
                             }
@@ -927,10 +1176,10 @@ namespace LSCore
                             s_Uv[3].y = s_Uv[0].y;
 
                             float val = fillClockwise ?
-                                fillAmount * 4f - ((corner + fillOrigin) % 4) :
-                                fillAmount * 4f - (3 - ((corner + fillOrigin) % 4));
+                                fillAmount * 4f - (corner + fillOrigin) % 4 :
+                                fillAmount * 4f - (3 - (corner + fillOrigin) % 4);
 
-                            if (RadialCut(s_Xy, s_Uv, Clamp01(val), fillClockwise, ((corner + 2) % 4)))
+                            if (RadialCut(s_Xy, s_Uv, Clamp01(val), fillClockwise, (corner + 2) % 4))
                                 AddQuad(toFill, s_Xy,  s_Uv);
                         }
                     }
@@ -979,9 +1228,9 @@ namespace LSCore
         static void RadialCut(Vector3[] xy, float cos, float sin, bool invert, int corner)
         {
             int i0 = corner;
-            int i1 = ((corner + 1) % 4);
-            int i2 = ((corner + 2) % 4);
-            int i3 = ((corner + 3) % 4);
+            int i1 = (corner + 1) % 4;
+            int i2 = (corner + 2) % 4;
+            int i3 = (corner + 3) % 4;
 
             if ((corner & 1) == 1)
             {
@@ -1062,6 +1311,9 @@ namespace LSCore
         SerializedProperty rotateId;
         SerializedProperty invert;
         SerializedProperty gradient;
+        SerializedProperty angle;
+        SerializedProperty gradientStart;
+        SerializedProperty gradientEnd;
         
         SerializedProperty m_Sprite;
         SerializedProperty m_Type;
@@ -1070,24 +1322,28 @@ namespace LSCore
         FieldInfo m_bIsDriven;
         private LSImage image;
         private RectTransform rect;
-        private bool isDragging; 
-        
+        private bool isDragging;
+        private bool isEditing;
+
         protected override void OnEnable()
         {
             base.OnEnable();
-            
-            m_Sprite                = serializedObject.FindProperty("m_Sprite");
-            m_Type                  = serializedObject.FindProperty("m_Type");
-            m_PreserveAspect        = serializedObject.FindProperty("m_PreserveAspect");
-            m_UseSpriteMesh         = serializedObject.FindProperty("m_UseSpriteMesh");
 
+            m_Sprite = serializedObject.FindProperty("m_Sprite");
+            m_Type = serializedObject.FindProperty("m_Type");
+            m_PreserveAspect = serializedObject.FindProperty("m_PreserveAspect");
+            m_UseSpriteMesh = serializedObject.FindProperty("m_UseSpriteMesh");
             rotateId = serializedObject.FindProperty("rotateId");
             invert = serializedObject.FindProperty("invert");
             gradient = serializedObject.FindProperty("gradient");
+            angle = serializedObject.FindProperty("angle");
+            gradientStart = serializedObject.FindProperty("gradientStart");
+            gradientEnd = serializedObject.FindProperty("gradientEnd");
             var type = GetType().BaseType;
             m_bIsDriven = type.GetField("m_bIsDriven", BindingFlags.Instance | BindingFlags.NonPublic);
             image = (LSImage)target;
             rect = image.GetComponent<RectTransform>();
+            isEditing = false;
         }
 
         public override void OnInspectorGUI()
@@ -1098,6 +1354,10 @@ namespace LSCore
             SpriteGUI();
             EditorGUILayout.PropertyField(gradient);
             EditorGUILayout.PropertyField(invert);
+            if (GUILayout.Button(isEditing ? "Stop Edit" : "Edit"))
+            {
+                isEditing = !isEditing;
+            }
             EditorGUILayout.PropertyField(m_Material);
             RaycastControlsGUI();
             MaskableControlsGUI();
@@ -1142,11 +1402,10 @@ namespace LSCore
         
         void OnSceneGUI()
         {
-            EditorGUI.BeginChangeCheck();
-
-            var imagePosition = image.transform.position;
-            var start = imagePosition + image.GradientStart;
-            var end = imagePosition + image.GradientEnd;
+            if(!isEditing) return;
+            Vector3 imagePosition = (Vector3)image.rectTransform.rect.center + image.transform.position;
+            var start = imagePosition + (Vector3)image.GradientStartPoint;
+            var end = imagePosition + (Vector3)image.GradientEndPoint;
             float handle1Size = HandleUtility.GetHandleSize(start) * 0.1f;
             float handle2Size = HandleUtility.GetHandleSize(end) * 0.1f;
             Handles.DrawSolidDisc(start, Vector3.forward, handle1Size);
@@ -1159,16 +1418,28 @@ namespace LSCore
             map.Add(id2, 1);
             HandleInput(id1);
             HandleInput(id2);
-            Vector3 newHandle1Pos = Handles.FreeMoveHandle(id1, start, handle1Size * 1.5f, Vector3.zero, Handles.CircleHandleCap) - imagePosition;
-            Vector3 newHandle2Pos = Handles.FreeMoveHandle(id2, end, handle2Size * 1.5f, Vector3.zero, Handles.CircleHandleCap) - imagePosition;
+            EditorGUI.BeginChangeCheck();
+            Vector3 newHandle1Pos = Handles.FreeMoveHandle(id1, start, handle1Size * 1.5f, Vector3.zero, Handles.CircleHandleCap);
+            Vector3 newHandle2Pos = Handles.FreeMoveHandle(id2, end, handle2Size * 1.5f, Vector3.zero, Handles.CircleHandleCap);
             if (EditorGUI.EndChangeCheck())
             {
+                newHandle1Pos -= imagePosition;
+                newHandle2Pos -= imagePosition;
+                image.GradientStart = newHandle1Pos.UnclampedInverseLerp(image.minPoint, image.maxPoint);
+                image.GradientEnd = newHandle2Pos.UnclampedInverseLerp(image.maxPoint, image.minPoint);
+                image.UpdateMeshColors();
                 Undo.RecordObject(image, "Move Handle");
-                image.GradientStart = newHandle1Pos;
-                image.GradientEnd = newHandle2Pos;
                 EditorUtility.SetDirty(image);
             }
+
+            EditorGUI.BeginChangeCheck();
+            var newAngle = Handles.RotationHandle(Quaternion.Euler(Vector3.forward * image.Angle), imagePosition);
+            if (EditorGUI.EndChangeCheck())
+            {
+                image.Angle = newAngle.eulerAngles.z;
+            }
         }
+        
         private static readonly float DoubleClickTime = 0.3f; // Time threshold for double click
         private float lastClickTime = 0f;
         private int currentControlId;

@@ -6,7 +6,15 @@ namespace LSCore.Extensions.Unity
     {
         public static float NormalizeX(in this Rect rect, float x) => (x - rect.xMin) / rect.width;
         public static float NormalizeY(in this Rect rect, float y) => (y - rect.yMin) / rect.height;
-
+        public static Vector2 BottomLeft(in this Rect rect) => new(rect.xMin, rect.yMin);
+        public static Vector2 BottomRight(in this Rect rect) => new(rect.xMax, rect.yMin);
+        public static Vector2 TopLeft(in this Rect rect) => new(rect.xMin, rect.yMax);
+        public static Vector2 TopRight(in this Rect rect) => new(rect.xMax, rect.yMax);
+        public static Vector2[] Corners(in this Rect rect) => new[] { rect.TopLeft(), rect.TopRight(), rect.BottomLeft(), rect.BottomRight() };
+        public static float CircumscribedCircleRadius(in this Rect rect)
+        {
+            return Mathf.Sqrt(Mathf.Pow(rect.width / 2, 2) + Mathf.Pow(rect.height / 2, 2));
+        }
 
         private delegate Vector2 GeneratePointDelegate(Rect rect, float distance);
 

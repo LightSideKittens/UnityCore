@@ -38,5 +38,40 @@ namespace LSCore.Extensions.Unity
             
             return target.y / target.x;
         }
+        
+        public static float UnclampedInverseLerp(this in Vector3 value, in Vector3 a, in Vector3 b)
+        {
+            Vector3 ab = b - a;
+            Vector3 av = value - a;
+
+            if (ab == Vector3.zero)
+                return 0f;
+            
+            Vector3 projected = Vector3.Project(av, ab);
+            float t = projected.magnitude / ab.magnitude;
+            
+            if (Vector3.Dot(ab, projected) < 0)
+                t *= -1;
+            
+            return t;
+        }
+        
+        public static float InverseLerp(this in Vector3 value, in Vector3 a, in Vector3 b)
+        {
+            Vector3 ab = b - a;
+            Vector3 av = value - a;
+            
+            if (ab == Vector3.zero)
+                return 0f;
+            
+            Vector3 projected = Vector3.Project(av, ab);
+            float t = projected.magnitude / ab.magnitude;
+            
+            if (Vector3.Dot(ab, projected) < 0)
+                t *= -1;
+
+            // Normalize t to be between 0 and 1
+            return Mathf.InverseLerp(0, ab.magnitude, t * ab.magnitude);
+        }
     }
 }
