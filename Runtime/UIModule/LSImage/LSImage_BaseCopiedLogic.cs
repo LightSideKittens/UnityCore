@@ -1,290 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LSCore.Extensions.Unity;
-using UnityEditor;
-#if UNITY_EDITOR
-using System.Reflection;
-using UnityEditor.UI;
-#endif
 using UnityEngine;
 using UnityEngine.Sprites;
 using UnityEngine.UI;
-using UnityToolbarExtender;
 using static UnityEngine.Mathf;
 
 namespace LSCore
 {
-    public class LSImage : Image
+    public partial class LSImage
     {
-        [SerializeField] private int rotateId = 0;
-        [SerializeField] private bool invert;
-        [SerializeField] private Gradient gradient;
-        [SerializeField] private float angle = 45;
-        [SerializeField] private float gradientStart;
-        [SerializeField] private float gradientEnd;
-        private Vector2 gradientStartPoint;
-        private Vector2 gradientEndPoint;
-
-        public int RotateId
-        {
-            get => rotateId;
-            set => rotateId = value;
-        }
-        
-        public bool Invert
-        {
-            get => invert;
-            set
-            {
-                invert = value;
-                UpdateColorEvaluateFunc();
-            }
-        }
-        public Gradient Gradient
-        {
-            get => gradient;
-            set
-            {
-                gradient = value;
-                SetVerticesDirty();
-            }
-        }
-        
-        public float Angle
-        {
-            get => angle;
-            set
-            {
-                angle = value;
-                CalculatePerpendicularPoints(currentRect);
-                var direction = GradientDirection;
-                gradientStartPoint.x = minPoint.x + direction.x * gradientStart;
-                gradientStartPoint.y = minPoint.y + direction.y * gradientStart;
-                gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
-                gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
-
-                if (gradient.colorKeys.Length > 2 || gradient.alphaKeys.Length > 2)
-                {
-                    SetVerticesDirty();
-                }
-                else
-                {
-                    UpdateMeshColors();
-                }
-            }
-        }
-        
-        public float GradientStart
-        {
-            get => gradientStart;
-            set
-            {
-                gradientStart = value;
-                var direction = GradientDirection;
-                gradientStartPoint.x = minPoint.x + direction.x * gradientStart;
-                gradientStartPoint.y = minPoint.y + direction.y * gradientStart;
-                UpdateMeshColors();
-            }
-        }
-        
-        public float GradientEnd
-        {
-            get => gradientEnd;
-            set
-            {
-                gradientEnd = value;
-                var direction = GradientDirection;
-                gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
-                gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
-                UpdateMeshColors();
-            }
-        }
-        
-        internal Vector2 GradientStartPoint
-        {
-            get => gradientStartPoint;
-            set
-            {
-                gradientStartPoint = value;
-                UpdateMeshColors();
-            }
-        }
-        
-        internal Vector2 GradientEndPoint
-        {
-            get => gradientEndPoint;
-            set
-            {
-                gradientEndPoint = value;
-                UpdateMeshColors();
-            }
-        }
-
-        internal Vector2 GradientDirection { get; private set; }
-
-        private static readonly Vector2[] vertScratch = new Vector2[4];
-        private static readonly Vector2[] uVScratch = new Vector2[4];
-        
-        private static readonly Vector3[] s_Xy = new Vector3[4];
-        private static readonly Vector3[] s_Uv = new Vector3[4];
-        private InFunc<Vector3, Color> colorEvaluate;
-        
-        private Color DefaulColor(in Vector3 pos) => color;
-        private float GetGradientValue(Vector2 pos)
-        {
-            pos -= currentRect.center;
-            return pos.UnclampedInverseLerp(gradientStartPoint, gradientEndPoint);
-        }
-
-        private Color ColorEvaluate(in Vector3 pos) => gradient.Evaluate(GetGradientValue(pos));
-        private Color Inverted_ColorEvaluate(in Vector3 pos) => gradient.Evaluate(1 - GetGradientValue(pos));
-        private InFunc<Vector3, Color> GetLeftToRightColorEvaluate() => invert ? Inverted_ColorEvaluate : ColorEvaluate;
-        
-        
-        private void CalculatePerpendicularPoints(in Rect rect)
-        {
-            float angleRad = angle * Deg2Rad;
-            var direction = new Vector2(Cos(angleRad), Sin(angleRad));
-            var radius = rect.CircumscribedCircleRadius();
-            float distanceForMinPoint = radius;
-            float distanceForMaxPoint = radius;
-            
-            Vector2 minPointRef = direction * -radius;
-            Vector2 maxPointRef = direction * radius;
-            
-            minPoint = minPointRef;
-            maxPoint = maxPointRef;
-            var corners = rect.Corners();
-
-            for (int i = 0; i < corners.Length; i++)
-            {
-                corners[i] -= rect.center;
-                CalculatePerpendicular(corners[i], minPointRef, ref minPoint, ref distanceForMinPoint);
-            }
-            
-            for (int i = 0; i < corners.Length; i++)
-            {
-                CalculatePerpendicular(corners[i], maxPointRef, ref maxPoint, ref distanceForMaxPoint);
-            }
-
-            direction = maxPoint - minPoint;
-            GradientDirection = direction;
-            gradientStartPoint.x = minPoint.x + direction.x * gradientStart;
-            gradientStartPoint.y = minPoint.y + direction.y * gradientStart;
-            gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
-            gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
-
-            void CalculatePerpendicular(in Vector2 rectCorner, in Vector2 refPoint, ref Vector2 point, ref float maxDistance)
-            {
-                var perpendicular = Vector3.Project(rectCorner, direction);
-                var distance = Vector3.Distance(perpendicular, refPoint);
-                if (distance < maxDistance)
-                {
-                    point = perpendicular;
-                    maxDistance = distance;
-                }
-            }
-        }
-
-#if UNITY_EDITOR
-        protected override void OnValidate()
-        {
-            base.OnValidate();
-            UpdateColorEvaluateFunc();
-        }
-#endif
-
-        protected override void Reset()
-        {
-            base.Reset();
-            gradient = new Gradient();
-            var rect = GetPixelAdjustedRect();
-            CalculatePerpendicularPoints(rect);
-        }
-
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            gradient ??= new Gradient();
-            UpdateColorEvaluateFunc();
-        }
-
-        private void UpdateColorEvaluateFunc()
-        {
-            if (gradient.colorKeys.Length > 1)
-            {
-                colorEvaluate = GetLeftToRightColorEvaluate();
-            }
-            else
-            {
-                colorEvaluate = DefaulColor;
-            }
-        }
-
-        internal void UpdateMeshColors()
-        {
-            var vertices = workerMesh.vertices;
-            var colors = workerMesh.colors;
-
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                colors[i] = colorEvaluate(vertices[i]);
-            }
-            
-            workerMesh.colors = colors;
-            canvasRenderer.SetMesh(workerMesh);
-        }
-        
-        private void UpdateMeshColors(VertexHelper vh)
-        {
-            UIVertex vert = new UIVertex();
-
-            for (int i = 0; i < vh.currentVertCount; i++)
-            {
-                vh.PopulateUIVertex(ref vert, i);
-                vert.color = colorEvaluate(vert.position);
-                vh.SetUIVertex(vert, i);
-            }
-        }
-        
-        protected override void UpdateGeometry()
-        {
-            base.UpdateGeometry();
-            if(rotateId == 0) return;
-            
-            var vertices = workerMesh.vertices;
-
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i] -= Vector3.zero;
-
-                switch (rotateId)
-                {
-                    case 1:
-                        vertices[i] = new Vector3(-vertices[i].y, vertices[i].x, vertices[i].z);
-                        break;
-
-                    case 2:
-                        vertices[i] = new Vector3(-vertices[i].x, -vertices[i].y, vertices[i].z);
-                        break;
-
-                    case 3:
-                        vertices[i] = new Vector3(vertices[i].y, -vertices[i].x, vertices[i].z);
-                        break;
-                }
-                
-                // Translate vertex back to the original position based on the rotation point
-                vertices[i] += Vector3.zero;
-            }
-
-            workerMesh.vertices = vertices;
-            workerMesh.RecalculateBounds();
-            workerMesh.RecalculateNormals();
-            canvasRenderer.SetMesh(workerMesh);
-        }
-
-        private void GenerateDefaultSprite(VertexHelper vh)
+        private void GenerateDefaultSprite(LSVertexHelper vh)
         {
             var rect = GetPixelAdjustedRect();
             TryRotateRect(ref rect);
@@ -300,184 +24,8 @@ namespace LSCore
             vh.AddTriangle(0, 1, 2);
             vh.AddTriangle(2, 3, 0);
         }
-
-        protected override void OnPopulateMesh(VertexHelper toFill)
-        {
-            var activeSprite = overrideSprite;
-            if (activeSprite == null)
-            {
-                GenerateDefaultSprite(toFill);
-                CutMeshByGradient(toFill);
-                return;
-            }
-
-            switch (type)
-            {
-                case Type.Simple:
-                    if (!useSpriteMesh)
-                        GenerateSimpleSprite(toFill, preserveAspect);
-                    else
-                        GenerateSprite(toFill, preserveAspect);
-                    break;
-                case Type.Sliced:
-                    GenerateSlicedSprite(toFill);
-                    break;
-                case Type.Tiled:
-                    GenerateTiledSprite(toFill);
-                    break;
-                case Type.Filled:
-                    GenerateFilledSprite(toFill, preserveAspect);
-                    break;
-            }
-            
-            CutMeshByGradient(toFill);
-        }
-
-        private void CutMeshByGradient(VertexHelper vh)
-        {
-            CutMesh(vh);
-            UpdateMeshColors(vh);
-        }
         
-        private void CutMesh(VertexHelper vh)
-        {
-            var tris = new List<UIVertex>();
-
-            vh.GetUIVertexStream(tris);
-
-            vh.Clear();
-
-            var list = new List<UIVertex>();
-
-            var d = GetCutDirection();
-
-            var cuts = gradient.alphaKeys.Select(x => x.time);
-            cuts = cuts.Union(gradient.colorKeys.Select(x => x.time));
-
-            foreach (var item in cuts)
-            {
-                list.Clear();
-                var point = GetCutOrigin(item);
-                if (item < 0.001 || item > 0.999)
-                {
-                    continue;
-                }
-                else
-                {
-                    for (int j = 0; j < tris.Count; j += 3)
-                    {
-                        CutTriangle(tris, j, list, d, point);
-                    }
-                }
-                tris.Clear();
-                tris.AddRange(list);
-            }
-            vh.AddUIVertexTriangleStream(tris);
-        }
-
-        Vector2 GetCutDirection()
-        {
-            var v = Vector2.up.Rotate(-angle);
-            v = new Vector2(v.x / this.currentRect.size.x,v.y / this.currentRect.size.y);
-            return v.Rotate(90);
-        }
-
-        Vector2 GetCutOrigin(in float f)
-        {
-            var v = Vector2.up.Rotate(-angle);
-
-            v = new Vector2(v.x / currentRect.size.x,v.y / currentRect.size.y);
-
-            Vector2 p1, p2;
-
-            if (angle % 180 < 90)
-            {
-                p1 = (Vector2.Scale(currentRect.size, Vector2.down + Vector2.left) * 0.5f).Project(v);
-                p2 = (Vector2.Scale(currentRect.size,Vector2.up + Vector2.right) * 0.5f).Project(v);
-            }
-            else
-            {
-                p1 = (Vector2.Scale(currentRect.size,Vector2.up + Vector2.left) * 0.5f).Project(v);
-                p2 = (Vector2.Scale(currentRect.size,Vector2.down + Vector2.right) * 0.5f).Project(v);
-            }
-            if (angle % 360 >= 180)
-            {
-                return Vector2.Lerp(p2, p1, f) + currentRect.center;
-            }
-
-            return Vector2.Lerp(p1, p2, f) + currentRect.center;
-        }
-
-        void CutTriangle(List<UIVertex> tris, int idx, List<UIVertex> list, in Vector2 cutDirection, in Vector2 point)
-        {
-            var a = tris[idx];
-            var b = tris[idx + 1];
-            var c = tris[idx + 2];
-
-            float bc = OnLine(b.position, c.position, point, cutDirection);
-            float ab = OnLine(a.position, b.position, point, cutDirection);
-            float ca = OnLine(c.position, a.position, point, cutDirection);
-
-            if (IsOnLine(ab))
-            {
-                if (IsOnLine(bc))
-                {
-                    var pab = UIVertexLerp(a, b, ab);
-                    var pbc = UIVertexLerp(b, c, bc);
-                    list.AddRange(new List<UIVertex>() { a, pab, c, pab, pbc, c, pab, b, pbc });
-                }
-                else
-                {
-                    var pab = UIVertexLerp(a, b, ab);
-                    var pca = UIVertexLerp(c, a, ca);
-                    list.AddRange(new List<UIVertex>() { c, pca, b, pca, pab, b, pca, a, pab });
-                }
-            }
-            else if (IsOnLine(bc))
-            {
-                var pbc = UIVertexLerp(b, c, bc);
-                var pca = UIVertexLerp(c, a, ca);
-                list.AddRange(new List<UIVertex>() { b, pbc, a, pbc, pca, a, pbc, c, pca });
-            }
-            else
-            {
-                list.AddRange(tris.GetRange(idx, 3));
-            }
-        }
-
-        float OnLine(in Vector2 p1, in Vector2 p2, in Vector2 o, in Vector2 dir)
-        {
-            float tmp = (p2.x - p1.x) * dir.y - (p2.y - p1.y) * dir.x;
-            if (tmp == 0)
-            {
-                return -1;
-            }
-            float mu = ((o.x - p1.x) * dir.y - (o.y - p1.y) * dir.x) / tmp;
-            return mu;
-        }
-
-        private static bool IsOnLine(in float f) => f <= 1 && f > 0;
-
-        private static UIVertex UIVertexLerp(in UIVertex v1, in UIVertex v2, in float f)
-        {
-            UIVertex vert = new UIVertex();
-
-            vert.position = Vector3.Lerp(v1.position, v2.position, f);
-            vert.color = Color.Lerp(v1.color, v2.color, f);
-            vert.uv0 = Vector2.Lerp(v1.uv0, v2.uv0, f);
-            vert.uv1 = Vector2.Lerp(v1.uv1, v2.uv1, f);
-            vert.uv2 = Vector2.Lerp(v1.uv2, v2.uv2, f);
-            vert.uv3 = Vector2.Lerp(v1.uv3, v2.uv3, f);
-
-            return vert;
-        }
-
-        private Rect currentRect;
-        internal Vector2 minPoint;
-        internal Vector2 maxPoint;
-
-
-        private void GenerateSlicedSprite(VertexHelper toFill)
+        private void GenerateSlicedSprite(LSVertexHelper toFill)
         {
             if (!hasBorder)
             {
@@ -554,7 +102,7 @@ namespace LSCore
             }
         }
         
-        void GenerateSimpleSprite(VertexHelper vh, bool lPreserveAspect)
+        void GenerateSimpleSprite(LSVertexHelper vh, bool lPreserveAspect)
         {
             var activeSprite = overrideSprite;
             Vector4 v = GetDrawingDimensions(lPreserveAspect);
@@ -570,7 +118,7 @@ namespace LSCore
             vh.AddTriangle(0, 1, 2);
             vh.AddTriangle(2, 3, 0);
         }
-        
+
         private Vector4 GetDrawingDimensions(bool shouldPreserveAspect)
         {
             var activeSprite = overrideSprite;
@@ -607,20 +155,7 @@ namespace LSCore
             return v;
         }
 
-        private void TryRotateRect(ref Rect rect)
-        {
-            if (rotateId % 2 == 1)
-            {
-                (rect.width, rect.height) = (rect.height, rect.width);
-                var pos = rect.position;
-                (pos.x, pos.y) = (pos.y, pos.x);
-                rect.position = pos;
-            }
-
-            CalculatePerpendicularPoints(rect);
-        }
-        
-        private void GenerateSprite(VertexHelper vh, bool lPreserveAspect)
+        private void GenerateSprite(LSVertexHelper vh, bool lPreserveAspect)
         {
             var activeSprite = overrideSprite;
             var spriteSize = new Vector2(activeSprite.rect.width, activeSprite.rect.height);
@@ -711,36 +246,7 @@ namespace LSCore
             return border;
         }
         
-        void AddQuad(VertexHelper vertexHelper, Vector3[] quadPositions, Vector3[] quadUVs)
-        {
-            int startIndex = vertexHelper.currentVertCount;
-
-            for (int i = 0; i < 4; ++i)
-                AddVert(vertexHelper, quadPositions[i], quadUVs[i]);
-
-            vertexHelper.AddTriangle(startIndex, startIndex + 1, startIndex + 2);
-            vertexHelper.AddTriangle(startIndex + 2, startIndex + 3, startIndex);
-        }
-
-        void AddQuad(VertexHelper vertexHelper, Vector2 posMin, Vector2 posMax, Vector2 uvMin, Vector2 uvMax)
-        {
-            int startIndex = vertexHelper.currentVertCount;
-
-            AddVert(vertexHelper, new Vector3(posMin.x, posMin.y, 0), new Vector2(uvMin.x, uvMin.y));
-            AddVert(vertexHelper, new Vector3(posMin.x, posMax.y, 0), new Vector2(uvMin.x, uvMax.y));
-            AddVert(vertexHelper, new Vector3(posMax.x, posMax.y, 0), new Vector2(uvMax.x, uvMax.y));
-            AddVert(vertexHelper, new Vector3(posMax.x, posMin.y, 0), new Vector2(uvMax.x, uvMin.y));
-
-            vertexHelper.AddTriangle(startIndex, startIndex + 1, startIndex + 2);
-            vertexHelper.AddTriangle(startIndex + 2, startIndex + 3, startIndex);
-        }
-
-        private void AddVert(in VertexHelper vertexHelper, in Vector3 position, in Vector4 uv0)
-        {
-            vertexHelper.AddVert(position, colorEvaluate(position), uv0);
-        }
-        
-        void GenerateTiledSprite(VertexHelper toFill)
+        void GenerateTiledSprite(LSVertexHelper toFill)
         {
             Vector4 outer, inner, border;
             Vector2 spriteSize;
@@ -989,7 +495,7 @@ namespace LSCore
             }
         }
         
-        void GenerateFilledSprite(VertexHelper toFill, bool preserveAspect)
+        void GenerateFilledSprite(LSVertexHelper toFill, bool preserveAspect)
         {
             toFill.Clear();
 
@@ -1191,6 +697,34 @@ namespace LSCore
             }
         }
         
+        void AddQuad(LSVertexHelper vertexHelper, Vector3[] quadPositions, Vector3[] quadUVs)
+        {
+            int startIndex = vertexHelper.currentVertCount;
+
+            for (int i = 0; i < 4; ++i)
+                AddVert(vertexHelper, quadPositions[i], quadUVs[i]);
+
+            vertexHelper.AddTriangle(startIndex, startIndex + 1, startIndex + 2);
+            vertexHelper.AddTriangle(startIndex + 2, startIndex + 3, startIndex);
+        }
+
+        void AddQuad(LSVertexHelper vertexHelper, Vector2 posMin, Vector2 posMax, Vector2 uvMin, Vector2 uvMax)
+        {
+            int startIndex = vertexHelper.currentVertCount;
+
+            AddVert(vertexHelper, new Vector3(posMin.x, posMin.y, 0), new Vector2(uvMin.x, uvMin.y));
+            AddVert(vertexHelper, new Vector3(posMin.x, posMax.y, 0), new Vector2(uvMin.x, uvMax.y));
+            AddVert(vertexHelper, new Vector3(posMax.x, posMax.y, 0), new Vector2(uvMax.x, uvMax.y));
+            AddVert(vertexHelper, new Vector3(posMax.x, posMin.y, 0), new Vector2(uvMax.x, uvMin.y));
+
+            vertexHelper.AddTriangle(startIndex, startIndex + 1, startIndex + 2);
+            vertexHelper.AddTriangle(startIndex + 2, startIndex + 3, startIndex);
+        }
+
+        private void AddVert(in LSVertexHelper vertexHelper, in Vector3 position, in Vector4 uv0)
+        {
+            vertexHelper.AddVert(position, colorEvaluate(position), uv0);
+        }
         
         /// <summary>
         /// Adjust the specified quad, making it be radially filled instead.
@@ -1300,198 +834,4 @@ namespace LSCore
             }
         }
     }
-    
-        
-#if UNITY_EDITOR
-    
-    [CustomEditor(typeof(LSImage), true)]
-    [CanEditMultipleObjects]
-    public class LSImageEditor : ImageEditor
-    {
-        SerializedProperty rotateId;
-        SerializedProperty invert;
-        SerializedProperty gradient;
-        SerializedProperty angle;
-        SerializedProperty gradientStart;
-        SerializedProperty gradientEnd;
-        
-        SerializedProperty m_Sprite;
-        SerializedProperty m_Type;
-        SerializedProperty m_PreserveAspect;
-        SerializedProperty m_UseSpriteMesh;
-        FieldInfo m_bIsDriven;
-        private LSImage image;
-        private RectTransform rect;
-        private bool isDragging;
-        private bool isEditing;
-
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-
-            m_Sprite = serializedObject.FindProperty("m_Sprite");
-            m_Type = serializedObject.FindProperty("m_Type");
-            m_PreserveAspect = serializedObject.FindProperty("m_PreserveAspect");
-            m_UseSpriteMesh = serializedObject.FindProperty("m_UseSpriteMesh");
-            rotateId = serializedObject.FindProperty("rotateId");
-            invert = serializedObject.FindProperty("invert");
-            gradient = serializedObject.FindProperty("gradient");
-            angle = serializedObject.FindProperty("angle");
-            gradientStart = serializedObject.FindProperty("gradientStart");
-            gradientEnd = serializedObject.FindProperty("gradientEnd");
-            var type = GetType().BaseType;
-            m_bIsDriven = type.GetField("m_bIsDriven", BindingFlags.Instance | BindingFlags.NonPublic);
-            image = (LSImage)target;
-            rect = image.GetComponent<RectTransform>();
-            isEditing = false;
-        }
-
-        public override void OnInspectorGUI()
-        {
-            serializedObject.Update();
-            //m_bIsDriven.SetValue(this, (rect.drivenByObject as Slider)?.fillRect == rect);
-
-            SpriteGUI();
-            EditorGUILayout.PropertyField(gradient);
-            EditorGUILayout.PropertyField(invert);
-            if (GUILayout.Button(isEditing ? "Stop Edit" : "Edit"))
-            {
-                isEditing = !isEditing;
-            }
-            EditorGUILayout.PropertyField(m_Material);
-            RaycastControlsGUI();
-            MaskableControlsGUI();
-            
-            TypeGUI();
-            SetShowNativeSize(false);
-            if (EditorGUILayout.BeginFadeGroup(m_ShowNativeSize.faded))
-            {
-                EditorGUI.indentLevel++;
-
-                if ((Image.Type)m_Type.enumValueIndex == Image.Type.Simple)
-                    EditorGUILayout.PropertyField(m_UseSpriteMesh);
-
-                EditorGUILayout.PropertyField(m_PreserveAspect);
-                EditorGUI.indentLevel--;
-            }
-            EditorGUILayout.EndFadeGroup();
-            NativeSizeButtonGUI();
-            
-            DrawRotateButton();
-            
-            serializedObject.ApplyModifiedProperties();
-        }
-
-        void SetShowNativeSize(bool instant)
-        {
-            Image.Type type = (Image.Type)m_Type.enumValueIndex;
-            bool showNativeSize = (type == Image.Type.Simple || type == Image.Type.Filled) && m_Sprite.objectReferenceValue != null;
-            base.SetShowNativeSize(showNativeSize, instant);
-        }
-        
-        protected virtual void DrawRotateButton()
-        {
-            GUILayout.Space(10);
-            if (GUILayout.Button("Rotate"))
-            {
-                rotateId.intValue = (rotateId.intValue + 1) % 4;
-            }
-        }
-
-        private Dictionary<int, int> map = new();
-        
-        void OnSceneGUI()
-        {
-            if(!isEditing) return;
-            Vector3 imagePosition = (Vector3)image.rectTransform.rect.center + image.transform.position;
-            var start = imagePosition + (Vector3)image.GradientStartPoint;
-            var end = imagePosition + (Vector3)image.GradientEndPoint;
-            float handle1Size = HandleUtility.GetHandleSize(start) * 0.1f;
-            float handle2Size = HandleUtility.GetHandleSize(end) * 0.1f;
-            Handles.DrawSolidDisc(start, Vector3.forward, handle1Size);
-            Handles.DrawSolidDisc(end, Vector3.forward, handle2Size);
-            var id1 = GUIUtility.GetControlID(FocusType.Passive);
-            var id2 = GUIUtility.GetControlID(FocusType.Passive);
-            if(id1 == -1)return;
-            map.Clear();
-            map.Add(id1, 0);
-            map.Add(id2, 1);
-            HandleInput(id1);
-            HandleInput(id2);
-            EditorGUI.BeginChangeCheck();
-            Vector3 newHandle1Pos = Handles.FreeMoveHandle(id1, start, handle1Size * 1.5f, Vector3.zero, Handles.CircleHandleCap);
-            Vector3 newHandle2Pos = Handles.FreeMoveHandle(id2, end, handle2Size * 1.5f, Vector3.zero, Handles.CircleHandleCap);
-            if (EditorGUI.EndChangeCheck())
-            {
-                newHandle1Pos -= imagePosition;
-                newHandle2Pos -= imagePosition;
-                image.GradientStart = newHandle1Pos.UnclampedInverseLerp(image.minPoint, image.maxPoint);
-                image.GradientEnd = newHandle2Pos.UnclampedInverseLerp(image.maxPoint, image.minPoint);
-                image.UpdateMeshColors();
-                Undo.RecordObject(image, "Move Handle");
-                EditorUtility.SetDirty(image);
-            }
-
-            EditorGUI.BeginChangeCheck();
-            var newAngle = Handles.RotationHandle(Quaternion.Euler(Vector3.forward * image.Angle), imagePosition);
-            if (EditorGUI.EndChangeCheck())
-            {
-                image.Angle = newAngle.eulerAngles.z;
-            }
-        }
-        
-        private static readonly float DoubleClickTime = 0.3f; // Time threshold for double click
-        private float lastClickTime = 0f;
-        private int currentControlId;
-        
-        private void HandleInput(int controlId)
-        {
-            Event e = Event.current;
-            var type = e.GetTypeForControl(controlId);
-            
-            switch (type)
-            {
-                case EventType.MouseDown:
-                    if (HandleUtility.nearestControl == controlId && e.button == 0) // Left mouse button
-                    {
-                        float timeSinceLastClick = (float)(EditorApplication.timeSinceStartup - lastClickTime);
-                    
-                        if (timeSinceLastClick < DoubleClickTime)
-                        {
-                            OpenColorPicker(map[controlId]);
-                        }
-
-                        lastClickTime = (float)EditorApplication.timeSinceStartup;
-                    }
-                    break;
-                case EventType.ExecuteCommand:
-                    if (e.commandName == "ColorPickerChanged")
-                    {
-                        var colors = image.Gradient.colorKeys;
-                        var alphaKeys = image.Gradient.alphaKeys;
-                        colors[currentControlId].color = LSColorPicker.Color;
-                        alphaKeys[currentControlId].alpha = LSColorPicker.Color.a;
-                        image.Gradient.SetKeys(colors, alphaKeys);
-                        image.SetVerticesDirty();
-                    }
-                    break;
-            }
-        }
-        
-        private void OpenColorPicker(int cotrolID)
-        {
-            currentControlId = cotrolID;
-            var color = image.Gradient.colorKeys[cotrolID].color;
-            color.a = image.Gradient.alphaKeys[cotrolID].alpha;
-            
-            LSColorPicker.Show(newColor => { }, color);
-        }
-        
-        [MenuItem("GameObject/LSCore/Image")]
-        private static void CreateButton()
-        {
-            new GameObject("LSImage").AddComponent<LSImage>();
-        }
-    }
-#endif
 }

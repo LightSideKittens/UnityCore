@@ -8,7 +8,7 @@ namespace LSCore.Extensions.Unity
         {
             var dotProduct = Vector2.Dot(a, b);
             var magnitudeSquared = Vector2.Dot(b, b);
-            return (dotProduct / magnitudeSquared) * b;
+            return dotProduct / magnitudeSquared * b;
         }
         
         public static float UnclampedInverseLerp(this in Vector2 value, in Vector2 a, in Vector2 b)
@@ -28,18 +28,21 @@ namespace LSCore.Extensions.Unity
             return t;
         }
         
-        public static Vector2 Rotate(this Vector2 v, float degrees)
+        public static Vector2 Rotate(this Vector2 v, in float degrees)
         {
-            float sin = Mathf.Sin(degrees * Mathf.Deg2Rad);
-            float cos = Mathf.Cos(degrees * Mathf.Deg2Rad);
+            float radianAngle = degrees * Mathf.Deg2Rad;
+            float sin = Mathf.Sin(radianAngle);
+            float cos = Mathf.Cos(radianAngle);
 
             float tx = v.x;
             float ty = v.y;
-            v.x = (cos * tx) - (sin * ty);
-            v.y = (sin * tx) + (cos * ty);
+            v.x = cos * tx - sin * ty;
+            v.y = sin * tx + cos * ty;
             return v;
         }
         
+        public static Vector2 RotateAroundPoint(this in Vector2 point, in Vector2 pivot, in float angleDegrees) => Rotate(point - pivot, angleDegrees) + pivot;
+
         public static float InverseLerp(this in Vector2 value, in Vector2 a, in Vector2 b)
         {
             Vector2 ab = b - a;

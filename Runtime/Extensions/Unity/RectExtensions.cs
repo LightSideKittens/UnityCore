@@ -11,6 +11,7 @@ namespace LSCore.Extensions.Unity
         public static Vector2 TopLeft(in this Rect rect) => new(rect.xMin, rect.yMax);
         public static Vector2 TopRight(in this Rect rect) => new(rect.xMax, rect.yMax);
         public static Vector2[] Corners(in this Rect rect) => new[] { rect.TopLeft(), rect.TopRight(), rect.BottomLeft(), rect.BottomRight() };
+        public static Vector2[] CornersRelativeCenter(in this Rect rect) => new[] { rect.TopLeft() - rect.center, rect.TopRight() - rect.center, rect.BottomLeft() - rect.center, rect.BottomRight() - rect.center };
         public static float CircumscribedCircleRadius(in this Rect rect)
         {
             return Mathf.Sqrt(Mathf.Pow(rect.width / 2, 2) + Mathf.Pow(rect.height / 2, 2));
