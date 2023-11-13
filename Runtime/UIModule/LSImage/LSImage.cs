@@ -74,13 +74,21 @@ namespace LSCore
             {
                 toFill.Clear();
                 var zero = Vector4.zero;
+                var verts = cachedMesh.vertices;
+                var tris = cachedMesh.triangles;
+                var colors = cachedMesh.colors;
+                var uvs = cachedMesh.uv;
                 
-                for (int i = 0; i < cachedMesh.vertices.Length; i++)
+                for (int i = 0; i < verts.Length; i++)
                 {
-                    toFill.AddVert(cachedMesh.vertices[i], cachedMesh.colors[i], cachedMesh.uv[i], zero, zero, zero);
+                    toFill.AddVert(verts[i], colors[i], uvs[i], zero, zero, zero);
                 }
-                toFill.AddTriangle(0, 1, 2);
-                toFill.AddTriangle(2, 3, 0);
+
+                for (int i = 0; i < tris.Length; i += 3)
+                {
+                    toFill.AddTriangle(tris[i], tris[i+1], tris[i+2]);
+                }
+                
                 UpdateMeshColors(toFill);
                 isColorDirty = false;
                 return;
@@ -120,6 +128,7 @@ namespace LSCore
         private void PostProcessMesh(LSVertexHelper vh)
         {
             RotateMesh(vh);
+            CutMeshForGradient(vh);
             UpdateMeshColors(vh);
             cachedMesh = new Mesh();
             vh.FillMesh(cachedMesh);
@@ -154,12 +163,6 @@ namespace LSCore
                 vert.position = pos;
                 vh.SetUIVertex(vert, i);
             }
-        }
-
-        private void CutMeshByGradient(LSVertexHelper vh)
-        {
-            CutMesh(vh);
-            UpdateMeshColors(vh);
         }
         
         private void TryRotateRect(ref Rect rect)

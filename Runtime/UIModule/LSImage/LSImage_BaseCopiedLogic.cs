@@ -16,10 +16,10 @@ namespace LSCore
             var v = new Vector4(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height);
             
             vh.Clear();
-            AddVert(vh, new Vector3(v.x, v.y), new Vector2(0f, 0f));
-            AddVert(vh, new Vector3(v.x, v.w), new Vector2(0f, 1f));
-            AddVert(vh, new Vector3(v.z, v.w), new Vector2(1f, 1f));
-            AddVert(vh, new Vector3(v.z, v.y), new Vector2(1f, 0f));
+            AddVert(vh, new Vector3(v.x, v.y), new Vector4(0f, 0f));
+            AddVert(vh, new Vector3(v.x, v.w), new Vector4(0f, 1f));
+            AddVert(vh, new Vector3(v.z, v.w), new Vector4(1f, 1f));
+            AddVert(vh, new Vector3(v.z, v.y), new Vector4(1f, 0f));
 
             vh.AddTriangle(0, 1, 2);
             vh.AddTriangle(2, 3, 0);
@@ -110,10 +110,10 @@ namespace LSCore
             
             vh.Clear();
             
-            AddVert(vh, new Vector3(v.x, v.y), new Vector2(uv.x, uv.y));
-            AddVert(vh, new Vector3(v.x, v.w), new Vector2(uv.x, uv.w));
-            AddVert(vh, new Vector3(v.z, v.w), new Vector2(uv.z, uv.w));
-            AddVert(vh, new Vector3(v.z, v.y), new Vector2(uv.z, uv.y));
+            AddVert(vh, new Vector3(v.x, v.y), new Vector4(uv.x, uv.y));
+            AddVert(vh, new Vector3(v.x, v.w), new Vector4(uv.x, uv.w));
+            AddVert(vh, new Vector3(v.z, v.w), new Vector4(uv.z, uv.w));
+            AddVert(vh, new Vector3(v.z, v.y), new Vector4(uv.z, uv.y));
 
             vh.AddTriangle(0, 1, 2);
             vh.AddTriangle(2, 3, 0);
@@ -185,7 +185,7 @@ namespace LSCore
             Vector2[] uvs = activeSprite.uv;
             for (int i = 0; i < vertices.Length; ++i)
             {
-                AddVert(vh, new Vector3(vertices[i].x / spriteBoundSize.x * drawingSize.x - drawOffset.x, vertices[i].y / spriteBoundSize.y * drawingSize.y - drawOffset.y), new Vector2(uvs[i].x, uvs[i].y));
+                AddVert(vh, new Vector3(vertices[i].x / spriteBoundSize.x * drawingSize.x - drawOffset.x, vertices[i].y / spriteBoundSize.y * drawingSize.y - drawOffset.y), new Vector4(uvs[i].x, uvs[i].y));
             }
 
             UInt16[] triangles = activeSprite.triangles;
@@ -195,7 +195,7 @@ namespace LSCore
             }
         }
         
-        private void PreserveSpriteAspectRatio(ref Rect rect, Vector2 spriteSize)
+        private void PreserveSpriteAspectRatio(ref Rect rect, in Vector2 spriteSize)
         {
             var spriteRatio = spriteSize.x / spriteSize.y;
             var rectRatio = rect.width / rect.height;
@@ -214,7 +214,7 @@ namespace LSCore
             }
         }
         
-        private Vector4 GetAdjustedBorders(Vector4 border, Rect adjustedRect)
+        private Vector4 GetAdjustedBorders(Vector4 border, in Rect adjustedRect)
         {
             Rect originalRect = currentRect;
 
@@ -697,7 +697,7 @@ namespace LSCore
             }
         }
         
-        void AddQuad(LSVertexHelper vertexHelper, Vector3[] quadPositions, Vector3[] quadUVs)
+        void AddQuad(LSVertexHelper vertexHelper, in Vector3[] quadPositions, in Vector3[] quadUVs)
         {
             int startIndex = vertexHelper.currentVertCount;
 
@@ -708,22 +708,24 @@ namespace LSCore
             vertexHelper.AddTriangle(startIndex + 2, startIndex + 3, startIndex);
         }
 
-        void AddQuad(LSVertexHelper vertexHelper, Vector2 posMin, Vector2 posMax, Vector2 uvMin, Vector2 uvMax)
+        void AddQuad(LSVertexHelper vertexHelper, in Vector2 posMin, in Vector2 posMax, in Vector2 uvMin, in Vector2 uvMax)
         {
             int startIndex = vertexHelper.currentVertCount;
 
-            AddVert(vertexHelper, new Vector3(posMin.x, posMin.y, 0), new Vector2(uvMin.x, uvMin.y));
-            AddVert(vertexHelper, new Vector3(posMin.x, posMax.y, 0), new Vector2(uvMin.x, uvMax.y));
-            AddVert(vertexHelper, new Vector3(posMax.x, posMax.y, 0), new Vector2(uvMax.x, uvMax.y));
-            AddVert(vertexHelper, new Vector3(posMax.x, posMin.y, 0), new Vector2(uvMax.x, uvMin.y));
+            AddVert(vertexHelper, new Vector3(posMin.x, posMin.y, 0), new Vector4(uvMin.x, uvMin.y));
+            AddVert(vertexHelper, new Vector3(posMin.x, posMax.y, 0), new Vector4(uvMin.x, uvMax.y));
+            AddVert(vertexHelper, new Vector3(posMax.x, posMax.y, 0), new Vector4(uvMax.x, uvMax.y));
+            AddVert(vertexHelper, new Vector3(posMax.x, posMin.y, 0), new Vector4(uvMax.x, uvMin.y));
 
             vertexHelper.AddTriangle(startIndex, startIndex + 1, startIndex + 2);
             vertexHelper.AddTriangle(startIndex + 2, startIndex + 3, startIndex);
         }
 
-        private void AddVert(in LSVertexHelper vertexHelper, in Vector3 position, in Vector4 uv0)
+        private static readonly Color32 defaultColor = new (255, 255, 255, 255);
+        
+        private void AddVert(in LSVertexHelper vh, in Vector3 position, in Vector4 uv0)
         {
-            vertexHelper.AddVert(position, colorEvaluate(position), uv0);
+            vh.AddVert(position, defaultColor, uv0);
         }
         
         /// <summary>

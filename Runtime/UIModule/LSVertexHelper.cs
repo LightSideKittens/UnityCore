@@ -150,7 +150,7 @@ namespace UnityEngine.UI
         /// </summary>
         /// <param name="vertex">Vertex to populate</param>
         /// <param name="i">Index to populate.</param>
-        public void PopulateUIVertex(ref UIVertex vertex, int i)
+        public void PopulateUIVertex(ref UIVertex vertex, in int i)
         {
             InitializeListIfRequired();
 
@@ -169,7 +169,7 @@ namespace UnityEngine.UI
         /// </summary>
         /// <param name="vertex">The vertex to fill</param>
         /// <param name="i">the position in the current list to fill.</param>
-        public void SetUIVertex(in UIVertex vertex, int i)
+        public void SetUIVertex(in UIVertex vertex, in int i)
         {
             InitializeListIfRequired();
 
@@ -286,7 +286,7 @@ namespace UnityEngine.UI
         /// <param name="idx0">index 0</param>
         /// <param name="idx1">index 1</param>
         /// <param name="idx2">index 2</param>
-        public void AddTriangle(int idx0, int idx1, int idx2)
+        public void AddTriangle(in int idx0, in int idx1, in int idx2)
         {
             InitializeListIfRequired();
 
