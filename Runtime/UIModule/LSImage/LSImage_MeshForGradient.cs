@@ -19,7 +19,9 @@ namespace LSCore
 
             var dirNorm = GradientDirection.normalized;
             var d = new Vector2(-dirNorm.y, dirNorm.x);
-            var center = (Vector3)rectTransform.rect.center;
+            var rect = rectTransform.rect;
+            var center = rect.center;
+            var size = rect.size;
             
             var cuts = gradient.alphaKeys.Select(x => x.time);
             cuts = cuts.Union(gradient.colorKeys.Select(x => x.time));
@@ -33,9 +35,10 @@ namespace LSCore
                     continue;
                 }
 
+                var point = GetCutOrigin(item, d, center, size);
                 for (int j = 0; j < tris.Count; j += 3)
                 {
-                    CutTriangle(tris, j, list, d, center);
+                    CutTriangle(tris, j, list, d, center, point);
                 }
                 
                 tris.Clear();
@@ -44,20 +47,46 @@ namespace LSCore
             
             vh.AddUIVertexTriangleStream(tris);
         }
+        
+        Vector2 GetCutOrigin(in float f, Vector2 v, in Vector2 center, in Vector2 size)
+        {
+            Vector2 p1, p2;
 
-        void CutTriangle(List<UIVertex> tris, int idx, List<UIVertex> list, in Vector2 cutDirection, in Vector3 center)
+            v = v.Rotate(-90);
+            angle = (angle + 360) % 360;
+            
+            if (angle % 180 < 90)
+            {
+                p1 = (Vector2.Scale(size * 0.5f, Vector2.down + Vector2.left)).Project(v);
+                p2 = (Vector2.Scale(size * 0.5f,Vector2.up + Vector2.right)).Project(v);
+            }
+            else
+            {
+                p1 = (Vector2.Scale(size * -0.5f,Vector2.up + Vector2.left)).Project(v);
+                p2 = (Vector2.Scale(size * -0.5f,Vector2.down + Vector2.right)).Project(v);
+            }
+            
+            if (angle >= 180)
+            {
+                return Vector2.Lerp(p2, p1, f);
+            }
+
+            return Vector2.Lerp(p1, p2, f);
+        }
+
+        void CutTriangle(List<UIVertex> tris, int idx, List<UIVertex> list, in Vector2 cutDirection, in Vector2 center, in Vector2 origin)
         {
             var a = tris[idx];
             var b = tris[idx + 1];
             var c = tris[idx + 2];
             
-            var aCenter = a.position - center;
-            var bCenter = b.position - center;
-            var cCenter = c.position - center;
+            var aCenter = (Vector2)a.position - center;
+            var bCenter = (Vector2)b.position - center;
+            var cCenter = (Vector2)c.position - center;
             
-            float bc = OnLine(bCenter, cCenter, cutDirection);
-            float ab = OnLine(aCenter, bCenter, cutDirection);
-            float ca = OnLine(cCenter, aCenter, cutDirection);
+            float bc = OnLine(bCenter, cCenter, origin, cutDirection);
+            float ab = OnLine(aCenter, bCenter, origin, cutDirection);
+            float ca = OnLine(cCenter, aCenter, origin, cutDirection);
 
             if (IsOnLine(ab))
             {
@@ -86,14 +115,14 @@ namespace LSCore
             }
         }
 
-        float OnLine(in Vector3 p1, in Vector3 p2, in Vector2 dir)
+        float OnLine(in Vector2 p1, in Vector2 p2, in Vector2 o, in Vector2 dir)
         {
             float tmp = (p2.x - p1.x) * dir.y - (p2.y - p1.y) * dir.x;
             if (tmp == 0)
             {
                 return -1;
             }
-            float mu = (-p1.x * dir.y + p1.y * dir.x) / tmp;
+            float mu = ((o.x - p1.x) * dir.y - (o.y - p1.y) * dir.x) / tmp;
             return mu;
         }
 
