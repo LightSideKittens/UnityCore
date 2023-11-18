@@ -4,74 +4,86 @@ namespace LSCore.Extensions.Unity
 {
     public static class Vector3Extensions
     {
-        public static void ClampX(this ref Vector3 target, float min, float max)
+        public static void ClampX(this ref Vector3 target, in float min, in float max)
         {
             target.x = Mathf.Clamp(target.x, min, max);
         }
         
-        public static void ClampY(this ref Vector3 target, float min, float max)
+        public static void ClampY(this ref Vector3 target, in float min, in float max)
         {
             target.y = Mathf.Clamp(target.y, min, max);
         }
         
-        public static void ClampZ(this ref Vector3 target, float min, float max)
+        public static void ClampZ(this ref Vector3 target, in float min, in float max)
         {
             target.z = Mathf.Clamp(target.z, min, max);
         }
         
-        public static float GetAspect(this Vector2 target)
+        public static float UnclampedInverseLerp(this in Vector3 value, Vector3 a, Vector3 b)
         {
-            if (ScreenExt.IsPortrait)
-            {
-                return target.x / target.y;
-            }
+            b.x -= a.x;
+            b.y -= a.y;
+            b.z -= a.z;
+            a.x = value.x - a.x;
+            a.y = value.y - a.y;
+            a.z = value.z - a.z;
             
-            return target.y / target.x;
-        }
-        
-        public static float GetAspect(this Vector2 target, ScreenOrientation orientation)
-        {
-            if (orientation == ScreenOrientation.Portrait)
-            {
-                return target.x / target.y;
-            }
+            //Vector3.Project
+            float num1 = b.x * b.x + b.y * b.y + b.z * b.z; //Vector3.Dot
+            if (num1 == 0f) return 0f;
+            float num2 = a.x * b.x + a.y * b.y + a.z * b.z; //Vector3.Dot
+            a.x = b.x * num2 / num1;
+            a.y = b.y * num2 / num1;
+            a.z = b.z * num2 / num1;
+            //Vector3.Project
             
-            return target.y / target.x;
-        }
-        
-        public static float UnclampedInverseLerp(this in Vector3 value, in Vector3 a, in Vector3 b)
-        {
-            Vector3 ab = b - a;
-            Vector3 av = value - a;
-
-            if (ab == Vector3.zero)
-                return 0f;
+            float t = a.magnitude / b.magnitude;
             
-            Vector3 projected = Vector3.Project(av, ab);
-            float t = projected.magnitude / ab.magnitude;
-            
-            if (Vector3.Dot(ab, projected) < 0)
+            if (b.x * a.x + b.y * a.y + b.z * a.z < 0f) //Vector3.Dot
                 t *= -1;
             
             return t;
         }
         
-        public static float InverseLerp(this in Vector3 value, in Vector3 a, in Vector3 b)
+        public static float InverseLerp(this in Vector3 value, Vector3 a, Vector3 b)
         {
-            Vector3 ab = b - a;
-            Vector3 av = value - a;
+            b.x -= a.x;
+            b.y -= a.y;
+            b.z -= a.z;
+            a.x = value.x - a.x;
+            a.y = value.y - a.y;
+            a.z = value.z - a.z;
             
-            if (ab == Vector3.zero)
-                return 0f;
-            
-            Vector3 projected = Vector3.Project(av, ab);
-            float t = projected.magnitude / ab.magnitude;
-            
-            if (Vector3.Dot(ab, projected) < 0)
-                t *= -1;
+            //Vector3.Project
+            float num1 = b.x * b.x + b.y * b.y + b.z * b.z; //Vector3.Dot
+            if (num1 == 0f) return 0f;
+            float num2 = a.x * b.x + a.y * b.y + a.z * b.z; //Vector3.Dot
+            a.x = b.x * num2 / num1;
+            a.y = b.y * num2 / num1;
+            a.z = b.z * num2 / num1;
+            //Vector3.Project
 
-            // Normalize t to be between 0 and 1
-            return Mathf.InverseLerp(0, ab.magnitude, t * ab.magnitude);
+            float bMagnitude = b.magnitude;
+            float t = a.magnitude / bMagnitude;
+            
+            if (b.x * a.x + b.y * a.y + b.z * a.z < 0) //Vector3.Dot
+                t *= -1;
+            
+            return Mathf.InverseLerp(0f, bMagnitude, t * bMagnitude);
         }
+
+        public static Vector3 Project(this in Vector3 vector, Vector3 direction)
+        {
+            float d = direction.x * direction.x + direction.y * direction.y + direction.z * direction.z;
+            if (d == 0f) return Vector3.zero;
+            float v = vector.x * direction.x + vector.y * direction.y + vector.z * direction.z;
+            v /= d;
+            direction.x *= v;
+            direction.y *= v;
+            direction.z *= v;
+            return direction;
+        }
+
+        public static float Dot(this in Vector3 a, in Vector3 b) => a.x * b.x + a.y * b.y + a.z * b.z;
     }
 }

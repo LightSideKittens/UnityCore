@@ -9,6 +9,7 @@ namespace LSCore
     {
         internal Vector2 minPoint;
         internal Vector2 maxPoint;
+        internal bool isGradientDirty;
         internal bool isColorDirty;
         
         private Color DefaulColor(in Vector3 pos) => color;
@@ -74,6 +75,12 @@ namespace LSCore
             SetVerticesDirty();
         }
         
+        internal void SetGradientDirty()
+        {
+            isGradientDirty = true;
+            SetVerticesDirty();
+        }
+        
         private void UpdateColorEvaluateFunc()
         {
             if (gradient.colorKeys.Length > 1)
@@ -90,7 +97,8 @@ namespace LSCore
         {
             UIVertex vert = new UIVertex();
 
-            for (int i = 0; i < vh.currentVertCount; i++)
+            var count = vh.currentVertCount;
+            for (int i = 0; i < count; i++)
             {
                 vh.PopulateUIVertex(ref vert, i);
                 vert.color = colorEvaluate(vert.position);

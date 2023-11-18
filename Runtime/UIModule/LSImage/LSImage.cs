@@ -7,6 +7,7 @@ namespace LSCore
     public partial class LSImage : Image
     {
         private static readonly LSVertexHelper vertexHelper = new LSVertexHelper();
+        private static readonly VertexHelper legacyVertexHelper = new VertexHelper();
         private Rect currentRect;
         
 #if UNITY_EDITOR
@@ -47,21 +48,21 @@ namespace LSCore
 
             var components = ListPool<Component>.Get();
             GetComponents(typeof(IMeshModifier), components);
-
-            VertexHelper legacy = null;
             
             if (components.Count > 0)
             {
-                legacy = vertexHelper.ToLegacy();
+                vertexHelper.FillLegacy(legacyVertexHelper);
             }
+            
             for (var i = 0; i < components.Count; i++)
-                ((IMeshModifier)components[i]).ModifyMesh(legacy);
+                ((IMeshModifier)components[i]).ModifyMesh(legacyVertexHelper);
 
             ListPool<Component>.Release(components);
 
-            vertexHelper.FillMesh(workerMesh);
-            canvasRenderer.SetMesh(workerMesh);
+            vertexHelper.FillMesh(resultMesh);
+            canvasRenderer.SetMesh(resultMesh);
         }
+        
         
         protected void OnPopulateMesh(LSVertexHelper toFill)
         {
@@ -70,27 +71,18 @@ namespace LSCore
                 CalculatePerpendicularPoints();
             }
             
-            if (isColorDirty && cachedMesh != null)
+            if (isColorDirty && TryGetCachedVertextHelper(toFill, resultMesh))
             {
-                toFill.Clear();
-                var zero = Vector4.zero;
-                var verts = cachedMesh.vertices;
-                var tris = cachedMesh.triangles;
-                var colors = cachedMesh.colors;
-                var uvs = cachedMesh.uv;
-                
-                for (int i = 0; i < verts.Length; i++)
-                {
-                    toFill.AddVert(verts[i], colors[i], uvs[i], zero, zero, zero);
-                }
-
-                for (int i = 0; i < tris.Length; i += 3)
-                {
-                    toFill.AddTriangle(tris[i], tris[i+1], tris[i+2]);
-                }
-                
                 UpdateMeshColors(toFill);
                 isColorDirty = false;
+                return;
+            }
+
+            if (isGradientDirty && TryGetCachedVertextHelper(toFill, withoutGradientMesh))
+            {
+                CutMeshForGradient(toFill);
+                UpdateMeshColors(toFill);
+                isGradientDirty = false;
                 return;
             }
             
@@ -128,10 +120,17 @@ namespace LSCore
         private void PostProcessMesh(LSVertexHelper vh)
         {
             RotateMesh(vh);
-            CutMeshForGradient(vh);
+            withoutGradientMesh = new Mesh();
+            withoutGradientMesh.name = "gradient";
+            vh.FillMesh(withoutGradientMesh);
+            if (gradient.colorKeys.Length > 2)
+            {
+                CutMeshForGradient(vh);
+            }
+            
             UpdateMeshColors(vh);
-            cachedMesh = new Mesh();
-            vh.FillMesh(cachedMesh);
+            resultMesh = new Mesh();
+            resultMesh.name = "result";
         }
 
         private void RotateMesh(LSVertexHelper vh)
@@ -174,6 +173,33 @@ namespace LSCore
                 (pos.x, pos.y) = (pos.y, pos.x);
                 rect.position = pos;
             }
+        }
+
+        private bool TryGetCachedVertextHelper(LSVertexHelper vh, Mesh mesh)
+        {
+            var canCompute = mesh != null;
+            
+            if (canCompute)
+            {
+                vh.Clear();
+                var zero = Vector4.zero;
+                var verts = mesh.vertices;
+                var tris = mesh.triangles;
+                var colors = mesh.colors;
+                var uvs = mesh.uv;
+                
+                for (int i = 0; i < verts.Length; i++)
+                {
+                    vh.AddVert(verts[i], colors[i], uvs[i], zero, zero, zero);
+                }
+
+                for (int i = 0; i < tris.Length; i += 3)
+                {
+                    vh.AddTriangle(tris[i], tris[i+1], tris[i+2]);
+                }
+            }
+
+            return canCompute;
         }
     }
 }

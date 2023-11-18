@@ -53,7 +53,7 @@ namespace LSCore
 
             Rect rect = GetPixelAdjustedRect();
             Vector4 adjustedBorders = GetAdjustedBorders(border / multipliedPixelsPerUnit, rect);
-            padding = padding / multipliedPixelsPerUnit;
+            padding /= multipliedPixelsPerUnit;
             
             TryRotateRect(ref rect);
             currentRect = rect;

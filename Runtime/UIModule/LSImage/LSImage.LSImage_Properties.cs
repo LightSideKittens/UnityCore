@@ -10,9 +10,10 @@ namespace LSCore
         [SerializeField] private float angle = 45;
         [SerializeField] private float gradientStart;
         [SerializeField] private float gradientEnd;
-        private Vector2 gradientStartPoint;
-        private Vector2 gradientEndPoint;
-        private Mesh cachedMesh;
+        internal Vector2 gradientStartPoint;
+        internal Vector2 gradientEndPoint;
+        private Mesh resultMesh;
+        private Mesh withoutGradientMesh;
         
         public int RotateId
         {
@@ -20,7 +21,7 @@ namespace LSCore
             set
             {
                 rotateId = value;
-                SetColorDirty();
+                SetGradientDirty();
             }
         }
 
@@ -40,7 +41,7 @@ namespace LSCore
             set
             {
                 gradient = value;
-                SetColorDirty();
+                SetGradientDirty();
             }
         }
         
@@ -77,7 +78,7 @@ namespace LSCore
                 var direction = GradientDirection;
                 gradientStartPoint.x = minPoint.x + direction.x * gradientStart;
                 gradientStartPoint.y = minPoint.y + direction.y * gradientStart;
-                SetColorDirty();
+                SetGradientDirty();
             }
         }
         
@@ -90,27 +91,7 @@ namespace LSCore
                 var direction = GradientDirection;
                 gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
                 gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
-                SetColorDirty();
-            }
-        }
-        
-        internal Vector2 GradientStartPoint
-        {
-            get => gradientStartPoint;
-            set
-            {
-                gradientStartPoint = value;
-                SetColorDirty();
-            }
-        }
-        
-        internal Vector2 GradientEndPoint
-        {
-            get => gradientEndPoint;
-            set
-            {
-                gradientEndPoint = value;
-                SetColorDirty();
+                SetGradientDirty();
             }
         }
 

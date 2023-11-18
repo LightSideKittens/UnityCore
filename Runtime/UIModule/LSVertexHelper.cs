@@ -17,6 +17,7 @@ namespace UnityEngine.UI
         private List<int> indices;
 
         private static readonly Vector4 defaultTangent = new Vector4(1.0f, 0.0f, 0.0f, -1.0f);
+        private static readonly Vector4 defaultUv = Vector4.zero;
         private static readonly Vector3 defaultNormal = Vector3.back;
 
         private bool listsInitalized = false;
@@ -44,21 +45,19 @@ namespace UnityEngine.UI
             indices.AddRange(m.GetIndices(0));
         }
 
-        public VertexHelper ToLegacy()
+        public void FillLegacy(VertexHelper vh)
         {
-            var vh = new VertexHelper();
-            var zero = Vector4.zero;
-            for (int i = 0; i < currentVertCount; i++)
+            var vertCount = currentVertCount;
+            for (int i = 0; i < vertCount; i++)
             {
-                vh.AddVert(positions[i], colors[i], uvs0[i], i < uvs1.Count ? uvs1[i] : zero, i < uvs2.Count ? uvs2[i] : zero, i < uvs3.Count ? uvs3[i] : zero, defaultNormal, defaultTangent );
+                vh.AddVert(positions[i], colors[i], uvs0[i], uvs1[i], uvs2[i], uvs3[i], normals[i], tangents[i]);
             }
 
-            for (int i = 0; i < currentIndexCount / 3; i++)
+            var indexCount = currentIndexCount / 3;
+            for (int i = 0; i < indexCount; i++)
             {
                 vh.AddTriangle(indices[i], indices[i+1], indices[i+2]);
             }
-
-            return vh;
         }
         
         private void InitializeListIfRequired()
@@ -150,7 +149,7 @@ namespace UnityEngine.UI
         /// </summary>
         /// <param name="vertex">Vertex to populate</param>
         /// <param name="i">Index to populate.</param>
-        public void PopulateUIVertex(ref UIVertex vertex, in int i)
+        public void PopulateUIVertex(ref UIVertex vertex, int i)
         {
             InitializeListIfRequired();
 
@@ -169,7 +168,7 @@ namespace UnityEngine.UI
         /// </summary>
         /// <param name="vertex">The vertex to fill</param>
         /// <param name="i">the position in the current list to fill.</param>
-        public void SetUIVertex(in UIVertex vertex, in int i)
+        public void SetUIVertex(in UIVertex vertex, int i)
         {
             InitializeListIfRequired();
 
@@ -257,7 +256,16 @@ namespace UnityEngine.UI
         /// <param name="tangent">Tangent of the vert</param>
         public void AddVert(in Vector3 position, in Color32 color, in Vector4 uv0, in Vector4 uv1, in Vector3 normal, in Vector4 tangent)
         {
-            AddVert(position, color, uv0, uv1, Vector4.zero, Vector4.zero, normal, tangent);
+            InitializeListIfRequired();
+            
+            positions.Add(position);
+            colors.Add(color);
+            uvs0.Add(uv0);
+            uvs1.Add(uv1);
+            uvs2.Add(defaultUv);
+            uvs3.Add(defaultUv);
+            normals.Add(normal);
+            tangents.Add(tangent);
         }
 
         /// <summary>
@@ -268,7 +276,16 @@ namespace UnityEngine.UI
         /// <param name="uv0">UV of the vert</param>
         public void AddVert(in Vector3 position, in Color32 color, in Vector4 uv0)
         {
-            AddVert(position, color, uv0, Vector4.zero, defaultNormal, defaultTangent);
+            InitializeListIfRequired();
+            
+            positions.Add(position);
+            colors.Add(color);
+            uvs0.Add(uv0);
+            uvs1.Add(defaultUv);
+            uvs2.Add(defaultUv);
+            uvs3.Add(defaultUv);
+            normals.Add(defaultNormal);
+            tangents.Add(defaultTangent);
         }
 
         /// <summary>
@@ -277,7 +294,16 @@ namespace UnityEngine.UI
         /// <param name="v">The vertex to add</param>
         public void AddVert(in UIVertex v)
         {
-            AddVert(v.position, v.color, v.uv0, v.uv1, v.uv2, v.uv3, v.normal, v.tangent);
+            InitializeListIfRequired();
+            
+            positions.Add(v.position);
+            colors.Add(v.color);
+            uvs0.Add(v.uv0);
+            uvs1.Add(v.uv1);
+            uvs2.Add(v.uv2);
+            uvs3.Add(v.uv3);
+            normals.Add(v.normal);
+            tangents.Add(v.tangent);
         }
 
         /// <summary>
@@ -286,7 +312,7 @@ namespace UnityEngine.UI
         /// <param name="idx0">index 0</param>
         /// <param name="idx1">index 1</param>
         /// <param name="idx2">index 2</param>
-        public void AddTriangle(in int idx0, in int idx1, in int idx2)
+        public void AddTriangle(int idx0, int idx1, int idx2)
         {
             InitializeListIfRequired();
 
@@ -304,7 +330,18 @@ namespace UnityEngine.UI
             int startIndex = currentVertCount;
 
             for (int i = 0; i < 4; i++)
-                AddVert(verts[i].position, verts[i].color, verts[i].uv0, verts[i].uv1, verts[i].normal, verts[i].tangent);
+            {
+                InitializeListIfRequired();
+                ref var vert = ref verts[i];
+                positions.Add(vert.position);
+                colors.Add(vert.color);
+                uvs0.Add(vert.uv0);
+                uvs1.Add(vert.uv1);
+                uvs2.Add(vert.uv2);
+                uvs3.Add(vert.uv3);
+                normals.Add(vert.normal);
+                tangents.Add(vert.tangent);
+            }
 
             AddTriangle(startIndex, startIndex + 1, startIndex + 2);
             AddTriangle(startIndex + 2, startIndex + 3, startIndex);

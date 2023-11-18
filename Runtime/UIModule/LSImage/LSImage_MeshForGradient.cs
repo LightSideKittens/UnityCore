@@ -28,14 +28,16 @@ namespace LSCore
 
             foreach (var item in cuts)
             {
+                var pos = Mathf.Lerp(gradientStart, 1 - gradientEnd, item);
+                
                 list.Clear();
                 
-                if (item < 0.001 || item > 0.999)
+                if (pos < 0.001 || pos > 0.999)
                 {
                     continue;
                 }
 
-                var point = GetCutOrigin(item, d, center, size);
+                var point = GetCutOrigin(pos, d, size);
                 for (int j = 0; j < tris.Count; j += 3)
                 {
                     CutTriangle(tris, j, list, d, center, point);
@@ -48,7 +50,7 @@ namespace LSCore
             vh.AddUIVertexTriangleStream(tris);
         }
         
-        Vector2 GetCutOrigin(in float f, Vector2 v, in Vector2 center, in Vector2 size)
+        Vector2 GetCutOrigin(float f, Vector2 v, Vector2 size)
         {
             Vector2 p1, p2;
 
@@ -74,7 +76,7 @@ namespace LSCore
             return Vector2.Lerp(p1, p2, f);
         }
 
-        void CutTriangle(List<UIVertex> tris, int idx, List<UIVertex> list, in Vector2 cutDirection, in Vector2 center, in Vector2 origin)
+        void CutTriangle(List<UIVertex> tris, int idx, List<UIVertex> list, Vector2 cutDirection, Vector2 center, Vector2 origin)
         {
             var a = tris[idx];
             var b = tris[idx + 1];

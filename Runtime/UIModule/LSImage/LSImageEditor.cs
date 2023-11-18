@@ -109,7 +109,7 @@ namespace LSCore
                 if (GUILayout.Button($"{targetAngle}°") && rotateId.intValue != i)
                 {
                     rotateId.intValue = i;
-                    image.SetColorDirty();
+                    image.SetVerticesDirty();
                 }
             }
 
@@ -129,9 +129,8 @@ namespace LSCore
             Vector3 center = (Vector3)image.rectTransform.rect.center + imagePosition;
             var center2D = (Vector2)center;
 
-            var start = (image.GradientStartPoint + center2D).RotateAroundPoint(imagePosition, imageRotation);
-            var end = (image.GradientEndPoint + center2D).RotateAroundPoint(imagePosition, imageRotation);
-            center = center2D.RotateAroundPoint(imagePosition, imageRotation);
+            var start = (image.gradientStartPoint + center2D).RotateAroundPoint(imagePosition, imageRotation);
+            var end = (image.gradientEndPoint + center2D).RotateAroundPoint(imagePosition, imageRotation);
 
             float handle1Size = HandleUtility.GetHandleSize(start) * 0.1f;
             float handle2Size = HandleUtility.GetHandleSize(end) * 0.1f;
@@ -150,7 +149,7 @@ namespace LSCore
                 Handles.CircleHandleCap);
             Vector3 newHandle2Pos =
                 Handles.FreeMoveHandle(id2, end, handle2Size * 1.5f, Vector3.zero, Handles.CircleHandleCap);
-
+            
             if (EditorGUI.EndChangeCheck())
             {
                 newHandle1Pos = ((Vector2)newHandle1Pos).RotateAroundPoint(imagePosition, -imageRotation);
@@ -164,6 +163,7 @@ namespace LSCore
             }
 
             EditorGUI.BeginChangeCheck();
+            center = center2D.RotateAroundPoint(imagePosition, imageRotation);
             var newAngle = Handles.RotationHandle(Quaternion.Euler(Vector3.forward * (image.Angle + imageRotation)),
                 center);
             if (EditorGUI.EndChangeCheck())
