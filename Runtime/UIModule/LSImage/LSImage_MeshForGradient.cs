@@ -22,26 +22,24 @@ namespace LSCore
             var rect = rectTransform.rect;
             var center = rect.center;
             var size = rect.size;
-            var start = gradientEnd;
-            var end = gradientStart;
+            var start = gradientStart;
+            var end = gradientEnd;
 
             var cuts = gradient.alphaKeys.Select(x => x.time);
             cuts = cuts.Union(gradient.colorKeys.Select(x => x.time));
-
+            
             if (rotateId % 2 == 1)
             {
-                cuts = cuts.Reverse();
+                start = 1 - gradientStart;
+            }
+            else
+            {
+                end = 1 - gradientEnd;
             }
             
-            if (rotateId > 1)
-            {
-                (start, end) = (end, start);
-            }
-
             foreach (var item in cuts)
             {
-                var pos = Mathf.Lerp(start, 1 - end, item);
-                
+                var pos = Mathf.Lerp(start, end, item);
                 list.Clear();
                 
                 if (pos < 0.001 || pos > 0.999)
@@ -68,15 +66,16 @@ namespace LSCore
 
             v = v.Rotate(-90);
             var newAngle = (angle + 360 - rotateId * 90) % 360;
-            size *= 0.5f;
             
             if (newAngle % 180 < 90)
             {
+                size *= 0.5f;
                 p1 = (Vector2.Scale(size, Vector2.down + Vector2.left)).Project(v);
                 p2 = (Vector2.Scale(size,Vector2.up + Vector2.right)).Project(v);
             }
             else
             {
+                size *= -0.5f;
                 p1 = (Vector2.Scale(size,Vector2.up + Vector2.left)).Project(v);
                 p2 = (Vector2.Scale(size,Vector2.down + Vector2.right)).Project(v);
             }

@@ -54,7 +54,6 @@ namespace LSCore
             Rect rect = GetPixelAdjustedRect();
             TryRotateRect(ref rect);
             currentRect = rect;
-            
             Vector4 adjustedBorders = GetAdjustedBorders(border / multipliedPixelsPerUnit, rect);
             padding /= multipliedPixelsPerUnit;
 
@@ -127,7 +126,8 @@ namespace LSCore
             var size = activeSprite == null ? Vector2.zero : new Vector2(activeSprite.rect.width, activeSprite.rect.height);
 
             Rect rect = GetPixelAdjustedRect();
-            // Debug.Log(string.Format("r:{2}, size:{0}, padding:{1}", size, padding, r));
+            TryRotateRect(ref rect);
+            currentRect = rect;
             
             int spriteW = RoundToInt(size.x);
             int spriteH = RoundToInt(size.y);
@@ -142,9 +142,6 @@ namespace LSCore
             {
                 PreserveSpriteAspectRatio(ref rect, size);
             }
-            
-            TryRotateRect(ref rect);
-            currentRect = rect;
             
             v = new Vector4(
                 rect.x + rect.width * v.x,
@@ -269,14 +266,14 @@ namespace LSCore
             }
 
             Rect rect = GetPixelAdjustedRect();
-
+            TryRotateRect(ref rect);
+            currentRect = rect;
             float tileWidth = (spriteSize.x - border.x - border.z) / multipliedPixelsPerUnit;
             float tileHeight = (spriteSize.y - border.y - border.w) / multipliedPixelsPerUnit;
             
             border = GetAdjustedBorders(border / multipliedPixelsPerUnit, rect);
             
-            TryRotateRect(ref rect);
-            currentRect = rect;
+
             
             var uvMin = new Vector2(inner.x, inner.y);
             var uvMax = new Vector2(inner.z, inner.w);
