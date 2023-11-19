@@ -160,7 +160,7 @@ namespace LSCore
                 vh.SetUIVertex(vert, i);
             }
 
-            count = vh.currentIndexCount / 2;
+            count = vh.currentIndexCount / 6 * 4;
             vh.ClearTriangles();
             
             if (rotateId % 2 == 1)
