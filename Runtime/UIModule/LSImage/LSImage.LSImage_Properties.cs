@@ -50,7 +50,7 @@ namespace LSCore
             get => angle;
             set
             {
-                angle = value;
+                angle = (value + 360) % 360;
                 CalculatePerpendicularPoints();
                 var direction = GradientDirection;
                 gradientStartPoint.x = minPoint.x + direction.x * gradientStart;
@@ -58,13 +58,9 @@ namespace LSCore
                 gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
                 gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
 
-                if (gradient.colorKeys.Length > 2 || gradient.alphaKeys.Length > 2)
+                if (gradient.colorKeys.Length > 1 || gradient.alphaKeys.Length > 1)
                 {
                     SetVerticesDirty();
-                }
-                else
-                {
-                    SetColorDirty();
                 }
             }
         }

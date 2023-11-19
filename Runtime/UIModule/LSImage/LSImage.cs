@@ -64,7 +64,7 @@ namespace LSCore
         }
         
         
-        protected void OnPopulateMesh(LSVertexHelper toFill)
+        private void OnPopulateMesh(LSVertexHelper toFill)
         {
             if (currentRect != rectTransform.rect)
             {
@@ -121,47 +121,85 @@ namespace LSCore
         {
             RotateMesh(vh);
             withoutGradientMesh = new Mesh();
-            withoutGradientMesh.name = "gradient";
             vh.FillMesh(withoutGradientMesh);
-            if (gradient.colorKeys.Length > 2)
+            
+            if (gradient.colorKeys.Length > 1)
             {
                 CutMeshForGradient(vh);
             }
             
             UpdateMeshColors(vh);
             resultMesh = new Mesh();
-            resultMesh.name = "result";
         }
+
+        public delegate void RotateAction(ref Vector3 value, in Vector2 center);
+        private RotateAction rotateAction;
 
         private void RotateMesh(LSVertexHelper vh)
         {
             if(rotateId == 0) return;
             
             UIVertex vert = new UIVertex();
+            var count = vh.currentVertCount;
+            var center = rectTransform.rect.center * 2;
+
+            rotateAction = rotateId switch
+            {
+                1 => Rotate90,
+                2 => Rotate180,
+                3 => Rotate270,
+                _ => rotateAction
+            };
             
-            for (int i = 0; i < vh.currentVertCount; i++)
+            for (int i = 0; i < count; i++)
             {
                 vh.PopulateUIVertex(ref vert, i);
                 var pos = vert.position;
-                
-                switch (rotateId)
-                {
-                    case 1:
-                        pos = new Vector3(-pos.y, pos.x, pos.z);
-                        break;
-
-                    case 2:
-                        pos = new Vector3(-pos.x, -pos.y, pos.z);
-                        break;
-
-                    case 3:
-                        pos = new Vector3(pos.y, -pos.x, pos.z);
-                        break;
-                }
-
+                rotateAction(ref pos, center);
                 vert.position = pos;
                 vh.SetUIVertex(vert, i);
             }
+
+            count = vh.currentIndexCount / 2;
+            vh.ClearTriangles();
+            
+            if (rotateId % 2 == 1)
+            {
+                for (int i = 0; i < count; i += 4)
+                {
+                    vh.AddTriangle(i+1, i + 2, i+3);
+                    vh.AddTriangle(i+3, i, i+1);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < count; i += 4)
+                {
+                    vh.AddTriangle(i, i + 1, i + 2);
+                    vh.AddTriangle(i + 2, i + 3, i);
+                }
+            }
+
+        }
+
+        private void Rotate90(ref Vector3 pos, in Vector2 center)
+        {
+            var x = pos.x;
+            pos.x = -pos.y + center.x;
+            pos.y = x;
+        }
+        
+        private void Rotate180(ref Vector3 pos, in Vector2 center)
+        {
+            pos.x = -pos.x + center.x;
+            pos.y = -pos.y + center.y;
+        }
+        
+        private void Rotate270(ref Vector3 pos, in Vector2 center)
+        {
+            var x = pos.x;
+            pos.x = pos.y;
+            pos.y = -x + center.y;
         }
         
         private void TryRotateRect(ref Rect rect)

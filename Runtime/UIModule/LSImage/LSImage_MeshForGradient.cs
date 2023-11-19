@@ -22,13 +22,25 @@ namespace LSCore
             var rect = rectTransform.rect;
             var center = rect.center;
             var size = rect.size;
-            
+            var start = gradientEnd;
+            var end = gradientStart;
+
             var cuts = gradient.alphaKeys.Select(x => x.time);
             cuts = cuts.Union(gradient.colorKeys.Select(x => x.time));
 
+            if (rotateId % 2 == 1)
+            {
+                cuts = cuts.Reverse();
+            }
+            
+            if (rotateId > 1)
+            {
+                (start, end) = (end, start);
+            }
+
             foreach (var item in cuts)
             {
-                var pos = Mathf.Lerp(gradientStart, 1 - gradientEnd, item);
+                var pos = Mathf.Lerp(start, 1 - end, item);
                 
                 list.Clear();
                 
@@ -55,20 +67,21 @@ namespace LSCore
             Vector2 p1, p2;
 
             v = v.Rotate(-90);
-            angle = (angle + 360) % 360;
+            var newAngle = (angle + 360 - rotateId * 90) % 360;
+            size *= 0.5f;
             
-            if (angle % 180 < 90)
+            if (newAngle % 180 < 90)
             {
-                p1 = (Vector2.Scale(size * 0.5f, Vector2.down + Vector2.left)).Project(v);
-                p2 = (Vector2.Scale(size * 0.5f,Vector2.up + Vector2.right)).Project(v);
+                p1 = (Vector2.Scale(size, Vector2.down + Vector2.left)).Project(v);
+                p2 = (Vector2.Scale(size,Vector2.up + Vector2.right)).Project(v);
             }
             else
             {
-                p1 = (Vector2.Scale(size * -0.5f,Vector2.up + Vector2.left)).Project(v);
-                p2 = (Vector2.Scale(size * -0.5f,Vector2.down + Vector2.right)).Project(v);
+                p1 = (Vector2.Scale(size,Vector2.up + Vector2.left)).Project(v);
+                p2 = (Vector2.Scale(size,Vector2.down + Vector2.right)).Project(v);
             }
             
-            if (angle >= 180)
+            if (newAngle >= 180)
             {
                 return Vector2.Lerp(p2, p1, f);
             }
@@ -76,7 +89,7 @@ namespace LSCore
             return Vector2.Lerp(p1, p2, f);
         }
 
-        void CutTriangle(List<UIVertex> tris, int idx, List<UIVertex> list, Vector2 cutDirection, Vector2 center, Vector2 origin)
+        void CutTriangle(List<UIVertex> tris, int idx, List<UIVertex> list, in Vector2 cutDirection, in Vector2 center, in Vector2 origin)
         {
             var a = tris[idx];
             var b = tris[idx + 1];

@@ -13,11 +13,7 @@ namespace LSCore
         internal bool isColorDirty;
         
         private Color DefaulColor(in Vector3 pos) => color;
-        private float GetGradientValue(Vector2 pos)
-        {
-            pos -= currentRect.center;
-            return pos.UnclampedInverseLerp(gradientStartPoint, gradientEndPoint);
-        }
+        private float GetGradientValue(in Vector2 pos) => pos.UnclampedInverseLerp(gradientStartPoint, gradientEndPoint);
 
         private Color ColorEvaluate(in Vector3 pos) => gradient.Evaluate(GetGradientValue(pos));
         private Color Inverted_ColorEvaluate(in Vector3 pos) => gradient.Evaluate(1 - GetGradientValue(pos));
@@ -59,8 +55,8 @@ namespace LSCore
 
             void CalculatePerpendicular(in Vector2 rectCorner, in Vector2 refPoint, ref Vector2 point, ref float maxDistance)
             {
-                var perpendicular = Vector3.Project(rectCorner, direction);
-                var distance = Vector3.Distance(perpendicular, refPoint);
+                var perpendicular = rectCorner.Project(direction);
+                var distance = Vector2.Distance(perpendicular, refPoint);
                 if (distance < maxDistance)
                 {
                     point = perpendicular;
@@ -98,10 +94,18 @@ namespace LSCore
             UIVertex vert = new UIVertex();
 
             var count = vh.currentVertCount;
+            Vector3 center = currentRect.center;
+            
+            if (rotateId % 2 == 1)
+            {
+                (center.x, center.y) = (center.y, center.x);
+            }
+            
             for (int i = 0; i < count; i++)
             {
                 vh.PopulateUIVertex(ref vert, i);
-                vert.color = colorEvaluate(vert.position);
+                vert.color = colorEvaluate(vert.position - center);
+                
                 vh.SetUIVertex(vert, i);
             }
         }

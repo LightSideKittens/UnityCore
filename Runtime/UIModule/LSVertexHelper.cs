@@ -53,8 +53,8 @@ namespace UnityEngine.UI
                 vh.AddVert(positions[i], colors[i], uvs0[i], uvs1[i], uvs2[i], uvs3[i], normals[i], tangents[i]);
             }
 
-            var indexCount = currentIndexCount / 3;
-            for (int i = 0; i < indexCount; i++)
+            var indexCount = currentIndexCount;
+            for (int i = 0; i < indexCount; i += 3)
             {
                 vh.AddTriangle(indices[i], indices[i+1], indices[i+2]);
             }
@@ -319,6 +319,12 @@ namespace UnityEngine.UI
             indices.Add(idx0);
             indices.Add(idx1);
             indices.Add(idx2);
+        }
+        
+        public void ClearTriangles()
+        {
+            InitializeListIfRequired();
+            indices.Clear();
         }
 
         /// <summary>

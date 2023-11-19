@@ -52,12 +52,13 @@ namespace LSCore
             }
 
             Rect rect = GetPixelAdjustedRect();
-            Vector4 adjustedBorders = GetAdjustedBorders(border / multipliedPixelsPerUnit, rect);
-            padding /= multipliedPixelsPerUnit;
-            
             TryRotateRect(ref rect);
             currentRect = rect;
             
+            Vector4 adjustedBorders = GetAdjustedBorders(border / multipliedPixelsPerUnit, rect);
+            padding /= multipliedPixelsPerUnit;
+
+
             vertScratch[0] = new Vector2(padding.x, padding.y);
             vertScratch[3] = new Vector2(rect.width - padding.z, rect.height - padding.w);
 

@@ -150,12 +150,20 @@ namespace LSCore
             Vector3 newHandle2Pos =
                 Handles.FreeMoveHandle(id2, end, handle2Size * 1.5f, Vector3.zero, Handles.CircleHandleCap);
             
+            Handles.color = Color.red;
+            Handles.DrawSolidDisc(image.minPoint, Vector3.forward, 7);
+            Handles.DrawSolidDisc(image.maxPoint, Vector3.forward, 7);
+            newHandle1Pos = ((Vector2)newHandle1Pos).RotateAroundPoint(imagePosition, -imageRotation);
+            newHandle2Pos = ((Vector2)newHandle2Pos).RotateAroundPoint(imagePosition, -imageRotation);
+            newHandle1Pos -= center;
+            newHandle2Pos -= center;
+            Handles.color = Color.green;
+            Handles.DrawSolidDisc(newHandle1Pos, Vector3.forward, 5);
+            Handles.DrawSolidDisc(newHandle2Pos, Vector3.forward, 5);
+            
             if (EditorGUI.EndChangeCheck())
             {
-                newHandle1Pos = ((Vector2)newHandle1Pos).RotateAroundPoint(imagePosition, -imageRotation);
-                newHandle2Pos = ((Vector2)newHandle2Pos).RotateAroundPoint(imagePosition, -imageRotation);
-                newHandle1Pos -= center;
-                newHandle2Pos -= center;
+
                 image.GradientStart = newHandle1Pos.UnclampedInverseLerp(image.minPoint, image.maxPoint);
                 image.GradientEnd = newHandle2Pos.UnclampedInverseLerp(image.maxPoint, image.minPoint);
                 Undo.RecordObject(image, "Move Handle");
