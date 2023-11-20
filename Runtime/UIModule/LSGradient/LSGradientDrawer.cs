@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using DG.DemiEditor;
 using Sirenix.Utilities;
 using UnityEditor;
@@ -15,6 +14,7 @@ namespace LSCore
         private Gradient gradient = new Gradient();
         private bool isInited;
         private LSGradient lsGradient;
+        private SerializedProperty lsGradientProp;
         private bool isHold;
         private bool isDirty;
         private int selected;
@@ -25,8 +25,9 @@ namespace LSCore
 
         public override void OnGUI(Rect rect, SerializedProperty property, GUIContent label)
         {
-            if (!isInited)
+            if (!isInited || lsGradientProp != property)
             {
+                lsGradientProp = property;
                 lsGradient = property.CastTo<LSGradient>();
                 lsGradient.FillLegacy(gradient);
                 target = property.serializedObject.targetObject;
@@ -46,7 +47,7 @@ namespace LSCore
                 {
                     if (e.button == 0)
                     {
-                        lsGradient[(Index)selected].position = Mathf.Clamp01((mousePos.x - rect.xMin) / rect.width);
+                        lsGradient.SetPostion(selected, Mathf.Clamp01((mousePos.x - rect.xMin) / rect.width));
                         isDirty = true;
                     }
                 }
@@ -62,7 +63,7 @@ namespace LSCore
             {
                 if (e.commandName == "ColorPickerChanged")
                 {
-                    lsGradient[(Index)selected].color = LSColorPicker.Color;
+                    lsGradient.SetColor(selected, LSColorPicker.Color);
                     isDirty = true;
                 }
             }

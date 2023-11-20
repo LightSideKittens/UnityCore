@@ -24,7 +24,7 @@ namespace LSCore
         {
             rt = rectTransform;
             base.Reset();
-            gradient = new LSGradient();
+            gradient = new LSGradient(new LSGradient.Key(0, Color.white));
             CalculatePerpendicularPoints();
         }
 #endif
@@ -34,7 +34,7 @@ namespace LSCore
         {
             rt = rectTransform;
             base.OnEnable();
-            gradient ??= new LSGradient();
+            gradient ??= new LSGradient(new LSGradient.Key(0, Color.white));
             UpdateColorEvaluateFunc();
         }
 
@@ -63,22 +63,33 @@ namespace LSCore
 
             ListPool<Component>.Release(components);
 
-            vertexHelper.FillMesh(resultMesh);
+            if (skipFillMesh)
+            {
+                skipFillMesh = false;
+            }
+            else
+            {
+                vertexHelper.FillMesh(resultMesh);
+                resultMeshVerts = vertexHelper.positions.ToArray();
+                resultMeshColors = new Color[resultMeshVerts.Length];
+            }
+            
             canvasRenderer.SetMesh(resultMesh);
         }
         
         
         private void OnPopulateMesh(LSVertexHelper toFill)
         {
-            if (isRectDirty)
+            if (isRectDirty && gradient.Count > 1)
             {
                 CalculatePerpendicularPoints();
                 isRectDirty = false;
             }
             
-            if (isColorDirty && TryGetCachedVertextHelper(toFill, resultMesh))
+            if (isColorDirty && resultMesh != null)
             {
-                UpdateMeshColors(toFill);
+                skipFillMesh = true;
+                UpdateMeshColors();
                 isColorDirty = false;
                 return;
             }
@@ -227,12 +238,29 @@ namespace LSCore
                 var zero = Vector4.zero;
                 var verts = mesh.vertices;
                 var tris = mesh.triangles;
-                var colors = mesh.colors;
                 var uvs = mesh.uv;
-                
-                for (int i = 0; i < verts.Length; i++)
+                var uv0 = new Vector4();
+
+                if (isColorDirty)
                 {
-                    vh.AddVert(verts[i], colors[i], uvs[i], zero, zero, zero);
+                    for (int i = 0; i < verts.Length; i++)
+                    {
+                        var uv = uvs[i];
+                        uv0.x = uv.x;
+                        uv0.y = uv.y;
+                        vh.AddVert(verts[i], defaultColor, uv0, zero, zero, zero);
+                    }
+                }
+                else
+                {
+                    var colors = mesh.colors;
+                    for (int i = 0; i < verts.Length; i++)
+                    {
+                        var uv = uvs[i];
+                        uv0.x = uv.x;
+                        uv0.y = uv.y;
+                        vh.AddVert(verts[i], colors[i], uv0, zero, zero, zero);
+                    }
                 }
 
                 for (int i = 0; i < tris.Length; i += 3)

@@ -13,15 +13,17 @@ namespace LSCore
         internal Vector2 gradientStartPoint;
         internal Vector2 gradientEndPoint;
         private Mesh resultMesh;
+        private Vector3[] resultMeshVerts;
+        private Color[] resultMeshColors;
         private Mesh withoutGradientMesh;
 
         public override Color color
         {
-            get => base.color;
+            get => gradient[0].color;
             set
             {
+                gradient.SetColor(0, value);
                 SetColorDirty();
-                base.color = value;
             }
         }
 
@@ -61,15 +63,15 @@ namespace LSCore
             set
             {
                 angle = (value + 360) % 360;
-                CalculatePerpendicularPoints();
-                var direction = GradientDirection;
-                gradientStartPoint.x = minPoint.x + direction.x * gradientStart;
-                gradientStartPoint.y = minPoint.y + direction.y * gradientStart;
-                gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
-                gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
-
                 if (gradient.Count > 1)
                 {
+                    CalculatePerpendicularPoints();
+                    var direction = GradientDirection;
+                    gradientStartPoint.x = minPoint.x + direction.x * gradientStart;
+                    gradientStartPoint.y = minPoint.y + direction.y * gradientStart;
+                    gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
+                    gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
+                    
                     SetVerticesDirty();
                 }
             }

@@ -21,26 +21,38 @@ namespace LSCore
             }
         }
 
+        private static Key defaultKey = new() { position = 0, color = Color.white };
+
         [SerializeField] private Key[] keys;
         private LSList<Key> keysList = new();
-
-        public int Count => keysList.Count;
         
+        public int Count => keysList.Count;
+
         public Key this[int index]
         {
-            get => keysList[index];
-            set => keysList[index] = value;
+            get
+            {
+                if (keysList.TryGet(index, out var value))
+                {
+                    return value;
+                }
+
+                return defaultKey;
+            }
+            set
+            {
+                keysList[index] = value;
+                Sort();
+            }
         }
-        
-        public ref Key this[Index index] => ref keysList[index];
 
         public IEnumerable<float> Positions
         {
             get
             {
-                for (int i = 0; i < keysList.Count; i++)
+                for (int i = 0; i < keys.Length; i++)
                 {
-                    yield return keysList[i].position;
+                    yield return keys[i].position;
                 }
             }
         }
@@ -51,65 +63,113 @@ namespace LSCore
             {
                 keysList.Add(in keys[i]);
             }
+
+            Sort();
         }
-        
-        public void Add(float position, in Color color) => keysList.Add(new Key(position, color));
-        public void SetPostion(int index, float position) => keysList[(Index)index].position = position;
-        public void SetColor(int index, in Color color) => keysList[(Index)index].color = color;
-        public void Remove(int index) => keysList.RemoveAt(index);
-        public void Clear() => keysList.Clear();
+
+        public void Add(float position, in Color color)
+        {
+            keysList.Add(new Key(position, color));
+            Sort();
+        }
+
+        public void SetPostion(int index, float position)
+        {
+            keysList[(Index)index].position = position;
+            Sort();
+        }
+
+        public void SetColor(int index, in Color color)
+        {
+            keysList[(Index)index].color = color;
+            Sort();
+        }
+
+        public void Remove(int index)
+        {
+            keysList.RemoveAt(index);
+            Sort();
+        }
+
+        public void Clear()
+        {
+            keysList.Clear();
+            keys = new[] { defaultKey };
+            keysList.Add(defaultKey);
+        }
 
         private void Sort()
         {
-            keysList.Sort((a, b) => Math.Sign(b.position - a.position));
+            var count = keysList.Count;
+            if (keys == null || keys.Length != count)
+            {
+                if (count == 0)
+                {
+                    keys = new[] { defaultKey };
+                    keysList.Add(defaultKey);
+                    return;
+                }
+                
+                keys = new Key[count];
+            }
+
+            int i = 0;
+            foreach (var key in keysList.OrderBy(x => x.position))
+            {
+                keys[i++] = key;
+            }
         }
 
         public void FillLegacy(Gradient gradient)
         {
-            var colors = new GradientColorKey[keysList.Count];
-            var alphas = new GradientAlphaKey[keysList.Count];
+            GradientColorKey[] colors;
+            GradientAlphaKey[] alphas;
+            var count = keysList.Count;
 
-            for (int i = 0; i < keysList.Count; i++)
+            if (count > 0)
             {
-                ref var key = ref keysList[(Index)i];
-                colors[i].time = key.position;
-                colors[i].color = key.color;
-                
-                alphas[i].time = key.position;
-                alphas[i].alpha = key.color.a;
+                colors = new GradientColorKey[keysList.Count];
+                alphas = new GradientAlphaKey[keysList.Count];
+
+                for (int i = 0; i < count; i++)
+                {
+                    ref var key = ref keysList[(Index)i];
+                    colors[i].time = key.position;
+                    colors[i].color = key.color;
+
+                    alphas[i].time = key.position;
+                    alphas[i].alpha = key.color.a;
+                }
             }
-            
+            else
+            {
+                colors = new GradientColorKey[1];
+                alphas = new GradientAlphaKey[1];
+                colors[0].color = defaultKey.color;
+                colors[0].time = defaultKey.position;
+                alphas[0].alpha = defaultKey.color.a;
+                alphas[0].time = defaultKey.position;
+            }
+
             gradient.SetKeys(colors, alphas);
         }
-        
+
 
         public Color Evaluate(float time)
         {
-            if (keysList.Count == 0)
-            {
-                return Color.white;
-            }
+            int end = keys.Length - 1;
+            if (end == -1) return Color.white;
+            if (end == 0) return keys[0].color;
 
-            if (keysList.Count == 1 || time < 0)
-            {
-                return keysList[0].color;
-            }
-            
-            var de = keysList.OrderBy(x => x.position);
-            
-            if (time > 1)
-            {
-                return de.Last().color;
-            }
+            Key startKey = keys[0];
+            Key endKey = keys[^1];
 
-            using var d = de.GetEnumerator();
+            if (time <= startKey.position) return startKey.color;
+            if (time >= endKey.position) return endKey.color;
+
             int start = 0;
-            int end = keysList.Count - 1;
 
-            d.MoveNext();
-            Key startKey = d.Current;
-            d.MoveNext();
-            Key endKey = d.Current;
+            endKey = keys[1];
 
             while (start < end)
             {
@@ -119,42 +179,26 @@ namespace LSCore
                 }
 
                 startKey = endKey;
-                d.MoveNext();
-                endKey = d.Current;
-                start++;
+                endKey = keys[++start];
             }
-            
+
             var startPos = startKey.position;
             float blendFactor = (time - startPos) / (endKey.position - startPos);
             return Color.Lerp(startKey.color, endKey.color, blendFactor);
         }
 
-        public void OnBeforeSerialize()
-        {
-            keysList ??= new LSList<Key>();
-            keys ??= Array.Empty<Key>();
-            
-            if (keys.Length != keysList.Count)
-            {
-                keys = new Key[keysList.Count];
-            }
-            
-            for (int i = 0; i < keys.Length; i++)
-            {
-                keys[i] = keysList[i];
-            }
-        }
+        public void OnBeforeSerialize() { }
 
         public void OnAfterDeserialize()
         {
             keysList ??= new LSList<Key>();
+            keys ??= new[] { defaultKey };
             keysList.Clear();
-            
+
             for (int i = 0; i < keys.Length; i++)
-            { 
+            {
                 keysList.Add(in keys[i]);
             }
         }
-        
     }
 }

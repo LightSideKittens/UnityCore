@@ -6,7 +6,7 @@ namespace UnityEngine.UI
 {
     public class LSVertexHelper : IDisposable
     {
-        private List<Vector3> positions;
+        public List<Vector3> positions;
         private List<Color32> colors;
         private List<Vector4> uvs0;
         private List<Vector4> uvs1;

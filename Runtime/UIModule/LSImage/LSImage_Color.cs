@@ -12,8 +12,9 @@ namespace LSCore
         internal bool isGradientDirty;
         internal bool isColorDirty;
         internal bool isRectDirty;
+        internal bool skipFillMesh;
         
-        private Color DefaulColor(in Vector3 pos) => color;
+        private Color DefaulColor(in Vector3 pos) => gradient[0].color;
         private float GetGradientValue(in Vector2 pos) => pos.UnclampedInverseLerp(gradientStartPoint, gradientEndPoint);
 
         private Color ColorEvaluate(in Vector3 pos) => gradient.Evaluate(GetGradientValue(pos));
@@ -94,14 +95,30 @@ namespace LSCore
             {
                 (center.x, center.y) = (center.y, center.x);
             }
+
+            var x = center.x;
+            var y = center.y;
             
             for (int i = 0; i < count; i++)
             {
                 vh.PopulateUIVertex(ref vert, i);
-                vert.color = colorEvaluate(vert.position - center);
+                var pos = vert.position;
+                pos.x -= x;
+                pos.y -= y;
+                vert.color = colorEvaluate(pos);
                 
                 vh.SetUIVertex(vert, i);
             }
+        }
+        
+        private void UpdateMeshColors()
+        {
+            for (int i = 0; i < resultMeshVerts.Length; i++)
+            {
+                resultMeshColors[i] = colorEvaluate(in resultMeshVerts[i]);
+            }
+
+            resultMesh.colors = resultMeshColors;
         }
     }
 }

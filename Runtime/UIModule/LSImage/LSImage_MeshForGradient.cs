@@ -33,6 +33,22 @@ namespace LSCore
                 end = 1 - gradientEnd;
             }
             
+            var v = d.Rotate(-90);
+            newAngle = (angle + 360 - rotateId * 90) % 360;
+            
+            if (newAngle % 180 < 90)
+            {
+                size *= 0.5f;
+                p1 = size.Scalee(downLeft).Project(v);
+                p2 = size.Scalee(upRight).Project(v);
+            }
+            else
+            {
+                size *= -0.5f;
+                p1 = size.Scalee(upLeft).Project(v);
+                p2 = size.Scalee(downRight).Project(v);
+            }
+            
             foreach (var item in gradient.Positions)
             {
                 var pos = Mathf.Lerp(start, end, item);
@@ -43,7 +59,7 @@ namespace LSCore
                     continue;
                 }
 
-                var point = GetCutOrigin(pos, d, size);
+                var point = GetCutOrigin(pos);
                 for (int j = 0; j < tris.Count; j += 3)
                 {
                     CutTriangle(tris, j, list, d, center, point);
@@ -55,33 +71,24 @@ namespace LSCore
             
             vh.AddUIVertexTriangleStream(tris);
         }
-        
-        Vector2 GetCutOrigin(float f, Vector2 v, Vector2 size)
-        {
-            Vector2 p1, p2;
 
-            v = v.Rotate(-90);
-            var newAngle = (angle + 360 - rotateId * 90) % 360;
-            
-            if (newAngle % 180 < 90)
-            {
-                size *= 0.5f;
-                p1 = (Vector2.Scale(size, Vector2.down + Vector2.left)).Project(v);
-                p2 = (Vector2.Scale(size,Vector2.up + Vector2.right)).Project(v);
-            }
-            else
-            {
-                size *= -0.5f;
-                p1 = (Vector2.Scale(size,Vector2.up + Vector2.left)).Project(v);
-                p2 = (Vector2.Scale(size,Vector2.down + Vector2.right)).Project(v);
-            }
-            
+        private static readonly Vector2 downLeft = Vector2.down + Vector2.left;
+        private static readonly Vector2 upRight = Vector2.up + Vector2.right;
+        private static readonly Vector2 upLeft = Vector2.up + Vector2.left;
+        private static readonly Vector2 downRight = Vector2.down + Vector2.right;
+        private Vector2 p1;
+        private Vector2 p2;
+        private float newAngle;
+
+
+        private Vector2 GetCutOrigin(float f)
+        {
             if (newAngle >= 180)
             {
-                return Vector2.Lerp(p2, p1, f);
+                return p2.Lerp(p1, f);
             }
 
-            return Vector2.Lerp(p1, p2, f);
+            return p1.Lerp(p2, f);
         }
 
         void CutTriangle(List<UIVertex> tris, int idx, List<UIVertex> list, in Vector2 cutDirection, in Vector2 center, in Vector2 origin)

@@ -15,6 +15,21 @@ namespace LSCore.Extensions.Unity
             return b;
         }
         
+        public static Vector2 Scalee(this in Vector2 a, Vector2 b)
+        {
+            b.x = a.x * b.x;
+            b.y = a.y * b.y;
+            return b;
+        }
+        
+        public static Vector2 Lerp(this in Vector2 a, Vector2 b, float t)
+        {
+            t = Mathf.Clamp01(t);
+            b.x = a.x + (b.x - a.x) * t;
+            b.y = a.y + (b.y - a.y) * t;
+            return b;
+        }
+        
         public static float UnclampedInverseLerp(this in Vector2 value, Vector2 a, Vector2 b)
         {
             b.x -= a.x;

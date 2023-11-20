@@ -46,6 +46,18 @@ namespace LSCore
             }
         }
 
+        public bool TryGet(int index, out T value)
+        {
+            if (index < 0 || index >= _count)
+            {
+                value = default;
+                return false;
+            }
+
+            value = _items[index];
+            return true;
+        }
+        
         public void Add(T item)
         {
             if (_count == _items.Length)
