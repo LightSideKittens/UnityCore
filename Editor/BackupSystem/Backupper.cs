@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LSCore.ConfigModule;
 using Newtonsoft.Json;
 using Sirenix.OdinInspector;
+using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -13,10 +14,11 @@ using UnityEngine.SceneManagement;
 
 namespace LSCore.Editor.BackupSystem
 {
-    public class Backupper : SerializedScriptableObject
+    public class Backupper : OdinEditorWindow, IHasCustomMenu
     {
         private const string DateTimeSeparator = "_@#$";
         private const int TimeThreshold = 1;
+        private static Backupper instance;
         private static int editCount;
         private static TimeSpan delay;
         private static bool canSave;
@@ -60,9 +62,12 @@ namespace LSCore.Editor.BackupSystem
         [OnValueChanged(nameof(OnSaveIntervalChanged))]
         private int saveInterval = 1;
 
-        [SerializeField, Min(5)] [LabelText("Max backups count")] private int maxBackupsCount = 5;
-
-
+        [SerializeField, Min(5)] 
+        [LabelText("Max backups count")]
+        [OnValueChanged(nameof(OnMaxBackupsCountChanged))]
+        private int maxBackupsCount = 5;
+        
+        [Title("Backups")]
         [SerializeField] 
         [TableList(HideToolbar = true, IsReadOnly = true)]
         private List<Data> backups = new();
@@ -74,7 +79,7 @@ namespace LSCore.Editor.BackupSystem
         {
             Undo.willFlushUndoRecord += OnEdit;
             Undo.undoRedoEvent += OnEdit;
-            delay = TimeSpan.FromMinutes(Window.saveInterval);
+            delay = TimeSpan.FromMinutes(Linker.Config.saveInterval);
             CheckForCanSave();
             if (!Directory.Exists(BackupPath))
             {
@@ -86,39 +91,27 @@ namespace LSCore.Editor.BackupSystem
         [MenuItem(LSPaths.Windows.Backuper)]
         private static void OpenWindow()
         {
-            LSPropertyEditor.Show(Window);
+            GetWindow<Backupper>().Show();
         }
-
-        private static Backupper Window
+        
+        public void AddItemsToMenu(GenericMenu menu)
         {
-            get
+            menu.AddItem(new GUIContent("Clear"), false, () =>
             {
-                var directory = $"Assets/{LSPaths.Backuper}";
-                var assetPath = $"{directory}/Backups.asset";
-                var instance = AssetDatabase.LoadAssetAtPath<Backupper>(assetPath);
-                if (instance == null)
+                foreach (var data in backups)
                 {
-                    instance = CreateInstance<Backupper>();
-                }
-                else
-                {
-                    return instance;
+                    data.Delete();
                 }
                 
-                if (!Directory.Exists(directory))
-                {
-                    Directory.CreateDirectory(directory);
-                }
-                
-                AssetDatabase.CreateAsset(instance, assetPath);
-                AssetDatabase.SaveAssets();
-                return instance;
-            }
+                backups.Clear();
+            });
         }
+        
 
         [OnInspectorInit]
         private void Init()
         {
+            instance = this;
             backups.Clear();
             backupsSet.Clear();
             var allFiles = Directory.GetFiles(BackupPath);
@@ -134,7 +127,7 @@ namespace LSCore.Editor.BackupSystem
                 Linker.PathByName.Remove(toRemove);
             }
 
-            ConfigUtils.Save<Linker>();
+            Save();
             setToRemove.Clear();
         }
 
@@ -144,6 +137,14 @@ namespace LSCore.Editor.BackupSystem
             source = new CancellationTokenSource();
             delay = TimeSpan.FromMinutes(saveInterval);
             CheckForCanSave();
+            Linker.Config.saveInterval = saveInterval;
+            Save();
+        }
+
+        private void OnMaxBackupsCountChanged()
+        {
+            Linker.Config.maxBackupsCount = maxBackupsCount;
+            Save();
         }
 
         private void TryAdd(string backupPath)
@@ -212,8 +213,8 @@ namespace LSCore.Editor.BackupSystem
             if (EditorSceneManager.SaveScene(scene, backupPath, true))
             {
                 Linker.PathByName[fileName] = scene.path.AssetsPathToFull();
-                ConfigUtils.Save<Linker>();
-                Window.TryAdd(backupPath);
+                Save();
+                instance?.TryAdd(backupPath);
                 File.Delete($"{backupPath}.meta");
             }
         }
@@ -244,12 +245,17 @@ namespace LSCore.Editor.BackupSystem
                 
                 File.Delete($"{prefabAssetPath}.meta");
                 Linker.PathByName[fileName] = prefabStage.assetPath.AssetsPathToFull();
-                ConfigUtils.Save<Linker>();
-                Window.TryAdd(backupPath);
+                Save();
+                instance?.TryAdd(backupPath);
                 return true;
             }
 
             return false;
+        }
+
+        private static void Save()
+        {
+            ConfigUtils.Save<Linker>();
         }
         
         private class Linker : BaseDebugData<Linker>
@@ -259,6 +265,8 @@ namespace LSCore.Editor.BackupSystem
 #endif
             
             [JsonProperty] private readonly Dictionary<string, string> pathByName = new ();
+            public int maxBackupsCount = 5;
+            public int saveInterval = 1;
             public static Dictionary<string, string> PathByName => Config.pathByName;
         }
     }
