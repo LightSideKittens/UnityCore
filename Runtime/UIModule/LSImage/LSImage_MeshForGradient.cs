@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using LSCore.Extensions.Unity;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,14 +18,11 @@ namespace LSCore
 
             var dirNorm = GradientDirection.normalized;
             var d = new Vector2(-dirNorm.y, dirNorm.x);
-            var rect = rectTransform.rect;
+            var rect = rt.rect;
             var center = rect.center;
             var size = rect.size;
             var start = gradientStart;
             var end = gradientEnd;
-
-            var cuts = gradient.alphaKeys.Select(x => x.time);
-            cuts = cuts.Union(gradient.colorKeys.Select(x => x.time));
             
             if (rotateId % 2 == 1)
             {
@@ -37,7 +33,7 @@ namespace LSCore
                 end = 1 - gradientEnd;
             }
             
-            foreach (var item in cuts)
+            foreach (var item in gradient.Positions)
             {
                 var pos = Mathf.Lerp(start, end, item);
                 list.Clear();

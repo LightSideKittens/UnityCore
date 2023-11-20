@@ -6,7 +6,7 @@ namespace LSCore
     {
         [SerializeField] private int rotateId = 0;
         [SerializeField] private bool invert;
-        [SerializeField] private Gradient gradient;
+        [SerializeField] private LSGradient gradient;
         [SerializeField] private float angle = 45;
         [SerializeField] private float gradientStart;
         [SerializeField] private float gradientEnd;
@@ -14,7 +14,17 @@ namespace LSCore
         internal Vector2 gradientEndPoint;
         private Mesh resultMesh;
         private Mesh withoutGradientMesh;
-        
+
+        public override Color color
+        {
+            get => base.color;
+            set
+            {
+                SetColorDirty();
+                base.color = value;
+            }
+        }
+
         public int RotateId
         {
             get => rotateId;
@@ -35,7 +45,7 @@ namespace LSCore
                 SetColorDirty();
             }
         }
-        public Gradient Gradient
+        public LSGradient Gradient
         {
             get => gradient;
             set
@@ -58,7 +68,7 @@ namespace LSCore
                 gradientEndPoint.x = maxPoint.x - direction.x * gradientEnd;
                 gradientEndPoint.y = maxPoint.y - direction.y * gradientEnd;
 
-                if (gradient.colorKeys.Length > 1 || gradient.alphaKeys.Length > 1)
+                if (gradient.Count > 1)
                 {
                     SetVerticesDirty();
                 }
@@ -99,5 +109,11 @@ namespace LSCore
         private static readonly Vector3[] s_Xy = new Vector3[4];
         private static readonly Vector3[] s_Uv = new Vector3[4];
         private InFunc<Vector3, Color> colorEvaluate;
+
+        protected override void OnRectTransformDimensionsChange()
+        {
+            base.OnRectTransformDimensionsChange();
+            isRectDirty = true;
+        }
     }
 }

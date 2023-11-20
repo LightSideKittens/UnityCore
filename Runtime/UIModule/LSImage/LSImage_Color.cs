@@ -11,6 +11,7 @@ namespace LSCore
         internal Vector2 maxPoint;
         internal bool isGradientDirty;
         internal bool isColorDirty;
+        internal bool isRectDirty;
         
         private Color DefaulColor(in Vector3 pos) => color;
         private float GetGradientValue(in Vector2 pos) => pos.UnclampedInverseLerp(gradientStartPoint, gradientEndPoint);
@@ -22,7 +23,7 @@ namespace LSCore
         
         private void CalculatePerpendicularPoints()
         {
-            var rect = rectTransform.rect;
+            var rect = rt.rect;
             float angleRad = (angle + rotateId * 90) * Deg2Rad;
             var direction = new Vector2(Cos(angleRad), Sin(angleRad));
             var radius = rect.CircumscribedCircleRadius();
@@ -79,14 +80,7 @@ namespace LSCore
         
         private void UpdateColorEvaluateFunc()
         {
-            if (gradient.colorKeys.Length > 1)
-            {
-                colorEvaluate = GetLeftToRightColorEvaluate();
-            }
-            else
-            {
-                colorEvaluate = DefaulColor;
-            }
+            colorEvaluate = gradient.Count > 1 ? GetLeftToRightColorEvaluate() : DefaulColor;
         }
         
         private void UpdateMeshColors(LSVertexHelper vh)

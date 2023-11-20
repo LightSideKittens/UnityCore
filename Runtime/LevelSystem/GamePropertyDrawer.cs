@@ -1,7 +1,6 @@
 ﻿#if UNITY_EDITOR
 
 using System;
-using LSCore.Editor;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;

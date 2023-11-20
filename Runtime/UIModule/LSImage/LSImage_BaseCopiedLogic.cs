@@ -160,7 +160,7 @@ namespace LSCore
             
             // Covert sprite pivot into normalized space.
             var spritePivot = activeSprite.pivot / spriteSize;
-            var rectPivot = rectTransform.pivot;
+            var rectPivot = rt.pivot;
             Rect rect = GetPixelAdjustedRect();
             
             if (lPreserveAspect & spriteSize.sqrMagnitude > 0.0f)
@@ -202,20 +202,18 @@ namespace LSCore
             {
                 var oldHeight = rect.height;
                 rect.height = rect.width * (1.0f / spriteRatio);
-                rect.y += (oldHeight - rect.height) * rectTransform.pivot.y;
+                rect.y += (oldHeight - rect.height) * rt.pivot.y;
             }
             else
             {
                 var oldWidth = rect.width;
                 rect.width = rect.height * spriteRatio;
-                rect.x += (oldWidth - rect.width) * rectTransform.pivot.x;
+                rect.x += (oldWidth - rect.width) * rt.pivot.x;
             }
         }
         
         private Vector4 GetAdjustedBorders(Vector4 border, in Rect adjustedRect)
         {
-            Rect originalRect = currentRect;
-
             for (int axis = 0; axis <= 1; axis++)
             {
                 float borderScaleRatio;
@@ -224,9 +222,12 @@ namespace LSCore
                 // may be slightly larger than the original rect.
                 // Adjust the border to match the adjustedRect to avoid
                 // small gaps between borders (case 833201).
-                if (originalRect.size[axis] != 0)
+                var size = currentRect.size;
+                var size2 = adjustedRect.size;
+                
+                if (size[axis] != 0)
                 {
-                    borderScaleRatio = adjustedRect.size[axis] / originalRect.size[axis];
+                    borderScaleRatio = size2[axis] / size[axis];
                     border[axis] *= borderScaleRatio;
                     border[axis + 2] *= borderScaleRatio;
                 }
@@ -234,9 +235,9 @@ namespace LSCore
                 // If the rect is smaller than the combined borders, then there's not room for the borders at their normal size.
                 // In order to avoid artefacts with overlapping borders, we scale the borders down to fit.
                 float combinedBorders = border[axis] + border[axis + 2];
-                if (adjustedRect.size[axis] < combinedBorders && combinedBorders != 0)
+                if (size2[axis] < combinedBorders && combinedBorders != 0)
                 {
-                    borderScaleRatio = adjustedRect.size[axis] / combinedBorders;
+                    borderScaleRatio = size2[axis] / combinedBorders;
                     border[axis] *= borderScaleRatio;
                     border[axis + 2] *= borderScaleRatio;
                 }
@@ -546,15 +547,15 @@ namespace LSCore
                 }
             }
 
-            s_Xy[0] = new Vector2(v.x, v.y);
-            s_Xy[1] = new Vector2(v.x, v.w);
-            s_Xy[2] = new Vector2(v.z, v.w);
-            s_Xy[3] = new Vector2(v.z, v.y);
+            s_Xy[0] = new Vector3(v.x, v.y);
+            s_Xy[1] = new Vector3(v.x, v.w);
+            s_Xy[2] = new Vector3(v.z, v.w);
+            s_Xy[3] = new Vector3(v.z, v.y);
 
-            s_Uv[0] = new Vector2(tx0, ty0);
-            s_Uv[1] = new Vector2(tx0, ty1);
-            s_Uv[2] = new Vector2(tx1, ty1);
-            s_Uv[3] = new Vector2(tx1, ty0);
+            s_Uv[0] = new Vector3(tx0, ty0);
+            s_Uv[1] = new Vector3(tx0, ty1);
+            s_Uv[2] = new Vector3(tx1, ty1);
+            s_Uv[3] = new Vector3(tx1, ty0);
 
             {
                 if (fillAmount < 1f && fillMethod != FillMethod.Horizontal && fillMethod != FillMethod.Vertical)
@@ -695,7 +696,7 @@ namespace LSCore
             }
         }
         
-        void AddQuad(LSVertexHelper vertexHelper, in Vector3[] quadPositions, in Vector3[] quadUVs)
+        void AddQuad(LSVertexHelper vertexHelper, Vector3[] quadPositions, Vector3[] quadUVs)
         {
             int startIndex = vertexHelper.currentVertCount;
 

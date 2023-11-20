@@ -8,11 +8,13 @@ namespace LSCore
     {
         private static readonly LSVertexHelper vertexHelper = new LSVertexHelper();
         private static readonly VertexHelper legacyVertexHelper = new VertexHelper();
+        private RectTransform rt;
         private Rect currentRect;
         
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
+            rt = rectTransform;
             UpdateColorEvaluateFunc();
             base.OnValidate();
             CalculatePerpendicularPoints();
@@ -20,8 +22,9 @@ namespace LSCore
         
         protected override void Reset()
         {
+            rt = rectTransform;
             base.Reset();
-            gradient = new Gradient();
+            gradient = new LSGradient();
             CalculatePerpendicularPoints();
         }
 #endif
@@ -29,8 +32,9 @@ namespace LSCore
 
         protected override void OnEnable()
         {
+            rt = rectTransform;
             base.OnEnable();
-            gradient ??= new Gradient();
+            gradient ??= new LSGradient();
             UpdateColorEvaluateFunc();
         }
 
@@ -41,7 +45,7 @@ namespace LSCore
         
         private void DoMeshGeneration()
         {
-            if (rectTransform != null && rectTransform.rect.width >= 0 && rectTransform.rect.height >= 0)
+            if (rt != null && rt.rect is { width: > 0, height: > 0 })
                 OnPopulateMesh(vertexHelper);
             else
                 vertexHelper.Clear(); // clear the vertex helper so invalid graphics dont draw.
@@ -66,9 +70,10 @@ namespace LSCore
         
         private void OnPopulateMesh(LSVertexHelper toFill)
         {
-            if (currentRect != rectTransform.rect)
+            if (isRectDirty)
             {
                 CalculatePerpendicularPoints();
+                isRectDirty = false;
             }
             
             if (isColorDirty && TryGetCachedVertextHelper(toFill, resultMesh))
@@ -86,8 +91,7 @@ namespace LSCore
                 return;
             }
             
-            var activeSprite = overrideSprite;
-            if (activeSprite == null)
+            if (overrideSprite == null)
             {
                 GenerateDefaultSprite(toFill);
                 PostProcessMesh(toFill);
@@ -123,7 +127,7 @@ namespace LSCore
             withoutGradientMesh = new Mesh();
             vh.FillMesh(withoutGradientMesh);
             
-            if (gradient.colorKeys.Length > 1)
+            if (gradient.Count > 1)
             {
                 CutMeshForGradient(vh);
             }
@@ -141,7 +145,7 @@ namespace LSCore
             
             UIVertex vert = new UIVertex();
             var count = vh.currentVertCount;
-            var center = rectTransform.rect.center * 2;
+            var center = rt.rect.center * 2;
 
             rotateAction = rotateId switch
             {

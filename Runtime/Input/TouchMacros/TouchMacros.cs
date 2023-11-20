@@ -1,6 +1,5 @@
 ﻿#if UNITY_EDITOR
 
-using LSCore.Editor;
 using UnityEngine;
 
 [ExecuteAlways]

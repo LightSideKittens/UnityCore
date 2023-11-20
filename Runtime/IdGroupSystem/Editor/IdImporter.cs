@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using LSCore.Editor;
 using UnityEditor;
 using UnityEditor.AssetImporters;
 using UnityEngine;

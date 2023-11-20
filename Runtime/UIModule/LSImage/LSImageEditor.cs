@@ -60,7 +60,7 @@ namespace LSCore
             SpriteGUI();
             EditorGUILayout.PropertyField(gradient);
             EditorGUILayout.PropertyField(invert);
-            if (GUILayout.Button(isEditing ? "Stop Edit" : "Edit"))
+            if (GUILayout.Button(isEditing ? "Stop Edit" : "Edit", GUILayout.Height(30)))
             {
                 isEditing = !isEditing;
             }
@@ -106,7 +106,7 @@ namespace LSCore
             for (int i = 0; i < 4; i++)
             {
                 var targetAngle = i * 90;
-                if (GUILayout.Button($"{targetAngle}°") && rotateId.intValue != i)
+                if (GUILayout.Button($"{targetAngle}°", GUILayout.Height(30)) && rotateId.intValue != i)
                 {
                     rotateId.intValue = i;
                     image.SetVerticesDirty();
@@ -209,12 +209,12 @@ namespace LSCore
                 case EventType.ExecuteCommand:
                     if (e.commandName == "ColorPickerChanged")
                     {
-                        var colors = image.Gradient.colorKeys;
+                        /*var colors = image.Gradient.colorKeys;
                         var alphaKeys = image.Gradient.alphaKeys;
                         colors[currentControlId].color = LSColorPicker.Color;
                         alphaKeys[currentControlId].alpha = LSColorPicker.Color.a;
                         image.Gradient.SetKeys(colors, alphaKeys);
-                        image.SetVerticesDirty();
+                        image.SetVerticesDirty();*/
                     }
 
                     break;
@@ -224,8 +224,7 @@ namespace LSCore
         private void OpenColorPicker(int cotrolID)
         {
             currentControlId = cotrolID;
-            var color = image.Gradient.colorKeys[cotrolID].color;
-            color.a = image.Gradient.alphaKeys[cotrolID].alpha;
+            var color = image.Gradient[cotrolID].color;
 
             LSColorPicker.Show(newColor => { }, color);
         }
