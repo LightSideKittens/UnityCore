@@ -9,6 +9,7 @@ using UnityEditor;
 using UnityEngine;
 namespace LSCore
 {
+    [InitializeOnLoad]
     public class IdGroup : SerializedScriptableObject, IEnumerable<Id>
     {
         [OdinSerialize]
@@ -29,15 +30,20 @@ namespace LSCore
 
         private FileSystemWatcher watcher;
         private SynchronizationContext context;
-
-        [InitializeOnLoadMethod]
+        
+        static IdGroup()
+        {
+            EditorApplication.update += Init;
+        }
+        
         private static void Init()
         {
             foreach (var group in AssetDatabaseUtils.LoadAllAssets<IdGroup>())
             {
-                group.Listen();
                 group.OnInit();
             }
+            
+            EditorApplication.update -= Init;
         }
 
         private void Listen()
