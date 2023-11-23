@@ -7,7 +7,7 @@ namespace LSCore
     public class SingleObject<T> where T : Object
     {
         private T instance;
-        public T Get(Action<T> onComplete)
+        public T Get(Action<T> onComplete = null)
         {
             if (instance == null)
             {

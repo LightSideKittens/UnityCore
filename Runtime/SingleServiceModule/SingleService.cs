@@ -52,9 +52,6 @@ namespace LSCore
         private static T TrowException() => throw new Exception(
             $"You try get {nameof(Instance)} before initializing." +
             $" Use {nameof(Init)} method by override in {typeof(T)} class.");
-        
-        private static T TrowDeInitException() => throw new Exception(
-            $"You try get {nameof(Instance)} at {nameof(DeInit)} method.");
 
         public static void AddChild(Transform child, bool worldPositionStays = false)
         {
@@ -94,7 +91,6 @@ namespace LSCore
 
         private void OnDestroy()
         {
-            staticConstructor = TrowDeInitException;
             DeInit();
             ResetStatic();
         }

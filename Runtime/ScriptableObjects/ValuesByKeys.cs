@@ -40,10 +40,10 @@ namespace LSCore
         private HashSet<Data> byKey = new();
 
         public Dictionary<TKey, TValue> ByKey { get; } = new();
-        
 
-        public void Init()
-        {   
+
+        protected override void OnAfterDeserialize()
+        {
             ByKey.Clear();
 
             foreach (var data in byKey)

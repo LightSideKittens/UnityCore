@@ -25,7 +25,7 @@ namespace LSCore
 
 #if UNITY_EDITOR
         private static readonly SingleObject<IconsById> singleObject = new();
-        public static IconsById Instance => singleObject.Get(x => x.Init());
+        public static IconsById Instance => singleObject.Get();
         protected override void SetupDataSelector(ValueDropdownList<Data> list) => SetupByGroup(allCurrenciesGroup, list);
 
         protected override void OnValueProcessAttributes(List<Attribute> attributes)

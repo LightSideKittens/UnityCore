@@ -72,6 +72,7 @@ namespace LSCore.ConfigModule
         protected override void Initialize()
         {
             data.Clear();
+            Directory.CreateDirectory(ProfilesPath);
             var files = Directory.GetFiles(ProfilesPath, "*.tar.gz");
             foreach (var file in files)
             {
