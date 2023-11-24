@@ -6,10 +6,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static LSCore.ConfigModule.FolderNames;
+[assembly: InternalsVisibleTo("LSCore.DebugModule")]
 
 namespace LSCore.ConfigModule
 {
@@ -81,7 +83,7 @@ namespace LSCore.ConfigModule
             }
         }
         
-        protected static string DataPath
+        public static string DataPath
         {
             get
             {
@@ -93,12 +95,11 @@ namespace LSCore.ConfigModule
             }
         }
         
-        protected string FullFileName => Path.Combine(FolderPath, $"{FileName}.{Ext}");
+        protected string FullFileName => Path.Combine(FolderPath, $"{FileName}.json");
         protected string FolderPath => Path.Combine(DataPath, Configs, GeneralFolderName, FolderName);
         
-        protected virtual string Ext => FileExtensions.Json;
         protected virtual string FileName { get; private set; }
-        protected virtual string GeneralFolderName => SaveData;
+        internal virtual string GeneralFolderName => SaveData;
         protected virtual string FolderName => string.Empty;
         
 #if UNITY_EDITOR

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿#if UNITY_EDITOR
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using System.Collections.Generic;
@@ -325,3 +326,4 @@ namespace LSCore.AddressablesModule
         }
     }
 }
+#endif

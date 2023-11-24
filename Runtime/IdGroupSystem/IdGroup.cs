@@ -7,9 +7,12 @@ using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using UnityEditor;
 using UnityEngine;
+
 namespace LSCore
 {
+#if UNITY_EDITOR
     [InitializeOnLoad]
+#endif
     public class IdGroup : SerializedScriptableObject, IEnumerable<Id>
     {
         [OdinSerialize]

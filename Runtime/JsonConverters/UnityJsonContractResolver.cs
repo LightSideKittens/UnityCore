@@ -19,6 +19,18 @@ namespace LSCore.ConfigModule
 			{typeof(Color), new ColorJsonConverter()},
 			{typeof(Bounds), new BoundsJsonConverter()},
 		};
+		
+		protected override JsonProperty CreateProperty(System.Reflection.MemberInfo member, MemberSerialization memberSerialization)
+		{
+			JsonProperty property = base.CreateProperty(member, memberSerialization);
+			
+			if (typeof(UnityEngine.Object).IsAssignableFrom(property.PropertyType))
+			{
+				property.Ignored = true;
+			}
+
+			return property;
+		}
 
 		protected override JsonContract CreateContract(Type objectType)
 		{

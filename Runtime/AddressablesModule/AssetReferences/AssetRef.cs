@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.Scripting;
 using Object = UnityEngine.Object;

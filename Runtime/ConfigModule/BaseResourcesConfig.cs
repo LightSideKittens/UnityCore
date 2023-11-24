@@ -6,7 +6,7 @@ namespace LSCore.ConfigModule
     {
         public static T Config => ByName<T>.Get(string.Empty, false);
         protected override string FileName => typeof(T).Name;
-        protected override string GeneralFolderName => FolderNames.DefaultSaveData;
+        internal override string GeneralFolderName => FolderNames.DefaultSaveData;
 
         [Conditional("UNITY_EDITOR")]
         internal static void Editor_Save() => Config.Save();

@@ -1,4 +1,5 @@
-﻿using Sirenix.OdinInspector.Editor;
+﻿#if UNITY_EDITOR
+using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,3 +18,4 @@ public static class OdinValueDrawerExtenstions
         EditorUtility.SetDirty(target);
     }
 }
+#endif

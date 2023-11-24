@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿#if UNITY_EDITOR
+using System.Reflection;
 using DG.DemiEditor;
 using Sirenix.Utilities;
 using UnityEditor;
@@ -166,3 +167,4 @@ namespace LSCore
         }
     }
 }
+#endif
