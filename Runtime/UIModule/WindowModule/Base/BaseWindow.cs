@@ -69,7 +69,7 @@ namespace LSCore
 
             if (BackButton != null)
             {
-                BackButton.Listen(OnBackButton);
+                BackButton.Clicked += OnBackButton;
             }
             
             if(isCalledFromStatic) return;

@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using DG.Tweening;
+using LightSideCore.Runtime.UIModule;
+using LightSideCore.Runtime.UIModule.TabAnimations;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace LSCore
 {
@@ -11,9 +14,10 @@ namespace LSCore
     {
         public class Controller
         {
-            private readonly Dictionary<Data, Tab> tabs = new();
+            private readonly Dictionary<BaseData, Tab> tabs = new();
             public RectTransform Parent { get; }
-            private Tab prevTab;
+            public BaseData CurrentData { get; private set; }
+            private Tab currentTab;
             private Action<Tab> opened;
             public void OnOpen(Action<Tab> action) => opened += action;
             public Controller(RectTransform parent)
@@ -21,23 +25,31 @@ namespace LSCore
                 Parent = parent;
             }
             
-            public void Register(Data data)
+            public void Register(BaseData data)
             {
                 data.Init(this);
             }
-
-            public void Add(Data data)
+            
+            public void Register(BaseData[] data)
             {
-                prevTab = data.tabPrefab;
+                for (int i = 0; i < data.Length; i++)
+                {
+                    data[i].Init(this);
+                }
+            }
+
+            public void Add(BaseData data)
+            {
+                currentTab = data.tabPrefab;
                 data.Init(this);
-                prevTab.Init(data.reference, Parent);
-                prevTab.OnOpen(OnOpen);
-                tabs.Add(data, prevTab);
-                prevTab = null;
+                currentTab.Init(data.reference, Parent);
+                currentTab.OnOpen(OnOpen);
+                tabs.Add(data, currentTab);
+                currentTab = null;
                 Open(data);
             }
 
-            public Tab Open(Data data)
+            public Tab Open(BaseData data)
             {
                 if (!tabs.TryGetValue(data, out var tab))
                 {
@@ -45,37 +57,42 @@ namespace LSCore
                     tab.OnOpen(OnOpen);
                     tabs[data] = tab;
                 }
+
+                if (currentTab != tab)
+                {
+                    CurrentData = data;
+                    tab.Open();
+                }
                 
-                tab.Open();
                 return tab;
             }
 
             private void OnOpen(Tab tab)
             {
-                if (prevTab != null)
+                if (currentTab != null)
                 {
-                    prevTab.Close();
+                    currentTab.Close();
                 }
 
-                prevTab = tab;
+                currentTab = tab;
                 opened?.Invoke(tab);
             }
         }
 
         [Serializable]
-        public struct Data
+        public abstract class BaseData
         {
             public Tab tabPrefab;
-            public LSButton openButton;
             public RectTransform reference;
             private Controller controller;
 
+            public abstract IClickable Clickable { get; }
             internal void Init(Controller controller)
             {
                 this.controller = controller;
-                if (openButton != null)
+                if (Clickable != null)
                 {
-                    openButton.Listen(Open);
+                    Clickable.Clicked += Open;
                 }
             }
             
@@ -89,32 +106,19 @@ namespace LSCore
             }
 
             private void Open() => controller.Open(this);
-
-            public override bool Equals(object obj)
-            {
-                if (obj is Data drawer)
-                {
-                    return Equals(drawer);
-                }
-
-                return false;
-            }
-        
-            public bool Equals(Data other) => tabPrefab == other.tabPrefab;
-            public override int GetHashCode() => tabPrefab.GetInstanceID();
         }
 
-        [SerializeField] private float animDuration = 0.2f;
+        [SerializeReference] private BaseTabAnim anim;
         private CanvasGroup group;
-        private RectTransform parent;
-        private RectTransform reference;
         private Action<Tab> opened;
 
         private void Init(RectTransform reference, RectTransform parent)
         {
-            this.reference = reference;
-            this.parent = parent;
             group = GetComponent<CanvasGroup>();
+            
+            anim.group = group;
+            anim.reference = reference;
+            anim.parent = parent;
         }
 
         public void OnOpen(Action<Tab> action) => opened += action;
@@ -123,8 +127,7 @@ namespace LSCore
         {
             group.interactable = true;
             group.blocksRaycasts = true;
-            group.DOFade(1, animDuration);
-            parent.DOSizeDelta(reference.rect.size, animDuration);
+            anim.ShowAnim();
             opened?.Invoke(this);
         }
 
@@ -132,7 +135,7 @@ namespace LSCore
         {
             group.interactable = false;
             group.blocksRaycasts = false;
-            group.DOFade(0, animDuration);
+            anim.HideAnim();
         }
     }
 }

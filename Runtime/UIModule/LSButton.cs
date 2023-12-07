@@ -1,4 +1,5 @@
 ﻿using System;
+using LightSideCore.Runtime.UIModule;
 using UnityEditor;
 #if UNITY_EDITOR
 using UnityEditor.UI;
@@ -8,7 +9,7 @@ using UnityEngine.EventSystems;
 
 namespace LSCore
 {
-    public class LSButton : LSImage,  IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
+    public class LSButton : LSImage,  IPointerDownHandler, IPointerUpHandler, IPointerClickHandler, IClickable
     {
         [SerializeField] private ClickAnim anim;
         public ref ClickAnim Anim => ref anim;
@@ -22,7 +23,7 @@ namespace LSCore
         public void OnPointerClick(PointerEventData eventData)
         {
             anim.OnPointerClick();
-            clicked?.Invoke();
+            Clicked?.Invoke();
         }
 
         public void OnPointerDown(PointerEventData eventData) => anim.OnPointerDown();
@@ -34,11 +35,8 @@ namespace LSCore
             anim.OnDisable();
         }
 
-        private Action clicked;
-        public void OnClick(Action action) => clicked = action;
-        public void Listen(Action action) => clicked += action;
-        public void UnListen(Action action) => clicked -= action;
-        public void UnListenAll() => clicked = null;
+        public Transform Transform => transform;
+        public Action Clicked { get; set; }
     }
     
 #if UNITY_EDITOR

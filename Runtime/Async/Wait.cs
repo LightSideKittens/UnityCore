@@ -17,13 +17,13 @@ namespace LSCore.Async
             var tween = DOTween.Sequence().AppendInterval(float.MaxValue);
             tween.OnUpdate(() =>
             {
-                if (current >= count)
+                current++;
+                
+                if (current > count)
                 {
                     tween.Kill();
                     onComplete();
                 }
-                
-                current++;
             });
             
             return tween;

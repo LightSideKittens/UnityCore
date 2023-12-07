@@ -2,29 +2,31 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace LSCore.ConditionModule
 {
     [Serializable]
     public class ConditionsContainer : BaseCondition
     {
-        private static class ConditionType
+        private enum ConditionType
         {
-            public const string Start = nameof(Start);
-            public const string And = nameof(And);
-            public const string Or = nameof(Or);
+            Start,
+            And,
+            Or,
         }
         
         [Serializable]
         private struct ConditionData
         {
-            public string conditionType;
+            public ConditionType type;
+            [SerializeReference] 
             public BaseCondition condition;
 
-            public ConditionData(BaseCondition condition, string conditionType)
+            public ConditionData(BaseCondition condition, ConditionType type)
             {
                 this.condition = condition;
-                this.conditionType = conditionType;
+                this.type = type;
             }
 
             public void Reset()
@@ -81,7 +83,7 @@ namespace LSCore.ConditionModule
                 {
                     var data = conditions[i];
 
-                    if (data.conditionType == ConditionType.And)
+                    if (data.type == ConditionType.And)
                     {
                         value &= data.condition;
                     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using LightSideCore.Runtime.UIModule;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -10,7 +11,7 @@ using UnityEditor;
 
 namespace LSCore
 {
-    public class LSText : TextMeshProUGUI, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
+    public class LSText : TextMeshProUGUI, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler, IClickable
     {
         [SerializeField] private ClickAnim anim;
         public ref ClickAnim Anim => ref anim;
@@ -24,7 +25,7 @@ namespace LSCore
         public void OnPointerClick(PointerEventData eventData)
         {
             anim.OnPointerClick();
-            clicked?.Invoke();
+            Clicked?.Invoke();
         }
 
         public void OnPointerDown(PointerEventData eventData) => anim.OnPointerDown();
@@ -36,11 +37,8 @@ namespace LSCore
             anim.OnDisable();
         }
         
-        private Action clicked;
-        public void OnClick(Action action) => clicked = action;
-        public void Listen(Action action) => clicked += action;
-        public void UnListen(Action action) => clicked -= action;
-        public void UnListenAll() => clicked = null;
+        public Transform Transform => transform;
+        public Action Clicked { get; set; }
     }
     
 #if UNITY_EDITOR
