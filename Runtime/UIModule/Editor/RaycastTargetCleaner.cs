@@ -42,9 +42,10 @@ namespace LSCore.UIModule.Editor
         private static void Clean(Component component)
         {
             var hasSelectable = component.TryGetComponent<Selectable>(out var selectable);
+            var hasLSButton = component.TryGetComponent<LSButton>(out _);
             var hasGraphic = component.TryGetComponent<Graphic>(out var graphic);
 
-            if (hasSelectable)
+            if (hasSelectable || hasLSButton)
             {
                 if (hasGraphic)
                 {

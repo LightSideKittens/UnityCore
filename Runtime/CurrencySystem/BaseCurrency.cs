@@ -1,4 +1,5 @@
 ﻿using System;
+using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using UnityEngine;
 
@@ -13,14 +14,18 @@ namespace LSCore
         [Serializable]
         public class Fund : BaseFund
         {
+            [field: SerializeField] 
+            [field: CustomValueDrawer("Editor_Draw")]
+            public override int Value { get; set; }
+            
             public override void Earn()
             {
-                BaseCurrency<T>.Earn(value);
+                BaseCurrency<T>.Earn(Value);
             }
 
             public override bool Spend(out Action spend)
             {
-                return BaseCurrency<T>.Spend(value, out spend);
+                return BaseCurrency<T>.Spend(Value, out spend);
             }
             
 #if UNITY_EDITOR

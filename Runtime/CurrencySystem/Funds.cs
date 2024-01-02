@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Sirenix.OdinInspector;
-using Sirenix.Serialization;
 using UnityEngine;
 using static LSCore.Currencies;
 
@@ -11,21 +9,42 @@ namespace LSCore
     [Serializable]
     public class Funds : IEnumerable<BaseFund>
     {
-        [SerializeField] 
-        [DisableIf("isControls")] 
-        public CurrencyIdGroup group;
+        [SerializeField] [SerializeReference] private List<BaseFund> funds;
         
-        [OdinSerialize]
-        [ValueDropdown("AwailableFunds", IsUniqueList = true)]
-        private HashSet<BaseFund> funds = new();
+        public void Earn()
+        {
+            foreach (var fund in funds)
+            {
+                fund.Earn();
+            }
+        }
         
-        public static void OnChanged(Id id, Action<int> onChanged)
+        public bool Spend(out Action spend)
+        {
+            var transactions = new Transactions(true);
+            
+            foreach (var fund in funds)
+            {
+                transactions.Add(fund.Spend);
+            }
+
+            return transactions.Union()(out spend);
+        }
+        
+        
+        public static void OnChanged(Id id, Action<int> onChanged, bool callImmediate = false)
         {
             if (onChangedActions.TryGetValue(id, out var action))
             {
                 onChanged += action;
             }
+            
             onChangedActions[id] = onChanged;
+            
+            if (callImmediate)
+            {
+                onChanged(GetValue(id));   
+            }
         }
         
         public static void RemoveOnChanged(Id id, Action<int> onChanged)
@@ -42,62 +61,11 @@ namespace LSCore
             onChangedActions.Remove(id);
         }
 
-
         public IEnumerator<BaseFund> GetEnumerator() => funds.GetEnumerator();
         
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
         }
-
-        public void Earn()
-        {
-            foreach (var funds in funds)
-            {
-                funds.Earn();
-            }
-        }
-        
-        public bool Spend(out Action spend)
-        {
-            var transactions = new Transactions(true);
-            
-            foreach (var funds in funds)
-            {
-                transactions.Add(funds.Spend);
-            }
-
-            return transactions.Union()(out spend);
-        }
-
-#if UNITY_EDITOR
-        [NonSerialized] public bool isControls;
-
-        public void Control()
-        {
-            foreach (var funds in this)
-            {
-                funds.isControls = true;
-            }
-        }
-        
-        private ValueDropdownList<Fund> awailableFunds;
-        private IList<ValueDropdownItem<Fund>> AwailableFunds
-        {
-            get
-            {
-                awailableFunds ??= new ValueDropdownList<Fund>();
-                awailableFunds.Clear();
-                if (group == null) return awailableFunds;
-                
-                foreach (var id in group)
-                {
-                    awailableFunds.Add(id, new Fund {id = id});
-                }
-                
-                return awailableFunds;
-            }
-        }
-#endif
     }
 }
