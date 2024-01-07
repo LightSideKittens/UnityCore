@@ -24,6 +24,8 @@ public abstract class BaseFund
         return Currencies.Spend(id, Value, out spend);
     }
 
+    public static void Clear(Id id) => Currencies.Clear(id);
+
 #if UNITY_EDITOR
     private Texture2D icon;
     [NonSerialized] public bool isControls;

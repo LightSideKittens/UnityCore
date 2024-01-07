@@ -51,5 +51,11 @@ namespace LSCore
                 action(value);
             }
         }
+
+        public static void Clear(string name)
+        {
+            Config.currencies.Remove(name);
+            onChangedActions.Remove(name);
+        }
     }
 }
