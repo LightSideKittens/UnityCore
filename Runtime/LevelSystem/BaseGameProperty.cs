@@ -17,8 +17,6 @@ namespace LSCore.LevelSystem
         public Prop Prop => prop;
         public string Name => GetType().Name;
         
-        public abstract Prop Upgrade(Prop propValue);
-        
 #if UNITY_EDITOR
         public static List<Type> AllPropertyTypes { get; private set; }
 
@@ -50,28 +48,16 @@ namespace LSCore.LevelSystem
     }
 
     [Serializable]
-    public abstract class FloatAndPercent : BaseGameProperty
+    public abstract class FloatGameProp : BaseGameProperty
     {
         public const string ValueKey = "Value";
-        public const string PercentKey = "Percent";
 
-        public static float GetValue<T>(Dictionary<string, Prop> dict) where T : BaseGameProperty => dict[typeof(T).Name].Value[ValueKey];
-        
-        public override Prop Upgrade(Prop propValue)
-        {
-            propValue.Value[ValueKey] += prop.Value[ValueKey];
-            if (prop.Value.TryGetValue(PercentKey, out var percent))
-            {
-                propValue.Value[ValueKey] *= 1 + percent / 100;
-            }
-            return propValue;
-        }
+        public static float GetValue<T>(Dictionary<Type, Prop> dict) where T : FloatGameProp => dict[typeof(T)].Value[ValueKey];
 
 #if UNITY_EDITOR
         protected override Prop DrawFields()
         {
             prop.DrawFloat(ValueKey);
-            prop.DrawSlider(PercentKey, 0, 100);
             return prop;
         }
 #endif

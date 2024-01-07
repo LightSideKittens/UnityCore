@@ -23,7 +23,7 @@ namespace LSCore.LevelSystem
         [HideReferenceObjectPicker]
         public CurrencyIdGroup CurrencyGroup { get; private set; }
         
-        private readonly Dictionary<string, List<LevelConfig>> levelsById = new();
+        private readonly Dictionary<Id, List<LevelConfig>> levelsById = new();
 
         public void Init()
         {
@@ -34,8 +34,6 @@ namespace LSCore.LevelSystem
             {
                 levelsById.Add(levelContainer.Id, levelContainer.levels);
             }
-
-            RecomputeAllLevels();
         }
 
         public bool CanUpgrade(Id id, out LevelConfig level)
@@ -56,8 +54,7 @@ namespace LSCore.LevelSystem
         {
             if (CanUpgrade(id, out var level))
             {
-                level.Apply();
-                UnlockedLevels.UpgradeLevel(Group, level);
+                UnlockedLevels.UpgradeLevel(id);
                 
                 LevelUpgraded?.Invoke();
                 Burger.Log($"{id} Upgraded to {level.Id}");
@@ -67,20 +64,10 @@ namespace LSCore.LevelSystem
             return false;
         }
 
-        private void RecomputeAllLevels()
+        public Dictionary<Type, Prop> GetProps(Id id)
         {
-            Burger.Log($"[{nameof(LevelsManager)}] RecomputeAllLevels");
-            EntiProps.Get(Group.name).Clear();
-            
-            if (UnlockedLevels.TryGetUpgrades(Group, out var upgrades))
-            {
-                for (int i = 0; i < upgrades.Count; i++)
-                {
-                    var data = upgrades[i];
-                    var level = levelsById[data.id][data.level-1];
-                    level.Apply();
-                }
-            }
+            UnlockedLevels.TryGetLevel(id, out var level);
+            return levelsById[id][level - 1].Props.ByType;
         }
     }
 }

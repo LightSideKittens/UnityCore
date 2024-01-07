@@ -92,7 +92,7 @@ namespace LSCore
             }
         }
 
-        public void Clear()
+        public void Destroy()
         {
             if (Destroyed != null)
             {

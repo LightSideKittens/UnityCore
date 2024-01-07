@@ -10,7 +10,7 @@ namespace LSCore.LevelSystem
         private static readonly SingleObject<PropTypesByIdGroup> singleObject = new();
         public static PropTypesByIdGroup Instance => singleObject.Get();
         
-        public static HashSet<Type> GetAllObjectsById(Id id)
+        public static HashSet<Type> GetAllTypesById(Id id)
         {
             var allIdGroups = id.GetAllGroups<LevelIdGroup>();
             var set = new HashSet<Type>();
