@@ -7,8 +7,6 @@ namespace LSCore.LevelSystem
 {
     public partial class LevelsManager : SerializedScriptableObject
     {
-        public event Action LevelUpgraded;
-
         [IdGroup]
         [OdinSerialize]
         [HideReferenceObjectPicker]
@@ -36,32 +34,34 @@ namespace LSCore.LevelSystem
             }
         }
 
-        public bool CanUpgrade(Id id, out LevelConfig level)
+        public bool CanUpgrade(Id id)
+        {
+            UnlockedLevels.TryGetLevel(id, out var currentLevel);
+            return currentLevel < levelsById[id].Count;
+        }
+
+        public void SetLevel(Id id, int level)
+        {
+            var levels = levelsById[id];
+            UnlockedLevels.SetLevel(id, 
+                level < levels.Count 
+                ? level 
+                : levels.Count);
+        }
+
+        public int UpgradeLevel(Id id)
         {
             UnlockedLevels.TryGetLevel(id, out var currentLevel);
             var levels = levelsById[id];
+
             if (currentLevel < levels.Count)
             {
-                level = levels[currentLevel];
-                return true;
+                currentLevel++;
+                UnlockedLevels.SetLevel(id, currentLevel);
+                Burger.Log($"{id} Upgraded to {currentLevel}");
             }
 
-            level = null;
-            return false;
-        }
-
-        public bool TryUpgradeLevel(Id id)
-        {
-            if (CanUpgrade(id, out var level))
-            {
-                UnlockedLevels.UpgradeLevel(id);
-                
-                LevelUpgraded?.Invoke();
-                Burger.Log($"{id} Upgraded to {level.Id}");
-                return true;
-            }
-
-            return false;
+            return currentLevel;
         }
 
         public Dictionary<Type, Prop> GetProps(Id id)

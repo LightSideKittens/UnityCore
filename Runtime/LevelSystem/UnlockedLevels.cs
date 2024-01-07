@@ -13,11 +13,12 @@ namespace LSCore.LevelSystem
             return Config.levelById.TryGetValue(id, out level);
         }
         
-        internal static void UpgradeLevel(Id id)
+        internal static int UpgradeLevel(Id id)
         {
             TryGetLevel(id, out var level);
             level++;
             SetLevel(id, level);
+            return level;
         }
 
         public static void SetLevel(Id id, int level)
