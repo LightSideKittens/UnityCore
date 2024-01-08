@@ -41,7 +41,7 @@ namespace LSCore.AnimationsModule
         private Dictionary<string, BaseAnim> animsById = new();
         private Sequence sequence;
 
-        public BaseAnim this[string id] => animsById[id];
+        public T GetAnim<T>(string id) where T : BaseAnim => (T)animsById[id]; 
 
 #if UNITY_EDITOR
         [OnInspectorGUI]

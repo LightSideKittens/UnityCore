@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace LSCore
 {
-    public class Currencies : BaseConfig<Currencies>
+    internal class Currencies : BaseConfig<Currencies>
     {
         [JsonProperty] private Dictionary<string, int> currencies = new();
         internal static readonly Dictionary<string, Action<int>> onChangedActions = new();
@@ -43,19 +43,19 @@ namespace LSCore
             spend = null;
             return false;
         }
-        
+
+        internal static void Clear(string name)
+        {
+            Config.currencies.Remove(name);
+            onChangedActions.Remove(name);
+        }
+
         private static void TryInvokeOnChanged(string name, int value)
         {
             if (onChangedActions.TryGetValue(name, out var action))
             {
                 action(value);
             }
-        }
-
-        public static void Clear(string name)
-        {
-            Config.currencies.Remove(name);
-            onChangedActions.Remove(name);
         }
     }
 }

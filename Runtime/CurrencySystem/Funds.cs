@@ -61,6 +61,11 @@ namespace LSCore
             onChangedActions.Remove(id);
         }
 
+        public static int GetValue(Id id) => Currencies.GetValue(id);
+        public static void Earn(Id id, int value) => Currencies.Earn(id, value);
+        public static bool Spend(Id id, int value, out Action action) => Currencies.Spend(id, value, out action);
+        public static void Clear(Id id) => Currencies.Clear(id);
+        
         public IEnumerator<BaseFund> GetEnumerator() => funds.GetEnumerator();
         
         IEnumerator IEnumerable.GetEnumerator()
