@@ -39,6 +39,7 @@ namespace LSCore.AnimationsModule
         [SerializeField] private AnimData[] animsData;
 
         private Dictionary<string, BaseAnim> animsById = new();
+        private Sequence sequence;
 
         public BaseAnim this[string id] => animsById[id];
 
@@ -83,7 +84,8 @@ namespace LSCore.AnimationsModule
         public Sequence Animate()
         {
             var currentTime = 0f;
-            var sequence = DOTween.Sequence().SetId(this);
+            sequence.Kill();
+            sequence = DOTween.Sequence().SetId(this);
 
             for (int i = 0; i < animsData.Length; i++)
             {
