@@ -30,9 +30,11 @@ namespace LSCore.Editor.BackupSystem
         private struct Data
         {
             [DisplayAsString] [TableColumnWidth(100)] public string name;
-            [DisplayAsString] [TableColumnWidth(70, false)] public string dateTime;
-            [DisplayAsString] [TableColumnWidth(500)] public string assetPath;
-            private string Source => $"{BackupPath}/{name}{DateTimeSeparator}{dateTime}";
+            [DisplayAsString] [TableColumnWidth(100, false)] public string dateTime;
+            [DisplayAsString] [TableColumnWidth(300)] public string assetPath;
+            private string Source => $"{BackupPath}/{name}{DateTimeSeparator}{realDateTime}";
+            [HideInInspector] public string realDateTime;
+            public string FullAssetPath => $"{Application.dataPath}/{assetPath}";
             
             [Button]
             [TableColumnWidth(50, false)]
@@ -40,13 +42,13 @@ namespace LSCore.Editor.BackupSystem
             {
                 var source = Source;
                 
-                if (File.Exists(assetPath))
+                if (File.Exists(FullAssetPath))
                 {
-                    File.Copy(source, assetPath, true);
+                    File.Copy(source, FullAssetPath, true);
                 }
                 else
                 {
-                    File.Move(source, assetPath);
+                    File.Move(source, FullAssetPath);
                 }
                 
                 AssetDatabase.Refresh();
@@ -65,11 +67,11 @@ namespace LSCore.Editor.BackupSystem
         [SerializeField, Min(5)] 
         [LabelText("Max backups count")]
         [OnValueChanged(nameof(OnMaxBackupsCountChanged))]
-        private int maxBackupsCount = 5;
+        private int maxBackupsCount = 30;
         
         [Title("Backups")]
         [SerializeField] 
-        [TableList(HideToolbar = true, IsReadOnly = true)]
+        [TableList(HideToolbar = true, IsReadOnly = true, AlwaysExpanded = true)]
         private List<Data> backups = new();
 
         private HashSet<Data> backupsSet = new();
@@ -154,7 +156,9 @@ namespace LSCore.Editor.BackupSystem
             
             if (Linker.PathByName.TryGetValue(fileName, out var assetPath))
             {
-                var data = new Data{ name = split[0], dateTime = split[1], assetPath = assetPath };
+                var date = Path.GetFileNameWithoutExtension(split[1]).Split('-');
+                
+                var data = new Data{ name = split[0], dateTime = $"{date[0]}/{date[1]} {date[2]}:{date[3]}", realDateTime = split[1], assetPath = assetPath.Replace($"{Application.dataPath}/", string.Empty) };
                 setToRemove.Remove(fileName);
 
                 if (backupsSet.Add(data))
@@ -220,7 +224,7 @@ namespace LSCore.Editor.BackupSystem
         }
 
         private static string BackupPath => $"{Application.persistentDataPath}/Backups";
-        private static string DateKey => $"{DateTimeSeparator}{DateTime.Now:dd-hh-mm}";
+        private static string DateKey => $"{DateTimeSeparator}{DateTime.Now:MM-dd-hh-mm}";
         
         private static bool TrySaveCurrentPrefab()
         {
@@ -233,17 +237,12 @@ namespace LSCore.Editor.BackupSystem
                 string backupPath = $"{BackupPath}/{fileName}";
 
                 PrefabUtility.SaveAsPrefabAsset(prefabRoot, prefabAssetPath);
-                if (File.Exists(backupPath))
-                {
-                    File.Copy(prefabAssetPath, backupPath, true);
-                    File.Delete(prefabAssetPath);
-                }
-                else
-                {
-                    File.Move(prefabAssetPath, backupPath);
-                }
                 
-                File.Delete($"{prefabAssetPath}.meta");
+                if (!File.Exists(backupPath)) File.Create(backupPath).Dispose();
+
+                File.Copy(prefabAssetPath, backupPath, true);
+                AssetDatabase.DeleteAsset($"Assets/{fileName}");
+                
                 Linker.PathByName[fileName] = prefabStage.assetPath.AssetsPathToFull();
                 Save();
                 instance?.TryAdd(backupPath);

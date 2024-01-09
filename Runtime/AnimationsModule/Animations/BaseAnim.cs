@@ -14,9 +14,9 @@ namespace LSCore.AnimationsModule.Animations
         [SerializeReference] private IOptions[] options;
         [HideIf("IsDurationZero")]
         [SerializeField] private bool needInit;
+        public float duration;
         
         public Tween Anim { get; private set; }
-        public float duration;
         public bool IsDurationZero => duration == 0;
 
         public void TryInit()

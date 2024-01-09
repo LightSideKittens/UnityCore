@@ -15,7 +15,7 @@ namespace LSCore.AnimationsModule
         [Serializable]
         private struct AnimData
         {
-            [TableColumnWidth(60, false)]
+            [TableColumnWidth(80, false)]
             public float timeOffset;
             
             [TableColumnWidth(60, false)]
