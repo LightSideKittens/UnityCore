@@ -5,24 +5,7 @@ namespace LSCore
 {
     public abstract class ValuesById<TValue> : ValuesByKeys<Id, TValue>
     {
-        private Dictionary<string, TValue> byId;
-
-        public Dictionary<string, TValue> ById
-        {
-            get
-            {
-                if (byId == null)
-                {
-                    byId = new();
-                    foreach (var (key, value) in ByKey)
-                    {
-                        byId.Add(key, value);
-                    }
-                }
-
-                return byId;
-            }
-        }
+        public Dictionary<Id, TValue> ById => ByKey;
         
 #if UNITY_EDITOR
         protected void SetupByIds(IEnumerable<Id> ids, ValueDropdownList<Data> list)

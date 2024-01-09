@@ -1,4 +1,4 @@
 ﻿{
   "name": "LSCore.ScriptableObjects",
-  "references":[ "GUID:e203c3ad7a7046548ca22a43fa4eb0de" ]
+  "references":[ "GUID:e203c3ad7a7046548ca22a43fa4eb0de", "GUID:e2d262c07fab33347bf583c077610e88" ]
 }

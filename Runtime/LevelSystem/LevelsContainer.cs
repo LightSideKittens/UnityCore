@@ -62,6 +62,28 @@ public class LevelsContainer : SerializedScriptableObject
         AssetDatabase.CreateAsset(level, $"{path}/{targetName}.asset");
         levels.Insert(number - 1, level);
     }
+
+    [Button]
+    private void AddAll()
+    {
+        levels.Clear();
+        foreach (var level in Levels)
+        {
+            level.Container = this;
+            levels.Add(level);
+        }
+    }
+
+    [Button]
+    private void UpdateName()
+    {
+        AssetDatabase.RenameAsset($"{path}/{name}.asset", $"{Id}_Container");
+        foreach (var level in Levels)
+        {
+            var split = level.name.Split('_');
+            AssetDatabase.RenameAsset($"{path}/{level.name}.asset", $"{Id}_{split[^1]}");
+        }
+    }
     
 #endif
 }

@@ -11,6 +11,7 @@ namespace LSCore
     public class IdImporter : ScriptedImporter
     {
         private static HashSet<string> allIdNames = new();
+        private static bool isInited;
         
         static IdImporter()
         {
@@ -19,16 +20,24 @@ namespace LSCore
 
         private static void RunOnceAfterProjectIsLoaded()
         {
+            UpdateNames();
+            isInited = true;
+            EditorApplication.update -= RunOnceAfterProjectIsLoaded;
+        }
+
+        private static void UpdateNames()
+        {
+            allIdNames.Clear();
             foreach (var id in AssetDatabaseUtils.LoadAllAssets<Id>())
             {
                 allIdNames.Add(id);
             }
-            
-            EditorApplication.update -= RunOnceAfterProjectIsLoaded;
         }
         
         public override void OnImportAsset(AssetImportContext ctx)
         {
+            if (isInited) UpdateNames();
+
             var fileName = Path.GetFileNameWithoutExtension(ctx.assetPath);
 
             if (allIdNames.Contains(fileName))

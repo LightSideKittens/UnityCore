@@ -8,8 +8,8 @@ namespace LSCore
     public class World : MonoBehaviour
     {
         public static event Action ApplicationPaused;
-        public static event Action Initing;
-        public static event Action Inited;
+        public static event Action Creating;
+        public static event Action Created;
         public static event Action Updated;
         public static event Action Destroyed;
         private static bool isCreated;
@@ -20,13 +20,13 @@ namespace LSCore
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
         {
-            Initing?.Invoke();
+            Creating?.Invoke();
             
             instance = new GameObject(nameof(World)).AddComponent<World>();
             DontDestroyOnLoad(instance);
             IsPlaying = true;
 
-            Inited?.Invoke();
+            Created?.Invoke();
             Debug.Log("[World] Inited");
         }
         

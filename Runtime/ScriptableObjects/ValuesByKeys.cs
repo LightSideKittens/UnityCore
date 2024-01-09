@@ -44,6 +44,13 @@ namespace LSCore
 
         protected override void OnAfterDeserialize()
         {
+            Init();
+            World.Created -= Init;
+            World.Created += Init;
+        }
+
+        private void Init()
+        {
             ByKey.Clear();
 
             foreach (var data in byKey)
@@ -53,6 +60,7 @@ namespace LSCore
         }
 
 #if UNITY_EDITOR
+        
         private ValueDropdownList<Data> list;
         private IList<ValueDropdownItem<Data>> DataSelector
         {

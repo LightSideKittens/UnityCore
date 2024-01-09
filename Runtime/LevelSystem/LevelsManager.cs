@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
+using UnityEngine;
 
 namespace LSCore.LevelSystem
 {
@@ -30,7 +31,16 @@ namespace LSCore.LevelSystem
 
             foreach (var levelContainer in levelsContainers)
             {
-                levelsById.Add(levelContainer.Id, levelContainer.levels);
+                var id = levelContainer.Id;
+                var levels = levelContainer.levels;
+                
+                levelsById.Add(id, levels);
+                
+                if (UnlockedLevels.TryGetLevel(id, out var level))
+                {
+                    level = Mathf.Clamp(level, 1, levelsById.Count);
+                    UnlockedLevels.SetLevel(id, level);
+                }
             }
         }
 
@@ -62,11 +72,13 @@ namespace LSCore.LevelSystem
             }
 
             return currentLevel;
+            
         }
 
         public Dictionary<Type, Prop> GetProps(Id id)
         {
             UnlockedLevels.TryGetLevel(id, out var level);
+            level = Mathf.Clamp(level, 1, levelsById.Count);
             return levelsById[id][level - 1].Props.ByType;
         }
     }
