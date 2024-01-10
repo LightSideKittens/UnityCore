@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using LSCore;
-using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
@@ -10,23 +7,20 @@ using UnityEngine;
 [Serializable]
 public abstract class BaseFund
 {
-    [HideIf("isControls")] 
-    [ValueDropdown("Ids")]
-    public Id id;
+    public abstract Id Id { get; }
     public abstract int Value { get; set; }
     public virtual void Earn()
     {
-        Currencies.Earn(id, Value);
+        Currencies.Earn(Id, Value);
     }
 
     public virtual bool Spend(out Action spend)
     {
-        return Currencies.Spend(id, Value, out spend);
+        return Currencies.Spend(Id, Value, out spend);
     }
 
 #if UNITY_EDITOR
     private Texture2D icon;
-    [NonSerialized] public bool isControls;
     protected abstract void SetIcon(ref Texture2D icon);
     private int Editor_Draw(int value, GUIContent _)
     {
@@ -49,9 +43,6 @@ public abstract class BaseFund
         GUI.DrawTexture(boxRect, icon, ScaleMode.ScaleToFit);
         return rect;
     }
-    
-    protected virtual IEnumerable<CurrencyIdGroup> Groups => AssetDatabaseUtils.LoadAllAssets<CurrencyIdGroup>();
-    protected virtual IEnumerable<Id> Ids => Groups.SelectMany(group => group);
 
 #endif
 }

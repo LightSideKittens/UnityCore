@@ -45,8 +45,12 @@ namespace LSCore
         protected override void OnAfterDeserialize()
         {
             Init();
+#if UNITY_EDITOR
             World.Created -= Init;
             World.Created += Init;
+            World.Destroyed -= Init;
+            World.Destroyed += Init;
+#endif
         }
 
         private void Init()

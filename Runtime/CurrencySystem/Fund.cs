@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -10,11 +12,11 @@ namespace LSCore
         public abstract override int Value { get; set; }
 
 #if UNITY_EDITOR
-        public override string ToString() => id == null ? "Null" : id;
+        public override string ToString() => Id == null ? "Null" : Id;
 
         protected override void SetIcon(ref Texture2D icon)
         {
-            if (id != null && IconsById.TryGetMainIcon(id, out var sprite))
+            if (Id != null && IconsById.TryGetMainIcon(Id, out var sprite))
             {
                 icon = sprite.texture;
                 return;
@@ -33,17 +35,27 @@ namespace LSCore
             return false;
         }
         
-        public bool Equals(Fund other) => id == other.id;
+        public bool Equals(Fund other) => Id == other.Id;
 
-        public override int GetHashCode() => id.GetHashCode();
+        public override int GetHashCode() => Id.GetHashCode();
 #endif
     }
     
     [Serializable]
     public class Fund : BaseIntFund
     {
+        [HideIf("isControls")] [ValueDropdown("Ids")] 
+        [SerializeField] private Id id;
+
+        public override Id Id => id;
+
         [field: SerializeField] 
         [field: CustomValueDrawer("Editor_Draw")]
         public override int Value { get; set; }
+
+#if UNITY_EDITOR
+        protected virtual IEnumerable<CurrencyIdGroup> Groups => AssetDatabaseUtils.LoadAllAssets<CurrencyIdGroup>();
+        protected virtual IEnumerable<Id> Ids => Groups.SelectMany(group => group);
+#endif
     }
 }

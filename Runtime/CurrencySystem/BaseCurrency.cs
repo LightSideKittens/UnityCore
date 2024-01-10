@@ -14,6 +14,8 @@ namespace LSCore
         [Serializable]
         public class Fund : BaseFund
         {
+            public override Id Id { get; }
+
             [field: SerializeField] 
             [field: CustomValueDrawer("Editor_Draw")]
             public override int Value { get; set; }

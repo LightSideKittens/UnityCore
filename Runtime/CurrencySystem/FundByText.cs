@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Sirenix.OdinInspector;
 using UnityEditor;
@@ -15,6 +14,10 @@ namespace LSCore
         [SerializeField] private bool changeTextColorIfNotEnough;
         [ShowIf("$changeTextColorIfNotEnough")]
         [Id(typeof(PaletteIdGroup))] [SerializeField] private Id notEnoughColorId;
+        [ShowIf("$changeTextColorIfNotEnough")]
+        [Id(typeof(PaletteIdGroup))] [SerializeField] private Id enoughColorId;
+
+        public override Id Id => fundText.Id;
 
         public override int Value
         {
@@ -22,36 +25,32 @@ namespace LSCore
             set => fundText.text = value.ToString();
         }
 
-        public void OnBeforeSerialize(){}
+        public void OnBeforeSerialize() { }
 
-        [Conditional("UNITY_EDITOR")]
-        private void UpdateId()
+        public async void OnAfterDeserialize()
         {
-#if UNITY_EDITOR
-            isControls = true;
-#endif
-            if (fundText != null && fundText.Id != null)
-            {
-                id = fundText.Id;
-            }
-        }
-        
-        public void OnAfterDeserialize()
-        {
-            UpdateId();
+            await Task.Delay(1);
             
-            if (World.IsPlaying)
+            if (!World.IsPlaying) return;
+            if (!changeTextColorIfNotEnough) return;
+            
+            Funds.OnChanged(Id, UpdateColor, true);
+        }
+
+        private void UpdateColor(int a)
+        {
+            if (fundText == null)
             {
-                if (changeTextColorIfNotEnough)
-                {
-                    if (!Spend(out _))
-                    {
-                        if (Palette.TryGet(notEnoughColorId, out var color))
-                        {
-                            fundText.color = color;
-                        }
-                    }
-                }
+                Funds.RemoveOnChanged(Id, UpdateColor);
+                return;
+            }
+
+            var id = notEnoughColorId;
+            if (Spend(out _)) id = enoughColorId;
+            
+            if (Palette.TryGet(id, out var color))
+            {
+                fundText.color = color;
             }
         }
 
