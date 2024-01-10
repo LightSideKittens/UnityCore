@@ -83,6 +83,8 @@ public class LevelsContainer : SerializedScriptableObject
             var split = level.name.Split('_');
             AssetDatabase.RenameAsset($"{path}/{level.name}.asset", $"{Id}_{split[^1]}");
         }
+
+        AssetDatabaseUtils.RenameFolder(path, Id);
     }
     
 #endif

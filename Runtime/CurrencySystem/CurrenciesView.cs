@@ -8,7 +8,7 @@ namespace LSCore
         [Serializable]
         public class Data
         {
-            [CurrencyId]
+            [Id(typeof(CurrencyIdGroup))]
             [SerializeField] private Id id;
 
             [SerializeField] private GameObject gameObject;

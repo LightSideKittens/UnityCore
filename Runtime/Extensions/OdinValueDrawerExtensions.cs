@@ -3,7 +3,7 @@ using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
 
-public static class OdinValueDrawerExtenstions
+public static class OdinValueDrawerExtensions
 {
     public static void ForceSaveParent<T>(this OdinValueDrawer<T> drawer)
     {

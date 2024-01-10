@@ -1,6 +1,6 @@
 ﻿using DG.DemiEditor;
 using Sirenix.Utilities.Editor;
-
+using UnityEditor;
 using UnityEngine;
 
 public static class EditorUtils
@@ -34,6 +34,8 @@ public static class EditorUtils
     {
         return Colors[index % Colors.Length];
     }
+
+    public static SerializedProperty FindBackingField(this SerializedObject obj, string name) => obj.FindProperty($"<{name}>k__BackingField");
 
     public static Texture2D GetTextureByColor(Color color)
     {

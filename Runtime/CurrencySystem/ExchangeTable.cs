@@ -9,8 +9,8 @@ namespace LSCore
         [Serializable]
         private struct Pair
         {
-            [CurrencyId] public Id from;
-            [CurrencyId] public Id to;
+            [Id(typeof(CurrencyIdGroup))] public Id from;
+            [Id(typeof(CurrencyIdGroup))] public Id to;
         }
 
         [Serializable]

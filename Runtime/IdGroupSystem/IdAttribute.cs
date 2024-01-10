@@ -8,11 +8,18 @@ namespace LSCore
     [Conditional("UNITY_EDITOR")]
     public class IdAttribute : ValueDropdownAttribute
     {
-        public string GroupName;
+        public string[] groupNames;
+        public Type groupType;
 
-        public IdAttribute(string groupName = "") : base(groupName)
+        public IdAttribute(params string[] groupNames) : base("")
         {
-            GroupName = groupName;
+            this.groupNames = groupNames;
+            IsUniqueList = true;
+        }
+        
+        public IdAttribute(Type groupType) : base("")
+        {
+            this.groupType = groupType;
             IsUniqueList = true;
         }
     }

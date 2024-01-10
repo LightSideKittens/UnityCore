@@ -18,7 +18,7 @@ namespace LSCore
         
         protected void SetupByGroup(IdGroup group, ValueDropdownList<Data> list)
         {
-            if (group != null) SetupByIds(group.Ids, list);
+            if (group != null) SetupByIds(group, list);
         }
 #endif
 

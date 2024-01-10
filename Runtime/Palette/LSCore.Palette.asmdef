@@ -1,0 +1,4 @@
+﻿{
+  "name": "LSCore.Palette",
+  "references":[ "GUID:0383e17b21214350bace8de976684bdb", "GUID:06eadfe8d4d64d6d814988038dcf79eb", "GUID:e203c3ad7a7046548ca22a43fa4eb0de" ]
+}

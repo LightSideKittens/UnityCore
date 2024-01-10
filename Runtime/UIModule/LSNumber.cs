@@ -19,7 +19,7 @@ namespace LSCore
         protected override void OnEnable()
         {
             base.OnEnable();
-            Number = serializedObject.FindProperty("<Number>k__BackingField");
+            Number = serializedObject.FindBackingField("Number");
         }
 
         public override void OnInspectorGUI()
@@ -27,7 +27,19 @@ namespace LSCore
             if (IsMixSelectionTypes()) return;
 
             serializedObject.Update();
-            
+
+            Draw();
+
+            if (serializedObject.ApplyModifiedProperties() || m_HavePropertiesChanged)
+            {
+                m_TextComponent.havePropertiesChanged = true;
+                m_HavePropertiesChanged = false;
+                EditorUtility.SetDirty(target);
+            }
+        }
+
+        protected virtual void Draw()
+        {
             var oldEnabled = GUI.enabled;
             GUI.enabled = false;
             EditorGUILayout.PropertyField(Number);
@@ -45,13 +57,6 @@ namespace LSCore
             DrawExtraSettings();
 
             EditorGUILayout.Space();
-
-            if (serializedObject.ApplyModifiedProperties() || m_HavePropertiesChanged)
-            {
-                m_TextComponent.havePropertiesChanged = true;
-                m_HavePropertiesChanged = false;
-                EditorUtility.SetDirty(target);
-            }
         }
 
 

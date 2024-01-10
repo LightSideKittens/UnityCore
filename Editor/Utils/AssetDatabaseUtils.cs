@@ -31,6 +31,11 @@ public static class AssetDatabaseUtils
         return Path.GetFileName(Path.GetDirectoryName(AssetDatabase.GetAssetPath(target)));
     }
 
+    public static string RenameFolder(string folderPath, string newFolderName)
+    {
+        return AssetDatabase.MoveAsset(folderPath, folderPath.Replace(Path.GetFileName(folderPath), newFolderName));
+    }
+
     public static string[] GetPaths<T>(string filter = "", params string[] paths) where T : Object
     {
         return GetPaths(typeof(T), filter, paths);
@@ -80,6 +85,20 @@ public static class AssetDatabaseUtils
 
     public static T LoadAny<T>(string filter = "", params string[] paths) where T : Object
     {
-        return LoadAllAssets<T>(filter, paths).FirstOrDefault();
+        return (T)LoadAny(typeof(T), filter, paths);
+    }
+    
+    public static Object LoadAny(Type type, string filter = "", params string[] paths)
+    {
+        var allPaths = GetPaths(type, filter, paths);
+        Object asset = null;
+        
+        for (int i = 0; i < allPaths.Length; i++)
+        {
+            asset = AssetDatabase.LoadAssetAtPath(allPaths[i], type);
+            break;
+        }
+        
+        return asset;
     }
 }

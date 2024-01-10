@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Sirenix.OdinInspector.Editor;
 using UnityEngine;
 using static LSCore.Currencies;
 
@@ -73,4 +75,14 @@ namespace LSCore
             return GetEnumerator();
         }
     }
+    
+#if UNITY_EDITOR
+    public class FundsDrawer : OdinValueDrawer<Funds>
+    {
+        protected override void DrawPropertyLayout(GUIContent label)
+        {
+            Property.Children.First().Draw(label);
+        }
+    }
+#endif
 }
