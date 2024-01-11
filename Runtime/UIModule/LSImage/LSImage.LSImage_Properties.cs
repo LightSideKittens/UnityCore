@@ -10,6 +10,7 @@ namespace LSCore
         [SerializeField] private float angle = 45;
         [SerializeField] private float gradientStart;
         [SerializeField] private float gradientEnd;
+        [SerializeField] private bool combineFilledWithSliced;
         internal Vector2 gradientStartPoint;
         internal Vector2 gradientEndPoint;
         private Mesh resultMesh;
@@ -102,7 +103,17 @@ namespace LSCore
                 SetGradientDirty();
             }
         }
-
+        
+        public bool CombineFilledWithSliced
+        {
+            get => combineFilledWithSliced;
+            set
+            {
+                combineFilledWithSliced = value;
+                SetVerticesDirty();
+            }
+        }
+        
         internal Vector2 GradientDirection { get; private set; }
 
         private static readonly Vector2[] vertScratch = new Vector2[4];

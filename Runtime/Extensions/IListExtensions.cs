@@ -7,25 +7,32 @@ namespace LSCore.Extensions
     {
         public static T Random<T>(this IList<T> list) => list[UnityEngine.Random.Range(0, list.Count)];
 
-        public static int ClosestBinarySearch(Func<int, int> arr, int length, int target)
+        public static T ClosestBinarySearch<T>(this IList<T> list, Func<T, int> arr, int target) => list.ClosestBinarySearch(arr, target, out _);
+        
+        public static T ClosestBinarySearch<T>(this IList<T> list, Func<T, int> arr, int target, out int index)
         {
+            int length = list.Count;
             int left = 0;
             int right = length - 1;
 
             if (length == 2)
             {
-                return target > arr(0) ? 1 : 0;
+                index = target > arr(list[0]) ? 1 : 0;
+                return list[index];
             }
 
             while (left < right - 1) // Keep looping until left and right are adjacent
             {
                 int mid = left + (right - left) / 2;
-
-                if (arr(mid) == target)
+                var midItem = list[mid];
+                
+                if (arr(midItem) == target)
                 {
-                    return mid; // Found the exact target
+                    index = mid;
+                    return midItem; // Found the exact target
                 }
-                else if (arr(mid) < target)
+
+                if (arr(midItem) < target)
                 {
                     left = mid; // Move left pointer to mid
                 }
@@ -35,12 +42,16 @@ namespace LSCore.Extensions
                 }
             }
 
-            if (target > arr(left))
+            var leftItem = list[left];
+            index = left;
+            
+            if (target > arr(leftItem))
             {
-                return right;
+                index = right;
+                return list[right];
             }
-
-            return left;
+            
+            return leftItem;
         }
     }
 }

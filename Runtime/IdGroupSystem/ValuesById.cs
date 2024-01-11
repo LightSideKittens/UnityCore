@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Sirenix.OdinInspector;
 
 namespace LSCore
@@ -19,6 +20,11 @@ namespace LSCore
         protected void SetupByGroup(IdGroup group, ValueDropdownList<Data> list)
         {
             if (group != null) SetupByIds(group, list);
+        }
+
+        protected IEnumerable<Id> AllIdsByGroupType<T>() where T : IdGroup
+        {
+            return AssetDatabaseUtils.LoadAllAssets<T>().SelectMany(x => x);
         }
 #endif
 

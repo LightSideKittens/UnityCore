@@ -25,7 +25,35 @@ namespace LSCore
             vh.AddTriangle(2, 3, 0);
         }
         
+        
+        //-------------GENERATORS-------------
         private void GenerateSlicedSprite(LSVertexHelper toFill)
+        {
+            SlicedPrepare(toFill);
+            toFill.Clear();
+
+            for (int x = 0; x < 3; ++x)
+            {
+                int x2 = x + 1;
+
+                for (int y = 0; y < 3; ++y)
+                {
+                    if (!fillCenter && x == 1 && y == 1)
+                        continue;
+
+                    int y2 = y + 1;
+
+                    AddQuad(toFill,
+                        new Vector2(vertScratch[x].x, vertScratch[y].y),
+                        new Vector2(vertScratch[x2].x, vertScratch[y2].y),
+                        
+                        new Vector2(uVScratch[x].x, uVScratch[y].y),
+                        new Vector2(uVScratch[x2].x, uVScratch[y2].y));
+                }
+            }
+        }
+
+        private void SlicedPrepare(LSVertexHelper toFill)
         {
             if (!hasBorder)
             {
@@ -77,32 +105,9 @@ namespace LSCore
             uVScratch[1] = new Vector2(inner.x, inner.y);
             uVScratch[2] = new Vector2(inner.z, inner.w);
             uVScratch[3] = new Vector2(outer.z, outer.w);
-
-            toFill.Clear();
-
-            for (int x = 0; x < 3; ++x)
-            {
-                int x2 = x + 1;
-
-                for (int y = 0; y < 3; ++y)
-                {
-                    if (!fillCenter && x == 1 && y == 1)
-                        continue;
-
-                    int y2 = y + 1;
-
-
-                    AddQuad(toFill,
-                        new Vector2(vertScratch[x].x, vertScratch[y].y),
-                        new Vector2(vertScratch[x2].x, vertScratch[y2].y),
-                        
-                        new Vector2(uVScratch[x].x, uVScratch[y].y),
-                        new Vector2(uVScratch[x2].x, uVScratch[y2].y));
-                }
-            }
         }
-        
-        void GenerateSimpleSprite(LSVertexHelper vh, bool lPreserveAspect)
+
+        private void GenerateSimpleSprite(LSVertexHelper vh, bool lPreserveAspect)
         {
             var activeSprite = overrideSprite;
             Vector4 v = GetDrawingDimensions(lPreserveAspect);
@@ -117,40 +122,6 @@ namespace LSCore
 
             vh.AddTriangle(0, 1, 2);
             vh.AddTriangle(2, 3, 0);
-        }
-
-        private Vector4 GetDrawingDimensions(bool shouldPreserveAspect)
-        {
-            var activeSprite = overrideSprite;
-            var padding = activeSprite == null ? Vector4.zero : DataUtility.GetPadding(activeSprite);
-            var size = activeSprite == null ? Vector2.zero : new Vector2(activeSprite.rect.width, activeSprite.rect.height);
-
-            Rect rect = GetPixelAdjustedRect();
-            TryRotateRect(ref rect);
-            currentRect = rect;
-            
-            int spriteW = RoundToInt(size.x);
-            int spriteH = RoundToInt(size.y);
-
-            var v = new Vector4(
-                padding.x / spriteW,
-                padding.y / spriteH,
-                (spriteW - padding.z) / spriteW,
-                (spriteH - padding.w) / spriteH);
-
-            if (shouldPreserveAspect && size.sqrMagnitude > 0.0f)
-            {
-                PreserveSpriteAspectRatio(ref rect, size);
-            }
-            
-            v = new Vector4(
-                rect.x + rect.width * v.x,
-                rect.y + rect.height * v.y,
-                rect.x + rect.width * v.z,
-                rect.y + rect.height * v.w
-            );
-
-            return v;
         }
 
         private void GenerateSprite(LSVertexHelper vh, bool lPreserveAspect)
@@ -192,60 +163,8 @@ namespace LSCore
                 vh.AddTriangle(triangles[i + 0], triangles[i + 1], triangles[i + 2]);
             }
         }
-        
-        private void PreserveSpriteAspectRatio(ref Rect rect, in Vector2 spriteSize)
-        {
-            var spriteRatio = spriteSize.x / spriteSize.y;
-            var rectRatio = rect.width / rect.height;
 
-            if (spriteRatio > rectRatio)
-            {
-                var oldHeight = rect.height;
-                rect.height = rect.width * (1.0f / spriteRatio);
-                rect.y += (oldHeight - rect.height) * rt.pivot.y;
-            }
-            else
-            {
-                var oldWidth = rect.width;
-                rect.width = rect.height * spriteRatio;
-                rect.x += (oldWidth - rect.width) * rt.pivot.x;
-            }
-        }
-        
-        private Vector4 GetAdjustedBorders(Vector4 border, in Rect adjustedRect)
-        {
-            for (int axis = 0; axis <= 1; axis++)
-            {
-                float borderScaleRatio;
-
-                // The adjusted rect (adjusted for pixel correctness)
-                // may be slightly larger than the original rect.
-                // Adjust the border to match the adjustedRect to avoid
-                // small gaps between borders (case 833201).
-                var size = currentRect.size;
-                var size2 = adjustedRect.size;
-                
-                if (size[axis] != 0)
-                {
-                    borderScaleRatio = size2[axis] / size[axis];
-                    border[axis] *= borderScaleRatio;
-                    border[axis + 2] *= borderScaleRatio;
-                }
-
-                // If the rect is smaller than the combined borders, then there's not room for the borders at their normal size.
-                // In order to avoid artefacts with overlapping borders, we scale the borders down to fit.
-                float combinedBorders = border[axis] + border[axis + 2];
-                if (size2[axis] < combinedBorders && combinedBorders != 0)
-                {
-                    borderScaleRatio = size2[axis] / combinedBorders;
-                    border[axis] *= borderScaleRatio;
-                    border[axis + 2] *= borderScaleRatio;
-                }
-            }
-            return border;
-        }
-        
-        void GenerateTiledSprite(LSVertexHelper toFill)
+        private void GenerateTiledSprite(LSVertexHelper toFill)
         {
             Vector4 outer, inner, border;
             Vector2 spriteSize;
@@ -493,8 +412,8 @@ namespace LSCore
                 }
             }
         }
-        
-        void GenerateFilledSprite(LSVertexHelper toFill, bool preserveAspect)
+
+        private void GenerateFilledSprite(LSVertexHelper toFill, bool preserveAspect)
         {
             toFill.Clear();
 
@@ -694,6 +613,195 @@ namespace LSCore
                     AddQuad(toFill, s_Xy,  s_Uv);
                 }
             }
+        }
+
+        private void GenerateFilledSlicedSprite(LSVertexHelper toFill)
+        {
+            SlicedPrepare(toFill);
+            toFill.Clear();
+            var rect = rectTransform.rect;
+
+            for (int x = 0; x < 3; ++x)
+            {
+                int x2 = x + 1;
+
+                for (int y = 0; y < 3; ++y)
+                {
+                    if (!fillCenter && x == 1 && y == 1)
+                        continue;
+
+                    int y2 = y + 1;
+
+                    var min = new Vector2(vertScratch[x].x, vertScratch[y].y);
+                    var max = new Vector2(vertScratch[x2].x, vertScratch[y2].y);
+                    var uvMin = new Vector2(uVScratch[x].x, uVScratch[y].y);
+                    var uvMax = new Vector2(uVScratch[x2].x, uVScratch[y2].y);
+                    
+                    if (CanAddQuad(ref min, ref max, ref uvMin, ref uvMax))
+                    {
+                        AddQuad(toFill, min, max, uvMin, uvMax);
+                    }
+                }
+            }
+
+            bool CanAddQuad(ref Vector2 min, ref Vector2 max, ref Vector2 uvMin, ref Vector2 uvMax)
+            {
+                if (fillMethod == FillMethod.Horizontal)
+                {
+                    if (fillOrigin == 0) //Left
+                    {
+                        var maxPoint = rect.xMin + rect.width * fillAmount;
+                        var result = min.x < maxPoint;
+                        
+                        if (result && max.x > maxPoint)
+                        {
+                            var quadWidth = max.x - min.x;
+                            uvMax.x = Lerp(uvMin.x ,uvMax.x, (maxPoint - min.x) / quadWidth);
+                            max.x = maxPoint;
+                        }
+                        
+                        return result;
+                    }
+                    else if(fillOrigin == 1) //Right
+                    {
+                        var minPoint = rect.xMax - rect.width * fillAmount;
+                        var result = max.x > minPoint;
+                        
+                        if (result && min.x < minPoint)
+                        {
+                            var quadWidth = max.x - min.x;
+                            uvMin.x = Lerp(uvMax.x, uvMin.x, (max.x - minPoint) / quadWidth);
+                            min.x = minPoint;
+                        }
+                        
+                        return result;
+                    }
+                }
+                else if(fillMethod == FillMethod.Vertical)
+                {
+                    if (fillOrigin == 0) //Bottom
+                    {
+                        var maxPoint = rect.yMin + rect.height * fillAmount;
+                        var result = min.y < maxPoint;
+                        
+                        if (result && max.y > maxPoint)
+                        {
+                            var quadWidth = max.y - min.y;
+                            uvMax.y = Lerp(uvMin.y ,uvMax.y, (maxPoint - min.y) / quadWidth);
+                            max.y = maxPoint;
+                        }
+                        
+                        return result;
+                    }
+                    else if(fillOrigin == 1) //Top
+                    {
+                        var minPoint = rect.yMax - rect.height * fillAmount;
+                        var result = max.y > minPoint;
+                        
+                        if (result && min.y < minPoint)
+                        {
+                            var quadWidth = max.y - min.y;
+                            uvMin.y = Lerp(uvMax.y, uvMin.y, (max.y - minPoint) / quadWidth);
+                            min.y = minPoint;
+                        }
+                        
+                        return result;
+                    }
+                }
+
+                return true;
+            }
+        }
+        
+        //-------------GENERATORS-------------
+        
+        
+        //-------------TOOLS-------------
+        
+        private Vector4 GetDrawingDimensions(bool shouldPreserveAspect)
+        {
+            var activeSprite = overrideSprite;
+            var padding = activeSprite == null ? Vector4.zero : DataUtility.GetPadding(activeSprite);
+            var size = activeSprite == null ? Vector2.zero : new Vector2(activeSprite.rect.width, activeSprite.rect.height);
+
+            Rect rect = GetPixelAdjustedRect();
+            TryRotateRect(ref rect);
+            currentRect = rect;
+            
+            int spriteW = RoundToInt(size.x);
+            int spriteH = RoundToInt(size.y);
+
+            var v = new Vector4(
+                padding.x / spriteW,
+                padding.y / spriteH,
+                (spriteW - padding.z) / spriteW,
+                (spriteH - padding.w) / spriteH);
+
+            if (shouldPreserveAspect && size.sqrMagnitude > 0.0f)
+            {
+                PreserveSpriteAspectRatio(ref rect, size);
+            }
+            
+            v = new Vector4(
+                rect.x + rect.width * v.x,
+                rect.y + rect.height * v.y,
+                rect.x + rect.width * v.z,
+                rect.y + rect.height * v.w
+            );
+
+            return v;
+        }
+
+        private void PreserveSpriteAspectRatio(ref Rect rect, in Vector2 spriteSize)
+        {
+            var spriteRatio = spriteSize.x / spriteSize.y;
+            var rectRatio = rect.width / rect.height;
+
+            if (spriteRatio > rectRatio)
+            {
+                var oldHeight = rect.height;
+                rect.height = rect.width * (1.0f / spriteRatio);
+                rect.y += (oldHeight - rect.height) * rt.pivot.y;
+            }
+            else
+            {
+                var oldWidth = rect.width;
+                rect.width = rect.height * spriteRatio;
+                rect.x += (oldWidth - rect.width) * rt.pivot.x;
+            }
+        }
+        
+        private Vector4 GetAdjustedBorders(Vector4 border, in Rect adjustedRect)
+        {
+            for (int axis = 0; axis <= 1; axis++)
+            {
+                float borderScaleRatio;
+
+                // The adjusted rect (adjusted for pixel correctness)
+                // may be slightly larger than the original rect.
+                // Adjust the border to match the adjustedRect to avoid
+                // small gaps between borders (case 833201).
+                var size = currentRect.size;
+                var size2 = adjustedRect.size;
+                
+                if (size[axis] != 0)
+                {
+                    borderScaleRatio = size2[axis] / size[axis];
+                    border[axis] *= borderScaleRatio;
+                    border[axis + 2] *= borderScaleRatio;
+                }
+
+                // If the rect is smaller than the combined borders, then there's not room for the borders at their normal size.
+                // In order to avoid artefacts with overlapping borders, we scale the borders down to fit.
+                float combinedBorders = border[axis] + border[axis + 2];
+                if (size2[axis] < combinedBorders && combinedBorders != 0)
+                {
+                    borderScaleRatio = size2[axis] / combinedBorders;
+                    border[axis] *= borderScaleRatio;
+                    border[axis + 2] *= borderScaleRatio;
+                }
+            }
+            return border;
         }
         
         void AddQuad(LSVertexHelper vertexHelper, Vector3[] quadPositions, Vector3[] quadUVs)

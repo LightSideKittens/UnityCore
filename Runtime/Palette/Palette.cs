@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Sirenix.OdinInspector;
+﻿using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace LSCore
@@ -17,7 +16,10 @@ namespace LSCore
         public static bool TryGet(Id id, out Color color) => instance.ByKey.TryGetValue(id, out color);
         
 #if UNITY_EDITOR
-        protected override void SetupDataSelector(ValueDropdownList<Data> list) => SetupByIds(AssetDatabaseUtils.LoadAllAssets<PaletteIdGroup>().SelectMany(x => x), list);
+        protected override void SetupDataSelector(ValueDropdownList<Data> list)
+        {
+            SetupByIds(AllIdsByGroupType<PaletteIdGroup>(), list);
+        }
 #endif
     }
 }

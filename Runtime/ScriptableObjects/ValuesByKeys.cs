@@ -33,11 +33,10 @@ namespace LSCore
 
             public override int GetHashCode() => key.GetHashCode();
         }
-
-        [HideReferenceObjectPicker]
+        
         [ValueDropdown("DataSelector", IsUniqueList = true)]
-        [OdinSerialize]
-        private HashSet<Data> byKey = new();
+        [SerializeField]
+        private List<Data> byKey = new();
 
         public Dictionary<TKey, TValue> ByKey { get; } = new();
 

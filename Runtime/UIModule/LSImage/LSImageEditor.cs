@@ -25,7 +25,9 @@ namespace LSCore
         SerializedProperty m_Type;
         SerializedProperty m_PreserveAspect;
         SerializedProperty m_UseSpriteMesh;
-        FieldInfo m_bIsDriven;
+        SerializedProperty combineFilledWithSliced;
+        SerializedProperty m_PixelsPerUnitMultiplier;
+        FieldInfo bIsDriven;
         private LSImage image;
         private RectTransform rect;
         private bool isDragging;
@@ -45,17 +47,19 @@ namespace LSCore
             angle = serializedObject.FindProperty("angle");
             gradientStart = serializedObject.FindProperty("gradientStart");
             gradientEnd = serializedObject.FindProperty("gradientEnd");
-            var type = GetType().BaseType;
-            m_bIsDriven = type.GetField("m_bIsDriven", BindingFlags.Instance | BindingFlags.NonPublic);
+            combineFilledWithSliced = serializedObject.FindProperty("combineFilledWithSliced");
+            m_PixelsPerUnitMultiplier = serializedObject.FindProperty("m_PixelsPerUnitMultiplier");
+            bIsDriven = typeof(ImageEditor).GetField("m_bIsDriven", BindingFlags.Instance | BindingFlags.NonPublic);
             image = (LSImage)target;
             rect = image.GetComponent<RectTransform>();
             isEditing = false;
+            
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-            //m_bIsDriven.SetValue(this, (rect.drivenByObject as Slider)?.fillRect == rect);
+            bIsDriven.SetValue(this, (rect.drivenByObject as Slider)?.fillRect == rect);
 
             SpriteGUI();
             EditorGUILayout.PropertyField(gradient);
@@ -77,6 +81,13 @@ namespace LSCore
             MaskableControlsGUI();
 
             TypeGUI();
+            
+            if (image.type == Image.Type.Filled && image.fillMethod is Image.FillMethod.Horizontal or Image.FillMethod.Vertical)
+            {
+                EditorGUILayout.PropertyField(combineFilledWithSliced);
+                EditorGUILayout.PropertyField(m_PixelsPerUnitMultiplier);
+            }
+            
             SetShowNativeSize(false);
             if (EditorGUILayout.BeginFadeGroup(m_ShowNativeSize.faded))
             {

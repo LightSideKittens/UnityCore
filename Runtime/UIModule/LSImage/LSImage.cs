@@ -125,7 +125,14 @@ namespace LSCore
                     GenerateTiledSprite(toFill);
                     break;
                 case Type.Filled:
-                    GenerateFilledSprite(toFill, preserveAspect);
+                    if (combineFilledWithSliced && hasBorder)
+                    {
+                        GenerateFilledSlicedSprite(toFill);
+                    }
+                    else
+                    {
+                        GenerateFilledSprite(toFill, preserveAspect);
+                    }
                     break;
             }
 
