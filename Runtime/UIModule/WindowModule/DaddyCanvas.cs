@@ -7,6 +7,6 @@ namespace LSCore
         protected override bool ShowByDefault => true;
         protected override Transform Parent => null;
 
-        protected override void OnShowing() => ExcludeFromHidePrevious();
+        protected override void RecordState(){}
     }
 }
