@@ -2,6 +2,16 @@
 
 namespace LSCore.Extensions.Unity
 {
+    public static class LSVector2
+    {
+        public static readonly Vector2 half = Vector2.one / 2;
+    }
+    
+    public static class LSVector3
+    {
+        public static readonly Vector3 half = Vector3.one / 2;
+    }
+    
     public static class Vector2Extensions
     {
         public static Vector2 Project(this in Vector2 a, Vector2 b)

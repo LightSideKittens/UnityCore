@@ -5,7 +5,7 @@ namespace LSCore.Extensions.Unity
     public static class RectTransformExtensions
     {
         public static RectTransform Parent(this RectTransform target) => target.parent.GetComponent<RectTransform>();
-
+        
         public static Vector2 GetLocalPositionByScreenPoint(this RectTransform parent, Vector2 screenPoint, Canvas canvas = null)
         {
             Camera cam = null;

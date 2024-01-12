@@ -54,6 +54,9 @@ namespace LSCore
         public void OnDisable()
         {
             current.Kill();
+            if (current == null) return;
+            transform.localScale = defaultScale;
+            current = null;
         }
     }
 }

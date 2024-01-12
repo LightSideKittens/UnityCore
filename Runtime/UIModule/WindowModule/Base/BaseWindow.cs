@@ -1,11 +1,59 @@
 using System;
+using System.Collections.Generic;
 using DG.Tweening;
-using LSCore.Extensions.Unity;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace LSCore
 {
+    public struct WindowsData
+    {
+        internal static readonly Stack<(Action show, bool needHide)> showPrevious = new();
+        internal static Action hidePrevious;
+        private static Action goHome;
+
+        internal static void ShowPrevious()
+        {
+            if(showPrevious.Count == 0) return;
+            
+            var last = showPrevious.Pop();
+            List<Action> result = new() {last.show};
+            
+            for (int i = 0; i < showPrevious.Count; i++)
+            {
+                if (last.needHide) break;
+                last = showPrevious.Pop();
+                result.Add(last.show);
+            }
+
+            for (int i = result.Count - 1; i >= 0; i--)
+            {
+                result[i]();
+            }
+        }
+
+        internal static void GoHome()
+        {
+            goHome();
+            showPrevious.Clear();
+        }
+        
+        static WindowsData()
+        {
+            World.Destroyed += () =>
+            {
+                showPrevious.Clear();
+                hidePrevious = null;
+                goHome = null;
+            };
+        }
+        
+        public static void SetHome<T>() where T : BaseWindow<T>
+        {
+            goHome = BaseWindow<T>.ExcludeFromHidePrevious;
+            goHome += BaseWindow<T>.Show;
+        }
+    }
+    
     [RequireComponent(typeof(Canvas))]
     [RequireComponent(typeof(CanvasGroup))]
     [RequireComponent(typeof(RectTransform))]
@@ -24,6 +72,7 @@ namespace LSCore
 
         protected virtual Transform Parent => IsExistsInManager ? DaddyCanvas.Instance.transform : null;
         [field: Header("Optional")]
+        [field: SerializeField] protected virtual LSButton HomeButton { get; private set; }
         [field: SerializeField] protected virtual LSButton BackButton { get; private set; }
         public RectTransform RectTransform { get; private set; }
         public static Canvas Canvas { get; private set; }
@@ -31,7 +80,10 @@ namespace LSCore
         
         protected virtual float DefaultAlpha => 0;
         protected virtual bool ShowByDefault => false;
-        private static bool isCalledFromStatic = false;
+        protected virtual bool NeedHidePrevious => true;
+        protected virtual bool NeedShowPrevious => true;
+        
+        private static bool isCalledFromStatic;
 
         protected override void Init()
         {
@@ -67,10 +119,8 @@ namespace LSCore
                 canvas.sortingOrder = SortingOrder + 30000;
             }
 
-            if (BackButton != null)
-            {
-                BackButton.Clicked += OnBackButton;
-            }
+            if (BackButton != null) BackButton.Clicked += OnBackButton;
+            if (HomeButton != null) HomeButton.Clicked += OnHomeButton;
             
             if(isCalledFromStatic) return;
             if (ShowByDefault) Show();
@@ -83,24 +133,44 @@ namespace LSCore
             isCalledFromStatic = false;
         }
 
-        protected virtual void OnBackButton() => Hide();
-        
+        protected virtual void OnBackButton()
+        {
+            WindowsData.hidePrevious -= Hide;
+            if (NeedShowPrevious) WindowsData.ShowPrevious();
+            if (hideTween.IsActive()) return;
+            StartHiding();
+        }
+
+        protected virtual void OnHomeButton() => WindowsData.GoHome();
+
         private void InternalShow()
         {
-            if (showTween.IsActive() && showTween.IsInitialized()) return;
-
+            if (showTween.IsActive()) return;
+            
+            Action hide = WindowsData.hidePrevious;
+            WindowsData.hidePrevious += Hide;
+            
             Showing?.Invoke();
-
             gameObject.SetActive(true);
             OnShowing();
             AnimateOnShowing(OnCompleteShow);
+
+            if (NeedHidePrevious) hide?.Invoke();
         }
 
         private void InternalHide()
         {
-            if (hideTween.IsActive() && hideTween.IsInitialized()) return;
-            Hiding?.Invoke();
+            if (hideTween.IsActive()) return;
+            
+            WindowsData.hidePrevious -= Hide;
+            WindowsData.showPrevious.Push((Show, NeedHidePrevious));
 
+            StartHiding();
+        }
+
+        private void StartHiding()
+        {
+            Hiding?.Invoke();
             OnHiding();
             AnimateOnHiding(OnCompleteHide);
         }
@@ -145,10 +215,12 @@ namespace LSCore
             Instance.InternalShow();
         }
 
-        public static void Hide()
+        private static void Hide()
         {
             isCalledFromStatic = true;
             Instance.InternalHide();
         }
+
+        internal static void ExcludeFromHidePrevious() => WindowsData.hidePrevious -= Hide;
     }
 }
