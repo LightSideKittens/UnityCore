@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace LSCore
@@ -7,20 +8,22 @@ namespace LSCore
     public class ExchangeTable : ScriptableObject
     {
         [Serializable]
-        private struct Pair
+        internal struct Pair
         {
-            [Id(typeof(CurrencyIdGroup))] public Id from;
-            [Id(typeof(CurrencyIdGroup))] public Id to;
+            [Id(typeof(CurrencyIdGroup))] [HorizontalGroup] [LabelText("1")] [LabelWidth(10)] public Id from;
+            [HorizontalGroup(Width = 100)] [LabelText("=")] [LabelWidth(10)] public float rate;
+            [Id(typeof(CurrencyIdGroup))] [HorizontalGroup] [HideLabel] public Id to;
         }
 
         [Serializable]
-        private struct Data
+        internal struct Data
         {
-            public Pair pair;
-            public float rate;
+            [InlineProperty]
+            [HorizontalGroup("table")] 
+            [HideLabel] public Pair pair;
 
-            public int ConvertFrom(int from) => Mathf.CeilToInt(from * rate);
-            public int ConvertTo(int to) => Mathf.CeilToInt(to / rate);
+            public int ConvertFrom(int from) => Mathf.CeilToInt(from * pair.rate);
+            public int ConvertTo(int to) => Mathf.CeilToInt(to / pair.rate);
         }
 
         [SerializeField] private Data[] data;

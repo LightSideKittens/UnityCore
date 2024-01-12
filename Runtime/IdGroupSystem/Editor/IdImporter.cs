@@ -47,7 +47,7 @@ namespace LSCore
             }
 
             var idAsset = ScriptableObject.CreateInstance<Id>();
-            ctx.AddObjectToAsset("main", idAsset, LSIcons.Get("fire-icon"));
+            ctx.AddObjectToAsset("main", idAsset, LSIcons.Get("id-icon"));
             ctx.SetMainObject(idAsset);
         }
     }

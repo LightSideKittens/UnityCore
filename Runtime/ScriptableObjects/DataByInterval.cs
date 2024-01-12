@@ -22,9 +22,15 @@ namespace LSCore
         protected virtual string Label => "Intervals";
         private void DrawLabel(int index)
         {
-            index = Mathf.Clamp(index, 0, intervals.Count - 1);
             var style = new GUIStyle(GUI.skin.label);
             style.richText = true;
+            
+            if (index >= intervals.Count)
+            {
+                EditorGUILayout.LabelField($"<b>Don't Exist</b>", style);
+                return;
+            }
+
             var fromVal = index > 0 ? intervals[index - 1] : 0;
             EditorGUILayout.LabelField($"<b>{fromVal} — {intervals[index]}</b>", style);
         }
