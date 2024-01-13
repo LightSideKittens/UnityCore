@@ -3,7 +3,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace LSCore.AddressablesModule.AssetReferences
 {
-    public static partial class LGAddressables
+    public static partial class LSAddressables
     {
         public static AsyncOperationHandle<T> OnComplete<T>(this in AsyncOperationHandle<T> task, Action<T> onComplete)
         {

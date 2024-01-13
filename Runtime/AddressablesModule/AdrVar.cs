@@ -4,7 +4,7 @@ using UnityEngine.Scripting;
 public static class AdrVar
 {
 #if DEBUG
-    [Preserve] public static string BuildEnvironment => LSDebugData.Environment;
+    [Preserve] public static string BuildEnvironment => LSDebugData.Data.Environment;
 #endif
 
     private static string serverName;
@@ -16,7 +16,7 @@ public static class AdrVar
         {
             return serverName
 #if DEBUG
-                + $"/{LSDebugData.Environment}"
+                + $"/{LSDebugData.Data.Environment}"
 #else
                 + $"/{LSConsts.Env.Prod}"
 #endif

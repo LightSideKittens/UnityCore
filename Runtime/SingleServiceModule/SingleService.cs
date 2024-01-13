@@ -14,6 +14,7 @@ namespace LSCore
         public override Type Type => typeof(T);
 
         protected static T Instance => staticConstructor();
+        public static bool IsNull => instance == null;
         public static bool IsExistsInManager => ServiceManager.IsExists<T>();
 
         static SingleService()

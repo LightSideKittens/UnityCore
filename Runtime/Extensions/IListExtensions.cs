@@ -5,6 +5,26 @@ namespace LSCore.Extensions
 {
     public static class IListExtensions
     {
+        public static T Min<T>(this IList<T> list, Func<T, float> arr, out int index)
+        {
+            float minValue = float.MaxValue;
+            index = -1;
+            T result = default;
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                var candidate = list[i];
+                var value = arr(candidate);
+                if (value < minValue) {
+                    minValue = value;
+                    index = i;
+                    result = candidate;
+                }
+            }
+            
+            return result;
+        }
+        
         public static T Random<T>(this IList<T> list) => list[UnityEngine.Random.Range(0, list.Count)];
 
         public static T ClosestBinarySearch<T>(this IList<T> list, Func<T, int> arr, int target) => list.ClosestBinarySearch(arr, target, out _);

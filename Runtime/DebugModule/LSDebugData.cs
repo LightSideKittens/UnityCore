@@ -1,31 +1,50 @@
-﻿using Newtonsoft.Json;
+﻿using System.ComponentModel;
+using Newtonsoft.Json;
+using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace LSCore
 {
-    public partial class LSDebugData : BaseDebugData<LSDebugData>
+    public interface ILSDebugData
     {
+        string Country { get; set; }
+        string Environment { get; set; }
+        bool LogWindowsActivity { get; set; }
+    }
+    
+    public partial class LSDebugData : BaseDebugData<LSDebugData>, ILSDebugData
+    {
+        public static ILSDebugData Data => Config;
         protected override string FileName => nameof(LSDebugData);
-        [JsonProperty] private string country;
-        [JsonProperty] private string environment = LSConsts.Env.Dev;
 
-        public static string Country
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void Init()
         {
-            get => Config.country;
-            set => Config.country = value;
+            SRDebug.Instance.AddOptionContainer(Config);
         }
         
-        public static string Environment
-        {
-            get => Config.environment;
-            set => Config.environment = value;
-        }
+
+        [Category("LS Debug Data")]
+        [Preserve]
+        [JsonProperty] 
+        public string Country { get; set; }
+
+        [Category("LS Debug Data")]
+        [Preserve]
+        [JsonProperty] 
+        public string Environment { get; set; } = LSConsts.Env.Dev;
+    
+        [Category("LS Debug Data")]
+        [Preserve]
+        [JsonProperty] 
+        public bool LogWindowsActivity { get; set; }
 
         protected override void OnLoaded() 
         {
             base.OnLoaded();
-            if (string.IsNullOrEmpty(country))
+            if (string.IsNullOrEmpty(Country))
             {
-                country = "World";
+                Country = "World";
             }
         }
     }

@@ -17,7 +17,7 @@ namespace LSCore
         private static void Init()
         {
 #if DEBUG
-            task.Success(LSDebugData.Country);
+            task.Success(LSDebugData.Data.Country);
             return;
 #endif
             GetCountry();

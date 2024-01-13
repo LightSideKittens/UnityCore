@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 
 namespace LSCore.AddressablesModule.AssetReferences
 {
-    public static partial class LGAddressables
+    public static partial class LSAddressables
     {
         public static AsyncOperationHandle<T> LoadAsync<T>(this AssetRef<T> reference) where T : Object
         {

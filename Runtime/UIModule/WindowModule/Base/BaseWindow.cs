@@ -1,90 +1,9 @@
 using System;
-using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
 namespace LSCore
 {
-    public struct WindowsData
-    {
-        private static readonly Stack<Action> states = new();
-        internal static Action hidePrevious;
-        private static Action goHome;
-        private static Action hideHome;
-        private static bool recordStates;
-        private static Action recordedState;
-        internal static int sortingOrder;
-
-        static WindowsData()
-        {
-            World.Destroyed += Clear;
-        }
-        
-        internal static void GoBack() => states.Pop()();
-        internal static void HidePrevious() => hidePrevious?.Invoke();
-
-        internal static void StartRecording()
-        {
-            recordStates = true;
-            recordedState = null;
-        }
-
-        internal static void Record(Action state)
-        {
-            if (recordStates)
-            {
-                recordedState += state;
-            }
-        }
-
-        internal static void StopRecording()
-        {
-            recordStates = false;
-            states.Push(recordedState);
-        }
-
-        internal static void GoHome()
-        {
-            states.Clear();
-            var hideAction = hidePrevious;
-            hidePrevious = null;
-            sortingOrder = 0;
-            goHome();
-            var hideDelegate = (Delegate)hideHome;
-
-            foreach (var delegat in hideAction.GetInvocationList())
-            {
-                if (delegat == hideDelegate)
-                {
-                    continue;
-                }
-                
-                ((Action)delegat)();
-            }
-
-            hidePrevious = hideHome;
-            sortingOrder = 1;
-        }
-        
-        internal static void SetHome<T>(Action hide) where T : BaseWindow<T>
-        {
-            Clear();
-            hideHome = hide;
-            goHome += BaseWindow<T>.Show;
-        }
-
-        private static void Clear()
-        {
-            states.Clear();
-            hidePrevious = null;
-            goHome = null;
-            hideHome = null;
-            recordStates = false;
-            recordedState = null;
-            sortingOrder = 0;
-        }
-    }
-    
     [RequireComponent(typeof(Canvas))]
     [RequireComponent(typeof(CanvasGroup))]
     [RequireComponent(typeof(RectTransform))]
@@ -110,7 +29,7 @@ namespace LSCore
         public virtual int SortingOrder => 0;
         
         protected virtual float DefaultAlpha => 0;
-        protected virtual bool ShowByDefault => false;
+        protected virtual bool ActiveByDefault => false;
         protected virtual bool NeedHidePrevious => true;
         
         private static bool isCalledFromStatic;
@@ -153,8 +72,7 @@ namespace LSCore
             if (HomeButton != null) HomeButton.Clicked += OnHomeButton;
             
             if(isCalledFromStatic) return;
-            if (ShowByDefault) Show();
-            else InternalHide();
+            gameObject.SetActive(ActiveByDefault);
         }
 
         protected override void DeInit()
@@ -176,7 +94,6 @@ namespace LSCore
             OnShowing();
             AnimateOnShowing(OnCompleteShow);
             RecordState();
-            Canvas.sortingOrder = WindowsData.sortingOrder++;
         }
 
         protected virtual void RecordState()
@@ -188,13 +105,14 @@ namespace LSCore
 
             WindowsData.hidePrevious += InternalHide;
             WindowsData.Record(InternalHide);
+            Canvas.sortingOrder = WindowsData.maxSortingOrder++;
         }
 
         private void InternalHide()
         {
             if (hideTween != null) return;
 
-            WindowsData.sortingOrder--;
+            WindowsData.maxSortingOrder--;
             WindowsData.hidePrevious -= InternalHide;
             WindowsData.Record(InternalShow);
             Hiding?.Invoke();
@@ -242,8 +160,13 @@ namespace LSCore
 
         public static void Show()
         {
-            WindowsData.StartRecording();
             isCalledFromStatic = true;
+            if (WindowsData.IsPrevious(Instance) && WindowsData.maxSortingOrder - 1 > Canvas.sortingOrder)
+            {
+                WindowsData.GoBack();
+                return;
+            }
+            WindowsData.StartRecording();
             Instance.InternalShow();
             WindowsData.StopRecording();
         }

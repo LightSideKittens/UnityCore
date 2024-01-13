@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace LSCore.Extensions.Unity
 {
@@ -14,7 +16,10 @@ namespace LSCore.Extensions.Unity
         public static Vector2[] CornersRelativeCenter(in this Rect rect) => new[] { rect.TopLeft() - rect.center, rect.TopRight() - rect.center, rect.BottomLeft() - rect.center, rect.BottomRight() - rect.center };
         public static float CircumscribedCircleRadius(in this Rect rect)
         {
-            return Mathf.Sqrt(Mathf.Pow(rect.width / 2, 2) + Mathf.Pow(rect.height / 2, 2));
+            float width = rect.width;
+            float height = rect.height;
+            float diagonal = (float)Math.Sqrt(width * width + height * height);
+            return diagonal / 2;
         }
 
         private delegate Vector2 GeneratePointDelegate(Rect rect, float distance);

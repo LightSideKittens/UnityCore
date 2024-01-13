@@ -208,7 +208,8 @@ namespace LSCore.ConfigModule
         private static T instance;
         private static Func<T> getter = Get;
         public static T Config => getter();
-
+        public static bool IsNull => instance == null;
+        
         protected override string FileName => $"{char.ToLower(typeof(T).Name[0])}{typeof(T).Name[1..]}";
         protected override void OnDestroy() => getter = Get;
         private static T Get()

@@ -1,9 +1,19 @@
-﻿using System.ComponentModel;
+﻿#if DEBUG
+using System.ComponentModel;
 using LSCore.SDKManagement.Advertisement;
+using UnityEngine;
 using UnityEngine.Scripting;
 
-public partial class SROptions
+public class SRDebugData
 {
+    private static SRDebugData instance = new();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void Init()
+    {
+        SRDebug.Instance.AddOptionContainer(instance);
+    }
+    
     [Category("Ads/Banner")]
     [Preserve]
     public void ShowBanner()
@@ -32,3 +42,4 @@ public partial class SROptions
         Ads.Reward.Show(result => Burger.Log($"[Debugger] Reward Ads {result}"));
     }
 }
+#endif

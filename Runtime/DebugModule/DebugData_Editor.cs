@@ -18,9 +18,9 @@ namespace LSCore
 
         private static void OnToolbarRightGUI()
         {
-            var rect = GUILayoutUtility.GetRect(new GUIContent(Environment), GUI.skin.button, GUILayout.MaxWidth(100));
+            var rect = GUILayoutUtility.GetRect(new GUIContent(Config.Environment), GUI.skin.button, GUILayout.MaxWidth(100));
             
-            if (GUI.Button(rect, Environment))
+            if (GUI.Button(rect, Config.Environment))
             {
                 PopupWindow.Show(rect, popupContent);
             }
@@ -32,11 +32,11 @@ namespace LSCore
             {
                 foreach (var environment in LSConsts.Env.Environments)
                 {
-                    var isSelected = environment == Environment;
+                    var isSelected = environment == Config.Environment;
 
                     if (GUILayout.Button(environment + (isSelected ? " ❤️" : "")))
                     {
-                        Environment = environment;
+                        Config.Environment = environment;
                         Config.Save();
                         ToolbarExtender.Repaint();
                     }

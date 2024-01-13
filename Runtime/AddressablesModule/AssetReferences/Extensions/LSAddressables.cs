@@ -3,7 +3,7 @@ using Object = UnityEngine.Object;
 
 namespace LSCore.AddressablesModule.AssetReferences
 {
-    public static partial class LGAddressables
+    public static partial class LSAddressables
     {
         public static T Load<T>(this AssetRef<T> reference) where T : Object
         {
