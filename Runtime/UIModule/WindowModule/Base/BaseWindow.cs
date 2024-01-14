@@ -53,8 +53,17 @@ namespace LSCore
                 var zero = Vector2.zero;
                 var one = Vector2.one;
                 
-                rectTransform.anchorMin = zero;
-                rectTransform.anchorMax = one;
+                Rect safeArea = Screen.safeArea;
+
+                Vector2 anchorMin = safeArea.position;
+                Vector2 anchorMax = safeArea.position + safeArea.size;
+                anchorMin.x /= Screen.width;
+                anchorMin.y /= Screen.height;
+                anchorMax.x /= Screen.width;
+                anchorMax.y /= Screen.height;
+
+                rectTransform.anchorMin = anchorMin;
+                rectTransform.anchorMax = anchorMax;
                 rectTransform.anchoredPosition = zero;
                 rectTransform.offsetMin = zero;
                 rectTransform.offsetMax = zero;

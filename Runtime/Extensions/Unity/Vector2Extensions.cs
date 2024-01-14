@@ -14,6 +14,15 @@ namespace LSCore.Extensions.Unity
     
     public static class Vector2Extensions
     {
+        public static int DetermineQuadrant(this in Vector2 vector)
+        {
+            int signX = vector.x < 0 ? 1 : 0;
+            int signY = vector.y < 0 ? 1 : 0;
+            int quadrant = (signY << 1) | signX;
+            
+            return quadrant;
+        }
+
         public static Vector2 Project(this in Vector2 a, Vector2 b)
         {
             float num1 = b.x * b.x + b.y * b.y; //Vector2.Dot

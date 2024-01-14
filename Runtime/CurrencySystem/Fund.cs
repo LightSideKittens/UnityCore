@@ -44,7 +44,7 @@ namespace LSCore
     [Serializable]
     public class Fund : BaseIntFund
     {
-        [HideIf("isControls")] [ValueDropdown("Ids")] 
+        [ValueDropdown("Ids")] 
         [SerializeField] private Id id;
 
         public override Id Id => id;
