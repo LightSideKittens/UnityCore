@@ -9,15 +9,15 @@ namespace LSCore
         public Dictionary<Id, TValue> ById => ByKey;
         
 #if UNITY_EDITOR
-        protected void SetupByIds(IEnumerable<Id> ids, ValueDropdownList<Data> list)
+        protected void SetupByIds(IEnumerable<Id> ids, ValueDropdownList<Entry> list)
         {
             foreach (var id in ids)
             {
-                list.Add(id, new Data(){key = id});
+                list.Add(id, new Entry(){key = id});
             }
         }
         
-        protected void SetupByGroup(IdGroup group, ValueDropdownList<Data> list)
+        protected void SetupByGroup(IdGroup group, ValueDropdownList<Entry> list)
         {
             if (group != null) SetupByIds(group, list);
         }

@@ -11,7 +11,7 @@ namespace LSCore
         public static bool TryGet(Id id, out Color color) => instance.ByKey.TryGetValue(id, out color);
         
 #if UNITY_EDITOR
-        protected override void SetupDataSelector(ValueDropdownList<Data> list)
+        protected override void SetupDataSelector(ValueDropdownList<Entry> list)
         {
             SetupByIds(AllIdsByGroupType<PaletteIdGroup>(), list);
         }

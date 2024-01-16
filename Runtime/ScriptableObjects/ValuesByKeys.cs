@@ -12,7 +12,7 @@ namespace LSCore
     public abstract class ValuesByKeys<TKey, TValue> : SerializedScriptableObject
     {
         [Serializable]
-        protected class Data
+        protected class Entry
         {
             [HideInInspector] 
             public TKey key;
@@ -20,7 +20,7 @@ namespace LSCore
             
             public override bool Equals(object obj)
             {
-                if (obj is Data drawer)
+                if (obj is Entry drawer)
                 {
                     return Equals(drawer);
                 }
@@ -28,14 +28,14 @@ namespace LSCore
                 return false;
             }
         
-            public bool Equals(Data other) => key.Equals(other.key);
+            public bool Equals(Entry other) => key.Equals(other.key);
 
             public override int GetHashCode() => key.GetHashCode();
         }
         
         [ValueDropdown("DataSelector", IsUniqueList = true)]
         [SerializeField]
-        private List<Data> byKey = new();
+        private List<Entry> byKey = new();
 
         public Dictionary<TKey, TValue> ByKey { get; } = new();
 
@@ -55,27 +55,27 @@ namespace LSCore
         {
             ByKey.Clear();
 
-            foreach (var data in byKey)
+            foreach (var entry in byKey)
             {
-                ByKey.Add(data.key, data.value);
+                ByKey.Add(entry.key, entry.value);
             }
         }
 
 #if UNITY_EDITOR
         
-        private ValueDropdownList<Data> list;
-        private IList<ValueDropdownItem<Data>> DataSelector
+        private ValueDropdownList<Entry> list;
+        private IList<ValueDropdownItem<Entry>> DataSelector
         {
             get
             {
-                list ??= new ValueDropdownList<Data>();
+                list ??= new ValueDropdownList<Entry>();
                 list.Clear();
                 SetupDataSelector(list);
                 return list;
             }
         }
 
-        protected abstract void SetupDataSelector(ValueDropdownList<Data> list);
+        protected abstract void SetupDataSelector(ValueDropdownList<Entry> list);
 
         protected static ValuesByKeys<TKey, TValue> currentInspected;
 
@@ -99,7 +99,7 @@ namespace LSCore
         
         protected virtual void OnValueProcessAttributes(List<Attribute> attributes) { }
         
-        private class DataAttributeProcessor : OdinAttributeProcessor<Data>
+        private class DataAttributeProcessor : OdinAttributeProcessor<Entry>
         {
             public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
             {

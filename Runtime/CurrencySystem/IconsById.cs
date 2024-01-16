@@ -26,7 +26,7 @@ namespace LSCore
 
         private static readonly SingleObject<IconsById> singleObject = new();
         public static IconsById Instance => singleObject.Get();
-        protected override void SetupDataSelector(ValueDropdownList<Data> list) => SetupByGroup(allCurrenciesGroup, list);
+        protected override void SetupDataSelector(ValueDropdownList<Entry> list) => SetupByGroup(allCurrenciesGroup, list);
 
         protected override void OnValueProcessAttributes(List<Attribute> attributes)
         {
