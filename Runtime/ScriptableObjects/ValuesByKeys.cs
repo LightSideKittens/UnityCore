@@ -46,8 +46,8 @@ namespace LSCore
 #if UNITY_EDITOR
             World.Created -= Init;
             World.Created += Init;
-            World.Created -= Init;
-            World.Created += Init;
+            World.Destroyed -= Init;
+            World.Destroyed += Init;
 #endif
         }
 

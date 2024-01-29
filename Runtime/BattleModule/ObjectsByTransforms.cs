@@ -10,7 +10,7 @@ namespace LSCore.BattleModule
 
         static ObjectsByTransforms()
         {
-            World.Created += Clear;
+            World.Destroyed += Clear;
         }
 
         public static void Set(Transform target, T obj) => objects[target] = obj;

@@ -11,14 +11,14 @@ namespace LSCore.BattleModule
 
         [SerializeReference] private BaseComp[] comps =
         {
-            new BaseHealthComp(),
+            new HealthComp(),
             new FindTargetComp(),
             new MoveComp(),
             new ColliderHitBoxComp(),
             new ShootAttackComp()
         };
         
-        private CompData compData;
+        private readonly CompData compData = new();
         
         public override void Init(string userId, string teamId)
         {
@@ -47,18 +47,18 @@ namespace LSCore.BattleModule
             compData.fixedUpdate?.Invoke();
         }
 
-        public void Resett()
+        private void Resett()
         {
             compData.reset?.Invoke();
         }
 
-        public void Enable()
+        private void Enable()
         {
             compData.enable?.Invoke();
             gameObject.SetActive(true);
         }
-        
-        public void Disable()
+
+        private void Disable()
         {
             compData.disable?.Invoke();
             gameObject.SetActive(false);

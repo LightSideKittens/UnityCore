@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using UnityEngine;
 
 namespace LSCore
@@ -11,6 +10,7 @@ namespace LSCore
         public static event Action Creating;
         public static event Action Created;
         public static event Action Updated;
+        public static event Action Destroyed;
         private static bool isCreated;
         private static World instance;
         public static Camera Camera { get; private set; }
@@ -42,6 +42,7 @@ namespace LSCore
         private void OnDestroy()
         {
             IsPlaying = false;
+            Destroyed?.Invoke();
         }
 
         private void OnApplicationPause(bool pauseStatus)

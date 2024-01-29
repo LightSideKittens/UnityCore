@@ -10,7 +10,7 @@ namespace LSCore
         static Id()
         {
             cachedIds = new Dictionary<string, Id>();
-            World.Created += cachedIds.Clear;
+            World.Destroyed += cachedIds.Clear;
         }
         
         public static implicit operator string(Id id) => id.name;

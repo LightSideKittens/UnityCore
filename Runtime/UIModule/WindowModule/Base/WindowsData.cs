@@ -16,7 +16,7 @@ namespace LSCore
 
         static WindowsData()
         {
-            World.Created += Clear;
+            World.Destroyed += Clear;
         }
         
         internal static void GoBack() => states.Pop()();

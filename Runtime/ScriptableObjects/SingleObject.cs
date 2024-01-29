@@ -17,6 +17,8 @@ namespace LSCore
             onComplete?.Invoke(instance);
             return instance;
         }
+
+        public void Init(T obj) => instance = obj;
     }
 }
 #endif

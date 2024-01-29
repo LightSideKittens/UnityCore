@@ -6,7 +6,7 @@ namespace LSCore.BattleModule
     {
         private static readonly Dictionary<Id, OnOffPool<Unit>> pools = new();
 
-        static Unit() => World.Created += pools.Clear;
+        static Unit() => World.Destroyed += pools.Clear;
 
         public static Unit Create(Unit prefab)
         {
