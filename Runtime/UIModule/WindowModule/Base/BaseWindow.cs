@@ -26,7 +26,6 @@ namespace LSCore
         [field: SerializeField] protected virtual LSButton BackButton { get; private set; }
         public RectTransform RectTransform { get; private set; }
         public static Canvas Canvas { get; private set; }
-        public virtual int SortingOrder => 0;
         
         protected virtual float DefaultAlpha => 0;
         protected virtual bool ActiveByDefault => false;
@@ -165,12 +164,12 @@ namespace LSCore
 
         protected virtual Tween HideAnim => canvasGroup.DOFade(0, fadeSpeed);
 
-        public static void AsHome() => WindowsData.SetHome<T>(Instance.InternalHide);
+        public static void AsHome() => WindowsData.SetHome<T>(() => Instance.InternalHide());
 
         public static void Show()
         {
             isCalledFromStatic = true;
-            if (WindowsData.IsPrevious(Instance) && WindowsData.maxSortingOrder - 1 > Canvas.sortingOrder)
+            if (WindowsData.IsPreLast(Instance) && WindowsData.maxSortingOrder - 1 > Canvas.sortingOrder)
             {
                 WindowsData.GoBack();
                 return;

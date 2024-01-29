@@ -11,8 +11,8 @@ namespace LSCore.Firebase
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void StaticConstructor()
         {
-            World.Destroyed -= Dispose;
-            World.Destroyed += Dispose;
+            World.Created -= Dispose;
+            World.Created += Dispose;
         }
         
         private static void Dispose()

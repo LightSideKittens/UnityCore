@@ -2,7 +2,7 @@
 using LSCore.Extensions.Unity;
 using UnityEngine;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     public class ByPassEnemy : MonoBehaviour
     {

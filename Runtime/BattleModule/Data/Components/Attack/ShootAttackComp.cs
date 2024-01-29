@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.Scripting;
 using static UnityEngine.Object;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     [Preserve, Serializable]
-    internal class ShootAttackComponent : AutoAttackComponent
+    internal class ShootAttackComp : AutoAttackComponent
     {
         [SerializeField] private GameObject bulletPrefab;
         [SerializeField] private float bulletFlyDuration;

@@ -26,7 +26,7 @@ namespace LSCore
             [Conditional("UNITY_EDITOR")]
             static void Editor_Init()
             {
-                World.Destroyed += ResetStatic;
+                World.Created += ResetStatic;
             }
         }
 

@@ -52,12 +52,12 @@ namespace LSCore.ConfigModule
                 [Conditional("UNITY_EDITOR")]
                 static void Editor_Init(string name)
                 {
-                    World.Destroyed += OnDestoy;
+                    World.Created += OnDestoy;
                     return;
 
                     void OnDestoy()
                     {
-                        World.Destroyed -= OnDestoy;
+                        World.Created -= OnDestoy;
                         map[name].Save();
                         LoadOnNextAccess(name);
                     }

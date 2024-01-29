@@ -1,64 +1,67 @@
 ﻿using System;
-using Battle.Data.Components;
-using Battle.Data.Components.HitBox;
 using UnityEngine;
-using static Battle.ObjectsByTransfroms<Battle.Data.Unit>;
+using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.Unit>;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     public partial class Unit : BaseUnit
     {
         public static event Action<Unit> Killed;
         public event Action Destroyed;
-        
-        [SerializeReference] private MoveComponent moveComponent = new();
-        [SerializeReference] private FindTargetComponent findTargetComponent = new ();
-        [SerializeReference] private BaseAttackComponent attackComponent;
-        [SerializeReference] private BaseHealthComponent healthComponent = new();
-        [SerializeReference] private HitBoxComponent hitBoxComponent = new ColiderHitBoxComponent();
-        
-        private float radius;
 
-        public override void Init(string userId)
+        [SerializeReference] private BaseComp[] comps =
         {
-            base.Init(userId);
+            new BaseHealthComp(),
+            new FindTargetComp(),
+            new MoveComp(),
+            new ColliderHitBoxComp(),
+            new ShootAttackComp()
+        };
+        
+        private CompData compData;
+        
+        public override void Init(string userId, string teamId)
+        {
+            base.Init(userId, teamId);
             Add(transform, this);
-            
-            hitBoxComponent.Init(transform);
-            findTargetComponent.Init(transform);
-            moveComponent.Init(transform, findTargetComponent);
-            healthComponent.Init(transform, IsOpponent);
-            attackComponent.Init(transform);
+            compData.transform = transform;
+
+            for (int i = 0; i < comps.Length; i++)
+            {
+                comps[i].Init(compData);
+            }
+        }
+
+        public override void OnInit()
+        {
+            compData.onInit?.Invoke();
         }
 
         public void Run()
         {
-            attackComponent.Update();
-            healthComponent.Update();
+            compData.update?.Invoke();
         }
 
         public void FixedRun()
         {
-            moveComponent.Update();
+            compData.fixedUpdate?.Invoke();
         }
 
         public void Resett()
         {
-            attackComponent.Buffs.Reset();
-            moveComponent.Buffs.Reset();
-            healthComponent.Reset();
+            compData.reset?.Invoke();
         }
 
         public void Enable()
         {
+            compData.enable?.Invoke();
             gameObject.SetActive(true);
-            attackComponent.Enable();
         }
         
         public void Disable()
         {
+            compData.disable?.Invoke();
             gameObject.SetActive(false);
-            attackComponent.Disable();
         }
 
         public void Kill()
@@ -70,10 +73,7 @@ namespace Battle.Data
         public override void Destroy()
         {
             base.Destroy();
-            hitBoxComponent.Destroy();
-            attackComponent.Destroy();
-            healthComponent.Destroy();
-            moveComponent.Destroy();
+            compData.destroy?.Invoke();
             Remove(transform);
             Destroyed?.Invoke();
         }

@@ -3,12 +3,12 @@ using LSCore.LevelSystem;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Scripting;
-using static Battle.ObjectsByTransfroms<Battle.Data.Components.BaseAttackComponent>;
+using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.BaseAttackComponent>;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     [Preserve, Serializable]
-    internal abstract class BaseAttackComponent
+    internal abstract class BaseAttackComponent : BaseComp
     {
         protected float attackSpeed;
         protected float damage;
@@ -19,16 +19,22 @@ namespace Battle.Data.Components
 
         protected Tween attackTween;
 
-        public void Init(Transform transform)
+        public override void Init(CompData data)
         {
             Add(transform, this);
-            this.transform = transform;
+            transform = data.transform;
+            Buffs = new Buffs();
             var unit = transform.Get<BaseUnit>();
             radius = unit.GetValue<RadiusGP>();
             damage = unit.GetValue<DamageGP>();
             attackSpeed = unit.GetValue<AttackSpeedGP>();
-            Buffs = new Buffs();
-            OnInit();
+            
+            data.onInit += OnInit;
+            data.enable += Enable;
+            data.disable += Disable;
+            data.update += Update;
+            data.reset += Buffs.Reset;
+            data.destroy += Destroy;
         }
         
         protected virtual void OnInit(){}
@@ -58,7 +64,7 @@ namespace Battle.Data.Components
 
         protected bool TryApplyDamage(Transform target)
         {
-            if (target != null && target.TryGet<BaseHealthComponent>(out var health))
+            if (target != null && target.TryGet<BaseHealthComp>(out var health))
             {
                 health.TakeDamage(Damage);
                 return true;

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     public class Buffs
     {

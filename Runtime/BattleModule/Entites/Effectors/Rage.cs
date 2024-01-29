@@ -1,12 +1,10 @@
 ﻿using System;
-using Battle.Data.Components;
 using LSCore.LevelSystem;
 using DG.Tweening;
 using LSCore.Async;
 using UnityEngine;
-using Move = Battle.Data.Components.MoveComponent;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     [Serializable]
     internal class Rage : BaseEffector
@@ -32,9 +30,9 @@ namespace Battle.Data
 
             Wait.Run(duration, _ =>
             {
-                foreach (var target in findTargetComponent.FindAll(radius))
+                foreach (var target in findTargetComp.FindAll(radius))
                 {
-                    target.Get<Move>().Buffs.Set(Name, moveSpeedBuff, buffDuration);
+                    target.Get<MoveComp>().Buffs.Set(Name, moveSpeedBuff, buffDuration);
                     target.Get<AutoAttackComponent>().Buffs.Set(Name, damageBuff, buffDuration);
                 }
             }).OnComplete(() =>

@@ -1,9 +1,8 @@
 ﻿using System;
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Scripting;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     [Preserve, Serializable]
     internal class SelfDestroyAttackComponent : AutoAttackComponent

@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using UnityEngine;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     public class Effectors : SerializedScriptableObject
     {

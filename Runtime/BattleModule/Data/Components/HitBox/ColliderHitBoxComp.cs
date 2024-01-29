@@ -1,10 +1,10 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Battle.Data.Components.HitBox
+namespace LSCore.BattleModule
 {
     [Serializable]
-    internal class ColiderHitBoxComponent : HitBoxComponent
+    internal class ColliderHitBoxComp : HitBoxComponent
     {
         private CircleCollider2D collider;
 

@@ -12,8 +12,8 @@ namespace LSCore
 #if UNITY_EDITOR
             World.Created -= OnLoad;
             World.Created += OnLoad;
-            World.Destroyed -= OnLoad;
-            World.Destroyed += OnLoad;
+            World.Created -= OnLoad;
+            World.Created += OnLoad;
 #endif
         }
 

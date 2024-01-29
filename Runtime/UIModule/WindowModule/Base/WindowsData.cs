@@ -5,17 +5,18 @@ namespace LSCore
 {
     public struct WindowsData
     {
-        private static readonly Stack<Action> states = new();
         internal static Action hidePrevious;
+        internal static int maxSortingOrder;
+        
+        private static readonly Stack<Action> states = new();
         private static Action goHome;
         private static Action hideHome;
         private static bool recordStates;
         private static Action recordedState;
-        internal static int maxSortingOrder;
 
         static WindowsData()
         {
-            World.Destroyed += Clear;
+            World.Created += Clear;
         }
         
         internal static void GoBack() => states.Pop()();
@@ -85,7 +86,7 @@ namespace LSCore
             maxSortingOrder = 0;
         }
 
-        public static bool IsPrevious<T>(T window) where T : BaseWindow<T>
+        public static bool IsPreLast<T>(T window) where T : BaseWindow<T>
         {
             if (states.TryPeek(out var state))
             {

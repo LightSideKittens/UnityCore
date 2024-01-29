@@ -1,38 +1,43 @@
 ﻿using System;
 using LSCore.LevelSystem;
 using UnityEngine;
-using static Battle.ObjectsByTransfroms<Battle.Data.Components.BaseHealthComponent>;
+using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.BaseHealthComp>;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     [Serializable]
-    public class BaseHealthComponent
+    public class BaseHealthComp : BaseComp
     {
         protected Transform transform;
         private bool isKilled;
-        private bool isOpponent;
+        protected AffiliationType affiliation;
         protected float health;
 
-        public virtual void Init(Transform transform, bool isOpponent)
+        public override void Init(CompData data)
         {
-            this.transform = transform;
+            transform = data.transform;
+            data.onInit += OnInit;
+            data.reset += Reset;
+            data.destroy += Destroy;
             health = transform.GetValue<HealthGP>();
-            this.isOpponent = isOpponent;
             Add(transform, this);
         }
-        
-        public virtual void Reset()
+
+        private void OnInit()
+        {
+            affiliation = transform.Get<Unit>().Affiliation;
+        }
+
+        protected virtual void Reset()
         {
             isKilled = false;
             health = transform.GetValue<HealthGP>();
         }
 
-        public void Destroy()
+        private void Destroy()
         { 
             Remove(transform);
         }
-
-        public virtual void Update() { }
 
         public void Kill()
         {

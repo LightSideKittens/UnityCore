@@ -2,15 +2,15 @@
 using LSCore;
 using UnityEngine;
 
-namespace Battle
+namespace LSCore.BattleModule
 {
-    public static class ObjectsByTransfroms<T>
+    public static class ObjectsByTransforms<T>
     {
         private static Dictionary<Transform, T> objects = new();
 
-        static ObjectsByTransfroms()
+        static ObjectsByTransforms()
         {
-            World.Destroyed += Clear;
+            World.Created += Clear;
         }
 
         public static void Set(Transform target, T obj) => objects[target] = obj;

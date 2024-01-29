@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using LSCore.LevelSystem;
-using Battle.Data.Components;
-using LSCore;
 using Sirenix.Serialization;
 using UnityEngine;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     [Serializable]
     public abstract class BaseEffector
     {
-        [OdinSerialize] protected FindTargetComponent findTargetComponent;
+        [OdinSerialize] protected FindTargetComp findTargetComp;
         [SerializeField] private LevelsManager levelsManager;
         [NonSerialized] public Id id;
         protected float radius;
@@ -36,7 +34,7 @@ namespace Battle.Data
             radiusRenderer.sprite = circleSprite;
             var gameObject = radiusRenderer.gameObject;
             gameObject.SetActive(false);
-            findTargetComponent.Init(gameObject.transform);
+            //findTargetComponent.Init(gameObject.transform);
             OnInit();
         }
 

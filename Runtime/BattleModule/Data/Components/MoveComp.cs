@@ -4,14 +4,14 @@ using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using LSCore.LevelSystem;
 using UnityEngine;
-using static Battle.ObjectsByTransfroms<Battle.Data.Components.MoveComponent>;
+using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.MoveComp>;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     [Serializable]
-    public class MoveComponent
+    public class MoveComp : BaseComp
     {
-        private FindTargetComponent findTargetComponent;
+        private FindTargetComp findTargetComp;
         private Transform transform;
         protected Rigidbody2D rigidbody;
         private CircleCollider2D collider;
@@ -22,17 +22,16 @@ namespace Battle.Data.Components
         private Collider2D lastObstacles;
         public Buffs Buffs { get; private set; }
 
-        public void Init(Transform transform, FindTargetComponent findTargetComponent)
+        public override void Init(CompData data)
         {
-            this.transform = transform;
+            Add(transform, this);
+            transform = data.transform;
+
             rigidbody = transform.GetComponent<Rigidbody2D>();
             collider = rigidbody.GetComponent<CircleCollider2D>();
             speed = transform.GetValue<MoveSpeedGP>();
             Buffs = new Buffs();
 
-            this.findTargetComponent = findTargetComponent;
-            Add(transform, this);
-            
             if (mask == -1)
             {
                 mask = LayerMask.GetMask("Obstacles");
@@ -40,6 +39,16 @@ namespace Battle.Data.Components
 
             Wait.InfinityLoop(0.5f, () => lastObstacles = null);
             lastObstacles = null;
+            
+            data.onInit += OnInit;
+            data.update += Update;
+            data.reset += Buffs.Reset;
+            data.destroy += Destroy;
+        }
+
+        private void OnInit()
+        {
+            findTargetComp = transform.Get<FindTargetComp>();
         }
 
         public void SetEnabled(bool enabled)
@@ -147,7 +156,7 @@ namespace Battle.Data.Components
             if (enabled)
             {
                 Buffs.Update();
-                if (findTargetComponent.Find(out var target))
+                if (findTargetComp.Find(out var target))
                 {
                     var position = rigidbody.position;
                     var targetPos = (Vector2)target.position;
@@ -163,12 +172,12 @@ namespace Battle.Data.Components
             }
         }
         
-        public void Update()
+        private void Update()
         {
             Move();
         }
 
-        public void Destroy()
+        private void Destroy()
         {
             Remove(transform);
         }

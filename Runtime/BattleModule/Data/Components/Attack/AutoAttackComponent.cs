@@ -1,25 +1,23 @@
 ﻿using System;
-using LSCore.LevelSystem;
 using DG.Tweening;
 using LSCore.Async;
 using UnityEngine;
 using UnityEngine.Scripting;
-using static Battle.ObjectsByTransfroms<Battle.Data.Components.AutoAttackComponent>;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     [Preserve, Serializable]
     internal abstract class AutoAttackComponent : BaseAttackComponent
     {
-        private FindTargetComponent findTargetComponent;
-        private MoveComponent moveComponent;
+        private FindTargetComp findTargetComp;
+        private MoveComp moveComp;
         protected Tween attackLoopEmiter;
         private bool canAttack;
 
         protected override void OnInit()
         {
-            findTargetComponent = transform.Get<FindTargetComponent>();
-            moveComponent = transform.Get<MoveComponent>();
+            findTargetComp = transform.Get<FindTargetComp>();
+            moveComp = transform.Get<MoveComp>();
         }
 
         protected override void OnEnable()
@@ -39,9 +37,9 @@ namespace Battle.Data.Components
         {
             base.Update();
             
-            if (findTargetComponent.Find(radius, out var target))
+            if (findTargetComp.Find(radius, out var target))
             {
-                moveComponent.SetEnabled(false);
+                moveComp.SetEnabled(false);
                 if (canAttack)
                 {
                     Attack(target);
@@ -50,7 +48,7 @@ namespace Battle.Data.Components
             }
             else
             {
-                moveComponent.SetEnabled(true);
+                moveComp.SetEnabled(true);
             }
         }
 

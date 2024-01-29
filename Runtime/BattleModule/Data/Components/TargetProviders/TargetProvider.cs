@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Battle.Data.Components.TargetProviders
+namespace LSCore.BattleModule
 {
     [Serializable]
     public abstract class TargetProvider
     {
-        [NonSerialized] public FindTargetComponent findTargetComponent;
         public abstract IEnumerable<Transform> Targets { get; }
     }
 }

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore;
 using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using static Battle.ObjectsByTransfroms<Battle.Data.BaseUnit>;
+using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.BaseUnit>;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     public class BaseUnit : MonoBehaviour
     {
@@ -15,12 +14,11 @@ namespace Battle.Data
         private bool HideManager => name.Contains("_Base");
 #endif
         
-        
         [SerializeField, ValueDropdown("Ids")] private Id id;
         public Dictionary<Type, Prop> Props { get; private set; }
-        
-        public bool IsOpponent { get; private set; }
         public string UserId { get; private set; }
+        public string TeamId { get; private set; }
+        public AffiliationType Affiliation { get; private set; }
         public new Transform transform { get; private set; }
         
         [ShowIf("$HideManager")]
@@ -33,14 +31,30 @@ namespace Battle.Data
             return FloatGameProp.GetValue<T>(Props);
         }
 
-        public virtual void Init(string userId)
+        public virtual void Init(string userId, string teamId)
         {
             transform = base.transform;
             UserId = userId;
-            IsOpponent = UserId == "Opponent";
+            TeamId = teamId;
+            
+            if (userId == BattlePlayerData.UserId)
+            {
+                Affiliation = AffiliationType.Self;
+            }
+            else if(teamId == BattlePlayerData.TeamId)
+            {
+                Affiliation = AffiliationType.Ally;
+            }
+            else
+            {
+                Affiliation = AffiliationType.Enemy;
+            }
+            
             Add(transform, this);
             Props = manager.GetProps(id);
         }
+
+        public virtual void OnInit(){}
 
         public virtual void Destroy()
         {

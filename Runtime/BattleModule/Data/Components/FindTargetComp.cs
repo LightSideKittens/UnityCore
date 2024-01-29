@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using Battle.Data.Components.TargetProviders;
-using Sirenix.Serialization;
 using UnityEngine;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     [Serializable]
-    public class FindTargetComponent
+    public class FindTargetComp : BaseComp
     {
         [SerializeReference] private List<TargetProvider> providers;
         private Transform lastTarget;
@@ -15,15 +13,9 @@ namespace Battle.Data.Components
         private int frame;
         private bool IsFound => lastTarget != null;
 
-        public void Init(Transform transform)
+        public override void Init(CompData data)
         {
-            this.transform = transform;
-            
-            for (int i = 0; i < providers.Count; i++)
-            {
-                var provider = providers[i];
-                provider.findTargetComponent = this;
-            }
+            transform = data.transform;
         }
 
         public IEnumerable<Transform> FindAll(float radius) => FindAll(transform.position, radius);

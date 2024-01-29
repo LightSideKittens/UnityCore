@@ -1,18 +1,18 @@
 ﻿using System;
 using UnityEngine;
-using static Battle.ObjectsByTransfroms<Battle.Data.Components.HitBoxComponent>;
+using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.HitBoxComponent>;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     [Serializable]
-    internal abstract class HitBoxComponent
+    internal abstract class HitBoxComponent : BaseComp
     {
         protected Transform transform;
-        
-        public void Init(Transform transform)
+
+        public override void Init(CompData data)
         {
-            this.transform = transform;
             Add(transform, this);
+            transform = data.transform;
             OnInit();
         }
 

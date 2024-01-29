@@ -11,7 +11,6 @@ namespace LSCore
         public static event Action Creating;
         public static event Action Created;
         public static event Action Updated;
-        public static event Action Destroyed;
         private static bool isCreated;
         private static World instance;
         public static Camera Camera { get; private set; }
@@ -27,10 +26,8 @@ namespace LSCore
             IsPlaying = true;
 
             Created?.Invoke();
-            Debug.Log("[World] Inited");
+            Debug.Log("[World] Created");
         }
-        
-        public static Coroutine RunCoroutine(IEnumerator enumerator) => instance.StartCoroutine(enumerator);
 
         private void Awake()
         {
@@ -45,7 +42,6 @@ namespace LSCore
         private void OnDestroy()
         {
             IsPlaying = false;
-            Destroyed?.Invoke();
         }
 
         private void OnApplicationPause(bool pauseStatus)

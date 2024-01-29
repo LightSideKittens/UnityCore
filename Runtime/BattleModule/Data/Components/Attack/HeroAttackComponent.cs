@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     internal class HeroAttackComponent : AutoAttackComponent
     {

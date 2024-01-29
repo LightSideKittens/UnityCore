@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
-using LSCore;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     public partial class Unit
     {
         private static readonly Dictionary<Id, OnOffPool<Unit>> pools = new();
 
-        static Unit() => World.Destroyed += pools.Clear;
+        static Unit() => World.Created += pools.Clear;
 
         public static Unit Create(Unit prefab)
         {

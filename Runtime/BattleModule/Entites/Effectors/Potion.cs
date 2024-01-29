@@ -1,10 +1,9 @@
 ﻿using System;
-using Battle.Data.Components;
 using LSCore.LevelSystem;
 using LSCore.Async;
 using UnityEngine;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     [Serializable]
     internal class Potion : BaseEffector
@@ -30,9 +29,9 @@ namespace Battle.Data
 
         private void OnTicked()
         {
-            foreach (var target in findTargetComponent.FindAll(radius))
+            foreach (var target in findTargetComp.FindAll(radius))
             {
-                target.Get<BaseHealthComponent>().TakeDamage(damage);
+                target.Get<BaseHealthComp>().TakeDamage(damage);
             }
         }
     }

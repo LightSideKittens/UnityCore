@@ -1,9 +1,8 @@
-﻿using LSCore;
-using LSCore.LevelSystem;
+﻿using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     public class UnitsById : ValuesById<Unit>
     {

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Scripting;
-using static UnityEngine.Object;
 
-namespace Battle.Data.Components
+namespace LSCore.BattleModule
 {
     [Preserve, Serializable]
     internal class RicochetAttackComponent : AutoAttackComponent
