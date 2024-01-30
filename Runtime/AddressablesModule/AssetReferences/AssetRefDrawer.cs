@@ -1,6 +1,5 @@
 #if UNITY_EDITOR
 using System;
-using System.Reflection;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -10,14 +9,6 @@ namespace LSCore
 {
     public class AssetRefDrawer<TAssetRef, TAsset> : OdinValueDrawer<TAssetRef> where TAssetRef : AssetRef<TAsset> where TAsset : Object
     {
-        private ConstructorInfo constructor;
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            constructor = ValueEntry.TypeOfValue.GetConstructor(new[] { typeof(string) });
-        }
-
         protected override void DrawPropertyLayout(GUIContent label)
         {
             var entry = ValueEntry;
@@ -31,10 +22,12 @@ namespace LSCore
             var currentAsset = entry.SmartValue?.editorAsset;
             var newAsset = EditorGUI.ObjectField(rect, currentAsset, typeof(TAsset), false);
                 
-            if (newAsset != currentAsset)
+            if (newAsset != null && newAsset != currentAsset)
             {
-                string guid = newAsset ? AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(newAsset)) : null;
-                entry.SmartValue = (TAssetRef)constructor?.Invoke(new object[] {guid});
+                var guid = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(newAsset));
+                var assetRef = (TAssetRef)Activator.CreateInstance(typeof(TAssetRef));
+                assetRef.SetGuid(guid);
+                entry.SmartValue = assetRef;
             }
         }
     }
