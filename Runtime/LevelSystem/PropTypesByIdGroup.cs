@@ -2,14 +2,12 @@
 using System;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
+using static LSCore.SingleObject<LSCore.LevelSystem.PropTypesByIdGroup>;
 
 namespace LSCore.LevelSystem
 {
     public class PropTypesByIdGroup : ValuesByIdGroup<LevelIdGroup, HashSet<Type>>
     {
-        private static readonly SingleObject<PropTypesByIdGroup> singleObject = new();
-        public static PropTypesByIdGroup Instance => singleObject.Get();
-        
         public static HashSet<Type> GetAllTypesById(Id id)
         {
             var allIdGroups = id.GetAllGroups<LevelIdGroup>();

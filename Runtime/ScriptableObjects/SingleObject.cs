@@ -1,24 +1,30 @@
-﻿#if UNITY_EDITOR
-using System;
-using Object = UnityEngine.Object;
+﻿using Object = UnityEngine.Object;
 
 namespace LSCore
 {
-    public class SingleObject<T> where T : Object
+    public static class SingleObject<T> where T : Object
     {
-        private T instance;
-        public T Get(Action<T> onComplete = null)
-        {
-            if (instance == null)
-            {
-                instance = AssetDatabaseUtils.LoadAny<T>();
-            }
-            
-            onComplete?.Invoke(instance);
-            return instance;
-        }
+        private static T instance;
 
-        public void Init(T obj) => instance = obj;
+        static SingleObject()
+        {
+            World.Destroyed += () => instance = null;
+        }
+        
+        public static T Instance
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (!World.IsPlaying && instance == null)
+                {
+                    instance = AssetDatabaseUtils.LoadAny<T>();
+                }
+#endif
+            
+                return instance;
+            }
+            set => instance = value;
+        }
     }
 }
-#endif

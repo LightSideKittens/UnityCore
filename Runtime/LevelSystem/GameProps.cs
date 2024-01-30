@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using UnityEngine;
+using PropTypesByGroup = LSCore.SingleObject<LSCore.LevelSystem.PropTypesByIdGroup>;
 
 namespace LSCore.LevelSystem
 {
@@ -68,7 +68,7 @@ namespace LSCore.LevelSystem
         {
             get
             {
-                if (Group != null && PropTypesByIdGroup.Instance.ByKey.TryGetValue(Group, out var types))
+                if (Group != null && PropTypesByGroup.Instance.ByKey.TryGetValue(Group, out var types))
                 {
                     return types;
                 }

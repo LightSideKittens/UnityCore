@@ -6,8 +6,6 @@ namespace LSCore
 {
     public abstract class ValuesById<TValue> : ValuesByKeys<Id, TValue>
     {
-        public Dictionary<Id, TValue> ById => ByKey;
-        
 #if UNITY_EDITOR
         protected void SetupByIds(IEnumerable<Id> ids, ValueDropdownList<Entry> list)
         {

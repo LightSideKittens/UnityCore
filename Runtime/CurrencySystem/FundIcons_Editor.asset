@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23becc66d0e546a8a9b36b6cfac0cd57, type: 3}
+  m_Name: FundIcons_Editor
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  byKey:
+  - key: {fileID: -6750239444755058063, guid: 635c0f22cd793754fba7cca16f9585ef, type: 3}
+    value:
+    - {fileID: 21300000, guid: 9b2bc0b2a45c14f1cad7b6f4a7dbcaca, type: 3}
+  - key: {fileID: -6750239444755058063, guid: efb3d28e644f36842a86a2f95f65c6e5, type: 3}
+    value:
+    - {fileID: 21300000, guid: 2cc5e317ec48f435aac4bb12606baa4f, type: 3}
+  - key: {fileID: -6750239444755058063, guid: 529de37825ef3ad4498a18d0705726b0, type: 3}
+    value:
+    - {fileID: 21300000, guid: 6f40e5d50d0934e45aac02171a570c88, type: 3}
+  allCurrenciesGroup: {fileID: 11400000, guid: 985c7d175237dd54f8baccc3fd05c703, type: 2}

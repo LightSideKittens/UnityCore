@@ -16,7 +16,7 @@ namespace LSCore
 
         protected override void SetIcon(ref Texture2D icon)
         {
-            if (Id != null && IconsById.TryGetMainIcon(Id, out var sprite))
+            if (Id != null && AssetDatabaseUtils.LoadAny<IconsById>("FundIcons_Editor").TryGetIcon(Id, out var sprite))
             {
                 icon = sprite.texture;
                 return;
