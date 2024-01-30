@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
-namespace LSCore.AddressablesModule.AssetReferences
+namespace LSCore
 {
     public static partial class LSAddressables
     {

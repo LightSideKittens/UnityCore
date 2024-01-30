@@ -4,7 +4,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;
 
-namespace LSCore.AddressablesModule.AssetReferences
+namespace LSCore
 {
     public class WhenAll : AsyncOperationBase<WhenAll>
     {

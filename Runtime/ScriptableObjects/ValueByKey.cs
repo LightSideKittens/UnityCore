@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Sirenix.OdinInspector;
+using Sirenix.Serialization;
 using UnityEngine;
+using Object = UnityEngine.Object;
 #if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
 #endif
 
 namespace LSCore
 {
-    public abstract class ValuesByKeys<TKey, TValue> : SerializedScriptableObject
+    public abstract class ValueByKey<TKey, TValue> : SerializedScriptableObject
     {
         [Serializable]
         protected class Entry
@@ -17,6 +19,17 @@ namespace LSCore
             [HideInInspector] 
             public TKey key;
             public TValue value;
+            
+#if UNITY_EDITOR
+            public Entry()
+            {
+                var type = typeof(TValue);
+                if (!typeof(Object).IsAssignableFrom(type))
+                {
+                    value = Activator.CreateInstance<TValue>();
+                }
+            }
+#endif
             
             public override bool Equals(object obj)
             {
@@ -34,8 +47,8 @@ namespace LSCore
         }
         
         [ValueDropdown("DataSelector", IsUniqueList = true)]
-        [SerializeField]
-        private List<Entry> byKey = new();
+        [OdinSerialize]
+        private HashSet<Entry> byKey = new();
 
         public Dictionary<TKey, TValue> ByKey { get; } = new();
 
@@ -77,7 +90,7 @@ namespace LSCore
 
         protected abstract void SetupDataSelector(ValueDropdownList<Entry> list);
 
-        protected static ValuesByKeys<TKey, TValue> currentInspected;
+        protected static ValueByKey<TKey, TValue> currentInspected;
 
         [OnInspectorInit] private void OnInit() => OnGui();
         [OnInspectorGUI] private void OnGui() => currentInspected = this;
@@ -99,7 +112,7 @@ namespace LSCore
         
         protected virtual void OnValueProcessAttributes(List<Attribute> attributes) { }
         
-        private class DataAttributeProcessor : OdinAttributeProcessor<Entry>
+        private class EntryAttributeProcessor : OdinAttributeProcessor<Entry>
         {
             public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
             {

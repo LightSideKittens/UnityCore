@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace LSCore
 {
-    public class Palette : ValuesById<Color>
+    public class Palette : ValueById<Color>
     {
         private static Palette instance;
         public void Init() => instance = this;

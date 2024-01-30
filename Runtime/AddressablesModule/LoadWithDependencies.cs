@@ -3,7 +3,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;
 
-namespace LSCore.AddressablesModule.AssetReferences
+namespace LSCore
 {
     public class LoadWithDependencies<T> : AsyncOperationBase<T> where T : Object
     {

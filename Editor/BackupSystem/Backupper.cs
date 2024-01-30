@@ -212,8 +212,9 @@ namespace LSCore.Editor.BackupSystem
         {
             var scene = SceneManager.GetActiveScene();
             var fileName = $"{scene.name}{DateKey}.unity";
+            Debug.Log($"Saving {fileName}");
             var backupPath = $"{BackupPath}/{fileName}";
-            
+
             if (EditorSceneManager.SaveScene(scene, backupPath, true))
             {
                 Linker.PathByName[fileName] = scene.path.AssetsPathToFull();
@@ -233,16 +234,16 @@ namespace LSCore.Editor.BackupSystem
             {
                 GameObject prefabRoot = prefabStage.prefabContentsRoot;
                 var fileName = $"{prefabRoot.name}{DateKey}.prefab";
+                Debug.Log($"Saving {fileName}");
                 string prefabAssetPath = $"{Application.dataPath}/{fileName}";
                 string backupPath = $"{BackupPath}/{fileName}";
 
                 PrefabUtility.SaveAsPrefabAsset(prefabRoot, prefabAssetPath);
-                
+
                 if (!File.Exists(backupPath)) File.Create(backupPath).Dispose();
 
                 File.Copy(prefabAssetPath, backupPath, true);
                 AssetDatabase.DeleteAsset($"Assets/{fileName}");
-                
                 Linker.PathByName[fileName] = prefabStage.assetPath.AssetsPathToFull();
                 Save();
                 instance?.TryAdd(backupPath);

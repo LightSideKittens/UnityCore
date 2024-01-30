@@ -1,11 +1,8 @@
 ﻿using System;
 using UnityEngine;
 
-namespace LSCore.AddressablesModule.AssetReferences
+namespace LSCore
 {
     [Serializable]
-    public class SpriteRef : AssetRef<Sprite>
-    {
-        public SpriteRef(string guid) : base(guid) { }
-    }
+    public class SpriteRef : AssetRef<Sprite> { }
 }

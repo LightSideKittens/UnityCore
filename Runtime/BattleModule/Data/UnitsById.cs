@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace LSCore.BattleModule
 {
-    public class UnitsById : ValuesById<Unit>
+    public class UnitsById : ValueById<Unit>
     {
         [SerializeField] private LevelIdGroup group;
 

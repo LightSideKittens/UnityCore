@@ -4,7 +4,7 @@ using Sirenix.OdinInspector;
 
 namespace LSCore
 {
-    public abstract class ValuesById<TValue> : ValuesByKeys<Id, TValue>
+    public abstract class ValueById<TValue> : ValueByKey<Id, TValue>
     {
 #if UNITY_EDITOR
         protected void SetupByIds(IEnumerable<Id> ids, ValueDropdownList<Entry> list)

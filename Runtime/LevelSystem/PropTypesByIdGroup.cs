@@ -6,7 +6,7 @@ using static LSCore.SingleObject<LSCore.LevelSystem.PropTypesByIdGroup>;
 
 namespace LSCore.LevelSystem
 {
-    public class PropTypesByIdGroup : ValuesByIdGroup<LevelIdGroup, HashSet<Type>>
+    public class PropTypesByIdGroup : ValueByIdGroup<LevelIdGroup, HashSet<Type>>
     {
         public static HashSet<Type> GetAllTypesById(Id id)
         {

@@ -1,5 +1,5 @@
 ﻿using System;
-using LSCore.AddressablesModule.AssetReferences;
+using LSCore;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using UnityEngine;

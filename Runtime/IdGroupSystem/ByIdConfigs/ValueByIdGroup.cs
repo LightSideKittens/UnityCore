@@ -2,7 +2,7 @@
 
 namespace LSCore
 {
-    public abstract class ValuesByIdGroup<TIdGroup, TValue> : ValuesByKeys<TIdGroup, TValue> where TIdGroup : IdGroup
+    public abstract class ValueByIdGroup<TIdGroup, TValue> : ValueByKey<TIdGroup, TValue> where TIdGroup : IdGroup
     {
 #if UNITY_EDITOR
         protected override void SetupDataSelector(ValueDropdownList<Entry> list)

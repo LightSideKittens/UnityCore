@@ -1,7 +1,7 @@
 ﻿using UnityEngine.AddressableAssets;
 using Object = UnityEngine.Object;
 
-namespace LSCore.AddressablesModule.AssetReferences
+namespace LSCore
 {
     public static partial class LSAddressables
     {

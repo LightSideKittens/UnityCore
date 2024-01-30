@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace LSCore
 {
-    public class IconsById : ValuesById<Sprite>
+    public class IconsById : ValueById<Sprite>
     {
         [SerializeField] private IdGroup allCurrenciesGroup;
         

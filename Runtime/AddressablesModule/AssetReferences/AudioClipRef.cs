@@ -1,11 +1,8 @@
 ﻿using System;
 using UnityEngine;
 
-namespace LSCore.AddressablesModule.AssetReferences
+namespace LSCore
 {
     [Serializable]
-    public class AudioClipRef : AssetRef<AudioClip>
-    {
-        public AudioClipRef(string guid) : base(guid) { }
-    }
+    public class AudioClipRef : AssetRef<AudioClip> { }
 }

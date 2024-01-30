@@ -5,7 +5,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using Object = UnityEngine.Object;
 
-namespace LSCore.AddressablesModule.AssetReferences
+namespace LSCore
 {
     public static partial class LSAddressables
     {

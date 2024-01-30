@@ -1,17 +1,21 @@
 ﻿using System;
+using Sirenix.OdinInspector;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.Scripting;
 using Object = UnityEngine.Object;
 
-namespace LSCore.AddressablesModule.AssetReferences
+namespace LSCore
 {
+    [Serializable]
+    [HideReferenceObjectPicker]
     public class AssetRef<T> : AssetReferenceT<T> where T : Object
     {
         private Func<T> getter;
         private T asset;
         public AsyncOperationHandle<T> Task { get; private set; }
-        protected AssetRef(string guid) : base(guid) { }
+        public AssetRef(string guid) : base(guid) { }
+        public AssetRef() : base("") {}
         
         public static implicit operator T(AssetRef<T> assetRef) => assetRef.getter();
 
