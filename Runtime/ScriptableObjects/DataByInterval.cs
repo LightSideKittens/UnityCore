@@ -8,6 +8,8 @@ using UnityEngine;
 namespace LSCore
 {
     [Serializable]
+    [InlineProperty]
+    [HideLabel]
     public class DataByInterval<T>
     {
         [SerializeField] [LabelText("$Label")] protected Intervals intervals;

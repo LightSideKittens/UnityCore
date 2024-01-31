@@ -10,7 +10,6 @@ namespace LSCore
         
         private static readonly Stack<Action> states = new();
         private static Action goHome;
-        private static Action hideHome;
         private static bool recordStates;
         private static Action recordedState;
 
@@ -24,6 +23,8 @@ namespace LSCore
 
         internal static void StartRecording()
         {
+            if(recordStates) return;
+            
             recordStates = true;
             recordedState = null;
         }
@@ -38,6 +39,8 @@ namespace LSCore
 
         internal static void StopRecording()
         {
+            if(!recordStates) return;
+            
             recordStates = false;
             if (recordedState != null)
             {
@@ -45,34 +48,12 @@ namespace LSCore
             }
         }
 
-        internal static void GoHome()
-        {
-            states.Clear();
-            var hideAction = hidePrevious;
-            hidePrevious = null;
-            maxSortingOrder = 0;
-            goHome();
-            var hideDelegate = (Delegate)hideHome;
+        internal static void GoHome() => goHome();
 
-            foreach (var delegat in hideAction.GetInvocationList())
-            {
-                if (delegat == hideDelegate)
-                {
-                    continue;
-                }
-                
-                ((Action)delegat)();
-            }
-
-            hidePrevious = hideHome;
-            maxSortingOrder = 1;
-        }
-        
-        internal static void SetHome<T>(Action hide) where T : BaseWindow<T>
+        internal static void SetHome<T>() where T : BaseWindow<T>
         {
             Clear();
-            hideHome = hide;
-            goHome += BaseWindow<T>.Show;
+            goHome += BaseWindow<T>.GoHome;
         }
 
         private static void Clear()
@@ -80,7 +61,6 @@ namespace LSCore
             states.Clear();
             hidePrevious = null;
             goHome = null;
-            hideHome = null;
             recordStates = false;
             recordedState = null;
             maxSortingOrder = 0;
@@ -88,7 +68,7 @@ namespace LSCore
 
         public static bool IsPreLast<T>(T window) where T : BaseWindow<T>
         {
-            if (states.TryPeek(out var state))
+            if (states.TryPeek(out var state) && hidePrevious != null)
             {
                 return Check(state) || Check(hidePrevious);
             }

@@ -96,11 +96,11 @@ namespace LSCore
         private void InternalShow()
         {
             if (showTween != null) return;
-            
+
+            AnimateOnShowing(OnCompleteShow);
             Showing?.Invoke();
             gameObject.SetActive(true);
             OnShowing();
-            AnimateOnShowing(OnCompleteShow);
             RecordState();
         }
 
@@ -120,12 +120,12 @@ namespace LSCore
         {
             if (hideTween != null) return;
 
+            AnimateOnHiding(OnCompleteHide);
             WindowsData.maxSortingOrder--;
             WindowsData.hidePrevious -= InternalHide;
             WindowsData.Record(InternalShow);
             Hiding?.Invoke();
             OnHiding();
-            AnimateOnHiding(OnCompleteHide);
         }
 
         private void OnCompleteShow()
@@ -164,7 +164,7 @@ namespace LSCore
 
         protected virtual Tween HideAnim => canvasGroup.DOFade(0, fadeSpeed);
 
-        public static void AsHome() => WindowsData.SetHome<T>(() => Instance.InternalHide());
+        public static void AsHome() => WindowsData.SetHome<T>();
 
         public static void Show()
         {
@@ -176,6 +176,14 @@ namespace LSCore
             }
             WindowsData.StartRecording();
             Instance.InternalShow();
+            WindowsData.StopRecording();
+        }
+
+        internal static void GoHome()
+        {
+            WindowsData.StartRecording();
+            WindowsData.HidePrevious();
+            Show();
             WindowsData.StopRecording();
         }
     }
