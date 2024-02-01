@@ -5,7 +5,7 @@ namespace LSCore
 {
     public struct WindowsData
     {
-        internal static Action hidePrevious;
+        internal static Action hideAllPrevious;
         internal static int maxSortingOrder;
         
         private static readonly Stack<Action> states = new();
@@ -19,7 +19,7 @@ namespace LSCore
         }
         
         internal static void GoBack() => states.Pop()();
-        internal static void HidePrevious() => hidePrevious?.Invoke();
+        internal static void HideAllPrevious() => hideAllPrevious?.Invoke();
 
         internal static void StartRecording()
         {
@@ -59,7 +59,7 @@ namespace LSCore
         private static void Clear()
         {
             states.Clear();
-            hidePrevious = null;
+            hideAllPrevious = null;
             goHome = null;
             recordStates = false;
             recordedState = null;
@@ -68,9 +68,9 @@ namespace LSCore
 
         public static bool IsPreLast<T>(T window) where T : BaseWindow<T>
         {
-            if (states.TryPeek(out var state) && hidePrevious != null)
+            if (states.TryPeek(out var state) && hideAllPrevious != null)
             {
-                return Check(state) || Check(hidePrevious);
+                return Check(state) || Check(hideAllPrevious);
             }
             
             return false;

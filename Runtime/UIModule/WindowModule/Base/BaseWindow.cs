@@ -29,7 +29,7 @@ namespace LSCore
         
         protected virtual float DefaultAlpha => 0;
         protected virtual bool ActiveByDefault => false;
-        protected virtual bool NeedHidePrevious => true;
+        protected virtual bool NeedHideAllPrevious => true;
         
         private static bool isCalledFromStatic;
 
@@ -106,12 +106,12 @@ namespace LSCore
 
         protected virtual void RecordState()
         {
-            if (NeedHidePrevious)
+            if (NeedHideAllPrevious)
             {
-                WindowsData.HidePrevious();
+                WindowsData.HideAllPrevious();
             }
 
-            WindowsData.hidePrevious += InternalHide;
+            WindowsData.hideAllPrevious += InternalHide;
             WindowsData.Record(InternalHide);
             Canvas.sortingOrder = WindowsData.maxSortingOrder++;
         }
@@ -122,7 +122,7 @@ namespace LSCore
 
             AnimateOnHiding(OnCompleteHide);
             WindowsData.maxSortingOrder--;
-            WindowsData.hidePrevious -= InternalHide;
+            WindowsData.hideAllPrevious -= InternalHide;
             WindowsData.Record(InternalShow);
             Hiding?.Invoke();
             OnHiding();
@@ -182,7 +182,7 @@ namespace LSCore
         internal static void GoHome()
         {
             WindowsData.StartRecording();
-            WindowsData.HidePrevious();
+            WindowsData.HideAllPrevious();
             Show();
             WindowsData.StopRecording();
         }
