@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Sirenix.OdinInspector;
+using Sirenix.Serialization;
 using UnityEngine;
 #if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
@@ -34,8 +35,8 @@ namespace LSCore
         }
         
         [ValueDropdown("DataSelector", IsUniqueList = true)]
-        [SerializeField]
-        private List<Data> byKey = new();
+        [OdinSerialize]
+        private HashSet<Data> byKey = new();
 
         public Dictionary<TKey, TValue> ByKey { get; } = new();
 
