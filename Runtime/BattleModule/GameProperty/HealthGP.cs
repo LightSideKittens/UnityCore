@@ -1,6 +1,7 @@
 ﻿using System;
+using LSCore.LevelSystem;
 
-namespace LSCore.LevelSystem
+namespace LSCore.GameProperty
 {
     [Serializable]
     public class HealthGP : FloatGameProp

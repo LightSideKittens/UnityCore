@@ -2,7 +2,7 @@
 using LSCore.Async;
 using LSCore.Extensions;
 using LSCore.Extensions.Unity;
-using LSCore.LevelSystem;
+using LSCore.GameProperty;
 using UnityEngine;
 using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.MoveComp>;
 

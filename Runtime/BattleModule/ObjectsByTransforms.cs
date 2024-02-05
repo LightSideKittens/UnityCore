@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using LSCore;
 using UnityEngine;
 
 namespace LSCore.BattleModule

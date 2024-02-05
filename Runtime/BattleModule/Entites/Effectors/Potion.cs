@@ -1,6 +1,6 @@
 ﻿using System;
-using LSCore.LevelSystem;
 using LSCore.Async;
+using LSCore.GameProperty;
 using UnityEngine;
 
 namespace LSCore.BattleModule

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LSCore.ConfigModule;
@@ -11,6 +13,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Debug = UnityEngine.Debug;
 
 namespace LSCore.Editor.BackupSystem
 {
@@ -95,6 +98,12 @@ namespace LSCore.Editor.BackupSystem
         {
             GetWindow<Backupper>().Show();
         }
+
+        [Button]
+        private void OpenBackupFolder()
+        {
+            Process.Start(BackupPath);
+        }
         
         public void AddItemsToMenu(GenericMenu menu)
         {
@@ -116,10 +125,12 @@ namespace LSCore.Editor.BackupSystem
             instance = this;
             backups.Clear();
             backupsSet.Clear();
-            var allFiles = Directory.GetFiles(BackupPath);
+            var allFiles = new DirectoryInfo(BackupPath).GetFiles();
+            var sortedFiles = allFiles.OrderBy(f => f.LastWriteTime).Select(x => x.FullName);
+            
             setToRemove.UnionWith(Linker.PathByName.Keys);
             
-            foreach (var backupPath in allFiles)
+            foreach (var backupPath in sortedFiles)
             {
                 TryAdd(backupPath);
             }

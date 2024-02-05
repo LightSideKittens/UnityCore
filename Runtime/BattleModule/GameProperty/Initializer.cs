@@ -1,8 +1,9 @@
 ﻿#if UNITY_EDITOR
 using System.Reflection;
+using LSCore.LevelSystem;
 using UnityEditor;
 
-namespace LSCore.LevelSystem
+namespace LSCore.GameProperty
 {
     [InitializeOnLoad]
     internal class Initializer

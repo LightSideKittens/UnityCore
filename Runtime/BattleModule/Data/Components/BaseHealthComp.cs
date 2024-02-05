@@ -1,5 +1,5 @@
 ﻿using System;
-using LSCore.LevelSystem;
+using LSCore.GameProperty;
 using UnityEngine;
 using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.BaseHealthComp>;
 

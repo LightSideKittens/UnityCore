@@ -1,6 +1,6 @@
 ﻿using System;
-using LSCore.LevelSystem;
 using DG.Tweening;
+using LSCore.GameProperty;
 using UnityEngine;
 using UnityEngine.Scripting;
 using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.BaseAttackComponent>;

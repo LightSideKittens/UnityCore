@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LSCore.GameProperty;
 using LSCore.LevelSystem;
 using Sirenix.Serialization;
 using UnityEngine;

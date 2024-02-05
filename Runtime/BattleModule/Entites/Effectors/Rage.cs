@@ -1,7 +1,7 @@
 ﻿using System;
-using LSCore.LevelSystem;
 using DG.Tweening;
 using LSCore.Async;
+using LSCore.GameProperty;
 using UnityEngine;
 
 namespace LSCore.BattleModule
