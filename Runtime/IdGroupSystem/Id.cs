@@ -16,6 +16,7 @@ namespace LSCore
         public static implicit operator string(Id id) => id.name;
         public static implicit operator Id(string name)
         {
+            if (string.IsNullOrEmpty(name)) name = string.Empty;
             if (cachedIds.TryGetValue(name, out var id)) return id;
             
             id = new Id();

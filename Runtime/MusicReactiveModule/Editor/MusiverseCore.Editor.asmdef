@@ -1,0 +1,20 @@
+{
+    "name": "MusiverseCore.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:05ed16b1651c7174681e9c8a66957d08",
+        "GUID:488fbb5f4bad8a94daedd0c8d1239e93",
+        "GUID:92e5c6464f52b4648beebefec1c8f137"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
