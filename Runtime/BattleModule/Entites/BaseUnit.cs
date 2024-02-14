@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.BaseUnit>;
+using static LSCore.BattleModule.ObjectTo<LSCore.BattleModule.BaseUnit>;
 
 namespace LSCore.BattleModule
 {
@@ -15,7 +15,6 @@ namespace LSCore.BattleModule
 #endif
         
         [SerializeField, ValueDropdown("Ids")] private Id id;
-        public Dictionary<Type, Prop> Props { get; private set; }
         public string UserId { get; private set; }
         public string TeamId { get; private set; }
         public AffiliationType Affiliation { get; private set; }
@@ -25,11 +24,6 @@ namespace LSCore.BattleModule
         [SerializeField] protected LevelsManager manager;
 
         public Id Id => id;
-
-        public float GetValue<T>() where T : FloatGameProp
-        {
-            return FloatGameProp.GetValue<T>(Props);
-        }
 
         public virtual void Init(string userId, string teamId)
         {
@@ -51,12 +45,11 @@ namespace LSCore.BattleModule
             }
             
             Add(transform, this);
-            Props = manager.GetProps(id);
         }
 
         public virtual void OnInit(){}
 
-        public virtual void Destroy()
+        public virtual void DeInit()
         {
             Remove(transform);
         }

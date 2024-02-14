@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static LSCore.BattleModule.ObjectTo<LSCore.BattleModule.FindTargetComp>;
 
 namespace LSCore.BattleModule
 {
     [Serializable]
     public class FindTargetComp : BaseComp
     {
-        [SerializeReference] private List<TargetProvider> providers;
+        [SerializeReference] private List<TargetProvider> providers = new();
         private Transform lastTarget;
-        private Transform transform;
         private int frame;
         private bool IsFound => lastTarget != null;
-
-        public override void Init(CompData data)
-        {
-            transform = data.transform;
-        }
+        
+        protected override void OnRegister() => Add(transform, this);
+        public override void UnRegister() => Remove(transform);
+        
+        protected override void Init() { }
 
         public IEnumerable<Transform> FindAll(float radius) => FindAll(transform.position, radius);
 

@@ -2,34 +2,31 @@
 using LSCore.Async;
 using LSCore.Extensions;
 using LSCore.Extensions.Unity;
-using LSCore.GameProperty;
 using UnityEngine;
-using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.MoveComp>;
+using static LSCore.BattleModule.ObjectTo<LSCore.BattleModule.MoveComp>;
 
 namespace LSCore.BattleModule
 {
     [Serializable]
     public class MoveComp : BaseComp
     {
+        public float speed;
         private FindTargetComp findTargetComp;
-        private Transform transform;
         protected Rigidbody2D rigidbody;
         private CircleCollider2D collider;
-        protected float speed;
         public float Speed => speed * Buffs;
         private static int mask = -1;
         private bool enabled = true;
         private Collider2D lastObstacles;
         public Buffs Buffs { get; private set; }
 
-        public override void Init(CompData data)
-        {
-            Add(transform, this);
-            transform = data.transform;
+        protected override void OnRegister() => Add(transform, this);
+        public override void UnRegister() => Remove(transform);
 
+        protected override void Init()
+        {
             rigidbody = transform.GetComponent<Rigidbody2D>();
             collider = rigidbody.GetComponent<CircleCollider2D>();
-            speed = transform.GetValue<MoveSpeedGP>();
             Buffs = new Buffs();
 
             if (mask == -1)
@@ -43,7 +40,6 @@ namespace LSCore.BattleModule
             data.onInit += OnInit;
             data.update += Update;
             data.reset += Buffs.Reset;
-            data.destroy += Destroy;
         }
 
         private void OnInit()
@@ -175,11 +171,6 @@ namespace LSCore.BattleModule
         private void Update()
         {
             Move();
-        }
-
-        private void Destroy()
-        {
-            Remove(transform);
         }
     }
 }

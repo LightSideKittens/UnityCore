@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace LSCore.LevelSystem
 {
@@ -22,7 +22,7 @@ namespace LSCore.LevelSystem
         [HideReferenceObjectPicker]
         public CurrencyIdGroup CurrencyGroup { get; private set; }
         
-        private readonly Dictionary<Id, List<LevelConfig>> levelsById = new();
+        private readonly Dictionary<Id, List<Object>> levelsById = new();
 
         public void Init()
         {
@@ -35,10 +35,10 @@ namespace LSCore.LevelSystem
                 var levels = levelContainer.levels;
                 
                 levelsById.Add(id, levels);
-                
+
                 if (UnlockedLevels.TryGetLevel(id, out var level))
                 {
-                    level = Mathf.Clamp(level, 1, levelsById.Count);
+                    level = Mathf.Clamp(level, 1, levels.Count);
                     UnlockedLevels.SetLevel(id, level);
                 }
             }
@@ -75,11 +75,23 @@ namespace LSCore.LevelSystem
             
         }
 
-        public Dictionary<Type, Prop> GetProps(Id id)
+        public T GetCurrentLevel<T>(Id id) where T : Object
         {
             UnlockedLevels.TryGetLevel(id, out var level);
-            level = Mathf.Clamp(level, 1, levelsById.Count);
-            return levelsById[id][level - 1].Props.ByType;
+            return GetLevel<T>(id, level);
+        }
+        
+        public T GetComponentByCurrentLevel<T>(Id id) where T : Object
+        {
+            UnlockedLevels.TryGetLevel(id, out var level);
+            return GetLevel<GameObject>(id, level).GetComponent<T>();
+        }
+        
+        public T GetLevel<T>(Id id, int level) where T : Object
+        {
+            var levels = levelsById[id];
+            level = Mathf.Clamp(level, 1, levels.Count);
+            return (T)levels[level - 1];
         }
     }
 }

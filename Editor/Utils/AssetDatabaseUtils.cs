@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
+using UnityEngine;
 using Object = UnityEngine.Object;
 
 public static class AssetDatabaseUtils
@@ -67,6 +68,16 @@ public static class AssetDatabaseUtils
     public static List<T> LoadAllAssets<T>(string filter = "", params string[] paths) where T : Object
     {
         return LoadAllAssets(typeof(T), filter, paths).Cast<T>().ToList();
+    }
+    
+    public static List<GameObject> LoadAllGameObjects(Type type, string filter = "", params string[] paths)
+    {
+        return LoadAllAssets(typeof(GameObject), filter, paths).Cast<GameObject>().Where(x => x.TryGetComponent(type, out _)).ToList();
+    }
+    
+    public static List<T> LoadAllGameObjects<T>(string filter = "", params string[] paths) where T : Object
+    {
+        return LoadAllAssets(typeof(GameObject), filter, paths).Cast<GameObject>().Select(x => x.GetComponent<T>()).ToList();
     }
     
     public static List<Object> LoadAllAssets(Type type, string filter = "", params string[] paths)

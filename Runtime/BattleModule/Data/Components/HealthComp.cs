@@ -16,9 +16,9 @@ namespace LSCore.BattleModule
         private Animatable.HealthBar healthBar;
         private static readonly int exposure = Shader.PropertyToID("_Exposure");
 
-        public override void Init(CompData data)
+        protected override void OnInit()
         {
-            base.Init(data);
+            base.OnInit();
             healthBar = Animatable.HealthBar.Create(health, transform, offset, scale, affiliation == AffiliationType.Enemy);
             data.update += healthBar.Update;
             expose = renderer.material;

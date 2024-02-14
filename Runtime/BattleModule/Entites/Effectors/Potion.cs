@@ -1,6 +1,5 @@
 ﻿using System;
 using LSCore.Async;
-using LSCore.GameProperty;
 using UnityEngine;
 
 namespace LSCore.BattleModule
@@ -9,12 +8,10 @@ namespace LSCore.BattleModule
     internal class Potion : BaseEffector
     {
         private float duration;
-        private float damage;
+        private int damage;
 
         protected override void OnInit()
         {
-            duration = GetValue<HealthGP>();
-            damage = GetValue<DamageGP>();
         }
         
         protected override void OnApply()

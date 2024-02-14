@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnitsByTransform = LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.Unit>;
+using UnitsByTransform = LSCore.BattleModule.ObjectTo<LSCore.BattleModule.Unit>;
 
 namespace LSCore.BattleModule
 {
@@ -40,7 +40,7 @@ namespace LSCore.BattleModule
         {
             foreach (var unit in activeUnits)
             {
-                unit.Destroy();
+                unit.DeInit();
             }
             
             activeUnits.Clear();

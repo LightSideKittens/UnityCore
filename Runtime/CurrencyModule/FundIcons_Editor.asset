@@ -15,17 +15,69 @@ MonoBehaviour:
   serializationData:
     SerializedFormat: 2
     SerializedBytes: 
-    ReferencedUnityObjects: []
+    ReferencedUnityObjects:
+    - {fileID: -6750239444755058063, guid: 635c0f22cd793754fba7cca16f9585ef, type: 3}
+    - {fileID: 21300000, guid: 9b2bc0b2a45c14f1cad7b6f4a7dbcaca, type: 3}
+    - {fileID: -6750239444755058063, guid: efb3d28e644f36842a86a2f95f65c6e5, type: 3}
+    - {fileID: 21300000, guid: 2cc5e317ec48f435aac4bb12606baa4f, type: 3}
+    - {fileID: -6750239444755058063, guid: 529de37825ef3ad4498a18d0705726b0, type: 3}
+    - {fileID: 21300000, guid: 6f40e5d50d0934e45aac02171a570c88, type: 3}
     SerializedBytesString: 
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
-    SerializationNodes: []
-  byKey:
-  - key: {fileID: -6750239444755058063, guid: 635c0f22cd793754fba7cca16f9585ef, type: 3}
-    value: {fileID: 21300000, guid: 9b2bc0b2a45c14f1cad7b6f4a7dbcaca, type: 3}
-  - key: {fileID: -6750239444755058063, guid: efb3d28e644f36842a86a2f95f65c6e5, type: 3}
-    value: {fileID: 21300000, guid: 2cc5e317ec48f435aac4bb12606baa4f, type: 3}
-  - key: {fileID: -6750239444755058063, guid: 529de37825ef3ad4498a18d0705726b0, type: 3}
-    value: {fileID: 21300000, guid: 6f40e5d50d0934e45aac02171a570c88, type: 3}
+    SerializationNodes:
+    - Name: byKey
+      Entry: 7
+      Data: 0|System.Collections.Generic.HashSet`1[[LSCore.ValueByKey`2+Entry[[LSCore.Id,
+        LSCore.IdGroupSystem],[UnityEngine.Sprite, UnityEngine.CoreModule]], LSCore.ScriptableObjects]],
+        System.Core
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 7
+      Data: 1|LSCore.ValueByKey`2+Entry[[LSCore.Id, LSCore.IdGroupSystem],[UnityEngine.Sprite,
+        UnityEngine.CoreModule]], LSCore.ScriptableObjects
+    - Name: key
+      Entry: 10
+      Data: 0
+    - Name: value
+      Entry: 10
+      Data: 1
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 2|LSCore.ValueByKey`2+Entry[[LSCore.Id, LSCore.IdGroupSystem],[UnityEngine.Sprite,
+        UnityEngine.CoreModule]], LSCore.ScriptableObjects
+    - Name: key
+      Entry: 10
+      Data: 2
+    - Name: value
+      Entry: 10
+      Data: 3
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 3|LSCore.ValueByKey`2+Entry[[LSCore.Id, LSCore.IdGroupSystem],[UnityEngine.Sprite,
+        UnityEngine.CoreModule]], LSCore.ScriptableObjects
+    - Name: key
+      Entry: 10
+      Data: 4
+    - Name: value
+      Entry: 10
+      Data: 5
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
   allCurrenciesGroup: {fileID: 11400000, guid: 985c7d175237dd54f8baccc3fd05c703, type: 2}

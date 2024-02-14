@@ -7,11 +7,11 @@ using UnityEngine.Scripting;
 namespace LSCore.BattleModule
 {
     [Preserve, Serializable]
-    internal abstract class AutoAttackComponent : BaseAttackComponent
+    public class AutoAttackComponent : BaseAttackComponent
     {
         private FindTargetComp findTargetComp;
         private MoveComp moveComp;
-        protected Tween attackLoopEmiter;
+        protected Tween attackLoopEmitter;
         private bool canAttack;
 
         protected override void OnInit()
@@ -22,16 +22,19 @@ namespace LSCore.BattleModule
 
         protected override void OnEnable()
         {
-            attackLoopEmiter = Wait.InfinityLoop(attackSpeed, OnTactTicked);
+            attackLoopEmitter = Wait.InfinityLoop(attackSpeed, OnTactTicked);
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
-            attackLoopEmiter.Kill();
+            attackLoopEmitter.Kill();
         }
 
-        protected abstract void Attack(Transform target);
+        protected void Attack(Transform target)
+        {
+            impactObject.Emit();
+        }
 
         public override void Update()
         {

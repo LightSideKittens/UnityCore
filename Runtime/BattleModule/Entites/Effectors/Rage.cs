@@ -1,7 +1,6 @@
 ﻿using System;
 using DG.Tweening;
 using LSCore.Async;
-using LSCore.GameProperty;
 using UnityEngine;
 
 namespace LSCore.BattleModule
@@ -19,9 +18,6 @@ namespace LSCore.BattleModule
 
         protected override void OnInit()
         {
-            duration = GetValue<HealthGP>();
-            damageBuff = GetValue<DamageGP>() / 100;
-            moveSpeedBuff = GetValue<MoveSpeedGP>() / 100;
         }
 
         protected override void OnApply()

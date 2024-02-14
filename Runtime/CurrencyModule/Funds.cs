@@ -13,7 +13,7 @@ namespace LSCore
     [Serializable]
     public class Funds : IEnumerable<BaseFund>
     {
-        [SerializeField] [SerializeReference] private List<BaseFund> funds;
+        [SerializeReference] private List<BaseFund> funds = new();
         
         public void Earn()
         {

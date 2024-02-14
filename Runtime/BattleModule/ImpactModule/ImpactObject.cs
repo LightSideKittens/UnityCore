@@ -11,7 +11,8 @@ namespace LSCore
     public class ImpactObject : MonoBehaviour
     {
         private const int Infinity = 65535;
-        
+
+        public List<Impact> impacts;
         private readonly Collider2D[] hitColliders = new Collider2D[1];
         private readonly List<Particle> enterParticles = new();
         [SerializeField] private AnimationCurve curve;
@@ -117,9 +118,17 @@ namespace LSCore
             }
         }
 
+        public void Emit()
+        {
+            ps.Play();
+        }
+
         protected virtual void OnParticleTriggerEnter(Collider2D target)
         {
-            
+            for (int i = 0; i < impacts.Count; i++)
+            {
+                impacts[i].Apply(target.transform);
+            }
         }
     }
 }

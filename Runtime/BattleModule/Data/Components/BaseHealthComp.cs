@@ -1,29 +1,26 @@
 ﻿using System;
-using LSCore.GameProperty;
 using UnityEngine;
-using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.BaseHealthComp>;
+using static LSCore.BattleModule.ObjectTo<LSCore.BattleModule.BaseHealthComp>;
 
 namespace LSCore.BattleModule
 {
     [Serializable]
     public class BaseHealthComp : BaseComp
     {
-        protected Transform transform;
+        [SerializeField] protected int health;
         private bool isKilled;
         protected AffiliationType affiliation;
-        protected float health;
+        public int Health => health;
 
-        public override void Init(CompData data)
+        protected override void OnRegister() => Add(transform, this);
+        public override void UnRegister() => Remove(transform);
+        protected override void Init()
         {
-            transform = data.transform;
             data.onInit += OnInit;
             data.reset += Reset;
-            data.destroy += Destroy;
-            health = transform.GetValue<HealthGP>();
-            Add(transform, this);
         }
 
-        private void OnInit()
+        protected virtual void OnInit()
         {
             affiliation = transform.Get<Unit>().Affiliation;
         }
@@ -31,12 +28,6 @@ namespace LSCore.BattleModule
         protected virtual void Reset()
         {
             isKilled = false;
-            health = transform.GetValue<HealthGP>();
-        }
-
-        private void Destroy()
-        { 
-            Remove(transform);
         }
 
         public void Kill()
@@ -44,7 +35,7 @@ namespace LSCore.BattleModule
             TakeDamage(health);
         }
 
-        public void TakeDamage(float damage)
+        public void TakeDamage(int damage)
         {
             if (isKilled) return;
             

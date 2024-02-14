@@ -1,11 +1,21 @@
 ﻿using System.Collections.Generic;
-
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 namespace LSCore.BattleModule
 {
     public partial class Unit
     {
         private static readonly Dictionary<Id, OnOffPool<Unit>> pools = new();
 
+#if UNITY_EDITOR
+        [InitializeOnLoadMethod]
+        private static void AddType()
+        {
+            LevelsContainer.availableTypes.Add(typeof(Unit));
+        }
+#endif
+        
         static Unit() => World.Destroyed += pools.Clear;
 
         public static Unit Create(Unit prefab)
@@ -56,6 +66,6 @@ namespace LSCore.BattleModule
         }
         
         private static void OnReleased(Unit unit) => unit.Disable();
-        private static void OnDestroyed(Unit unit) => unit.Destroy();
+        private static void OnDestroyed(Unit unit) => unit.DeInit();
     }
 }

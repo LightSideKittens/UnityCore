@@ -1,6 +1,6 @@
 ﻿using System;
 using UnityEngine;
-using static LSCore.BattleModule.ObjectsByTransforms<LSCore.BattleModule.Unit>;
+using static LSCore.BattleModule.ObjectTo<LSCore.BattleModule.Unit>;
 
 namespace LSCore.BattleModule
 {
@@ -15,23 +15,39 @@ namespace LSCore.BattleModule
             new FindTargetComp(),
             new MoveComp(),
             new ColliderHitBoxComp(),
-            new ShootAttackComp()
+            new AutoAttackComponent()
         };
         
         private readonly CompData compData = new();
+        private new Transform transform;
         
         public override void Init(string userId, string teamId)
         {
-            base.Init(userId, teamId);
+            base.Init(userId, teamId); 
+            transform = GetComponent<Transform>();
             Add(transform, this);
-            compData.transform = transform;
-
+            
             for (int i = 0; i < comps.Length; i++)
             {
-                comps[i].Init(compData);
+                comps[i].Init(transform, compData);
             }
         }
 
+        public void RegisterComps()
+        {
+            transform = gameObject.GetComponent<Transform>();
+            
+            for (int i = 0; i < comps.Length; i++)
+            {
+                comps[i].Register(transform);
+            }
+        }
+
+        public T GetComp<T>() where T : BaseComp
+        {
+            return ObjectTo<T>.Get(transform);
+        }
+        
         public override void OnInit()
         {
             compData.onInit?.Invoke();
@@ -70,11 +86,11 @@ namespace LSCore.BattleModule
             Killed?.Invoke(this);
         }
         
-        public override void Destroy()
+        public override void DeInit()
         {
-            base.Destroy();
-            compData.destroy?.Invoke();
+            base.DeInit();
             Remove(transform);
+            compData.destroy?.Invoke();
             Destroyed?.Invoke();
         }
     }

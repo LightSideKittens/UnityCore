@@ -169,7 +169,7 @@ namespace LSCore.Editor.BackupSystem
             {
                 var date = Path.GetFileNameWithoutExtension(split[1]).Split('-');
                 
-                var data = new Data{ name = split[0], dateTime = $"{date[0]}/{date[1]} {date[2]}:{date[3]}", realDateTime = split[1], assetPath = assetPath.Replace($"{Application.dataPath}/", string.Empty) };
+                var data = new Data{ name = split[0], dateTime = $"{date[0]}/{date[1]} {date[2]}:{date[3]}", realDateTime = split[1], assetPath = assetPath.Split("Assets/")[1] };
                 setToRemove.Remove(fileName);
 
                 if (backupsSet.Add(data))

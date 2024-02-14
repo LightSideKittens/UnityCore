@@ -1,11 +1,9 @@
 using System;
-using UnityEngine;
 
 namespace LSCore.BattleModule
 {
     public class CompData
     {
-        public Transform transform;
         public Action onInit;
         public Action reset;
         public Action enable;

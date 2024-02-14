@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore.GameProperty;
 using LSCore.LevelSystem;
 using Sirenix.Serialization;
 using UnityEngine;
@@ -20,17 +19,9 @@ namespace LSCore.BattleModule
         
         [field: SerializeField] public int Fund { get; private set; }
         protected virtual bool NeedFindOpponent => true;
-        private Dictionary<Type, Prop> props;
         
-        protected float GetValue<T>() where T : FloatGameProp
-        {
-            return FloatGameProp.GetValue<T>(props);
-        }
-
         public void Init()
         {
-            props = levelsManager.GetProps(id);
-            radius = GetValue<RadiusGP>();
             radiusRenderer = new GameObject($"{GetType().Name} Radius").AddComponent<SpriteRenderer>();
             radiusRenderer.sprite = circleSprite;
             var gameObject = radiusRenderer.gameObject;
