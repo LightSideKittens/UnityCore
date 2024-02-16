@@ -8,44 +8,86 @@ using Object = UnityEngine.Object;
 
 public partial class LevelsContainer
 {
-    public static readonly List<Type> availableTypes = new()
-    {
-        typeof(GameObject),
-        typeof(ScriptableObject),
-    };
-
-    private readonly ValueDropdownList<int> selector = new();
+    private readonly ValueDropdownList<string> selector = new();
     
+    [ShowIf("isGameObject")]
     [ValueDropdown("selector")]
-    [SerializeField] private int targetType;
+    [OnValueChanged("TargetTypeChanged")]
+    [SerializeField] private string targetType;
     
     private string path;
-    private IEnumerable<Object> Levels => AllLevels;
-    private IEnumerable<Object> AllLevels
+    private bool isGameObject;
+
+    private IEnumerable<Object> Levels
     {
         get
         {
-            var type = availableTypes[targetType];
-            
-            if (typeof(Component).IsAssignableFrom(type))
+            isGameObject = false;
+            var allAssets = AssetDatabaseUtils.LoadAllAssets<Object>(paths: path);
+            allAssets.Remove(this);
+            if (allAssets.Count > 0)
             {
-                return AssetDatabaseUtils.LoadAllGameObjects(type, paths: path);
+                if (allAssets[0] is GameObject obj)
+                {
+                    selector.Clear();
+                    if (string.IsNullOrEmpty(targetType))
+                    {
+                        targetType = typeof(GameObject).AssemblyQualifiedName;
+                    }
+                    
+                    isGameObject = true;
+                    selector.Add(nameof(GameObject), typeof(GameObject).AssemblyQualifiedName);
+                    var components = obj.GetComponents<Component>();
+                    
+                    for (int i = 0; i < components.Length; i++)
+                    {
+                        var type = components[i].GetType();
+                        selector.Add(type.Name, type.AssemblyQualifiedName);
+                    }
+                }
             }
             
-            return AssetDatabaseUtils.LoadAllAssets(availableTypes[targetType], paths: path);
+            return allAssets;
+        }
+    }
+
+    private void TargetTypeChanged()
+    {
+        OnTargetTypeChanged(levels);
+    }
+
+    private void OnTargetTypeChanged(List<Object> objects)
+    {
+        var type = Type.GetType(targetType);
+        var isGameObjectType = typeof(GameObject) == type;
+        
+        for (int i = 0; i < objects.Count; i++)
+        {
+            if (isGameObjectType)
+            {
+                if (objects[i] is Component component)
+                {
+                    objects[i] = component.gameObject;
+                }
+                else
+                {
+                    objects[i] = (GameObject)objects[i];
+                }
+            }
+            else if (objects[i] is GameObject gameObject)
+            {
+                objects[i] = gameObject.GetComponent(type);
+            }
+            else if (objects[i] is Component component)
+            {
+                objects[i] = component.GetComponent(type);
+            }
         }
     }
 
     [OnInspectorInit]
     private void Init()
     {
-        selector.Clear();
-        for (int i = 0; i < availableTypes.Count; i++)
-        {
-            var type = availableTypes[i];
-            selector.Add(type.Name, i);
-        }
-        
         path = this.GetFolderPath();
 
         for (int i = 0; i < levels.Count; i++)
@@ -58,7 +100,7 @@ public partial class LevelsContainer
             }
         }
     }
-
+    
     [Button]
     private void AddAll()
     {

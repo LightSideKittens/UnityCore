@@ -11,7 +11,7 @@ namespace LSCore
             var names = Attribute.groupNames;
             var type = Attribute.groupType;
             
-            if (names != null)
+            if (names is { Length: > 0 })
             {
                 source = AssetDatabaseUtils.LoadAny<IdGroup>(names[0]);
                 

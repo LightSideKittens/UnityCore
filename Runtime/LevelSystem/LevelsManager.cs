@@ -81,12 +81,6 @@ namespace LSCore.LevelSystem
             return GetLevel<T>(id, level);
         }
         
-        public T GetComponentByCurrentLevel<T>(Id id) where T : Object
-        {
-            UnlockedLevels.TryGetLevel(id, out var level);
-            return GetLevel<GameObject>(id, level).GetComponent<T>();
-        }
-        
         public T GetLevel<T>(Id id, int level) where T : Object
         {
             var levels = levelsById[id];

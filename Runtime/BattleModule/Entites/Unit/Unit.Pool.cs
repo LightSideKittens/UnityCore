@@ -1,20 +1,9 @@
 ﻿using System.Collections.Generic;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 namespace LSCore.BattleModule
 {
     public partial class Unit
     {
         private static readonly Dictionary<Id, OnOffPool<Unit>> pools = new();
-
-#if UNITY_EDITOR
-        [InitializeOnLoadMethod]
-        private static void AddType()
-        {
-            LevelsContainer.availableTypes.Add(typeof(Unit));
-        }
-#endif
         
         static Unit() => World.Destroyed += pools.Clear;
 

@@ -9,22 +9,27 @@ namespace LSCore.BattleModule
         protected CompData data;
         protected Transform transform;
         
-        public void Init(Transform transform, CompData data)
+        public void Init(CompData data)
         {
-            this.data = data;
-            Register(transform);
-            data.destroy += UnRegister;
+            Register(data);
             Init();
         }
 
-        public void Register(Transform transform)
+        public void Register(CompData data)
         {
-            this.transform = transform;
+            this.data = data;
+            transform = data.transform;
             OnRegister();
         }
 
-        public abstract void UnRegister();
-        protected abstract void OnRegister();
+        protected void Reg<T>(T obj) where T : BaseComp
+        {
+            TransformDict<T>.Add(transform, obj);
+            data.destroy += data.Remove<T>;
+        }
+        
+        protected virtual void OnRegister() { }
+        
         protected abstract void Init();
     }
 }

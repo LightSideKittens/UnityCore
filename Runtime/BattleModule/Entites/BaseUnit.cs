@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using static LSCore.BattleModule.ObjectTo<LSCore.BattleModule.BaseUnit>;
+using static LSCore.BattleModule.StaticDict<UnityEngine.Transform,LSCore.BattleModule.BaseUnit>;
 
 namespace LSCore.BattleModule
 {
     public class BaseUnit : MonoBehaviour
     {
 #if UNITY_EDITOR
-        protected IEnumerable<Id> Ids => manager.Group;
+        protected IEnumerable<Id> Ids1 => manager.Group;
         private bool HideManager => name.Contains("_Base");
 #endif
         
-        [SerializeField, ValueDropdown("Ids")] private Id id;
+        [SerializeField, ValueDropdown("Ids1")] private Id id;
         public string UserId { get; private set; }
         public string TeamId { get; private set; }
         public AffiliationType Affiliation { get; private set; }
@@ -30,6 +30,7 @@ namespace LSCore.BattleModule
             transform = base.transform;
             UserId = userId;
             TeamId = teamId;
+            tag = $"{teamId}@{userId}";
             
             if (userId == BattlePlayerData.UserId)
             {

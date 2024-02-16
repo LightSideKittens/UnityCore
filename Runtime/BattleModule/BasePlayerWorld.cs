@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnitsByTransform = LSCore.BattleModule.ObjectTo<LSCore.BattleModule.Unit>;
+using UnitsByTransform = LSCore.BattleModule.TransformDict<LSCore.BattleModule.Unit>;
 
 namespace LSCore.BattleModule
 {
     public abstract class BasePlayerWorld<T> : SingleService<T> where T : BasePlayerWorld<T>
     {
         public static event Action AllUnitsDestroyed;
-        
-        private static HashSet<Unit> activeUnits = new();
+
+        public static List<Unit> activeUnits = new();
         public static int UnitCount => activeUnits.Count;
-        public static IEnumerable<Unit> ActiveUnits => activeUnits;
         public abstract string UserId { get; }
         public abstract string TeamId { get; }
 

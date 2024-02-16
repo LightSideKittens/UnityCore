@@ -1,57 +1,67 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using LSCore.ConditionModule;
+using LSCore.Extensions.Unity;
 using UnityEngine;
-using static LSCore.BattleModule.ObjectTo<LSCore.BattleModule.FindTargetComp>;
 
 namespace LSCore.BattleModule
 {
     [Serializable]
     public class FindTargetComp : BaseComp
     {
-        [SerializeReference] private List<TargetProvider> providers = new();
+        public static Unit selfUnit;
+        public static Unit targetUnit;
+        private Unit unit;
+
+        [SerializeReference] private Condition checkers;
+        private ConditionBuilder conditions;
+        public LayerMask mask;
         private Transform lastTarget;
         private int frame;
         private bool IsFound => lastTarget != null;
         
-        protected override void OnRegister() => Add(transform, this);
-        public override void UnRegister() => Remove(transform);
-        
-        protected override void Init() { }
+        protected override void OnRegister() => Reg(this);
+
+        protected override void Init()
+        {
+            unit = transform.Get<Unit>();
+            conditions = ConditionBuilder.If(checkers);
+        }
 
         public IEnumerable<Transform> FindAll(float radius) => FindAll(transform.position, radius);
 
         public IEnumerable<Transform> FindAll(Vector2 position, float radius)
         {
-            if (frame == Time.frameCount)
+            selfUnit = unit;
+            
+            foreach (var targetTransform in Physics2DExt.FindAll(position, radius, mask).Select(x => x.transform))
             {
-                if (IsFound)
+                targetUnit = targetTransform.Get<Unit>();
+                
+                if (conditions)
                 {
-                    yield return lastTarget;
-                }
-                else
-                {
-                    yield break;
+                    yield return targetTransform;
                 }
             }
+        }
+        
+        public IEnumerable<Collider2D> FindAllColliders(Vector2 position, float radius)
+        {
+            selfUnit = unit;
             
-            frame = Time.frameCount;
-            
-            for (int i = 0; i < providers.Count; i++)
+            foreach (var collider in Physics2DExt.FindAll(position, radius, mask))
             {
-                var targets = providers[i].Targets;
-                foreach (var target in targets)
+                targetUnit = collider.transform.Get<Unit>();
+                
+                if (conditions)
                 {
-                    var hitBox = target.Get<HitBoxComponent>();
-
-                    if (hitBox.IsIntersected(position, radius, out _))
-                    {
-                        yield return target;
-                    }
+                    yield return collider;
                 }
             }
         }
 
-        public bool Find(Vector2 position, float radius, HashSet<Transform> excepted, out Transform target)
+        public bool Find(in Vector2 position, float radius, HashSet<Transform> excepted, out Transform target)
         {
             if (frame == Time.frameCount)
             {
@@ -60,38 +70,21 @@ namespace LSCore.BattleModule
             }
             
             frame = Time.frameCount;
-            
-            var distance = radius;
             target = null;
-            
-            for (int i = 0; i < providers.Count; i++)
+
+            conditions.And(() => excepted.Contains(targetUnit.transform));
+            if(Physics2DExt.TryFindNearestCollider(position, FindAllColliders(position, radius), out var col, mask))
             {
-                var targets = providers[i].Targets;
-                foreach (var target1 in targets)
-                {
-                    if (!excepted.Contains(target1))
-                    {
-                        var hitBox = target1.Get<HitBoxComponent>();
-
-                        if (hitBox.IsIntersected(position, distance, out var point))
-                        {
-                            var newDistance = Vector2.Distance(point, position);
-
-                            if (distance > newDistance)
-                            {
-                                target = target1;
-                                distance = newDistance;
-                            }
-                        }
-                    }
-                }
+                target = col.transform;
             }
+
+            conditions.Clear().Add(checkers);
 
             lastTarget = target;
             return IsFound;
         }
 
-        public bool Find(Vector2 position, float radius, out Transform target)
+        public bool Find(in Vector2 position, float radius, out Transform target)
         {
             if (frame == Time.frameCount)
             {
@@ -100,28 +93,11 @@ namespace LSCore.BattleModule
             }
             
             frame = Time.frameCount;
-            
-            var distance = radius;
             target = null;
             
-            for (int i = 0; i < providers.Count; i++)
+            if(Physics2DExt.TryFindNearestCollider(position, FindAllColliders(position, radius), out var col, mask))
             {
-                var targets = providers[i].Targets;
-                foreach (var target1 in targets)
-                {
-                    var hitBox = target1.Get<HitBoxComponent>();
-
-                    if (hitBox.IsIntersected(position, distance, out var point))
-                    {
-                        var newDistance = Vector2.Distance(point, position);
-
-                        if (distance > newDistance)
-                        {
-                            target = target1;
-                            distance = newDistance;
-                        }
-                    }
-                }
+                target = col.transform;
             }
 
             lastTarget = target;

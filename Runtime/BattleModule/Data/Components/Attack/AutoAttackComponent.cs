@@ -33,6 +33,7 @@ namespace LSCore.BattleModule
 
         protected void Attack(Transform target)
         {
+            impactObject.transform.up = target.position - transform.position;
             impactObject.Emit();
         }
 

@@ -2,11 +2,16 @@
 
 namespace LSCore.ConditionModule
 {
-    [Serializable]
     public abstract class BaseCondition
     {
+        public enum ConditionType
+        {
+            If,
+            And,
+            Or,
+        }
+        
         private Func<bool> checker;
-        protected abstract bool IsCompleted { get; set; }
 
         protected BaseCondition()
         {
@@ -21,10 +26,10 @@ namespace LSCore.ConditionModule
         {
             Init();
             checker = Check;
-            return IsCompleted;
+            return checker();
         }
-        
-        private bool Check() => IsCompleted;
+
+        protected internal abstract bool Check();
         
         public virtual void Reset()
         {

@@ -3,7 +3,7 @@ using LSCore.Async;
 using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using UnityEngine;
-using static LSCore.BattleModule.ObjectTo<LSCore.BattleModule.MoveComp>;
+using static LSCore.BattleModule.TransformDict<LSCore.BattleModule.MoveComp>;
 
 namespace LSCore.BattleModule
 {
@@ -20,8 +20,7 @@ namespace LSCore.BattleModule
         private Collider2D lastObstacles;
         public Buffs Buffs { get; private set; }
 
-        protected override void OnRegister() => Add(transform, this);
-        public override void UnRegister() => Remove(transform);
+        protected override void OnRegister() => Reg(this);
 
         protected override void Init()
         {

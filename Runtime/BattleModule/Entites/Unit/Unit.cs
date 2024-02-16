@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using LSCore.Attributes;
 using UnityEngine;
-using static LSCore.BattleModule.ObjectTo<LSCore.BattleModule.Unit>;
+using static LSCore.BattleModule.StaticDict<UnityEngine.Transform,LSCore.BattleModule.Unit>;
 
 namespace LSCore.BattleModule
 {
@@ -8,13 +10,13 @@ namespace LSCore.BattleModule
     {
         public static event Action<Unit> Killed;
         public event Action Destroyed;
-
-        [SerializeReference] private BaseComp[] comps =
+        
+        [UniqueTypeFilter]
+        [SerializeReference] private List<BaseComp> comps = new()
         {
             new HealthComp(),
             new FindTargetComp(),
             new MoveComp(),
-            new ColliderHitBoxComp(),
             new AutoAttackComponent()
         };
         
@@ -23,29 +25,31 @@ namespace LSCore.BattleModule
         
         public override void Init(string userId, string teamId)
         {
-            base.Init(userId, teamId); 
+            base.Init(userId, teamId);
             transform = GetComponent<Transform>();
+            compData.transform = transform;
             Add(transform, this);
             
-            for (int i = 0; i < comps.Length; i++)
+            for (int i = 0; i < comps.Count; i++)
             {
-                comps[i].Init(transform, compData);
+                comps[i].Init(compData);
             }
         }
 
         public void RegisterComps()
         {
             transform = gameObject.GetComponent<Transform>();
+            compData.transform = transform;
             
-            for (int i = 0; i < comps.Length; i++)
+            for (int i = 0; i < comps.Count; i++)
             {
-                comps[i].Register(transform);
+                comps[i].Register(compData);
             }
         }
 
         public T GetComp<T>() where T : BaseComp
         {
-            return ObjectTo<T>.Get(transform);
+            return TransformDict<T>.Get(transform);
         }
         
         public override void OnInit()

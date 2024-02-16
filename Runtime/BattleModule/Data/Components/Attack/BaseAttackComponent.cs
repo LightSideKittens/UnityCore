@@ -1,8 +1,7 @@
 ﻿using System;
 using DG.Tweening;
-using UnityEngine;
 using UnityEngine.Scripting;
-using static LSCore.BattleModule.ObjectTo<LSCore.BattleModule.BaseAttackComponent>;
+using static LSCore.BattleModule.StaticDict<UnityEngine.Transform,LSCore.BattleModule.BaseAttackComponent>;
 
 namespace LSCore.BattleModule
 {
@@ -10,16 +9,16 @@ namespace LSCore.BattleModule
     public abstract class BaseAttackComponent : BaseComp
     {
         public ImpactObject impactObject;
-        protected float attackSpeed;
+        public float attackSpeed;
+        public float radius;
         protected float damage;
-        protected float radius;
         protected int Damage => (int)(damage * Buffs);
         public Buffs Buffs { get; private set; }
 
         protected Tween attackTween;
-        
-        protected override void OnRegister() => Add(transform, this);
-        public override void UnRegister() => Remove(transform);
+
+        protected override void OnRegister() => Reg(this);
+
         protected override void Init()
         {
             Buffs = new Buffs();
@@ -54,17 +53,6 @@ namespace LSCore.BattleModule
         public void Destroy()
         {
             Disable();
-        }
-
-        protected bool TryApplyDamage(Transform target)
-        {
-            if (target != null && target.TryGet<BaseHealthComp>(out var health))
-            {
-                health.TakeDamage(Damage);
-                return true;
-            }
-
-            return false;
         }
     }
 }

@@ -7,12 +7,12 @@ namespace LSCore.BattleModule
     {
         public static T Get<T>(this Transform target)
         {
-            return ObjectTo<T>.Get(target);
+            return TransformDict<T>.Get(target);
         }
 
         public static bool TryGet<T>(this Transform target, out T result)
         {
-            return ObjectTo<T>.TryGet(target, out result);
+            return TransformDict<T>.TryGet(target, out result);
         }
     }
 }

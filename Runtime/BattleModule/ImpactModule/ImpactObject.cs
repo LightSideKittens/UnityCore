@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LSCore.Attributes;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using static UnityEngine.ParticleSystem;
@@ -12,7 +13,8 @@ namespace LSCore
     {
         private const int Infinity = 65535;
 
-        public List<Impact> impacts;
+        [UniqueTypeFilter]
+        [SerializeReference] public List<Impact> impacts;
         private readonly Collider2D[] hitColliders = new Collider2D[1];
         private readonly List<Particle> enterParticles = new();
         [SerializeField] private AnimationCurve curve;
@@ -58,13 +60,13 @@ namespace LSCore
             ps.Play();
         }
 
-        private void Update()
+        /*private void Update()
         {
             if (!mainPs.isPaused && !ps.isPaused)
             {
                 ChangeParticlesColor();
             }
-        }
+        }*/
         
         void ChangeParticlesColor()
         {
@@ -108,11 +110,16 @@ namespace LSCore
             
             for (int i = 0; i < numEnter; i++)
             {
-                float radius = enterParticles[i].GetCurrentSize(ps) * radiusScale / 2;
-                var numColliders = Physics2D.OverlapCircleNonAlloc(enterParticles[i].position, radius, hitColliders);
+                var particle = enterParticles[i];
+                float radius = particle.GetCurrentSize(ps) * radiusScale / 2;
+                var numColliders = Physics2D.OverlapCircleNonAlloc(particle.position, radius, hitColliders);
 
                 for (int j = 0; j < numColliders; j++)
                 {
+                    particle.remainingLifetime = 0;
+                    particle.startLifetime = 0;
+                    enterParticles[i] = particle;
+                    ps.SetTriggerParticles(ParticleSystemTriggerEventType.Enter, enterParticles);
                     OnParticleTriggerEnter(hitColliders[j]);
                 }
             }
@@ -120,6 +127,16 @@ namespace LSCore
 
         public void Emit()
         {
+            /*for (int i = 0; i < ps.trigger.colliderCount; i++)
+            {
+                ps.trigger.RemoveCollider(0);
+            }
+            
+            foreach (var target in targets)
+            {
+                ps.trigger.AddCollider(target.GetComponent<Collider2D>());
+            }*/
+            
             ps.Play();
         }
 
