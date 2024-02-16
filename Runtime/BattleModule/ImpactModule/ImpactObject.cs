@@ -125,17 +125,17 @@ namespace LSCore
             }
         }
 
-        public void Emit()
+        public void Emit(IEnumerable<Collider2D> colliders)
         {
-            /*for (int i = 0; i < ps.trigger.colliderCount; i++)
+            for (int i = 0; i < ps.trigger.colliderCount; i++)
             {
                 ps.trigger.RemoveCollider(0);
             }
             
-            foreach (var target in targets)
+            foreach (var target in colliders)
             {
-                ps.trigger.AddCollider(target.GetComponent<Collider2D>());
-            }*/
+                ps.trigger.AddCollider(target);
+            }
             
             ps.Play();
         }

@@ -45,6 +45,8 @@ namespace LSCore.BattleModule
                 }
             }
         }
+
+        public IEnumerable<Collider2D> FindAllColliders(float radius) => FindAllColliders(transform.position, radius);
         
         public IEnumerable<Collider2D> FindAllColliders(Vector2 position, float radius)
         {

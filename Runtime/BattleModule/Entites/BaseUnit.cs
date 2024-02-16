@@ -30,7 +30,6 @@ namespace LSCore.BattleModule
             transform = base.transform;
             UserId = userId;
             TeamId = teamId;
-            tag = $"{teamId}@{userId}";
             
             if (userId == BattlePlayerData.UserId)
             {

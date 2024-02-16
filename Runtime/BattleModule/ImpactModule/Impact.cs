@@ -17,7 +17,7 @@ namespace LSCore
         
         public override void Apply(Transform target)
         {
-            target.Get<HealthComp>().TakeDamage(damage);
+            target.Get<BaseHealthComp>().TakeDamage(damage);
         }
     }
 }
