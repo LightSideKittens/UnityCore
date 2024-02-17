@@ -30,6 +30,9 @@ namespace LSCore.BattleModule
             transform = base.transform;
             UserId = userId;
             TeamId = teamId;
+#if UNITY_EDITOR
+            name = $"{name}_{GetInstanceID()}";
+#endif
             
             if (userId == BattlePlayerData.UserId)
             {

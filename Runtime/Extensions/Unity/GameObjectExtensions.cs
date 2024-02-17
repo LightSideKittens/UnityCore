@@ -6,6 +6,11 @@ namespace LSCore.Extensions.Unity
 {
     public static partial class ComponentExtensions
     {
+        public static bool IsLayerInMask(this GameObject target, LayerMask mask)
+        {
+            return ((1 << target.layer) & mask) != 0;
+        }
+        
         public static void GetAllChild(this GameObject gameObject, List<Transform> childs)
         {
             gameObject.transform.GetAllChild(childs);

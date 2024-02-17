@@ -11,7 +11,7 @@ namespace LSCore.BattleModule
     public class MoveComp : BaseComp
     {
         public float speed;
-        private FindTargetComp findTargetComp;
+        [SerializeField] private FindTargetComp findTargetComp;
         protected Rigidbody2D rigidbody;
         private CircleCollider2D collider;
         public float Speed => speed * Buffs;
@@ -26,6 +26,7 @@ namespace LSCore.BattleModule
         {
             rigidbody = transform.GetComponent<Rigidbody2D>();
             collider = rigidbody.GetComponent<CircleCollider2D>();
+            findTargetComp.Init(transform);
             Buffs = new Buffs();
 
             if (mask == -1)
@@ -35,15 +36,9 @@ namespace LSCore.BattleModule
 
             Wait.InfinityLoop(0.5f, () => lastObstacles = null);
             lastObstacles = null;
-            
-            data.onInit += OnInit;
-            data.update += Update;
-            data.reset += Buffs.Reset;
-        }
 
-        private void OnInit()
-        {
-            findTargetComp = transform.Get<FindTargetComp>();
+            data.fixedUpdate += Update;
+            data.reset += Buffs.Reset;
         }
 
         public void SetEnabled(bool enabled)

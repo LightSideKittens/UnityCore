@@ -9,13 +9,12 @@ namespace LSCore.BattleModule
     public partial class Unit : BaseUnit
     {
         public static event Action<Unit> Killed;
-        public event Action Destroyed;
+        public event System.Action Destroyed;
         
         [UniqueTypeFilter]
         [SerializeReference] private List<BaseComp> comps = new()
         {
             new HealthComp(),
-            new FindTargetComp(),
             new MoveComp(),
             new AutoAttackComponent()
         };

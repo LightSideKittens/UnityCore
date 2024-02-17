@@ -9,14 +9,15 @@ namespace LSCore.BattleModule
     [Preserve, Serializable]
     public class AutoAttackComponent : BaseAttackComponent
     {
-        private FindTargetComp findTargetComp;
+        [SerializeField] private FindTargetComp findTargetComp;
         private MoveComp moveComp;
         protected Tween attackLoopEmitter;
         private bool canAttack;
 
         protected override void OnInit()
         {
-            findTargetComp = transform.Get<FindTargetComp>();
+            findTargetComp.Init(transform);
+            impactObject.canImpactChecker = findTargetComp.Check;
             moveComp = transform.Get<MoveComp>();
         }
 
@@ -34,7 +35,7 @@ namespace LSCore.BattleModule
         protected void Attack(Transform target)
         {
             impactObject.transform.up = target.position - transform.position;
-            impactObject.Emit(findTargetComp.FindAllColliders(40));
+            impactObject.Emit();
         }
 
         public override void Update()
@@ -46,8 +47,8 @@ namespace LSCore.BattleModule
                 moveComp.SetEnabled(false);
                 if (canAttack)
                 {
-                    Attack(target);
                     canAttack = false;
+                    Attack(target);
                 }
             }
             else

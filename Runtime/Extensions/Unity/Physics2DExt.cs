@@ -9,14 +9,14 @@ namespace LSCore.Extensions.Unity
 
         public static void SetHitCollidersSize(int size) => hitColliders = new Collider2D[size];
 
-        public static Collider2D[] FindAll(in Vector2 position, float radius, LayerMask mask)
+        public static Collider2D[] FindAll(in Vector2 position, float radius, in LayerMask mask)
         {
             var numColliders = Physics2D.OverlapCircleNonAlloc(position, radius, hitColliders, mask);
 
             return hitColliders[..numColliders];
         }
         
-        public static bool TryFindNearestCollider(in Vector2 position, LayerMask mask, out Collider2D closestCollider, float startRadius = 1, float maxRadius = 100)
+        public static bool TryFindNearestCollider(in Vector2 position, in LayerMask mask, out Collider2D closestCollider, float startRadius = 1, float maxRadius = 100)
         {
             int numColliders;
             while (true)
@@ -42,10 +42,10 @@ namespace LSCore.Extensions.Unity
                 }
             }
 
-            return TryFindNearestCollider(position, hitColliders[..numColliders], out closestCollider, mask);
+            return TryFindNearestCollider(position, hitColliders[..numColliders], out closestCollider);
         }
         
-        public static bool TryFindNearestCollider(Collider2D sourceCollider, out Collider2D closestCollider, LayerMask mask, float startRadius = 1, float maxRadius = 100)
+        public static bool TryFindNearestCollider(Collider2D sourceCollider, out Collider2D closestCollider, in LayerMask mask, float startRadius = 1, float maxRadius = 100)
         {
             int numColliders;
             Vector2 position = sourceCollider.bounds.center;
@@ -73,10 +73,10 @@ namespace LSCore.Extensions.Unity
                 }
             }
             sourceCollider.enabled = true;
-            return TryFindNearestCollider(sourceCollider, hitColliders[..numColliders], out closestCollider, mask);
+            return TryFindNearestCollider(sourceCollider, hitColliders[..numColliders], out closestCollider);
         }
 
-        public static bool TryFindNearestCollider(Collider2D sourceCollider, IEnumerable<Collider2D> colliders, out Collider2D closestCollider, LayerMask mask)
+        public static bool TryFindNearestCollider(Collider2D sourceCollider, IEnumerable<Collider2D> colliders, out Collider2D closestCollider)
         {
             float closestDistance = float.MaxValue;
             closestCollider = null;
@@ -95,7 +95,7 @@ namespace LSCore.Extensions.Unity
             return closestCollider != null;
         }
         
-        public static bool TryFindNearestCollider(in Vector2 position, IEnumerable<Collider2D> colliders, out Collider2D closestCollider, LayerMask mask)
+        public static bool TryFindNearestCollider(in Vector2 position, IEnumerable<Collider2D> colliders, out Collider2D closestCollider)
         {
             float closestDistance = float.MaxValue;
             closestCollider = null;

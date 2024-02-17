@@ -7,7 +7,7 @@ namespace LSCore.BattleModule
 {
     public abstract class BasePlayerWorld<T> : SingleService<T> where T : BasePlayerWorld<T>
     {
-        public static event Action AllUnitsDestroyed;
+        public static event System.Action AllUnitsDestroyed;
 
         public static List<Unit> activeUnits = new();
         public static int UnitCount => activeUnits.Count;

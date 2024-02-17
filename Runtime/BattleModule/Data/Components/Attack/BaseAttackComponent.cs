@@ -11,6 +11,7 @@ namespace LSCore.BattleModule
         public ImpactObject impactObject;
         public float attackSpeed;
         public float radius;
+        
         protected float damage;
         protected int Damage => (int)(damage * Buffs);
         public Buffs Buffs { get; private set; }

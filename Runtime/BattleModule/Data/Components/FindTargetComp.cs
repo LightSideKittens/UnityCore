@@ -8,27 +8,27 @@ using UnityEngine;
 namespace LSCore.BattleModule
 {
     [Serializable]
-    public class FindTargetComp : BaseComp
+    public class FindTargetComp
     {
         public static Unit selfUnit;
         public static Unit targetUnit;
         private Unit unit;
 
         [SerializeReference] private Condition checkers;
+        [NonSerialized] public Transform transform;
         private ConditionBuilder conditions;
         public LayerMask mask;
         private Transform lastTarget;
         private int frame;
         private bool IsFound => lastTarget != null;
-        
-        protected override void OnRegister() => Reg(this);
 
-        protected override void Init()
+        public void Init(Transform transform)
         {
+            this.transform = transform;
             unit = transform.Get<Unit>();
             conditions = ConditionBuilder.If(checkers);
         }
-
+        
         public IEnumerable<Transform> FindAll(float radius) => FindAll(transform.position, radius);
 
         public IEnumerable<Transform> FindAll(Vector2 position, float radius)
@@ -63,6 +63,19 @@ namespace LSCore.BattleModule
             }
         }
 
+        public bool Check(Collider2D collider)
+        {
+            selfUnit = unit;
+            
+            if (collider.transform.TryGet(out Unit target))
+            {
+                targetUnit = target;
+                return conditions;
+            }
+           
+            return false;
+        }
+
         public bool Find(in Vector2 position, float radius, HashSet<Transform> excepted, out Transform target)
         {
             if (frame == Time.frameCount)
@@ -75,7 +88,7 @@ namespace LSCore.BattleModule
             target = null;
 
             conditions.And(() => excepted.Contains(targetUnit.transform));
-            if(Physics2DExt.TryFindNearestCollider(position, FindAllColliders(position, radius), out var col, mask))
+            if(Physics2DExt.TryFindNearestCollider(position, FindAllColliders(position, radius), out var col))
             {
                 target = col.transform;
             }
@@ -97,7 +110,7 @@ namespace LSCore.BattleModule
             frame = Time.frameCount;
             target = null;
             
-            if(Physics2DExt.TryFindNearestCollider(position, FindAllColliders(position, radius), out var col, mask))
+            if(Physics2DExt.TryFindNearestCollider(position, FindAllColliders(position, radius), out var col))
             {
                 target = col.transform;
             }
