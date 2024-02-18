@@ -28,6 +28,7 @@ namespace LSCore
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
 #if UNITY_EDITOR
+        
         [SerializeField] [OnValueChanged("OnInit")]
         private bool includeAll;
 
@@ -37,8 +38,24 @@ namespace LSCore
         static IdGroup()
         {
             EditorApplication.update += Init;
+            World.Created += OnWorldCreated;
         }
-        
+
+        private static void OnWorldCreated()
+        {
+            foreach (var group in AssetDatabaseUtils.LoadAllAssets<IdGroup>())
+            {
+                var set = new HashSet<Id>();
+                
+                foreach (var id in group.ids)
+                {
+                    set.Add(id);
+                }
+
+                group.ids = set;
+            }
+        }
+
         private static void Init()
         {
             foreach (var group in AssetDatabaseUtils.LoadAllAssets<IdGroup>())

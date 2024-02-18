@@ -19,6 +19,7 @@ namespace LSCore.BattleModule
         private bool enabled = true;
         private Collider2D lastObstacles;
         public Buffs Buffs { get; private set; }
+        public bool Enabled => enabled;
 
         protected override void OnRegister() => Reg(this);
 

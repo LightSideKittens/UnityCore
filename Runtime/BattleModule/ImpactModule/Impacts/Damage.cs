@@ -5,12 +5,6 @@ using UnityEngine;
 namespace LSCore
 {
     [Serializable]
-    public abstract class Impact
-    {
-        public abstract void Apply(Transform target);
-    }
-
-    [Serializable]
     public class Damage : Impact
     {
         public int damage;

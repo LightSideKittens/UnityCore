@@ -3,25 +3,25 @@ using System.Collections.Generic;
 using LSCore.Attributes;
 using LSCore.Extensions.Unity;
 using UnityEngine;
+using UnityEngine.Serialization;
 using static UnityEngine.ParticleSystem;
 
 namespace LSCore
 {
-    public delegate void TriggeredAction(ref Particle particle, Collider2D[] collider);
+    public delegate void TriggeredAction(ref Particle particle, Collider2D collider);
     public delegate void TriggerAction(HashSet<Collider2D> set1, HashSet<Collider2D> set2, ref Particle particle);
     
     [Serializable]
     public class TriggerHandler : ParticlesHandler
     {
         private static Collider2D[] maxColliders = new Collider2D[100];
-        private static Vector4 currentId;
         private static List<int> keysToRemove = new();
         
-        public ParticleSystemTriggerEventType type;
+        public ParticleSystemTriggerEventType type = ParticleSystemTriggerEventType.Enter;
         public LayerMask mask;
-
+        
         [UniqueTypeFilter]
-        [SerializeReference] public List<OnTriggerHandler> handlers;
+        [SerializeReference] public List<OnTriggerHandler> particleHandlers;
         
         public event TriggeredAction Triggered;
         public Collider2D ignoredCollider;
@@ -32,25 +32,11 @@ namespace LSCore
         private List<Vector4> customData = new();
         private ParticleSystem ps;
 
-        public void Init(ParticleSystem ps)
+        public void Init(ParticleSystem ps, List<Vector4> customData)
         {
             this.ps = ps;
-
+            this.customData = customData;
             InitTriggerAction();
-        }
-
-        private void SetCustomData()
-        {
-            ps.GetCustomParticleData(customData, ParticleSystemCustomData.Custom2);
-            for (int i = 0; i < customData.Count; i++)
-            {
-                if (customData[i].x == 0f)
-                {
-                    currentId.x++;
-                    customData[i] = currentId;
-                }
-            }
-            ps.SetCustomParticleData(customData, ParticleSystemCustomData.Custom2);
         }
         
         public override void Handle(Particle[] particles)
@@ -58,7 +44,6 @@ namespace LSCore
             var radiusScale = ps.trigger.radiusScale;
             Vector2 point = default;
             ids.Clear();
-            SetCustomData();
             ignoredCollider.enabled = false;
             for (int i = 0; i < particles.Length; i++)
             {
@@ -113,11 +98,15 @@ namespace LSCore
             }
             
             if(colliderNum == 0) return;
-            
-            Triggered?.Invoke(ref particle, maxColliders[..colliderNum]);
-            for (int k = 0; k < handlers.Count; k++)
+
+            for (int i = 0; i < colliderNum; i++)
             {
-                handlers[k].Handle(ref particle, maxColliders[..colliderNum]);
+                var collider = maxColliders[i];
+                Triggered?.Invoke(ref particle, collider);
+                for (int k = 0; k < particleHandlers.Count; k++)
+                {
+                    particleHandlers[k].Handle(ref particle, collider);
+                }
             }
         }
 
@@ -134,11 +123,15 @@ namespace LSCore
             }
             
             if(colliderNum == 0) return;
-            
-            Triggered?.Invoke(ref particle, maxColliders[..colliderNum]);
-            for (int k = 0; k < handlers.Count; k++)
+
+            for (int i = 0; i < colliderNum; i++)
             {
-                handlers[k].Handle(ref particle, maxColliders[..colliderNum]);
+                var collider = maxColliders[i];
+                Triggered?.Invoke(ref particle, collider);
+                for (int k = 0; k < particleHandlers.Count; k++)
+                {
+                    particleHandlers[k].Handle(ref particle, collider);
+                }
             }
         }
 

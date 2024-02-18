@@ -4,27 +4,33 @@ using LSCore.Attributes;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using static UnityEngine.ParticleSystem;
 
 namespace LSCore
 {
     [RequireComponent(typeof(ParticleSystem))]
     public class ImpactObject : MonoBehaviour
     {
+        private static Vector4 currentId;
+        
+        [SerializeReference] public List<ParticleImpact> impacts;
+        
         [UniqueTypeFilter]
-        [SerializeReference] public List<Impact> impacts;
+        [SerializeReference] public List<ParticlesIniter> paticleIniters;
+        
         [UniqueTypeFilter(typeof(TriggerHandler))]
-        [SerializeReference] public List<ParticlesHandler> handlers;
+        [SerializeReference] public List<ParticlesHandler> particleHandlers;
         
         public TriggerHandler triggerHandler;
         public Func<Collider2D, bool> canImpactChecker;
         protected ParticleSystem mainPs;
         protected ParticleSystem ps;
-        private Kill kill;
+        private List<Vector4> customData = new();
         
         private void Awake()
         {
             ps = GetComponent<ParticleSystem>();
-            triggerHandler.Init(ps);
+            triggerHandler.Init(ps, customData);
             triggerHandler.Triggered += OnTriggered;
             
             mainPs = ps;
@@ -48,33 +54,44 @@ namespace LSCore
         private void HandleParticles()
         {
             var particles = ps.GetParticles();
-            
+
+            TryInitParticles(particles);
             triggerHandler.Handle(particles);
-            for (int i = 0; i < handlers.Count; i++)
+            for (int i = 0; i < particleHandlers.Count; i++)
             {
-                handlers[i].Handle(particles);
+                particleHandlers[i].Handle(particles);
             }
             
             ps.SetParticles(particles);
         }
 
+        private void TryInitParticles(Particle[] particles)
+        {
+            ps.GetCustomParticleData(customData, ParticleSystemCustomData.Custom2);
+            for (int i = 0; i < customData.Count; i++)
+            {
+                if (customData[i].x == 0f)
+                {
+                    currentId.x++;
+                    customData[i] = currentId;
+                    for (int j = 0; j < paticleIniters.Count; j++)
+                    {
+                        paticleIniters[j].Init(ref particles[i]);
+                    }
+                }
+            }
+            ps.SetCustomParticleData(customData, ParticleSystemCustomData.Custom2);
+        }
+
         public void Emit() => ps.Play();
 
-        private void OnTriggered(ref ParticleSystem.Particle particle, Collider2D[] colliders)
-        {
-            for (int i = 0; i < colliders.Length; i++)
-            {
-                OnTriggered(colliders[i]);
-            }
-        }
-        
-        private void OnTriggered(Collider2D target)
+        private void OnTriggered(ref Particle particle, Collider2D target)
         {
             if(!canImpactChecker(target)) return;
             
             for (int i = 0; i < impacts.Count; i++)
             {
-                impacts[i].Apply(target.transform);
+                impacts[i].Apply(ref particle, target);
             }
         }
 

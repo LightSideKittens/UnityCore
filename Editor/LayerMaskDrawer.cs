@@ -8,9 +8,9 @@ using UnityEngine;
 public class LayerMaskDrawer : OdinValueDrawer<LayerMask>
 {
 	Rect buttonRect;
-	List<string> layerNames = new List<string>();
-	List<int> layerIndexes = new List<int>();
-	List<bool> selectedLayers = new List<bool>();
+	List<string> layerNames = new();
+	List<int> layerIndexes = new();
+	List<bool> selectedLayers = new();
 	string buttonText = null;
 
 	protected override void DrawPropertyLayout(GUIContent label)
@@ -61,7 +61,13 @@ public class LayerMaskDrawer : OdinValueDrawer<LayerMask>
 				layerIndexes = layerIndexes,
 				selectedLayers = selectedLayers,
 				bitmask = ValueEntry.SmartValue,
-				OnSet = (bitmask) => { ValueEntry.SmartValue = bitmask; buttonText = null; }
+				OnSet = (bitmask) =>
+				{
+					Debug.Log(bitmask);
+					ValueEntry.SmartValue = bitmask;
+					ValueEntry.ApplyChanges();
+					buttonText = null;
+				}
 			});
 		}
 
@@ -75,9 +81,9 @@ public class LayerMaskDrawer : OdinValueDrawer<LayerMask>
 
 	public class LayerMaskPopupSelector : PopupWindowContent
 	{
-		public List<string> layerNames = new List<string>();
-		public List<int> layerIndexes = new List<int>();
-		public List<bool> selectedLayers = new List<bool>();
+		public List<string> layerNames = new();
+		public List<int> layerIndexes = new();
+		public List<bool> selectedLayers = new();
 		public Action<int> OnSet;
 		public int bitmask;
 
@@ -143,11 +149,6 @@ public class LayerMaskDrawer : OdinValueDrawer<LayerMask>
 					selectedLayers[i] = true;
 				}
 			}
-
-			OnSet(bitmask);
-
-			// faster update of this window, otherwise the highlight of buttons lags
-			editorWindow.Repaint();
 		}
 
 		void SetBitmask(int index, bool set)

@@ -1,13 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace LSCore.Attributes.TypeFrom
+namespace LSCore.Attributes
 {
     public class TypeFromDrawer : BaseTypeFilterDrawer<TypeFromAttribute>
     {
         protected override IEnumerable<object> GetRawGetter()
         {
-            return allTypes.Where(t => Attribute.from.IsAssignableFrom(t)).Concat(Attribute.additional);
+            var type = Attribute.from;
+            if (type == null)
+            {
+                type = Property.ValueEntry.BaseValueType;
+            }
+            return allTypes.Where(t => type.IsAssignableFrom(t)).Concat(Attribute.additional);
         }
     }
 }

@@ -47,6 +47,17 @@ namespace LSCore.Attributes
                         .ToList();
                 }
             }
+            else
+            {
+                var type = Property.BaseValueEntry.BaseValueType;
+                if(lastItemType != type)
+                {
+                    lastItemType = type;
+                    allTypes = AssemblyUtilities.GetTypes(AssemblyTypeFlags.PluginTypes | AssemblyTypeFlags.PluginEditorTypes)
+                        .Where(t => lastItemType.IsAssignableFrom(t) && !t.IsAbstract)
+                        .ToList();
+                }
+            }
 
             rawGetter = GetRawGetter();
             
