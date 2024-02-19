@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Attributes;
 using LSCore.Attributes;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
@@ -18,14 +19,21 @@ namespace LSCore
         [UniqueTypeFilter]
         [SerializeReference] public List<ParticlesIniter> paticleIniters;
         
+        [PropertySpace(SpaceBefore = 0, SpaceAfter = 20)]
         [UniqueTypeFilter(typeof(TriggerHandler))]
         [SerializeReference] public List<ParticlesHandler> particleHandlers;
         
+        [ColoredField]
         public TriggerHandler triggerHandler;
         public Func<Collider2D, bool> canImpactChecker;
         protected ParticleSystem mainPs;
         protected ParticleSystem ps;
         private List<Vector4> customData = new();
+
+        public Collider2D IgnoredCollider
+        {
+            set => triggerHandler.ignoredCollider = value;
+        }
         
         private void Awake()
         {
@@ -96,6 +104,7 @@ namespace LSCore
         }
 
 #if UNITY_EDITOR
+        [PropertySpace(20)]
         [Button] private void PauseMain() => mainPs.Pause();
         [Button] private void Pause() => ps.Pause();
         [Button] private void PlayMain() => mainPs.Play();

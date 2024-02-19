@@ -19,7 +19,10 @@ public class LayerMaskDrawer : OdinValueDrawer<LayerMask>
 
 		EditorGUILayout.BeginHorizontal();
 
-		EditorGUILayout.PrefixLabel(label);
+		if (label != null)
+		{
+			EditorGUILayout.PrefixLabel(label);
+		}
 
 		// get a list of selected layers with bitwise operations
 		selectedLayers.Clear();
@@ -63,7 +66,6 @@ public class LayerMaskDrawer : OdinValueDrawer<LayerMask>
 				bitmask = ValueEntry.SmartValue,
 				OnSet = (bitmask) =>
 				{
-					Debug.Log(bitmask);
 					ValueEntry.SmartValue = bitmask;
 					ValueEntry.ApplyChanges();
 					buttonText = null;

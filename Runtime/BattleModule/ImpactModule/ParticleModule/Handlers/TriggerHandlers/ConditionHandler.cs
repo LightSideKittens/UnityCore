@@ -15,7 +15,7 @@ namespace LSCore
         
         public override void Handle(ref ParticleSystem.Particle particle, Collider2D collider)
         {
-            condition.Init(ref particle, collider);
+            condition.Prepare(ref particle, collider);
             
             if (condition)
             {

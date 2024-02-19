@@ -18,7 +18,7 @@ namespace LSCore.ConditionModule
         public static ConditionBuilder If(Func<bool> condition)
         {
             var builder = new ConditionBuilder();
-            builder.data.Add(new Data {type = ConditionType.If, condition = condition});
+            builder.data.Add(new Data {type = default, condition = condition});
             return builder;
         }
 
@@ -37,7 +37,7 @@ namespace LSCore.ConditionModule
         public static ConditionBuilder If(BaseCondition condition)
         {
             var builder = new ConditionBuilder();
-            builder.data.Add(new Data {type = ConditionType.If, condition = condition.Check});
+            builder.data.Add(new Data {type = default, condition = condition.Check});
             return builder;
         }
 

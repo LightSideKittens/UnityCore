@@ -11,6 +11,6 @@ namespace LSCore
     [HideReferenceObjectPicker]
     public abstract class TriggerCondition : Condition
     {
-        public abstract void Init(ref ParticleSystem.Particle particle, Collider2D collider);
+        public abstract void Prepare(ref ParticleSystem.Particle particle, Collider2D collider);
     }
 }

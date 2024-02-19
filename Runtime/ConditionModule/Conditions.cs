@@ -5,9 +5,9 @@ using UnityEngine;
 namespace LSCore.ConditionModule
 {
     [Serializable]
-    public class Conditions : Condition, ISerializationCallbackReceiver
+    public class Conditions<T> : Condition, ISerializationCallbackReceiver where T : Condition
     {
-        [SerializeReference] public List<Condition> conditions;
+        [SerializeReference] public List<T> conditions;
         [NonSerialized] public ConditionBuilder conditionBuilder;
 
         protected internal override bool Check() => conditionBuilder;

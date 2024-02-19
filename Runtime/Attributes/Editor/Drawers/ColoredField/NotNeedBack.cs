@@ -1,4 +1,5 @@
 ﻿using Attributes;
+using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
 using UnityEngine;
 
@@ -89,9 +90,6 @@ namespace Attributes.Editor.Drawers
 
             SirenixEditorGUI.EndFadeGroup();
             SirenixEditorGUI.EndBox();
-            
-            var valueRect = Property.LastDrawnValueRect;
-            SirenixEditorGUI.DrawBorders(valueRect, 1);
         }
     }
 }

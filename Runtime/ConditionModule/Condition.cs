@@ -1,4 +1,5 @@
 using System;
+using LSCore.Attributes;
 using Sirenix.OdinInspector;
 
 namespace LSCore.ConditionModule
@@ -6,6 +7,6 @@ namespace LSCore.ConditionModule
     [Serializable]
     public abstract class Condition : BaseCondition
     {
-        [HideLabel] public ConditionType type;
+        [HideLabel] [HideCondition] public ConditionType type;
     }
 }

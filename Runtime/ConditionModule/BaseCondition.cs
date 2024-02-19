@@ -6,7 +6,6 @@ namespace LSCore.ConditionModule
     {
         public enum ConditionType
         {
-            If,
             And,
             Or,
         }

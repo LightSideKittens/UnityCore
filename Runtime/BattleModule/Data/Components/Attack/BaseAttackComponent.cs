@@ -1,14 +1,16 @@
 ﻿using System;
 using DG.Tweening;
+using UnityEngine;
 using UnityEngine.Scripting;
-using static LSCore.BattleModule.StaticDict<UnityEngine.Transform,LSCore.BattleModule.BaseAttackComponent>;
+using Object = UnityEngine.Object;
 
 namespace LSCore.BattleModule
 {
     [Preserve, Serializable]
     public abstract class BaseAttackComponent : BaseComp
     {
-        public ImpactObject impactObject;
+        public ImpactObject impactObjectPrefab;
+        [NonSerialized] public ImpactObject impactObject;
         public float attackSpeed;
         public float radius;
         
@@ -30,6 +32,8 @@ namespace LSCore.BattleModule
             data.update += Update;
             data.reset += Buffs.Reset;
             data.destroy += Destroy;
+            impactObject = Object.Instantiate(impactObjectPrefab, transform, false);
+            impactObject.IgnoredCollider = transform.GetComponent<Collider2D>();
         }
         
         protected virtual void OnInit(){}

@@ -43,7 +43,7 @@ namespace Attributes.Editor.Drawers
             EditorGUIUtility.fieldWidth = 10f;
             Rect controlRect = EditorGUILayout.GetControlRect(false);
             EditorGUIUtility.fieldWidth = fieldWidth;
-            return Foldout(controlRect, isVisible, label, style);
+            return (Foldout(controlRect, isVisible, label, style));
         }
 
         private bool Foldout(Rect rect, bool isVisible, GUIContent label, GUIStyle style = null)

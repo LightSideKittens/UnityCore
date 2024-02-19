@@ -10,6 +10,7 @@ namespace LSCore.BattleModule
     public class AutoAttackComponent : BaseAttackComponent
     {
         [SerializeField] private FindTargetComp findTargetComp;
+        [SerializeField] private bool disableMoveCompOnTargetInRadius;
         private MoveComp moveComp;
         protected Tween attackLoopEmitter;
         private bool canAttack;
@@ -44,7 +45,8 @@ namespace LSCore.BattleModule
             
             if (findTargetComp.Find(radius, out var target))
             {
-                moveComp.SetEnabled(false);
+                moveComp.enabled = disableMoveCompOnTargetInRadius;
+                
                 if (canAttack)
                 {
                     canAttack = false;
@@ -53,7 +55,7 @@ namespace LSCore.BattleModule
             }
             else
             {
-                moveComp.SetEnabled(true);
+                moveComp.enabled = true;
             }
         }
 

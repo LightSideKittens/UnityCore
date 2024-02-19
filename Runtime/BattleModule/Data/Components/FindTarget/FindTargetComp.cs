@@ -14,7 +14,7 @@ namespace LSCore.BattleModule
         public static Unit targetUnit;
         private Unit unit;
 
-        [SerializeReference] private Condition checkers;
+        [SerializeReference] private TargetChecker checker;
         [NonSerialized] public Transform transform;
         private ConditionBuilder conditions;
         public LayerMask mask;
@@ -26,7 +26,7 @@ namespace LSCore.BattleModule
         {
             this.transform = transform;
             unit = transform.Get<Unit>();
-            conditions = ConditionBuilder.If(checkers);
+            conditions = ConditionBuilder.If(checker);
         }
         
         public IEnumerable<Transform> FindAll(float radius) => FindAll(transform.position, radius);
@@ -93,7 +93,7 @@ namespace LSCore.BattleModule
                 target = col.transform;
             }
 
-            conditions.Clear().Add(checkers);
+            conditions.Clear().Add(checker);
 
             lastTarget = target;
             return IsFound;

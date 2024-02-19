@@ -12,7 +12,7 @@ namespace LSCore
         
         protected override bool Check() => collider.IsLayerInMask(mask);
 
-        public override void Init(ref ParticleSystem.Particle particle, Collider2D collider)
+        public override void Prepare(ref ParticleSystem.Particle particle, Collider2D collider)
         {
             this.collider = collider;
         }

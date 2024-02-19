@@ -10,7 +10,7 @@ namespace LSCore
         [IdGroup] public IdGroup group;
         private Id id;
 
-        public override void Init(ref ParticleSystem.Particle particle, Collider2D collider)
+        public override void Prepare(ref ParticleSystem.Particle particle, Collider2D collider)
         {
             var transform = collider.transform;
             id = transform.Get<Unit>().Id;

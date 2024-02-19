@@ -14,12 +14,12 @@ namespace LSCore
         {
             var move = target.Get<MoveComp>();
 
-            if (!move.Enabled) return;
+            if (!move.enabled) return;
             
-            move.SetEnabled(false);
+            move.enabled = false;
             Wait.Delay(time, () =>
             {
-                move.SetEnabled(true);
+                move.enabled = true;
             });
         }
     }
