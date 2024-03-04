@@ -16,6 +16,12 @@ public static class LSPaths
         public const string Tools = Root + "/Tools";
         public const string Configs = Root + "/Configs";
     }
+    
+    public static class AssetMenuItem
+    {
+        public const string Assets = nameof(Assets);
+        public const string Root = Assets + "/LSCore";
+    }
 
     public static class Windows
     {

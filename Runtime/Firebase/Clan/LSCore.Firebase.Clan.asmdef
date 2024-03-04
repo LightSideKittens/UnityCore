@@ -1,4 +1,21 @@
 {
-	"name": "LSCore.Firebase.Clan",
-	"references":[ "GUID:832620040c033e744b5d645b98e8cda9", "GUID:5bb0561ab59f4090b284fb2dc8ab2482", "GUID:3bf7de22d034a6e44a3c4c8f1c7a329e", "GUID:488fbb5f4bad8a94daedd0c8d1239e93" ]
+    "name": "LSCore.Firebase.Clan",
+    "rootNamespace": "",
+    "references": [
+        "GUID:832620040c033e744b5d645b98e8cda9",
+        "GUID:5bb0561ab59f4090b284fb2dc8ab2482",
+        "GUID:3bf7de22d034a6e44a3c4c8f1c7a329e",
+        "GUID:488fbb5f4bad8a94daedd0c8d1239e93"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "DISABLE"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
