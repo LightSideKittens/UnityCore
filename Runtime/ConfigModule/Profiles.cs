@@ -18,10 +18,8 @@ using UnityEngine;
 
 namespace LSCore.ConfigModule
 {
+    [Serializable]
     public class Profiles 
-#if UNITY_EDITOR
-        : OdinEditorWindow
-#endif
     {
         [Serializable]
         private class Data
@@ -78,40 +76,19 @@ namespace LSCore.ConfigModule
             public void Delete()
             {
                 File.Delete(path);
-                Instance.data.Remove(this);
+                instance.data.Remove(this);
             }
         }
         
-        [TableList(HideToolbar = true, IsReadOnly = true)]
-        [SerializeField] private List<Data> data = new();
+        [Title("Profiles")]
+        [SerializeField] 
+        [TableList(HideToolbar = true, IsReadOnly = true, AlwaysExpanded = true)]
+        private List<Data> data = new();
         
         private static string FileName => $"profile_{DateTime.Now.Ticks}";
         private static string ProfilesPath => $"{Application.persistentDataPath}/Profiles";
         
-        
-#if !UNITY_EDITOR
-        private static Profiles instance = new Profiles();
-
         public Profiles()
-        {
-            Init();
-        }
-#endif
-
-        
-        private static Profiles Instance
-        {
-            get
-            {
-#if UNITY_EDITOR
-                return GetWindow<Profiles>();
-#else
-                return instance;
-#endif
-            }
-        }
-
-        private void Init()
         {
             data.Clear();
             Directory.CreateDirectory(ProfilesPath);
@@ -121,15 +98,31 @@ namespace LSCore.ConfigModule
                 Add(file);
             }
         }
+
+        private static readonly Profiles instance = new();
         
 #if UNITY_EDITOR
-        [MenuItem(LSPaths.Windows.Profiles)]
-        private static void OpenWindow()
+        private static PropertyTree tree = PropertyTree.Create(instance);
+        
+        private static void OnGui(string s)
         {
-            Instance.Show();
+            tree.BeginDraw(false);
+            tree.Draw(false);
+            tree.EndDraw();
         }
+    
+        [SettingsProvider]
+        public static SettingsProvider CreateMyCustomSettingsProvider()
+        {
+            var provider = new SettingsProvider("Project/Light Side Core/Profiles", SettingsScope.Project)
+            {
+                label = "Profiles",
+                guiHandler = OnGui,
+                keywords = new HashSet<string>(new[] { "Profiles" })
+            };
 
-        protected override void Initialize() => Init();
+            return provider;
+        }
         
         [Button(30, Icon = SdfIconType.XCircleFill)]
         private void DeleteCurrent()
@@ -145,7 +138,7 @@ namespace LSCore.ConfigModule
         private void Savee() => Internal_Save();
 #endif
 
-        public static string Save() => Instance.Internal_Save();
+        public static string Save() => instance.Internal_Save();
         
         private void Add(string filePath)
         {

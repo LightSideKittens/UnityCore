@@ -17,11 +17,13 @@ using Debug = UnityEngine.Debug;
 
 namespace LSCore.Editor.BackupSystem
 {
-    public class Backupper : OdinEditorWindow, IHasCustomMenu
+    [Serializable]
+    public class Backuper
     {
         private const string DateTimeSeparator = "_@#$";
         private const int TimeThreshold = 1;
-        private static Backupper instance;
+        private static Backuper instance = new();
+        private static PropertyTree tree = PropertyTree.Create(instance);
         private static int editCount;
         private static TimeSpan delay;
         private static bool canSave;
@@ -92,12 +94,26 @@ namespace LSCore.Editor.BackupSystem
             }
         }
         
-        
-        [MenuItem(LSPaths.Windows.Backuper)]
-        private static void OpenWindow()
+        private static void OnGui(string s)
         {
-            GetWindow<Backupper>().Show();
+            tree.BeginDraw(false);
+            tree.Draw(false);
+            tree.EndDraw();
         }
+    
+        [SettingsProvider]
+        public static SettingsProvider CreateMyCustomSettingsProvider()
+        {
+            var provider = new SettingsProvider("Project/Light Side Core/Backuper", SettingsScope.Project)
+            {
+                label = "Backuper",
+                guiHandler = OnGui,
+                keywords = new HashSet<string>(new[] { "Backuper" })
+            };
+
+            return provider;
+        }
+        
 
         [Button]
         private void OpenBackupFolder()

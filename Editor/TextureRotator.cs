@@ -23,8 +23,9 @@ public static class TextureRotator
         RotateTexture(3);
     }
 
-    [MenuItem(Section + "/Rotate Texture Left", true)]
-    [MenuItem(Section + "/Rotate Texture Right", true)]
+    [MenuItem(Section + "/Rotate Left", true)]
+    [MenuItem(Section + "/Rotate Right", true)]
+    [MenuItem(Section + "/Rotate 180", true)]
     private static bool ValidateRotateTexture(MenuCommand command)
     {
         return Selection.activeObject is Texture2D;
