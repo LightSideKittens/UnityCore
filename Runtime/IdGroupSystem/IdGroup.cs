@@ -39,6 +39,7 @@ namespace LSCore
         {
             EditorApplication.update += Init;
             World.Created += OnWorldCreated;
+            World.Destroyed += OnWorldCreated;
         }
 
         private static void OnWorldCreated()
