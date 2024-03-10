@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -9,11 +10,15 @@ using LSCore.ConfigModule;
 using Newtonsoft.Json;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.Serialization;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
+using static System.IO.Path;
 using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
 
 namespace LSCore.Editor.BackupSystem
 {
@@ -28,21 +33,28 @@ namespace LSCore.Editor.BackupSystem
         private static TimeSpan delay;
         private static bool canSave;
         private static CancellationTokenSource source = new();
-        private static HashSet<string> setToRemove = new();
 
 
         [Serializable]
-        private struct Data
+        private class Data
         {
-            [DisplayAsString] [TableColumnWidth(100)] public string name;
-            [DisplayAsString] [TableColumnWidth(100, false)] public string dateTime;
-            [DisplayAsString] [TableColumnWidth(300)] public string assetPath;
-            private string Source => $"{BackupPath}/{name}{DateTimeSeparator}{realDateTime}";
-            [HideInInspector] public string realDateTime;
+            [DisplayAsString] [TableColumnWidth(10)] public string name;
+            [DisplayAsString] [TableColumnWidth(10)] public string dateTime;
+            [DisplayAsString] [TableColumnWidth(100)] public string assetPath;
+            [NonSerialized] public string backupPath;
+            
+            private string Source => $"{backupPath}";
             public string FullAssetPath => $"{Application.dataPath}/{assetPath}";
             
-            [Button]
-            [TableColumnWidth(50, false)]
+            [Button(25, Icon = SdfIconType.Eye)]
+            [TableColumnWidth(80, false)]
+            public void Show()
+            {
+                Process.Start(GetDirectoryName(Source));
+            }
+            
+            [Button(25, Icon = SdfIconType.CheckSquareFill)]
+            [TableColumnWidth(80, false)]
             public void Apply()
             {
                 var source = Source;
@@ -58,10 +70,14 @@ namespace LSCore.Editor.BackupSystem
                 
                 AssetDatabase.Refresh();
             }
-
+            
+            [Button(25, Icon = SdfIconType.XCircleFill)]
+            [TableColumnWidth(30, false)]
             public void Delete()
             {
                 File.Delete(Source);
+                instance.backups.Remove(this);
+                instance.backupsSet.Remove(this);
             }
         }
 
@@ -86,7 +102,7 @@ namespace LSCore.Editor.BackupSystem
         {
             Undo.willFlushUndoRecord += OnEdit;
             Undo.undoRedoEvent += OnEdit;
-            delay = TimeSpan.FromMinutes(Linker.Config.saveInterval);
+            delay = TimeSpan.FromMinutes(BackuperSettings.Instance.saveInterval);
             CheckForCanSave();
             if (!Directory.Exists(BackupPath))
             {
@@ -108,99 +124,88 @@ namespace LSCore.Editor.BackupSystem
             {
                 label = "Backuper",
                 guiHandler = OnGui,
-                keywords = new HashSet<string>(new[] { "Backuper" })
+                keywords = new HashSet<string>(new[] { "Backuper" }),
+                activateHandler = Init
             };
 
             return provider;
         }
         
 
-        [Button]
+        [PropertySpace(20)]
+        [Button("Open Backups Location", 30, Icon = SdfIconType.FolderFill)]
         private void OpenBackupFolder()
         {
             Process.Start(BackupPath);
         }
         
-        public void AddItemsToMenu(GenericMenu menu)
+        private static void Init(string s, VisualElement v)
         {
-            menu.AddItem(new GUIContent("Clear"), false, () =>
-            {
-                foreach (var data in backups)
-                {
-                    data.Delete();
-                }
-                
-                backups.Clear();
-            });
+            instance.Init();
         }
         
-
-        [OnInspectorInit]
         private void Init()
         {
-            instance = this;
+            if (BackuperSettings.Instance.maxBackupsCount > 0)
+            {
+                maxBackupsCount = BackuperSettings.Instance.maxBackupsCount;
+            }
+
+            if (BackuperSettings.Instance.saveInterval > 0)
+            {
+                saveInterval = BackuperSettings.Instance.saveInterval;
+            }
+            
             backups.Clear();
             backupsSet.Clear();
-            var allFiles = new DirectoryInfo(BackupPath).GetFiles();
+            var allFiles = new DirectoryInfo(BackupPath).GetFiles("*", SearchOption.AllDirectories);
             var sortedFiles = allFiles.OrderBy(f => f.LastWriteTime).Select(x => x.FullName);
-            
-            setToRemove.UnionWith(Linker.PathByName.Keys);
             
             foreach (var backupPath in sortedFiles)
             {
                 TryAdd(backupPath);
             }
-            
-            foreach (var toRemove in setToRemove)
-            {
-                Linker.PathByName.Remove(toRemove);
-            }
-
-            Save();
-            setToRemove.Clear();
         }
 
+        
         private void OnSaveIntervalChanged()
         {
             source.Cancel();
             source = new CancellationTokenSource();
             delay = TimeSpan.FromMinutes(saveInterval);
             CheckForCanSave();
-            Linker.Config.saveInterval = saveInterval;
-            Save();
+            BackuperSettings.Instance.saveInterval = saveInterval;
         }
 
         private void OnMaxBackupsCountChanged()
         {
-            Linker.Config.maxBackupsCount = maxBackupsCount;
-            Save();
+            BackuperSettings.Instance.maxBackupsCount = maxBackupsCount;
         }
 
         private void TryAdd(string backupPath)
         {
-            var fileName = Path.GetFileName(backupPath);
+            var fileName = GetFileName(backupPath);
             var split = fileName.Split(DateTimeSeparator);
+
+            var name = split[0];
+            var ticks = long.Parse(GetFileNameWithoutExtension(split[1]));
+            var format = CultureInfo.CurrentCulture.DateTimeFormat;
+            var dateTime = new DateTime(ticks).ToString($"{format.ShortDatePattern} {format.ShortTimePattern}");
             
-            if (Linker.PathByName.TryGetValue(fileName, out var assetPath))
+            var assetPath = $"{GetDirectoryName(backupPath)}/{name}{GetExtension(backupPath)}"[(BackupPath.Length + 1)..];
+            
+            var data = new Data{ name = name, dateTime = dateTime, assetPath = assetPath, backupPath = backupPath};
+
+            if (backupsSet.Add(data))
             {
-                var date = Path.GetFileNameWithoutExtension(split[1]).Split('-');
-                
-                var data = new Data{ name = split[0], dateTime = $"{date[0]}/{date[1]} {date[2]}:{date[3]}", realDateTime = split[1], assetPath = assetPath.Split("Assets/")[1] };
-                setToRemove.Remove(fileName);
+                backups.Insert(0, data);
+            }
 
-                if (backupsSet.Add(data))
-                {
-                    backups.Insert(0, data);
-                }
-
-                if (backupsSet.Count > maxBackupsCount)
-                {
-                    var index = backups.Count - 1;
-                    data = backups[index];
-                    backupsSet.Remove(data);
-                    backups.RemoveAt(index);
-                    data.Delete();
-                }
+            if (backupsSet.Count > maxBackupsCount)
+            {
+                var index = backups.Count - 1;
+                data = backups[index];
+                data.Delete();
             }
         }
 
@@ -238,21 +243,25 @@ namespace LSCore.Editor.BackupSystem
         private static void TrySaveCurrentScene()
         {
             var scene = SceneManager.GetActiveScene();
-            var fileName = $"{scene.name}{DateKey}.unity";
-            Debug.Log($"Saving {fileName}");
-            var backupPath = $"{BackupPath}/{fileName}";
-
+            var fileName = GetFileNameWithoutExtension(scene.path);
+            var fileExt = GetExtension(scene.path);
+            var relativeFolderPath = GetDirectoryName(scene.path)[7..];
+            var filePath = $"{relativeFolderPath}/{fileName}{DateKey}{fileExt}";
+            Debug.Log($"Saving {filePath}");
+            var backupPath = $"{BackupPath}/{filePath}";
+            
+            Directory.CreateDirectory($"{BackupPath}/{relativeFolderPath}");
+            
             if (EditorSceneManager.SaveScene(scene, backupPath, true))
             {
-                Linker.PathByName[fileName] = scene.path.AssetsPathToFull();
-                Save();
+                //Linker.PathByName[fileName] = scene.path.AssetsPathToFull();
                 instance?.TryAdd(backupPath);
                 File.Delete($"{backupPath}.meta");
             }
         }
 
         private static string BackupPath => $"{Application.persistentDataPath}/Backups";
-        private static string DateKey => $"{DateTimeSeparator}{DateTime.Now:MM-dd-hh-mm}";
+        private static string DateKey => $"{DateTimeSeparator}{DateTime.Now.Ticks}";
         
         private static bool TrySaveCurrentPrefab()
         {
@@ -271,31 +280,12 @@ namespace LSCore.Editor.BackupSystem
 
                 File.Copy(prefabAssetPath, backupPath, true);
                 AssetDatabase.DeleteAsset($"Assets/{fileName}");
-                Linker.PathByName[fileName] = prefabStage.assetPath.AssetsPathToFull();
-                Save();
+                //Linker.PathByName[fileName] = prefabStage.assetPath.AssetsPathToFull();
                 instance?.TryAdd(backupPath);
                 return true;
             }
 
             return false;
         }
-
-        private static void Save()
-        {
-            ConfigUtils.Save<Linker>();
-        }
-        
-        private class Linker : BaseDebugData<Linker>
-        {
-#if UNITY_EDITOR
-            protected override bool LogEnabled => false;
-#endif
-            
-            [JsonProperty] private readonly Dictionary<string, string> pathByName = new ();
-            public int maxBackupsCount = 5;
-            public int saveInterval = 1;
-            public static Dictionary<string, string> PathByName => Config.pathByName;
-        }
     }
 }
-
