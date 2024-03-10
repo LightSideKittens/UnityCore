@@ -104,6 +104,9 @@ namespace LSCore.ConfigModule
 #if UNITY_EDITOR
         private static PropertyTree tree = PropertyTree.Create(instance);
         
+        static Profiles() => AssemblyReloadEvents.beforeAssemblyReload += OnBeforeRecompile;
+        private static void OnBeforeRecompile() => tree.Dispose();
+
         private static void OnGui(string s)
         {
             tree.BeginDraw(false);

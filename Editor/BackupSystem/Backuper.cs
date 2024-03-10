@@ -31,7 +31,6 @@ namespace LSCore.Editor.BackupSystem
         private static bool canSave;
         private static CancellationTokenSource source = new();
 
-
         [Serializable]
         private class Data
         {
@@ -127,7 +126,9 @@ namespace LSCore.Editor.BackupSystem
 
             return provider;
         }
-        
+
+        static Backuper() => AssemblyReloadEvents.beforeAssemblyReload += OnBeforeRecompile;
+        private static void OnBeforeRecompile() => tree.Dispose();
 
         [PropertySpace(20)]
         [Button("Open Backups Location", 30, Icon = SdfIconType.FolderFill)]
