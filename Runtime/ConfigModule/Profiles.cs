@@ -47,7 +47,7 @@ namespace LSCore.ConfigModule
             [TableColumnWidth(100, false)]
             public void Apply()
             {
-                var destinationDirectory = $"{BaseConfig.DataPath}/{FolderNames.Configs}/{FolderNames.SaveData}";
+                var destinationDirectory = $"{BaseConfig.ConfigsPath}/{FolderNames.DynamicData}";
                 Directory.Delete(destinationDirectory, true);
                 Directory.CreateDirectory(destinationDirectory);
                 using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
@@ -114,7 +114,7 @@ namespace LSCore.ConfigModule
         [SettingsProvider]
         public static SettingsProvider CreateMyCustomSettingsProvider()
         {
-            var provider = new SettingsProvider("Project/Light Side Core/Profiles", SettingsScope.Project)
+            var provider = new SettingsProvider("Preferences/Light Side Core/Profiles", SettingsScope.User)
             {
                 label = "Profiles",
                 guiHandler = OnGui,
@@ -127,7 +127,7 @@ namespace LSCore.ConfigModule
         [Button(30, Icon = SdfIconType.XCircleFill)]
         private void DeleteCurrent()
         {
-            var path = Path.Combine("Assets", FolderNames.Configs, FolderNames.SaveData);
+            var path = Path.Combine("Assets", FolderNames.Configs, FolderNames.DynamicData);
             var directories = Directory.GetDirectories(path);
             var files = Directory.GetFiles(path);
             AssetDatabase.DeleteAssets(directories.Concat(files).ToArray(), new List<string>());
@@ -147,7 +147,7 @@ namespace LSCore.ConfigModule
 
         private string Internal_Save()
         {
-            var directoryPath = Path.Combine("Assets", FolderNames.Configs, FolderNames.SaveData);
+            var directoryPath = Path.Combine("Assets", FolderNames.Configs, FolderNames.DynamicData);
             var outputDirectory = ProfilesPath;
             var tarGzFileName = $"{outputDirectory}/{FileName}.tar.gz";
             Directory.CreateDirectory(outputDirectory);

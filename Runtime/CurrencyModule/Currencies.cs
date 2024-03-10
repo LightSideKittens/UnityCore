@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace LSCore
 {
-    internal class Currencies : BaseConfig<Currencies>
+    internal class Currencies : BaseSingleConfig<Currencies>
     {
         [JsonProperty] private Dictionary<string, int> currencies = new();
         internal static readonly Dictionary<string, Action<int>> onChangedActions = new();

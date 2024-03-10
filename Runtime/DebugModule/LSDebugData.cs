@@ -15,7 +15,6 @@ namespace LSCore
     public partial class LSDebugData : BaseDebugData<LSDebugData>, ILSDebugData
     {
         public static ILSDebugData Data => Config;
-        protected override string FileName => nameof(LSDebugData);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Init()

@@ -6,14 +6,20 @@ namespace LSCore.ConfigModule
     public static class ConfigUtils
     {
         [Conditional("UNITY_EDITOR")]
-        public static void Save<T>() where T : BaseConfig<T>, new()
+        public static void Save<T>() where T : BaseSingleConfig<T>, new()
         {
-            BaseConfig<T>.Config.Save();
+            BaseSingleConfig<T>.Config.Save();
         }
         
-        public static JToken GetJToken<T>() where T : BaseConfig<T>, new()
+        [Conditional("UNITY_EDITOR")]
+        public static void Save(BaseConfig config)
         {
-            return BaseConfig<T>.Config.GetJToken();
+            config.Save();
+        }
+        
+        public static JToken GetJToken<T>() where T : BaseSingleConfig<T>, new()
+        {
+            return BaseSingleConfig<T>.Config.GetJToken();
         }
     }
 }

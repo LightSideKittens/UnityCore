@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using LSCore.ConfigModule;
 using Newtonsoft.Json;
 using static SoundventTypes;
@@ -7,10 +8,10 @@ using static SoundventTypes;
 namespace MusicEventSystem.Configs
 {
     //TODO: Refactor for new Config logic
-    public partial class MusicData : BaseResourcesConfig<MusicData>
+    public partial class MusicData : BaseStaticConfig<MusicData>
     {
-        protected override string FileName => configName;
-        protected override string FolderName => "MusicData";
+        //protected override string FileName => configName;
+        protected override string RelativeFolderPath => "MusicData";
         protected override JsonSerializerSettings Settings { get; } = new() {ContractResolver = new MusicDataContractResolver()};
         
         public const float DefaultEndTime = 600;

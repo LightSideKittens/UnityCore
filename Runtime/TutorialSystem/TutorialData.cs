@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using LSCore.ConfigModule;
 using Newtonsoft.Json;
 
-public class TutorialData : BaseConfig<TutorialData>
+public class TutorialData : BaseSingleConfig<TutorialData>
 {
-    protected override string FileName => "tutorialData";
-    [JsonProperty] private readonly HashSet<Type> completedSteps = new HashSet<Type>();
-
+    [JsonProperty] private readonly HashSet<Type> completedSteps = new();
+    
     public static void OnStepComplete(Type stepType)
     {
         Config.completedSteps.Add(stepType);

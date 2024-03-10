@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace LSCore.ConfigModule
 {
-    public class FirstTime : BaseConfig<FirstTime>
+    public class FirstTime : BaseSingleConfig<FirstTime>
     {
         [JsonProperty] private HashSet<string> states = new();
 

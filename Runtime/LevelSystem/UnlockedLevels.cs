@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace LSCore.LevelSystem
 {
-    public class UnlockedLevels : BaseConfig<UnlockedLevels>
+    public class UnlockedLevels : BaseSingleConfig<UnlockedLevels>
     {
         [JsonProperty("entitiesLevel")] private Dictionary<string, int> levelById = new();
         
