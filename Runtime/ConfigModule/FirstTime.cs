@@ -10,8 +10,14 @@ namespace LSCore.ConfigModule
 
         public static bool IsNot(string name, out Action pass)
         {
+            if (Config.states.Contains(name))
+            {
+                pass = null;
+                return false;
+            }
+
             pass = () => Config.states.Add(name);
-            return !Config.states.Contains(name);
+            return true;
         }
     }
 }

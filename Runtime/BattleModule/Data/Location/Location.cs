@@ -8,24 +8,30 @@ namespace Battle.Data
     {
         [SerializeField] private GameObject prefab;
         [SerializeField] private GameObject[] chunks;
-
+        [SerializeField] private float chunkSideSize = 20;
+        [SerializeField] private int xChunkCount = 10;
+        [SerializeField] private int yChunkCount = 10;
+        
         [Button]
         public void Generate()
         {
             var ground = Instantiate(prefab);
-            const float step = 20f;
-            var position = new Vector2(-100, 100);
+            if(chunks.Length == 0) return;
+
+            var defaultX = -(chunkSideSize * xChunkCount / 2);
+            var defaultY = chunkSideSize * yChunkCount / 2;
+            var position = new Vector2(defaultX, defaultY);
             
-            for (int x = 0; x < 10; x++)
+            for (int x = 0; x < xChunkCount; x++)
             {
-                position.y = 100;
-                for (int y = 0; y < 10; y++)
+                position.y = defaultY;
+                for (int y = 0; y < yChunkCount; y++)
                 {
                     Instantiate(chunks.Random(), position, Quaternion.identity, ground.transform);
-                    position.y -= step;
+                    position.y -= chunkSideSize;
                 }
 
-                position.x += step;
+                position.x += chunkSideSize;
             }
         }
     }

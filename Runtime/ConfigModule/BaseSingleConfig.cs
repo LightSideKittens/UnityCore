@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using static LSCore.ConfigModule.FolderNames;
+using Debug = UnityEngine.Debug;
+
 [assembly: InternalsVisibleTo("LSCore.DebugModule")]
 
 namespace LSCore.ConfigModule
@@ -178,6 +180,7 @@ namespace LSCore.ConfigModule
         private void Deserialize(string json)
         {
             Log($"[{fileName}] Loaded (Deserialized)");
+
             JsonConvert.PopulateObject(json, this, Settings);
         }
 

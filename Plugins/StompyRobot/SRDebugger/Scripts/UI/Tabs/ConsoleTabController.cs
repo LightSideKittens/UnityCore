@@ -87,7 +87,7 @@ namespace SRDebugger.UI.Tabs
 
         private void CopyStackTrace()
         {
-            Clipboard.Copy(StackTraceText.text);
+            Clipboard.Value = StackTraceText.text;
         }
 
 
