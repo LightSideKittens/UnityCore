@@ -11,7 +11,7 @@ using UnityEngine;
 namespace LSCore
 {
 #if UNITY_EDITOR
-    [InitializeOnLoad]
+    //[InitializeOnLoad]
 #endif
     public class IdGroup : SerializedScriptableObject, IEnumerable<Id>
     {

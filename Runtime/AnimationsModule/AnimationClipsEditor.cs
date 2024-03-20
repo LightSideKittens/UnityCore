@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DG.DemiEditor;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
@@ -6,18 +7,49 @@ using UnityEngine;
 
 public class AnimationClipsEditor : OdinEditorWindow
 {
-    [SerializeField] private string propertyName;
     [SerializeField] private AnimationClip[] clips;
+    
+    [Button(ButtonSizes.Large)]
+    private void Apply()
+    {
+        foreach (var clip in clips)
+        {
+            bool wasChanged = false;
+            foreach (var binding in AnimationUtility.GetCurveBindings(clip))
+            {
+                if (binding.propertyName.StartsWith("m_LocalPosition."))
+                {
+                    AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
+                    var keys = curve.keys;
+                    for (int i = 0; i < curve.keys.Length; i++)
+                    {
+                        ref Keyframe key = ref keys[i];
+                        key.value /= 32f;
+                    }
+
+                    curve.keys = keys;
+                    AnimationUtility.SetEditorCurve(clip, binding, curve);
+                    wasChanged = true;
+                }
+            }
+
+            if (wasChanged)
+            {
+                clip.ForceSave();
+            }
+        }
+    }
+    
     [SerializeField] [Range(0, 1)] private float time = 0.5f;
-    [SerializeField] private Vector2 scale = new Vector2();
-    [SerializeField] private float gridSize = 10.0f;
+    [SerializeField] private Vector2 scale;
     [SerializeField] private float gridOpacity = 0.2f;
     private Vector2 scrollPosition;
-    [SerializeField] private Rect gridArea = new Rect(0, 0, 600, 400);
-    private Vector2 anchorPoint = new Vector2();
-    private Color gridColor = Color.gray;
+    private Vector2 anchorPoint;
     private Rect bounds;
-
+    private int draggingPointIndex = -1;
+    private List<int> pointIndexes = new();
+    private List<List<int>> interdependentIndexes = new();
+    
     [MenuItem(LSPaths.Windows.AnimationClipsEditor)]
     private static void OpenWindow()
     {
@@ -64,6 +96,7 @@ public class AnimationClipsEditor : OdinEditorWindow
 
             DrawKey(points[^1] * scale + anchorPoint);
             ProcessEvents(Event.current);
+            ProcessEventsScale(Event.current);
 
             // Обновление окна
             if (GUI.changed)
@@ -76,6 +109,7 @@ public class AnimationClipsEditor : OdinEditorWindow
         Handles.EndGUI();
         bounds.min = min;
         bounds.max = max;
+        bounds = bounds.Expand(20);
 
         GUILayout.Box("", GUILayout.Width(bounds.width), GUILayout.Height(bounds.height));
         
@@ -102,7 +136,8 @@ public class AnimationClipsEditor : OdinEditorWindow
 
         for (int i = 0; i < widthDivs; i++)
         {
-            Handles.DrawLine(new Vector3(scale.x * i, 0, 0), new Vector3(scale.x * i, rect.height, 0));
+            var x = scale.x * i;
+            Handles.DrawLine(new Vector3(x, 0, 0), new Vector3(x, rect.height, 0));
         }
 
         for (int j = 0; j < heightDivs; j++)
@@ -126,9 +161,7 @@ public class AnimationClipsEditor : OdinEditorWindow
         Handles.color = Color.white;
     }
     
-    private int draggingPointIndex = -1;
-    private List<int> pointIndexes = new();
-    private List<List<int>> interdependentIndexes = new();
+
     
     private void ProcessEvents(Event e)
     {
@@ -192,12 +225,51 @@ public class AnimationClipsEditor : OdinEditorWindow
                     points[draggingPointIndex] += dt; // Перемещаем выбранную точку
                     for (int i = 0; i < pointIndexes.Count; i++)
                     {
-                        points[pointIndexes[i]] += dt;
+                        var ti = pointIndexes[i];
+                        points[ti] += dt;
+                        var y = points[ti].y;
+                        if (y < 0)
+                        {
+                            for (int j = 0; j < points.Count; j++)
+                            {
+                                var p = points[j];
+                                p.y -= y;
+                                points[j] = p;
+                            }
+                        }
                     }
         
                     GUI.changed = true;
                 }
                 break;
+        }
+    }
+    private void ProcessEventsScale(Event e)
+    {
+        if (bounds.Contains(e.mousePosition))
+        {
+            switch (e.type)
+            {
+                case EventType.ScrollWheel:
+                    var wdt = e.delta * -0.3f;
+                    if (e.control)
+                    {
+                        scale.x += wdt.y; 
+                    }
+                    else if(e.alt)
+                    {
+                        scale.y += wdt.y;
+                    }
+                    else
+                    {
+                        scale.x += wdt.y; 
+                        scale.y += wdt.y;
+                    }
+                   
+                    break;
+            }
+
+            GUI.changed = true;
         }
     }
 
@@ -365,33 +437,5 @@ public class AnimationClipsEditor : OdinEditorWindow
         }
 
         return (t0 + t1) / 2;
-    }
-    
-    
-    
-    
-    
-    [Button]
-    private void Apply()
-    {
-        foreach (var clip in clips)
-        {
-            foreach (var binding in AnimationUtility.GetCurveBindings(clip))
-            {
-                Debug.Log(binding.path);
-                Debug.Log(binding.propertyName);
-                /*if (binding.propertyName.StartsWith("m_LocalPosition."))
-                {
-                    AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
-                    for (int i = 0; i < curve.keys.Length; i++)
-                    {
-                        Keyframe key = curve.keys[i];
-                        key.value /= 32f;
-                        curve.keys[i] = key;
-                    }
-                    AnimationUtility.SetEditorCurve(clip, binding, curve);
-                }*/
-            }
-        }
     }
 }

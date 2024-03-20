@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityToolbarExtender;
 using Debug = UnityEngine.Debug;
 
-[InitializeOnLoad]
+//[InitializeOnLoad]
 public static class CustomBuilder
 {
     public static event Action<BuildMode> Building;

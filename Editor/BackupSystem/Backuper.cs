@@ -93,7 +93,7 @@ namespace LSCore.Editor.BackupSystem
 
         private HashSet<Data> backupsSet = new();
 
-        [InitializeOnLoadMethod]
+        /*[InitializeOnLoadMethod]
         private static void InitializeOnLoadMethod()
         {
             Undo.willFlushUndoRecord += OnEdit;
@@ -104,7 +104,7 @@ namespace LSCore.Editor.BackupSystem
             {
                 Directory.CreateDirectory(BackupPath);
             }
-        }
+        }*/
         
         private static void OnGui(string s)
         {

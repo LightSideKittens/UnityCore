@@ -7,7 +7,7 @@ using UnityEngine;
 namespace LSCore
 {
     [ScriptedImporter(2, "id")]
-    [InitializeOnLoad]
+    //[InitializeOnLoad]
     public class IdImporter : ScriptedImporter
     {
         private static HashSet<string> allIdNames = new();

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace UnityToolbarExtender
 {
-	[InitializeOnLoad]
+	//[InitializeOnLoad]
 	public static class ToolbarExtender
 	{
 		public static event Action GuiCalled;
