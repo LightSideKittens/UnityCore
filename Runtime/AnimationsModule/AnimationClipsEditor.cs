@@ -9,30 +9,37 @@ public class AnimationClipsEditor : OdinEditorWindow
     [SerializeField] private string propertyName;
     [SerializeField] private AnimationClip[] clips;
     [SerializeField] [Range(0, 1)] private float time = 0.5f;
-    [SerializeField] private Vector2 anchorPoint;
     [SerializeField] private Vector2 scale = new Vector2();
-
-    private AnimationCurve curve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(1, 1));
+    [SerializeField] private float gridSize = 10.0f;
+    [SerializeField] private float gridOpacity = 0.2f;
+    private Vector2 scrollPosition;
+    [SerializeField] private Rect gridArea = new Rect(0, 0, 600, 400);
+    private Vector2 anchorPoint = new Vector2();
+    private Color gridColor = Color.gray;
+    private Rect bounds;
 
     [MenuItem(LSPaths.Windows.AnimationClipsEditor)]
     private static void OpenWindow()
     {
         GetWindow<AnimationClipsEditor>().Show();
     }
-
-    protected override void OnGUI()
+    
+    protected override void DrawEditor(int index)
     {
-        base.OnGUI();
+        base.DrawEditor(index);
+        showFoldout = EditorGUILayout.Foldout(showFoldout, "Foldout Title", true);
+        if(!showFoldout) return;
+        
+        scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+        
         Handles.BeginGUI();
         Color curveColor = Color.red;
         Handles.color = Color.white;
+        var min = points[0];
+        var max = points[0];
         
         if (points.Count >= 4)
         {
-            var diff = Vector2.zero - points[0];
-            points[0] = Vector2.zero;
-            points[1] += diff;
-            
             for (int i = 0; i < points.Count - 1; i += 3)
             {
                 var startPosition = points[i] * scale + anchorPoint;
@@ -48,6 +55,11 @@ public class AnimationClipsEditor : OdinEditorWindow
                 DrawKey(startPosition);
                 DrawTangent(startTangent);
                 DrawTangent(endTangent);
+
+                UpdateMinMax(startPosition);
+                UpdateMinMax(startTangent);
+                UpdateMinMax(endTangent);
+                UpdateMinMax(endPosition);
             }
 
             DrawKey(points[^1] * scale + anchorPoint);
@@ -62,6 +74,42 @@ public class AnimationClipsEditor : OdinEditorWindow
         
         Handles.DrawSolidDisc(Evaluate1(time) * scale + anchorPoint, Vector3.forward, 6);
         Handles.EndGUI();
+        bounds.min = min;
+        bounds.max = max;
+
+        GUILayout.Box("", GUILayout.Width(bounds.width), GUILayout.Height(bounds.height));
+        
+        anchorPoint = GUILayoutUtility.GetLastRect().position;
+        DrawGrid(bounds);
+        
+        EditorGUILayout.EndScrollView();
+
+        void UpdateMinMax(in Vector2 vector)
+        {
+            if (vector.x < min.x) min.x = vector.x;
+            if (vector.y < min.y) min.y = vector.y;
+            if (vector.x > max.x) max.x = vector.x;
+            if (vector.y > max.y) max.y = vector.y;
+        }
+    }
+    
+    private void DrawGrid(Rect rect)
+    {
+        int widthDivs = Mathf.CeilToInt(rect.width / scale.x);
+        int heightDivs = Mathf.CeilToInt(rect.height / scale.y);
+        
+        Handles.color = new Color(0.5f, 0.5f, 0.5f, gridOpacity);
+
+        for (int i = 0; i < widthDivs; i++)
+        {
+            Handles.DrawLine(new Vector3(scale.x * i, 0, 0), new Vector3(scale.x * i, rect.height, 0));
+        }
+
+        for (int j = 0; j < heightDivs; j++)
+        {
+            var y = scale.y * j;
+            Handles.DrawLine(new Vector3(0, y, 0), new Vector3(rect.width, y, 0));
+        }
     }
 
     private void DrawKey(Vector2 pos)
@@ -160,6 +208,7 @@ public class AnimationClipsEditor : OdinEditorWindow
     }
     
     public List<Vector2> points;
+    private bool showFoldout;
 
     [Button]
     public void AddKey()
