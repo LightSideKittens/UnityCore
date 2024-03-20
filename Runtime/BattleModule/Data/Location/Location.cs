@@ -7,16 +7,18 @@ namespace Battle.Data
     public class Location : ScriptableObject
     {
         [SerializeField] private GameObject prefab;
-        [SerializeField] private GameObject[] chunks;
-        [SerializeField] private float chunkSideSize = 20;
-        [SerializeField] private int xChunkCount = 10;
-        [SerializeField] private int yChunkCount = 10;
+        [SerializeField] private bool useChunk;
+        
+        [HideIf("useChunk")] [SerializeField] private GameObject[] chunks;
+        [HideIf("useChunk")] [SerializeField] private float chunkSideSize = 20;
+        [HideIf("useChunk")] [SerializeField] private int xChunkCount = 10;
+        [HideIf("useChunk")] [SerializeField] private int yChunkCount = 10;
         
         [Button]
         public void Generate()
         {
             var ground = Instantiate(prefab);
-            if(chunks.Length == 0) return;
+            if(!useChunk) return;
 
             var defaultX = -(chunkSideSize * xChunkCount / 2);
             var defaultY = chunkSideSize * yChunkCount / 2;

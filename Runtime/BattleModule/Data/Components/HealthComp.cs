@@ -1,6 +1,7 @@
 ﻿using System;
 using Animatable;
 using DG.Tweening;
+using LSCore.Extensions;
 using UnityEngine;
 
 namespace LSCore.BattleModule
@@ -11,17 +12,17 @@ namespace LSCore.BattleModule
         [SerializeField] private Vector2 scale = new Vector2(1, 1);
         [SerializeField] private Vector2 offset;
         [SerializeField] private Transform visualRoot;
-        [SerializeField] private Renderer renderer;
-        private Material expose;
+        [SerializeField] private Renderer[] renderers;
+        private MaterialPropertyBlock block;
         private Animatable.HealthBar healthBar;
         private static readonly int exposure = Shader.PropertyToID("_Exposure");
 
         protected override void OnInit()
         {
             base.OnInit();
+            block = new();
             healthBar = Animatable.HealthBar.Create(health, transform, offset, scale, affiliation == AffiliationType.Enemy);
-            data.update += healthBar.Update;
-            expose = renderer.material;
+            data.update += healthBar.Update; 
         }
 
         protected override void Reset()
@@ -33,8 +34,15 @@ namespace LSCore.BattleModule
         protected override void OnDamageTaken(float damage)
         {
             visualRoot.DOShakePosition(0.15f, 0.2f, 25);
-            expose.SetFloat(exposure, 1.6f);
-            expose.DOFloat(1, exposure, 0.5f);
+            block.SetFloat(exposure, 1.6f);
+            block.DOFloat(1, exposure, 0.5f).OnUpdate(() =>
+            {
+                for (int i = 0; i < renderers.Length; i++)
+                {
+                    renderers[i].SetPropertyBlock(block);
+                }
+            });
+            
             healthBar.SetValue(health);
             AnimText.Create($"{(int)damage}", transform.position);
         }

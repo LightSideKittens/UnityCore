@@ -16,7 +16,9 @@ namespace LSCore.LevelSystem
         [TableList, OdinSerialize, ValueDropdown("AvailableContainer", IsUniqueList = true)]
         [HideReferenceObjectPicker]
         private HashSet<LevelsContainer> levelsContainers = new();
-        
+
+        public HashSet<Id> AddedIds { get; private set; }
+
         [IdGroup]
         [OdinSerialize]
         [HideReferenceObjectPicker]
@@ -28,10 +30,12 @@ namespace LSCore.LevelSystem
         {
             Burger.Log($"[{nameof(LevelsManager)}] Init");
             levelsById.Clear();
-
+            AddedIds = new();
+            
             foreach (var levelContainer in levelsContainers)
             {
                 var id = levelContainer.Id;
+                AddedIds.Add(id);
                 var levels = levelContainer.levels;
                 
                 levelsById.Add(id, levels);

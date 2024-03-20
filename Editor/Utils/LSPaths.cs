@@ -27,11 +27,10 @@ public static class LSPaths
     {
         public const string Root = MenuItem.Root + "/Windows";
         public const string ModulesManager = Root + "/Modules Manager";
+        public const string AnimationClipsEditor = Root + "/Animation Clips Editor";
         public const string YamlEditor = Root + "/Yaml Editor";
         public const string ThemeEditor = Root + "/Theme Editor";
         public const string AssetIconSetter = Root + "/Asset Icon Setter";
-        public const string Backuper = Root + "/Backuper";
-        public const string Profiles = Root + "/Profiles";
     }
     
         

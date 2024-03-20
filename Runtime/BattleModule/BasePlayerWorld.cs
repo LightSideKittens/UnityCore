@@ -21,6 +21,9 @@ namespace LSCore.BattleModule
 
         public static void Begin()
         {
+#if UNITY_EDITOR
+            if(!Instance.gameObject.activeSelf) return;
+#endif
             Instance.enabled = true;
             Instance.OnBegin();
         }
