@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using DG.DemiEditor;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
@@ -12,10 +14,10 @@ public class AnimationClipsEditor : OdinEditorWindow
     [SerializeField] private Vector2 scale = new Vector2();
     [SerializeField] private float gridSize = 10.0f;
     [SerializeField] private float gridOpacity = 0.2f;
+    [SerializeField] private Vector2 xRange = new Vector2(-1000, 1000);
+    [SerializeField] private Vector2 yRange = new Vector2(-1000, 1000);
     private Vector2 scrollPosition;
-    [SerializeField] private Rect gridArea = new Rect(0, 0, 600, 400);
-    private Vector2 anchorPoint = new Vector2();
-    private Color gridColor = Color.gray;
+    private Vector2 anchorPoint;
     private Rect bounds;
 
     [MenuItem(LSPaths.Windows.AnimationClipsEditor)]
@@ -29,87 +31,99 @@ public class AnimationClipsEditor : OdinEditorWindow
         base.DrawEditor(index);
         showFoldout = EditorGUILayout.Foldout(showFoldout, "Foldout Title", true);
         if(!showFoldout) return;
-        
+        TryInit();
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
         
         Handles.BeginGUI();
         Color curveColor = Color.red;
         Handles.color = Color.white;
-        var min = points[0];
-        var max = points[0];
         
         if (points.Count >= 4)
         {
+            var min = points[0];
+            var max = points[0];
+            
+            for (int i = 0; i < points.Count; i++)
+            {
+                UpdateMinMax(points[i]);
+            }
+
+            bounds.min = min * scale;
+            bounds.max = max * scale;
+            DrawGrid();
+            wh = bounds.height;
             for (int i = 0; i < points.Count - 1; i += 3)
             {
-                var startPosition = points[i] * scale + anchorPoint;
-                var startTangent = points[i + 1] * scale + anchorPoint;
-                var endTangent = points[i+2] * scale + anchorPoint;
-                var endPosition = points[i+3] * scale + anchorPoint;
+                var startPosition = GetPoint(i);
+                var startTangent = GetPoint(i+1);
+                var endTangent = GetPoint(i+2);
+                var endPosition = GetPoint(i+3);
                 
                 Handles.DrawBezier(startPosition, endPosition, startTangent, endTangent, curveColor, null, 4);
-                Handles.DrawLine(startTangent, startPosition);
-                Handles.DrawLine(endTangent, endPosition);
-
+                Handles.DrawAAPolyLine(2, startTangent, startPosition);
+                Handles.DrawAAPolyLine(2, endTangent, endPosition);
 
                 DrawKey(startPosition);
                 DrawTangent(startTangent);
                 DrawTangent(endTangent);
-
-                UpdateMinMax(startPosition);
-                UpdateMinMax(startTangent);
-                UpdateMinMax(endTangent);
-                UpdateMinMax(endPosition);
             }
+            
+            DrawKey(GetPoint(^1));
+            ProcessEvents(Event.current); 
+            ProcessEventsScale(Event.current);
 
-            DrawKey(points[^1] * scale + anchorPoint);
-            ProcessEvents(Event.current);
-
-            // Обновление окна
+            var dp = Evaluate1(time) * scale + anchorPoint;
+            dp.y = wh - dp.y;
+            Handles.DrawSolidDisc(dp, Vector3.forward, 6);
+            Handles.EndGUI();
+            
             if (GUI.changed)
             {
                 Repaint();
             }
+            
+            void UpdateMinMax(in Vector2 vector)
+            {
+                if (vector.x < min.x) min.x = vector.x;
+                if (vector.y < min.y) min.y = vector.y;
+                if (vector.x > max.x) max.x = vector.x;
+                if (vector.y > max.y) max.y = vector.y;
+            }
         }
         
-        Handles.DrawSolidDisc(Evaluate1(time) * scale + anchorPoint, Vector3.forward, 6);
-        Handles.EndGUI();
-        bounds.min = min;
-        bounds.max = max;
-
-        GUILayout.Box("", GUILayout.Width(bounds.width), GUILayout.Height(bounds.height));
-        
-        anchorPoint = GUILayoutUtility.GetLastRect().position;
-        DrawGrid(bounds);
         
         EditorGUILayout.EndScrollView();
-
-        void UpdateMinMax(in Vector2 vector)
-        {
-            if (vector.x < min.x) min.x = vector.x;
-            if (vector.y < min.y) min.y = vector.y;
-            if (vector.x > max.x) max.x = vector.x;
-            if (vector.y > max.y) max.y = vector.y;
-        }
     }
     
-    private void DrawGrid(Rect rect)
+    private void DrawGrid()
     {
-        int widthDivs = Mathf.CeilToInt(rect.width / scale.x);
-        int heightDivs = Mathf.CeilToInt(rect.height / scale.y);
+        var box = bounds;
+        var offset = scale / 2;
+        box.size += offset * 2;
+        GUILayout.Box("", GUILayout.Width(box.width), GUILayout.Height(box.height));
+        boxRect = GUILayoutUtility.GetLastRect();
+        anchorPoint = boxRect.position;
+        anchorPoint.y -= offset.y + 8;
+        anchorPoint.x += offset.x;
+        int widthDivs = Mathf.CeilToInt(boxRect.width / scale.x);
+        int heightDivs = Mathf.CeilToInt(boxRect.height / scale.y);
+        var startPoint = new Vector2(boxRect.xMin, boxRect.yMax) + offset;
         
         Handles.color = new Color(0.5f, 0.5f, 0.5f, gridOpacity);
 
         for (int i = 0; i < widthDivs; i++)
         {
-            Handles.DrawLine(new Vector3(scale.x * i, 0, 0), new Vector3(scale.x * i, rect.height, 0));
+            Handles.DrawLine(new Vector3(startPoint.x, boxRect.yMin, 0), new Vector3(startPoint.x, boxRect.yMax, 0));
+            startPoint.x += scale.x;
         }
 
         for (int j = 0; j < heightDivs; j++)
         {
-            var y = scale.y * j;
-            Handles.DrawLine(new Vector3(0, y, 0), new Vector3(rect.width, y, 0));
+            startPoint.y -= scale.y;
+            Handles.DrawLine(new Vector3(boxRect.xMin, startPoint.y, 0), new Vector3(boxRect.xMax, startPoint.y, 0));
         }
+        
+        Handles.color = Color.white;
     }
 
     private void DrawKey(Vector2 pos)
@@ -129,6 +143,20 @@ public class AnimationClipsEditor : OdinEditorWindow
     private int draggingPointIndex = -1;
     private List<int> pointIndexes = new();
     private List<List<int>> interdependentIndexes = new();
+
+    private Vector2 GetPoint(Index index)
+    {
+        var p = points[index] * scale + anchorPoint;
+        p.y = wh - p.y;
+        return p;
+    }
+    
+    private Vector2 GetPoint(int index)
+    {
+        var p = points[index] * scale + anchorPoint;
+        p.y = wh - p.y;
+        return p;
+    }
     
     private void ProcessEvents(Event e)
     {
@@ -140,7 +168,7 @@ public class AnimationClipsEditor : OdinEditorWindow
                     pointIndexes.Clear();
                     for (int i = 0; i < points.Count; i++)
                     {
-                        if (IsPointClicked(points[i] * scale + anchorPoint, e.mousePosition, 10f))
+                        if (IsPointClicked(GetPoint(i), e.mousePosition, 10f))
                         {
                             if ((e.modifiers & EventModifiers.Alt) != 0)
                             {
@@ -189,6 +217,7 @@ public class AnimationClipsEditor : OdinEditorWindow
                 if (draggingPointIndex != -1)
                 {
                     var dt = e.delta / scale;
+                    dt.y *= -1;
                     points[draggingPointIndex] += dt; // Перемещаем выбранную точку
                     for (int i = 0; i < pointIndexes.Count; i++)
                     {
@@ -200,6 +229,34 @@ public class AnimationClipsEditor : OdinEditorWindow
                 break;
         }
     }
+    private void ProcessEventsScale(Event e)
+    {
+        if (boxRect.Contains(e.mousePosition))
+        {
+            switch (e.type)
+            {
+                case EventType.ScrollWheel:
+                    var wdt = e.delta * -Mathf.InverseLerp(0, 100000, scale.sqrMagnitude) * 10;
+                    if (e.control)
+                    {
+                        scale.x += wdt.y; 
+                    }
+                    else if(e.alt)
+                    {
+                        scale.y += wdt.y;
+                    }
+                    else
+                    {
+                        scale.x += wdt.y; 
+                        scale.y += wdt.y;
+                    }
+                   
+                    break;
+            }
+
+            GUI.changed = true;
+        }
+    }
 
     // Проверка, кликнул ли пользователь в пределах точки
     private bool IsPointClicked(Vector2 point, Vector2 mousePosition, float distance)
@@ -209,15 +266,18 @@ public class AnimationClipsEditor : OdinEditorWindow
     
     public List<Vector2> points;
     private bool showFoldout;
+    private float wh;
+    private Rect boxRect;
 
-    [Button]
-    public void AddKey()
+    public void TryInit()
     {
-        int count = points.Count == 0 ? 4 : 3;
-        
-        for (int i = 0; i < count; i++)
+        if (points.Count < 4)
         {
+            points.Clear();
             points.Add(new Vector2());
+            points.Add(new Vector2(0.5f, 0));
+            points.Add(new Vector2(0.5f, 1));
+            points.Add(new Vector2(1, 1));
         }
     }
 
@@ -251,13 +311,13 @@ public class AnimationClipsEditor : OdinEditorWindow
 
     private int GetLeftKeyIndexByX(float x)
     {
-        if (x > points[^1].x) return points.Count - 1;
-        if (x < points[0].x) return 0;
+        if (x <= points[0].x) return 0;
+        if (x >= points[^1].x) return (points.Count - 4) /  3;
         var index = 0;
 
         for (int i = 3; i < points.Count; i += 3)
         {
-            if (x < points[i].x)
+            if (x <= points[i].x)
             {
                 return index;
             }
