@@ -21,7 +21,7 @@ public class CanvasWindow : EditorWindow
 
     private void OnGUI()
     {
-        grid.OnGUI(new Rect(50, 50, 800, 800));
+        grid.OnGUI(new Rect(Vector2.zero, new Vector2(800, 800)));
 
         if (grid.NeedRepaint)
         {
