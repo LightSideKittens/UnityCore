@@ -28,7 +28,7 @@ public class GridGUI
     public GridGUI()
     {
         zoom = zoomRange.y * 0.1f;
-        gridSpacingRef = new Vector2(4, 4) / gridScale / zoomRange.y;
+        gridSpacingRef = new Vector2(3, 3) / gridScale / zoomRange.y;
     }
 
     private void Init()
@@ -68,7 +68,7 @@ public class GridGUI
                 var box = rectArea;
                 box.position = Vector2.zero;
                 GUI.Box(box, "");
-                DrawGrid(gridSpacingRef, 1, Color.white);
+                DrawGrid(gridSpacingRef, 0.5f, Color.white);
                 DrawPoints();
             }
             GUI.EndGroup();
@@ -186,7 +186,7 @@ public class GridGUI
 
             var alphaByZoom = GetProgressToNextDoublingByZoom(depth);
             var alphaByScale = GetProgressToNextDoublingByScale(depth);
-            alphaByScale *= alphaByZoom;
+            alphaByScale *= alphaByZoom * gridOpacity;
 
             var panXZoom = -pan.x / zoom;
             var panYZoom = -pan.y / zoom;
