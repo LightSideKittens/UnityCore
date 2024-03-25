@@ -8,8 +8,8 @@ using Sirenix.Utilities;
 public class GridGUI
 {
     private List<Vector2> points = new();
-    private Vector2 zoomRange = new(1, 10_000);
-    private Vector2 gridRange = new(1, 10_000);
+    private Vector2 zoomRange = new(1, 7_000);
+    private Vector2 gridRange = new(1, 9_000);
     private Vector2 gridScale = new (100, 100);
     private Vector2 dragCurrent;
     private Vector2 scaledOffset;
@@ -28,7 +28,7 @@ public class GridGUI
     public GridGUI()
     {
         zoom = zoomRange.y * 0.1f;
-        gridSpacingRef = new Vector2(3, 3) / gridScale / zoomRange.y;
+        gridSpacingRef = new Vector2(10000, 10000) / gridScale / gridRange.y / zoomRange.y;
     }
 
     private void Init()

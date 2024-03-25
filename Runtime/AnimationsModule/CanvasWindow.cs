@@ -1,46 +1,30 @@
-﻿using System;
+﻿using LSCore.Editor;
 using UnityEngine;
 using UnityEditor;
 
 public class CanvasWindow : EditorWindow
 {
-    private GridGUI grid;
-    private Vector2 scroll;
-    private Rect windowRect = new Rect(Vector2.zero, new Vector2(800, 600));
-
+    public LSHandles.CameraData camData = new();
+    public LSHandles.GridData gridData = new();
+    
     [MenuItem("Window/Custom Editor Window")]
     public static void ShowWindow()
     {
         GetWindow<CanvasWindow>("Custom Workspace");
     }
 
-    private void Awake()
-    {
-        grid = new GridGUI();
-    }
-
     private void OnGUI()
     {
-        grid.OnGUI(new Rect(Vector2.zero, new Vector2(800, 800)));
-
-        if (grid.NeedRepaint)
+        var rect = position;
+        rect.position = Vector2.zero;
+        LSHandles.Begin(rect, camData);
+        for (int i = 0; i < 100; i++)
         {
-            Repaint();
+            LSHandles.DrawBezier(Vector2.one * i, new Vector2(0.5f + i, 0f + i), new Vector2(0.5f + i, 1f + i),
+                Vector2.one * (i + 1), Color.yellow, null, (i + 1) * 0.01f);
         }
+
+        LSHandles.DrawGrid(gridData);
+        LSHandles.End(); ;
     }
-
-    /*void WindowFunction(int windowID)
-    {
-        var area = windowRect;
-        area.position = Vector2.zero;
-        grid.OnGUI(area);
-
-        if (grid.NeedRepaint)
-        {
-            Repaint();
-        }
-        
-        /#1#/ Делает окно перемещаемым
-        GUI.DragWindow();#1#
-    }*/
 }

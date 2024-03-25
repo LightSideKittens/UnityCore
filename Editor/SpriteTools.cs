@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-public static class TextureRotator
+public static class SpriteTools
 {
-    private const string Section = LSPaths.AssetMenuItem.Root + "/" + nameof(TextureRotator);
+    private const string Section = LSPaths.AssetMenuItem.Root + "/" + nameof(SpriteTools);
 
     [MenuItem(Section + "/Rotate Left")]
     private static void RotateLeft()
@@ -21,6 +21,30 @@ public static class TextureRotator
     private static void RotateRight()
     {
         RotateTexture(3);
+    }
+    
+    [MenuItem(Section + "/Save Mesh", true)]
+    private static bool SaveMeshValidation()
+    {
+        return Selection.activeObject && Selection.activeObject is Sprite;
+    }
+    
+    [MenuItem(Section + "/Save Mesh")]
+    private static void SaveMesh()
+    {
+        Sprite sprite = Selection.activeObject as Sprite;
+        Mesh mesh = new Mesh();
+        mesh.vertices = System.Array.ConvertAll(sprite.vertices, i => (Vector3)i);
+        mesh.uv = sprite.uv;
+        mesh.triangles = System.Array.ConvertAll(sprite.triangles, i => (int)i);
+        
+        string path = EditorUtility.SaveFilePanelInProject("Save Mesh", sprite.name, "asset", "Please enter a file name to save the mesh to");
+        if (string.IsNullOrEmpty(path)) return;
+
+        AssetDatabase.CreateAsset(mesh, path);
+        AssetDatabase.SaveAssets();
+
+        Debug.Log($"Mesh saved: {path}");
     }
 
     [MenuItem(Section + "/Rotate Left", true)]

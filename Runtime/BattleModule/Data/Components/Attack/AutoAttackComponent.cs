@@ -3,6 +3,7 @@ using DG.Tweening;
 using LSCore.Async;
 using UnityEngine;
 using UnityEngine.Scripting;
+using UnityEngine.Serialization;
 
 namespace LSCore.BattleModule
 {
@@ -10,7 +11,7 @@ namespace LSCore.BattleModule
     public class AutoAttackComponent : BaseAttackComponent
     {
         [SerializeField] private FindTargetComp findTargetComp;
-        [SerializeField] private bool disableMoveCompOnTargetInRadius;
+        [SerializeField] private bool stillMoveIfTargetInRadius;
         private MoveComp moveComp;
         protected Tween attackLoopEmitter;
         private bool canAttack;
@@ -45,7 +46,7 @@ namespace LSCore.BattleModule
             
             if (findTargetComp.Find(radius, out var target))
             {
-                moveComp.enabled = disableMoveCompOnTargetInRadius;
+                moveComp.enabled = stillMoveIfTargetInRadius;
                 
                 if (canAttack)
                 {

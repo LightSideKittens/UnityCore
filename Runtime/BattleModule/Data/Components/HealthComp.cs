@@ -23,6 +23,7 @@ namespace LSCore.BattleModule
             block = new();
             healthBar = Animatable.HealthBar.Create(health, transform, offset, scale, affiliation == AffiliationType.Enemy);
             data.update += healthBar.Update; 
+            GetPropBlock();
         }
 
         protected override void Reset()
@@ -35,16 +36,25 @@ namespace LSCore.BattleModule
         {
             visualRoot.DOShakePosition(0.15f, 0.2f, 25);
             block.SetFloat(exposure, 1.6f);
-            block.DOFloat(1, exposure, 0.5f).OnUpdate(() =>
-            {
-                for (int i = 0; i < renderers.Length; i++)
-                {
-                    renderers[i].SetPropertyBlock(block);
-                }
-            });
-            
+            block.DOFloat(1, exposure, 1f).OnUpdate(SetPropBlock);
             healthBar.SetValue(health);
             AnimText.Create($"{(int)damage}", transform.position);
+        }
+
+        private void GetPropBlock()
+        {
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                renderers[i].GetPropertyBlock(block);
+            }
+        }
+
+        private void SetPropBlock()
+        {
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                renderers[i].SetPropertyBlock(block);
+            }
         }
 
         protected override void OnKilled()

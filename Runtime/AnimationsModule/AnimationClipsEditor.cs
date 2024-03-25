@@ -8,14 +8,8 @@ using UnityEngine;
 
 public class AnimationClipsEditor : OdinEditorWindow
 {
-    [SerializeField] private string propertyName;
-    [SerializeField] private AnimationClip[] clips;
     [SerializeField] [Range(0, 1)] private float time = 0.5f;
     [SerializeField] private Vector2 scale = new Vector2();
-    [SerializeField] private float gridSize = 10.0f;
-    [SerializeField] private float gridOpacity = 0.2f;
-    [SerializeField] private Vector2 xRange = new Vector2(-1000, 1000);
-    [SerializeField] private Vector2 yRange = new Vector2(-1000, 1000);
     private Vector2 scrollPosition;
     private Vector2 anchorPoint;
     private Rect bounds;
@@ -50,7 +44,6 @@ public class AnimationClipsEditor : OdinEditorWindow
 
             bounds.min = min * scale;
             bounds.max = max * scale;
-            DrawGrid();
             wh = bounds.height;
             for (int i = 0; i < points.Count - 1; i += 3)
             {
@@ -94,37 +87,6 @@ public class AnimationClipsEditor : OdinEditorWindow
         
         EditorGUILayout.EndScrollView();
     }
-    
-    private void DrawGrid()
-    {
-        var box = bounds;
-        var offset = scale / 2;
-        box.size += offset * 2;
-        GUILayout.Box("", GUILayout.Width(box.width), GUILayout.Height(box.height));
-        boxRect = GUILayoutUtility.GetLastRect();
-        anchorPoint = boxRect.position;
-        anchorPoint.y -= offset.y + 8;
-        anchorPoint.x += offset.x;
-        int widthDivs = Mathf.CeilToInt(boxRect.width / scale.x);
-        int heightDivs = Mathf.CeilToInt(boxRect.height / scale.y);
-        var startPoint = new Vector2(boxRect.xMin, boxRect.yMax) + offset;
-        
-        Handles.color = new Color(0.5f, 0.5f, 0.5f, gridOpacity);
-
-        for (int i = 0; i < widthDivs; i++)
-        {
-            Handles.DrawLine(new Vector3(startPoint.x, boxRect.yMin, 0), new Vector3(startPoint.x, boxRect.yMax, 0));
-            startPoint.x += scale.x;
-        }
-
-        for (int j = 0; j < heightDivs; j++)
-        {
-            startPoint.y -= scale.y;
-            Handles.DrawLine(new Vector3(boxRect.xMin, startPoint.y, 0), new Vector3(boxRect.xMax, startPoint.y, 0));
-        }
-        
-        Handles.color = Color.white;
-    }
 
     private void DrawKey(Vector2 pos)
     {
@@ -163,7 +125,7 @@ public class AnimationClipsEditor : OdinEditorWindow
         switch (e.type)
         {
             case EventType.MouseDown:
-                if (e.button == 0) // Левая кнопка мыши
+                if (e.button == 0)
                 {
                     pointIndexes.Clear();
                     for (int i = 0; i < points.Count; i++)
@@ -179,7 +141,7 @@ public class AnimationClipsEditor : OdinEditorWindow
                                 }
                             }
                             
-                            draggingPointIndex = i; // Начинаем перетаскивание точки
+                            draggingPointIndex = i;
                             if (i == 0)
                             {
                                 pointIndexes.Add(1);
@@ -210,7 +172,7 @@ public class AnimationClipsEditor : OdinEditorWindow
                 break;
 
             case EventType.MouseUp:
-                draggingPointIndex = -1; // Окончание перетаскивания
+                draggingPointIndex = -1;
                 break;
 
             case EventType.MouseDrag:
@@ -218,7 +180,7 @@ public class AnimationClipsEditor : OdinEditorWindow
                 {
                     var dt = e.delta / scale;
                     dt.y *= -1;
-                    points[draggingPointIndex] += dt; // Перемещаем выбранную точку
+                    points[draggingPointIndex] += dt;
                     for (int i = 0; i < pointIndexes.Count; i++)
                     {
                         points[pointIndexes[i]] += dt;
@@ -257,8 +219,7 @@ public class AnimationClipsEditor : OdinEditorWindow
             GUI.changed = true;
         }
     }
-
-    // Проверка, кликнул ли пользователь в пределах точки
+    
     private bool IsPointClicked(Vector2 point, Vector2 mousePosition, float distance)
     {
         return Vector2.Distance(point, mousePosition) <= distance;
@@ -280,8 +241,7 @@ public class AnimationClipsEditor : OdinEditorWindow
             points.Add(new Vector2(1, 1));
         }
     }
-
-    // Вычисление точки на объединённой кривой
+    
     public Vector2 Evaluate1(float t)
     {
         float xTarget = Mathf.Lerp(points[0].x, points[^1].x, t);
@@ -293,7 +253,7 @@ public class AnimationClipsEditor : OdinEditorWindow
         Vector2 p3 = points[index + 3];
         
         float tForX = FindBezierTForX(p0.x, p1.x, p2.x, p3.x, xTarget);
-        return EvaluateCubicBezier(p0, p1, p2, p3, tForX); // Вычисление точки на текущей кривой
+        return EvaluateCubicBezier(p0, p1, p2, p3, tForX);
     }
 
     private void InsertKeyByX(float x)
@@ -357,12 +317,12 @@ public class AnimationClipsEditor : OdinEditorWindow
     [Button]
     public void InsertKey(int index, float t)
     {
-        // Вычисляем промежуточные точки на основе t
         var i = index * 3;
         if (i >= points.Count - 1)
         {
             return;
         }
+        
         Vector2 p0 = points[i];
         Vector2 p1 = points[i + 1];
         Vector2 p2 = points[i + 2];
@@ -375,8 +335,7 @@ public class AnimationClipsEditor : OdinEditorWindow
         Vector2 r0 = Vector2.Lerp(q0, q1, t);
         Vector2 r1 = Vector2.Lerp(q1, q2, t);
         Vector2 s = Vector2.Lerp(r0, r1, t);
-
-        // Создаем две новые кривые
+        
         points[i] = p0;
         points[i + 1] = q0;
         points[i + 2] = r0;
@@ -394,10 +353,10 @@ public class AnimationClipsEditor : OdinEditorWindow
         float uuu = uu * u;
         float ttt = tt * t;
 
-        Vector2 p = uuu * p0; // Начальная точка умножается на u^3
-        p += 3 * uu * t * p1; // Первая контрольная точка умножается на 3 * u^2 * t
-        p += 3 * u * tt * p2; // Вторая контрольная точка умножается на 3 * u * t^2
-        p += ttt * p3; // Конечная точка умножается на t^3
+        Vector2 p = uuu * p0;
+        p += 3 * uu * t * p1;
+        p += 3 * u * tt * p2;
+        p += ttt * p3;
 
         return p;
     }
@@ -425,33 +384,5 @@ public class AnimationClipsEditor : OdinEditorWindow
         }
 
         return (t0 + t1) / 2;
-    }
-    
-    
-    
-    
-    
-    [Button]
-    private void Apply()
-    {
-        foreach (var clip in clips)
-        {
-            foreach (var binding in AnimationUtility.GetCurveBindings(clip))
-            {
-                Debug.Log(binding.path);
-                Debug.Log(binding.propertyName);
-                /*if (binding.propertyName.StartsWith("m_LocalPosition."))
-                {
-                    AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, binding);
-                    for (int i = 0; i < curve.keys.Length; i++)
-                    {
-                        Keyframe key = curve.keys[i];
-                        key.value /= 32f;
-                        curve.keys[i] = key;
-                    }
-                    AnimationUtility.SetEditorCurve(clip, binding, curve);
-                }*/
-            }
-        }
     }
 }
