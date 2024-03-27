@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
-using LSCore.Extensions.Unity;
+using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
@@ -16,6 +17,7 @@ namespace LSCore.Editor
             public Color backColor = new(0.2f, 0.2f, 0.2f);
             public Vector3 position = Vector3.forward * -10;
             public float size = 10;
+            public Vector2 sizeRange = new(0.000001f, 9.08581038E+13f);
         }
         
         [Serializable]
@@ -24,11 +26,161 @@ namespace LSCore.Editor
             public int cellDivides = 10;
             public Vector2 scale = Vector2.one;
             public Color color = Color.white;
+            public Vector2 scaleRange = new(0.0001f, 100);
+            public List<LineRenderer> activeLines = new();
+
+            public void Draw()
+            {
+                HandleGridInput();
+                Vector2 startPoint = cam.ViewportToWorldPoint(new Vector3(0, 0, cam.nearClipPlane));
+                Vector2 endPoint = cam.ViewportToWorldPoint(new Vector3(1, 1, cam.nearClipPlane));
+                var zoomStepMultiplies = GetGridMultiplyByZoom();
+                var scaleStepMultiplies = GetGridMultiplyByGridScale();
+                scaleStepMultiplies.x += zoomStepMultiplies;
+                scaleStepMultiplies.y += zoomStepMultiplies;
+
+                var lw = 0.001f * cam.orthographicSize;
+                ;
+                var step = Vector2.one * scale;
+                //step *= scaleStepMultiplies;
+
+                startPoint.x -= startPoint.x % step.x;
+                startPoint.y -= startPoint.y % step.y;
+
+                var positions = new Vector3[2];
+                var c = color;
+
+                var alphaByZoom = GetProgressToNextDoublingByZoom(1);
+                //var alphaByScale = data.GetProgressToNextDoublingByScale(1);
+                var opacity2 = alphaByZoom;
+
+                float minValue = -100_000_000_000_000f;
+                float maxValue = 100_000_000_000_000f;
+
+                var index = Mathf.RoundToInt(startPoint.x / step.x);
+
+                while (startPoint.x < endPoint.x)
+                {
+                    HandleOpacity();
+                    var line = GetLine(c, lw);
+                    positions[0] = new Vector3(startPoint.x, minValue);
+                    positions[1] = new Vector3(startPoint.x, maxValue);
+                    line.positionCount = 2;
+                    line.SetPositions(positions);
+                    startPoint.x += step.x;
+                    activeLines.Add(line);
+                }
+
+                Debug.Log(index);
+                index = Mathf.RoundToInt(startPoint.y / step.y);
+
+                while (startPoint.y < endPoint.y)
+                {
+                    HandleOpacity();
+                    var line = GetLine(c, lw);
+                    positions[0] = new Vector3(minValue, startPoint.y);
+                    positions[1] = new Vector3(maxValue, startPoint.y);
+                    line.positionCount = 2;
+                    line.SetPositions(positions);
+                    startPoint.y += step.y;
+                    activeLines.Add(line);
+                }
+
+                AddDrawLineRendererList(activeLines);
+                activeLines.Clear();
+                
+                void HandleOpacity()
+                {
+                    if (index % cellDivides == 0)
+                    {
+                        lw = 0.005f * cam.orthographicSize;
+                        c.a = 1;
+                    }
+                    else
+                    {
+                        lw = 0.002f * cam.orthographicSize;
+                        c.a = 1;
+                    }
+
+                    index++;
+                }
+            }
+
+            private void HandleGridInput()
+            {
+                Event e = Event.current;
+                Vector3 mp = e.mousePosition;
+                mp.y *= -1;
+                mp.y += rect.height;
+                var gridDelta = e.delta.y / 300;
+            
+                if (e.type == EventType.ScrollWheel)
+                {
+                    if (e.control)
+                    {
+                        scale.x -= gridDelta;
+                        ClampGridScale();
+                    }
+                    else if(e.alt)
+                    {
+                        scale.y -= gridDelta;
+                        ClampGridScale();
+                    }
+                    GUI.changed = true;
+                }
+            }
+            
+            private void ClampGridScale()
+            {
+                scale = scale.Clamp(Vector2.one * scaleRange.x, Vector2.one * scaleRange.y);
+            }
+
+            public float GetProgressToNextDoublingByZoom(int doublingDepth)
+            {
+                return GetLerped(camData.size, cellDivides, doublingDepth);
+            }
+            
+            public float GetGridMultiplyByZoom()
+            {
+                float scaleRatio = camData.size;
+                int doublingCount = (int)Mathf.Log(scaleRatio, cellDivides);
+                float gridSpacingMultiply = Mathf.Pow(cellDivides, doublingCount);
+                return gridSpacingMultiply;
+            }
+    
+            public Vector2 GetGridMultiplyByGridScale()
+            {
+                var s = scale * camData.size;
+                int doublingXCount = (int)Mathf.Log(s.x, cellDivides);
+                int doublingYCount = (int)Mathf.Log(s.y, cellDivides);
+                float gridSpacingMultiplyX = Mathf.Pow(cellDivides, doublingXCount);
+                float gridSpacingMultiplyY = Mathf.Pow(cellDivides, doublingYCount);
+
+                return new Vector2(gridSpacingMultiplyX, gridSpacingMultiplyY);
+            }
+    
+            public Vector2 GetProgressToNextDoublingByScale(int doublingDepth)
+            {
+                var s = scale * camData.size;
+                return new Vector2(
+                    GetLerped(s.x, cellDivides, doublingDepth),
+                    GetLerped(s.y, cellDivides, doublingDepth));
+            }
+        }
+        
+        public static float GetLerped(float scaleRatio, float logBase, int depth)
+        {
+            float value = Mathf.Log(scaleRatio, logBase);
+            float a = (int)value;
+            float b = a + depth;
+
+            return Mathf.InverseLerp(b, a, value);
         }
         
         public static int bezieQuality = 50;
         private static readonly EditorHiddenObjectPool<LineRenderer> lines = new(shouldStoreActive: true);
         private static readonly EditorHiddenObjectPool<Transform> points = new(shouldStoreActive: true);
+        private static CombineInstance[] meshesToBake = new CombineInstance[1000];
         private static Rect rect;
         private static Camera cam;
         private static Material lineMaterial;
@@ -179,105 +331,8 @@ namespace LSCore.Editor
         }
 
         public static void DrawGrid(GridData data)
-        {
-            Vector2 startPoint =  cam.ViewportToWorldPoint(new Vector3(0, 0, cam.nearClipPlane));
-            Vector2 endPoint = cam.ViewportToWorldPoint(new Vector3(1, 1, cam.nearClipPlane));
-            var zoomStepMultiplies = GetGridMultiplyByZoom(data);
-            var scaleStepMultiplies = GetGridMultiplyByGridScale(data);
-            scaleStepMultiplies *= zoomStepMultiplies;
-            
-            var width = 0.001f;
-            var step = Vector2.one / data.cellDivides * data.scale;
-            step *= scaleStepMultiplies;
-            
-            startPoint.x -= startPoint.x % step.x;
-            startPoint.y -= startPoint.y % step.y;
-            var a = new Vector2(0, 0);
-            var b = new Vector2(2f, 2f);
-            var v1 = step / cam.orthographicSize;
-            var v2 = v1 * data.cellDivides;
-            
-            var opacity1 = (v1).InverseLerp(a, b);
-            var opacity2 = (v2).InverseLerp(a, b);
-
-            Debug.Log((opacity1, opacity2));
-            var positions = new Vector3[2];
-            var c = data.color;
-            
-            float minValue = -100_000_000_000_000f;
-            float maxValue = 100_000_000_000_000f;
-
-            var index = Mathf.RoundToInt(startPoint.x / step.x);
-            
-            while (startPoint.x < endPoint.x)
-            {
-                if (index % data.cellDivides == 0)
-                {
-                    width = 0.004f;
-                    c.a = opacity2;
-                }
-                else
-                {
-                    width = 0.001f;
-                    c.a = opacity1;
-                }
-                
-                index++;;
-                
-                var line = GetLine(c, width);
-                positions[0] = new Vector3(startPoint.x, minValue);
-                positions[1] = new Vector3(startPoint.x, maxValue);
-                line.positionCount = 2;
-                line.SetPositions(positions);
-                AddDrawRenderer(line);
-                startPoint.x += step.x;
-            }
-            
-            index = Mathf.RoundToInt(startPoint.y / step.y);
-            
-            while (startPoint.y < endPoint.y)
-            {
-                if (index % data.cellDivides == 0)
-                {
-                    width = 0.004f;
-                    c.a = opacity2;
-                }
-                else
-                {
-                    width = 0.001f;
-                    c.a = opacity1;
-                }
-                
-                index++;
-                
-                var line = GetLine(c, width);
-                positions[0] = new Vector3(minValue, startPoint.y);
-                positions[1] = new Vector3(maxValue, startPoint.y);
-                line.positionCount = 2;
-                line.SetPositions(positions);
-                AddDrawRenderer(line);
-                startPoint.y += step.y;
-            }
-        }
-        
-        private static float GetGridMultiplyByZoom(GridData data)
-        {
-            float scaleRatio = cam.orthographicSize * 2;
-            int doublingCount = (int)Mathf.Log(scaleRatio, data.cellDivides);
-            float gridSpacingMultiply = Mathf.Pow(data.cellDivides, doublingCount);
-            return gridSpacingMultiply;
-        }
-    
-        private static Vector2 GetGridMultiplyByGridScale(GridData data)
-        {
-            float scaleXRatio = 4 / data.scale.x;
-            float scaleYRatio = 4 / data.scale.y;
-            int doublingXCount = (int)Mathf.Log(scaleXRatio, data.cellDivides);
-            int doublingYCount = (int)Mathf.Log(scaleYRatio, data.cellDivides);
-            float gridSpacingMultiplyX = Mathf.Pow(data.cellDivides, doublingXCount);
-            float gridSpacingMultiplyY = Mathf.Pow(data.cellDivides, doublingYCount);
-
-            return new Vector2(gridSpacingMultiplyX, gridSpacingMultiplyY);
+        { 
+            data.Draw();
         }
 
         private static bool IsInCamera(Vector2 point)
@@ -325,6 +380,33 @@ namespace LSCore.Editor
             commandBuffer.DrawRenderer(renderer, renderer.sharedMaterial);
         }
 
+        private static void AddDrawLineRendererList(List<LineRenderer> renderer)
+        {
+            var mesh = CombineLines(renderer);
+            commandBuffer.DrawMesh(mesh, Matrix4x4.identity, lineMaterial);
+        }
+
+        private static Mesh CombineLines(List<LineRenderer> renderers)
+        {
+            if (renderers.Count > meshesToBake.Length)
+            {
+                meshesToBake = new CombineInstance[meshesToBake.Length * 2];
+            }
+
+            for (int i = 0; i < renderers.Count; i++)
+            {
+                Mesh mesh = new Mesh();
+                renderers[i].BakeMesh(mesh, cam, true);
+                CombineInstance combineInstance = new CombineInstance();
+                combineInstance.mesh = mesh;
+
+                meshesToBake[i] = combineInstance;
+            }
+            
+            Mesh combinedMesh = new Mesh();
+            combinedMesh.CombineMeshes(meshesToBake[..renderers.Count], true);
+            return combinedMesh;
+        }
 
         private static void DrawBezierCurve(LineRenderer bezie,
             Vector3 startPoint,

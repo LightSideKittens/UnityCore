@@ -6,7 +6,7 @@ namespace LSCore
     public class LSObjectPool<T>
     {
         internal readonly HashSet<T> releasedSet;
-        internal readonly HashSet<T> activeSet;
+        public readonly HashSet<T> activeSet;
         protected Func<T> createFunc;
         public event Action<T> Created;
         public event Action<T> Got;
@@ -42,12 +42,8 @@ namespace LSCore
             }
         }
 
-        public void AddActive(T obj)
-        {
-            activeSet.Add(obj);
-        }
-
-        public void RemoveActive(T obj) => activeSet.Remove(obj);
+        private void AddActive(T obj) => activeSet.Add(obj);
+        private  void RemoveActive(T obj) => activeSet.Remove(obj);
         
         public T Get()
         {

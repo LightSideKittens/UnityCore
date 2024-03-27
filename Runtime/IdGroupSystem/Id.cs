@@ -26,7 +26,14 @@ namespace LSCore
             return id;
         }
 
-        public override string ToString() => name;
+        public override string ToString()
+        {
+            if (this == null)
+            {
+                return "Null Id";
+            }
+            return name;
+        }
 
         public override bool Equals(object other)
         {
