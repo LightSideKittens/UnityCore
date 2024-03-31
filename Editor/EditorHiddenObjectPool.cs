@@ -12,8 +12,8 @@ namespace LSCore.Editor
 
         public T CreateObject()
         {
-            return EditorUtility.CreateGameObjectWithHideFlags("hidden", HideFlags.None, typeof(T))
-                .GetComponent<T>();
+            var go = EditorUtility.CreateGameObjectWithHideFlags("hidden", HideFlags.None, typeof(T));
+            return go.GetComponent<T>();
         }
     }
 }
