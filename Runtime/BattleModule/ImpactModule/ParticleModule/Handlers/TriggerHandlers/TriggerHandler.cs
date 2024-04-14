@@ -21,7 +21,7 @@ namespace LSCore
         public LayerMask mask;
         
         [UniqueTypeFilter]
-        [SerializeReference] public List<OnTriggerHandler> particleHandlers;
+        [SerializeReference] public List<OnTriggerHandler> handlers;
         
         public event TriggeredAction Triggered;
         public Collider2D ignoredCollider;
@@ -44,7 +44,7 @@ namespace LSCore
             var radiusScale = ps.trigger.radiusScale;
             Vector2 point = default;
             ids.Clear();
-            ignoredCollider.enabled = false;
+            if(ignoredCollider != null) ignoredCollider.enabled = false;
             for (int i = 0; i < particles.Length; i++)
             {
                 ref var particle = ref particles[i];
@@ -67,7 +67,7 @@ namespace LSCore
                 
                 colliders[id] = currentSet;
             }
-            ignoredCollider.enabled = true;
+            if(ignoredCollider != null) ignoredCollider.enabled = true;
             
             keysToRemove.Clear();
             
@@ -103,9 +103,9 @@ namespace LSCore
             {
                 var collider = maxColliders[i];
                 Triggered?.Invoke(ref particle, collider);
-                for (int k = 0; k < particleHandlers.Count; k++)
+                for (int k = 0; k < handlers.Count; k++)
                 {
-                    particleHandlers[k].Handle(ref particle, collider);
+                    handlers[k].Handle(ref particle, collider);
                 }
             }
         }
@@ -128,9 +128,9 @@ namespace LSCore
             {
                 var collider = maxColliders[i];
                 Triggered?.Invoke(ref particle, collider);
-                for (int k = 0; k < particleHandlers.Count; k++)
+                for (int k = 0; k < handlers.Count; k++)
                 {
-                    particleHandlers[k].Handle(ref particle, collider);
+                    handlers[k].Handle(ref particle, collider);
                 }
             }
         }

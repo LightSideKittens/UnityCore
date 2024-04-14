@@ -8,10 +8,10 @@ namespace LSCore
     {
         public abstract void Handle(Particle[] particles);
     }
-    
+        
     [Serializable]
-    public abstract class ParticlesIniter
+    public abstract class ParticleHandler
     {
-        public abstract void Init(ref Particle particle);
+        public abstract void Handle(ref Particle particle);
     }
 }

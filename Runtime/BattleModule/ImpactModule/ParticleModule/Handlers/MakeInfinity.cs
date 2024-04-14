@@ -3,11 +3,11 @@ using UnityEngine;
 
 namespace LSCore
 {
-    public class MakeInfinity : ParticlesIniter
+    public class MakeInfinity : ParticleHandler
     {
         private const int Infinity = 65535;
 
-        public override void Init(ref ParticleSystem.Particle particle)
+        public override void Handle(ref ParticleSystem.Particle particle)
         {
             if (Math.Abs(particle.startLifetime - Infinity) > 0.0001f)
             {

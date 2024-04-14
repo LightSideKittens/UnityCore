@@ -33,6 +33,7 @@ namespace LSCore.Editor
             var guiType = Type.GetType("UnityEngine.GUI,UnityEngine");
             var propInfo = guiType.GetProperty("blitMaterial", BindingFlags.Static | BindingFlags.NonPublic);
             blitMaterialInfo = propInfo.GetGetMethod(true);
+            lineMaterial = new Material(Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply"));
             lines.Created += AddGameObject;
             lines.Got += line => line.enabled = true;
             lines.Released += line => line.enabled = false;
@@ -45,7 +46,6 @@ namespace LSCore.Editor
             eventType = Event.current.type;
             LSHandles.rect = rect;
             LSHandles.camData = camData;
-            lineMaterial ??= new Material(Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply"));
             
             if (cam == null)
             {

@@ -48,7 +48,7 @@ namespace Attributes.Editor.Drawers
 
         private bool Foldout(Rect rect, bool isVisible, GUIContent label, GUIStyle style = null)
         {
-            style ??= SirenixGUIStyles.Foldout;
+            style ??= new GUIStyle(SirenixGUIStyles.Foldout);
             style.normal.textColor = normalColor;
             style.focused.textColor = normalColor;
             style.active.textColor = normalColor;
