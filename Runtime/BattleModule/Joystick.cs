@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
     public Vector2 Direction { get; private set; }
-    public bool IsUsing { get; private set; }
+    public ReactProp<bool> IsUsing { get; private set; } = new();
     [SerializeField] private RectTransform area;
     [SerializeField] private RectTransform handleArea;
     [SerializeField] private RectTransform handle;
@@ -29,7 +29,7 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        IsUsing = true;
+        IsUsing.Value = true;
         group.alpha = 1;
         startTouchPosition = eventData.position;
         handleArea.SetPositionByScreenPoint(area, eventData.position, canvas);
@@ -46,10 +46,9 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        IsUsing = false;
+        IsUsing.Value = false;
         group.alpha = 0.5f;
         handle.localPosition = Vector3.zero;
-        Direction = Vector2.zero;
         handleArea.localPosition = handleAreaStartPosition;
         directions[lastFactor].SetActive(false);
     }

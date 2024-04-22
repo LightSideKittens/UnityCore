@@ -20,12 +20,18 @@ namespace Animatable
         internal static HealthBar HealthBar => Instance.healthBar;
         internal static HealthBar OpponentHealthBar => Instance.opponentHealthBar;
         internal static Loader Loader => Instance.loader;
+
+        private void Awake()
+        {
+            DontDestroyOnLoad(this);
+        }
         
         protected override void Init()
         {
             base.Init();
-            DontDestroyOnLoad(this);
             animText.Init();
+            healthBar.Init();
+            opponentHealthBar.Init();
             canvas = GetComponent<Canvas>();
             canvas.worldCamera = Camera.main;
             canvas.sortingOrder = 10;
@@ -39,7 +45,7 @@ namespace Animatable
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }
 
-        private static void OnSceneLoaded(Scene arg0, LoadSceneMode arg1)
+        private void OnSceneLoaded(Scene arg0, LoadSceneMode arg1)
         {
             canvas.worldCamera = Camera.main;
             Clean();
@@ -56,10 +62,9 @@ namespace Animatable
         public static void Clean()
         {
             var instance = Instance;
-            for (int i = 1; i < instance.transform.childCount; i++)
-            {
-                Destroy(instance.transform.GetChild(i).gameObject);
-            }
+            instance.animText.ReleaseAll();
+            instance.healthBar.ReleaseAll();
+            instance.opponentHealthBar.ReleaseAll();
         }
     }
 }

@@ -27,10 +27,26 @@ namespace LSCore
 
         [ColoredField]
         public TriggerHandler triggerHandler;
-        public Func<Collider2D, bool> canImpactChecker;
+
+        [SerializeField] private GameObject preview;
+        private Func<Collider2D, bool> canImpactChecker;
+
+        public Func<Collider2D, bool> CanImpactChecker
+        {
+            set
+            {
+                canImpactChecker = value;
+                for (int i = 0; i < childImpactObjects.Length; i++)
+                {
+                    childImpactObjects[i].canImpactChecker = value;
+                }
+            }
+        }
+        
         [NonSerialized] public ParticleSystem ps;
         private List<Vector4> customData = new();
         private ImpactObject[] childImpactObjects;
+        private new Transform transform;
         
         public Collider2D IgnoredCollider
         {
@@ -39,6 +55,7 @@ namespace LSCore
         
         private void Awake()
         {
+            transform = base.transform;
             ps = GetComponent<ParticleSystem>();
             childImpactObjects = GetComponentsInChildren<ImpactObject>();
             triggerHandler.Init(ps, customData);
@@ -61,7 +78,7 @@ namespace LSCore
             }
         }
 
-        public void HandleParticles()
+        private void HandleParticles()
         {
             var particles = ps.GetParticles();
             if(particles.Length == 0) return;
@@ -124,6 +141,24 @@ namespace LSCore
             ps.SetCustomParticleData(customData, ParticleSystemCustomData.Custom2);
         }
 
+        public void LookAt(Transform target)
+        { 
+            transform.up = target.position - transform.position;
+        }
+        
+        public void LookAt(in Vector3 direction)
+        { 
+            transform.up = direction;
+        }
+        
+        public void SetActivePreview(bool active)
+        {
+            if (preview != null)
+            {
+                preview.SetActive(active);
+            }
+        }
+
         public void Emit()
         {
             ps.Stop();
@@ -164,7 +199,7 @@ namespace LSCore
             }
         }
 
-        [Button] private void GeneratePath(float simulateTime = 0.02f) => PathGenerator.SimulateParticles(this, simulateTime);
+        [Button] private void GeneratePath(float simulateTime = 0.02f) => PathGenerator.Generate(this, simulateTime);
         [Button] private void Play() => Emit();
 #endif
     }

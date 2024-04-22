@@ -10,7 +10,8 @@ namespace LSCore
         public OnOffPool(
             T prefab,
             int defaultCapacity = 10,
-            int maxSize = 10000) : base(null, defaultCapacity, maxSize)
+            int maxSize = 10000,
+            bool shouldStoreActive = false) : base(null, defaultCapacity, maxSize, shouldStoreActive)
         {
             this.prefab = prefab;
             createFunc = InstantiatePrefab;

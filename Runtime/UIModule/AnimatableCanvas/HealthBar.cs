@@ -1,7 +1,7 @@
 ﻿using System;
+using LSCore;
 using UnityEngine;
 using static Animatable.AnimatableCanvas;
-using Object = UnityEngine.Object;
 
 namespace Animatable
 {
@@ -11,7 +11,10 @@ namespace Animatable
         [SerializeField] public LSCore.HealthBar mainBar;
         private Transform target;
         private Vector3 offset;
-
+        private OnOffPool<LSCore.HealthBar> pool;
+        internal void Init() => pool = new OnOffPool<LSCore.HealthBar>(mainBar, shouldStoreActive: true);
+        internal void ReleaseAll() => pool.ReleaseAll();
+        
         public void Reset()
         {
             mainBar.gameObject.SetActive(true);
@@ -22,7 +25,7 @@ namespace Animatable
         {
             var template = isOpponent ? OpponentHealthBar : AnimatableCanvas.HealthBar;
             
-            var bar = Object.Instantiate(template.mainBar);
+            var bar = template.pool.Get();
             var barTransform = bar.transform;
             barTransform.SetParent(SpawnPoint, false);
             barTransform.localScale = scale;

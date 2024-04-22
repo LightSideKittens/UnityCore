@@ -10,13 +10,13 @@ namespace Animatable
     [Serializable]
     public class AnimText
     {
-        
         [SerializeField] private TMP_Text text;
         [SerializeField] private Vector2 animOffset = new Vector2(0, 100);
         [SerializeField] private float duration = 1;
         private OnOffPool<TMP_Text> pool;
 
-        internal void Init() => pool = new OnOffPool<TMP_Text>(text);
+        internal void Init() => pool = new OnOffPool<TMP_Text>(text, shouldStoreActive: true);
+        internal void ReleaseAll() => pool.ReleaseAll();
 
         public static AnimText Create(string message, Vector2 pos = default, Vector2 offset = default, bool fromWorldSpace = false)
         {
@@ -29,10 +29,10 @@ namespace Animatable
 
             var scale = template.text.transform.localScale;
             var text = template.pool.Get();
-            var textTransfrom = text.transform;
-            textTransfrom.SetParent(SpawnPoint, true);
-            textTransfrom.position = pos;
-            textTransfrom.localScale = scale;
+            var textTransform = text.transform;
+            textTransform.SetParent(SpawnPoint, true);
+            textTransform.position = pos;
+            textTransform.localScale = scale;
             text.text = message;
             var rect = (RectTransform) text.transform;
             text.alpha = 1;

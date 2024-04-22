@@ -29,7 +29,7 @@ namespace LSCore.BattleModule
                 foreach (var target in findTargetComp.FindAll(radius))
                 {
                     target.Get<MoveComp>().Buffs.Set(Name, moveSpeedBuff, buffDuration);
-                    target.Get<AutoAttackComponent>().Buffs.Set(Name, damageBuff, buffDuration);
+                    //target.Get<AutoAttackComponent>().Buffs.Set(Name, damageBuff, buffDuration);
                 }
             }).OnComplete(() =>
             {

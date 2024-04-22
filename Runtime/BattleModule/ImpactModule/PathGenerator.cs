@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#if UNITY_EDITOR
+
+using System.Collections.Generic;
 using LSCore.Attributes;
 using LSCore.Extensions.Unity;
 using UnityEngine;
@@ -29,16 +31,17 @@ namespace LSCore
         
         private void Awake()
         {
-            lineMaterial ??= new Material(Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply"));
+            lineMaterial = LSDefaultAssets.LineMaterial;
             ps = GetComponent<ParticleSystem>();
             radiusScale = ps.trigger.radiusScale;
             childPs = GetComponentsInChildren<ImpactObject>();
         }
 
-        public static void SimulateParticles(ImpactObject impactObject, float simulateTime = 0.02f)
+        public static void Generate(ImpactObject impactObject, float simulateTime = 0.02f)
         {
             simulateTime = Mathf.Clamp(simulateTime, 0.01f, 100);
-            var targetParent = impactObject.transform;
+            var targetParent = new GameObject("Preview").transform;
+            targetParent.SetParent(impactObject.transform, false);
             impactObject = Instantiate(impactObject);
             var pathGenerator = impactObject.gameObject.AddComponent<PathGenerator>();
             var pathTransform = pathGenerator.transform;
@@ -136,3 +139,5 @@ namespace LSCore
         }
     }
 }
+
+#endif

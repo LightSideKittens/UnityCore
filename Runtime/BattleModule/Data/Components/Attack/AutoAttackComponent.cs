@@ -3,24 +3,33 @@ using DG.Tweening;
 using LSCore.Async;
 using UnityEngine;
 using UnityEngine.Scripting;
-using UnityEngine.Serialization;
 
 namespace LSCore.BattleModule
 {
     [Preserve, Serializable]
     public class AutoAttackComponent : BaseAttackComponent
     {
-        [SerializeField] private FindTargetComp findTargetComp;
-        [SerializeField] private bool stillMoveIfTargetInRadius;
+        [SerializeField] private bool manualMoveCompControl;
+        
+        public bool InRadius { get; private set; }
+        public float radius;
         private MoveComp moveComp;
         protected Tween attackLoopEmitter;
         private bool canAttack;
 
         protected override void OnInit()
         {
-            findTargetComp.Init(transform);
-            impactObject.canImpactChecker = findTargetComp.Check;
             moveComp = transform.Get<MoveComp>();
+            
+            if (!manualMoveCompControl)
+            {
+                data.update += ControlMove;
+            }
+        }
+
+        private void ControlMove()
+        {
+            moveComp.IsRunning = !InRadius;
         }
 
         protected override void OnEnable()
@@ -34,32 +43,27 @@ namespace LSCore.BattleModule
             attackLoopEmitter.Kill();
         }
 
-        protected void Attack(Transform target)
+        private void Attack(Transform target)
         {
-            impactObject.transform.up = target.position - transform.position;
+            impactObject.LookAt(target);
             impactObject.Emit();
         }
 
-        public override void Update()
+        protected override void Update()
         {
-            base.Update();
+            base.Update(); 
+            InRadius = findTargetComp.Find(radius, out var target);
             
-            if (findTargetComp.Find(radius, out var target))
+            if (InRadius)
             {
-                moveComp.enabled = stillMoveIfTargetInRadius;
-                
                 if (canAttack)
                 {
                     canAttack = false;
                     Attack(target);
                 }
             }
-            else
-            {
-                moveComp.enabled = true;
-            }
         }
-
+        
         private void OnTactTicked() => canAttack = true;
     }
 }
