@@ -9,7 +9,14 @@ namespace LSCore
         
         public override void Handle(ParticleSystem.Particle[] particles)
         {
-            var f = force * Time.deltaTime;
+            var dt = Time.deltaTime;
+#if UNITY_EDITOR
+            if (PathGenerator.IsSimulating)
+            {
+                dt = PathGenerator.DeltaTime;
+            }
+#endif
+            var f = force * dt;
             
             for (int i = 0; i < particles.Length; i++)
             {

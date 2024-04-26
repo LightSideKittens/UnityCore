@@ -17,7 +17,9 @@ namespace LSCore
         [SerializeReference] public List<ParticlesHandler> particleHandlers;
         [UniqueTypeFilter]
         [SerializeReference] public List<ParticleHandler> particleDeathHandlers;
-        
+
+        public static bool IsSimulating { get; private set; }
+        public static float DeltaTime { get; private set; }
         private Vector4 currentId;
         private static Material lineMaterial;
         private ParticleSystem ps;
@@ -37,9 +39,11 @@ namespace LSCore
             childPs = GetComponentsInChildren<ImpactObject>();
         }
 
-        public static void Generate(ImpactObject impactObject, float simulateTime = 0.02f)
+        public static void Generate(ImpactObject impactObject, float deltaTime = 0.02f)
         {
-            simulateTime = Mathf.Clamp(simulateTime, 0.01f, 100);
+            IsSimulating = true;
+            DeltaTime = deltaTime;
+            deltaTime = Mathf.Clamp(deltaTime, 0.01f, 100);
             var targetParent = new GameObject("Preview").transform;
             targetParent.SetParent(impactObject.transform, false);
             impactObject = Instantiate(impactObject);
@@ -53,7 +57,8 @@ namespace LSCore
             pathGenerator.particleHandlers = impactObject.particleHandlers;
             pathGenerator.particleDeathHandlers = impactObject.particleDeathHandlers;
             pathGenerator.ps.Play();
-            pathGenerator.SimulateParticles(simulateTime);
+            pathGenerator.SimulateParticles(deltaTime);
+            IsSimulating = false;
         }
 
         private void SimulateParticles(float simulateTime)
