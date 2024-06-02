@@ -24,13 +24,13 @@ namespace LSCore
         [field: Header("Optional")]
         [field: SerializeField] protected virtual LSButton HomeButton { get; private set; }
         [field: SerializeField] protected virtual LSButton BackButton { get; private set; }
+        [field: SerializeField] protected virtual bool NeedHideAllPrevious { get; private set; }
         public RectTransform RectTransform { get; private set; }
         public static Canvas Canvas { get; private set; }
-        
+
         protected virtual float DefaultAlpha => 0;
         protected virtual bool ActiveByDefault => false;
-        protected virtual bool NeedHideAllPrevious => true;
-        
+
         private static bool isCalledFromStatic;
 
         protected override void Init()

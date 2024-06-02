@@ -7,14 +7,20 @@ namespace Animatable
 {
     public class AnimatableCanvas : SingleService<AnimatableCanvas>
     {
-        private static Canvas canvas;
-        private static Camera Cam => canvas.worldCamera;
+        private Canvas canvas;
+        private static Camera Cam => Instance.canvas.worldCamera;
         
         [ColoredField, SerializeField] private AnimText animText;
         [ColoredField, SerializeField] private HealthBar healthBar;
         [ColoredField, SerializeField] private HealthBar opponentHealthBar;
         [ColoredField, SerializeField] private Loader loader;
 
+        public static int SortingOrder
+        {
+            get => Instance.canvas.sortingOrder;
+            set => Instance.canvas.sortingOrder = value;
+        }
+        
         public static Transform SpawnPoint => Instance.transform;
         internal static AnimText AnimText => Instance.animText;
         internal static HealthBar HealthBar => Instance.healthBar;
@@ -34,7 +40,6 @@ namespace Animatable
             opponentHealthBar.Init();
             canvas = GetComponent<Canvas>();
             canvas.worldCamera = Camera.main;
-            canvas.sortingOrder = 10;
             
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
@@ -54,7 +59,7 @@ namespace Animatable
         internal static Vector3 GetLocalPosition(Vector3 worldPos)
         {
             var targetLocalPosByCam = Cam.transform.InverseTransformPoint(worldPos);
-            targetLocalPosByCam /= canvas.transform.lossyScale.x;
+            targetLocalPosByCam /= Instance.canvas.transform.lossyScale.x;
             targetLocalPosByCam.z = 0;
             return targetLocalPosByCam;
         }

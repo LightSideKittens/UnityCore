@@ -17,7 +17,7 @@ namespace LSCore
         [ShowIf("$changeTextColorIfNotEnough")]
         [Id(typeof(PaletteIdGroup))] [SerializeField] private Id enoughColorId;
 
-        public override Id Id => fundText.Id;
+        public override Id Id => fundText == null ? null : fundText.Id;
 
         public override int Value
         {

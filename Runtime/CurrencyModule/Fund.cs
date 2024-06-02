@@ -12,11 +12,14 @@ namespace LSCore
         public abstract override int Value { get; set; }
 
 #if UNITY_EDITOR
+        private static IconsById _icons;
         public override string ToString() => Id == null ? "Null" : Id;
 
         protected override void SetIcon(ref Texture2D icon)
         {
-            if (Id != null && AssetDatabaseUtils.LoadAny<IconsById>("FundIcons_Editor").TryGetIcon(Id, out var sprite))
+            _icons ??= AssetDatabaseUtils.LoadAny<IconsById>("FundIcons_Editor");
+            
+            if (Id != null && _icons.TryGetIcon(Id, out var sprite))
             {
                 icon = sprite.texture;
                 return;
