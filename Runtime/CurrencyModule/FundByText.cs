@@ -34,7 +34,7 @@ namespace LSCore
             if (!World.IsPlaying) return;
             if (!changeTextColorIfNotEnough) return;
             
-            Funds.OnChanged(Id, UpdateColor, true);
+            Funds.AddOnChanged(Id, UpdateColor, true);
         }
 
         private void UpdateColor(int a)
@@ -45,8 +45,7 @@ namespace LSCore
                 return;
             }
 
-            var id = notEnoughColorId;
-            if (Spend(out _)) id = enoughColorId;
+            var id = CanSpend ? enoughColorId : notEnoughColorId;
             
             if (Palette.TryGet(id, out var color))
             {

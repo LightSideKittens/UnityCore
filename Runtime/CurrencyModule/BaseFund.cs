@@ -9,6 +9,8 @@ public abstract class BaseFund
 {
     public abstract Id Id { get; }
     public abstract int Value { get; set; }
+    public bool CanSpend => Currencies.Spend(Id, Value, out _);
+    
     public virtual void Earn()
     {
         Currencies.Earn(Id, Value);

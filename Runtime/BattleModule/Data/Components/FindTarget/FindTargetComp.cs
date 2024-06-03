@@ -18,9 +18,6 @@ namespace LSCore.BattleModule
         [NonSerialized] public Transform transform;
         private ConditionBuilder conditions;
         public LayerMask mask;
-        private Transform lastTarget;
-        private int frame;
-        private bool IsFound => lastTarget != null;
 
         public void Init(Transform transform)
         {
@@ -78,13 +75,6 @@ namespace LSCore.BattleModule
 
         public bool Find(in Vector2 position, float radius, HashSet<Transform> excepted, out Transform target)
         {
-            if (frame == Time.frameCount)
-            {
-                target = lastTarget;
-                return IsFound;
-            }
-            
-            frame = Time.frameCount;
             target = null;
 
             conditions.And(() => excepted.Contains(targetUnit.transform));
@@ -94,29 +84,19 @@ namespace LSCore.BattleModule
             }
 
             conditions.Clear().Add(checker);
-
-            lastTarget = target;
-            return IsFound;
+            return target != null;
         }
 
         public bool Find(in Vector2 position, float radius, out Transform target)
         {
-            if (frame == Time.frameCount)
-            {
-                target = lastTarget;
-                return IsFound;
-            }
-            
-            frame = Time.frameCount;
             target = null;
             
             if(Physics2DExt.TryFindNearestCollider(position, FindAllColliders(position, radius), out var col))
             {
                 target = col.transform;
             }
-
-            lastTarget = target;
-            return IsFound;
+            
+            return target != null;
         }
 
         public virtual bool Find(out Transform target) => Find(transform.position, 1000, out target);

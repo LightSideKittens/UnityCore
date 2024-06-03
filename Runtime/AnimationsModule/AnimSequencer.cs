@@ -126,8 +126,10 @@ namespace LSCore.AnimationsModule
                 {
                     var data = animsData[i];
                     var id = data.anim.id;
-                    id = string.IsNullOrEmpty(id) ? Random.Range(0, int.MaxValue).ToString() : id;
-                    animsById.Add(id, data.anim);
+                    if (!string.IsNullOrEmpty(id))
+                    {
+                        animsById.Add(id, data.anim);
+                    }
                 }
             }
         }

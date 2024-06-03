@@ -36,7 +36,7 @@ namespace LSCore
         }
         
         
-        public static void OnChanged(Id id, Action<int> onChanged, bool callImmediate = false)
+        public static void AddOnChanged(Id id, Action<int> onChanged, bool callImmediate = false)
         {
             if (onChangedActions.TryGetValue(id, out var action))
             {
@@ -47,7 +47,7 @@ namespace LSCore
             
             if (callImmediate)
             {
-                onChanged(GetValue(id));   
+                onChanged(GetValue(id));
             }
         }
         
@@ -68,7 +68,7 @@ namespace LSCore
         public static int GetValue(Id id) => Currencies.GetValue(id);
         public static void Earn(Id id, int value) => Currencies.Earn(id, value);
         public static bool Spend(Id id, int value, out Action action) => Currencies.Spend(id, value, out action);
-        public static void Clear(Id id) => Currencies.Clear(id);
+        public static void Remove(Id id) => Currencies.Remove(id);
         
         public IEnumerator<BaseFund> GetEnumerator() => funds.GetEnumerator();
         

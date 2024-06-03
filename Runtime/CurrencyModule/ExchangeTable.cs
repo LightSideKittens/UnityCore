@@ -11,8 +11,23 @@ namespace LSCore
         internal struct Pair
         {
             [Id(typeof(CurrencyIdGroup))] [HorizontalGroup] [LabelText("1")] [LabelWidth(10)] public Id from;
-            [HorizontalGroup(Width = 100)] [LabelText("=")] [LabelWidth(10)] public float rate;
+            [HorizontalGroup(Width = 100)] [LabelText("=")] [LabelWidth(10)] [Min(0.00000000001f)] public float rate;
             [Id(typeof(CurrencyIdGroup))] [HorizontalGroup] [HideLabel] public Id to;
+            
+            public override bool Equals(object other)
+            {
+                if (other is Pair pair)
+                {
+                    return pair.from == from && pair.to == to;
+                }
+
+                return false;
+            }
+
+            public override int GetHashCode()
+            {
+                return from.GetHashCode() - to.GetHashCode();
+            }
         }
 
         [Serializable]

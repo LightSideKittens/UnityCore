@@ -5,8 +5,9 @@ namespace LSCore
 {
     public struct WindowsData
     {
+        public const int DefaultSortingOrder = 100;
         internal static Action hideAllPrevious;
-        internal static int maxSortingOrder;
+        internal static int sortingOrder = DefaultSortingOrder;
         
         private static readonly Stack<Action> states = new();
         private static Action goHome;
@@ -63,10 +64,10 @@ namespace LSCore
             goHome = null;
             recordStates = false;
             recordedState = null;
-            maxSortingOrder = 0;
+            sortingOrder = DefaultSortingOrder;
         }
 
-        public static bool IsPreLast<T>(T window) where T : BaseWindow<T>
+        internal static bool IsPreLast<T>(T window) where T : BaseWindow<T>
         {
             if (states.TryPeek(out var state) && hideAllPrevious != null)
             {

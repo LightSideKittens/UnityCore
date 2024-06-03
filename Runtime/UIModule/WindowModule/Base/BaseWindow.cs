@@ -113,7 +113,7 @@ namespace LSCore
 
             WindowsData.hideAllPrevious += InternalHide;
             WindowsData.Record(InternalHide);
-            Canvas.sortingOrder = WindowsData.maxSortingOrder++;
+            Canvas.sortingOrder = WindowsData.sortingOrder++;
         }
 
         private void InternalHide()
@@ -121,7 +121,7 @@ namespace LSCore
             if (hideTween != null) return;
 
             AnimateOnHiding(OnCompleteHide);
-            WindowsData.maxSortingOrder--;
+            WindowsData.sortingOrder--;
             WindowsData.hideAllPrevious -= InternalHide;
             WindowsData.Record(InternalShow);
             Hiding?.Invoke();
@@ -169,7 +169,7 @@ namespace LSCore
         public static void Show()
         {
             isCalledFromStatic = true;
-            if (WindowsData.IsPreLast(Instance) && WindowsData.maxSortingOrder - 1 > Canvas.sortingOrder)
+            if (WindowsData.IsPreLast(Instance) && WindowsData.sortingOrder - 1 > Canvas.sortingOrder)
             {
                 WindowsData.GoBack();
                 return;

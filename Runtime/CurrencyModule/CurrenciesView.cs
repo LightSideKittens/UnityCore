@@ -17,7 +17,7 @@ namespace LSCore
 
             public void Init()
             {
-                Funds.OnChanged(id, OnChanged, true);
+                Funds.AddOnChanged(id, OnChanged, true);
             }
 
             private void OnChanged(int value)

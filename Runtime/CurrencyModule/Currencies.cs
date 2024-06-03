@@ -9,6 +9,11 @@ namespace LSCore
     {
         [JsonProperty] private Dictionary<string, int> currencies = new();
         internal static readonly Dictionary<string, Action<int>> onChangedActions = new();
+
+        static Currencies()
+        {
+            World.Destroyed += onChangedActions.Clear;
+        }
         
         internal static int GetValue(string name)
         {
@@ -44,10 +49,9 @@ namespace LSCore
             return false;
         }
 
-        internal static void Clear(string name)
+        internal static void Remove(string name)
         {
             Config.currencies.Remove(name);
-            onChangedActions.Remove(name);
         }
 
         private static void TryInvokeOnChanged(string name, int value)

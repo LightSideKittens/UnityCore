@@ -38,7 +38,7 @@ namespace LSCore.BattleModule
             visualRoot.DOShakePosition(0.15f, 0.2f, 25);
             block.SetFloat(exposure, 1.6f);
             block.DOFloat(1, exposure, 1f).OnUpdate(SetPropBlock);
-            healthBar.SetValue(health);
+            healthBar.SetValue(realHealth);
             AnimText.Create($"{(int)damage}", transform.position);
         }
 

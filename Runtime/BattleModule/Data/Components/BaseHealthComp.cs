@@ -8,6 +8,7 @@ namespace LSCore.BattleModule
     public class BaseHealthComp : BaseComp
     {
         [SerializeField] protected int health;
+        protected int realHealth;
         private bool isKilled;
         protected AffiliationType affiliation;
         public int Health => health;
@@ -26,22 +27,23 @@ namespace LSCore.BattleModule
 
         protected virtual void Reset()
         {
+            realHealth = health;
             isKilled = false;
         }
 
         public void Kill()
         {
-            TakeDamage(health);
+            TakeDamage(realHealth);
         }
 
         public void TakeDamage(int damage)
         {
             if (isKilled) return;
             
-            health -= damage;
+            realHealth -= damage;
             OnDamageTaken(damage);
             
-            if (health <= 0)
+            if (realHealth <= 0)
             {
                 isKilled = true;
                 transform.Get<Unit>().Kill();
