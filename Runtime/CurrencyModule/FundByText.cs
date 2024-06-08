@@ -17,7 +17,8 @@ namespace LSCore
         [ShowIf("$changeTextColorIfNotEnough")]
         [Id(typeof(PaletteIdGroup))] [SerializeField] private Id enoughColorId;
 
-        public override Id Id => fundText == null ? null : fundText.Id;
+        private Id id;
+        public override Id Id => id ??= fundText == null ? null : fundText.Id;
 
         public override int Value
         {
@@ -41,13 +42,13 @@ namespace LSCore
         {
             if (fundText == null)
             {
-                Funds.RemoveOnChanged(Id, UpdateColor);
+                Funds.RemoveOnChanged(id, UpdateColor);
                 return;
             }
 
-            var id = CanSpend ? enoughColorId : notEnoughColorId;
+            var colorId = CanSpend ? enoughColorId : notEnoughColorId;
             
-            if (Palette.TryGet(id, out var color))
+            if (Palette.TryGet(colorId, out var color))
             {
                 fundText.color = color;
             }

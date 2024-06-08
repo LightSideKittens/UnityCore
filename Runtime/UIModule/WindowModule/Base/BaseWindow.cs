@@ -1,6 +1,7 @@
 using System;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace LSCore
 {
@@ -20,14 +21,15 @@ namespace LSCore
         private Tween showTween;
         private Tween hideTween;
 
-        protected virtual Transform Parent => IsExistsInManager ? DaddyCanvas.Instance.transform : null;
         [field: Header("Optional")]
         [field: SerializeField] protected virtual LSButton HomeButton { get; private set; }
+
         [field: SerializeField] protected virtual LSButton BackButton { get; private set; }
         [field: SerializeField] protected virtual bool NeedHideAllPrevious { get; private set; }
         public RectTransform RectTransform { get; private set; }
         public static Canvas Canvas { get; private set; }
 
+        protected virtual Transform Daddy => DaddyCanvas.IsExistsInManager ? DaddyCanvas.Instance.transform : null;
         protected virtual float DefaultAlpha => 0;
         protected virtual bool ActiveByDefault => false;
 
@@ -36,19 +38,17 @@ namespace LSCore
         protected override void Init()
         {
             base.Init();
-            
             canvasGroup = GetComponent<CanvasGroup>();
             canvasGroup.alpha = DefaultAlpha;
             
             var canvas = GetComponent<Canvas>();
             Canvas = canvas;
-            
             var rectTransform = (RectTransform)transform;
             RectTransform = rectTransform;
 
-            if (Parent != null && Parent.TryGetComponent<Canvas>(out _))
+            if (Daddy != null)
             {
-                transform.SetParent(Parent, false);
+                transform.SetParent(Daddy, false);
                 var zero = Vector2.zero;
                 var one = Vector2.one;
                 

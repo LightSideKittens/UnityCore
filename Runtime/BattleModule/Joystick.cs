@@ -50,11 +50,20 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
         group.alpha = 0.5f;
         handle.localPosition = Vector3.zero;
         handleArea.localPosition = handleAreaStartPosition;
-        directions[lastFactor].SetActive(false);
+        
+        if (directions.Length > 3)
+        {
+            directions[lastFactor].SetActive(false);
+        }
     }
 
     private void SetupDirections()
     {
+        if (directions.Length < 4)
+        {
+            return;
+        }
+        
         var factor = Direction.DetermineQuadrant();
         if (lastFactor == factor) return;
         

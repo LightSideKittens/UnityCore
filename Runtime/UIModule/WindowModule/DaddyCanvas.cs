@@ -6,7 +6,7 @@ namespace LSCore
     {
         protected override bool ActiveByDefault => true;
         protected override float DefaultAlpha => 1;
-        protected override Transform Parent => null;
+        protected override Transform Daddy => null;
 
         protected override void RecordState(){}
     }
