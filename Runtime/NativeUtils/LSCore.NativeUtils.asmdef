@@ -1,7 +1,7 @@
 {
-    "name": "LSCore.Clipboard",
+    "name": "LSCore.NativeUtils",
     "rootNamespace": "",
-    "references": [],
+    "references": ["GUID:e203c3ad7a7046548ca22a43fa4eb0de"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

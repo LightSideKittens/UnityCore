@@ -1,4 +1,5 @@
-﻿using LSCore.Editor;
+﻿#if UNITY_EDITOR
+using LSCore.Editor;
 using UnityEngine;
 using UnityEditor;
 
@@ -29,3 +30,5 @@ public class CanvasWindow : EditorWindow
         LSHandles.End();
     }
 }
+
+#endif

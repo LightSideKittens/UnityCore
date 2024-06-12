@@ -1,6 +1,7 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+
+using System;
 using System.Collections.Generic;
-using DG.DemiEditor;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
@@ -386,3 +387,5 @@ public class AnimationClipsEditor : OdinEditorWindow
         return (t0 + t1) / 2;
     }
 }
+
+#endif
