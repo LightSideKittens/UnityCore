@@ -47,6 +47,7 @@ public partial class LevelsContainer
                 }
             }
             
+            OnTargetTypeChanged(allAssets);
             return allAssets;
         }
     }
