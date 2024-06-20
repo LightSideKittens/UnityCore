@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using Sirenix.Utilities.Editor;
+using static GlobalContextMenuAttribute;
 using static LSCore.Sirenix.Utilities.Editor.LSGenericMenuExtensions;
 
 public class GlobalContextMenuProcessor : OdinAttributeProcessor<object>
@@ -13,36 +13,64 @@ public class GlobalContextMenuProcessor : OdinAttributeProcessor<object>
         attributes.Add(new GlobalContextMenuAttribute());
     }
 }
-public class GlobalContextMenuAttribute : Attribute { }
+
+public class GlobalContextMenuAttribute : Attribute
+{
+    internal static Color changeColor = new Color(0.43f, 1f, 0.39f);
+    internal static FontStyle defaulLabelFontStyle;
+    internal static Color defaulLabelColor;
+    private static bool isInited;
+    
+    internal static void Init()
+    {
+        if (isInited)
+        {
+            return;
+        }
+
+        isInited = true;
+        defaulLabelColor = EditorStyles.label.normal.textColor;
+        defaulLabelFontStyle = FontStyle.Normal;
+        
+    }
+}
+
 public class GlobalContextMenuDrawer<T> : OdinAttributeDrawer<GlobalContextMenuAttribute, T>, IDefinesGenericMenuItems
 {
     protected override void DrawPropertyLayout(GUIContent label)
     {
-        CallNextDrawer(label);
-
+        Init();
+        ResetStyle();
         SerializedProperty sproperty = Property.Tree.GetUnityPropertyForPath(Property.Path);
-        if (sproperty is { prefabOverride: true })
-        {
-            Rect rect = GUILayoutUtility.GetLastRect();
-            Rect blueRect = new Rect(rect.x-3, rect.y, 3, rect.height);
-            EditorGUI.DrawRect(blueRect, new Color(1f, 0.88f, 0f));
-        }
+        bool hasOverrides = sproperty is { prefabOverride: true };
 
+        if (hasOverrides)
+        {
+            EditorStyles.label.fontStyle = FontStyle.Bold;
+            EditorStyles.label.normal.textColor = changeColor;
+            CallNextDrawer(label);
+            Rect rect = GUILayoutUtility.GetLastRect();
+            Rect blueRect = new Rect(rect.x-3, rect.y, 2, rect.height);
+            EditorGUI.DrawRect(blueRect, changeColor);
+        }
+        else
+        {
+            CallNextDrawer(label);
+        }
+        
+        ResetStyle();
+        void ResetStyle()
+        {
+            EditorStyles.label.fontStyle = defaulLabelFontStyle;
+            EditorStyles.label.normal.textColor = defaulLabelColor;
+        }
     }
 
     public void PopulateGenericMenu(InspectorProperty property, GenericMenu genericMenu)
     {
-        GameObject selectedObject = Selection.activeGameObject;
-        if (selectedObject == null)
+        GameObject selectedGameObject = Selection.activeGameObject;
+        if (selectedGameObject == null)
         {
-            Debug.LogError("Please select a GameObject in the hierarchy.");
-            return;
-        }
-
-        GameObject prefabRoot = selectedObject;
-        if (prefabRoot == null)
-        {
-            Debug.LogError("Selected GameObject is not part of a prefab instance.");
             return;
         }
         
@@ -57,7 +85,7 @@ public class GlobalContextMenuDrawer<T> : OdinAttributeDrawer<GlobalContextMenuA
         {
             List<GameObject> prefabs = new List<GameObject>();
             
-            GameObject prefab = selectedObject;
+            GameObject prefab = selectedGameObject;
 
             while (true)
             {

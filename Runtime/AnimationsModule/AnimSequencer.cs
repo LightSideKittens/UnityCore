@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using LSCore.AnimationsModule.Animations;
 using LSCore.AnimationsModule.Animations.Options;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using Random = UnityEngine.Random;
 
 namespace LSCore.AnimationsModule
 {
@@ -42,6 +42,17 @@ namespace LSCore.AnimationsModule
         private Sequence sequence;
 
         public T GetAnim<T>(string id) where T : BaseAnim => (T)animsById[id]; 
+        public T GetAnim<T>() where T : BaseAnim
+        {
+            foreach (var element in animsData)
+            {
+                if (element.anim is T anim)
+                {
+                    return anim;
+                }
+            }
+            return null;
+        }
 
 #if UNITY_EDITOR
         [OnInspectorGUI]
