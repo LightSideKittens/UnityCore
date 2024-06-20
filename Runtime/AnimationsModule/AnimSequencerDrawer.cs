@@ -40,7 +40,7 @@ namespace LSCore.AnimationsModule
         [IgnoreOdinValueDrawer] public AnimSequencer sequencer;
         [NonSerialized] public Object selected;
         
-        protected override void OnGUI()
+        protected override void OnImGUI()
         {
             if (selected == null || Selection.activeObject != selected)
             {
@@ -50,7 +50,7 @@ namespace LSCore.AnimationsModule
             }
 
             EditorGUI.BeginChangeCheck();
-            base.OnGUI();
+            base.OnImGUI();
             if (EditorGUI.EndChangeCheck())
             {
                 EditorUtility.SetDirty(selected);

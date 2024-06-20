@@ -12,7 +12,7 @@ namespace LSCore.BattleModule
         [SerializeField] private Vector2 scale = new Vector2(1, 1);
         [SerializeField] private Vector2 offset;
         [SerializeField] private Transform visualRoot;
-        [SerializeField] private Renderer[] renderers;
+        private Renderer[] renderers;
         private MaterialPropertyBlock block;
         private Animatable.HealthBar healthBar;
         private static readonly int exposure = Shader.PropertyToID("_Exposure");
@@ -20,6 +20,7 @@ namespace LSCore.BattleModule
         protected override void OnInit()
         {
             base.OnInit();
+            renderers = visualRoot.GetComponentsInChildren<Renderer>();
             block = new();
             healthBar = Animatable.HealthBar.Create(health, transform, offset, scale, affiliation == AffiliationType.Enemy);
             data.update += healthBar.Update; 

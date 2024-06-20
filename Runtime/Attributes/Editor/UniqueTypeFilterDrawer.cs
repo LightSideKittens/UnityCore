@@ -19,7 +19,7 @@ namespace LSCore.Attributes
                 prop = prop.Parent;
             }
             
-            var set = new HashSet<Type>(Attribute.ExludeTypes);
+            var set = new HashSet<Type>(Attribute.ExcludeTypes);
             var children = prop.Children;
             for (int i = 0; i < children.Count; i++)
             {

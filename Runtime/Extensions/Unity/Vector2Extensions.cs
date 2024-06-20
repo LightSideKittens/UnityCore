@@ -132,8 +132,7 @@ namespace LSCore.Extensions.Unity
             return point;
         }
 
-
-        public static float GetAspect(this in Vector2 target)
+        public static float GetScreenAspect(this in Vector2 target)
         {
             if (ScreenExt.IsPortrait)
             {
@@ -143,7 +142,7 @@ namespace LSCore.Extensions.Unity
             return target.y / target.x;
         }
         
-        public static float GetAspect(this in Vector2 target, ScreenOrientation orientation)
+        public static float GetScreenAspect(this in Vector2 target, ScreenOrientation orientation)
         {
             if (orientation == ScreenOrientation.Portrait)
             {

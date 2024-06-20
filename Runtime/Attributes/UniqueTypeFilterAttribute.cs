@@ -16,11 +16,11 @@ namespace LSCore.Attributes
         /// Gets or sets the title for the dropdown. Null by default.
         /// </summary>
         public string DropdownTitle;
-        public Type[] ExludeTypes;
+        public Type[] ExcludeTypes;
 
         public UniqueTypeFilterAttribute(params Type[] excludeTypes)
         {
-            ExludeTypes = excludeTypes;
+            ExcludeTypes = excludeTypes;
         }
     }
 }

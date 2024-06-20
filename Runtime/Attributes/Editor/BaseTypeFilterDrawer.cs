@@ -42,7 +42,7 @@ namespace LSCore.Attributes
                 if(lastItemType != childResolver.ElementType)
                 {
                     lastItemType = childResolver.ElementType;
-                    allTypes = AssemblyUtilities.GetTypes(AssemblyTypeFlags.PluginTypes | AssemblyTypeFlags.PluginEditorTypes)
+                    allTypes = AssemblyUtilities.GetTypes(AssemblyCategory.ProjectSpecific)
                         .Where(t => lastItemType.IsAssignableFrom(t) && !t.IsAbstract)
                         .ToList();
                 }
@@ -53,7 +53,7 @@ namespace LSCore.Attributes
                 if(lastItemType != type)
                 {
                     lastItemType = type;
-                    allTypes = AssemblyUtilities.GetTypes(AssemblyTypeFlags.PluginTypes | AssemblyTypeFlags.PluginEditorTypes)
+                    allTypes = AssemblyUtilities.GetTypes(AssemblyCategory.ProjectSpecific)
                         .Where(t => lastItemType.IsAssignableFrom(t) && !t.IsAbstract)
                         .ToList();
                 }
