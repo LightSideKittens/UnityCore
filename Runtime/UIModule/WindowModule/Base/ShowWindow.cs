@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using LSCore.Attributes;
 using LSCore.ConfigModule;
 using LSCore.Extensions;
@@ -30,7 +31,7 @@ namespace LSCore
 #if UNITY_EDITOR
             EditorApplication.update += Initialize;
 #else
-            Initialize();
+            World.Created += Initialize;
 #endif
         }
 
@@ -38,17 +39,17 @@ namespace LSCore
         {
 #if UNITY_EDITOR
             EditorApplication.update -= Initialize;
+#else
+            World.Created -= Initialize;
 #endif
-
             var type = typeof(BaseWindow<>);
 #if UNITY_EDITOR
             var allAssembly = type.Assembly.GetRelevantAssemblies();
-            var types = allAssembly
+            WindowTypes.Config.types = allAssembly
                 .SelectMany(assembly => assembly.GetTypes())
                 .Where(t => !t.IsAbstract && !t.IsGenericTypeDefinition)
                 .Where(t => t.IsSubclassOfRawGeneric(type))
                 .ToList();
-            
             
             ConfigUtils.Save<WindowTypes>();
 #endif
@@ -68,11 +69,13 @@ namespace LSCore
 
         public Assembly rootObjectAssembly;
 
+#if UNITY_EDITOR
         [GetInspectorProperty]
         private void GetRootObject(InspectorProperty property)
         {
             rootObjectAssembly = property.SerializationRoot.Info.TypeOfValue.Assembly;
         }
+#endif
         
         private IEnumerable<string> GetKeys()
         {

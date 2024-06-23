@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿#if UNITY_EDITOR
+
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEditor.SceneManagement;
@@ -6,7 +8,7 @@ using UnityEditor.SceneManagement;
 /// <summary>
 /// Custom editor for UI gradient Effect Component
 /// </summary>
-namespace PolyAndCode.UI.effect
+namespace LSCore
 {
     [CustomEditor(typeof(UIGradient), true)]
     public class UIGradientEditor : Editor
@@ -383,3 +385,5 @@ namespace PolyAndCode.UI.effect
         }
     }
 }
+
+#endif

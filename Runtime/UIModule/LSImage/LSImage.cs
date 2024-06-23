@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UI;
 
@@ -39,6 +40,7 @@ namespace LSCore
         
         private void DoMeshGeneration()
         {
+            Action<Mesh> fillMesh = vertexHelper.FillMesh;
             if (rt != null && rt.rect is { width: > 0, height: > 0 })
                 OnPopulateMesh(vertexHelper);
             else
@@ -50,14 +52,17 @@ namespace LSCore
             if (components.Count > 0)
             {
                 vertexHelper.FillLegacy(legacyVertexHelper);
+                fillMesh = legacyVertexHelper.FillMesh;
             }
-            
+
             for (var i = 0; i < components.Count; i++)
+            {
                 ((IMeshModifier)components[i]).ModifyMesh(legacyVertexHelper);
+            }
 
             ListPool<Component>.Release(components);
-
-            legacyVertexHelper.FillMesh(workerMesh);
+            
+            fillMesh(workerMesh);
             canvasRenderer.SetMesh(workerMesh);
         }
         

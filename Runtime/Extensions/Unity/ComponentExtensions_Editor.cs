@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -40,3 +41,4 @@ namespace LSCore.Extensions.Unity
         }
     }
 }
+#endif

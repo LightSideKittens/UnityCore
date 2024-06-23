@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿#if UNITY_EDITOR
+
+using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
@@ -11,7 +13,7 @@ using System.Collections.Generic;
 /// So, what this script does is skip the saving of a gradient material.
 /// The gradient shader/material is required only to support complex gradient rendering.
 /// </summary>
-namespace PolyAndCode.UI.effect
+namespace LSCore
 {
     public class PostProcessUIGradientAssets : UnityEditor.AssetModificationProcessor
     {
@@ -62,3 +64,5 @@ namespace PolyAndCode.UI.effect
         }
     }
 }
+
+#endif

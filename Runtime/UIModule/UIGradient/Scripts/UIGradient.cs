@@ -3,14 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Applies Gradient effect to UI.
-/// Gradient Types:
-/// Default : Vertex (Corner, Linear)
-/// Advanced : Linear, Radial, Angle, Reflected, Diamond
-/// Blend Modes : default and advanced
-/// </summary>
-namespace PolyAndCode.UI.effect
+namespace LSCore
 {
     [AddComponentMenu("UI/Effects/Gradient")]
     public class UIGradient : BaseMeshEffect

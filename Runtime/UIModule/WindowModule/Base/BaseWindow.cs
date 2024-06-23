@@ -3,6 +3,7 @@ using DG.Tweening;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace LSCore
 {
@@ -126,8 +127,10 @@ namespace LSCore
         
         public static void AsHome() => WindowsData.SetHome(Instance.Manager);
         
+        [Preserve]
         public static void Show(ShowWindowOption option)
         {
+            Debug.Log($"{typeof(T)} Show {option}");
             isCalledFromStatic = true;
             Instance.ShowOption = option;
             Show();
@@ -135,6 +138,7 @@ namespace LSCore
 
         public static void Show()
         {
+            Debug.Log($"{typeof(T)} Show");
             isCalledFromStatic = true;
             Instance.Manager.Show();
         }

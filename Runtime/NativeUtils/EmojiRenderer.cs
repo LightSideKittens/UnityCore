@@ -31,13 +31,10 @@ public static class EmojiRenderer
     };
     
 #if UNITY_ANDROID
-    private const string packageName = "com.lscore.emojirenderer.";
+    private const string packageName = "com.lscore.emojirenderer";
     private static AndroidJavaClass emojiRenderer;
-    private static AndroidJavaClass EmojiRendererClass => emojiRenderer ??= new AndroidJavaClass($"{packageName}EmojiRenderer");
+    private static AndroidJavaClass EmojiRendererClass => emojiRenderer ??= new AndroidJavaClass($"{packageName}.EmojiRenderer");
 #endif
-    
-    [DllImport("__Internal")]
-    private static extern byte[] renderEmoji(string text, float fontSize);
     
     public static void RenderEmoji(string emoji, float fontSize, Color color, out Texture2D texture)
     {

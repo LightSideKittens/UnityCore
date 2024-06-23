@@ -1,7 +1,10 @@
 ﻿using System;
-using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using Sirenix.OdinInspector.Editor;
+#endif
 
 namespace LSCore.Attributes
 {
@@ -15,6 +18,7 @@ namespace LSCore.Attributes
         }
     }
     
+#if UNITY_EDITOR
     [DrawerPriority(DrawerPriorityLevel.SuperPriority)]
     public class DefaultValueAttributeDrawer : OdinValueDrawer<object>
     {
@@ -49,4 +53,5 @@ namespace LSCore.Attributes
             CallNextDrawer(label);
         }
     }
+#endif
 }
