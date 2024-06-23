@@ -47,6 +47,7 @@ namespace UnityEngine.UI
 
         public void FillLegacy(VertexHelper vh)
         {
+            vh.Clear();
             var vertCount = currentVertCount;
             for (int i = 0; i < vertCount; i++)
             {

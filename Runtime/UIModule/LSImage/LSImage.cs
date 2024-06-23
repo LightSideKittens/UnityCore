@@ -15,17 +15,13 @@ namespace LSCore
         protected override void OnValidate()
         {
             rt = rectTransform;
-            UpdateColorEvaluateFunc();
             base.OnValidate();
-            CalculatePerpendicularPoints();
         }
         
         protected override void Reset()
         {
             rt = rectTransform;
             base.Reset();
-            gradient = new LSGradient(new LSGradient.Key(0, Color.white));
-            CalculatePerpendicularPoints();
         }
 #endif
 
@@ -34,8 +30,6 @@ namespace LSCore
         {
             rt = rectTransform;
             base.OnEnable();
-            gradient ??= new LSGradient(new LSGradient.Key(0, Color.white));
-            UpdateColorEvaluateFunc();
         }
 
         protected override void UpdateGeometry()
@@ -63,50 +57,18 @@ namespace LSCore
 
             ListPool<Component>.Release(components);
 
-            if (skipFillMesh)
-            {
-                skipFillMesh = false;
-            }
-            else
-            {
-                vertexHelper.FillMesh(resultMesh);
-                resultMeshVerts = vertexHelper.positions.ToArray();
-                resultMeshColors = new Color[resultMeshVerts.Length];
-            }
-            
-            canvasRenderer.SetMesh(resultMesh);
+            legacyVertexHelper.FillMesh(workerMesh);
+            canvasRenderer.SetMesh(workerMesh);
         }
         
         
         private void OnPopulateMesh(LSVertexHelper toFill)
         {
-            if (isRectDirty && gradient.Count > 1)
-            {
-                CalculatePerpendicularPoints();
-                isRectDirty = false;
-            }
-            
-            if (isColorDirty && resultMesh != null)
-            {
-                skipFillMesh = true;
-                UpdateMeshColors();
-                isColorDirty = false;
-                return;
-            }
-
-            if (isGradientDirty && TryGetCachedVertextHelper(toFill, withoutGradientMesh))
-            {
-                CutMeshForGradient(toFill);
-                UpdateMeshColors(toFill);
-                isGradientDirty = false;
-                return;
-            }
-            
+            defaultColor = color;
             if (overrideSprite == null)
             {
                 GenerateDefaultSprite(toFill);
                 PostProcessMesh(toFill);
-                
                 return;
             }
             
@@ -138,20 +100,10 @@ namespace LSCore
 
             PostProcessMesh(toFill);
         }
-
+        
         private void PostProcessMesh(LSVertexHelper vh)
         {
             RotateMesh(vh);
-            withoutGradientMesh = new Mesh();
-            vh.FillMesh(withoutGradientMesh);
-            
-            if (gradient.Count > 1)
-            {
-                CutMeshForGradient(vh);
-            }
-            
-            UpdateMeshColors(vh);
-            resultMesh = new Mesh();
         }
 
         public delegate void RotateAction(ref Vector3 value, in Vector2 center);
@@ -233,50 +185,6 @@ namespace LSCore
                 (pos.x, pos.y) = (pos.y, pos.x);
                 rect.position = pos;
             }
-        }
-
-        private bool TryGetCachedVertextHelper(LSVertexHelper vh, Mesh mesh)
-        {
-            var canCompute = mesh != null;
-            
-            if (canCompute)
-            {
-                vh.Clear();
-                var zero = Vector4.zero;
-                var verts = mesh.vertices;
-                var tris = mesh.triangles;
-                var uvs = mesh.uv;
-                var uv0 = new Vector4();
-
-                if (isColorDirty)
-                {
-                    for (int i = 0; i < verts.Length; i++)
-                    {
-                        var uv = uvs[i];
-                        uv0.x = uv.x;
-                        uv0.y = uv.y;
-                        vh.AddVert(verts[i], defaultColor, uv0, zero, zero, zero);
-                    }
-                }
-                else
-                {
-                    var colors = mesh.colors;
-                    for (int i = 0; i < verts.Length; i++)
-                    {
-                        var uv = uvs[i];
-                        uv0.x = uv.x;
-                        uv0.y = uv.y;
-                        vh.AddVert(verts[i], colors[i], uv0, zero, zero, zero);
-                    }
-                }
-
-                for (int i = 0; i < tris.Length; i += 3)
-                {
-                    vh.AddTriangle(tris[i], tris[i+1], tris[i+2]);
-                }
-            }
-
-            return canCompute;
         }
     }
 }

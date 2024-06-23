@@ -9,7 +9,7 @@ namespace LSCore.Extensions.Unity
 
         static CameraExtensions()
         {
-            if (ScreenExt.IsPortrait)
+            if (LSScreen.IsPortrait)
             {
                 sizeGetter = GetSizeOnPortraitMode;
             }
@@ -39,14 +39,14 @@ namespace LSCore.Extensions.Unity
         {
             var orthographicSize = camera.orthographicSize;
 
-            return new Vector3(orthographicSize, orthographicSize / ScreenExt.Aspect);
+            return new Vector3(orthographicSize, orthographicSize / LSScreen.Aspect);
         }
     
         private static Vector3 GetSizeOnAlbumMode(Camera camera)
         {
             var orthographicSize = camera.orthographicSize;
 
-            return new Vector3(orthographicSize / ScreenExt.Aspect, orthographicSize);
+            return new Vector3(orthographicSize / LSScreen.Aspect, orthographicSize);
         }
     }
 }

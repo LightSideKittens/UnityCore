@@ -134,7 +134,7 @@ namespace LSCore.Extensions.Unity
 
         public static float GetScreenAspect(this in Vector2 target)
         {
-            if (ScreenExt.IsPortrait)
+            if (LSScreen.IsPortrait)
             {
                 return target.x / target.y;
             }

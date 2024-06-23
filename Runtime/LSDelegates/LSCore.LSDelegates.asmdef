@@ -1,15 +1,16 @@
 {
-    "name": "LSCore.Attributes",
+    "name": "LSCore.LSDelegates",
     "rootNamespace": "",
     "references": [
-        "GUID:e203c3ad7a7046548ca22a43fa4eb0de",
+        "GUID:bb5ab3e5517faff4287376ae8f1fc9fc",
         "GUID:3dd2cb52eff6e5743bdb8fcc64baed91"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
-    "autoReferenced": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false

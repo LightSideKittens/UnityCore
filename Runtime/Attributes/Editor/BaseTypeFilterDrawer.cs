@@ -42,9 +42,7 @@ namespace LSCore.Attributes
                 if(lastItemType != childResolver.ElementType)
                 {
                     lastItemType = childResolver.ElementType;
-                    allTypes = AssemblyUtilities.GetTypes(AssemblyCategory.ProjectSpecific)
-                        .Where(t => lastItemType.IsAssignableFrom(t) && !t.IsAbstract)
-                        .ToList();
+                    InitAllTypes(lastItemType);
                 }
             }
             else
@@ -53,9 +51,7 @@ namespace LSCore.Attributes
                 if(lastItemType != type)
                 {
                     lastItemType = type;
-                    allTypes = AssemblyUtilities.GetTypes(AssemblyCategory.ProjectSpecific)
-                        .Where(t => lastItemType.IsAssignableFrom(t) && !t.IsAbstract)
-                        .ToList();
+                    InitAllTypes(type);
                 }
             }
 
@@ -66,6 +62,54 @@ namespace LSCore.Attributes
             ReloadDropdownCollections();
         }
 
+        
+        private void InitAllTypes(Type type)
+        {
+            var assembly = Property.SerializationRoot.Info.TypeOfValue.Assembly;
+            var setTypes = assembly.GetVisibleTypes();
+            var nestedTypes = new HashSet<Type>();
+            
+            allTypes = setTypes
+                .Where(t =>
+                {
+                    if (type.IsAssignableFrom(t) && !t.IsAbstract)
+                    {
+                        if (t.IsGenericType)
+                        {
+                            nestedTypes.AddRange(FindAllConcreteNestedTypes(setTypes, t));
+                        }
+
+                        return true;
+                    }
+
+                    return false;
+                })
+                .ToList();
+            allTypes.AddRange(nestedTypes);
+        }
+        
+        public static HashSet<Type> FindAllConcreteNestedTypes(IEnumerable<Type> types, Type nestedGenericType)
+        {
+            HashSet<Type> nestedTypes = new HashSet<Type>();
+
+            foreach (var type in types)
+            {
+                if (type.IsClass && !type.IsAbstract && type.BaseType != null && type.BaseType.IsGenericType)
+                {
+                    Type baseType = type.BaseType.GetGenericTypeDefinition();
+                    if (baseType == nestedGenericType.DeclaringType.GetGenericTypeDefinition())
+                    {
+                        var target = nestedGenericType.MakeGenericType(type.BaseType.GetGenericArguments());
+                        Debug.Log(target);
+                        nestedTypes.Add(target);
+                    }
+                }
+            }
+
+            return nestedTypes;
+        }
+        
+        
         protected abstract IEnumerable<object> GetRawGetter();
 
         private void ReloadDropdownCollections()

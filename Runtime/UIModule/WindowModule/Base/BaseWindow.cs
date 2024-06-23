@@ -1,5 +1,7 @@
 using System;
 using DG.Tweening;
+using LSCore.Extensions.Unity;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace LSCore
@@ -14,25 +16,25 @@ namespace LSCore
 
         public static event Action Showed;
         public static event Action Hidden;
-
-        [SerializeField] protected float fadeSpeed = 0.2f;
+        
+        private static bool isCalledFromStatic;
+        
+        [SerializeField] protected float animDuration = 0.2f;
         private CanvasGroup canvasGroup;
-        private Tween showTween;
-        private Tween hideTween;
+        
+        public RectTransform RectTransform { get; private set; }
+        public Canvas Canvas { get; private set; }
+        protected virtual WindowManager Manager { get; } = new();
 
         [field: Header("Optional")]
         [field: SerializeField] protected virtual LSButton HomeButton { get; private set; }
-
         [field: SerializeField] protected virtual LSButton BackButton { get; private set; }
-        [field: SerializeField] protected virtual bool NeedHideAllPrevious { get; private set; }
-        public RectTransform RectTransform { get; private set; }
-        public static Canvas Canvas { get; private set; }
 
-        protected virtual Transform Daddy => DaddyCanvas.IsExistsInManager ? DaddyCanvas.Instance.transform : null;
+        protected virtual ShowWindowOption ShowOption { get; private set; }
+        protected virtual RectTransform Daddy => DaddyCanvas.IsExistsInManager ? DaddyCanvas.Instance.RectTransform : null;
         protected virtual float DefaultAlpha => 0;
         protected virtual bool ActiveByDefault => false;
 
-        private static bool isCalledFromStatic;
 
         protected override void Init()
         {
@@ -45,27 +47,12 @@ namespace LSCore
             var rectTransform = (RectTransform)transform;
             RectTransform = rectTransform;
 
+            InitManager();
+            
             if (Daddy != null)
             {
                 transform.SetParent(Daddy, false);
-                var zero = Vector2.zero;
-                var one = Vector2.one;
-                
-                Rect safeArea = Screen.safeArea;
-
-                Vector2 anchorMin = safeArea.position;
-                Vector2 anchorMax = safeArea.position + safeArea.size;
-                anchorMin.x /= Screen.width;
-                anchorMin.y /= Screen.height;
-                anchorMax.x /= Screen.width;
-                anchorMax.y /= Screen.height;
-
-                rectTransform.anchorMin = anchorMin;
-                rectTransform.anchorMax = anchorMax;
-                rectTransform.anchoredPosition = zero;
-                rectTransform.offsetMin = zero;
-                rectTransform.offsetMax = zero;
-                rectTransform.localScale = one;
+                FitInSafeArea(rectTransform);
             }
             else
             {
@@ -82,108 +69,79 @@ namespace LSCore
             gameObject.SetActive(ActiveByDefault);
         }
 
+        protected virtual void InitManager()
+        {
+            Manager.Init(gameObject, Canvas);
+            Manager.Showing += OnShowing;
+            Manager.Showed += OnShowed;
+            Manager.Hiding += OnHiding;
+            Manager.Hidden += OnHidden;
+            Manager.showOption = () => ShowOption;
+            Manager.showAnim = () => ShowAnim;
+            Manager.hideAnim = () => HideAnim;
+        }
+
+        [Button]
+        private void FitInSafeArea()
+        {
+            FitInSafeArea((RectTransform)transform);
+        }
+        
+        private void FitInSafeArea(RectTransform target)
+        {
+            var parent = (RectTransform)target.root;
+            var zero = Vector2.zero;
+            var one = Vector2.one;
+
+            Rect safeArea = Screen.safeArea;
+            float xFactor = parent.rect.width / LSScreen.Width;
+            float yFactor = parent.rect.height / LSScreen.Height;
+
+            target.anchorMin = zero;
+            target.anchorMax = one;
+            target.anchoredPosition = zero;
+            target.localScale = one;
+
+            target.offsetMin = safeArea.min * xFactor;
+            target.offsetMax = (safeArea.max - new Vector2(LSScreen.Width, LSScreen.Height)) * yFactor;
+        }
+        
         protected override void DeInit()
         {
             base.DeInit();
             isCalledFromStatic = false;
         }
 
-        protected virtual void OnBackButton() => WindowsData.GoBack();
-
-        protected virtual void OnHomeButton() => WindowsData.GoHome();
-
-        private void InternalShow()
-        {
-            if (showTween != null) return;
-
-            AnimateOnShowing(OnCompleteShow);
-            Showing?.Invoke();
-            gameObject.SetActive(true);
-            OnShowing();
-            RecordState();
-        }
-
-        protected virtual void RecordState()
-        {
-            if (NeedHideAllPrevious)
-            {
-                WindowsData.HideAllPrevious();
-            }
-
-            WindowsData.hideAllPrevious += InternalHide;
-            WindowsData.Record(InternalHide);
-            Canvas.sortingOrder = WindowsData.sortingOrder++;
-        }
-
-        private void InternalHide()
-        {
-            if (hideTween != null) return;
-
-            AnimateOnHiding(OnCompleteHide);
-            WindowsData.sortingOrder--;
-            WindowsData.hideAllPrevious -= InternalHide;
-            WindowsData.Record(InternalShow);
-            Hiding?.Invoke();
-            OnHiding();
-        }
-
-        private void OnCompleteShow()
-        {
-            OnShowed();
-            Showed?.Invoke();
-        }
-
-        private void OnCompleteHide()
-        {
-            gameObject.SetActive(false);
-            OnHidden();
-            Hidden?.Invoke();
-        }
-
         protected virtual void OnShowing() { }
         protected virtual void OnHiding() { }
         protected virtual void OnShowed() {}
         protected virtual void OnHidden() { }
+        protected virtual Tween ShowAnim => canvasGroup.DOFade(1, animDuration);
 
-        private void AnimateOnShowing(TweenCallback onComplete)
+        protected virtual Tween HideAnim => canvasGroup.DOFade(0, animDuration);
+        
+        protected virtual void OnBackButton() => WindowsData.GoBack();
+
+        protected virtual void OnHomeButton() => WindowsData.GoHome();
+        
+        public static void AsHome() => WindowsData.SetHome(Instance.Manager);
+        
+        public static void Show(ShowWindowOption option)
         {
-            hideTween?.Kill();
-            hideTween = null;
-            showTween = ShowAnim.OnComplete(onComplete);
+            isCalledFromStatic = true;
+            Instance.ShowOption = option;
+            Show();
         }
-
-        private void AnimateOnHiding(TweenCallback onComplete)
-        {
-            showTween?.Kill();
-            showTween = null;
-            hideTween = HideAnim.OnComplete(onComplete);
-        }
-
-        protected virtual Tween ShowAnim => canvasGroup.DOFade(1, fadeSpeed);
-
-        protected virtual Tween HideAnim => canvasGroup.DOFade(0, fadeSpeed);
-
-        public static void AsHome() => WindowsData.SetHome<T>();
 
         public static void Show()
         {
             isCalledFromStatic = true;
-            if (WindowsData.IsPreLast(Instance) && WindowsData.sortingOrder - 1 > Canvas.sortingOrder)
-            {
-                WindowsData.GoBack();
-                return;
-            }
-            WindowsData.StartRecording();
-            Instance.InternalShow();
-            WindowsData.StopRecording();
+            Instance.Manager.Show();
         }
 
         internal static void GoHome()
         {
-            WindowsData.StartRecording();
-            WindowsData.HideAllPrevious();
-            Show();
-            WindowsData.StopRecording();
+            Instance.Manager.GoHome();
         }
     }
 }

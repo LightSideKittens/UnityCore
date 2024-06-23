@@ -15,11 +15,6 @@ namespace LSCore
     public class LSImageEditor : ImageEditor
     {
         SerializedProperty rotateId;
-        SerializedProperty invert;
-        SerializedProperty gradient;
-        SerializedProperty angle;
-        SerializedProperty gradientStart;
-        SerializedProperty gradientEnd;
 
         SerializedProperty m_Sprite;
         SerializedProperty m_Type;
@@ -31,7 +26,6 @@ namespace LSCore
         private LSImage image;
         private RectTransform rect;
         private bool isDragging;
-        private bool isEditing;
 
         protected override void OnEnable()
         {
@@ -42,18 +36,11 @@ namespace LSCore
             m_PreserveAspect = serializedObject.FindProperty("m_PreserveAspect");
             m_UseSpriteMesh = serializedObject.FindProperty("m_UseSpriteMesh");
             rotateId = serializedObject.FindProperty("rotateId");
-            invert = serializedObject.FindProperty("invert");
-            gradient = serializedObject.FindProperty("gradient");
-            angle = serializedObject.FindProperty("angle");
-            gradientStart = serializedObject.FindProperty("gradientStart");
-            gradientEnd = serializedObject.FindProperty("gradientEnd");
             combineFilledWithSliced = serializedObject.FindProperty("combineFilledWithSliced");
             m_PixelsPerUnitMultiplier = serializedObject.FindProperty("m_PixelsPerUnitMultiplier");
             bIsDriven = typeof(ImageEditor).GetField("m_bIsDriven", BindingFlags.Instance | BindingFlags.NonPublic);
             image = (LSImage)target;
             rect = image.GetComponent<RectTransform>();
-            isEditing = false;
-            
         }
 
         public override void OnInspectorGUI()
@@ -62,26 +49,11 @@ namespace LSCore
             bIsDriven.SetValue(this, (rect.drivenByObject as Slider)?.fillRect == rect);
 
             SpriteGUI();
-            EditorGUILayout.PropertyField(gradient);
-            EditorGUILayout.PropertyField(invert);
-            
-            if (image.Gradient.Count > 1)
-            {
-                angle.floatValue = EditorGUILayout.Slider("Angle", angle.floatValue, 0, 360);
-                gradientStart.floatValue = EditorGUILayout.Slider("Gradient Start", gradientStart.floatValue, -1, 1);
-                gradientEnd.floatValue = EditorGUILayout.Slider("Gradient End", gradientEnd.floatValue, -1, 1);
-            }
-            else
-            {
-                isEditing = false;
-            }
-
-            EditorGUILayout.PropertyField(m_Material);
+            AppearanceControlsGUI();
             RaycastControlsGUI();
             MaskableControlsGUI();
-
             TypeGUI();
-            
+
             if (image.type == Image.Type.Filled && image.fillMethod is Image.FillMethod.Horizontal or Image.FillMethod.Vertical)
             {
                 EditorGUILayout.PropertyField(combineFilledWithSliced);

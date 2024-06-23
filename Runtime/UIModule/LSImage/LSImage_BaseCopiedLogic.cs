@@ -828,7 +828,7 @@ namespace LSCore
             vertexHelper.AddTriangle(startIndex + 2, startIndex + 3, startIndex);
         }
 
-        private static readonly Color32 defaultColor = new (255, 255, 255, 255);
+        private static Color32 defaultColor;
         
         private void AddVert(in LSVertexHelper vh, in Vector3 position, in Vector4 uv0)
         {
