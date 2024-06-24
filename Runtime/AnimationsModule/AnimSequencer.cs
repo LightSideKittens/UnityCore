@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using DG.Tweening;
 using LSCore.AnimationsModule.Animations;
 using LSCore.AnimationsModule.Animations.Options;
@@ -13,7 +12,7 @@ namespace LSCore.AnimationsModule
     public class AnimSequencer : ISerializationCallbackReceiver
     {
         [Serializable]
-        private struct AnimData
+        public struct AnimData
         {
             [TableColumnWidth(80, false)]
             public float timeOffset;
@@ -36,33 +35,46 @@ namespace LSCore.AnimationsModule
         [SerializeReference] private IOptions[] options;
         
         [TableList]
-        [SerializeField] private AnimData[] animsData;
+        [SerializeField] private List<AnimData> animsData = new();
 
         private Dictionary<string, BaseAnim> animsById = new();
+        private Dictionary<Type, List<BaseAnim>> animsByType = new();
         private Sequence sequence;
 
+        public int Count => animsData.Count;
+        
         public T GetAnim<T>(string id) where T : BaseAnim => (T)animsById[id]; 
         public T GetAnim<T>() where T : BaseAnim
         {
-            foreach (var element in animsData)
+            return (T)animsByType[typeof(T)][0];
+        }
+        
+        public bool TryGetAnim<T>(out T anim) where T : BaseAnim
+        {
+            if (animsByType.TryGetValue(typeof(T), out var anim1))
             {
-                if (element.anim is T anim)
-                {
-                    return anim;
-                }
+                anim = (T)anim1[0];
+                return true;
             }
-            return null;
+
+            anim = null;
+            return false;
+        }
+
+        public bool Contains<T>()
+        {
+            return animsByType.ContainsKey(typeof(T));
         }
 
 #if UNITY_EDITOR
         [OnInspectorGUI]
         private void OnGUI()
         {
-            if (animsData is {Length: > 0})
+            if (animsData is {Count: > 0})
             {
                 var currentTime = 0f;
                 
-                for (int i = 0; i < animsData.Length; i++)
+                for (int i = 0; i < animsData.Count; i++)
                 {
                     var data = animsData[i];
                     currentTime += data.timeOffset;
@@ -86,7 +98,7 @@ namespace LSCore.AnimationsModule
 
         public void InitAllAnims()
         {
-            for (int i = 0; i < animsData.Length; i++)
+            for (int i = 0; i < animsData.Count; i++)
             {
                 animsData[i].anim.TryInit();
             }
@@ -95,20 +107,19 @@ namespace LSCore.AnimationsModule
         public Sequence Animate()
         {
             var currentTime = 0f;
-            sequence.Kill();
+            if (sequence is { active: false })
+            {
+                sequence.Kill();
+            }
+            
             sequence = DOTween.Sequence().SetId(this);
 
-            for (int i = 0; i < animsData.Length; i++)
+            for (int i = 0; i < animsData.Count; i++)
             {
                 var data = animsData[i];
                 var anim = data.anim;
-                anim.TryInit();
-                
-                if (!anim.IsDurationZero)
-                {
-                    currentTime += data.timeOffset;
-                    sequence.Insert(currentTime, anim.Animate());
-                }
+                currentTime += data.timeOffset;
+                sequence.Insert(currentTime, anim.Animate());
             }
 
             if (options != null)
@@ -133,16 +144,34 @@ namespace LSCore.AnimationsModule
         {
             if (animsData != null && World.IsPlaying)
             {
-                for (int i = 0; i < animsData.Length; i++)
+                for (int i = 0; i < animsData.Count; i++)
                 {
-                    var data = animsData[i];
-                    var id = data.anim.id;
-                    if (!string.IsNullOrEmpty(id))
-                    {
-                        animsById.Add(id, data.anim);
-                    }
+                    Add(animsData[i].anim);
                 }
             }
+        }
+
+        public void Add(AnimData data)
+        {
+            animsData.Add(data);
+            Add(data.anim);
+        }
+        
+        private void Add(BaseAnim anim)
+        {
+            var id = anim.id;
+            if (!string.IsNullOrEmpty(id))
+            {
+                animsById.Add(id, anim);
+            }
+            var type = anim.GetType();
+            if (!animsByType.TryGetValue(type, out var list))
+            {
+                list = new List<BaseAnim>();
+                animsByType.Add(type, list);
+            }
+
+            list.Add(anim);
         }
     }
 }

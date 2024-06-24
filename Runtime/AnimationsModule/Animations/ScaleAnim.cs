@@ -5,18 +5,16 @@ using UnityEngine;
 namespace LSCore.AnimationsModule.Animations
 {
     [Serializable]
-    public class ScaleAnim : BaseAnim<Vector3>
+    public class ScaleAnim : BaseAnim<Vector3, Transform>
     {
-        public Transform target;
-
-        protected override void Internal_Init()
+        protected override void InitAction(Transform target)
         {
             target.localScale = startValue;
         }
         
-        protected override Tween Internal_Animate()
+        protected override Tween AnimAction(Transform target)
         {
-            return target.DOScale(endValue, duration);
+            return target.DOScale(endValue,Duration);
         }
     }
 }

@@ -10,7 +10,6 @@ namespace LSCore
         private static T instance;
         private static Func<T> staticConstructor;
         private static Action onInitializing;
-        private static bool isInited;
         public override Type Type => typeof(T);
 
         protected static T Instance => staticConstructor();
@@ -34,18 +33,7 @@ namespace LSCore
         {
             onInitializing?.Invoke();
             staticConstructor = TrowException;
-
-            if (instance == null)
-            {
-                isInited = true;
-                instance = Instantiate(ServiceManager.GetService<T>());
-            }
-
-            staticConstructor = GetInstance;
-
-            instance.Init();
-
-            return instance;
+            return Instantiate(ServiceManager.GetService<T>());;
         }
 
         private static T GetInstance() => instance;
@@ -76,14 +64,9 @@ namespace LSCore
 
         private void Awake()
         {
-            if (!isInited)
-            {
-                isInited = true;
-                instance = (T)this;
-                staticConstructor = GetInstance;
-                instance.Init();
-            }
-            
+            instance = (T)this;
+            staticConstructor = GetInstance;
+            instance.Init();
             Debug.Log($"[{GetType().Name}] Awake");
         }
 
@@ -98,7 +81,6 @@ namespace LSCore
 
         private static void ResetStatic()
         {
-            isInited = false;
             onInitializing = null;
             staticConstructor = StaticConstructor;
         }

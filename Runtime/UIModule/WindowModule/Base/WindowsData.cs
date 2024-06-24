@@ -109,5 +109,10 @@ namespace LSCore
                 action();
             }
         }
+
+        public static bool IsHome(WindowManager manager)
+        {
+            return goHome.Target == manager;
+        }
     }
 }

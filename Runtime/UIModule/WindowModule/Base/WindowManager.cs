@@ -11,9 +11,8 @@ namespace LSCore
 
         public event Action Showed;
         public event Action Hidden;
-        
 
-        private Canvas canvas;
+
         private Tween showTween;
         private Tween hideTween;
         private GameObject gameObject;
@@ -21,11 +20,11 @@ namespace LSCore
         public Func<ShowWindowOption> showOption;
         public Func<Tween> showAnim;
         public Func<Tween> hideAnim;
-        
-        public void Init(GameObject gameObject, Canvas canvas = null)
+        public Canvas canvas;
+
+        public void Init(GameObject gameObject)
         {
             this.gameObject = gameObject;
-            this.canvas = canvas;
         }
         
         public void Show()
@@ -53,20 +52,23 @@ namespace LSCore
             if (showTween != null) return;
 
             AnimateOnShowing(OnCompleteShow);
+            WindowsData.CallOption(showOption());
+            if (!WindowsData.IsHome(this))
+            {
+                RecordState();
+            }
+            if (canvas)
+            {
+                canvas.sortingOrder = WindowsData.sortingOrder++;
+            }
             Showing?.Invoke();
             gameObject.SetActive(true);
-            WindowsData.CallOption(showOption());
-            RecordState();
         }
 
         protected virtual void RecordState()
         {
             WindowsData.hideAllPrevious += InternalHide;
             WindowsData.Record(InternalHide);
-            if (canvas)
-            {
-                canvas.sortingOrder = WindowsData.sortingOrder++;
-            }
         }
 
         private void InternalHide()
@@ -98,14 +100,30 @@ namespace LSCore
         {
             hideTween?.Kill();
             hideTween = null;
-            showTween = showAnim().OnComplete(onComplete);
+            var tween = showAnim().OnComplete(onComplete).OnRewind(onComplete);
+            if (tween.Duration() == 0)
+            {
+                onComplete();
+            }
+            else
+            {
+                showTween = tween;
+            }
         }
 
         private void AnimateOnHiding(TweenCallback onComplete)
         {
             showTween?.Kill();
             showTween = null;
-            hideTween = hideAnim().OnComplete(onComplete);
+            var tween = hideAnim().OnComplete(onComplete).OnRewind(onComplete);
+            if (tween.Duration() == 0)
+            {
+                onComplete();
+            }
+            else
+            {
+                hideTween = tween;
+            }
         }
     }
 }

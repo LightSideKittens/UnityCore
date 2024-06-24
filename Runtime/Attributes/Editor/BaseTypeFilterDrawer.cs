@@ -97,7 +97,7 @@ namespace LSCore.Attributes
                 if (type.IsClass && !type.IsAbstract && type.BaseType != null && type.BaseType.IsGenericType)
                 {
                     Type baseType = type.BaseType.GetGenericTypeDefinition();
-                    if (baseType == nestedGenericType.DeclaringType.GetGenericTypeDefinition())
+                    if (nestedGenericType.DeclaringType != null && baseType == nestedGenericType.DeclaringType.GetGenericTypeDefinition())
                     {
                         var target = nestedGenericType.MakeGenericType(type.BaseType.GetGenericArguments());
                         Debug.Log(target);

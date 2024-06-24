@@ -5,18 +5,16 @@ using TMPro;
 namespace LSCore.AnimationsModule.Animations.Text
 {
     [Serializable]
-    public class TextNumberAnim : BaseAnim<int>
+    public class TextNumberAnim : BaseAnim<int, TMP_Text>
     {
-        public TMP_Text target;
-
-        protected override void Internal_Init()
+        protected override void InitAction(TMP_Text target)
         {
             target.text = $"{startValue}";
         }
 
-        protected override Tween Internal_Animate()
+        protected override Tween AnimAction(TMP_Text target)
         {
-            return DOVirtual.Int(startValue, endValue, duration, value => target.text = $"{value}");
+            return DOVirtual.Int(startValue, endValue,Duration, value => target.text = $"{value}");
         }
     }
 }

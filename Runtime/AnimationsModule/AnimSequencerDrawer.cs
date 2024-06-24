@@ -42,13 +42,16 @@ namespace LSCore.AnimationsModule
         
         protected override void OnImGUI()
         {
-            if (selected == null || Selection.activeObject != selected)
+            if (selected == null)
             {
-                selected = null;
                 Close();
                 return;
             }
 
+            GUI.enabled = false;
+            EditorGUILayout.ObjectField(selected, typeof(Object), true);
+            GUI.enabled = true;
+            
             EditorGUI.BeginChangeCheck();
             base.OnImGUI();
             if (EditorGUI.EndChangeCheck())

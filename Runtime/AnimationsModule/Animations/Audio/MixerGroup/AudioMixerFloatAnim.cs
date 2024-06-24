@@ -5,19 +5,18 @@ using UnityEngine.Audio;
 namespace LSCore.AnimationsModule.Animations.Audio.MixerGroup
 {
     [Serializable]
-    public class AudioMixerFloatAnim : BaseAnim<float>
+    public class AudioMixerFloatAnim : BaseAnim<float, AudioMixerGroup>
     {
-        public AudioMixerGroup target;
         public string key;
 
-        protected override void Internal_Init()
+        protected override void InitAction(AudioMixerGroup target)
         {
             target.audioMixer.SetFloat(key, startValue);
         }
 
-        protected override Tween Internal_Animate()
+        protected override Tween AnimAction(AudioMixerGroup target)
         {
-            return target.audioMixer.DOSetFloat(key, endValue, duration);
+            return target.audioMixer.DOSetFloat(key, endValue,Duration);
         }
     }
 }

@@ -5,18 +5,16 @@ using UnityEngine;
 namespace LSCore.AnimationsModule.Animations.Text
 {
     [Serializable]
-    public class CameraSizeAnim : BaseAnim<float>
+    public class CameraSizeAnim : BaseAnim<float, Camera>
     {
-        public Camera target;
-
-        protected override void Internal_Init()
+        protected override void InitAction(Camera target)
         {
             target.orthographicSize = startValue;
         }
 
-        protected override Tween Internal_Animate()
+        protected override Tween AnimAction(Camera target)
         {
-            return target.DOOrthoSize(endValue, duration);
+            return target.DOOrthoSize(endValue,Duration);
         }
     }
 }

@@ -5,18 +5,16 @@ using UnityEngine;
 namespace LSCore.AnimationsModule.Animations
 {
     [Serializable]
-    public class SizeDeltaAnim : BaseAnim<Vector2>
+    public class SizeDeltaAnim : BaseAnim<Vector2, RectTransform>
     {
-        public RectTransform target;
-
-        protected override void Internal_Init()
+        protected override void InitAction(RectTransform target)
         {
             target.sizeDelta = startValue;
         }
 
-        protected override Tween Internal_Animate()
+        protected override Tween AnimAction(RectTransform target)
         {
-            return target.DOSizeDelta(endValue, duration);
+            return target.DOSizeDelta(endValue,Duration);
         }
     }
 }

@@ -5,12 +5,11 @@ using UnityEngine;
 namespace LSCore.AnimationsModule.Animations
 {
     [Serializable]
-    public class RotateAnim : BaseAnim<Vector3>
+    public class RotateAnim : BaseAnim<Vector3, Transform>
     {
-        public Transform target;
         public bool useLocalSpace;
 
-        protected override void Internal_Init()
+        protected override void InitAction(Transform target)
         {
             if (useLocalSpace)
             {
@@ -21,9 +20,9 @@ namespace LSCore.AnimationsModule.Animations
             target.eulerAngles = startValue;
         }
         
-        protected override Tween Internal_Animate()
+        protected override Tween AnimAction(Transform target)
         {
-            return useLocalSpace ? target.DOLocalRotate(endValue, duration) : target.DORotate(endValue, duration);
+            return useLocalSpace ? target.DOLocalRotate(endValue,Duration) : target.DORotate(endValue,Duration);
         }
     }
 }

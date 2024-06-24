@@ -1,16 +1,31 @@
 ﻿using System;
+using LightSideCore.Runtime.UIModule;
 using LSCore;
 using UnityEngine;
 
 [Serializable]
-public class LSButtonAction : LSAction
+public abstract class LSClickAction : LSAction
 {
-    public LSButton button;
+    public abstract IClickable Clickable { get; }
 
     [SerializeReference] public LSAction action;
         
     public override void Invoke()
     {
-        button.Clicked += action.Invoke;
+        Clickable.Clicked += action.Invoke;
     }
+}
+
+[Serializable]
+public class LSButtonAction : LSClickAction
+{
+    public LSButton button;
+    public override IClickable Clickable => button;
+}
+
+[Serializable]
+public class LSTextAction : LSClickAction
+{
+    public LSText text;
+    public override IClickable Clickable => text;
 }
