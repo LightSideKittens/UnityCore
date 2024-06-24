@@ -33,7 +33,9 @@ namespace LSCore
         {
             onInitializing?.Invoke();
             staticConstructor = TrowException;
-            return Instantiate(ServiceManager.GetService<T>());;
+            var obj = Instantiate(ServiceManager.GetService<T>());
+            obj.Awake();
+            return obj;
         }
 
         private static T GetInstance() => instance;
@@ -62,8 +64,11 @@ namespace LSCore
             onInitializing += action;
         }
 
+        private bool isInited;
         private void Awake()
         {
+            if(isInited) return;
+            isInited = true;
             instance = (T)this;
             staticConstructor = GetInstance;
             instance.Init();

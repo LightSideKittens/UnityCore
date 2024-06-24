@@ -142,7 +142,7 @@ namespace LSCore.AnimationsModule
 
         public void OnAfterDeserialize()
         {
-            if (animsData != null && World.IsPlaying)
+            if (animsData != null)
             {
                 for (int i = 0; i < animsData.Count; i++)
                 {
@@ -150,7 +150,7 @@ namespace LSCore.AnimationsModule
                 }
             }
         }
-
+        
         public void Add(AnimData data)
         {
             animsData.Add(data);
