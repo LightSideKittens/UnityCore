@@ -9,10 +9,19 @@ namespace LSCore
     {
         public T viewPrefab;
         public Transform parent;
+        public int parentOffset = 0;
         private T view;
         public override T Invoke()
         {
-            view ??= Object.Instantiate(viewPrefab, parent);
+            var p = parent;
+            int i = 0;
+            while (p is not null && i < parentOffset)
+            {
+                p = p.parent;
+                i++;    
+            }
+            
+            view ??= Object.Instantiate(viewPrefab, p);
             return view;
         }
     }

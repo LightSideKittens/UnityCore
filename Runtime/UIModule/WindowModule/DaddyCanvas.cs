@@ -13,6 +13,6 @@ namespace LSCore
         protected override bool UseDefaultAnimation => false;
         protected override RectTransform Daddy => null;
 
-        protected override WindowManager Manager { get; } = new DaddyWindowManager();
+        public override WindowManager Manager { get; } = new DaddyWindowManager();
     }
 }

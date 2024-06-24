@@ -6,12 +6,18 @@ using UnityEngine;
 
 namespace LSCore
 {
+    public interface IUIView
+    {
+        RectTransform RectTransform { get; }
+        WindowManager Manager { get; }
+    }
+    
     [RequireComponent(typeof(RectTransform))]
-    public abstract class BaseUIView<T> : SingleService<T>, ISerializationCallbackReceiver where T : BaseUIView<T>
+    public abstract class BaseUIView<T> : SingleService<T>, ISerializationCallbackReceiver, IUIView where T : BaseUIView<T>
     {
         public new AnimSequencer animation;
         public RectTransform RectTransform { get; private set; }
-        protected virtual WindowManager Manager { get; } = new();
+        public virtual WindowManager Manager { get; } = new();
 
         [Header("Optional")] 
         [SerializeReference] protected List<LSClickAction> clickActions;
@@ -85,14 +91,14 @@ namespace LSCore
 
         public void Show(ShowWindowOption option)
         {
-            Burger.Log($"[{typeof(T)}] ({gameObject.name}) Show with option {option}");
+            Burger.Log($"[{typeof(T).Name}] ({gameObject.name}) Show with option {option}");
             ShowOption = option;
             Show();
         }
 
         public void Show()
         {
-            Burger.Log($"[{typeof(T)}] ({gameObject.name}) Show");
+            Burger.Log($"[{typeof(T).Name}] ({gameObject.name}) Show");
             Manager.Show();
         }
 
