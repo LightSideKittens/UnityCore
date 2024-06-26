@@ -98,9 +98,15 @@ namespace LSCore
 
         private void AnimateOnShowing(TweenCallback onComplete)
         {
+            var tween = showAnim();
+            if (tween == null)
+            {
+                onComplete();
+                return;
+            }
             hideTween?.Kill();
             hideTween = null;
-            var tween = showAnim().OnComplete(onComplete).OnRewind(onComplete);
+            tween.OnComplete(onComplete).OnRewind(onComplete);
             if (tween.Duration() == 0)
             {
                 onComplete();
@@ -113,9 +119,15 @@ namespace LSCore
 
         private void AnimateOnHiding(TweenCallback onComplete)
         {
+            var tween = hideAnim();
+            if (tween == null)
+            {
+                onComplete();
+                return;
+            }
             showTween?.Kill();
             showTween = null;
-            var tween = hideAnim().OnComplete(onComplete).OnRewind(onComplete);
+            tween.OnComplete(onComplete).OnRewind(onComplete);
             if (tween.Duration() == 0)
             {
                 onComplete();

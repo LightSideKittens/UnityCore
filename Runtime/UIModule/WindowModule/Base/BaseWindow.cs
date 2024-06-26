@@ -28,12 +28,13 @@ namespace LSCore
             isCalledFromStatic = false;
         }
         
+        private static string logTag = $"[{typeof(T).Name}]".ToTag(new Color(0f, 0.79f, 0.22f));
         public static void AsHome() => WindowsData.SetHome(Instance.Manager);
         
         [Preserve]
         public static void Show(ShowWindowOption option)
         {
-            Burger.Log($"[{typeof(T)}] Show {option}");
+            Burger.Log($"{logTag} Show {option}");
             isCalledFromStatic = true;
             Instance.ShowOption = option;
             Show();
@@ -41,7 +42,7 @@ namespace LSCore
 
         public static void Show()
         {
-            Burger.Log($"[{typeof(T)}] Show");
+            Burger.Log($"{logTag} Show");
             isCalledFromStatic = true;
             Instance.Manager.Show();
         }

@@ -96,7 +96,7 @@ namespace LSCore.AnimationsModule
         }
 #endif
 
-        public void InitAllAnims()
+        public void Init()
         {
             for (int i = 0; i < animsData.Count; i++)
             {
@@ -146,6 +146,9 @@ namespace LSCore.AnimationsModule
             {
                 for (int i = 0; i < animsData.Count; i++)
                 {
+#if UNITY_EDITOR
+                    if(animsData[i].anim == null) continue;    
+#endif
                     Add(animsData[i].anim);
                 }
             }
@@ -162,7 +165,7 @@ namespace LSCore.AnimationsModule
             var id = anim.id;
             if (!string.IsNullOrEmpty(id))
             {
-                animsById.Add(id, anim);
+                animsById.TryAdd(id, anim);
             }
             var type = anim.GetType();
             if (!animsByType.TryGetValue(type, out var list))

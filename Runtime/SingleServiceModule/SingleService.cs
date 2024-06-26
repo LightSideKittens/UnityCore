@@ -65,6 +65,8 @@ namespace LSCore
         }
 
         private bool isInited;
+        private string logTag => $"[{GetType().Name}]".ToTag(new Color(0.64f, 0.35f, 1f));
+        
         private void Awake()
         {
             if(isInited) return;
@@ -72,7 +74,7 @@ namespace LSCore
             instance = (T)this;
             staticConstructor = GetInstance;
             instance.Init();
-            Debug.Log($"[{GetType().Name}] Awake");
+            Burger.Log($"{logTag} {name} Awake");
         }
 
         protected virtual void Init() { }

@@ -20,9 +20,10 @@ namespace LSCore.AnimationsModule
             if (GUILayout.Button($"Edit {label}"))
             {
                 var editor = EditorWindow.GetWindow<AnimSequencerEditor>();
-                editor.Show();
+                editor.titleContent.text = $"{Property.NiceName} in {Property.SerializationRoot.ValueEntry.WeakSmartValue}";
                 editor.sequencer = ValueEntry.SmartValue;
                 editor.selected = Selection.activeObject;
+                editor.Show();
             }
         }
         
@@ -39,7 +40,7 @@ namespace LSCore.AnimationsModule
     {
         [IgnoreOdinValueDrawer] public AnimSequencer sequencer;
         [NonSerialized] public Object selected;
-        
+
         protected override void OnImGUI()
         {
             if (selected == null)

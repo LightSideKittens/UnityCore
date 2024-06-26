@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using DG.Tweening;
-using LSCore.AnimationsModule;
-using LSCore.AnimationsModule.Animations;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace LSCore
@@ -13,19 +12,23 @@ namespace LSCore
     }
     
     [RequireComponent(typeof(RectTransform))]
-    public abstract class BaseUIView<T> : SingleService<T>, ISerializationCallbackReceiver, IUIView where T : BaseUIView<T>
+    public abstract class BaseUIView<T> : SingleService<T>, IUIView where T : BaseUIView<T>
     {
-        public new AnimSequencer animation;
+        [SerializeReference] public ShowHideAnim showHideAnim = new DefaultUIViewAnimation();
         public RectTransform RectTransform { get; private set; }
         public virtual WindowManager Manager { get; } = new();
-
-        [Header("Optional")] 
+        
+        [FoldoutGroup("Optional")]
         [SerializeReference] protected List<LSClickAction> clickActions;
-        [field: SerializeField] protected virtual LSButton HomeButton { get; private set; }
-        [field: SerializeField] protected virtual LSButton BackButton { get; private set; }
+        [field: SerializeField, FoldoutGroup("Optional")] protected virtual LSButton HomeButton { get; private set; }
+        [field: SerializeField, FoldoutGroup("Optional")] protected virtual LSButton BackButton { get; private set; }
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowing;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHiding;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowed;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHidden;
+        
 
         protected virtual ShowWindowOption ShowOption { get; set; }
-        protected virtual bool UseDefaultAnimation => true;
         protected virtual bool ActiveByDefault => false;
 
 
@@ -34,7 +37,7 @@ namespace LSCore
             base.Init();
             clickActions.Invoke();
             InitManager();
-            animation.InitAllAnims();
+            showHideAnim?.Init();
             if (BackButton != null) BackButton.Clicked += OnBackButton;
             if (HomeButton != null) HomeButton.Clicked += OnHomeButton;
 
@@ -54,34 +57,13 @@ namespace LSCore
             Manager.hideAnim = () => HideAnim;
         }
 
-        protected virtual void OnShowing()
-        {
-        }
+        protected virtual void OnShowing() => onShowing.Invoke();
+        protected virtual void OnHiding() => onHiding.Invoke();
+        protected virtual void OnShowed() => onShowed.Invoke();
+        protected virtual void OnHidden() => onHidden.Invoke();
 
-        protected virtual void OnHiding()
-        {
-        }
-
-        protected virtual void OnShowed()
-        {
-        }
-
-        protected virtual void OnHidden()
-        {
-        }
-
-        protected virtual Tween ShowAnim => animation.Animate();
-
-        protected virtual Tween HideAnim
-        {
-            get
-            {
-                var tween = animation.Animate();
-                tween.Goto(tween.Duration(), true);
-                tween.PlayBackwards();
-                return tween;
-            }
-        }
+        protected virtual Tween ShowAnim => showHideAnim?.Show;
+        protected virtual Tween HideAnim => showHideAnim?.Hide;
 
         protected virtual void OnBackButton() => WindowsData.GoBack();
 
@@ -89,43 +71,19 @@ namespace LSCore
 
         public void AsHome() => WindowsData.SetHome(Manager);
 
+        private static string logTag = $"[{typeof(T).Name}]".ToTag(new Color(0.38f, 1f, 0.33f));
+        
         public void Show(ShowWindowOption option)
         {
-            Burger.Log($"[{typeof(T).Name}] ({gameObject.name}) Show with option {option}");
+            Burger.Log($"{logTag} {gameObject.name} Show with option {option}");
             ShowOption = option;
-            Show();
+            Manager.Show();
         }
 
         public void Show()
         {
-            Burger.Log($"[{typeof(T).Name}] ({gameObject.name}) Show");
+            Burger.Log($"{logTag} {gameObject.name} Show");
             Manager.Show();
-        }
-
-        public void OnBeforeSerialize()
-        {
-            if (this && animation != null && animation.Count == 0 && UseDefaultAnimation)
-            {
-                var anim = new AlphaAnim();
-                var canvasGroupAnim = new CanvasGroupAlphaAnim();
-                anim.canvasGroupAnim = canvasGroupAnim;
-                canvasGroupAnim.target = GetComponent<CanvasGroup>();
-                canvasGroupAnim.Duration = 0.2f;
-                canvasGroupAnim.startValue = 0;
-                canvasGroupAnim.endValue = 1;
-                canvasGroupAnim.NeedInit = true;
-                animation.Add(new AnimSequencer.AnimData()
-                {
-                    anim = anim,
-                    time = 0,
-                    timeOffset = 0,
-                });
-            }
-        }
-
-        public void OnAfterDeserialize()
-        {
-
         }
     }
 }

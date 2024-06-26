@@ -1,11 +1,33 @@
 {
-    "name": "Template.LSCore.Burger",
+    "name": "LSCore.Burger",
     "rootNamespace": "",
-    "references": [],
-    "includePlatforms": [
-        "Stadia"
+    "references": [
+        "GUID:e203c3ad7a7046548ca22a43fa4eb0de"
     ],
-    "excludePlatforms": [],
+    "includePlatforms": [],
+    "excludePlatforms": [
+        "Android",
+        "Editor",
+        "EmbeddedLinux",
+        "GameCoreScarlett",
+        "GameCoreXboxOne",
+        "iOS",
+        "LinuxStandalone64",
+        "CloudRendering",
+        "macOSStandalone",
+        "PS4",
+        "PS5",
+        "QNX",
+        "Stadia",
+        "Switch",
+        "tvOS",
+        "WSA",
+        "VisionOS",
+        "WebGL",
+        "WindowsStandalone32",
+        "WindowsStandalone64",
+        "XboxOne"
+    ],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],

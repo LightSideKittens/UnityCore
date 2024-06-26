@@ -177,16 +177,18 @@ namespace LSCore.ConfigModule
             return JToken.Parse(json);
         }
 
+        private string logTag => $"[{fileName}]".ToTag(new Color(0.19f, 0.97f, 1f));
+        
         private void Deserialize(string json)
         {
-            Log($"[{fileName}] Loaded (Deserialized)");
+            Log("Loaded (Deserialized)");
 
             JsonConvert.PopulateObject(json, this, Settings);
         }
 
         private string Serialize()
         {
-            Log($"[{fileName}] Saved (Serialized)");
+            Log("Saved (Serialized)");
             var json = JsonConvert.SerializeObject(this, Settings);
 
             return json;
@@ -198,7 +200,7 @@ namespace LSCore.ConfigModule
 #if UNITY_EDITOR
             if (LogEnabled)
 #endif
-                Burger.Log(message);
+                Burger.Log($"{logTag} {message}");
         }
     }
 
