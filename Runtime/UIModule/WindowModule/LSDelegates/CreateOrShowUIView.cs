@@ -1,27 +1,26 @@
 ﻿using System;
+using LSCore.ReferenceFrom.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace LSCore
 {
-    public class Create<T> : LSFunc<T> where T : Object
+    public class Create<T> : LSFunc<T> where T : Component
     {
         public T viewPrefab;
-        public Transform parent;
-        public int parentOffset = 0;
+        public Transform root;
+        public string pathToObject;
         private T view;
         public override T Invoke()
         {
-            var p = parent;
-            int i = 0;
-            while (p is not null && i < parentOffset)
+            Transform parent = root;
+            if (root != null)
             {
-                p = p.parent;
-                i++;    
+                parent = root.FindComponent<Transform>(pathToObject);
             }
             
-            view ??= Object.Instantiate(viewPrefab, p);
+            view ??= Object.Instantiate(viewPrefab, parent);
             return view;
         }
     }

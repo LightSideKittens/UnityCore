@@ -59,6 +59,38 @@ namespace LSCore.ReferenceFrom.Extensions
         {
             return component.GetPathFrom(from.gameObject);
         }
+        
+        public static GameObject FindGameObject(this GameObject baseObject, string path)
+        {
+            if (string.IsNullOrEmpty(path)) return baseObject;
+            string[] pathParts = path.Split('/');
+            Transform currentTransform = baseObject.transform;
+            
+            foreach (string part in pathParts)
+            {
+                if (part == "..")
+                {
+                    currentTransform = currentTransform.parent;
+                }
+                else if (part != ".")
+                {
+                    currentTransform = currentTransform.Find(part);
+                    if (currentTransform == null)
+                    {
+                        Debug.LogError($"Path part '{part}' not found in '{currentTransform.name}'");
+                        return baseObject;
+                    }
+                }
+            }
+
+            return currentTransform.gameObject;
+        }
+
+        public static T FindComponent<T>(this Transform baseObject, string path)
+             where T : Component
+        {
+            return baseObject.gameObject.FindGameObject(path).GetComponent<T>();
+        }
 
         public static GameObject Get<TComponent>(this TComponent component, GameObject path) where TComponent : Component
         {
