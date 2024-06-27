@@ -84,7 +84,7 @@ namespace LSCore.Editor.BackupSystem
         [SerializeField, Min(5)] 
         [LabelText("Max backups count")]
         [OnValueChanged(nameof(OnMaxBackupsCountChanged))]
-        private int maxBackupsCount = 30;
+        private int maxBackupsCount = 200;
         
         [Title("Backups")]
         [SerializeField] 

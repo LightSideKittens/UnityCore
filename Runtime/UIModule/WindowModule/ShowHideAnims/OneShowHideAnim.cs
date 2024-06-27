@@ -5,18 +5,24 @@ using LSCore.AnimationsModule;
 namespace LSCore
 {
     [Serializable]
-    public class InOutShowHideAnim : ShowHideAnim
+    public class OneShowHideAnim : ShowHideAnim
     {
         public AnimSequencer animation;
 
         public override void Init() => animation.Init();
 
         public override Tween Show => animation.Animate();
+        public override Tween Hide => animation.Animate();
+    }
+    
+    [Serializable]
+    public class InOutShowHideAnim : OneShowHideAnim
+    {
         public override Tween Hide
         {
             get
             {
-                var tween = animation.Animate();
+                var tween = base.Hide;
                 tween.Goto(tween.Duration(), true);
                 tween.PlayBackwards();
                 return tween;

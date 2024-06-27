@@ -2,6 +2,7 @@
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace LSCore
 {
@@ -22,15 +23,19 @@ namespace LSCore
         [SerializeReference] protected List<LSClickAction> clickActions;
         [field: SerializeField, FoldoutGroup("Optional")] protected virtual LSButton HomeButton { get; private set; }
         [field: SerializeField, FoldoutGroup("Optional")] protected virtual LSButton BackButton { get; private set; }
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowing;
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHiding;
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowed;
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHidden;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowing = null;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHiding = null;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowed = null;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHidden = null;
         
 
         protected virtual ShowWindowOption ShowOption { get; set; }
         protected virtual bool ActiveByDefault => false;
 
+        [Preserve]
+        protected void SetAnimation(ShowHideAnim anim) => showHideAnim = anim;
+        [Preserve]
+        protected void SetNeedDisableOnHidden(bool needDisableOnHidden) => Manager.needDisableOnHidden = needDisableOnHidden;
 
         protected override void Init()
         {

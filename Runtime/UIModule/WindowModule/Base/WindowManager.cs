@@ -21,6 +21,8 @@ namespace LSCore
         public Func<Tween> showAnim;
         public Func<Tween> hideAnim;
         public Canvas canvas;
+        public bool needDisableOnHidden = true;
+        public bool IsShow { get; private set; }
 
         public void Init(GameObject gameObject)
         {
@@ -29,7 +31,7 @@ namespace LSCore
         
         public void Show()
         {
-            if (WindowsData.IsPreLast(this) && (canvas == null || WindowsData.sortingOrder - 1 > canvas.sortingOrder))
+            if (WindowsData.IsAt(this, ^2))
             {
                 WindowsData.GoBack();
                 return;
@@ -39,7 +41,7 @@ namespace LSCore
             WindowsData.StopRecording();
         }
 
-        internal void GoHome()
+        internal void HideAllPreviousAndShow()
         {
             WindowsData.StartRecording();
             WindowsData.HideAllPrevious();
@@ -51,7 +53,7 @@ namespace LSCore
         {
             if (showTween != null) return;
 
-            AnimateOnShowing(OnCompleteShow);
+            IsShow = true;
             WindowsData.CallOption(showOption());
             if (!WindowsData.IsHome(this))
             {
@@ -61,12 +63,15 @@ namespace LSCore
             {
                 canvas.sortingOrder = WindowsData.sortingOrder++;
             }
+            
             Showing?.Invoke();
+            AnimateOnShowing(OnCompleteShow);
             gameObject.SetActive(true);
         }
 
         protected virtual void RecordState()
         {
+            WindowsData.hidePrevious = InternalHide;
             WindowsData.hideAllPrevious += InternalHide;
             WindowsData.Record(InternalHide);
         }
@@ -75,14 +80,16 @@ namespace LSCore
         {
             if (hideTween != null) return;
 
-            AnimateOnHiding(OnCompleteHide);
+            IsShow = false;
             if (canvas)
             {
                 WindowsData.sortingOrder--;
             }
             WindowsData.hideAllPrevious -= InternalHide;
             WindowsData.Record(InternalShow);
+            
             Hiding?.Invoke();
+            AnimateOnHiding(OnCompleteHide);
         }
         
         private void OnCompleteShow()
@@ -92,7 +99,7 @@ namespace LSCore
 
         private void OnCompleteHide()
         {
-            gameObject.SetActive(false);
+            if (needDisableOnHidden) gameObject.SetActive(false);
             Hidden?.Invoke();
         }
 

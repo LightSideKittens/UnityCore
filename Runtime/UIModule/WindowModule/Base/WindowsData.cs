@@ -16,12 +16,17 @@ namespace LSCore
 
         private static readonly Dictionary<ShowWindowOption, Action> showWindowOptions = new()
         {
-            { ShowWindowOption.HidePrevious, HidePrevious},
-            { ShowWindowOption.HideAllPrevious, HideAllPrevious},
+            { ShowWindowOption.HidePrevious, HidePrevious },
+            { ShowWindowOption.HideAllPrevious, HideAllPrevious },
         };
-        
+
+        internal static bool IsGoBack { get; private set; }
+        internal static bool IsHidePrevious { get; private set; }
+        internal static bool IsHideAllPrevious { get; private set; }
+        internal static Action hidePrevious;
         internal static Action hideAllPrevious;
         internal static int sortingOrder = DefaultSortingOrder;
+        
         
         private static readonly Stack<Action> states = new();
         private static Action goHome;
@@ -33,9 +38,29 @@ namespace LSCore
             World.Destroyed += Clear;
         }
         
-        internal static void GoBack() => states.Pop()();
-        internal static void HidePrevious() => ((Action)hideAllPrevious?.GetInvocationList()[^1])?.Invoke();
-        internal static void HideAllPrevious() => hideAllPrevious?.Invoke();
+        internal static void GoBack()
+        {
+            IsGoBack = true;
+            if (states.TryPop(out var action))
+            {
+                action();
+            }
+            IsGoBack = false;
+        }
+
+        internal static void HidePrevious()
+        {
+            IsHidePrevious = true;
+            hidePrevious?.Invoke();
+            IsHidePrevious = false;
+        }
+
+        internal static void HideAllPrevious()
+        {
+            IsHideAllPrevious = true;
+            hideAllPrevious?.Invoke();
+            IsHideAllPrevious = false;
+        }
 
         internal static void StartRecording()
         {
@@ -69,7 +94,7 @@ namespace LSCore
         internal static void SetHome(WindowManager manager)
         {
             Clear();
-            goHome += manager.GoHome;
+            goHome += manager.HideAllPreviousAndShow;
         }
 
         private static void Clear()
@@ -82,7 +107,7 @@ namespace LSCore
             sortingOrder = DefaultSortingOrder;
         }
 
-        internal static bool IsPreLast(WindowManager manager)
+        internal static bool IsAt(WindowManager manager, Index index)
         {
             if (states.TryPeek(out var state) && hideAllPrevious != null)
             {
@@ -95,7 +120,7 @@ namespace LSCore
             {
                 if (action.Target == null)
                 {
-                    return action.GetInvocationList()[^2].Target == manager;
+                    return action.GetInvocationList()[index].Target == manager;
                 }
                 
                 return action.Target == manager;

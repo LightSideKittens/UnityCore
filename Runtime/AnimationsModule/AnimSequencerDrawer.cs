@@ -1,6 +1,7 @@
 ﻿#if UNITY_EDITOR
 using System;
 using Sirenix.OdinInspector.Editor;
+using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -17,7 +18,10 @@ namespace LSCore.AnimationsModule
                 return;
             }
 
-            if (GUILayout.Button($"Edit {label}"))
+            var rect = EditorGUILayout.GetControlRect();
+            rect.TakeFromLeft(EditorGUI.indentLevel * 15);
+            
+            if (GUI.Button(rect, $"Edit {label}"))
             {
                 var editor = EditorWindow.GetWindow<AnimSequencerEditor>();
                 editor.titleContent.text = $"{Property.NiceName} in {Property.SerializationRoot.ValueEntry.WeakSmartValue}";
