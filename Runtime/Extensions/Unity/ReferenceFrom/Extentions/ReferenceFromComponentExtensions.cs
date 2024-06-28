@@ -87,7 +87,6 @@ namespace LSCore.ReferenceFrom.Extensions
         }
 
         public static T FindComponent<T>(this Transform baseObject, string path)
-             where T : Component
         {
             return baseObject.gameObject.FindGameObject(path).GetComponent<T>();
         }
