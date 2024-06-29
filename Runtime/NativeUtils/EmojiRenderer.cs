@@ -104,12 +104,14 @@ public static class EmojiRenderer
 #if UNITY_EDITOR_WIN
         return GetWidthOnWin(text, fontSize);
 #endif
+
+        return 0;
     }
     
     public static List<string> GetGraphemeClustersAndroid(string text)
     {
-        if (Application.platform == RuntimePlatform.Android)
-        {
+#if !UNITY_EDITOR
+    #if UNITY_ANDROID
             var result = EmojiRendererClass.CallStatic<AndroidJavaObject>("getGraphemeClusters", text);
             var list = new List<string>();
             for (int i = 0; i < result.Call<int>("size"); i++)
@@ -117,7 +119,8 @@ public static class EmojiRenderer
                 list.Add(result.Call<string>("get", i));
             }
             return list;
-        }
+    #endif
+#endif
         return new List<string>();
     }
     
