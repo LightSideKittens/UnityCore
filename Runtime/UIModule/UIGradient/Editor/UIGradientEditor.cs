@@ -200,7 +200,7 @@ namespace LSCore
                         script.SetVerticesDirty();
                     }
                 }
-
+                script.Alpha = EditorGUILayout.Slider("Alpha", script.Alpha, 0, 1);
                 EditorGUILayout.Space();
                 DrawUILine(Color.gray);
 

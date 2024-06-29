@@ -462,6 +462,12 @@ namespace LSCore
             }
         }
 
+        public float Alpha
+        {
+            set => graphic.canvasRenderer.SetAlpha(value);
+            get => graphic.canvasRenderer.GetAlpha();
+        }
+        
         /// <summary>
         /// Gradient for Fragment(Pixel) types
         /// </summary>

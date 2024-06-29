@@ -110,7 +110,11 @@ namespace LSCore.ConfigModule
 
         [JsonIgnore] protected virtual JsonSerializerSettings Settings { get; } = new()
         {
-            ContractResolver = UnityJsonContractResolver.Instance
+            ContractResolver = UnityJsonContractResolver.Instance,
+            Error = (_, args) =>
+            {
+                args.ErrorContext.Handled = true;
+            }
         };
 
         protected virtual void SetDefault(){}
@@ -169,6 +173,11 @@ namespace LSCore.ConfigModule
             
             File.WriteAllText(FullFileName,json); 
             OnSaved();
+        }
+        
+        protected internal void Delete()
+        {
+            File.Delete(FullFileName); 
         }
 
         internal JToken GetJToken()

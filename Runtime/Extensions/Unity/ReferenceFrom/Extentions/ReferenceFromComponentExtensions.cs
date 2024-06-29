@@ -60,7 +60,7 @@ namespace LSCore.ReferenceFrom.Extensions
             return component.GetPathFrom(from.gameObject);
         }
         
-        public static GameObject FindGameObject(this GameObject baseObject, string path)
+        public static Transform FindTransform(this Transform baseObject, string path)
         {
             if (string.IsNullOrEmpty(path)) return baseObject;
             string[] pathParts = path.Split('/');
@@ -83,12 +83,12 @@ namespace LSCore.ReferenceFrom.Extensions
                 }
             }
 
-            return currentTransform.gameObject;
+            return currentTransform;
         }
 
         public static T FindComponent<T>(this Transform baseObject, string path)
         {
-            return baseObject.gameObject.FindGameObject(path).GetComponent<T>();
+            return baseObject.FindTransform(path).GetComponent<T>();
         }
 
         public static GameObject Get<TComponent>(this TComponent component, GameObject path) where TComponent : Component

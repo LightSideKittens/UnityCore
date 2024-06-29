@@ -6,7 +6,6 @@ using Sirenix.OdinInspector;
 [Serializable]
 [HideReferenceObjectPicker]
 [TypeFrom]
-[DefaultValue(typeof(Null))]
 public abstract class LSAction
 {
     private class Null : LSAction {public override void Invoke() { throw new NullReferenceException(); } }
@@ -17,7 +16,6 @@ public abstract class LSAction
 [Serializable]
 [HideReferenceObjectPicker]
 [TypeFrom]
-[DefaultValue(typeof(LSAction<>.Null))]
 public abstract class LSAction<T>
 {
     private class Null : LSAction<T> {public override void Invoke(T value) { throw new NullReferenceException(); } }
@@ -27,7 +25,6 @@ public abstract class LSAction<T>
 [Serializable]
 [HideReferenceObjectPicker]
 [TypeFrom]
-[DefaultValue(typeof(LSFunc<>.Null))]
 public abstract class LSFunc<TReturn>
 {
     private class Null : LSFunc<TReturn> {public override TReturn Invoke() { throw new NullReferenceException(); } }
@@ -37,7 +34,6 @@ public abstract class LSFunc<TReturn>
 [Serializable]
 [HideReferenceObjectPicker]
 [TypeFrom]
-[DefaultValue(typeof(LSFunc<,>.Null))]
 public abstract class LSFunc<TReturn, TArg>
 {
     private class Null : LSFunc<TReturn, TArg> {public override TReturn Invoke(TArg arg) { throw new NullReferenceException(); } }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using LSCore.CommonComponents;
 using LSCore.ReferenceFrom.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -8,10 +10,12 @@ namespace LSCore
 {
     public class Create<T> : LSFunc<T> where T : Component
     {
+        private static readonly Dictionary<T, T> objectByPrefab = new();
+        
         public T viewPrefab;
         public Transform root;
         public string pathToObject;
-        private T view;
+        
         public override T Invoke()
         {
             Transform parent = root;
@@ -19,9 +23,19 @@ namespace LSCore
             {
                 parent = root.FindComponent<Transform>(pathToObject);
             }
+
+            if (!objectByPrefab.TryGetValue(viewPrefab, out var obj))
+            {
+                obj = Object.Instantiate(viewPrefab, parent);
+                var destroyEvent = obj.gameObject.AddComponent<DestroyEvent>();
+                destroyEvent.Destroyed += () =>
+                {
+                    objectByPrefab.Remove(viewPrefab);
+                };
+                objectByPrefab.Add(viewPrefab, obj);
+            }
             
-            view ??= Object.Instantiate(viewPrefab, parent);
-            return view;
+            return obj;
         }
     }
     

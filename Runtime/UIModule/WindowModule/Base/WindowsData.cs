@@ -94,7 +94,7 @@ namespace LSCore
         internal static void SetHome(WindowManager manager)
         {
             Clear();
-            goHome += manager.HideAllPreviousAndShow;
+            goHome = manager.HideAllPreviousAndShow;
         }
 
         private static void Clear()

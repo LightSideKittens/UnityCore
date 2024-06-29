@@ -45,14 +45,17 @@ namespace LSCore
             var type = typeof(BaseWindow<>);
 #if UNITY_EDITOR
             var allAssembly = type.Assembly.GetRelevantAssemblies();
+            ConfigUtils.Delete<WindowTypes>();
+            
             WindowTypes.Config.types = allAssembly
                 .SelectMany(assembly => assembly.GetTypes())
                 .Where(t => !t.IsAbstract && !t.IsGenericTypeDefinition)
                 .Where(t => t.IsSubclassOfRawGeneric(type))
                 .ToList();
-            
+
             ConfigUtils.Save<WindowTypes>();
 #endif
+            
 
             foreach (var target in WindowTypes.Config.types)
             {

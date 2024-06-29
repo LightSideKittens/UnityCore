@@ -22,17 +22,20 @@ namespace LSCore
         public Func<Tween> hideAnim;
         public Canvas canvas;
         public bool needDisableOnHidden = true;
+        private CanvasGroup canvasGroup;
         public bool IsShow { get; private set; }
 
-        public void Init(GameObject gameObject)
+        public void Init(CanvasGroup canvasGroup)
         {
-            this.gameObject = gameObject;
+            this.gameObject = canvasGroup.gameObject;
+            this.canvasGroup = canvasGroup;
         }
         
         public void Show()
         {
             if (WindowsData.IsAt(this, ^2))
             {
+                Debug.Log($"{gameObject.name} Show WindowsData.IsAt");
                 WindowsData.GoBack();
                 return;
             }
@@ -43,22 +46,17 @@ namespace LSCore
 
         internal void HideAllPreviousAndShow()
         {
-            WindowsData.StartRecording();
             WindowsData.HideAllPrevious();
             Show();
-            WindowsData.StopRecording();
         }
         
         private void InternalShow()
         {
             if (showTween != null) return;
-
+            Debug.Log($"{gameObject.name} InternalShow");
             IsShow = true;
             WindowsData.CallOption(showOption());
-            if (!WindowsData.IsHome(this))
-            {
-                RecordState();
-            }
+            RecordState();
             if (canvas)
             {
                 canvas.sortingOrder = WindowsData.sortingOrder++;
@@ -79,7 +77,7 @@ namespace LSCore
         private void InternalHide()
         {
             if (hideTween != null) return;
-
+            
             IsShow = false;
             if (canvas)
             {
@@ -105,6 +103,7 @@ namespace LSCore
 
         private void AnimateOnShowing(TweenCallback onComplete)
         {
+            canvasGroup.blocksRaycasts = true;
             var tween = showAnim();
             if (tween == null)
             {
@@ -126,6 +125,7 @@ namespace LSCore
 
         private void AnimateOnHiding(TweenCallback onComplete)
         {
+            canvasGroup.blocksRaycasts = false;
             var tween = hideAnim();
             if (tween == null)
             {

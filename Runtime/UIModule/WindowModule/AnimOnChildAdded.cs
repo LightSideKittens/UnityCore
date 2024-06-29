@@ -3,6 +3,7 @@ using DG.Tweening;
 using LSCore.AnimationsModule;
 using LSCore.AnimationsModule.Animations;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace LSCore
 {
@@ -13,6 +14,7 @@ namespace LSCore
         private SizeDeltaAnim sizeAnim;
         private HashSet<IUIView> views = new();
         private ChildrenTracker childrenTracker;
+        public float offset = 50;
         
         private void Awake()
         {
@@ -42,10 +44,11 @@ namespace LSCore
 
         private void Anim(float width)
         {
-            sizeAnim.endValue.x = width;
+            sizeAnim.endValue.x = width + offset;
             animation.Animate();
         }
         
+        [Preserve]
         public Tween Hide()
         {
             sizeAnim.endValue.x = 0;

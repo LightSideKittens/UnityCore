@@ -12,6 +12,7 @@ namespace LSCore
         WindowManager Manager { get; }
     }
     
+    [RequireComponent(typeof(CanvasGroup))]
     [RequireComponent(typeof(RectTransform))]
     public abstract class BaseUIView<T> : SingleService<T>, IUIView where T : BaseUIView<T>
     {
@@ -23,10 +24,10 @@ namespace LSCore
         [SerializeReference] protected List<LSClickAction> clickActions;
         [field: SerializeField, FoldoutGroup("Optional")] protected virtual LSButton HomeButton { get; private set; }
         [field: SerializeField, FoldoutGroup("Optional")] protected virtual LSButton BackButton { get; private set; }
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowing = null;
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHiding = null;
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowed = null;
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHidden = null;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowing;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHiding;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowed;
+        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHidden;
         
 
         protected virtual ShowWindowOption ShowOption { get; set; }
@@ -52,7 +53,7 @@ namespace LSCore
 
         protected virtual void InitManager()
         {
-            Manager.Init(gameObject);
+            Manager.Init(GetComponent<CanvasGroup>());
             Manager.Showing += OnShowing;
             Manager.Showed += OnShowed;
             Manager.Hiding += OnHiding;

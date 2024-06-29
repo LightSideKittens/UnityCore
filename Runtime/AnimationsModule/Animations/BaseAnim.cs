@@ -1,6 +1,7 @@
 ﻿using System;
 using DG.Tweening;
 using LSCore.AnimationsModule.Animations.Options;
+using LSCore.ReferenceFrom.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -56,7 +57,7 @@ namespace LSCore.AnimationsModule.Animations
     
     
     [Serializable]
-    public abstract class BaseAnim<T, TTarget> : BaseAnim where TTarget : Object
+    public abstract class BaseAnim<T, TTarget> : BaseAnim, ISerializationCallbackReceiver where TTarget : Object
     {
         [field: HideIf("IsDurationZero")]
         [field: SerializeField] public override bool NeedInit { get; set; }
@@ -64,18 +65,29 @@ namespace LSCore.AnimationsModule.Animations
         [field: HideIf("HideDuration")]
         [field: SerializeField] public override float Duration { get; set; }
         
+        [ShowIf("ShowStartValue")]
         public T startValue;
         
-        [HideIf("IsDurationZero")]
+        [ShowIf("ShowEndValue")]
         public T endValue;
         
+        public bool useTargetPath;
         public bool useMultiple;
-        public TTarget target;
-        [ShowIf("useMultiple")]
-        public TTarget[] targets;
-        [ShowIf("useMultiple")]
-        public float timeOffsetPerTarget = 0.1f;
+        
+        [HideIf("useTargetPath")] public TTarget target;
+        [ShowIf("ShowTargets")] public TTarget[] targets;
+        
+        [ShowIf("useTargetPath")] public Transform root;
+        [ShowIf("useTargetPath")] public string targetPath;
+        [ShowIf("ShowTargetsPaths")] public string[] targetsPaths;
+        
+        [ShowIf("useMultiple")] public float timeOffsetPerTarget = 0.1f;
 
+        private bool ShowTargets => useMultiple && !useTargetPath;
+        private bool ShowTargetsPaths => useMultiple && useTargetPath;
+        protected virtual bool ShowStartValue => true;
+        protected virtual bool ShowEndValue => !IsDurationZero;
+        
         protected abstract void InitAction(TTarget target);
         protected abstract Tween AnimAction(TTarget target);
         
@@ -110,6 +122,26 @@ namespace LSCore.AnimationsModule.Animations
         public void Reverse()
         {
             (startValue, endValue) = (endValue, startValue);
+        }
+
+        public virtual void OnBeforeSerialize() { }
+
+        public virtual void OnAfterDeserialize()
+        {
+            if(!World.IsPlaying) return;
+            if (useTargetPath)
+            {
+                if (typeof(Component).IsAssignableFrom(typeof(T)))
+                {
+                    target = root.FindComponent<TTarget>(targetPath);
+                    targets = new TTarget[targetsPaths.Length];
+
+                    for (int i = 0; i < targetsPaths.Length; i++)
+                    {
+                        targets[i] = root.FindComponent<TTarget>(targetsPaths[i]);
+                    }
+                }
+            }
         }
     }
 }
