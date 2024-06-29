@@ -4,7 +4,6 @@ using System.Drawing.Imaging;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
-using System.Runtime.InteropServices;
 using LSCore.Runtime;
 using UnityEngine;
 using Color = UnityEngine.Color;
@@ -44,8 +43,6 @@ public static class EmojiRenderer
 #if !UNITY_EDITOR
     #if UNITY_ANDROID
         imageBytes = EmojiRendererClass.CallStatic<byte[]>("renderEmoji", text, fontSize, color.ToARGB());
-    #elif UNITY_IOS
-            imageBytes = renderEmoji(text, fontSize); //TODO: COLOR
     #endif
 #endif
         
@@ -101,8 +98,6 @@ public static class EmojiRenderer
 #if !UNITY_EDITOR
     #if UNITY_ANDROID
         return EmojiRendererClass.CallStatic<float>("getWidth", text, fontSize);
-    #elif UNITY_IOS
-            imageBytes = renderEmoji(text, fontSize); //TODO: COLOR
     #endif
 #endif
         
@@ -131,8 +126,6 @@ public static class EmojiRenderer
 #if !UNITY_EDITOR
     #if UNITY_ANDROID
         return GetGraphemeClustersAndroid(text);
-    #elif UNITY_IOS
-            imageBytes = renderEmoji(text, fontSize); //TODO: COLOR
     #endif
 #endif
         
