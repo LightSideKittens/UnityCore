@@ -1,10 +1,9 @@
-using System.Collections.Generic;
 using LSCore.Extensions.Unity;
-using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEditor;
+using UnityEditor.SceneManagement;
 
 namespace LSCore.UIModule.Editor
 {

@@ -125,7 +125,11 @@ namespace LSCore
 
         private void AnimateOnHiding(TweenCallback onComplete)
         {
-            canvasGroup.blocksRaycasts = false;
+            if (needDisableOnHidden)
+            {
+                canvasGroup.blocksRaycasts = false;
+            }
+            
             var tween = hideAnim();
             if (tween == null)
             {

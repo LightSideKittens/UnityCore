@@ -1,12 +1,17 @@
 ﻿using System;
-using Sirenix.OdinInspector.Editor;
+using System.Diagnostics;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using Sirenix.OdinInspector.Editor;
+#endif
 
 namespace LSCore.Attributes
 {
+    [Conditional("UNITY_EDITOR")]
     public class GetComponentAttribute : Attribute { }
 }
-
+#if UNITY_EDITOR
 public class GetComponentFromRootAttributeDrawer : OdinAttributeDrawer<LSCore.Attributes.GetComponentAttribute>
 {
     protected override void Initialize()
@@ -31,6 +36,4 @@ public class GetComponentFromRootAttributeDrawer : OdinAttributeDrawer<LSCore.At
         CallNextDrawer(label);
     }
 }
-
-
-
+#endif

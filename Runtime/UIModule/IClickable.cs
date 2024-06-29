@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace LightSideCore.Runtime.UIModule
+namespace LSCore
 {
     public interface IClickable
     {

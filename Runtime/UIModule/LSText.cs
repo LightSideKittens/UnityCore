@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using LightSideCore.Runtime.UIModule;
 using LSCore.Extensions.Unity;
 using TMPro;
 using UnityEngine;

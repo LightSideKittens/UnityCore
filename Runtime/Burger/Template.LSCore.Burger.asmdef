@@ -1,5 +1,5 @@
 {
-    "name": "LSCore.Burger",
+    "name": "Template.LSCore.Burger",
     "rootNamespace": "",
     "references": [
         "GUID:e203c3ad7a7046548ca22a43fa4eb0de"

@@ -2,13 +2,15 @@
 using System.Reflection;
 using LSCore.ReferenceFrom.Extensions;
 using Sirenix.Utilities;
-using UnityEditor;
-using UnityEditor.UI;
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.UI;
+#endif
 
-namespace LightSideCore.Runtime.UIModule
+namespace LSCore
 {
     public class ExternalRectMask2D : RectMask2D
     {
@@ -109,7 +111,8 @@ namespace LightSideCore.Runtime.UIModule
             return false;
         }
     }
-
+    
+#if UNITY_EDITOR
     [CustomEditor(typeof(ExternalRectMask2D), true)]
     [CanEditMultipleObjects]
     public class ExternalRectMask2DEditor : RectMask2DEditor
@@ -131,4 +134,5 @@ namespace LightSideCore.Runtime.UIModule
             serializedObject.ApplyModifiedProperties();
         }
     }
+#endif
 }
