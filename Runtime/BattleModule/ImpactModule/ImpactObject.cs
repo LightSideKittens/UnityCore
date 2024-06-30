@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Attributes;
+using LSCore.Async;
 using LSCore.Attributes;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
@@ -72,6 +73,11 @@ namespace LSCore
 
         private void Update()
         {
+            if (lockRotation)
+            {
+                transform.up = up;
+            }
+            
             if (ps.isPlaying)
             {
                 HandleParticles();
@@ -159,8 +165,14 @@ namespace LSCore
             }
         }
 
+        private bool lockRotation;
+        private Vector3 up;
+        
         public void Emit()
         {
+            lockRotation = true;
+            up = transform.up;
+            Wait.Frames(1, () => lockRotation = false);
             ps.Stop();
             ps.Play();
         }

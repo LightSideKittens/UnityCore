@@ -15,7 +15,8 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
     }
 
     [SerializeField] private KeysData keysData;
-    public Vector2 Direction { get; set; }
+    public Vector2 Direction { get; private set; }
+    public ReactProp<float> Magnitude { get; private set; } = new();
     public ReactProp<bool> IsUsing { get; set; } = new();
     [SerializeField] private RectTransform area;
     [SerializeField] private RectTransform handleArea;
@@ -42,34 +43,39 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
     private void Update()
     {
         if(isUsingByTouch) return;
-        Direction = Vector2.zero;
-        IsUsing.Value = false;
-            
+        bool isUsing = false;
+        
         if (Input.GetKey(keysData.Up))
         {
            Direction = Vector2.up;
-           IsUsing.Value = true;
+           isUsing = true;
         }
-            
+        
         if (Input.GetKey(keysData.Left))
         {
             Direction += Vector2.left;
-            IsUsing.Value = true;
+            isUsing = true;
         }
             
         if (Input.GetKey(keysData.Down))
         {
             Direction += Vector2.down;
-            IsUsing.Value = true;
+            isUsing = true;
         }
             
         if (Input.GetKey(keysData.Right))
         {
             Direction += Vector2.right;
-            IsUsing.Value = true;
+            isUsing = true;
         }
 
-        Direction = Direction.normalized;
+        if (isUsing)
+        {
+            Direction = Direction.normalized;
+        }
+
+        IsUsing.Value = isUsing;
+        Magnitude.Value = isUsing ? 1 : 0;
     }
 
     public void OnPointerDown(PointerEventData eventData)
@@ -86,6 +92,7 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
     {
         Direction = (eventData.position - startTouchPosition).normalized;
         var position = handleArea.GetLocalPositionByScreenPoint(eventData.position, canvas);
+        Magnitude.Value = Mathf.InverseLerp(0, maxRadius, position.magnitude);
         handle.localPosition = Vector2.ClampMagnitude(position, maxRadius);
         SetupDirections();
     }
