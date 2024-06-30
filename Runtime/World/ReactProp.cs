@@ -18,8 +18,8 @@ public class ReactProp<T> : IDisposable
         }
     }
     
-    public static implicit operator ReactProp<T>(T value) => new() {value = value};
-    public static implicit operator T(ReactProp<T> prop) => prop.value;
+    public static explicit operator ReactProp<T>(T value) => new() {value = value};
+    public static explicit operator T(ReactProp<T> prop) => prop.value;
     public override string ToString() => value.ToString();
 
     public void Dispose()
@@ -30,8 +30,8 @@ public class ReactProp<T> : IDisposable
 
 public class IntReact : ReactProp<int>
 {
-    public static implicit operator IntReact(in int value) => new() {value = value};
-    public static implicit operator int(in IntReact value) => value.value;
+    public static explicit operator IntReact(in int value) => new() {value = value};
+    public static explicit operator int(in IntReact value) => value.value;
 
     public void pp() => Value++;
     public void mm() => Value--;
@@ -48,8 +48,8 @@ public class IntReact : ReactProp<int>
 
 public class FloatReact : ReactProp<float>
 {
-    public static implicit operator FloatReact(in float value) => new() {value = value};
-    public static implicit operator float(in FloatReact value) => value.value;
+    public static explicit operator FloatReact(in float value) => new() {value = value};
+    public static explicit operator float(in FloatReact value) => value.value;
 
     public static FloatReact operator +(FloatReact a, in float b)
     {

@@ -1,17 +1,29 @@
-﻿using LSCore.Extensions.Unity;
+﻿using System;
+using LSCore.Extensions.Unity;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
-    public Vector2 Direction { get; private set; }
-    public ReactProp<bool> IsUsing { get; private set; } = new();
+    [Serializable]
+    private struct KeysData
+    {
+        public KeyCode Up;
+        public KeyCode Right;
+        public KeyCode Down;
+        public KeyCode Left;
+    }
+
+    [SerializeField] private KeysData keysData;
+    public Vector2 Direction { get; set; }
+    public ReactProp<bool> IsUsing { get; set; } = new();
     [SerializeField] private RectTransform area;
     [SerializeField] private RectTransform handleArea;
     [SerializeField] private RectTransform handle;
     [SerializeField] private CanvasGroup group;
     [SerializeField] private GameObject[] directions;
 
+    private bool isUsingByTouch;
     private int lastFactor;
     private float maxRadius;
     private Canvas canvas;
@@ -27,8 +39,42 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
         group.alpha = 0.5f;
     }
 
+    private void Update()
+    {
+        if(isUsingByTouch) return;
+        Direction = Vector2.zero;
+        IsUsing.Value = false;
+            
+        if (Input.GetKey(keysData.Up))
+        {
+           Direction = Vector2.up;
+           IsUsing.Value = true;
+        }
+            
+        if (Input.GetKey(keysData.Left))
+        {
+            Direction += Vector2.left;
+            IsUsing.Value = true;
+        }
+            
+        if (Input.GetKey(keysData.Down))
+        {
+            Direction += Vector2.down;
+            IsUsing.Value = true;
+        }
+            
+        if (Input.GetKey(keysData.Right))
+        {
+            Direction += Vector2.right;
+            IsUsing.Value = true;
+        }
+
+        Direction = Direction.normalized;
+    }
+
     public void OnPointerDown(PointerEventData eventData)
     {
+        isUsingByTouch = true;
         IsUsing.Value = true;
         group.alpha = 1;
         startTouchPosition = eventData.position;
@@ -46,6 +92,7 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
 
     public void OnPointerUp(PointerEventData eventData)
     {
+        isUsingByTouch = false;
         IsUsing.Value = false;
         group.alpha = 0.5f;
         handle.localPosition = Vector3.zero;
