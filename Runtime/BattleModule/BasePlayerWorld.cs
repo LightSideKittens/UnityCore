@@ -55,7 +55,7 @@ namespace LSCore.BattleModule
             pool.Created += InitUnit;
             pool.Got += OnUnitGot;
             pool.Released += OnUnitReleased;
-            pool.Destroyed += OnUnitReleased;
+            pool.Removed += OnUnitReleased;
             return pool;
         }
 

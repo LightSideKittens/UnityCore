@@ -17,7 +17,7 @@ namespace LSCore.BattleModule
         [SerializeReference] private TargetChecker checker;
         [NonSerialized] public Transform transform;
         private ConditionBuilder conditions;
-        public LayerMask mask;
+        public ContactFilter2D contactFilter;
 
         public void Init(Transform transform)
         {
@@ -32,7 +32,7 @@ namespace LSCore.BattleModule
         {
             selfUnit = unit;
             
-            foreach (var targetTransform in Physics2DExt.FindAll(position, radius, mask).Select(x => x.transform))
+            foreach (var targetTransform in Physics2DExt.FindAll(position, radius, contactFilter).Select(x => x.transform))
             {
                 targetUnit = targetTransform.Get<Unit>();
                 
@@ -49,7 +49,7 @@ namespace LSCore.BattleModule
         {
             selfUnit = unit;
             
-            foreach (var collider in Physics2DExt.FindAll(position, radius, mask))
+            foreach (var collider in Physics2DExt.FindAll(position, radius, contactFilter))
             {
                 targetUnit = collider.transform.Get<Unit>();
                 

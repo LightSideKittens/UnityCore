@@ -2,19 +2,30 @@
 
 public static class LSPaths
 {
-    public const string Root = "LightSideCore";
-    public const string Python = Root + "/" + nameof(Python);
-    public const string Runtime = Root + "/" + nameof(Runtime);
-    public const string Editor = Root + "/" + nameof(Editor);
+    public const string Core = "LightSideCore";
+    public const string Python = Core + "/" + nameof(Python);
+    public const string Runtime = Core + "/" + nameof(Runtime);
+    public const string Editor = Core + "/" + nameof(Editor);
     public const string Firebase = Runtime + "/Firebase";
     public const string Icons = Editor + "/LightSideIcons";
-    public const string Backuper = Editor + "/BackupSystem/GitIgnored";
+    
+    public static class Folders
+    {
+        public const string Art = nameof(Art);
+        public const string Audio = nameof(Art) + "/" + nameof(Audio);
+    }
+    
+    public static class Preferences
+    {
+        public const string Root = "Preferences/Light Side Core";
+        public const string Backuper = Root + "/" + nameof(Backuper);
+        public const string Profiles = Root + "/" + nameof(Profiles);
+    }
     
     public static class MenuItem
     {
         public const string Root = "LSCore";
         public const string Tools = Root + "/Tools";
-        public const string Configs = Root + "/Configs";
     }
     
     public static class AssetMenuItem

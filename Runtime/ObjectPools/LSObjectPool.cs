@@ -11,32 +11,24 @@ namespace LSCore
         public event Action<T> Created;
         public event Action<T> Got;
         public event Action<T> Released;
-        public event Action<T> Destroyed;
-        public int maxSize;
+        public event Action<T> Removed;
 
+        private bool shouldStoreActive;
         public int CountAll { get; private set; }
-
         public int CountActive => CountAll - CountInactive;
         public int CountInactive => releasedSet.Count;
         
         public LSObjectPool(
             Func<T> createFunc,
-            int defaultCapacity = 10,
-            int maxSize = 10000,
+            int capacity = 10,
             bool shouldStoreActive = false)
         {
-            if (maxSize <= 0)
-            {
-                throw new ArgumentException("Max Size must be greater than 0", nameof(maxSize));
-            }
-            
-            releasedSet = new HashSet<T>(defaultCapacity);
-            this.maxSize = maxSize;
+            releasedSet = new HashSet<T>(capacity);
             this.createFunc = createFunc;
-
+            this.shouldStoreActive = shouldStoreActive; 
             if (shouldStoreActive)
             {
-                activeSet = new HashSet<T>();
+                activeSet = new HashSet<T>(capacity);
                 Got += AddActive;
                 Released += RemoveActive;
             }
@@ -69,19 +61,15 @@ namespace LSCore
 
         public void Release(T element)
         {
-            if (releasedSet.Contains(element))
-            {
-                throw new InvalidOperationException("Trying to release an object that has already been released to the pool.");
-            }
-            
+            releasedSet.Add(element);
             Released?.Invoke(element);
-            if (CountInactive < maxSize)
+        }
+        
+        public void Release(IEnumerable<T> elements)
+        {
+            foreach (var element in elements)
             {
-                releasedSet.Add(element);
-            }
-            else
-            {
-                Destroyed?.Invoke(element);
+                Release(element);
             }
         }
 
@@ -90,17 +78,20 @@ namespace LSCore
             if (activeSet != null)
             {
                 Released -= RemoveActive;
-                
-                foreach (var element in activeSet)
+
+                if (Released != null)
                 {
-                    Released?.Invoke(element);
-                    if (CountInactive < maxSize)
+                    foreach (var element in activeSet)
                     {
                         releasedSet.Add(element);
+                        Released(element);
                     }
-                    else
+                }
+                else
+                {
+                    foreach (var element in activeSet)
                     {
-                        Destroyed?.Invoke(element);
+                        releasedSet.Add(element);
                     }
                 }
                 
@@ -109,13 +100,35 @@ namespace LSCore
             }
         }
 
-        public void Destroy()
+        
+        public bool Remove(T element)
         {
-            if (Destroyed != null)
+            if (releasedSet.Remove(element))
+            {
+                Removed?.Invoke(element);
+                activeSet?.Remove(element);
+                CountAll--;
+                return true;
+            }
+
+            return false;
+        }
+        
+        public void Remove(IEnumerable<T> elements)
+        {
+            foreach (var element in elements)
+            {
+                Remove(element);
+            }
+        }
+
+        public void Clear()
+        {
+            if (Removed != null)
             {
                 foreach (T obj in releasedSet)
                 {
-                    Destroyed(obj);
+                    Removed(obj);
                 }
             }
             

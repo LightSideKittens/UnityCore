@@ -5,7 +5,7 @@ namespace LSCore.Editor
 {
     public class EditorHiddenObjectPool<T> : LSObjectPool<T>
     {
-        public EditorHiddenObjectPool(int defaultCapacity = 10, int maxSize = 10000, bool shouldStoreActive = false) : base(null, defaultCapacity, maxSize, shouldStoreActive)
+        public EditorHiddenObjectPool(int defaultCapacity = 10, bool shouldStoreActive = false) : base(null, defaultCapacity, shouldStoreActive)
         {
             createFunc = CreateObject;
         }

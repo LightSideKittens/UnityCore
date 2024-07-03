@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using DG.Tweening;
 
 namespace LSCore.Async
@@ -29,6 +30,11 @@ namespace LSCore.Async
             });
             
             return tween;
+        }
+
+        public static void Coroutine(IEnumerator enumerator, Action onComplete)
+        {
+            World.BeginCoroutine(enumerator);
         }
     }
 }

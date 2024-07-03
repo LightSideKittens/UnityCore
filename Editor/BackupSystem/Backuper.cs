@@ -22,6 +22,7 @@ namespace LSCore.Editor.BackupSystem
     [Serializable]
     public class Backuper
     {
+        private const string Name = nameof(Backuper);
         private const string DateTimeSeparator = "_@#$";
         private const int TimeThreshold = 1;
         private static Backuper instance = new();
@@ -116,11 +117,11 @@ namespace LSCore.Editor.BackupSystem
         [SettingsProvider]
         public static SettingsProvider CreateMyCustomSettingsProvider()
         {
-            var provider = new SettingsProvider("Preferences/Light Side Core/Backuper", SettingsScope.User)
+            var provider = new SettingsProvider(LSPaths.Preferences.Backuper, SettingsScope.User)
             {
-                label = "Backuper",
+                label = Name,
                 guiHandler = OnGui,
-                keywords = new HashSet<string>(new[] { "Backuper" }),
+                keywords = new HashSet<string>(new[] { Name }),
                 activateHandler = Init
             };
 

@@ -1,20 +1,27 @@
 ﻿using System;
 using LSCore.Extensions.Unity;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
+#if UNITY_EDITOR
     [Serializable]
     private struct KeysData
     {
-        public KeyCode Up;
-        public KeyCode Right;
-        public KeyCode Down;
-        public KeyCode Left;
+        public LSKeyCode Up;
+        public LSKeyCode Right;
+        public LSKeyCode Down;
+        public LSKeyCode Left;
     }
 
+    [SerializeField] private bool useKeys;
+    [ShowIf("useKeys")]
     [SerializeField] private KeysData keysData;
+#endif
+
+
     public Vector2 Direction { get; private set; }
     public ReactProp<float> Magnitude { get; private set; } = new();
     public ReactProp<bool> IsUsing { get; set; } = new();
@@ -39,31 +46,33 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
         handleAreaStartPosition = handleArea.localPosition;
         group.alpha = 0.5f;
     }
-
+    
+#if UNITY_EDITOR
     private void Update()
     {
+        if(!useKeys) return;
         if(isUsingByTouch) return;
         bool isUsing = false;
         
-        if (Input.GetKey(keysData.Up))
+        if (KeyWatcher.IsKeyHeld(keysData.Up))
         {
            Direction = Vector2.up;
            isUsing = true;
         }
         
-        if (Input.GetKey(keysData.Left))
+        if (KeyWatcher.IsKeyHeld(keysData.Left))
         {
             Direction += Vector2.left;
             isUsing = true;
         }
             
-        if (Input.GetKey(keysData.Down))
+        if (KeyWatcher.IsKeyHeld(keysData.Down))
         {
             Direction += Vector2.down;
             isUsing = true;
         }
             
-        if (Input.GetKey(keysData.Right))
+        if (KeyWatcher.IsKeyHeld(keysData.Right))
         {
             Direction += Vector2.right;
             isUsing = true;
@@ -77,6 +86,7 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
         IsUsing.Value = isUsing;
         Magnitude.Value = isUsing ? 1 : 0;
     }
+#endif
 
     public void OnPointerDown(PointerEventData eventData)
     {

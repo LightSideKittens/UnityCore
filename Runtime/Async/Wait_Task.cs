@@ -230,7 +230,5 @@ namespace LSCore.Async
             task.SetupOnComplete(target, () => task.Result);
             return target;
         }
-
-
     }
 }

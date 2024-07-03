@@ -9,19 +9,33 @@ namespace LSCore.Extensions.Unity
 
         public static void SetHitCollidersSize(int size) => hitColliders = new Collider2D[size];
 
-        public static Collider2D[] FindAll(in Vector2 position, float radius, in LayerMask mask)
+        public static Collider2D[] FindAll(in Vector2 position, float radius, in ContactFilter2D filter)
         {
-            var numColliders = Physics2D.OverlapCircleNonAlloc(position, radius, hitColliders, mask);
+            var numColliders = Physics2D.OverlapCircle(position, radius, filter, hitColliders);
 
             return hitColliders[..numColliders];
         }
         
-        public static bool TryFindNearestCollider(in Vector2 position, in LayerMask mask, out Collider2D closestCollider, float startRadius = 1, float maxRadius = 100)
+        public static Collider2D[] FindAll(in Vector2 position, Vector2 boxSize, float angle, in ContactFilter2D filter)
+        {
+            var numColliders = Physics2D.OverlapBox(position, boxSize, angle, filter, hitColliders);
+
+            return hitColliders[..numColliders];
+        }
+        
+        public static Collider2D[] FindAll(in Rect rect, float angle, in ContactFilter2D filter)
+        {
+            var numColliders = Physics2D.OverlapBox(rect.position, rect.size, angle, filter, hitColliders);
+
+            return hitColliders[..numColliders];
+        }
+        
+        public static bool TryFindNearestCollider(in Vector2 position, in ContactFilter2D filter, out Collider2D closestCollider, float startRadius = 1, float maxRadius = 100)
         {
             int numColliders;
             while (true)
             {
-                numColliders = Physics2D.OverlapCircleNonAlloc(position, startRadius, hitColliders, mask);
+                numColliders = Physics2D.OverlapCircle(position, startRadius, filter, hitColliders);
 
                 if (numColliders > 0)
                 {
@@ -45,14 +59,14 @@ namespace LSCore.Extensions.Unity
             return TryFindNearestCollider(position, hitColliders[..numColliders], out closestCollider);
         }
         
-        public static bool TryFindNearestCollider(Collider2D sourceCollider, out Collider2D closestCollider, in LayerMask mask, float startRadius = 1, float maxRadius = 100)
+        public static bool TryFindNearestCollider(Collider2D sourceCollider, out Collider2D closestCollider, in ContactFilter2D filter, float startRadius = 1, float maxRadius = 100)
         {
             int numColliders;
             Vector2 position = sourceCollider.bounds.center;
             sourceCollider.enabled = false;
             while (true)
             {
-                numColliders = Physics2D.OverlapCircleNonAlloc(position, startRadius, hitColliders, mask);
+                numColliders = Physics2D.OverlapCircle(position, startRadius, filter, hitColliders);
 
                 if (numColliders > 0)
                 {

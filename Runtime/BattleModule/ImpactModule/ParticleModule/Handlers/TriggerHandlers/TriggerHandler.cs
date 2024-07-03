@@ -18,7 +18,7 @@ namespace LSCore
         private static List<int> keysToRemove = new();
         
         public ParticleSystemTriggerEventType type = ParticleSystemTriggerEventType.Enter;
-        public LayerMask mask;
+        public ContactFilter2D contactFilter;
         
         [UniqueTypeFilter]
         [SerializeReference] public List<OnTriggerHandler> handlers;
@@ -54,7 +54,7 @@ namespace LSCore
                 var pos = particle.position;
                 point.x = pos.x;
                 point.y = pos.y;
-                var currentColliders = Physics2DExt.FindAll(point, radius, mask);
+                var currentColliders = Physics2DExt.FindAll(point, radius, contactFilter);
                 
                 if (!colliders.TryGetValue(id, out var previousColliders))
                 {

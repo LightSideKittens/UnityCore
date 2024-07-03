@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LSCore
@@ -13,6 +15,7 @@ namespace LSCore
         public static event Action Destroyed;
         private static bool isCreated;
         private static World instance;
+        
         public static Camera Camera { get; private set; }
         public static bool IsPlaying { get; private set; }
         
@@ -57,6 +60,11 @@ namespace LSCore
         {
             IsPlaying = false;
             OnApplicationPause(true);
+        }
+
+        public static Coroutine BeginCoroutine(IEnumerator enumerator) 
+        {
+            return instance.StartCoroutine(enumerator);
         }
     }
 }

@@ -9,6 +9,9 @@ namespace LSCore.BattleModule
         protected CompData data;
         protected Transform transform;
         
+        protected bool useUpdate;
+        protected bool useFixedUpdate;
+        
         private bool isRunning;
         public bool IsRunning
         {
@@ -20,8 +23,8 @@ namespace LSCore.BattleModule
                 isRunning = value;
                 if (value)
                 {
-                    data.update += Update;
-                    data.fixedUpdate += FixedUpdate;
+                    if(useUpdate) data.update += Update;
+                    if (useFixedUpdate) data.fixedUpdate += FixedUpdate;
                 }
                 else
                 {

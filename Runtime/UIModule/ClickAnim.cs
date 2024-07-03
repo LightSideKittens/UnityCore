@@ -27,7 +27,9 @@ namespace LSCore
 #if UNITY_EDITOR
         public void Editor_Draw()
         {
+
             isDisabled = !EditorGUILayout.Toggle("Is Animatable", !isDisabled);
+
         }
 #endif
        

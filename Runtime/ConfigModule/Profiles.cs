@@ -19,8 +19,9 @@ using UnityEngine;
 namespace LSCore.ConfigModule
 {
     [Serializable]
-    public class Profiles 
+    public class Profiles
     {
+        private const string Name = nameof(Profiles);
         [Serializable]
         private class Data
         {
@@ -86,7 +87,7 @@ namespace LSCore.ConfigModule
         private List<Data> data = new();
         
         private static string FileName => $"profile_{DateTime.Now.Ticks}";
-        private static string ProfilesPath => $"{Application.persistentDataPath}/Profiles";
+        private static string ProfilesPath => $"{Application.persistentDataPath}/{Name}";
         
         public Profiles()
         {
@@ -117,11 +118,11 @@ namespace LSCore.ConfigModule
         [SettingsProvider]
         public static SettingsProvider CreateMyCustomSettingsProvider()
         {
-            var provider = new SettingsProvider("Preferences/Light Side Core/Profiles", SettingsScope.User)
+            var provider = new SettingsProvider(LSPaths.Preferences.Profiles, SettingsScope.User)
             {
-                label = "Profiles",
+                label = Name,
                 guiHandler = OnGui,
-                keywords = new HashSet<string>(new[] { "Profiles" })
+                keywords = new HashSet<string>(new[] { Name })
             };
 
             return provider;

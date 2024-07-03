@@ -13,13 +13,14 @@ namespace LSCore.BattleModule
         
         public bool InRadius { get; private set; }
         public float radius;
-        private MoveComp moveComp;
+        private BaseMoveComp moveComp;
         protected Tween attackLoopEmitter;
         private bool canAttack;
 
         protected override void OnInit()
         {
-            moveComp = transform.Get<MoveComp>();
+            useUpdate = true;
+            moveComp = transform.Get<BaseMoveComp>();
             
             if (!manualMoveCompControl)
             {

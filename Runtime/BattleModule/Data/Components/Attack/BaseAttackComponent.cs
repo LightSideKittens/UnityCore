@@ -15,6 +15,7 @@ namespace LSCore.BattleModule
 
         protected override void Init()
         {
+            useUpdate = true;
             data.onInit += OnInit;
             data.enable += Enable;
             data.disable += Disable;

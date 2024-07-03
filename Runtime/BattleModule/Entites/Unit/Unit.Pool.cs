@@ -19,14 +19,14 @@ namespace LSCore.BattleModule
 
         public static void Release(Unit unit) => pools[unit.Id].Release(unit);
         
-        public static OnOffPool<Unit> CreatePool(Unit prefab, int capacity = 10)
+        public static OnOffPool<Unit> CreatePool(Unit prefab)
         {
             if (pools.TryGetValue(prefab.Id, out var pool)) return pool;
             
-            pool = new OnOffPool<Unit>(prefab, capacity);
+            pool = new OnOffPool<Unit>(prefab);
             pool.Got += OnGot;
             pool.Released += OnReleased;
-            pool.Destroyed += OnDestroyed;
+            pool.Removed += OnDestroyed;
             pools.Add(prefab.Id, pool);
 
             return pool;
@@ -34,7 +34,7 @@ namespace LSCore.BattleModule
 
         public static void DestroyPool(Id id)
         {
-            pools[id].Destroy();
+            pools[id].Clear();
             pools.Remove(id);
         }
         
@@ -42,7 +42,7 @@ namespace LSCore.BattleModule
         {
             foreach (var pool in pools.Values)
             {
-                pool.Destroy();
+                pool.Clear();
             }
             
             pools.Clear();
