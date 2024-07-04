@@ -82,7 +82,7 @@ namespace LSCore.AddressablesModule
         }
 
         private List<GUIStyle> searchStyles = new();
-        private string searchText;
+        private string searchText = string.Empty;
 
         private void OnGUI()
         {

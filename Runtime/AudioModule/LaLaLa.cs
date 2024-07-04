@@ -94,7 +94,6 @@ public static class LaLaLa
     
     public static AudioSource PlayOneShot(AudioClip clip)
     {
-        Debug.Log("PlayOneShot");
         var source = lastPlayOneShotSource;
         playOneShotSettings.Clip = clip;
         if (playOneShotSettings.WasChanged || source == null)

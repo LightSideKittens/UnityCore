@@ -42,6 +42,7 @@ public static class LSPaths
         public const string YamlEditor = Root + "/Yaml Editor";
         public const string ThemeEditor = Root + "/Theme Editor";
         public const string AssetIconSetter = Root + "/Asset Icon Setter";
+        public const string BuildAssetsViewer = Root + "/Build Assets Viewer";
     }
     
         

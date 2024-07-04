@@ -39,39 +39,6 @@ namespace LSCore.SDKManagement
                 SetUserProperty("GPU Vendor", graphicsDeviceVendor);
                 SetUserProperty("GPU Version", graphicsDeviceVersion);
                 SetUserProperty("Max Tex Size", maxTextureSize.ToString());
-                
-                
-                string GetBytesReadable(long i)
-                {
-                    var sign = i < 0 ? "-" : "";
-                    double readable;
-                    string suffix;
-                    
-                    switch (i)
-                    {
-                        case >= 0x40000000:
-                            suffix = "GB";
-                            readable = i >> 20;
-
-                            break;
-                        case >= 0x100000:
-                            suffix = "MB";
-                            readable = i >> 10;
-
-                            break;
-                        case >= 0x400:
-                            suffix = "KB";
-                            readable = i;
-
-                            break;
-                        default:
-                            return i.ToString(sign + "0 B");
-                    }
-                    
-                    readable /= 1024;
-
-                    return sign + readable.ToString("0.### ") + suffix;
-                }
             }
         }
     }

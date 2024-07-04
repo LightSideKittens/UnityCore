@@ -73,6 +73,7 @@ namespace LSCore
 
     public abstract class ServiceManager<T> : ServiceManager where T : ServiceManager<T>
     {
+        [SerializeReference] public List<LSAction> onAwake;
         public static event Action Destroyed;
         protected static T Instance { get; private set; }
 
@@ -83,6 +84,7 @@ namespace LSCore
             Type = typeof(T);
             Burger.Log($"[{GetType().Name}] Awake. Scene: {SceneManager.GetActiveScene().name}");
             base.Awake();
+            onAwake.Invoke();
         }
 
         protected override void OnDestroy()
