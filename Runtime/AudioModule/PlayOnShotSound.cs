@@ -6,4 +6,5 @@ public class PlayOneShotSound : LSAction
         LaLaLa.playOneShotSettings.Copy(settings);
         LaLaLa.PlayOneShot(settings.Clip);
     }
+    
 }

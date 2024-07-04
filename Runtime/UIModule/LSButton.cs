@@ -45,7 +45,10 @@ namespace LSCore
         {
             base.OnBeforeSerialize();
 #if UNITY_EDITOR
-            isClickSoundOverride = clickActions?.Any(x => x is PlayOneShotSound) ?? false;
+            if (!World.IsPlaying)
+            {
+                isClickSoundOverride = clickActions?.Any(x => x is PlayOneShotSound) ?? false;
+            }
 #endif
         }
 
@@ -90,7 +93,7 @@ namespace LSCore
         protected override void OnDisable()
         {
             base.OnDisable();
-            propertyTree.Dispose();
+            propertyTree?.Dispose();
         }
 
         public override void OnInspectorGUI()

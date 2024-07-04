@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using LSCore;
 using LSCore.Async;
 using UnityEngine;
@@ -7,12 +8,13 @@ using Object = UnityEngine.Object;
 
 public static class LaLaLa
 {
+    [Serializable]
     public class Settings
     {
-        private float volume = 1;
-        private bool loop;
-        private AudioClip clip;
-        private AudioMixerGroup group;
+        [SerializeField] private float volume = 1;
+        [SerializeField] private bool loop;
+        [SerializeField] private AudioClip clip;
+        [SerializeField] private AudioMixerGroup group;
         public bool WasChanged { get; private set; }
         
         public float Volume { get => volume; set => SetStruct(ref volume, value); }
@@ -92,6 +94,7 @@ public static class LaLaLa
     
     public static AudioSource PlayOneShot(AudioClip clip)
     {
+        Debug.Log("PlayOneShot");
         var source = lastPlayOneShotSource;
         playOneShotSettings.Clip = clip;
         if (playOneShotSettings.WasChanged || source == null)
