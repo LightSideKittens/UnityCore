@@ -22,24 +22,6 @@ public abstract class LSAction<T>
     public abstract void Invoke(T value);
 }
 
-[Serializable]
-[HideReferenceObjectPicker]
-[TypeFrom]
-public abstract class LSFunc<TReturn>
-{
-    private class Null : LSFunc<TReturn> {public override TReturn Invoke() { throw new NullReferenceException(); } }
-    public abstract TReturn Invoke();
-}
-
-[Serializable]
-[HideReferenceObjectPicker]
-[TypeFrom]
-public abstract class LSFunc<TReturn, TArg>
-{
-    private class Null : LSFunc<TReturn, TArg> {public override TReturn Invoke(TArg arg) { throw new NullReferenceException(); } }
-    public abstract TReturn Invoke(TArg arg);
-}
-
 public static class LSDelegatesExtensions
 {
     public static void Invoke(this IEnumerable<LSAction> actions)

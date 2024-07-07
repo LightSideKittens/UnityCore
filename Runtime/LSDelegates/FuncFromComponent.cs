@@ -7,9 +7,10 @@ using Object = UnityEngine.Object;
 [Serializable]
 public class TweenGetter : FuncFromObject<Tween> { }
 
-public class FuncFromObject<T> : LSFunc<T>
+public class FuncFromObject<T> : LSAction
 {
     public Object obj;
+    public T value;
     [ValueDropdown("Methods")] 
     public string method = string.Empty;
     private MethodInfo targetMethod;
@@ -20,8 +21,8 @@ public class FuncFromObject<T> : LSFunc<T>
         targetMethod = SerializedMethodFromObjectUtils.DeserializeMethodInfo(obj, method);
     }
 
-    public override T Invoke()
+    public override void Invoke()
     {
-        return targetMethod != null ? (T)targetMethod.Invoke(obj, null) : default;
+        value = targetMethod != null ? (T)targetMethod.Invoke(obj, null) : default;
     }
 }

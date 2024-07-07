@@ -25,6 +25,6 @@ public class LSButtonAction : LSClickAction
 [Serializable]
 public class LSTextAction : LSClickAction
 {
-    public LSText text;
+    public ClickableText text;
     public override IClickable Clickable => text;
 }

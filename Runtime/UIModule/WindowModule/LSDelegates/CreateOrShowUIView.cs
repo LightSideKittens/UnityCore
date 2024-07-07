@@ -2,51 +2,71 @@
 using System.Collections.Generic;
 using LSCore.CommonComponents;
 using LSCore.ReferenceFrom.Extensions;
-using Sirenix.OdinInspector;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 namespace LSCore
 {
-    public class Create<T> : LSFunc<T> where T : Component
+    [Serializable]
+    public abstract class TransformAction : LSAction<Transform> { }
+
+    [Serializable]
+    public class SetParentAction : TransformAction
     {
-        private static readonly Dictionary<T, T> objectByPrefab = new();
-        
-        public T viewPrefab;
         public Transform root;
         public string pathToObject;
+        public bool worldPositionStays = true;
         
-        public override T Invoke()
+        public override void Invoke(Transform value)
         {
-            Transform parent = root;
-            if (root != null)
+            var parent = root;
+            if (!string.IsNullOrEmpty(pathToObject))
             {
                 parent = root.FindComponent<Transform>(pathToObject);
             }
-
-            if (!objectByPrefab.TryGetValue(viewPrefab, out var obj))
-            {
-                obj = Object.Instantiate(viewPrefab, parent);
-                var destroyEvent = obj.gameObject.AddComponent<DestroyEvent>();
-                destroyEvent.Destroyed += () =>
-                {
-                    objectByPrefab.Remove(viewPrefab);
-                };
-                objectByPrefab.Add(viewPrefab, obj);
-            }
-            
-            return obj;
+            value.SetParent(parent, worldPositionStays);
         }
     }
     
-    public class CreateOrShowUIView<T> : Create<T> where T : BaseUIView<T>
+    public class Create<T> : LSAction where T : Component
+    {
+        public T prefab;
+        [NonSerialized] public T obj;
+        [SerializeReference] public List<TransformAction> transformActions;
+        
+        public override void Invoke()
+        {
+            obj = Object.Instantiate(prefab);
+            transformActions?.Invoke(obj.transform);
+        }
+    }
+    
+    public class CreateSinglePrefab<T> : Create<T> where T : Component
+    {
+        private static readonly Dictionary<T, T> objectByPrefab = new();
+        
+        public override void Invoke()
+        {
+            if (!objectByPrefab.TryGetValue(prefab, out obj))
+            {
+                base.Invoke();
+                var destroyEvent = obj.gameObject.AddComponent<DestroyEvent>();
+                destroyEvent.Destroyed += () =>
+                {
+                    objectByPrefab.Remove(prefab);
+                };
+                objectByPrefab.Add(prefab, obj);
+            }
+        }
+    }
+    
+    public class CreateOrShowUIView<T> : CreateSinglePrefab<T> where T : BaseUIView<T>
     {
         public ShowWindowOption option;
-        public override T Invoke()
+        public override void Invoke()
         {
-            var view = base.Invoke();
-            view.Show(option);
-            return view;
+            base.Invoke();
+            obj.Show(option);
         }
     }
 
@@ -54,20 +74,4 @@ namespace LSCore
     public class CreateOrShowCanvasView : CreateOrShowUIView<CanvasView> { }
     [Serializable]
     public class CreateOrShowUIView : CreateOrShowUIView<UIView> { }
-    
-    [Serializable]
-    public abstract class BaseCreateOrShowUIViewAction<TAction, TView> : LSAction where TAction : CreateOrShowUIView<TView> where TView : BaseUIView<TView>
-    {
-        [InlineProperty]
-        [HideReferenceObjectPicker]
-        public TAction action;
-        
-        public override void Invoke()
-        {
-            action.Invoke();
-        }
-    }
-    
-    [Serializable] public class CreateOrShowCanvasViewAction : BaseCreateOrShowUIViewAction<CreateOrShowCanvasView, CanvasView> { }
-    [Serializable] public class CreateOrShowUIViewAction : BaseCreateOrShowUIViewAction<CreateOrShowUIView, UIView> { }
 }
