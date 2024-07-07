@@ -1,5 +1,8 @@
-﻿namespace LSCore.AnimationsModule
+﻿using System;
+
+namespace LSCore.AnimationsModule
 {
+    [Serializable]
     public class AnimAction : LSAction
     {
         public AnimSequencer anim;

@@ -26,7 +26,7 @@ namespace LSCore.AnimationsModule
                 var editor = EditorWindow.GetWindow<AnimSequencerEditor>();
                 editor.titleContent.text = $"{Property.NiceName} in {Property.SerializationRoot.ValueEntry.WeakSmartValue}";
                 editor.sequencer = ValueEntry.SmartValue;
-                editor.selected = Selection.activeObject;
+                editor.rootObject = Property.SerializationRoot.ValueEntry.WeakSmartValue as Object;
                 editor.Show();
             }
         }
@@ -43,25 +43,25 @@ namespace LSCore.AnimationsModule
     public class AnimSequencerEditor : OdinEditorWindow
     {
         [IgnoreOdinValueDrawer] public AnimSequencer sequencer;
-        [NonSerialized] public Object selected;
+        [NonSerialized] public Object rootObject;
 
         protected override void OnImGUI()
         {
-            if (selected == null)
+            if (rootObject == null)
             {
                 Close();
                 return;
             }
 
             GUI.enabled = false;
-            EditorGUILayout.ObjectField(selected, typeof(Object), true);
+            EditorGUILayout.ObjectField(rootObject, typeof(Object), true);
             GUI.enabled = true;
             
             EditorGUI.BeginChangeCheck();
             base.OnImGUI();
             if (EditorGUI.EndChangeCheck())
             {
-                EditorUtility.SetDirty(selected);
+                EditorUtility.SetDirty(rootObject);
             }
         }
     }

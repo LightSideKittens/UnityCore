@@ -57,6 +57,9 @@ namespace LSCore
             base.OnAfterDeserialize();
             if (World.IsPlaying)
             {
+#if UNITY_EDITOR
+                isClickSoundOverride = clickActions?.Any(x => x is PlayOneShotSound) ?? false;
+#endif
                 if (!isClickSoundOverride)
                 {
                     var action = new PlayOneShotSound();
