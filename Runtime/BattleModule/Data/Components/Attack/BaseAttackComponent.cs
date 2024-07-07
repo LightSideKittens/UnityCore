@@ -15,11 +15,11 @@ namespace LSCore.BattleModule
 
         protected override void Init()
         {
-            useUpdate = true;
+            useFixedUpdate = true;
+            IsRunning = true;
             data.onInit += OnInit;
             data.enable += Enable;
             data.disable += Disable;
-            data.update += Update;
             data.destroy += Destroy;
             impactObject = Object.Instantiate(impactObjectPrefab, transform, false);
             impactObject.IgnoredCollider = transform.GetComponent<Collider2D>();

@@ -20,12 +20,11 @@ namespace LSCore.BattleModule
         };
         
         private readonly CompData compData = new();
-        private new Transform transform;
         
         public override void Init(string userId, string teamId)
         {
             base.Init(userId, teamId);
-            transform = GetComponent<Transform>();
+            
             compData.transform = transform;
             Add(transform, this);
             
@@ -33,6 +32,8 @@ namespace LSCore.BattleModule
             {
                 comps[i].Init(compData);
             }
+
+            OnInit();
         }
 
         public void RegisterComps()
@@ -55,17 +56,7 @@ namespace LSCore.BattleModule
         {
             compData.onInit?.Invoke();
         }
-
-        public void Run()
-        {
-            compData.update?.Invoke();
-        }
-
-        public void FixedRun()
-        {
-            compData.fixedUpdate?.Invoke();
-        }
-
+        
         private void Resett()
         {
             compData.reset?.Invoke();
@@ -81,6 +72,16 @@ namespace LSCore.BattleModule
         {
             compData.disable?.Invoke();
             gameObject.SetActive(false);
+        }
+        
+        public void Run()
+        {
+            compData.update?.Invoke();
+        }
+
+        public void FixedRun()
+        {
+            compData.fixedUpdate?.Invoke();
         }
 
         public void Kill()

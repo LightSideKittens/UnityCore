@@ -49,4 +49,12 @@ public static class LSDelegatesExtensions
             action.Invoke();
         }
     }
+    
+    public static void Invoke<T>(this IEnumerable<LSAction<T>> actions, T value)
+    {
+        foreach (var action in actions)
+        {
+            action.Invoke(value);
+        }
+    }
 }

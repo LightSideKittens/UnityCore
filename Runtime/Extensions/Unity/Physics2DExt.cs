@@ -25,7 +25,7 @@ namespace LSCore.Extensions.Unity
         
         public static Collider2D[] FindAll(in Rect rect, float angle, in ContactFilter2D filter)
         {
-            var numColliders = Physics2D.OverlapBox(rect.position, rect.size, angle, filter, hitColliders);
+            var numColliders = Physics2D.OverlapBox(rect.center, rect.size, angle, filter, hitColliders);
 
             return hitColliders[..numColliders];
         }

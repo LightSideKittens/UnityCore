@@ -26,19 +26,19 @@ namespace LSCore.BattleModule
             pool = new OnOffPool<Unit>(prefab);
             pool.Got += OnGot;
             pool.Released += OnReleased;
-            pool.Removed += OnDestroyed;
+            pool.Removed += OnRemoved;
             pools.Add(prefab.Id, pool);
 
             return pool;
         }
 
-        public static void DestroyPool(Id id)
+        public static void ClearPool(Id id)
         {
             pools[id].Clear();
             pools.Remove(id);
         }
         
-        public static void DestroyAllPools()
+        public static void ClearAllPools()
         {
             foreach (var pool in pools.Values)
             {
@@ -55,6 +55,6 @@ namespace LSCore.BattleModule
         }
         
         private static void OnReleased(Unit unit) => unit.Disable();
-        private static void OnDestroyed(Unit unit) => unit.DeInit();
+        private static void OnRemoved(Unit unit) => unit.DeInit();
     }
 }

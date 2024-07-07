@@ -148,11 +148,11 @@ namespace LSCore
         }
 
         public void LookAt(Transform target)
-        { 
-            transform.up = target.position - transform.position;
+        {
+            LookAt(target.position - transform.position);
         }
         
-        public void LookAt(in Vector3 direction)
+        public void LookAt(in Vector2 direction)
         { 
             transform.up = direction;
         }

@@ -46,7 +46,7 @@ namespace LSCore.BattleModule
             }
             
             activeUnits.Clear();
-            Unit.DestroyAllPools();
+            Unit.ClearAllPools();
         }
 
         protected OnOffPool<Unit> CreatePool(Unit prefab)
@@ -59,10 +59,9 @@ namespace LSCore.BattleModule
             return pool;
         }
 
-        private void InitUnit(Unit unit)
+        protected virtual void InitUnit(Unit unit)
         {
             unit.Init(UserId, TeamId);
-            unit.OnInit();
         }
 
         private static void OnUnitGot(Unit unit) => activeUnits.Add(unit);

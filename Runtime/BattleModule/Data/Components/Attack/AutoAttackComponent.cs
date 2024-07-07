@@ -19,12 +19,11 @@ namespace LSCore.BattleModule
 
         protected override void OnInit()
         {
-            useUpdate = true;
             moveComp = transform.Get<BaseMoveComp>();
             
             if (!manualMoveCompControl)
             {
-                data.update += ControlMove;
+                data.fixedUpdate += ControlMove;
             }
         }
 
@@ -50,9 +49,9 @@ namespace LSCore.BattleModule
             impactObject.Emit();
         }
 
-        protected override void Update()
+        protected override void FixedUpdate()
         {
-            base.Update(); 
+            base.FixedUpdate(); 
             InRadius = findTargetComp.Find(radius, out var target);
             
             if (InRadius)

@@ -82,12 +82,11 @@ namespace LSCore
             if (text != null)
             {
                 onValueChanged.AddListener(UpdateText);
+                UpdateText(0);
             }
-
-            text.text = textGetter();
         }
         
-        private void UpdateText(float val)
+        private void UpdateText(float _)
         {
             text.text = textGetter();
         }

@@ -5,6 +5,7 @@ namespace LSCore.Extensions.Unity
     public static class LSVector2
     {
         public static readonly Vector2 half = Vector2.one / 2;
+        public static readonly Vector2 one = Vector2.one;
     }
     
     public static class LSVector3

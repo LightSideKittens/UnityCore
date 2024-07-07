@@ -20,7 +20,7 @@ namespace Animatable
             mainBar.gameObject.SetActive(true);
             mainBar.value = mainBar.maxValue;
         }
-        
+
         public static HealthBar Create(float maxValue, Transform target, Vector2 offset, Vector2 scale, bool isOpponent)
         {
             var template = isOpponent ? OpponentHealthBar : AnimatableCanvas.HealthBar;
@@ -42,9 +42,9 @@ namespace Animatable
             return result;
         }
 
-        public void Disable()
+        public bool Active
         { 
-            mainBar.gameObject.SetActive(false);
+            set => mainBar.gameObject.SetActive(value);
         }
 
         public void Update()

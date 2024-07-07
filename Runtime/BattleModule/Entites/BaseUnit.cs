@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -18,16 +17,20 @@ namespace LSCore.BattleModule
         public string UserId { get; private set; }
         public string TeamId { get; private set; }
         public AffiliationType Affiliation { get; private set; }
-        public new Transform transform { get; private set; }
+        public new Transform transform { get; protected set; }
         
         [ShowIf("$HideManager")]
         [SerializeField] protected LevelsManager manager;
 
         public Id Id => id;
 
+        private void Awake()
+        {
+            transform = GetComponent<Transform>();
+        }
+
         public virtual void Init(string userId, string teamId)
         {
-            transform = base.transform;
             UserId = userId;
             TeamId = teamId;
 #if UNITY_EDITOR

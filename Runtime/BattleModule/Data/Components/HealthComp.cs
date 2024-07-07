@@ -31,10 +31,12 @@ namespace LSCore.BattleModule
         {
             base.Reset();
             healthBar.Reset();
+            healthBar.Active = false;
         }
 
         protected override void OnDamageTaken(float damage)
         {
+            healthBar.Active = true;
             visualRoot.localPosition = Vector3.zero;
             visualRoot.DOShakePosition(0.15f, 0.2f, 25);
             block.SetFloat(exposure, 1.6f);
@@ -61,7 +63,7 @@ namespace LSCore.BattleModule
 
         protected override void OnKilled()
         {
-            healthBar.Disable();
+            healthBar.Active = false;
         }
     }
 }

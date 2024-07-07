@@ -7,7 +7,7 @@ namespace LSCore.BattleModule
     public abstract class BaseMoveComp : BaseComp
     {
         public float speed;
-        protected Rigidbody2D rigidbody;
+        public Rigidbody2D rigidbody;
         public float Speed => speed * Buffs;
         public Buffs Buffs { get; private set; }
 
@@ -18,6 +18,7 @@ namespace LSCore.BattleModule
             useFixedUpdate = true;
             IsRunning = true;
             rigidbody = transform.GetComponent<Rigidbody2D>();
+            rigidbody.position = transform.position;
             Buffs = new Buffs();
             data.reset += Buffs.Reset;
         }

@@ -5,48 +5,23 @@ namespace LSCore.Extensions.Unity
 {
     public static class CameraExtensions
     {
-        private static Func<Camera, Vector3> sizeGetter;
-
-        static CameraExtensions()
-        {
-            if (LSScreen.IsPortrait)
-            {
-                sizeGetter = GetSizeOnPortraitMode;
-            }
-            else
-            {
-                sizeGetter = GetSizeOnAlbumMode;
-            }
-        }
-    
         public static Bounds GetBounds(this Camera camera)
         {
-            return new Bounds(camera.transform.position, sizeGetter(camera));
+            return new Bounds(camera.transform.position, camera.GetSize());
         }
 
-        public static Vector3 GetSize(this Camera camera)
+        public static Vector2 GetSize(this Camera camera)
         {
-            return sizeGetter(camera);
+            float cameraHeight = camera.orthographicSize * 2;
+            float cameraWidth = cameraHeight * camera.aspect;
+            return new Vector2(cameraWidth, cameraHeight);
         }
         
         public static Rect GetRect(this Camera camera)
         {
-            return new Rect(camera.transform.position, sizeGetter(camera) * 2);
-        }
-        
-
-        private static Vector3 GetSizeOnPortraitMode(Camera camera)
-        {
-            var orthographicSize = camera.orthographicSize;
-
-            return new Vector3(orthographicSize, orthographicSize / LSScreen.Aspect);
-        }
-    
-        private static Vector3 GetSizeOnAlbumMode(Camera camera)
-        {
-            var orthographicSize = camera.orthographicSize;
-
-            return new Vector3(orthographicSize / LSScreen.Aspect, orthographicSize);
+            var rect = new Rect(camera.transform.position, camera.GetSize());
+            rect.center = camera.transform.position;
+            return rect;
         }
     }
 }

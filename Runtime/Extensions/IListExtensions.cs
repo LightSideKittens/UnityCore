@@ -25,6 +25,28 @@ namespace LSCore.Extensions
             return result;
         }
         
+        public static T GetCyclic<T>(this T[,] array, int x, int y)
+        {
+            int width = array.GetLength(0);
+            int height = array.GetLength(1);
+
+            x = (x % width + width) % width;
+            y = (y % height + height) % height;
+
+            return array[x, y];
+        }
+        
+        public static T Random<T>(this T[,] array)
+        {
+            int width = array.GetLength(0);
+            int height = array.GetLength(1);
+
+            int randomX = UnityEngine.Random.Range(0, width);
+            int randomY = UnityEngine.Random.Range(0, height);
+
+            return array[randomX, randomY];
+        }
+        
         public static T Random<T>(this IList<T> list) => list[UnityEngine.Random.Range(0, list.Count)];
 
         public static T ClosestBinarySearch<T>(this IList<T> list, Func<T, int> arr, int target) => list.ClosestBinarySearch(arr, target, out _);
