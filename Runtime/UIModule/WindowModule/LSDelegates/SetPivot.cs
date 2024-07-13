@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using LSCore.Extensions.Unity;
+using UnityEngine;
 
 namespace LSCore
 {
@@ -12,19 +13,7 @@ namespace LSCore
         {
             if (savePosition)
             {
-                Vector2 size = rectTransform.rect.size;
-
-                // Вычисляем разницу в pivot
-                Vector2 pivotDelta = pivot - rectTransform.pivot;
-
-                // Вычисляем смещение позиции
-                Vector2 offset = new Vector2(pivotDelta.x * size.x, pivotDelta.y * size.y);
-
-                // Обновляем позицию
-                rectTransform.anchoredPosition += offset;
-
-                // Устанавливаем новый pivot
-                rectTransform.pivot = pivot;
+                rectTransform.SetPivot(pivot);
             }
             else
             {

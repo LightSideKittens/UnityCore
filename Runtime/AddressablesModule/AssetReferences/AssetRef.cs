@@ -43,7 +43,7 @@ namespace LSCore
         private T DefaultGetter() => asset;
 
 #if UNITY_EDITOR
-        public void SetGuid(string guid) => m_AssetGUID = guid;
+        internal void SetGuid(string guid) => m_AssetGUID = guid;
 #endif
     }
 }

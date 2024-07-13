@@ -105,11 +105,30 @@ public static class TextRenderer
         TextRendererClass.CallStatic("setOverflow", overflow);
     }
     
+    public static void SetFaceDilate(float dilate)
+    {
+        TextRendererClass.CallStatic("setFaceDilate", dilate);
+    }
+    
+    public static void SetStroke(float width, Color color)
+    {
+        Debug.Log($"SetStroke: {(width, color)}");
+        TextRendererClass.CallStatic("setStroke", width, color.ToARGB());
+    }
+
+
+    public static void SetUnderlay(Color color, float offsetX, float offsetY, float dilate, float softness)
+    {
+        Debug.Log($"SetUnderlay: {(color, offsetX, offsetY, dilate, softness)}");
+        TextRendererClass.CallStatic("setUnderlay", color.ToARGB(), offsetX, offsetY, dilate, softness);
+    }
+    
     public static Texture2D RenderText(TextMeshProUGUI textMeshProUGUI)
     {
         byte[] imageBytes = null;
 
         Debug.Log(textMeshProUGUI.font.name);
+        
 #if !UNITY_EDITOR
     #if UNITY_ANDROID
         string text = textMeshProUGUI.text;
@@ -125,6 +144,31 @@ public static class TextRenderer
         SetAlignment(textMeshProUGUI.alignment);
         SetWrapText(textMeshProUGUI.textWrappingMode == TextWrappingModes.Normal);
         SetOverflow(textMeshProUGUI.overflowMode);
+        
+        Material mat = textMeshProUGUI.fontMaterial;
+        if (mat.HasProperty(ShaderUtilities.ID_OutlineWidth))
+        {
+            float outlineWidth = mat.GetFloat(ShaderUtilities.ID_OutlineWidth);
+            Color outlineColor = mat.GetColor(ShaderUtilities.ID_OutlineColor);
+            SetStroke(outlineWidth, outlineColor);
+        }
+        
+        if (mat.HasProperty(ShaderUtilities.ID_UnderlayColor))
+        {
+            Color underlayColor = mat.GetColor(ShaderUtilities.ID_UnderlayColor);
+            float underlayOffsetX = mat.GetFloat(ShaderUtilities.ID_UnderlayOffsetX);
+            float underlayOffsetY = mat.GetFloat(ShaderUtilities.ID_UnderlayOffsetY);
+            float underlayDilate = mat.GetFloat(ShaderUtilities.ID_UnderlayDilate);
+            float underlaySoftness = mat.GetFloat(ShaderUtilities.ID_UnderlaySoftness);
+            SetUnderlay(underlayColor, underlayOffsetX, underlayOffsetY, underlayDilate, underlaySoftness);
+        }
+        
+        if (mat.HasProperty(ShaderUtilities.ID_FaceDilate))
+        {
+            float faceDilate = mat.GetFloat(ShaderUtilities.ID_FaceDilate);
+            SetFaceDilate(faceDilate);
+        }
+
         imageBytes = TextRendererClass.CallStatic<byte[]>("render", text);
     #endif
 #endif

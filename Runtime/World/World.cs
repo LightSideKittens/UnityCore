@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using HarmonyLib;
 using UnityEngine;
 
 namespace LSCore
@@ -29,7 +30,7 @@ namespace LSCore
             IsPlaying = true;
 
             Created?.Invoke();
-            Debug.Log("[World] Created");
+            Burger.Log("[World] Created");
         }
 
         private void Awake()

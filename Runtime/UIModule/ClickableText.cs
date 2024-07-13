@@ -87,7 +87,6 @@ namespace LSCore
     [CustomEditor(typeof(ClickableText), true), CanEditMultipleObjects]
     public class ClickableTextEditor : LSTextEditor
     {
-        SerializedProperty padding;
         ClickableText text;
         private PropertyTree propertyTree;
         private InspectorProperty clickActions;
@@ -96,7 +95,6 @@ namespace LSCore
         {
             base.OnEnable();
             text = (ClickableText)target;
-            propertyTree = PropertyTree.Create(serializedObject);
             clickActions = propertyTree.RootProperty.Children["clickActions"];
         }
 

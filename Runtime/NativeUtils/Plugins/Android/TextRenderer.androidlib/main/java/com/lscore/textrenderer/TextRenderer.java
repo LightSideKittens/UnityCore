@@ -3,13 +3,18 @@ package com.lscore.textrenderer;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.text.Layout;
+import android.text.Spannable;
+import android.text.SpannableString;
 import android.text.StaticLayout;
 import android.text.TextPaint;
+import android.text.TextUtils;
+import android.text.style.ReplacementSpan;
+
 import androidx.core.content.res.ResourcesCompat;
 import java.io.ByteArrayOutputStream;
-import android.text.TextUtils;
 
 public class TextRenderer
 {
@@ -21,6 +26,14 @@ public class TextRenderer
     private static Layout.Alignment alignment = Layout.Alignment.ALIGN_NORMAL;
     private static boolean wrapText = true; // Установка значения по умолчанию
     private static TextUtils.TruncateAt overflow = null;
+    private static float strokeWidth = 0f; // Значение по умолчанию
+    private static int strokeColor = 0xFF000000; // Черный цвет по умолчанию
+    private static float underlayOffsetX = 0f; // Значение по умолчанию
+    private static float underlayOffsetY = 0f; // Значение по умолчанию
+    private static int underlayColor = 0xFF000000; // Черный цвет по умолчанию
+    private static float underlayDilate = 0f; // Значение по умолчанию
+    private static float underlaySoftness = 0f; // Значение по умолчанию
+    private static float faceDilate = 0f; // Значение по умолчанию
 
     public static void setCustomFont(Context context, String fontName) {
         int fontResId = context.getResources().getIdentifier(fontName, "font", context.getPackageName());
@@ -78,35 +91,89 @@ public class TextRenderer
         }
     }
 
+    public static void setStroke(float width, int color) {
+        strokeWidth = width;
+        strokeColor = color;
+    }
+
+    public static void setUnderlay(int color, float offsetX, float offsetY, float dilate, float softness) {
+        underlayColor = color;
+        underlayOffsetX = offsetX;
+        underlayOffsetY = offsetY;
+        underlayDilate = dilate;
+        underlaySoftness = softness;
+    }
+
+    public static void setFaceDilate(float dilate) {
+        faceDilate = dilate;
+    }
+
     public static Bitmap renderToBitmap(String text)
     {
-        TextPaint paint = new TextPaint();
-        paint.setTextSize(customTextSize);
-        paint.setTypeface(customTypeface != null ? customTypeface : Typeface.DEFAULT);
-        paint.setAntiAlias(true);
-        paint.setColor(customTextColor);
+       TextPaint paint = new TextPaint();
+       paint.setTextSize(customTextSize);
+       paint.setTypeface(customTypeface != null ? customTypeface : Typeface.DEFAULT);
+       paint.setAntiAlias(true);
 
-        int adjustedWidth = (width > 0) ? width : (int) Math.ceil(Layout.getDesiredWidth(text, paint));
-        StaticLayout.Builder builder = StaticLayout.Builder.obtain(text, 0, text.length(), paint, adjustedWidth)
-                .setAlignment(alignment)
-                .setLineSpacing(0, 1.0f)
-                .setIncludePad(false);
-
-        if (!wrapText) {
-            builder.setMaxLines(1).setEllipsize(overflow);
-        } else if (overflow != null) {
-            // Если wrapText включен, обрабатываем overflow вручную
-            builder.setEllipsize(overflow).setMaxLines(2);
+        if (faceDilate != 0) {
+            paint.setFakeBoldText(true); // Используем жирный текст для увеличения толщины
+            paint.setStyle(Paint.Style.FILL_AND_STROKE);
+            paint.setStrokeWidth(faceDilate * customTextSize); // Пропорциональная обводка для Face Dilate
         }
+        
+       int adjustedWidth = (width > 0) ? width : (int) Math.ceil(Layout.getDesiredWidth(text, paint));
 
-        StaticLayout staticLayout = builder.build();
-        int adjustedHeight = (height > 0) ? height : staticLayout.getHeight();
+       // Рассчитываем максимальное количество строк, которые могут поместиться по высоте
+       int maxLines = Integer.MAX_VALUE;
 
-        Bitmap bitmap = Bitmap.createBitmap(adjustedWidth, adjustedHeight, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        staticLayout.draw(canvas);
+       StaticLayout.Builder builder = StaticLayout.Builder.obtain(text, 0, text.length(), paint, adjustedWidth)
+               .setAlignment(alignment)
+               .setLineSpacing(0, 1.0f)
+               .setIncludePad(false)
+               .setEllipsize(overflow);
 
-        return bitmap;
+       StaticLayout staticLayout = builder.build();
+       
+       if (height > 0) {
+           int lineHeight = staticLayout.getHeight() / staticLayout.getLineCount();
+           maxLines = height / lineHeight;
+           builder.setMaxLines(maxLines);
+           staticLayout = builder.build();
+       }
+
+       int adjustedHeight = staticLayout.getHeight();
+
+       // Учитываем максимальное значение обводки и тени для увеличения размера Bitmap
+       float maxPadding = Math.max(strokeWidth, Math.max(underlayOffsetX + underlayDilate, underlayOffsetY + underlayDilate));
+
+       // Создаем Bitmap с большими размерами для предотвращения обрезки текста
+       Bitmap bitmap = Bitmap.createBitmap(adjustedWidth + (int)maxPadding * 2, adjustedHeight + (int)maxPadding * 2, Bitmap.Config.ARGB_8888);
+       Canvas canvas = new Canvas(bitmap);
+
+       canvas.translate(maxPadding, maxPadding); // Перемещаем текст внутрь битмапа
+
+       // Сначала рисуем обводку
+       if (strokeWidth > 0) {
+           paint.setStyle(Paint.Style.STROKE);
+           paint.setStrokeWidth(strokeWidth * customTextSize); // Пропорциональная обводка
+           paint.setColor(strokeColor);
+           staticLayout.draw(canvas);
+       }
+       
+       if (underlayOffsetX != 0 || underlayOffsetY != 0 || underlayDilate != 0 || underlaySoftness != 0) {
+           paint.setStyle(Paint.Style.STROKE);
+           paint.setStrokeWidth(strokeWidth * customTextSize); // Пропорциональная обводка
+           paint.setColor(strokeColor);
+           canvas.translate(underlayOffsetX * 5, underlayOffsetY * 5);
+           staticLayout.draw(canvas);
+       }
+
+       // Затем рисуем основной текст
+       paint.setStyle(Paint.Style.FILL);
+       paint.setColor(customTextColor);
+       staticLayout.draw(canvas);
+
+       return bitmap;
     }
 
     public static byte[] render(String text)
@@ -117,3 +184,4 @@ public class TextRenderer
         return stream.toByteArray();
     }
 }
+

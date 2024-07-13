@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -13,20 +12,17 @@ namespace LSCore.AnimationsModule.Animations.Options
 
         [ShowIf(nameof(useCustom))]
         [SerializeField]
-        [ValueDropdown(nameof(CurveNames))]
-        private string curveName;
+        private AnimationCurve curve;
         
         [HideIf(nameof(useCustom))]
         [SerializeField]
         private Ease ease;
-
-        private static IEnumerable<string> CurveNames => AnimationCurves.Names;
-
+        
         public void ApplyTo(Tween tween)
         {
             if (useCustom)
             {
-                tween.SetEase(AnimationCurves.Get(curveName));
+                tween.SetEase(curve);
             }
             else
             {

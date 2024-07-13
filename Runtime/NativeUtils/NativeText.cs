@@ -1,4 +1,7 @@
-﻿using TMPro;
+﻿using System;
+using System.Threading.Tasks;
+using LSCore.Extensions.Unity;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,37 +11,39 @@ namespace LSCore.Runtime
     {
         [SerializeField] private TextMeshProUGUI text;
 
-        private void Start()
+        private async void Start()
         {
+            Debug.Log(DateTime.Now);
+            await Task.Delay(10000);
+            Debug.Log(DateTime.Now);
             text.ForceMeshUpdate();
             var texture = TextRenderer.RenderText(text);
-            var rawImage = new GameObject("image").AddComponent<RawImage>();
+            var imageGo = new GameObject("image");
+            var rawImage = imageGo.AddComponent<RawImage>();
             rawImage.texture = texture;
             rawImage.transform.SetParent(text.transform.parent);
-            var rect = (RectTransform)rawImage.transform;
-            CopyRectTransformValues(text.rectTransform, rect);
-            /*Debug.Log($"Size: {rect.sizeDelta}");
-            Debug.Log($"Size: {text.textBounds.size}");
-            rect.sizeDelta = text.textBounds.size;*/
-            text.enabled = false;
-        }
-        
-        public static void CopyRectTransformValues(RectTransform source, RectTransform destination)
-        {
-            if (source == null || destination == null)
+            
+            var fitter = imageGo.AddComponent<AspectRatioFitter>();
+            fitter.aspectMode = AspectRatioFitter.AspectMode.WidthControlsHeight;
+            fitter.aspectRatio = texture.AspectRatio();
+            var pivot = text.rectTransform.pivot;
+            switch (text.verticalAlignment)
             {
-                Debug.LogError("Source or destination RectTransform is null.");
-                return;
+                case VerticalAlignmentOptions.Top:
+                    pivot.y = 1;
+                    break;
+                case VerticalAlignmentOptions.Middle:
+                    pivot.y = 0.5f;
+                    break;
+                case VerticalAlignmentOptions.Bottom:
+                    pivot.y = 0;
+                    break;
             }
 
-            destination.anchoredPosition = source.anchoredPosition;
-            destination.sizeDelta = source.sizeDelta;
-            destination.anchorMin = source.anchorMin;
-            destination.anchorMax = source.anchorMax;
-            destination.pivot = source.pivot;
-            destination.localScale = source.localScale;
-            destination.localRotation = source.localRotation;
-            destination.localPosition = source.localPosition;
+            rawImage.rectTransform.anchoredPosition = text.rectTransform.anchoredPosition;
+            rawImage.rectTransform.SetSizeDeltaX(text.rectTransform.sizeDelta.x);
+            rawImage.rectTransform.SetPivot(pivot);
+            text.enabled = false;
         }
     }
 }

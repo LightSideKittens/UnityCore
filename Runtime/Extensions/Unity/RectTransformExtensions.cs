@@ -24,5 +24,21 @@ namespace LSCore.Extensions.Unity
         {
             target.localPosition = parent.GetLocalPositionByScreenPoint(screenPoint, canvas);
         }
+
+        public static void SetPivot(this RectTransform target, in Vector2 pivot)
+        {
+            Vector2 size = target.rect.size;
+            Vector2 pivotDelta = pivot - target.pivot;
+            Vector2 offset = new Vector2(pivotDelta.x * size.x, pivotDelta.y * size.y);
+            target.anchoredPosition += offset;
+            target.pivot = pivot;
+        }
+        
+        public static void SetSizeDeltaX(this RectTransform target, float x)
+        {
+            var size = target.sizeDelta;
+            size.x = x;
+            target.sizeDelta = size;
+        }
     }
 }
