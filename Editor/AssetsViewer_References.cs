@@ -1,48 +1,67 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEditor;
-using UnityEngine;
 
-public partial class AssetsViewer
+internal  partial class AssetsViewer
 {
-    [TabGroup("Tabs", "Asset References")]
-    public List<Object> AssetReferences = new();
+    [TabGroup("Tabs", "Used")] [TableList(IsReadOnly = true)] public List<AssetInfo> usedDirect = new();
+    [TabGroup("Tabs", "Used")] [TableList(IsReadOnly = true)] public List<AssetInfo> usedIndirect = new();
     
-    protected override void OnDisable()
-    {
-        base.OnDisable();
-        Selection.selectionChanged -= UpdateReferences;
-    }
+    [TabGroup("Tabs", "Uses")] [TableList(IsReadOnly = true)] public List<AssetInfo> usesDirect = new();
+    [TabGroup("Tabs", "Uses")] [TableList(IsReadOnly = true)] public List<AssetInfo> usesIndirect = new();
+
+    private readonly List<AssetInfo> fullUsedDirect = new();
+    private readonly List<AssetInfo> fullUsedIndirect = new();
+    
+    private readonly List<AssetInfo> fullUsesDirect = new();
+    private readonly List<AssetInfo> fullUsesIndirect = new();
 
     private void UpdateReferences()
     {
-        var selection = Selection.activeObject;
-        if (selection == null)
+        Selection.selectionChanged -= UpdateReferences;
+        Selection.selectionChanged += UpdateReferences;
+        fullUsedDirect.Clear();
+        fullUsedIndirect.Clear();
+        
+        fullUsesDirect.Clear();
+        fullUsesIndirect.Clear();
+
+        if (Selection.activeObject == null)
         {
-            AssetReferences.Clear();
             return;
         }
+        
+        string selectionPath = AssetDatabase.GetAssetPath(Selection.activeObject);
 
-        string selectedAssetPath = AssetDatabase.GetAssetPath(selection);
-        string[] allAssetPaths = AssetDatabase.GetAllAssetPaths();
-        List<Object> references = new List<Object>();
+        Fill(AssetDatabaseUtils.GetUsed, fullUsedDirect);
+        Fill(AssetDatabaseUtils.GetUsedIndirect, fullUsedIndirect);
+        
+        Fill(AssetDatabaseUtils.GetUses, fullUsesDirect);
+        Fill(AssetDatabaseUtils.GetUsesIndirect, fullUsesIndirect);
 
-        foreach (string assetPath in allAssetPaths)
+        FilterAssetsUsages();
+
+        return;
+        void Fill(Action<string, HashSet<string>> action, List<AssetInfo> full)
         {
-            if (AssetDatabase.IsValidFolder(assetPath)) continue;
-
-            string[] dependencies = AssetDatabase.GetDependencies(assetPath, true);
-            foreach (string dependency in dependencies)
+            HashSet<string> list = new HashSet<string>();
+            action(selectionPath, list);
+        
+            foreach (string assetPath in list)
             {
-                if (dependency == selectedAssetPath)
-                {
-                    var obj = AssetDatabase.LoadMainAssetAtPath(dependency);
-                    references.Add(obj);
-                    break;
-                }
+                full.Add(BuildInfo(assetPath));
             }
         }
+    }
 
-        AssetReferences = references;
+    private void FilterAssetsUsages()
+    {
+        FilterAssets(fullUsedDirect, usedDirect);
+        FilterAssets(fullUsedIndirect, usedIndirect);
+        
+        FilterAssets(fullUsesDirect, usesDirect);
+        FilterAssets(fullUsesIndirect, usesIndirect);
     }
 }
+

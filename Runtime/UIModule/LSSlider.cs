@@ -24,6 +24,7 @@ namespace LSCore
         [field: SerializeField] public Image Icon { get; private set; }
         [SerializeField] private LSText text; 
         [SerializeField] private TextMode textMode;
+        [SerializeField] private bool wholeNumberInText;
 
         public new bool wholeNumbers
         {
@@ -33,6 +34,21 @@ namespace LSCore
                 if (base.wholeNumbers != value)
                 {
                     base.wholeNumbers = value;
+                    UpdateValueTextGetters();
+                }
+            }
+        }
+        
+        public bool WholeNumberInText
+        {
+            get => wholeNumberInText;
+            set
+            {
+                if (wholeNumberInText != value)
+                {
+                    base.wholeNumbers = !base.wholeNumbers;
+                    base.wholeNumbers = !base.wholeNumbers;
+                    wholeNumberInText = value;
                     UpdateValueTextGetters();
                 }
             }
@@ -130,7 +146,7 @@ namespace LSCore
         
         private void UpdateValueTextGetter(Func<string> defaultGetter, Func<string> intGetter, out Func<string> getter)
         {
-            getter = wholeNumbers ? intGetter : defaultGetter;
+            getter = wholeNumbers || WholeNumberInText ? intGetter : defaultGetter;
         }
 
         private string IntValue() => $"{(int)value}";
@@ -148,6 +164,7 @@ namespace LSCore
         SerializedProperty Icon;
         SerializedProperty text;
         SerializedProperty textMode;
+        SerializedProperty wholeNumberInText;
         
         
         protected override void OnEnable()
@@ -156,6 +173,7 @@ namespace LSCore
             Icon = serializedObject.FindBackingField("Icon");
             text = serializedObject.FindProperty("text");
             textMode = serializedObject.FindProperty("textMode");
+            wholeNumberInText = serializedObject.FindProperty("wholeNumberInText");
         }
 
         public override void OnInspectorGUI()
@@ -165,6 +183,7 @@ namespace LSCore
             EditorGUILayout.PropertyField(Icon);
             EditorGUILayout.PropertyField(text);
             EditorGUILayout.PropertyField(textMode);
+            EditorGUILayout.PropertyField(wholeNumberInText);
             
             serializedObject.ApplyModifiedProperties();
         }

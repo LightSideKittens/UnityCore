@@ -5,6 +5,7 @@ using System.Reflection;
 using HarmonyLib;
 using Sirenix.Utilities;
 using UnityEditor;
+using UnityEditor.Build;
 
 [InitializeOnLoad]
 internal static class WindowsExtender
@@ -17,14 +18,14 @@ internal static class WindowsExtender
     static WindowsExtender()
     {
         var currentGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
-        PlayerSettings.SetApiCompatibilityLevel(currentGroup, ApiCompatibilityLevel.NET_Unity_4_8);
+        PlayerSettings.SetApiCompatibilityLevel(NamedBuildTarget.FromBuildTargetGroup(currentGroup), ApiCompatibilityLevel.NET_Unity_4_8);
         AssetDatabase.Refresh();
         const BindingFlags flags = BindingFlags.Static | BindingFlags.Public;
         OnPreGUIMethod = typeof(WindowsExtender).GetMethod(nameof(OnPreGUI), flags);
         OnPostGUIMethod = typeof(WindowsExtender).GetMethod(nameof(OnPostGUI), flags);
 
         var baseType = typeof(BaseWindowExtender);
-        var types = AssemblyUtilities.GetTypes(AssemblyTypeFlags.PluginTypes | AssemblyTypeFlags.PluginEditorTypes)
+        var types = AssemblyUtilities.GetTypes(AssemblyCategory.ProjectSpecific)
             .Where(t => baseType.IsAssignableFrom(t) && !t.IsAbstract)
             .ToList();
         

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using DG.Tweening;
+using UnityEngine;
 
 namespace LSCore.Async
 {
@@ -34,7 +35,12 @@ namespace LSCore.Async
 
         public static void Coroutine(IEnumerator enumerator, Action onComplete)
         {
-            World.BeginCoroutine(enumerator);
+            World.BeginCoroutine(enumerator, onComplete);
+        }
+        
+        public static void WaitWhile(Func<bool> predicate, Action onComplete)
+        {
+            World.BeginCoroutine(new WaitWhile(predicate), onComplete);
         }
     }
 }

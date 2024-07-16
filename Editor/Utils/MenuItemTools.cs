@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using UnityEditor;
 using MenuItem = UnityEditor.MenuItem;
 using UnityEngine;
@@ -39,11 +38,11 @@ public class MenuItemTools : MonoBehaviour
     {
         if (Caching.ClearCache())
         {
-            Debug.Log("Addressables Cache cleared successfully!");
+            Debug.Log("Cache cleared successfully!");
         }
         else
         {
-            Debug.LogError("Failed to clear Addressables Cache!");
+            Debug.LogError("Failed to clear Cache!");
         }
     }
 

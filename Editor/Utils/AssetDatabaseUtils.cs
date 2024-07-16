@@ -6,7 +6,7 @@ using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-public static class AssetDatabaseUtils
+public static partial class AssetDatabaseUtils
 {
     public static void ForceSave(this Object target)
     {

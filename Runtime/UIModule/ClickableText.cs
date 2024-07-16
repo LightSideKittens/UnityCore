@@ -88,7 +88,6 @@ namespace LSCore
     public class ClickableTextEditor : LSTextEditor
     {
         ClickableText text;
-        private PropertyTree propertyTree;
         private InspectorProperty clickActions;
         
         protected override void OnEnable()

@@ -85,7 +85,7 @@ namespace LSCore.AnimationsModule.Animations
 
         private bool ShowTargets => useMultiple && !useTargetPath;
         private bool ShowTargetsPaths => useMultiple && useTargetPath;
-        protected virtual bool ShowStartValue => true;
+        protected virtual bool ShowStartValue => NeedInit;
         protected virtual bool ShowEndValue => !IsDurationZero;
         
         protected abstract void InitAction(TTarget target);

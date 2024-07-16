@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
+using UnityEngine.Networking;
 using UnityEngine.UI;
 #if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
@@ -42,7 +43,10 @@ namespace LSCore
             get
             {
 #if UNITY_EDITOR
-                table = AssetDatabaseUtils.LoadAny<StringTable>($"{tableData.TableCollectionName}_{LocalizationSettings.ProjectLocale.Identifier.Code}");
+                if (!World.IsPlaying)
+                {
+                    table = AssetDatabaseUtils.LoadAny<StringTable>($"{tableData.TableCollectionName}_{LocalizationSettings.ProjectLocale.Identifier.Code}");
+                }
 #endif
                 return table;
             }
@@ -211,6 +215,7 @@ namespace LSCore
             LocalizationSettings.StringDatabase.GetTableAsync(lastTableRef).OnComplete(t => Table = t);
         }
     }
+    
 
 #if UNITY_EDITOR
     [CustomEditor(typeof(LSText), true), CanEditMultipleObjects]
@@ -244,6 +249,11 @@ namespace LSCore
         {
             base.OnDisable();
             SceneView.duringSceneGui -= DrawAnchorsOnSceneView;
+        }
+
+        private void OnDestroy()
+        {
+            propertyTree.Dispose();
         }
 
         private void DrawAnchorsOnSceneView(SceneView sceneView) => LSRaycastTargetEditor.DrawAnchorsOnSceneView(this, sceneView);

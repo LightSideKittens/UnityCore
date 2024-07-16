@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using HarmonyLib;
 using UnityEngine;
 
 namespace LSCore
@@ -24,8 +22,9 @@ namespace LSCore
         private static void Init()
         {
             Creating?.Invoke();
-            
-            instance = new GameObject(nameof(World)).AddComponent<World>();
+            var go = new GameObject(nameof(World));
+            go.hideFlags = HideFlags.HideAndDontSave;
+            instance = go.AddComponent<World>();
             DontDestroyOnLoad(instance);
             IsPlaying = true;
 
@@ -63,9 +62,15 @@ namespace LSCore
             OnApplicationPause(true);
         }
 
-        public static Coroutine BeginCoroutine(IEnumerator enumerator) 
+        public static Coroutine BeginCoroutine(IEnumerator enumerator, Action onComplete) 
         {
-            return instance.StartCoroutine(enumerator);
+            return instance.StartCoroutine(instance.StartCoroutine(enumerator, onComplete));
+        }
+        
+        public IEnumerator StartCoroutine(IEnumerator enumerator, Action onComplete)
+        {
+            yield return enumerator;
+            onComplete();
         }
     }
 }

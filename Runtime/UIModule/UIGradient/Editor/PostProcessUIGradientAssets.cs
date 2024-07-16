@@ -5,17 +5,9 @@ using UnityEditor;
 using System.IO;
 using System.Collections.Generic;
 
-/// <summary>
-/// Case : If materials are created in editor and assigned to the gradient component.
-/// The gradientmap in gradient shader is not serialized and is not also refrencing a saved map.
-/// So when saving the scene, gradientmap in the material resets to null.
-/// Saving properties in shader is actually not required since the gradient component assigns the properties in the scene.
-/// So, what this script does is skip the saving of a gradient material.
-/// The gradient shader/material is required only to support complex gradient rendering.
-/// </summary>
 namespace LSCore
 {
-    public class PostProcessUIGradientAssets : UnityEditor.AssetModificationProcessor
+    public class PostProcessUIGradientAssets : AssetModificationProcessor
     {
         static string[] OnWillSaveAssets(string[] paths)
         {
@@ -24,7 +16,7 @@ namespace LSCore
             //if material is gradient material skip it.
             foreach (string path in paths)
             {
-                if (!(string.Equals(Path.GetExtension(path), ".mat") && isGradientMat(path)))
+                if (!(string.Equals(Path.GetExtension(path), ".mat") && IsGradientMat(path)))
                 {
                     newpaths.Add(path);
                 }
@@ -32,7 +24,7 @@ namespace LSCore
             return newpaths.ToArray();
         }
 
-        static bool isGradientMat(string path)
+        static bool IsGradientMat(string path)
         {
             Material mat = (Material)AssetDatabase.LoadAssetAtPath(path, typeof(Material));
             Shader gradientshader = Shader.Find(UIGradient.GradientShaderPath);
@@ -53,7 +45,7 @@ namespace LSCore
         [MenuItem("Window/UI Gradient/Refresh Gradients")]
         public static void UpdateAllGradients()
         {
-            UIGradient[] allGradients = FindObjectsOfType<UIGradient>();
+            UIGradient[] allGradients = FindObjectsByType<UIGradient>(FindObjectsSortMode.None);
             foreach (var item in allGradients)
             {
                 if (item.gameObject.activeInHierarchy)

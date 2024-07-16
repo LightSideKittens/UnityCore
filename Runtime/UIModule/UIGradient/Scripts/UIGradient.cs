@@ -728,7 +728,7 @@ namespace LSCore
                 }
 
 #if UNITY_EDITOR
-                if (isMaterialAlreadyUsed())
+                if (IsMaterialAlreadyUsed())
                 {
                     ApplyGradientshader();
                 }
@@ -1192,11 +1192,11 @@ namespace LSCore
         /// Two gradients using the same material can result in unexpected results
         /// </summary>
         /// <returns></returns>
-        private bool isMaterialAlreadyUsed()
+        private bool IsMaterialAlreadyUsed()
         {
             if (HasGradientShader())
             {
-                UIGradient[] allGradients = FindObjectsOfType<UIGradient>();
+                UIGradient[] allGradients = FindObjectsByType<UIGradient>(FindObjectsSortMode.None);
 
                 foreach (var item in allGradients)
                 {

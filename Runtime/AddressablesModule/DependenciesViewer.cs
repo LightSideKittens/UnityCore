@@ -28,7 +28,6 @@ namespace LSCore.AddressablesModule
         private bool isLocked;
         private Vector2 scrollPosition;
         private Vector2 dublicateScrollPosition;
-        private SearchField searchField;
 
         #endregion
 
@@ -56,18 +55,10 @@ namespace LSCore.AddressablesModule
 
         private void OnEnable()
         {
-            searchField = new SearchField();
-
             if (Selection.activeObject != null)
             {
                 OnSelectionChange();
             }
-        }
-
-        private GUIStyle GetSearchStyle(string styleName)
-        {
-            return GUI.skin.FindStyle(styleName) ??
-                   EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector).FindStyle(styleName);
         }
 
         private void OnSelectionChange()
@@ -95,21 +86,8 @@ namespace LSCore.AddressablesModule
 
         private void DrawSearchBox()
         {
-            if (searchStyles.Count < 3)
+            if (LSSearchField.Draw(ref searchText))
             {
-                searchStyles.Clear();
-                searchStyles.Add(GetSearchStyle("ToolbarSeachTextFieldPopup"));
-                searchStyles.Add(GetSearchStyle("ToolbarSeachCancelButton"));
-                searchStyles.Add(GetSearchStyle("ToolbarSeachCancelButtonEmpty"));
-            }
-
-            var newSearch = searchField.OnGUI(EditorGUILayout.GetControlRect(), searchText, searchStyles[0],
-                searchStyles[1], searchStyles[2]);
-
-            if (searchText != newSearch)
-            {
-                searchText = newSearch;
-
                 if (string.IsNullOrEmpty(searchText))
                 {
                     filteredEntriesForDisplay.Clear();
