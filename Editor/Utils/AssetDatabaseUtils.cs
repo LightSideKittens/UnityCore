@@ -14,6 +14,12 @@ public static partial class AssetDatabaseUtils
         AssetDatabase.SaveAssetIfDirty(target);
     }
     
+    public static bool AssetExists(string assetPath)
+    {
+        string guid = AssetDatabase.AssetPathToGUID(assetPath);
+        return !string.IsNullOrEmpty(guid);
+    }
+    
     public static bool IsFolder(this Object obj) => obj.IsFolder(out _);
 
     public static bool IsFolder(this Object obj, out string path)
@@ -111,5 +117,18 @@ public static partial class AssetDatabaseUtils
         }
         
         return asset;
+    }
+
+    public static List<Object> LoadAllSubAsset(string assetPath, bool includeMain)
+    {
+        var list = new List<Object>();
+        
+        if (includeMain)
+        {
+            list.Add(AssetDatabase.LoadMainAssetAtPath(assetPath));
+        }
+
+        list.AddRange(AssetDatabase.LoadAllAssetRepresentationsAtPath(assetPath));
+        return list;
     }
 }

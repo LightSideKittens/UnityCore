@@ -2,7 +2,8 @@
     "name": "LSCore.Editor.Utils",
     "rootNamespace": "",
     "references": [
-        ""
+        "",
+        "LSCore.Editor.HarmonyPatchers"
     ],
     "includePlatforms": [
         "Editor"

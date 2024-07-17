@@ -1,7 +1,6 @@
 {
     "name": "LSCore.Editor.HarmonyPatchers",
     "rootNamespace": "",
-    "references": ["GUID:5bb0561ab59f4090b284fb2dc8ab2482"],
     "includePlatforms": [
         "Editor"
     ],

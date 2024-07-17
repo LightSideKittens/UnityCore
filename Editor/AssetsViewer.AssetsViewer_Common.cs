@@ -2,19 +2,28 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using LSCore.ReferenceFrom.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 internal partial class AssetsViewer : OdinEditorWindow
 {
+    [Flags]
     private enum FilterType
     {
         None,
+        InSceneOrPrefab
+    }
+    
+    private enum SortType
+    {
+        None,
         Type,
-        Size
+        Size,
     }
     
     [Flags]
@@ -22,18 +31,20 @@ internal partial class AssetsViewer : OdinEditorWindow
     {
         All = -1,
         Path = 0,
-        Type = 2,
-        Size = 4,
-        LastModified = 8,
-        Guid = 16,
-        Default = Type
+        Type = 1,
+        Size = 2,
+        LastModified = 4,
+        Guid = 8
     }
     
     [OnValueChanged("FilterAllAssets")]
     [SerializeField] private FilterType currentFilterType = FilterType.None;
     
+    [OnValueChanged("FilterAllAssets")]
+    [SerializeField] private SortType sortType = SortType.None;
+    
     [OnValueChanged("UpdateColumns")]
-    [SerializeField] private ColumnFlags columnFlags = ColumnFlags.Default;
+    [SerializeField] private ColumnFlags columnFlags = ColumnFlags.Type;
     
     [OnValueChanged("FilterAllAssets")]
     [SerializeField] private bool ascendingOrder;
@@ -61,13 +72,20 @@ internal partial class AssetsViewer : OdinEditorWindow
     {
         IEnumerable<AssetInfo> sorted = src;
         
-        if (currentFilterType == FilterType.Type)
+        if (currentFilterType == FilterType.InSceneOrPrefab)
+        {
+            sorted = ascendingOrder 
+                ? src.Where(a => a.inSceneOfPrefab) 
+                : src.Where(a => a.inSceneOfPrefab).Reverse();
+        }
+        
+        if (sortType == SortType.Type)
         {
             sorted = ascendingOrder 
                 ? src.OrderBy(a => a.Type) 
                 : src.OrderByDescending(a => a.Type);
         }
-        else if (currentFilterType == FilterType.Size)
+        else if (sortType == SortType.Size)
         {
             sorted = ascendingOrder 
                 ? src.OrderBy(a => a.size) 
@@ -80,8 +98,13 @@ internal partial class AssetsViewer : OdinEditorWindow
         {
             if (searchText.StartsWith(Type))
             {
-                var search = searchText[2..];
-                sorted = sorted.Where(x => x.Type.Contains(search));
+                var split = searchText.Split(' ');
+                var type = split[0][2..];
+                sorted = sorted.Where(x => x.Type.Contains(type));
+                if (split.Length > 1)
+                {
+                    sorted = sorted.Where(x => x.Name.Contains(split[1]));
+                }
             }
             else
             {
@@ -94,56 +117,52 @@ internal partial class AssetsViewer : OdinEditorWindow
             dst.Clear();
             dst.AddRange(sorted);
         }
-    }
-
-    private AssetInfo BuildInfo(string assetPath)
-    {
-        var assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath).Name;
-        var assetFileInfo = new FileInfo(assetPath);
-        var assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
-        var assetSize = assetFileInfo.Exists ? assetFileInfo.Length : 0;
-        var assetLastModified = assetFileInfo.Exists ? assetFileInfo.LastWriteTime : DateTime.MinValue;
-
-        return new AssetInfo
-        {
-            Name = Path.GetFileNameWithoutExtension(assetPath),
-            Path = assetPath.Replace("Assets/", string.Empty),
-            Type = assetType,
-            Size = assetSize.ToNiceSize(),
-            size = assetSize,
-            LastModified = assetLastModified,
-            GUID = assetGuid
-        };
+        
+        Repaint();
     }
     
-    private AssetInfo BuildInfo(Object obj)
+    private AssetInfo BuildInfo(Object obj, int subAssetIndex = -1)
     {
-        string objName;
+        string objName = obj.name;
         string assetPath;
-        string assetType;
+        string assetType = obj.GetType().Name;
         string assetGuid;
         long assetSize;
+        bool isSceneOrPrefab = !AssetDatabase.Contains(obj);
         DateTime assetLastModified;
-
-        if (AssetDatabase.Contains(obj))
+        
+        if (!isSceneOrPrefab)
         {
             assetPath = AssetDatabase.GetAssetPath(obj);
-            objName = Path.GetFileNameWithoutExtension(assetPath);
-            assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath).Name;
             var assetFileInfo = new FileInfo(assetPath);
             assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
+            
+            if (subAssetIndex > -1)
+            {
+                assetGuid = $"{assetGuid}_{subAssetIndex}";
+            }
+            
             assetSize = assetFileInfo.Exists ? assetFileInfo.Length : 0;
             assetLastModified = assetFileInfo.Exists ? assetFileInfo.LastWriteTime : DateTime.MinValue;
             assetPath = assetPath.Replace("Assets/", string.Empty);
         }
         else
         {
-            objName = obj.name;
             assetPath = string.Empty;
-            assetType = obj.GetType().Name;
             assetGuid = string.Empty;
             assetSize = 0;
             assetLastModified = DateTime.MinValue;
+
+            if (obj is GameObject go)
+            {
+                assetPath = go.GetPath();
+                assetGuid = go.GetInstanceID().ToString();
+            }
+            else if(obj is Component comp)
+            {
+                assetPath = PrefabStageUtility.GetCurrentPrefabStage() == null ? $"{comp.gameObject.scene.name}/{comp.GetPath()}" : comp.GetPath();
+                assetGuid = comp.GetInstanceID().ToString();
+            }
         }
 
         return new AssetInfo
@@ -154,7 +173,9 @@ internal partial class AssetsViewer : OdinEditorWindow
             Size = assetSize.ToNiceSize(),
             size = assetSize,
             LastModified = assetLastModified,
-            GUID = assetGuid
+            GUID = assetGuid,
+            inSceneOfPrefab = isSceneOrPrefab,
+            subAssetIndex = subAssetIndex
         };
     }
     
@@ -183,8 +204,17 @@ internal partial class AssetsViewer : OdinEditorWindow
     protected override void OnEnable()
     {
         RefreshList();
+        Selection.selectionChanged += UpdateReferences;
+        GameObjectUtils.GraphUpdated += UpdateReferences;
         UpdateReferences();
         base.OnEnable();
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        GameObjectUtils.GraphUpdated -= UpdateReferences;
+        Selection.selectionChanged -= UpdateReferences;
     }
 
     public class AssetInfo
@@ -194,17 +224,60 @@ internal partial class AssetsViewer : OdinEditorWindow
         [Button(SdfIconType.Apple, "")]
         public void Ping()
         {
-            EditorGUIUtility.PingObject(AssetDatabase.LoadMainAssetAtPath($"Assets/{Path}"));
+            var assetPath = $"Assets/{Path}";
+            Object obj;
+            if (AssetDatabaseUtils.AssetExists(assetPath))
+            {
+                if (subAssetIndex > -1)
+                {
+                    obj = AssetDatabase.LoadAllAssetsAtPath(assetPath)[subAssetIndex];
+                }
+                else
+                {
+                    obj = AssetDatabase.LoadMainAssetAtPath(assetPath);
+                }
+            }
+            else
+            {
+                var newPath = RemoveUpToFirstSlash(Path);
+                obj = GameObject.Find(newPath);
+
+                if (obj == null)
+                {
+                    PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+                    if (prefabStage != null)
+                    {
+                        GameObject prefabRoot = prefabStage.prefabContentsRoot;
+                        obj = prefabRoot.transform.Find(newPath);
+                    }
+                }
+            }
+            
+            EditorGUIUtility.PingObject(obj);
+            return;
+
+            static string RemoveUpToFirstSlash(string path)
+            {
+                int slashIndex = path.IndexOf('/');
+                return slashIndex != -1 ? path[(slashIndex + 1)..] : path;
+            }
         }
         
-        [TableColumnWidth(100)] [DisplayAsString] public string Name;
-        [TableColumnWidth(200)] [DisplayAsString] public string Path;
-        [TableColumnWidth(100)] [DisplayAsString] public string Type;
-        [TableColumnWidth(60, false)] [DisplayAsString] public string Size;
-        [TableColumnWidth(150, false)] [DisplayAsString] public DateTime LastModified;
-        [TableColumnWidth(250, false)] [DisplayAsString] public string GUID;
+        [TableColumnWidth(100)] [DisplayAsString] [GUIColor("GetColor")] public string Name;
+        [TableColumnWidth(200)] [DisplayAsString] [GUIColor("GetColor")] public string Path;
+        [TableColumnWidth(100)] [DisplayAsString] [GUIColor("GetColor")] public string Type;
+        [TableColumnWidth(60, false)] [DisplayAsString] [GUIColor("GetColor")] public string Size;
+        [TableColumnWidth(150, false)] [DisplayAsString] [GUIColor("GetColor")] public DateTime LastModified;
+        [TableColumnWidth(250, false)] [DisplayAsString] [GUIColor("GetColor")] public string GUID;
         [NonSerialized] public long size;
+        [NonSerialized] public bool inSceneOfPrefab;
+        [NonSerialized] public int subAssetIndex = -1;
 
+        private Color GetColor()
+        {
+            return inSceneOfPrefab ? new Color(0.51f, 0.94f, 1f) : Color.white;
+        }
+        
         public static bool ShowPath => HasFlag(ColumnFlags.Path);
         public static bool ShowType => HasFlag(ColumnFlags.Type);
         public static bool ShowSize => HasFlag(ColumnFlags.Size);

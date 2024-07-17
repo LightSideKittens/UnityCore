@@ -6,6 +6,11 @@ namespace LSCore.ReferenceFrom.Extensions
 {
     public static partial class ReferenceFromComponentExtensions
     {
+        public static string GetPath(this Component component)
+        {
+            return component.gameObject.GetPath();
+        }
+        
         private static GameObject GetGameObject<TComponent>(this TComponent component, string path) where TComponent : Component
         {
             var gameObjectNames = path.Split('/');

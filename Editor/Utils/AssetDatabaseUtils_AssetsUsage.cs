@@ -34,6 +34,7 @@ public static partial class AssetDatabaseUtils
         bool used = false, bool includeDirect = false)
     {
         GetDependenciesByGuid(new HashSet<string>(), assetGuid, result, indirect, used, includeDirect);
+        result.Remove(assetGuid);
     }
 
     private static void GetDependenciesByGuid(HashSet<string> set, string assetGuid, HashSet<string> result, bool indirect = false,

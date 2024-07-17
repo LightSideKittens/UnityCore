@@ -17,11 +17,20 @@ internal partial class AssetsViewer
     {
         fullBuildAssets.Clear();
         string[] buildScenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray();
-        var dependencies = AssetDatabase.GetDependencies(buildScenes);
+        var dependencies = new HashSet<string>();
 
-        foreach (var assetPath in dependencies)
+        for (int i = 0; i < buildScenes.Length; i++)
         {
-            fullBuildAssets.Add(BuildInfo(assetPath));
+            AssetDatabaseUtils.GetUsesIndirect(buildScenes[i], dependencies, true);
+
+            foreach (var assetPath in dependencies)
+            {
+                var assets = AssetDatabaseUtils.LoadAllSubAsset(assetPath, true);
+                for (int j = 0; j < assets.Count; j++)
+                {
+                    fullBuildAssets.Add(BuildInfo(assets[j], j-1));
+                }
+            }
         }
         
         FilterBuildAssets();

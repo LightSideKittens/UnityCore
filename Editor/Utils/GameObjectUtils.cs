@@ -1,14 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Sirenix.Utilities;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 [InitializeOnLoad]
 public static class GameObjectUtils
 {
-    private static Dictionary<Object, DependenciesData> graph = new();
+    private static Dictionary<Object, DependenciesData> graph;
+    private static Dictionary<Object, DependenciesData> sceneGraph = new();
+    private static Dictionary<Object, DependenciesData> prefabGraph = new();
+    public static event Action GraphUpdated;
+    private static bool isGraphUpdated;
+    
     public static void GetDependencies(Object obj, HashSet<Object> result,
         bool indirect = false,
         bool used = false, bool includeDirect = false)
@@ -25,12 +33,14 @@ public static class GameObjectUtils
         {
             GetDependencies(set, obj, result, indirect, used, includeDirect);
         }
+        
     }
 
     private static void GetDependencies(HashSet<Object> set, Object obj, HashSet<Object> result, bool indirect = false,
         bool used = false, bool includeDirect = false)
     {
         if (!set.Add(obj)) return;
+        if (!graph.ContainsKey(obj)) return;
         
         var dependencies = used
             ? graph[obj].usedBy
@@ -63,21 +73,77 @@ public static class GameObjectUtils
 
     static GameObjectUtils()
     {
-        AddObjectsForScene(SceneManager.GetActiveScene(), default);
-        EditorSceneManager.sceneOpened += AddObjectsForScene;
-        EditorSceneManager.sceneClosed += RemoveObjectsForScene;
+        OnSceneLoaded(SceneManager.GetActiveScene(), default);
+        var stage = PrefabStageUtility.GetCurrentPrefabStage();
+        if (stage != null)
+        {
+            OnPrefabStageOpened(stage);
+        }
+
+        PrefabStage.prefabStageOpened += OnPrefabStageOpened;
+        PrefabStage.prefabStageClosing += OnPrefabStageClosed;
+
+        EditorSceneManager.sceneOpened += OnSceneLoaded;
+        EditorSceneManager.sceneClosed += OnSceneUnloaded;
+        
+        LSEditorUtility.DirtySet += OnSetDirty;
     }
 
-    private static List<Object> GetDependencies(Object comp)
+    
+    private static void SetGraphUpdated()
+    {
+        EditorApplication.update -= OnEditorUpdate;
+        EditorApplication.update += OnEditorUpdate;
+    }
+    
+    private static void OnEditorUpdate()
+    {
+        EditorApplication.update -= OnEditorUpdate;
+        GraphUpdated?.Invoke();
+    }
+
+    private static void OnSetDirty(Object obj)
+    {
+        if (!AssetDatabase.Contains(obj))
+        {
+            var go = obj as GameObject;
+            if (go is null)
+            {
+                if (obj is Component comp)
+                {
+                    go = comp.gameObject;
+                }
+                else
+                {
+                    return;
+                }
+            }
+            
+            OnDeleted(go);
+            OnImported(go);
+        }
+    }
+
+    private static List<Object> GetDependenciesForGameObject(Object go)
     {
         List<Object> dependencies = new List<Object>();
-        if (comp is GameObject go)
-        {
-            dependencies.AddRange(go.GetComponents<Component>());
-            return dependencies;
-        }
+        dependencies.AddRange(((GameObject)go).GetComponents<Component>());
+        return dependencies;
+    }
+    
+    
+    private static List<Object> GetDependenciesForAsset(Object asset)
+    {
+        var set = new HashSet<string>();
+        AssetDatabaseUtils.GetUsesIndirect(AssetDatabase.GetAssetPath(asset), set, true);
+        return set.Select(AssetDatabase.LoadMainAssetAtPath).ToList();
+    }
+
+    private static List<Object> GetDependenciesForComponent(Object obj)
+    {
+        List<Object> dependencies = new List<Object>();
         
-        SerializedObject serializedObject = new SerializedObject(comp);
+        SerializedObject serializedObject = new SerializedObject(obj);
         SerializedProperty property = serializedObject.GetIterator();
 
         while (property.NextVisible(true))
@@ -95,31 +161,45 @@ public static class GameObjectUtils
         return dependencies;
     }
 
-    private static List<GameObject> allObjects = new();
+    private static void OnPrefabStageOpened(PrefabStage stage)
+    {
+        graph = prefabGraph;
+        GetAllChildren(stage.prefabContentsRoot, OnImported);
+    }
 
-    private static void AddObjectsForScene(Scene scene, OpenSceneMode _) => HandleObjectsForScene(scene, OnImported);
-    private static void RemoveObjectsForScene(Scene scene) => HandleObjectsForScene(scene, OnDeleted);
+    private static void OnPrefabStageClosed(PrefabStage stage)
+    {
+        graph = sceneGraph;
+        GetAllChildren(stage.prefabContentsRoot, OnDeleted);
+    }
+    
+    private static void OnSceneLoaded(Scene scene, OpenSceneMode _)
+    {
+        graph = sceneGraph;
+        HandleObjectsForScene(scene, OnImported);
+    }
 
-    private static void HandleObjectsForScene(Scene scene, System.Action<GameObject> action)
+    private static void OnSceneUnloaded(Scene scene) => HandleObjectsForScene(scene, OnDeleted);
+
+    private static void HandleObjectsForScene(Scene scene, Action<GameObject> action)
     {
         if (scene.isLoaded)
         {
             GameObject[] sceneObjects = scene.GetRootGameObjects();
             foreach (GameObject rootObject in sceneObjects)
             {
-                GetAllChildren(rootObject, allObjects, action);
+                GetAllChildren(rootObject, action);
             }
         }
     }
     
-    private static void GetAllChildren(GameObject parent, List<GameObject> objects, System.Action<GameObject> action)
+    private static void GetAllChildren(GameObject parent, Action<GameObject> action)
     {
-        objects.Add(parent);
         action(parent);
         
         foreach (Transform child in parent.transform)
         {
-            GetAllChildren(child.gameObject, objects, action);
+            GetAllChildren(child.gameObject, action);
         }
     }
     
@@ -130,16 +210,30 @@ public static class GameObjectUtils
             graph[obj] = new DependenciesData();
         }
 
-        FillDeps(obj);
-        
-        foreach (var comp in obj.GetComponents<Component>())
+        FillDeps(obj, GetDependenciesForGameObject);
+
+        var objs = obj.GetComponents<Component>();
+
+        for (int i = 0; i < objs.Length; i++)
         {
-            FillDeps(comp);
+            var deps = FillDeps(objs[i], GetDependenciesForComponent);
+
+            for (int j = 0; j < deps.Count; j++)
+            {
+                var dep = deps[j];
+                if (AssetDatabase.Contains(dep))
+                {
+                    FillDeps(dep, GetDependenciesForAsset);
+                }
+            }
         }
 
-        void FillDeps(Object target)
+        SetGraphUpdated();
+        return;
+
+        List<Object> FillDeps(Object target, Func<Object, List<Object>> getDependencies)
         {
-            var dependencies = GetDependencies(target);
+            var dependencies = getDependencies(target);
 
             foreach (var dependency in dependencies)
             {
@@ -152,24 +246,39 @@ public static class GameObjectUtils
 
                 graph[dependency].usedBy.Add(target);
             }
+
+            return dependencies;
         }
     }
 
-    private static void OnDeleted(GameObject obj)
+    private static void OnDeleted(GameObject target)
     {
-        if (graph.ContainsKey(obj))
-        {
-            foreach (var dependencyGuid in graph[obj].uses)
-            {
-                graph[dependencyGuid].usedBy.Remove(obj);
-            }
+        Delete(target);
 
-            graph.Remove(obj);
+        foreach (var comp in target.GetComponents<Component>())
+        {
+            Delete(comp);
         }
 
-        foreach (var assetData in graph.Values)
+        SetGraphUpdated();
+        return;
+
+        void Delete(Object obj)
         {
-            assetData.uses.Remove(obj);
+            if (graph.ContainsKey(obj))
+            {
+                foreach (var dependencyGuid in graph[obj].uses)
+                {
+                    graph[dependencyGuid].usedBy.Remove(obj);
+                }
+
+                graph.Remove(obj);
+            }
+
+            foreach (var assetData in graph.Values)
+            {
+                assetData.uses.Remove(obj);
+            }
         }
     }
     
