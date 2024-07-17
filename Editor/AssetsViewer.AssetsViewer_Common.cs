@@ -6,6 +6,7 @@ using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 internal partial class AssetsViewer : OdinEditorWindow
 {
@@ -107,6 +108,48 @@ internal partial class AssetsViewer : OdinEditorWindow
         {
             Name = Path.GetFileNameWithoutExtension(assetPath),
             Path = assetPath.Replace("Assets/", string.Empty),
+            Type = assetType,
+            Size = assetSize.ToNiceSize(),
+            size = assetSize,
+            LastModified = assetLastModified,
+            GUID = assetGuid
+        };
+    }
+    
+    private AssetInfo BuildInfo(Object obj)
+    {
+        string objName;
+        string assetPath;
+        string assetType;
+        string assetGuid;
+        long assetSize;
+        DateTime assetLastModified;
+
+        if (AssetDatabase.Contains(obj))
+        {
+            assetPath = AssetDatabase.GetAssetPath(obj);
+            objName = Path.GetFileNameWithoutExtension(assetPath);
+            assetType = AssetDatabase.GetMainAssetTypeAtPath(assetPath).Name;
+            var assetFileInfo = new FileInfo(assetPath);
+            assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
+            assetSize = assetFileInfo.Exists ? assetFileInfo.Length : 0;
+            assetLastModified = assetFileInfo.Exists ? assetFileInfo.LastWriteTime : DateTime.MinValue;
+            assetPath = assetPath.Replace("Assets/", string.Empty);
+        }
+        else
+        {
+            objName = obj.name;
+            assetPath = string.Empty;
+            assetType = obj.GetType().Name;
+            assetGuid = string.Empty;
+            assetSize = 0;
+            assetLastModified = DateTime.MinValue;
+        }
+
+        return new AssetInfo
+        {
+            Name = objName,
+            Path = assetPath,
             Type = assetType,
             Size = assetSize.ToNiceSize(),
             size = assetSize,

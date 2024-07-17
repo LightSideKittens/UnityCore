@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEditor;
+using Object = UnityEngine.Object;
 
 internal  partial class AssetsViewer
 {
@@ -31,14 +32,26 @@ internal  partial class AssetsViewer
         {
             return;
         }
-        
-        string selectionPath = AssetDatabase.GetAssetPath(Selection.activeObject);
 
-        Fill(AssetDatabaseUtils.GetUsed, fullUsedDirect);
-        Fill(AssetDatabaseUtils.GetUsedIndirect, fullUsedIndirect);
+        var selectedObject = Selection.activeObject;
+        string selectionPath = AssetDatabase.GetAssetPath(selectedObject);
+
+        if (AssetDatabase.Contains(Selection.activeObject))
+        {
+            Fill(AssetDatabaseUtils.GetUsed, fullUsedDirect);
+            Fill(AssetDatabaseUtils.GetUsedIndirect, fullUsedIndirect);
         
-        Fill(AssetDatabaseUtils.GetUses, fullUsesDirect);
-        Fill(AssetDatabaseUtils.GetUsesIndirect, fullUsesIndirect);
+            Fill(AssetDatabaseUtils.GetUses, fullUsesDirect);
+            Fill(AssetDatabaseUtils.GetUsesIndirect, fullUsesIndirect);
+        }
+        else
+        {
+            FillGo(GameObjectUtils.GetUsed, fullUsedDirect);
+            FillGo(GameObjectUtils.GetUsedIndirect, fullUsedIndirect);
+            FillGo(GameObjectUtils.GetUses, fullUsesDirect);
+            FillGo(GameObjectUtils.GetUsesIndirect, fullUsesIndirect);
+        }
+
 
         FilterAssetsUsages();
 
@@ -51,6 +64,17 @@ internal  partial class AssetsViewer
             foreach (string assetPath in list)
             {
                 full.Add(BuildInfo(assetPath));
+            }
+        }
+        
+        void FillGo(Action<Object, HashSet<Object>> action, List<AssetInfo> full)
+        {
+            HashSet<Object> list = new HashSet<Object>();
+            action(selectedObject, list);
+        
+            foreach (var obj in list)
+            {
+                full.Add(BuildInfo(obj));
             }
         }
     }

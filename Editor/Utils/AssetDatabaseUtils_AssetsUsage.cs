@@ -9,8 +9,8 @@ using UnityEngine;
 [InitializeOnLoad]
 public static partial class AssetDatabaseUtils
 {
-    private const string GraphFilePath = "Assets/AssetDependencyGraph.json";
-    private static AssetDependencyGraphData dependencyGraphData = new AssetDependencyGraphData();
+    private const string GraphFilePath = "Assets/AssetsUsages.json";
+    private static Dictionary<string, DependenciesData> graph = new();
 
     static AssetDatabaseUtils()
     {
@@ -42,8 +42,8 @@ public static partial class AssetDatabaseUtils
         if (!set.Add(assetGuid)) return;
         
         var dependencies = used
-            ? dependencyGraphData.dependencies[assetGuid].usedBy
-            : dependencyGraphData.dependencies[assetGuid].uses;
+            ? graph[assetGuid].usedBy
+            : graph[assetGuid].uses;
 
         if(dependencies.Count == 0) return;
         
@@ -84,14 +84,14 @@ public static partial class AssetDatabaseUtils
     private static void GenerateAssetDependencyGraph()
     {
         string[] allAssetPaths = AssetDatabase.GetAllAssetPaths();
-        dependencyGraphData.dependencies.Clear();
+        graph.Clear();
 
         foreach (string assetPath in allAssetPaths)
         {
             string assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
-            if (!dependencyGraphData.dependencies.ContainsKey(assetGuid))
+            if (!graph.ContainsKey(assetGuid))
             {
-                dependencyGraphData.dependencies[assetGuid] = new AssetDependencyData();
+                graph[assetGuid] = new DependenciesData();
             }
 
             string[] dependencies = AssetDatabase.GetDependencies(assetPath, false);
@@ -99,14 +99,14 @@ public static partial class AssetDatabaseUtils
             foreach (string dependencyPath in dependencies)
             {
                 string dependencyGuid = AssetDatabase.AssetPathToGUID(dependencyPath);
-                if (!dependencyGraphData.dependencies.ContainsKey(dependencyGuid))
+                if (!graph.ContainsKey(dependencyGuid))
                 {
-                    dependencyGraphData.dependencies[dependencyGuid] = new AssetDependencyData();
+                    graph[dependencyGuid] = new DependenciesData();
                 }
 
-                dependencyGraphData.dependencies[assetGuid].uses.Add(dependencyGuid);
+                graph[assetGuid].uses.Add(dependencyGuid);
 
-                dependencyGraphData.dependencies[dependencyGuid].usedBy.Add(assetGuid);
+                graph[dependencyGuid].usedBy.Add(assetGuid);
             }
         }
 
@@ -138,40 +138,40 @@ public static partial class AssetDatabaseUtils
         string assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
         string[] dependencies = AssetDatabase.GetDependencies(assetPath, false);
 
-        if (!dependencyGraphData.dependencies.ContainsKey(assetGuid))
+        if (!graph.ContainsKey(assetGuid))
         {
-            dependencyGraphData.dependencies[assetGuid] = new AssetDependencyData();
+            graph[assetGuid] = new DependenciesData();
         }
 
-        dependencyGraphData.dependencies[assetGuid].uses.Clear();
+        graph[assetGuid].uses.Clear();
 
         foreach (string dependencyPath in dependencies)
         {
             string dependencyGuid = AssetDatabase.AssetPathToGUID(dependencyPath);
-            if (!dependencyGraphData.dependencies.ContainsKey(dependencyGuid))
+            if (!graph.ContainsKey(dependencyGuid))
             {
-                dependencyGraphData.dependencies[dependencyGuid] = new AssetDependencyData();
+                graph[dependencyGuid] = new DependenciesData();
             }
 
-            dependencyGraphData.dependencies[assetGuid].uses.Add(dependencyGuid);
-            dependencyGraphData.dependencies[dependencyGuid].usedBy.Add(assetGuid);
+            graph[assetGuid].uses.Add(dependencyGuid);
+            graph[dependencyGuid].usedBy.Add(assetGuid);
         }
     }
 
     private static void RemoveAssetFromGraph(string assetPath)
     {
         string assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
-        if (dependencyGraphData.dependencies.ContainsKey(assetGuid))
+        if (graph.ContainsKey(assetGuid))
         {
-            foreach (var dependencyGuid in dependencyGraphData.dependencies[assetGuid].uses)
+            foreach (var dependencyGuid in graph[assetGuid].uses)
             {
-                dependencyGraphData.dependencies[dependencyGuid].usedBy.Remove(assetGuid);
+                graph[dependencyGuid].usedBy.Remove(assetGuid);
             }
 
-            dependencyGraphData.dependencies.Remove(assetGuid);
+            graph.Remove(assetGuid);
         }
 
-        foreach (var assetData in dependencyGraphData.dependencies.Values)
+        foreach (var assetData in graph.Values)
         {
             assetData.uses.Remove(assetGuid);
         }
@@ -179,10 +179,10 @@ public static partial class AssetDatabaseUtils
 
     private static void SaveGraphData()
     {
-        string json = JsonConvert.SerializeObject(dependencyGraphData, Formatting.Indented);
+        string json = JsonConvert.SerializeObject(graph, Formatting.None);
         File.WriteAllText(GraphFilePath, json);
         AssetDatabase.Refresh();
-        Debug.Log($"Asset dependency graph saved at: {GraphFilePath}");
+        Debug.Log($"Asset usages saved at: {GraphFilePath}");
     }
 
     private static void LoadGraphData()
@@ -190,24 +190,18 @@ public static partial class AssetDatabaseUtils
         if (File.Exists(GraphFilePath))
         {
             string json = File.ReadAllText(GraphFilePath);
-            dependencyGraphData = JsonConvert.DeserializeObject<AssetDependencyGraphData>(json);
+            graph = JsonConvert.DeserializeObject<Dictionary<string, DependenciesData>>(json);
         }
         else
         {
             GenerateAssetDependencyGraph();
         }
     }
-}
-
-[System.Serializable]
-public class AssetDependencyData
-{
-    public HashSet<string> usedBy = new();
-    public HashSet<string> uses = new();
-}
-
-[System.Serializable]
-public class AssetDependencyGraphData
-{
-    public Dictionary<string, AssetDependencyData> dependencies = new();
+    
+    [System.Serializable]
+    private class DependenciesData
+    {
+        public HashSet<string> usedBy = new();
+        public HashSet<string> uses = new();
+    }
 }
