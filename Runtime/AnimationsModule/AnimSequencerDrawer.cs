@@ -44,9 +44,16 @@ namespace LSCore.AnimationsModule
     {
         [IgnoreOdinValueDrawer] public AnimSequencer sequencer;
         [NonSerialized] public Object rootObject;
-
+        private bool isDirty;
+        
         protected override void OnImGUI()
         {
+            if (isDirty)
+            {
+                EditorUtility.SetDirty(rootObject);
+                isDirty = false;
+            }
+            
             if (rootObject == null)
             {
                 Close();
@@ -61,7 +68,9 @@ namespace LSCore.AnimationsModule
             base.OnImGUI();
             if (EditorGUI.EndChangeCheck())
             {
+                isDirty = true;
                 EditorUtility.SetDirty(rootObject);
+                Repaint();
             }
         }
     }
