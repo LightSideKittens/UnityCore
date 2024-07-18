@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 #if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 #endif
 using UnityEngine;
-using UnityEngine.Audio;
 using UnityEngine.EventSystems;
 
 namespace LSCore
@@ -14,8 +11,7 @@ namespace LSCore
     public class LSButton : LSImage,  IPointerDownHandler, IPointerUpHandler, IPointerClickHandler, IClickable
     {
         [SerializeField] private ClickAnim anim;
-        [SerializeReference] public List<LSAction> clickActions;
-        [HideInInspector] [SerializeField] private bool isClickSoundOverride;
+        [SerializeField] private ClickActions clickActions;
         
         public ref ClickAnim Anim => ref anim;
 
@@ -25,10 +21,16 @@ namespace LSCore
             anim.Init(transform);
         }
 
+        protected override void Start()
+        {
+            base.Start();
+            clickActions.Init();
+        }
+
         public void OnPointerClick(PointerEventData eventData)
         {
-            clickActions.Invoke();
-            anim.OnPointerClick();
+            clickActions.OnClick();
+            anim.OnClick();
             Clicked?.Invoke();
         }
 
@@ -39,38 +41,6 @@ namespace LSCore
         {
             base.OnDisable();
             anim.OnDisable();
-        }
-
-        public override void OnBeforeSerialize()
-        {
-            base.OnBeforeSerialize();
-#if UNITY_EDITOR
-            if (!World.IsPlaying)
-            {
-                isClickSoundOverride = clickActions?.Any(x => x is PlayOneShotSound) ?? false;
-            }
-#endif
-        }
-
-        public override void OnAfterDeserialize()
-        {
-            base.OnAfterDeserialize();
-            if (World.IsPlaying)
-            {
-#if UNITY_EDITOR
-                isClickSoundOverride = clickActions?.Any(x => x is PlayOneShotSound) ?? false;
-#endif
-                if (!isClickSoundOverride)
-                {
-                    var action = new PlayOneShotSound();
-                    var settings = new LaLaLa.Settings();
-                    action.settings = settings;
-                    settings.Clip = SingleAsset<AudioClip>.Get("ButtonClick");
-                    settings.Group = SingleAsset<AudioMixerGroup>.Get("AudioMixer[UI]");
-                    
-                    clickActions.Add(action);
-                }
-            }
         }
 
         public Transform Transform => transform;

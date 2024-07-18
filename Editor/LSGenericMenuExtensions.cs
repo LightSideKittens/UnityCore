@@ -1,17 +1,8 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: Sirenix.Utilities.Editor.GenericMenuExtensions
-// Assembly: Sirenix.Utilities.Editor, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: 04F7F3B1-12C6-4240-A0B5-3C2C135AD073
-// Assembly location: C:\C-UnityProjects\LightSide\MultiWars\Assets\LightSideCore\Plugins\Sirenix\Assemblies\Sirenix.Utilities.Editor.dll
-// XML documentation location: C:\C-UnityProjects\LightSide\MultiWars\Assets\LightSideCore\Plugins\Sirenix\Assemblies\Sirenix.Utilities.Editor.xml
-
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
-#nullable disable
 namespace LSCore.Sirenix.Utilities.Editor
 {
   /// <summary>

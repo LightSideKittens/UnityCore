@@ -43,7 +43,7 @@ namespace LSCore
             current = transform.DOScale(defaultScale * 0.8f, 0.3f);
         }
         
-        public void OnPointerClick()
+        public void OnClick()
         {
             if(isDisabled) return;
             current.Kill();
