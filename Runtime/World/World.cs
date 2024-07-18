@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 namespace LSCore
@@ -12,6 +14,8 @@ namespace LSCore
         public static event Action Created;
         public static event Action Updated;
         public static event Action Destroyed;
+        private static Queue<Action> callInMainThreadQueue = new();
+        private static SynchronizationContext synchronizationContext = SynchronizationContext.Current;
         private static bool isCreated;
         private static World instance;
         
@@ -71,6 +75,11 @@ namespace LSCore
         {
             yield return enumerator;
             onComplete();
+        }
+
+        public static void CallInMainThread(Action action)
+        {
+            synchronizationContext.Post(_ => action(), null);
         }
     }
 }

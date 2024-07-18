@@ -37,6 +37,9 @@ internal partial class AssetsViewer : OdinEditorWindow
         Guid = 8
     }
     
+    [ShowIf("@selectedObject != null")]
+    public Object selectedObject;
+    
     [OnValueChanged("FilterAllAssets")]
     [SerializeField] private FilterType currentFilterType = FilterType.None;
     

@@ -7,12 +7,15 @@ using Object = UnityEngine.Object;
 
 internal partial class AssetsViewer
 {
+
+
     [TabGroup("Tabs", "Uses")]
     [TabGroup("Tabs", "Used")]
     [ValueDropdown("selector")]
     [ShowIf("ShowSelector")]
     [OnValueChanged("OnInspectedObjectChanged")]
     public Object inspectedObject;
+
     private readonly ValueDropdownList<Object> selector = new();
     private bool ShowSelector => selector.Count > 0;
     
@@ -46,10 +49,11 @@ internal partial class AssetsViewer
 
         if (Selection.activeObject == null)
         {
+            selectedObject = null;
             return;
         }
 
-        var selectedObject = Selection.activeObject;
+        selectedObject = Selection.activeObject;
         string selectionPath = AssetDatabase.GetAssetPath(selectedObject);
 
         if (AssetDatabase.Contains(selectedObject))
