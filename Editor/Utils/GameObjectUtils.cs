@@ -14,6 +14,7 @@ public static class GameObjectUtils
     private static Dictionary<Object, DependenciesData> sceneGraph = new();
     private static Dictionary<Object, DependenciesData> prefabGraph = new();
     private static Dictionary<Scene, HashSet<Object>> objectsByScenes = new();
+    private static Dictionary<PrefabStage, HashSet<Object>> objectsByPrefab = new();
     public static event Action GraphUpdated;
     private static bool isGraphUpdated;
     
@@ -183,31 +184,43 @@ public static class GameObjectUtils
     private static void OnPrefabStageOpened(PrefabStage stage)
     {
         graph = prefabGraph;
+        objects = new HashSet<Object>();
+        objectsByPrefab[stage] = objects;
         GetAllChildren(stage.prefabContentsRoot, OnImported);
     }
 
     private static void OnPrefabStageClosed(PrefabStage stage)
     {
-        GetAllChildren(stage.prefabContentsRoot, OnDeleted);
+        if (!objectsByPrefab.TryGetValue(stage, out var objs)) return;
+        
+        foreach (var obj in objs)
+        {
+            OnDeleted(obj);
+        }
+
+        objectsByPrefab.Remove(stage);
+        
         if (PrefabStageUtility.GetCurrentPrefabStage() == null)
         {
             graph = sceneGraph;
         }
     }
-
-    private static HashSet<Object> sceneObjects;
+    
+    private static HashSet<Object> objects;
 
     private static void OnSceneLoaded(Scene scene, OpenSceneMode _)
     {
         graph = sceneGraph;
-        sceneObjects = new HashSet<Object>();
-        objectsByScenes[scene] = sceneObjects;
+        objects = new HashSet<Object>();
+        objectsByScenes[scene] = objects;
         HandleObjectsForScene(scene, OnImported);
     }
 
     private static void OnSceneUnloaded(Scene scene)
     {
-        foreach (var obj in objectsByScenes[scene])
+        if (!objectsByScenes.TryGetValue(scene, out var objs)) return;
+        
+        foreach (var obj in objs)
         {
             OnDeleted(obj);
         }
@@ -266,12 +279,12 @@ public static class GameObjectUtils
 
         HashSet<Object> FillDeps(Object target, Func<Object, HashSet<Object>> getDependencies)
         {
-            sceneObjects.Add(target);
+            objects.Add(target);
             var dependencies = getDependencies(target);
 
             foreach (var dependency in dependencies)
             {
-                sceneObjects.Add(dependency);
+                objects.Add(dependency);
                 if (!graph.ContainsKey(dependency))
                 {
                     graph[dependency] = new DependenciesData();

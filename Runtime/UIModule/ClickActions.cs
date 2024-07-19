@@ -27,6 +27,7 @@ namespace LSCore
         public void Init()
         {
 #if UNITY_EDITOR
+            if(!World.IsPlaying) return;
             isClickSoundOverride = actions?.Any(x => x is PlayOneShotSound) ?? false;
 #endif
             if (!isClickSoundOverride)

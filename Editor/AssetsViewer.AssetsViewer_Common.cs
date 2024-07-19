@@ -60,6 +60,21 @@ internal partial class AssetsViewer : OdinEditorWindow
         GetWindow<AssetsViewer>().Show();
     }
     
+    [Button]
+    private void ResetGuid()
+    {
+        if (selectedObject != null)
+        {
+            if (AssetDatabase.Contains(selectedObject))
+            {
+                var path = AssetDatabase.GetAssetPath(selectedObject);
+                var meta = File.ReadAllText($"{path}.meta");
+                meta = meta.Replace(AssetDatabase.AssetPathToGUID(path), GUID.Generate().ToString());
+                File.WriteAllText($"{path}.meta", meta);
+            }
+        }
+    }
+    
     private void UpdateColumns()
     {
         
@@ -156,15 +171,22 @@ internal partial class AssetsViewer : OdinEditorWindow
             assetSize = 0;
             assetLastModified = DateTime.MinValue;
 
+            GameObject tgo = null;
+            
             if (obj is GameObject go)
             {
-                assetPath = $"{go.gameObject.scene.name}/{go.GetPath()}";
+                tgo = go;
                 assetGuid = go.GetInstanceID().ToString();
             }
             else if(obj is Component comp)
             {
-                assetPath = PrefabStageUtility.GetCurrentPrefabStage() == null ? $"{comp.gameObject.scene.name}/{comp.GetPath()}" : comp.GetPath();
+                tgo = comp.gameObject;
                 assetGuid = comp.GetInstanceID().ToString();
+            }
+
+            if (tgo is not null)
+            {
+                assetPath = PrefabStageUtility.GetCurrentPrefabStage() == null ? $"{tgo.scene.name}/{tgo.GetPath()}" : tgo.GetPath();
             }
         }
 
