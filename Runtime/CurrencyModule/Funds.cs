@@ -38,12 +38,9 @@ namespace LSCore
         
         public static void AddOnChanged(Id id, Action<int> onChanged, bool callImmediate = false)
         {
-            if (onChangedActions.TryGetValue(id, out var action))
-            {
-                onChanged += action;
-            }
-            
-            onChangedActions[id] = onChanged;
+            onChangedActions.TryGetValue(id, out var action);
+            action += onChanged;
+            onChangedActions[id] = action;
             
             if (callImmediate)
             {

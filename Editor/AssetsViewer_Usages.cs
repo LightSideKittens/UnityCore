@@ -7,8 +7,6 @@ using Object = UnityEngine.Object;
 
 internal partial class AssetsViewer
 {
-
-
     [TabGroup("Tabs", "Uses")]
     [TabGroup("Tabs", "Used")]
     [ValueDropdown("selector")]

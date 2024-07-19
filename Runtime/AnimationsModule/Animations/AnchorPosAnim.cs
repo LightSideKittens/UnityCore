@@ -1,6 +1,6 @@
 ﻿using System;
 using DG.Tweening;
-using LSCore.ReferenceFrom.Extensions;
+using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
 

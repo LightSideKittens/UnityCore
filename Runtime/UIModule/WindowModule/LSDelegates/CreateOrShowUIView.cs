@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LSCore.CommonComponents;
-using LSCore.ReferenceFrom.Extensions;
+using LSCore.Extensions.Unity;
 using UnityEngine;
 using Object = UnityEngine.Object;
 

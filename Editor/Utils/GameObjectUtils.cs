@@ -8,12 +8,12 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
-[InitializeOnLoad]
 public static class GameObjectUtils
 {
     private static Dictionary<Object, DependenciesData> graph;
     private static Dictionary<Object, DependenciesData> sceneGraph = new();
     private static Dictionary<Object, DependenciesData> prefabGraph = new();
+    private static Dictionary<Scene, HashSet<Object>> objectsByScenes = new();
     public static event Action GraphUpdated;
     private static bool isGraphUpdated;
     
@@ -106,42 +106,61 @@ public static class GameObjectUtils
     {
         if (!AssetDatabase.Contains(obj))
         {
-            var go = obj as GameObject;
-            if (go is null)
+            HashSet<Object> deps = null;
+            Object target = null;
+            
+            if (obj is GameObject go)
             {
-                if (obj is Component comp)
+                target = go;
+                deps = GetDependenciesForGameObject(go);
+            }
+            else if(obj is Component comp)
+            {
+                target = comp;
+                deps = GetDependenciesForComponent(comp);
+            }
+
+            if (target is not null)
+            {
+                var uses = graph[target].uses;
+                graph[target].uses = deps;
+                
+                foreach (var entry in uses)
                 {
-                    go = comp.gameObject;
+                    graph[entry].usedBy.Remove(target);
                 }
-                else
+                
+                foreach (var entry in deps)
                 {
-                    return;
+                    if (!graph.ContainsKey(entry))
+                    {
+                        graph[entry] = new DependenciesData();
+                    }
+                    
+                    graph[entry].usedBy.Add(target);
                 }
             }
-            
-            OnDeleted(go);
-            OnImported(go);
         }
     }
 
-    private static List<Object> GetDependenciesForGameObject(Object go)
+    private static HashSet<Object> GetDependenciesForGameObject(Object go)
     {
-        List<Object> dependencies = new List<Object>();
+        var dependencies = new HashSet<Object>();
         dependencies.AddRange(((GameObject)go).GetComponents<Component>());
         return dependencies;
     }
     
     
-    private static List<Object> GetDependenciesForAsset(Object asset)
+    private static HashSet<Object> GetDependenciesForAsset(Object asset)
     {
         var set = new HashSet<string>();
         AssetDatabaseUtils.GetUsesIndirect(AssetDatabase.GetAssetPath(asset), set, true);
-        return set.Select(AssetDatabase.LoadMainAssetAtPath).ToList();
+        return set.Select(AssetDatabase.LoadMainAssetAtPath).ToHashSet();
     }
 
-    private static List<Object> GetDependenciesForComponent(Object obj)
+    private static HashSet<Object> GetDependenciesForComponent(Object obj)
     {
-        List<Object> dependencies = new List<Object>();
+        var dependencies = new HashSet<Object>();
         
         SerializedObject serializedObject = new SerializedObject(obj);
         SerializedProperty property = serializedObject.GetIterator();
@@ -151,7 +170,7 @@ public static class GameObjectUtils
             if (property.propertyType == SerializedPropertyType.ObjectReference)
             {
                 Object referencedObject = property.objectReferenceValue;
-                if (referencedObject != null && !dependencies.Contains(referencedObject))
+                if (referencedObject != null)
                 {
                     dependencies.Add(referencedObject);
                 }
@@ -169,18 +188,33 @@ public static class GameObjectUtils
 
     private static void OnPrefabStageClosed(PrefabStage stage)
     {
-        graph = sceneGraph;
         GetAllChildren(stage.prefabContentsRoot, OnDeleted);
+        if (PrefabStageUtility.GetCurrentPrefabStage() == null)
+        {
+            graph = sceneGraph;
+        }
     }
-    
+
+    private static HashSet<Object> sceneObjects;
+
     private static void OnSceneLoaded(Scene scene, OpenSceneMode _)
     {
         graph = sceneGraph;
+        sceneObjects = new HashSet<Object>();
+        objectsByScenes[scene] = sceneObjects;
         HandleObjectsForScene(scene, OnImported);
     }
 
-    private static void OnSceneUnloaded(Scene scene) => HandleObjectsForScene(scene, OnDeleted);
+    private static void OnSceneUnloaded(Scene scene)
+    {
+        foreach (var obj in objectsByScenes[scene])
+        {
+            OnDeleted(obj);
+        }
 
+        objectsByScenes.Remove(scene);
+    }
+    
     private static void HandleObjectsForScene(Scene scene, Action<GameObject> action)
     {
         if (scene.isLoaded)
@@ -212,15 +246,14 @@ public static class GameObjectUtils
 
         FillDeps(obj, GetDependenciesForGameObject);
 
-        var objs = obj.GetComponents<Component>();
+        var comps = obj.GetComponents<Component>();
 
-        for (int i = 0; i < objs.Length; i++)
+        for (int i = 0; i < comps.Length; i++)
         {
-            var deps = FillDeps(objs[i], GetDependenciesForComponent);
+            var compDeps = FillDeps(comps[i], GetDependenciesForComponent);
 
-            for (int j = 0; j < deps.Count; j++)
+            foreach (var dep in compDeps)
             {
-                var dep = deps[j];
                 if (AssetDatabase.Contains(dep))
                 {
                     FillDeps(dep, GetDependenciesForAsset);
@@ -231,12 +264,14 @@ public static class GameObjectUtils
         SetGraphUpdated();
         return;
 
-        List<Object> FillDeps(Object target, Func<Object, List<Object>> getDependencies)
+        HashSet<Object> FillDeps(Object target, Func<Object, HashSet<Object>> getDependencies)
         {
+            sceneObjects.Add(target);
             var dependencies = getDependencies(target);
 
             foreach (var dependency in dependencies)
             {
+                sceneObjects.Add(dependency);
                 if (!graph.ContainsKey(dependency))
                 {
                     graph[dependency] = new DependenciesData();
@@ -251,36 +286,24 @@ public static class GameObjectUtils
         }
     }
 
-    private static void OnDeleted(GameObject target)
+    private static void OnDeleted(Object target)
     {
-        Delete(target);
-
-        foreach (var comp in target.GetComponents<Component>())
+        if (graph.TryGetValue(target, out var data))
         {
-            Delete(comp);
-        }
-
-        SetGraphUpdated();
-        return;
-
-        void Delete(Object obj)
-        {
-            if (graph.ContainsKey(obj))
+            foreach (var dep in data.uses)
             {
-                foreach (var dependencyGuid in graph[obj].uses)
-                {
-                    graph[dependencyGuid].usedBy.Remove(obj);
-                }
-
-                graph.Remove(obj);
+                graph[dep].usedBy.Remove(target);
+            }
+            
+            foreach (var dep in data.usedBy)
+            {
+                graph[dep].uses.Remove(target);
             }
 
-            foreach (var assetData in graph.Values)
-            {
-                assetData.uses.Remove(obj);
-            }
+            graph.Remove(target);
         }
     }
+    
     
     [System.Serializable]
     private class DependenciesData

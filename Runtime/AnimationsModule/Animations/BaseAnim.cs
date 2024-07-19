@@ -1,7 +1,7 @@
 ﻿using System;
 using DG.Tweening;
 using LSCore.AnimationsModule.Animations.Options;
-using LSCore.ReferenceFrom.Extensions;
+using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using Object = UnityEngine.Object;

@@ -42,11 +42,14 @@ public static partial class AssetDatabaseUtils
     {
         if (!set.Add(assetGuid)) return;
         
-        var dependencies = used
-            ? graph[assetGuid].usedBy
-            : graph[assetGuid].uses;
+        HashSet<string> dependencies = null;
 
-        if(dependencies.Count == 0) return;
+        if (graph.TryGetValue(assetGuid, out var data))
+        {
+            dependencies = used ? data.usedBy : data.uses;
+        }
+
+        if(dependencies == null || dependencies.Count == 0) return;
         
         if (indirect)
         {
@@ -162,19 +165,19 @@ public static partial class AssetDatabaseUtils
     private static void RemoveAssetFromGraph(string assetPath)
     {
         string assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
-        if (graph.ContainsKey(assetGuid))
+        if (graph.TryGetValue(assetGuid, out var data))
         {
-            foreach (var dependencyGuid in graph[assetGuid].uses)
+            foreach (var dependencyGuid in data.uses)
             {
                 graph[dependencyGuid].usedBy.Remove(assetGuid);
             }
+            
+            foreach (var dependencyGuid in data.usedBy)
+            {
+                graph[dependencyGuid].uses.Remove(assetGuid);
+            }
 
             graph.Remove(assetGuid);
-        }
-
-        foreach (var assetData in graph.Values)
-        {
-            assetData.uses.Remove(assetGuid);
         }
     }
 

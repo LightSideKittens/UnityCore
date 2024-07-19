@@ -1,4 +1,5 @@
 ﻿using System;
+using LSCore.Extensions.Unity;
 using UnityEngine;
 
 namespace LSCore
@@ -22,6 +23,7 @@ namespace LSCore
 
             private void OnChanged(int value)
             {
+                Debug.Log($"OnChanged: {value} {text.GetPath()}");
                 text.text = $"{value}";
             }
         }

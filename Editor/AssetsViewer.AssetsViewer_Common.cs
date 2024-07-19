@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using LSCore.ReferenceFrom.Extensions;
+using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
@@ -158,7 +158,7 @@ internal partial class AssetsViewer : OdinEditorWindow
 
             if (obj is GameObject go)
             {
-                assetPath = go.GetPath();
+                assetPath = $"{go.gameObject.scene.name}/{go.GetPath()}";
                 assetGuid = go.GetInstanceID().ToString();
             }
             else if(obj is Component comp)
@@ -250,8 +250,15 @@ internal partial class AssetsViewer : OdinEditorWindow
                     PrefabStage prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
                     if (prefabStage != null)
                     {
-                        GameObject prefabRoot = prefabStage.prefabContentsRoot;
-                        obj = prefabRoot.transform.Find(newPath);
+                        if (string.IsNullOrEmpty(newPath))
+                        {
+                            obj = prefabStage.prefabContentsRoot;
+                        }
+                        else
+                        {
+                            var prefabRoot = prefabStage.prefabContentsRoot.GetRoot();
+                            obj = prefabRoot.Find(newPath);
+                        }
                     }
                 }
             }
@@ -262,7 +269,7 @@ internal partial class AssetsViewer : OdinEditorWindow
             static string RemoveUpToFirstSlash(string path)
             {
                 int slashIndex = path.IndexOf('/');
-                return slashIndex != -1 ? path[(slashIndex + 1)..] : path;
+                return slashIndex != -1 ? path[(slashIndex + 1)..] : string.Empty;
             }
         }
         

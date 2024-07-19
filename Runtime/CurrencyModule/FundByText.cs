@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading.Tasks;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
@@ -12,9 +11,9 @@ namespace LSCore
         [CustomValueDrawer("Editor_Draw")]
         [SerializeField] private FundText fundText;
         [SerializeField] private bool changeTextColorIfNotEnough;
-        [ShowIf("$changeTextColorIfNotEnough")]
+        [ShowIf("changeTextColorIfNotEnough")]
         [Id(typeof(PaletteIdGroup))] [SerializeField] private Id notEnoughColorId;
-        [ShowIf("$changeTextColorIfNotEnough")]
+        [ShowIf("changeTextColorIfNotEnough")]
         [Id(typeof(PaletteIdGroup))] [SerializeField] private Id enoughColorId;
 
         private Id id;
@@ -28,14 +27,18 @@ namespace LSCore
 
         public void OnBeforeSerialize() { }
 
-        public async void OnAfterDeserialize()
+        public void OnAfterDeserialize()
         {
-            await Task.Delay(1);
+            fundText.Deserialized += Action;
             
-            if (!World.IsPlaying) return;
-            if (!changeTextColorIfNotEnough) return;
+            void Action()
+            {
+                fundText.Deserialized -= Action;
+                if (!World.IsPlaying) return;
+                if (!changeTextColorIfNotEnough) return;
             
-            Funds.AddOnChanged(Id, UpdateColor, true);
+                Funds.AddOnChanged(Id, UpdateColor, true);
+            }
         }
 
         private void UpdateColor(int a)

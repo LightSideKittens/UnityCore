@@ -22,4 +22,9 @@ public static class SingleAsset<T> where T : Object
 
         return asset;
     }
+    
+    public static void Release(string id)
+    {
+        Addressables.Release(assetsById[id]);
+    }
 }

@@ -26,13 +26,12 @@ namespace LSCore
 
         public void Init()
         {
-            if(actions == null) return;
-            
 #if UNITY_EDITOR
-            isClickSoundOverride = actions.Any(x => x is PlayOneShotSound);
+            isClickSoundOverride = actions?.Any(x => x is PlayOneShotSound) ?? false;
 #endif
             if (!isClickSoundOverride)
             {
+                actions ??= new List<LSAction>();
                 var action = new PlayOneShotSound();
                 var settings = new LaLaLa.Settings();
                 action.settings = settings;

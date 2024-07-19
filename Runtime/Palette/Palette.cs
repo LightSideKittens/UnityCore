@@ -5,10 +5,11 @@ namespace LSCore
 {
     public class Palette : ValueById<Color>
     {
-        private static Palette instance;
-        public void Init() => instance = this;
-
-        public static bool TryGet(Id id, out Color color) => instance.ByKey.TryGetValue(id, out color);
+        public static bool TryGet(Id id, out Color color)
+        {
+            var palette = SingleAsset<Palette>.Get("fr");
+            return palette.ByKey.TryGetValue(id, out color);
+        }
         
 #if UNITY_EDITOR
         protected override void SetupDataSelector(ValueDropdownList<Entry> list)

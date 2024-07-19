@@ -21,6 +21,7 @@ internal partial class AssetsViewer
 
         for (int i = 0; i < buildScenes.Length; i++)
         {
+            dependencies.Clear();
             AssetDatabaseUtils.GetUsesIndirect(buildScenes[i], dependencies, true);
 
             foreach (var assetPath in dependencies)

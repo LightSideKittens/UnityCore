@@ -27,7 +27,7 @@ namespace LSCore
         {
             Creating?.Invoke();
             var go = new GameObject(nameof(World));
-            go.hideFlags = HideFlags.HideAndDontSave;
+            go.hideFlags = HideFlags.HideInHierarchy;
             instance = go.AddComponent<World>();
             DontDestroyOnLoad(instance);
             IsPlaying = true;
