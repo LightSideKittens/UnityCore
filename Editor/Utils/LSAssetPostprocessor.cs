@@ -11,7 +11,6 @@ public class LSAssetPostprocessor : AssetPostprocessor
     
     private static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
     {
-
         if (importedAssets.Length > 0) Imported?.Invoke(importedAssets);
         if (deletedAssets.Length > 0) Deleted?.Invoke(deletedAssets);
         if (movedAssets.Length > 0) Moved?.Invoke(movedAssets);

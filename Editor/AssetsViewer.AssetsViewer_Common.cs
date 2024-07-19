@@ -228,11 +228,11 @@ internal partial class AssetsViewer : OdinEditorWindow
 
     protected override void OnEnable()
     {
-        RefreshList();
+        base.OnEnable();
         Selection.selectionChanged += UpdateReferences;
         GameObjectUtils.GraphUpdated += UpdateReferences;
         UpdateReferences();
-        base.OnEnable();
+        RefreshList();
     }
 
     protected override void OnDisable()

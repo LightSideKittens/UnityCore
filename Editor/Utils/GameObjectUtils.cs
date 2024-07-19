@@ -158,6 +158,7 @@ public static class GameObjectUtils
         AssetDatabaseUtils.GetUsesIndirect(AssetDatabase.GetAssetPath(asset), set, true);
         return set.Select(AssetDatabase.LoadMainAssetAtPath).ToHashSet();
     }
+    
 
     private static HashSet<Object> GetDependenciesForComponent(Object obj)
     {

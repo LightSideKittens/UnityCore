@@ -36,6 +36,6 @@ internal partial class AssetsViewer
         
         FilterBuildAssets();
     }
-
+    
     private void FilterBuildAssets() => FilterAssets(fullBuildAssets, buildAssets);
 }

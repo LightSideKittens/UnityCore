@@ -24,9 +24,21 @@ public static partial class AssetDatabaseUtils
     {
         string assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
         GetDependenciesByGuid(assetGuid, result, indirect, used, includeDirect);
-        var newSet = result.Select(AssetDatabase.GUIDToAssetPath).ToList();
+        var paths = new List<string>();
+        
+        foreach (var guid in result)
+        {
+            var path = AssetDatabase.GUIDToAssetPath(guid);
+            if (string.IsNullOrEmpty(path))
+            {
+                RemoveAssetFromGraphByGuid(guid);
+                continue;
+            }
+            paths.Add(path);
+        }
+
         result.Clear();
-        result.AddRange(newSet);
+        result.AddRange(paths);
     }
 
     public static void GetDependenciesByGuid(string assetGuid, HashSet<string> result,
@@ -109,7 +121,6 @@ public static partial class AssetDatabaseUtils
                 }
 
                 graph[assetGuid].uses.Add(dependencyGuid);
-
                 graph[dependencyGuid].usedBy.Add(assetGuid);
             }
         }
@@ -123,18 +134,20 @@ public static partial class AssetDatabaseUtils
         {
             UpdateGraphForAsset(assetPaths[i]);
         }
-
-        SaveGraphData();
     }
 
     private static void OnDeleted(string[] assetPaths)
     {
         for (int i = 0; i < assetPaths.Length; i++)
         {
+            if (assetPaths[i] == GraphFilePath)
+            {
+                GenerateAssetDependencyGraph();
+                return;
+            }
+            
             RemoveAssetFromGraph(assetPaths[i]);
         }
-
-        SaveGraphData();
     }
 
     private static void UpdateGraphForAsset(string assetPath)
@@ -160,29 +173,44 @@ public static partial class AssetDatabaseUtils
             graph[assetGuid].uses.Add(dependencyGuid);
             graph[dependencyGuid].usedBy.Add(assetGuid);
         }
+
+        SetGraphDirty();
     }
 
     private static void RemoveAssetFromGraph(string assetPath)
     {
+        if(string.IsNullOrEmpty(assetPath)) return;
         string assetGuid = AssetDatabase.AssetPathToGUID(assetPath);
-        if (graph.TryGetValue(assetGuid, out var data))
-        {
-            foreach (var dependencyGuid in data.uses)
-            {
-                graph[dependencyGuid].usedBy.Remove(assetGuid);
-            }
-            
-            foreach (var dependencyGuid in data.usedBy)
-            {
-                graph[dependencyGuid].uses.Remove(assetGuid);
-            }
+        RemoveAssetFromGraphByGuid(assetGuid);
+    }
 
-            graph.Remove(assetGuid);
+    private static void RemoveAssetFromGraphByGuid(string guid)
+    {
+        var data = graph[guid];
+        
+        foreach (var dependencyGuid in data.uses)
+        {
+            graph[dependencyGuid].usedBy.Remove(guid);
         }
+            
+        foreach (var dependencyGuid in data.usedBy)
+        {
+            graph[dependencyGuid].uses.Remove(guid);
+        }
+
+        graph.Remove(guid);
+        SetGraphDirty();
+    }
+
+    private static void SetGraphDirty()
+    {
+        EditorApplication.update -= SaveGraphData;
+        EditorApplication.update += SaveGraphData;
     }
 
     private static void SaveGraphData()
     {
+        EditorApplication.update -= SaveGraphData;
         string json = JsonConvert.SerializeObject(graph, Formatting.None);
         File.WriteAllText(GraphFilePath, json);
         AssetDatabase.Refresh();
