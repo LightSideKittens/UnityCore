@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
-using UnityEngine.Networking;
 using UnityEngine.UI;
 #if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
@@ -159,32 +159,7 @@ namespace LSCore
                 return height;
             }
         }
-
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
-        }
-
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
-        }
-
-        private void OnSelectedLocaleChanged(Locale _)
-        {
-            if (IsLocalized)
-            {
-                UpdateTable();
-            }
-        }
-
-        private void OnLocalizationKeyChanged()
-        {
-            UpdateLocalizedText();
-        }
-
+        
         protected override void Awake()
         {
             base.Awake();
@@ -201,6 +176,36 @@ namespace LSCore
             {
                 LocalizationSettings.StringDatabase.ReleaseTable(lastTableRef);
             }
+        }
+
+        public event Action Enabled;
+        public event Action Disabled;
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
+            Enabled?.Invoke();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+            Disabled?.Invoke();
+        }
+
+        private void OnSelectedLocaleChanged(Locale _)
+        {
+            if (IsLocalized)
+            {
+                UpdateTable();
+            }
+        }
+
+        private void OnLocalizationKeyChanged()
+        {
+            UpdateLocalizedText();
         }
         
         private TableReference lastTableRef;

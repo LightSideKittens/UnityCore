@@ -110,13 +110,13 @@ public static class LaLaLa
     {
         var source = new GameObject("LaLaLa").AddComponent<AudioSource>(); 
         Object.DontDestroyOnLoad(source.gameObject);
-        Wait.Coroutine(new WaitUntil(() => source.isPlaying), WaitForRelease);
+        Wait.While(() => !source.isPlaying, WaitForRelease);
         
         return source;
 
         void WaitForRelease()
         {
-            Wait.Coroutine(new WaitWhile(() => source.isPlaying), Release);
+            Wait.While(() => source.isPlaying, Release);
         }
         
         void Release()

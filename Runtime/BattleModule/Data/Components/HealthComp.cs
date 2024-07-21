@@ -39,8 +39,8 @@ namespace LSCore.BattleModule
             healthBar.Active = true;
             visualRoot.localPosition = Vector3.zero;
             visualRoot.DOShakePosition(0.15f, 0.2f, 25);
-            block.SetFloat(exposure, 1.6f);
-            block.DOFloat(1, exposure, 1f).OnUpdate(SetPropBlock);
+            block.SetFloat(exposure, 3f);
+            block.DOFloat(0.3f, exposure, 1f).OnUpdate(SetPropBlock);
             healthBar.SetValue(realHealth);
             AnimText.Create($"{(int)damage}", transform.position);
         }

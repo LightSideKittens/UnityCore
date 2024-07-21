@@ -2,21 +2,13 @@
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 #endif
-using System;
 using UnityEngine;
 
 namespace LSCore
 {
-    public class FundText : LSNumber, ISerializationCallbackReceiver
+    public class FundText : LSNumber
     {
-        public event Action Deserialized;
         [field: SerializeField, Id(typeof(CurrencyIdGroup))] public Id Id { get; private set; }
-        public void OnBeforeSerialize() { }
-
-        public void OnAfterDeserialize()
-        {
-            Deserialized?.Invoke();
-        }
     }
     
 #if UNITY_EDITOR

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -65,18 +64,7 @@ namespace LSCore
             IsPlaying = false;
             OnApplicationPause(true);
         }
-
-        public static Coroutine BeginCoroutine(IEnumerator enumerator, Action onComplete) 
-        {
-            return instance.StartCoroutine(instance.StartCoroutine(enumerator, onComplete));
-        }
         
-        public IEnumerator StartCoroutine(IEnumerator enumerator, Action onComplete)
-        {
-            yield return enumerator;
-            onComplete();
-        }
-
         public static void CallInMainThread(Action action)
         {
             synchronizationContext.Post(_ => action(), null);

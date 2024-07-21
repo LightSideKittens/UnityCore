@@ -25,30 +25,8 @@ namespace LSCore
             set => fundText.text = value.ToString();
         }
 
-        public void OnBeforeSerialize() { }
-
-        public void OnAfterDeserialize()
-        {
-            fundText.Deserialized += Action;
-            
-            void Action()
-            {
-                fundText.Deserialized -= Action;
-                if (!World.IsPlaying) return;
-                if (!changeTextColorIfNotEnough) return;
-            
-                Funds.AddOnChanged(Id, UpdateColor, true);
-            }
-        }
-
         private void UpdateColor(int a)
         {
-            if (fundText == null)
-            {
-                Funds.RemoveOnChanged(id, UpdateColor);
-                return;
-            }
-
             var colorId = CanSpend ? enoughColorId : notEnoughColorId;
             
             if (Palette.TryGet(colorId, out var color))
@@ -67,5 +45,23 @@ namespace LSCore
             return value;
         }
 #endif
+        public void OnBeforeSerialize() { }
+
+        public void OnAfterDeserialize()
+        {
+            if (!changeTextColorIfNotEnough) return;
+            fundText.Enabled += Sub;
+            fundText.Disabled += UnSub;
+        }
+
+        private void Sub()
+        {
+            Funds.AddOnChanged(Id, UpdateColor, true);
+        }
+
+        private void UnSub()
+        {
+            Funds.RemoveOnChanged(Id, UpdateColor);
+        }
     }
 }

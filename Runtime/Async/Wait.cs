@@ -15,32 +15,29 @@ namespace LSCore.Async
         public static Tween Cycles(in float delay, int cycles, TweenCallback onLoop) => DOTween.Sequence().AppendInterval(delay).SetLoops(cycles).OnStepComplete(onLoop);
         public static Tween InfinityLoop(in float delay, TweenCallback onLoop) => Cycles(delay, -1, onLoop);
 
-        public static Tween Frames(int count, Action onComplete)
+        public static Tween Frames(uint count, Action onComplete)
         {
             var current = 0;
+            return While(() => current++ < count, onComplete);
+        }
+
+        public static Tween Coroutine(CustomYieldInstruction instruction, Action onComplete) => While(() => instruction.keepWaiting, onComplete);
+
+        public static Tween While(Func<bool> predicate, Action onComplete)
+        {
             var tween = DOTween.Sequence().AppendInterval(float.MaxValue);
-            tween.OnUpdate(() =>
+            tween.OnUpdate(Update);
+            
+            return tween;
+
+            void Update()
             {
-                current++;
-                
-                if (current > count)
+                if (!predicate())
                 {
                     tween.Kill();
                     onComplete();
                 }
-            });
-            
-            return tween;
-        }
-
-        public static void Coroutine(IEnumerator enumerator, Action onComplete)
-        {
-            World.BeginCoroutine(enumerator, onComplete);
-        }
-        
-        public static void WaitWhile(Func<bool> predicate, Action onComplete)
-        {
-            World.BeginCoroutine(new WaitWhile(predicate), onComplete);
+            }
         }
     }
 }

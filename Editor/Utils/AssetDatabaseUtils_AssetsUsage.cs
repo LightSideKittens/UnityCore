@@ -160,6 +160,11 @@ public static partial class AssetDatabaseUtils
             graph[assetGuid] = new DependenciesData();
         }
 
+        foreach (var use in graph[assetGuid].uses)
+        {
+            graph[use].usedBy.Remove(assetGuid);
+        }
+
         graph[assetGuid].uses.Clear();
 
         foreach (string dependencyPath in dependencies)

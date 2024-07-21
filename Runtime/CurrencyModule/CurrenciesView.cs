@@ -23,14 +23,13 @@ namespace LSCore
 
             private void OnChanged(int value)
             {
-                Debug.Log($"OnChanged: {value} {text.GetPath()}");
                 text.text = $"{value}";
             }
         }
 
         [SerializeField] private Data[] data;
 
-        private void Awake()
+        private void Start()
         {
             for (int i = 0; i < data.Length; i++)
             {

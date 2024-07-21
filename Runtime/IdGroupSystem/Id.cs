@@ -19,7 +19,7 @@ namespace LSCore
             if (string.IsNullOrEmpty(name)) name = string.Empty;
             if (cachedIds.TryGetValue(name, out var id)) return id;
             
-            id = new Id();
+            id = CreateInstance<Id>();
             id.name = name;
             cachedIds.Add(name, id);
 
