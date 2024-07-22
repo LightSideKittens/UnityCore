@@ -52,6 +52,20 @@ namespace LSCore.BattleModule
         }
 
         protected virtual void OnDamageTaken(float damage) { }
+        protected virtual void OnHealTaken(float heal) { }
         protected virtual void OnKilled() { }
+        
+        public void Heal(int heal)
+        {
+            if (isKilled) return;
+            
+            realHealth += heal;
+            OnHealTaken(heal);
+            
+            if (realHealth >= health)
+            {
+                realHealth = health;
+            }
+        }
     }
 }

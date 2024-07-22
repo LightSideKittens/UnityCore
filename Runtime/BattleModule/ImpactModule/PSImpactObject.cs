@@ -12,7 +12,7 @@ namespace LSCore
 {
     [RequireComponent(typeof(ParticleSystem))]
     [ExecuteAlways]
-    public class ImpactObject : MonoBehaviour
+    public class PSImpactObject : MonoBehaviour
     {
         private static Vector4 currentId;
 
@@ -46,7 +46,7 @@ namespace LSCore
         
         [NonSerialized] public ParticleSystem ps;
         private List<Vector4> customData = new();
-        private ImpactObject[] childImpactObjects;
+        private PSImpactObject[] childImpactObjects;
         private new Transform transform;
         
         public Collider2D IgnoredCollider
@@ -58,7 +58,7 @@ namespace LSCore
         {
             transform = base.transform;
             ps = GetComponent<ParticleSystem>();
-            childImpactObjects = GetComponentsInChildren<ImpactObject>();
+            childImpactObjects = GetComponentsInChildren<PSImpactObject>();
             triggerHandler.Init(ps, customData);
             SubscribeOnTriggered();
             

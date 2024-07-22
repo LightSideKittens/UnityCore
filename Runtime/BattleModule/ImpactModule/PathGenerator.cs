@@ -23,7 +23,7 @@ namespace LSCore
         private Vector4 currentId;
         private static Material lineMaterial;
         private ParticleSystem ps;
-        private ImpactObject[] childPs;
+        private PSImpactObject[] childPs;
         private List<Vector4> customData = new();
         private List<LineRenderer> lineRenderers = new();
         private List<List<float>> widths = new();
@@ -36,10 +36,10 @@ namespace LSCore
             lineMaterial = LSDefaultAssets.LineMaterial;
             ps = GetComponent<ParticleSystem>();
             radiusScale = ps.trigger.radiusScale;
-            childPs = GetComponentsInChildren<ImpactObject>();
+            childPs = GetComponentsInChildren<PSImpactObject>();
         }
 
-        public static void Generate(ImpactObject impactObject, float deltaTime = 0.02f)
+        public static void Generate(PSImpactObject impactObject, float deltaTime = 0.02f)
         {
             IsSimulating = true;
             DeltaTime = deltaTime;

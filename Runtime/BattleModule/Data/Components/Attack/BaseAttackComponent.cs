@@ -8,9 +8,9 @@ namespace LSCore.BattleModule
     [Preserve, Serializable]
     public abstract class BaseAttackComponent : BaseComp
     {
-        public ImpactObject impactObjectPrefab;
+        public PSImpactObject impactObjectPrefab;
         [SerializeField] protected FindTargetComp findTargetComp;
-        [NonSerialized] public ImpactObject impactObject;
+        [NonSerialized] public PSImpactObject impactObject;
         public float attackSpeed;
 
         protected override void Init()
