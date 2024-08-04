@@ -8,11 +8,11 @@ namespace LSCore
     [Serializable]
     [HideReferenceObjectPicker]
     [TypeFrom]
-    public class ParticleImpact
+    public class ShapeImpact
     {
         [SerializeReference] public Impact impact;
 
-        public virtual void Apply(Transform initiator, ref ParticleSystem.Particle particle, Collider2D collider)
+        public virtual void Apply(Transform initiator, Collider2D collider)
         {
             impact.Apply(initiator, collider.transform);
         }

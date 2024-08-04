@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace LSCore.CommonComponents
+namespace LSCore
 {
     public class DestroyEvent : MonoBehaviour
     {

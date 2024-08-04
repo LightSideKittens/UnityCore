@@ -19,13 +19,13 @@ namespace LSCore
     {
         [SerializeReference] public TriggerCondition condition;
 
-        public sealed override void Apply(ref ParticleSystem.Particle particle, Collider2D collider)
+        public sealed override void Apply(Transform initiator, ref ParticleSystem.Particle particle, Collider2D collider)
         {
             condition.Prepare(ref particle, collider);
             
             if (condition)
             {
-                base.Apply(ref particle, collider);
+                base.Apply(initiator, ref particle, collider);
                 OnApply(ref particle, collider);
             }
         }

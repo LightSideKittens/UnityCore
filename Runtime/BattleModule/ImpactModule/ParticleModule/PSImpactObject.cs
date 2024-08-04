@@ -12,7 +12,7 @@ namespace LSCore
 {
     [RequireComponent(typeof(ParticleSystem))]
     [ExecuteAlways]
-    public class PSImpactObject : MonoBehaviour
+    public class PSImpactObject : BaseImpactObject
     {
         private static Vector4 currentId;
 
@@ -30,35 +30,68 @@ namespace LSCore
         public TriggerHandler triggerHandler;
 
         [SerializeField] private GameObject preview;
-        private Func<Collider2D, bool> canImpactChecker;
-
-        public Func<Collider2D, bool> CanImpactChecker
+        
+        [NonSerialized] public ParticleSystem ps;
+        private List<Vector4> customData = new();
+        private List<PSImpactObject> childImpactObjects;
+        private new Transform transform;
+        
+        public override Func<Collider2D, bool> CanImpactChecker
         {
             set
             {
                 canImpactChecker = value;
-                for (int i = 0; i < childImpactObjects.Length; i++)
+                for (int i = 0; i < childImpactObjects.Count; i++)
                 {
                     childImpactObjects[i].canImpactChecker = value;
                 }
             }
         }
         
-        [NonSerialized] public ParticleSystem ps;
-        private List<Vector4> customData = new();
-        private PSImpactObject[] childImpactObjects;
-        private new Transform transform;
-        
-        public Collider2D IgnoredCollider
+        public override Collider2D IgnoredCollider
         {
-            set => triggerHandler.ignoredCollider = value;
+            set
+            {
+                ignoredCollider = value;
+                for (int i = 0; i < childImpactObjects.Count; i++)
+                {
+                    childImpactObjects[i].IgnoredCollider = value;
+                }
+            }
         }
         
+        public override Transform Initiator
+        {
+            set
+            {
+                initiator = value;
+                for (int i = 0; i < childImpactObjects.Count; i++)
+                {
+                    childImpactObjects[i].Initiator = value;
+                }
+            }
+        }
+
+        private List<PSImpactObject> GetChildren()
+        {
+            var components = new List<PSImpactObject>();
+            foreach (Transform child in transform)
+            {
+                var component = child.GetComponent<PSImpactObject>();
+                if (component != null)
+                {
+                    components.Add(component);
+                }
+            }
+
+            return components;
+        }
+
         private void Awake()
         {
             transform = base.transform;
             ps = GetComponent<ParticleSystem>();
-            childImpactObjects = GetComponentsInChildren<PSImpactObject>();
+            childImpactObjects = GetChildren();
             triggerHandler.Init(ps, customData);
             SubscribeOnTriggered();
             
@@ -90,8 +123,10 @@ namespace LSCore
             if(particles.Length == 0) return;
             
             TryInitParticles(particles);
+            IgnoreCollider = true;
             triggerHandler.Handle(particles);
-            
+            IgnoreCollider = false;
+
             for (int i = 0; i < particleHandlers.Count; i++)
             {
                 particleHandlers[i].Handle(particles);
@@ -183,7 +218,7 @@ namespace LSCore
             
             for (int i = 0; i < impacts.Count; i++)
             {
-                impacts[i].Apply(ref particle, target);
+                impacts[i].Apply(initiator, ref particle, target);
             }
         }
 
@@ -205,7 +240,7 @@ namespace LSCore
         {
             ps.Simulate(simulationTime);
             HandleParticles();
-            for (int i = 0; i < childImpactObjects.Length; i++)
+            for (int i = 0; i < childImpactObjects.Count; i++)
             {
                 childImpactObjects[i].HandleParticles();
             }

@@ -19,6 +19,8 @@ namespace LSCore.BattleModule
 
         protected override void OnInit()
         {
+            useFixedUpdate = true;
+            IsRunning = true;
             moveComp = transform.Get<BaseMoveComp>();
             
             if (!manualMoveCompControl)

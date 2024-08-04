@@ -57,12 +57,12 @@ public static class CustomBuilder
             {
                 if (mode == BuildMode.Debug)
                 {
-                    Defines.Add("DEBUG");
+                    Defines.Enable("DEBUG");
                     buildOptions |= BuildOptions.CompressWithLz4;
                 }
                 else
                 {
-                    Defines.Remove("DEBUG");
+                    Defines.Disable("DEBUG");
                     buildOptions |= BuildOptions.CompressWithLz4HC;
                 }
             }

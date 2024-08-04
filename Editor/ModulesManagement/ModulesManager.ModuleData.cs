@@ -26,11 +26,11 @@ namespace LSCore.Editor
             {
                 if (enabled)
                 {
-                    Defines.Add(define);
+                    Defines.Enable(define);
                 }
                 else
                 {
-                    Defines.Remove(define);
+                    Defines.Disable(define);
                 }
             }
         }

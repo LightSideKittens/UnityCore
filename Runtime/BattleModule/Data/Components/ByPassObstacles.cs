@@ -8,8 +8,8 @@ namespace LSCore.BattleModule
     [ExecuteAlways]
     public class ByPassObstacles : MonoBehaviour
     {
-        [SerializeField] public Rigidbody2D player;
-        [SerializeField] public Rigidbody2D rigidbody;
+        [SerializeField] public Transform player;
+        [SerializeField] public Transform rigidbody;
         [SerializeField] public CircleCollider2D collider;
         [SerializeField] public LayerMask obstaclesMask;
         [SerializeField] public ContactFilter2D contactFilter;
@@ -23,7 +23,7 @@ namespace LSCore.BattleModule
         {
             foreach (var result in Physics2DExt.FindAll(transform.position, 1000, contactFilter))
             {
-                UnityEngine.Debug.Log((int)result.excludeLayers);
+                UnityEngine.Debug.Log(result.name);
             }
             
             drawGizmos = false;
@@ -39,7 +39,7 @@ namespace LSCore.BattleModule
 
         public void ByPass(in Vector2 targetPos, out Vector2 byPassedDirection)
         {
-            var pos = rigidbody.position;
+            var pos = (Vector2)rigidbody.position;
             var direction = targetPos - pos;
             var trueRadius = collider.radius * rigidbody.transform.lossyScale.x;
             var distance = direction.magnitude;
@@ -100,7 +100,7 @@ namespace LSCore.BattleModule
                     Gizmos.color = Color.white;
                 }
             }
-
+            
             if (drawGizmos)
             {
                 Gizmos.DrawWireSphere(sidePoses[1], 0.1f);

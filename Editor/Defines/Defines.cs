@@ -29,13 +29,13 @@ namespace LSCore.Editor
             defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup).Split(';').ToHashSet();
         }
 
-        public static bool Add(string define)
+        public static bool Enable(string define)
         {
             OnAdd(define);
             return defines.Add(define);
         }
 
-        public static bool Remove(string define)
+        public static bool Disable(string define)
         {
             OnRemove(define);
             return defines.Remove(define);

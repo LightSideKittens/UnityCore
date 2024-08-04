@@ -12,7 +12,7 @@ namespace LSCore
         public float delay = 1;
         public int damage;
         
-        public override void Apply(Transform target)
+        public override void Apply(Transform initiator, Transform target)
         {
             var health = target.Get<BaseHealthComp>();
             Wait.Cycles(delay, cycles, () =>

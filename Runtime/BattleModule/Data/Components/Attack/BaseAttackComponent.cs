@@ -13,10 +13,8 @@ namespace LSCore.BattleModule
         [NonSerialized] public PSImpactObject impactObject;
         public float attackSpeed;
 
-        protected override void Init()
+        protected sealed override void Init()
         {
-            useFixedUpdate = true;
-            IsRunning = true;
             data.onInit += OnInit;
             data.enable += Enable;
             data.disable += Disable;
@@ -25,19 +23,15 @@ namespace LSCore.BattleModule
             impactObject.IgnoredCollider = transform.GetComponent<Collider2D>();
             findTargetComp.Init(transform);
             impactObject.CanImpactChecker = findTargetComp.Check;
+            impactObject.Initiator = transform;
         }
         
         protected virtual void OnInit(){}
 
         public void Enable() => OnEnable();
-
         protected virtual void OnEnable(){}
 
-        public void Disable()
-        {
-            OnDisable();
-        }
-        
+        public void Disable() => OnDisable();
         protected virtual void OnDisable(){}
 
         public void Destroy()

@@ -6,13 +6,13 @@ namespace LSCore.BattleModule
     public class CompData
     {
         public Transform transform;
-        public System.Action onInit;
-        public System.Action reset;
-        public System.Action enable;
-        public System.Action disable;
-        public System.Action destroy;
-        public System.Action update;
-        public System.Action fixedUpdate;
+        public Action onInit;
+        public Action reset;
+        public Action enable;
+        public Action disable;
+        public Action destroy;
+        public Action update;
+        public Action fixedUpdate;
 
         public void Remove<T>() where T : BaseComp
         {

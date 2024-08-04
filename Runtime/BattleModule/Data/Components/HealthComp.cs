@@ -16,7 +16,8 @@ namespace LSCore.BattleModule
         private MaterialPropertyBlock block;
         private Animatable.HealthBar healthBar;
         private static readonly int exposure = Shader.PropertyToID("_Exposure");
-
+        private static readonly Vector3 shakeStrength = new Vector3(0.15f, 0.15f, 0); 
+        
         protected override void OnInit()
         {
             base.OnInit();
@@ -37,8 +38,9 @@ namespace LSCore.BattleModule
         protected override void OnDamageTaken(float damage)
         {
             healthBar.Active = true;
+            DOTween.Kill(this);
             visualRoot.localPosition = Vector3.zero;
-            visualRoot.DOShakePosition(0.15f, 0.2f, 25);
+            visualRoot.DOShakePosition(0.1f, shakeStrength, 30).SetId(this);
             block.SetFloat(exposure, 3f);
             block.DOFloat(0.3f, exposure, 1f).OnUpdate(SetPropBlock);
             healthBar.SetValue(realHealth);

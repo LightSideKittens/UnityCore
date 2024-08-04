@@ -1,3 +1,4 @@
 ﻿{
-  "name": "LSCore.CommonComponents"
+  "name": "LSCore.CommonComponents",
+  "references":[ "GUID:a8db40cbaf444aa3aedf3bb887de5433" ]
 }

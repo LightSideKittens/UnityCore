@@ -3,17 +3,15 @@ using System.Collections.Generic;
 using LSCore.Attributes;
 using LSCore.Extensions.Unity;
 using UnityEngine;
-using UnityEngine.Serialization;
 using static UnityEngine.ParticleSystem;
 
 namespace LSCore
 {
-    public delegate void TriggeredAction(ref Particle particle, Collider2D collider);
-    public delegate void TriggerAction(HashSet<Collider2D> set1, HashSet<Collider2D> set2, ref Particle particle);
-    
     [Serializable]
     public class TriggerHandler : ParticlesHandler
     {
+        public delegate void TriggeredAction(ref Particle particle, Collider2D collider);
+        public delegate void TriggerAction(HashSet<Collider2D> set1, HashSet<Collider2D> set2, ref Particle particle);
         private static Collider2D[] maxColliders = new Collider2D[100];
         private static List<int> keysToRemove = new();
         
@@ -24,7 +22,6 @@ namespace LSCore
         [SerializeReference] public List<OnTriggerHandler> handlers;
         
         public event TriggeredAction Triggered;
-        public Collider2D ignoredCollider;
 
         private TriggerAction triggerAction;
         private Dictionary<int, HashSet<Collider2D>> colliders = new();
@@ -44,7 +41,7 @@ namespace LSCore
             var radiusScale = ps.trigger.radiusScale;
             Vector2 point = default;
             ids.Clear();
-            if(ignoredCollider != null) ignoredCollider.enabled = false;
+            
             for (int i = 0; i < particles.Length; i++)
             {
                 ref var particle = ref particles[i];
@@ -67,7 +64,6 @@ namespace LSCore
                 
                 colliders[id] = currentSet;
             }
-            if(ignoredCollider != null) ignoredCollider.enabled = true;
             
             keysToRemove.Clear();
             

@@ -10,6 +10,6 @@ namespace LSCore
     [HideReferenceObjectPicker]
     public abstract class Impact
     {
-        public abstract void Apply(Transform target);
+        public abstract void Apply(Transform initiator, Transform target);
     }
 }

@@ -10,7 +10,7 @@ namespace LSCore
     {
         public float time = 0.5f;
         
-        public override void Apply(Transform target)
+        public override void Apply(Transform initiator, Transform target)
         {
             var move = target.Get<MoveComp>();
 

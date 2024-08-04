@@ -8,9 +8,9 @@ namespace LSCore
     {
         [SerializeReference] public OnTriggerHandler handler;
 
-        public override void Apply(ref ParticleSystem.Particle particle, Collider2D collider)
+        public override void Apply(Transform initiator, ref ParticleSystem.Particle particle, Collider2D collider)
         {
-            base.Apply(ref particle, collider);
+            base.Apply(initiator, ref particle, collider);
             handler.Handle(ref particle, collider);
         }
     }
