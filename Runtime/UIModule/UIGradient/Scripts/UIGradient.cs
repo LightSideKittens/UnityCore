@@ -88,7 +88,7 @@ namespace LSCore
         [SerializeField]
         private GradientStyle _gradientStyle;
         [SerializeField]
-        private BlendModes _blendMode;
+        private BlendMode _blendMode;
 
         //Fragment(Pixel) Gradient Transformation
         [SerializeField]
@@ -256,7 +256,7 @@ namespace LSCore
         /// Uses Gradient shader
         /// </summary>
         /// <value></value>
-        public BlendModes blendMode
+        public BlendMode blendMode
         {
             set
             {
@@ -1134,7 +1134,7 @@ namespace LSCore
         /// </summary>
         /// <param name="blendMode"></param>
         /// <returns></returns>
-        private string GetShaderKeyword(BlendModes blendMode)
+        private string GetShaderKeyword(BlendMode blendMode)
         {
             return "BM_" + blendMode.ToString().ToUpper();
         }
@@ -1242,7 +1242,7 @@ namespace LSCore
         /// </summary>
         /// <param name="blendMode"></param>
         /// <param name="status"></param>
-        private void SetMaterialKeyword(BlendModes blendMode, bool status)
+        private void SetMaterialKeyword(BlendMode blendMode, bool status)
         {
             string keyword = GetShaderKeyword(blendMode);
             SetMaterialKeyword(keyword, status);
@@ -1309,7 +1309,7 @@ namespace LSCore
                 return;
             }
             string[] shaderGradientStyles = System.Array.ConvertAll(System.Enum.GetNames(typeof(GradientStyle)), d => "GRADIENT_" + d.ToUpper());
-            string[] shaderBlendModes = System.Array.ConvertAll(System.Enum.GetNames(typeof(BlendModes)), d => "BM_" + d.ToUpper());
+            string[] shaderBlendModes = System.Array.ConvertAll(System.Enum.GetNames(typeof(BlendMode)), d => "BM_" + d.ToUpper());
 
             //Disabling all the keywords except the select ones.
             bool status = false;
@@ -1420,7 +1420,7 @@ namespace LSCore
     /// <summary>
     /// Enum for Blend Modes
     /// </summary>
-    public enum BlendModes
+    public enum BlendMode
     {
         Normal,
         Darken,
@@ -1433,7 +1433,7 @@ namespace LSCore
         ColorDodge,
         LinearDodge,
         LightenColor,
-        overlay,
+        Overlay,
         SoftLight,
         HardLight,
         VividLight,

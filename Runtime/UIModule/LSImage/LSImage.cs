@@ -35,6 +35,7 @@ namespace LSCore
 
         protected override void UpdateGeometry()
         {
+            base.UpdateGeometry();
             DoMeshGeneration();
         }
         

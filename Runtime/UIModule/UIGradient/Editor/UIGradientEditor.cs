@@ -239,7 +239,7 @@ namespace LSCore
                 {
                     //Advanced Blending options
                     EditorGUI.BeginChangeCheck();
-                    BlendModes blendMode = (BlendModes)EditorGUILayout.EnumPopup("Blend Mode", script.blendMode);
+                    BlendMode blendMode = (BlendMode)EditorGUILayout.EnumPopup("Blend Mode", script.blendMode);
                     float opacity = EditorGUILayout.Slider("Opacity", script.opacity, 0, 1);
                     if (EditorGUI.EndChangeCheck())
                     {
@@ -292,7 +292,7 @@ namespace LSCore
 
                 //Blend modes
                 EditorGUI.BeginChangeCheck();
-                BlendModes blendMode = (BlendModes)EditorGUILayout.EnumPopup("Blend Mode", script.blendMode);
+                BlendMode blendMode = (BlendMode)EditorGUILayout.EnumPopup("Blend Mode", script.blendMode);
                 float opacity = EditorGUILayout.Slider("Opacity", script.opacity, 0, 1);
                 if (EditorGUI.EndChangeCheck())
                 {

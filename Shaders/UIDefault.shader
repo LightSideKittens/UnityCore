@@ -1,6 +1,4 @@
-// Unity built-in shader source. Copyright (c) 2016 Unity Technologies. MIT license (see license.txt)
-
-Shader "UI/Default"
+Shader "LSCore/UI/Default"
 {
     Properties
     {
@@ -48,7 +46,7 @@ Shader "UI/Default"
         Pass
         {
             Name "Default"
-        CGPROGRAM
+            CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
             #pragma target 2.0
@@ -58,7 +56,8 @@ Shader "UI/Default"
 
             #pragma multi_compile_local _ UNITY_UI_CLIP_RECT
             #pragma multi_compile_local _ UNITY_UI_ALPHACLIP
-
+            #pragma multi_compile_local __ BM_NORMAL BM_DARKEN BM_MULTIPLY BM_LINEARBURN BM_COLORBURN BM_DARKERCOLOR BM_LIGHTEN BM_SCREEN BM_COLORDODGE BM_LINEARDODGE BM_LIGHTENCOLOR BM_OVERLAY BM_SOFTLIGHT BM_HARDLIGHT BM_VIVIDLIGHT BM_LINEARLIGHT BM_PINLIGHT BM_HARDMIX BM_DIFFERENCE BM_EXCLUSION BM_SUBTRACT BM_DIVIDE
+            
             struct appdata_t
             {
                 float4 vertex   : POSITION;
@@ -84,7 +83,8 @@ Shader "UI/Default"
             float4 _MainTex_ST;
             float _UIMaskSoftnessX;
             float _UIMaskSoftnessY;
-
+            #include "Assets/LightSideCore/Shaders/LSBlendModes.cginc"
+            
             v2f vert(appdata_t v)
             {
                 v2f OUT;
@@ -108,8 +108,9 @@ Shader "UI/Default"
 
             fixed4 frag(v2f IN) : SV_Target
             {
-                half4 color = IN.color * (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
-
+                half4 color = (tex2D(_MainTex, IN.texcoord) + _TextureSampleAdd);
+                color = BlendColors(IN.color, color);
+                
                 #ifdef UNITY_UI_CLIP_RECT
                 half2 m = saturate((_ClipRect.zw - _ClipRect.xy - abs(IN.mask.xy)) * IN.mask.zw);
                 color.a *= m.x * m.y;

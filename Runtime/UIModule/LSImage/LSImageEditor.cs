@@ -1,11 +1,8 @@
 ﻿#if UNITY_EDITOR
-using System.Collections.Generic;
 using System.Reflection;
-using LSCore.Extensions.Unity;
 using UnityEditor;
 using UnityEditor.UI;
 using UnityEngine;
-using UnityToolbarExtender;
 using UnityEngine.UI;
 
 namespace LSCore
@@ -15,6 +12,7 @@ namespace LSCore
     public class LSImageEditor : ImageEditor
     {
         SerializedProperty rotateId;
+        SerializedProperty blendMode;
 
         SerializedProperty m_Sprite;
         SerializedProperty m_Type;
@@ -32,6 +30,7 @@ namespace LSCore
             base.OnEnable();
 
             m_Sprite = serializedObject.FindProperty("m_Sprite");
+            blendMode = serializedObject.FindProperty("blendMode");
             m_Type = serializedObject.FindProperty("m_Type");
             m_PreserveAspect = serializedObject.FindProperty("m_PreserveAspect");
             m_UseSpriteMesh = serializedObject.FindProperty("m_UseSpriteMesh");
@@ -50,6 +49,14 @@ namespace LSCore
 
             SpriteGUI();
             AppearanceControlsGUI();
+            
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(blendMode);
+            if (EditorGUI.EndChangeCheck())
+            {
+                image.SetBlendMode((BlendMode)blendMode.enumValueFlag);
+            }
+            
             RaycastControlsGUI();
             MaskableControlsGUI();
             TypeGUI();
