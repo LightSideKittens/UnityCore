@@ -21,14 +21,16 @@ namespace LSCore
         {
             if(pivot == null) return;
             var color = Gizmos.color;
-            Gizmos.color = GizmosColor;
+            var newColor = default(Color);
+            GetGizmosColor(ref newColor);
+            Gizmos.color = newColor;
             OnDrawGizmos();
             Gizmos.color = color;
         }
 
-#if UNITY_EDITOR
-        protected virtual Color GizmosColor { get; } = new (0.24f, 1f, 0.23f);
-#endif
+        [Conditional("UNITY_EDITOR")]
+        protected virtual void GetGizmosColor(ref Color color) => color = new (0.24f, 1f, 0.23f);
+        
         [Conditional("UNITY_EDITOR")]
         public abstract void OnDrawGizmos();
     }
