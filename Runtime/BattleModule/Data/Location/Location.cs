@@ -10,10 +10,12 @@ namespace Battle.Data
 {
     public class Location : SerializedScriptableObject
     {
-        [SerializeField] private Transform prefab;
         [SerializeField] private bool useChunk;
         [SerializeField] private bool dynamicGeneration;
-        
+
+        [HideIf("useChunk")]
+        [SerializeField] private Transform prefab;
+
         [ShowIf("useChunk")] [SerializeField] [TableMatrix] public Transform[,] chunks;
         [ShowIf("useChunk")] [SerializeField] private float chunkSideSize = 20;
         [ShowIf("@useChunk && !dynamicGeneration")] [SerializeField] private int xChunkCount = 10;
@@ -29,6 +31,7 @@ namespace Battle.Data
 
         private void StartDynamicGeneration()
         {
+            lastStartIndex = Vector2Int.one * int.MaxValue;
             cam = Camera.main;
             startCameraPosition = cam.transform.position;
             chunksByIndex.Clear();
