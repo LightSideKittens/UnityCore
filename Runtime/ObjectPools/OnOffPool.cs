@@ -57,12 +57,6 @@ namespace LSCore
             get => parent;
             set
             {
-                if (parent == value)
-                {
-                    createFunc ??= InstantiatePrefab;
-                    return;
-                }
-                
                 parent = value;
                 Got -= OnGetWithParent;
                 Got -= OnGet;

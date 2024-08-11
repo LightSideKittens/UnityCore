@@ -1,6 +1,6 @@
 ﻿using System;
+using DG.Tweening;
 using UnityEngine;
-using static LSCore.BattleModule.TransformDict<LSCore.BattleModule.BaseHealthComp>;
 
 namespace LSCore.BattleModule
 {
@@ -12,14 +12,24 @@ namespace LSCore.BattleModule
         private bool isKilled;
         protected AffiliationType affiliation;
         public int Health => health;
+        [NonSerialized] public bool isImmune;
 
         protected override void OnRegister() => Reg(this);
         protected override void Init()
         {
             data.onInit += OnInit;
             data.reset += Reset;
+            data.enable += OnEnable;
         }
 
+        protected virtual void OnEnable()
+        {
+            var tween = OnAlive();
+            if (tween == null) return;
+            isImmune = true;
+            OnAlive()?.OnComplete(() => isImmune = false);
+        }
+        
         protected virtual void OnInit()
         {
             affiliation = transform.Get<Unit>().Affiliation;
@@ -38,6 +48,7 @@ namespace LSCore.BattleModule
 
         public void TakeDamage(int damage)
         {
+            if (isImmune) return;
             if (isKilled) return;
             
             realHealth -= damage;
@@ -46,17 +57,26 @@ namespace LSCore.BattleModule
             if (realHealth <= 0)
             {
                 isKilled = true;
-                transform.Get<Unit>().Kill();
-                OnKilled();
+                var killTween = OnKilled();
+                if (killTween != null)
+                {
+                    killTween.OnComplete(() => transform.Get<Unit>().Release());
+                }
+                else
+                {
+                    transform.Get<Unit>().Release();
+                }
             }
         }
 
         protected virtual void OnDamageTaken(float damage) { }
         protected virtual void OnHealTaken(float heal) { }
-        protected virtual void OnKilled() { }
+        protected virtual Tween OnAlive() => null;
+        protected virtual Tween OnKilled() => null;
         
         public void Heal(int heal)
         {
+            if (isImmune) return;
             if (isKilled) return;
             
             realHealth += heal;

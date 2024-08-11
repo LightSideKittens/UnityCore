@@ -9,7 +9,7 @@ namespace LSCore.BattleModule
     [Serializable]
     public class HealthComp : BaseHealthComp
     {
-        [SerializeField] private Vector2 scale = new Vector2(1, 1);
+        [SerializeField] private Vector2 scale = new(1, 1);
         [SerializeField] private Vector2 offset;
         [SerializeField] private Transform visualRoot;
         private Renderer[] renderers;
@@ -63,9 +63,10 @@ namespace LSCore.BattleModule
             }
         }
 
-        protected override void OnKilled()
+        protected override Tween OnKilled()
         {
             healthBar.Active = false;
+            return null;
         }
     }
 }

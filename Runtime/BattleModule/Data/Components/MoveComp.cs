@@ -7,7 +7,7 @@ namespace LSCore.BattleModule
     public abstract class BaseMoveComp : BaseComp
     {
         public float speed;
-        public Rigidbody2D rigidbody;
+        [NonSerialized] public Rigidbody2D rigidbody;
         public float Speed => speed * Buffs;
         public Buffs Buffs { get; private set; }
 

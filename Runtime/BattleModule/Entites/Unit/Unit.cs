@@ -8,10 +8,9 @@ namespace LSCore.BattleModule
 {
     public partial class Unit : BaseUnit
     {
-        public static event Action<Unit> Killed;
-        public event Action Destroyed;
+        public static event Action<Unit> Releasedd;
+        public event Action Released;
         
-        [UniqueTypeFilter]
         [SerializeReference] private List<BaseComp> comps = new()
         {
             new HealthComp(),
@@ -65,13 +64,11 @@ namespace LSCore.BattleModule
         private void Enable()
         {
             compData.enable?.Invoke();
-            gameObject.SetActive(true);
         }
 
         private void Disable()
         {
             compData.disable?.Invoke();
-            gameObject.SetActive(false);
         }
         
         public void Run()
@@ -84,10 +81,11 @@ namespace LSCore.BattleModule
             compData.fixedUpdate?.Invoke();
         }
 
-        public void Kill()
+        public void Release()
         {
             Release(this);
-            Killed?.Invoke(this);
+            Released?.Invoke();
+            Releasedd?.Invoke(this);
         }
         
         public override void DeInit()
@@ -95,7 +93,6 @@ namespace LSCore.BattleModule
             base.DeInit();
             Remove(transform);
             compData.destroy?.Invoke();
-            Destroyed?.Invoke();
         }
     }
 }

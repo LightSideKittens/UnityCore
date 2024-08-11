@@ -8,8 +8,6 @@ using Sirenix.OdinInspector;
 [TypeFrom]
 public abstract class LSAction
 {
-    private class Null : LSAction {public override void Invoke() { throw new NullReferenceException(); } }
-    
     public abstract void Invoke();
 }
 
@@ -18,7 +16,6 @@ public abstract class LSAction
 [TypeFrom]
 public abstract class LSAction<T>
 {
-    private class Null : LSAction<T> {public override void Invoke(T value) { throw new NullReferenceException(); } }
     public abstract void Invoke(T value);
 }
 
