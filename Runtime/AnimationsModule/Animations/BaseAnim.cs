@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using LSCore.AnimationsModule.Animations.Options;
 using LSCore.Extensions.Unity;
@@ -10,7 +11,7 @@ namespace LSCore.AnimationsModule.Animations
 {
     [Serializable]
     public abstract class BaseAnim
-    {
+    { 
         [BoxGroup] [LabelText("ID")] public string id;
         [HideIf("IsDurationZero")]
         [SerializeReference] private IOptions[] options;
@@ -53,8 +54,46 @@ namespace LSCore.AnimationsModule.Animations
 
             return tween;
         }
+        
+        protected virtual void Bind(){}
+        protected virtual void UnbindAll(){}
+
+        public void ResolveBinds<T>(string key, T target)
+        {
+            Bind();
+            Binder<T>.Resolve(GetBindKey($"${key}"), target);
+            UnbindAll();
+        }
+
+        protected string GetBindKey(string key) => $"{key}_{GetHashCode()}";
     }
-    
+
+    public static class Binder<TTarget>
+    {
+        private static readonly Dictionary<string, Action<TTarget>> binds = new();
+
+        public static void Bind(string key, Action<TTarget> action)
+        {
+            binds.TryGetValue(key, out var existAction);
+            existAction += action;
+            binds[key] = existAction;
+        }
+        
+        public static void Unbind(string key, Action<TTarget> action)
+        {
+            binds.TryGetValue(key, out var existAction);
+            existAction -= action;
+            binds[key] = existAction;
+        }
+
+        public static void Resolve(string key, TTarget target)
+        {
+            if (binds.TryGetValue(key, out var action))
+            {
+                action(target);
+            }
+        }
+    }
     
     [Serializable]
     public abstract class BaseAnim<T, TTarget> : BaseAnim, ISerializationCallbackReceiver where TTarget : Object
@@ -131,17 +170,78 @@ namespace LSCore.AnimationsModule.Animations
             if(!World.IsPlaying) return;
             if (useTargetPath)
             {
+                targets = new TTarget[targetsPaths.Length];
                 if (typeof(Component).IsAssignableFrom(typeof(T)))
                 {
-                    target = root.FindComponent<TTarget>(targetPath);
-                    targets = new TTarget[targetsPaths.Length];
+                    if (targetPath[0] == '$')
+                    {
+                        Bind(targetPath, t => target = t);
+                    }
+                    else
+                    {
+                        target = root.FindComponent<TTarget>(targetPath);
+                    }
 
                     for (int i = 0; i < targetsPaths.Length; i++)
                     {
-                        targets[i] = root.FindComponent<TTarget>(targetsPaths[i]);
+                        var path = targetsPaths[i];
+                        if (path[0] == '$')
+                        {
+                            var index = i;
+                            Bind(path, t => targets[index] = t);
+                        }
+                        else
+                        {
+                            targets[i] = root.FindComponent<TTarget>(path);
+                        }
+                    }
+                }
+                else
+                {
+                    Bind();
+                }
+            }
+        }
+
+        protected sealed override void Bind()
+        {
+            if (useTargetPath)
+            {
+                if (targetPath[0] == '$')
+                {
+                    Bind(targetPath, t => target = t);
+                }
+
+                for (int i = 0; i < targetsPaths.Length; i++)
+                {
+                    var path = targetsPaths[i];
+                    if (path[0] == '$')
+                    {
+                        var index = i;
+                        Bind(path, t => targets[index] = t);
                     }
                 }
             }
+        }
+        
+        private List<(string key, Action<TTarget> action)> binds;
+        
+        protected sealed override void UnbindAll()
+        {
+            foreach (var (key, action) in binds)
+            {
+                Binder<TTarget>.Unbind(key, action);
+            }
+            
+            binds.Clear();
+        }
+        
+        private void Bind(string key, Action<TTarget> action)
+        {
+            key = GetBindKey(key);
+            binds ??= new List<(string, Action<TTarget>)>();
+            binds.Add((key, action));
+            Binder<TTarget>.Bind(key, action);
         }
     }
 }

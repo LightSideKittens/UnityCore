@@ -59,8 +59,19 @@ namespace LSCore.LevelSystem
             var levels = levelsById[id];
             UnlockedLevels.SetLevel(id, 
                 level < levels.Count 
-                ? level 
-                : levels.Count);
+                    ? level 
+                    : levels.Count);
+        }
+        
+        public void SetLevel(int level)
+        {
+            foreach (var (id, levels) in levelsById)
+            {
+                UnlockedLevels.SetLevel(id, 
+                    level < levels.Count 
+                        ? level 
+                        : levels.Count);
+            }
         }
 
         public int UpgradeLevel(Id id)

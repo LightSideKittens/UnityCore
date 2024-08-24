@@ -65,6 +65,14 @@ namespace LSCore.AnimationsModule
         {
             return animsByType.ContainsKey(typeof(T));
         }
+        
+        public void ResolveBinds<T>(string key, T target)
+        {
+            for (int i = 0; i < animsData.Count; i++)
+            {
+                animsData[i].anim.ResolveBinds(key, target);
+            }
+        }
 
 #if UNITY_EDITOR
         [OnInspectorGUI]

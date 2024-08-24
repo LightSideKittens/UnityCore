@@ -47,20 +47,20 @@ namespace LSCore.BattleModule
 
         private void Attack(Transform target)
         {
+            canAttack = false;
             impactObject.LookAt(target);
             impactObject.Emit();
         }
 
         protected override void FixedUpdate()
         {
-            base.FixedUpdate(); 
-            InRadius = findTargetComp.Find(radius, out var target);
-            
-            if (InRadius)
+            base.FixedUpdate();
+            if (canAttack)
             {
-                if (canAttack)
+                InRadius = findTargetComp.Find(radius, out var target);
+
+                if (InRadius)
                 {
-                    canAttack = false;
                     Attack(target);
                 }
             }

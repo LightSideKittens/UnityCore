@@ -19,9 +19,9 @@ namespace LSCore.BattleModule
             data.enable += Enable;
             data.disable += Disable;
             data.destroy += Destroy;
+            findTargetComp.Init(transform);
             impactObject = Object.Instantiate(impactObjectPrefab, transform, false);
             impactObject.IgnoredCollider = transform.GetComponent<Collider2D>();
-            findTargetComp.Init(transform);
             impactObject.CanImpactChecker = findTargetComp.Check;
             impactObject.Initiator = transform;
         }

@@ -9,7 +9,8 @@ namespace LSCore.ConditionModule
             And,
             Or,
         }
-        
+
+        public bool not;
         private Func<bool> checker;
 
         protected BaseCondition()
@@ -24,10 +25,11 @@ namespace LSCore.ConditionModule
         private bool FirstCheck()
         {
             Init();
-            checker = Check;
+            checker = FullCheck;
             return checker();
         }
 
+        private bool FullCheck() => Check() ^ not;
         protected internal abstract bool Check();
         
         public virtual void Reset()
