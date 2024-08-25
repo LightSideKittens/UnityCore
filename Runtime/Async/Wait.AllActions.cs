@@ -48,7 +48,7 @@ namespace LSCore.Async
                     UnRegisterAction(trace);
 #endif
                     resolvedDependenciesCount++;
-
+                    
                     if (resolvedDependenciesCount == dependenciesCount)
                     {
                         Completed?.Invoke();

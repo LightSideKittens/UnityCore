@@ -9,7 +9,7 @@ namespace LSCore.BattleModule
     public class BaseUnit : MonoBehaviour
     {
 #if UNITY_EDITOR
-        protected IEnumerable<Id> Ids1 => manager.Group;
+        protected IEnumerable<Id> Ids1 => manager.Ids;
         private bool HideManager => name.Contains("_Base");
 #endif
         

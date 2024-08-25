@@ -17,6 +17,18 @@ namespace LSCore.LevelSystem
         [HideReferenceObjectPicker]
         private HashSet<LevelsContainer> levelsContainers = new();
 
+        public IEnumerable<Id> Ids
+        {
+            get
+            {
+                foreach (var levelContainer in levelsContainers)
+                {
+                    var id = levelContainer.Id;
+                    yield return id;
+                }
+            }
+        }
+        
         public HashSet<Id> AddedIds { get; private set; }
 
         [IdGroup]

@@ -17,7 +17,8 @@ namespace LSCore
         private static SynchronizationContext synchronizationContext = SynchronizationContext.Current;
         private static bool isCreated;
         private static World instance;
-        
+
+        public static int InstanceId => instance.GetInstanceID(); 
         public static Camera Camera { get; private set; }
         public static bool IsPlaying { get; private set; }
         

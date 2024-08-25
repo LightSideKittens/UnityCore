@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore.Attributes;
 using UnityEngine;
 using static LSCore.BattleModule.StaticDict<UnityEngine.Transform,LSCore.BattleModule.Unit>;
 
@@ -36,8 +35,19 @@ namespace LSCore.BattleModule
             OnInit();
         }
 
+        private int lastWorldInstanceId;
+        
         public void RegisterComps()
         {
+#if UNITY_EDITOR
+            var instanceId = World.InstanceId;
+            if (lastWorldInstanceId != instanceId)
+            {
+                lastWorldInstanceId = instanceId;
+                isRegistered = false;
+            }
+#endif
+            
             if(isRegistered) return;
             
             transform = gameObject.GetComponent<Transform>();

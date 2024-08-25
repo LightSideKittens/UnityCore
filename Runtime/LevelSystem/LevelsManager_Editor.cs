@@ -11,18 +11,18 @@ namespace LSCore.LevelSystem
     {
         private IEnumerable<LevelsContainer> AvailableContainer => AssetDatabaseUtils.LoadAllAssets<LevelsContainer>(paths: folderPath);
         
-        [field: NonSerialized] public HashSet<Id> Ids { get; private set; } = new();
+        [field: NonSerialized] private HashSet<Id> ids { get; set; } = new();
         private string folderPath;
 
         [OnInspectorInit]
         private void OnInit()
         {
             folderPath = this.GetFolderPath();
-            Ids ??= new HashSet<Id>();
-            Ids.Clear();
+            ids ??= new HashSet<Id>();
+            ids.Clear();
             foreach (var level in AvailableContainer)
             {
-                Ids.Add(level.Id);
+                ids.Add(level.Id);
             }
         }
         
@@ -40,7 +40,7 @@ namespace LSCore.LevelSystem
             {
                 foreach (var id in manager.Group)
                 {
-                    if (manager.Ids.Contains(id))
+                    if (manager.ids.Contains(id))
                     {
                         continue;
                     }
@@ -53,7 +53,7 @@ namespace LSCore.LevelSystem
                         container.name = id; 
                         AssetDatabase.CreateFolder(manager.folderPath, id);
                         AssetDatabase.CreateAsset(container, $"{manager.folderPath}/{id}/{id}_Container.asset");
-                        manager.Ids.Add(id);
+                        manager.ids.Add(id);
                     }
                 }
             }
