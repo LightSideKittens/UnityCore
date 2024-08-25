@@ -19,6 +19,7 @@ namespace LSCore.BattleModule
         };
         
         private readonly CompData compData = new();
+        private bool isRegistered;
         
         public override void Init(string userId, string teamId)
         {
@@ -37,6 +38,8 @@ namespace LSCore.BattleModule
 
         public void RegisterComps()
         {
+            if(isRegistered) return;
+            
             transform = gameObject.GetComponent<Transform>();
             compData.transform = transform;
             
@@ -44,6 +47,8 @@ namespace LSCore.BattleModule
             {
                 comps[i].Register(compData);
             }
+
+            isRegistered = true;
         }
 
         public T GetComp<T>() where T : BaseComp

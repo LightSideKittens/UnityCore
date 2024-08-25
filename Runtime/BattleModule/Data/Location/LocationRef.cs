@@ -1,7 +1,7 @@
 ﻿using System;
 using LSCore;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     [Serializable]
     public class LocationRef : AssetRef<Location> { }

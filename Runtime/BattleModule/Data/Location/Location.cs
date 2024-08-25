@@ -6,7 +6,7 @@ using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using UnityEngine;
 
-namespace Battle.Data
+namespace LSCore.BattleModule
 {
     public class Location : SerializedScriptableObject
     {
