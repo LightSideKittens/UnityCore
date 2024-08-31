@@ -34,9 +34,10 @@ namespace LSCore.BattleModule
 
             OnInit();
         }
-
-        private int lastWorldInstanceId;
         
+#if UNITY_EDITOR
+        private int lastWorldInstanceId;
+#endif
         public void RegisterComps()
         {
 #if UNITY_EDITOR

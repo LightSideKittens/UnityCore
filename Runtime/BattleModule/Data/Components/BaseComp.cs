@@ -11,7 +11,10 @@ namespace LSCore.BattleModule
         
         protected bool useUpdate;
         protected bool useFixedUpdate;
-        
+#if UNITY_EDITOR
+        private int lastWorldInstanceId;
+#endif
+        private bool isRegistered;
         private bool isRunning;
         public bool IsRunning
         {
@@ -46,9 +49,20 @@ namespace LSCore.BattleModule
 
         public void Register(CompData data)
         {
+#if UNITY_EDITOR
+            var instanceId = World.InstanceId;
+            if (lastWorldInstanceId != instanceId)
+            {
+                lastWorldInstanceId = instanceId;
+                isRegistered = false;
+            }
+#endif
+            if(isRegistered) return;
+
             this.data = data;
             transform = data.transform;
             OnRegister();
+            isRegistered = true;
         }
 
         protected void Reg<T>(T obj) where T : BaseComp

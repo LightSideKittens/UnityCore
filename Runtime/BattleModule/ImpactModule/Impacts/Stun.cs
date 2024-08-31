@@ -12,7 +12,7 @@ namespace LSCore
         
         public override void Apply(Transform initiator, Transform target)
         {
-            var move = target.Get<MoveComp>();
+            var move = target.Get<BaseMoveComp>();
 
             if (!move.IsRunning) return;
             

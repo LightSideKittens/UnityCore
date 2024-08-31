@@ -65,6 +65,21 @@ namespace LSCore.BattleModule
             findTargetComp.Init(transform);
         }
 
+        public Transform Target
+        {
+            get
+            {
+                findTargetComp.Find(out target);
+                return target;
+            }
+        }
+
+        protected override void OnRegister()
+        {
+            base.OnRegister();
+            Reg(this);
+        }
+
         private void LookAtTarget()
         {
             isTargetFound = findTargetComp.Find(out target);

@@ -98,7 +98,6 @@ namespace LSCore.AnimationsModule.Animations
     [Serializable]
     public abstract class BaseAnim<T, TTarget> : BaseAnim, ISerializationCallbackReceiver where TTarget : Object
     {
-        [field: HideIf("IsDurationZero")]
         [field: SerializeField] public override bool NeedInit { get; set; }
 
         [field: HideIf("HideDuration")]

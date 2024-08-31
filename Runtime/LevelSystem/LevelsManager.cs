@@ -110,9 +110,30 @@ namespace LSCore.LevelSystem
         
         public T GetLevel<T>(Id id, int level) where T : Object
         {
+#if UNITY_EDITOR
+            if (!World.IsPlaying)
+            {
+                FillLevelsById();
+            }
+#endif
             var levels = levelsById[id];
             level = Mathf.Clamp(level, 1, levels.Count);
             return (T)levels[level - 1];
         }
+        
+#if UNITY_EDITOR
+        private void FillLevelsById()
+        {
+            levelsById.Clear();
+            
+            foreach (var levelContainer in levelsContainers)
+            {
+                var id = levelContainer.Id;
+                var levels = levelContainer.levels;
+                
+                levelsById.Add(id, levels);
+            }
+        }
+#endif
     }
 }
