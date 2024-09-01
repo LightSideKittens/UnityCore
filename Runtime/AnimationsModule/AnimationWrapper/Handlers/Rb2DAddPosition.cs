@@ -4,12 +4,12 @@ using UnityEngine;
 namespace LSCore.AnimationsModule
 {
     [Serializable]
-    public class Rb2DAddPosition : AnimationBridge.Handler<Vector2>
+    public class Rb2DAddPosition : AnimationWrapper.Handler<Vector2>
     {
         [SerializeField] private Rigidbody2D rigidbody;
         private Vector2 startPosition;
         
-        protected override string Lable => "Position";
+        protected override string Label => "Position";
         
         public override void Start()
         {

@@ -23,7 +23,7 @@ namespace LSCore.AnimationsModule
     
     [ExecuteAlways]
     [RequireComponent(typeof(AnimationWindow))]
-    public partial class AnimationBridge : MonoBehaviour, ISerializationCallbackReceiver
+    public partial class AnimationWrapper : MonoBehaviour, ISerializationCallbackReceiver
     {
         [Serializable]
         private struct Data
@@ -40,7 +40,7 @@ namespace LSCore.AnimationsModule
         }
 
         [SerializeField] private Data[] handlers;
-        [PropertySpace(SpaceBefore = 20)]
+        [PropertySpace(SpaceBefore = 10)]
         [SerializeReference] private List<LSAction> actions;
         private Animation animation;
 
@@ -199,7 +199,7 @@ namespace LSCore.AnimationsModule
         private static AnimationWindow window;
         private static AnimationWindow Window => window ??= EditorWindow.GetWindow<AnimationWindow>();
         
-        public AnimationBridge()
+        public AnimationWrapper()
         {
             Debug.Log($"Init {GetHashCode()}");
             Patchers.AnimEditor.OnSelectionChanged.Changed += OnSelectionChanged;
@@ -237,7 +237,7 @@ namespace LSCore.AnimationsModule
             lastAnimPlayer = animationPlayer;
         }
 
-        private static AnimationBridge currentInspected;
+        private static AnimationWrapper currentInspected;
         
         [OnInspectorGUI]
         private void OnInspectorGui()

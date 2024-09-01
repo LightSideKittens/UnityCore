@@ -2,7 +2,7 @@
 
 namespace LSCore.AnimationsModule
 {
-    public partial class AnimationBridge
+    public partial class AnimationWrapper
     {
         private bool isPlayCalled;
         

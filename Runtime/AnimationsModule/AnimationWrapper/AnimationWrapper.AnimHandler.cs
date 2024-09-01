@@ -3,7 +3,7 @@ using Sirenix.OdinInspector;
 
 namespace LSCore.AnimationsModule
 {
-    public partial class AnimationBridge
+    public partial class AnimationWrapper
     {
         [Serializable]
         public abstract class Handler
@@ -16,11 +16,11 @@ namespace LSCore.AnimationsModule
         [Serializable]
         public abstract class Handler<T> : Handler
         {
-            [LabelText("$Lable")]
+            [LabelText("$Label")]
             public T value;
             private T lastValue;
 
-            protected abstract string Lable { get; }
+            protected abstract string Label { get; }
             protected virtual bool IsEquals => value.Equals(lastValue);
 
             public sealed override void Handle()

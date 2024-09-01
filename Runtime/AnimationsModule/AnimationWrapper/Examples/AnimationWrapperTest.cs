@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace LSCore.AnimationsModule.Examples
 {
-    public class AnimationBridgeTest : MonoBehaviour
+    public class AnimationWrapperTest : MonoBehaviour
     {
-        [SerializeField] private AnimationBridge animation;
+        [SerializeField] private AnimationWrapper animation;
 
         public IEnumerator Start()
         {
