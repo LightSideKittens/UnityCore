@@ -2,9 +2,9 @@
 using UnityEditor;
 
 [InitializeOnLoad]
-internal static class Patcher
+public static partial class Patchers
 {
-    static Patcher()
+    static Patchers()
     {
         var harmony = new Harmony("com.lscore.patcher");
         harmony.PatchAll();
