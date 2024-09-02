@@ -43,7 +43,7 @@ namespace LSCore
             get
             {
 #if UNITY_EDITOR
-                if (!World.IsPlaying)
+                if (World.IsEditMode)
                 {
                     table = AssetDatabaseUtils.LoadAny<StringTable>($"{tableData.TableCollectionName}_{LocalizationSettings.ProjectLocale.Identifier.Code}");
                 }
@@ -55,7 +55,7 @@ namespace LSCore
                 if (table != value)
                 {
 #if UNITY_EDITOR
-                    if (!World.IsPlaying)
+                    if (World.IsEditMode)
                     {
                         table = value;
                         UpdateLocalizedText();
@@ -170,7 +170,7 @@ namespace LSCore
         {
             base.OnDestroy();
 #if UNITY_EDITOR
-            if (!World.IsPlaying) return;
+            if (World.IsEditMode) return;
 #endif
             if (table != null)
             {
@@ -214,7 +214,7 @@ namespace LSCore
             if (!IsLocalized) return;
             
 #if UNITY_EDITOR
-            if (!World.IsPlaying) return;
+            if (World.IsEditMode) return;
 #endif
             lastTableRef = tableData.TableCollectionName;
             LocalizationSettings.StringDatabase.GetTableAsync(lastTableRef).OnComplete(t => Table = t);

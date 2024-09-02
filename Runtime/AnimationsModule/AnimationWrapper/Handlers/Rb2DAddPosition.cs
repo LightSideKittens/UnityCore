@@ -16,7 +16,7 @@ namespace LSCore.AnimationsModule
             //Debug.Log($"{GetHashCode()} Rb2DAddPosition Start");
             base.OnStart();
 #if UNITY_EDITOR
-            if (!World.IsPlaying)
+            if (World.IsEditMode)
             {
                 startPosition = rigidbody.transform.position;
                 return;
@@ -30,7 +30,7 @@ namespace LSCore.AnimationsModule
             //Debug.Log($"{GetHashCode()} Rb2DAddPosition OnHandle {value}");
             var v = startPosition + value;
 #if UNITY_EDITOR
-            if (!World.IsPlaying)
+            if (World.IsEditMode)
             {
                 rigidbody.transform.position = v;
                 return;
@@ -45,7 +45,7 @@ namespace LSCore.AnimationsModule
             //Debug.Log($"{GetHashCode()} Rb2DAddPosition Stop");
             base.OnStop();
 
-            if (!World.IsPlaying)
+            if (World.IsEditMode)
             {
                 rigidbody.transform.position = startPosition;
             }

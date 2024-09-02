@@ -16,7 +16,7 @@ namespace LSCore
             get
             {
 #if UNITY_EDITOR
-                if (!World.IsPlaying && instance == null)
+                if (World.IsEditMode && instance == null)
                 {
                     instance = AssetDatabaseUtils.LoadAny<T>();
                 }

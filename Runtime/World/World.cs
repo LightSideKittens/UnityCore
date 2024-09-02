@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
 
@@ -21,6 +22,7 @@ namespace LSCore
         public static int InstanceId => instance.GetInstanceID(); 
         public static Camera Camera { get; private set; }
         public static bool IsPlaying { get; private set; }
+        public static bool IsEditMode => !IsPlaying;
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()

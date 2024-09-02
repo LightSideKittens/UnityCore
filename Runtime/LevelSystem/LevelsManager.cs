@@ -111,7 +111,7 @@ namespace LSCore.LevelSystem
         public T GetLevel<T>(Id id, int level) where T : Object
         {
 #if UNITY_EDITOR
-            if (!World.IsPlaying)
+            if (World.IsEditMode)
             {
                 FillLevelsById();
             }

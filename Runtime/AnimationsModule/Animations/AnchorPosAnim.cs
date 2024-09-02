@@ -57,7 +57,7 @@ namespace LSCore.AnimationsModule.Animations
         public override void OnAfterDeserialize()
         {
             base.OnAfterDeserialize();
-            if(!World.IsPlaying) return;
+            if(World.IsEditMode) return;
             if (useValuePath)
             {
                 startValue = root.FindComponent<Transform>(startValuePath);

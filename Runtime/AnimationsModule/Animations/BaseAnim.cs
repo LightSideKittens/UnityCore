@@ -166,7 +166,7 @@ namespace LSCore.AnimationsModule.Animations
 
         public virtual void OnAfterDeserialize()
         {
-            if(!World.IsPlaying) return;
+            if(World.IsEditMode) return;
             if (useTargetPath)
             {
                 targets = new TTarget[targetsPaths.Length];

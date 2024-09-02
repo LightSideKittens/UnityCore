@@ -15,7 +15,7 @@ namespace LSCore
         public void OnBeforeSerialize()
         {
 #if UNITY_EDITOR
-            if (!World.IsPlaying)
+            if (World.IsEditMode)
             {
                 isClickSoundOverride = actions?.Any(x => x is PlayOneShotSound) ?? false;
             }
@@ -27,7 +27,7 @@ namespace LSCore
         public void Init()
         {
 #if UNITY_EDITOR
-            if(!World.IsPlaying) return;
+            if(World.IsEditMode) return;
             isClickSoundOverride = actions?.Any(x => x is PlayOneShotSound) ?? false;
 #endif
             if (!isClickSoundOverride)

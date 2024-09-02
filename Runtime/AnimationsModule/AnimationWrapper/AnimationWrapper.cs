@@ -21,6 +21,46 @@ namespace LSCore.AnimationsModule
         }
     }
     
+    [Serializable]
+    public class ParticleSystemPlay : LSAction
+    {
+        public ParticleSystem particleSystem;
+        
+        public override void Invoke()
+        {
+            particleSystem.Stop();
+            particleSystem.Play();
+#if UNITY_EDITOR
+            if (World.IsEditMode)
+            {
+                lastTime = EditorApplication.timeSinceStartup;
+                EditorApplication.update -= Play;
+                EditorApplication.update += Play;
+            }
+#endif
+        }
+
+#if UNITY_EDITOR
+        private double lastTime;
+        
+        private void Play()
+        {
+            var t = EditorApplication.timeSinceStartup;
+            
+            if (World.IsEditMode)
+            {
+                particleSystem.Simulate((float)(t - lastTime), true, false);
+            }
+            else
+            {
+                EditorApplication.update -= Play;
+            }
+            
+            lastTime = t;
+        }
+#endif
+    }
+    
     [ExecuteAlways]
     [RequireComponent(typeof(Animation))]
     [DefaultExecutionOrder(-1000)]
@@ -92,7 +132,7 @@ namespace LSCore.AnimationsModule
             float time = 0;
             
 #if UNITY_EDITOR
-            if (!World.IsPlaying)
+            if (World.IsEditMode)
             {
                 clip = Window.animationClip;
                 time = Window.time;
@@ -116,7 +156,7 @@ namespace LSCore.AnimationsModule
         private void OnDidApplyAnimationProperties()
         {
 #if UNITY_EDITOR
-            if (!World.IsPlaying)
+            if (World.IsEditMode)
             {
                 Handle_Editor();
                 return;
@@ -184,18 +224,53 @@ namespace LSCore.AnimationsModule
                 handlersByClip.Add(h.clip, h.handlers);
             }
         }
-
-        private AnimationEvent[] events;
-        private AnimationClip eventClip;
+        
+        private float lastTime = -1;
         
         [Conditional("UNITY_EDITOR")]
         private void TryCallEvent(AnimationClip clip, float time)
         {
             if(World.IsPlaying) return;
-            events = eventClip != clip ? AnimationUtility.GetAnimationEvents(clip) : events;
-            eventClip = clip;
-            if(events.Length == 0 || time > events[^1].time || time < events[0].time) return;
-            events.ClosestBinarySearch(e => e.time, time).Invoke(this);
+            var events = AnimationUtility.GetAnimationEvents(clip);
+            if(events.Length == 0) return;
+
+            if (time == 0)
+            {
+                lastTime = -1;
+            }
+            
+            if (time > lastTime)
+            {
+                for (int i = 0; i < events.Length; i++)
+                {
+                    var e = events[i];
+                    var eTime = e.time;
+                    
+                    if (eTime <= lastTime) continue;
+
+                    if (time >= eTime)
+                    {
+                        e.Invoke(this);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = events.Length - 1; i >= 0; i--)
+                {
+                    var e = events[i];
+                    var eTime = e.time;
+                    
+                    if (eTime >= lastTime) continue;
+
+                    if (time <= eTime)
+                    {
+                        e.Invoke(this);
+                    }
+                }
+            }
+
+            lastTime = time;
         }
 
 #if UNITY_EDITOR
@@ -244,6 +319,7 @@ namespace LSCore.AnimationsModule
             {
                 StopLastClip(lastRuntimeClip);
                 lastRuntimeClip = null;
+                lastTime = -1;
             }
         }
         
@@ -264,6 +340,7 @@ namespace LSCore.AnimationsModule
             
             if (animationPlayer != lastAnimPlayer || lastClip != clip)
             {
+                lastTime = -1;
                 lastRuntimeClip = null;
                 StopLastClip(lastClip);
             }
