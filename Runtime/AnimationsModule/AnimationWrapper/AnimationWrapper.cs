@@ -22,7 +22,8 @@ namespace LSCore.AnimationsModule
     }
     
     [ExecuteAlways]
-    [RequireComponent(typeof(AnimationWindow))]
+    [RequireComponent(typeof(Animation))]
+    [DefaultExecutionOrder(-1000)]
     public partial class AnimationWrapper : MonoBehaviour, ISerializationCallbackReceiver
     {
         [Serializable]
@@ -111,22 +112,25 @@ namespace LSCore.AnimationsModule
             ret:
             return (clip, time);
         }
-
-        private float lastTime = -1;
         
         private void OnDidApplyAnimationProperties()
+        {
+#if UNITY_EDITOR
+            if (!World.IsPlaying)
+            {
+                Handle_Editor();
+                return;
+            }
+#endif
+            Handle();
+        }
+
+        private void Handle()
         {
             var (clip, time) = GetClip();
             var notEqual = lastRuntimeClip != clip || isPlayCalled;
             
             isPlayCalled = false;
-            if (Mathf.Approximately(lastTime, time) && !notEqual)
-            {
-                lastTime = time;
-                return;
-            }
-            
-            lastTime = time;
             TryCallEvent(clip, time);
             
             var currentClipHandlers = handlersByClip[clip];
@@ -197,20 +201,51 @@ namespace LSCore.AnimationsModule
 #if UNITY_EDITOR
 
         private static AnimationWindow window;
-        private static AnimationWindow Window => window ??= EditorWindow.GetWindow<AnimationWindow>();
+        private static AnimationWindow Window => window ??= EditorWindow.GetWindow<AnimationWindow>(null, false);
         
         public AnimationWrapper()
         {
-            Debug.Log($"Init {GetHashCode()}");
             Patchers.AnimEditor.OnSelectionChanged.Changed += OnSelectionChanged;
+            Patchers.AnimEditor.previewing.Changed += OnPreviewingChanged;
+            EditorApplication.update += OnEditorUpdate;
         }
-        
+
+        private void OnEditorUpdate()
+        {
+            if (this == null || EditorUtility.IsPersistent(gameObject))
+            {
+                EditorApplication.update -= OnEditorUpdate;
+                return;
+            }
+
+            if (isAnimationCalled)
+            {
+                Handle();
+                isAnimationCalled = false;
+            }
+        }
+
         private void OnDestroy()
         {
-            Debug.Log($"OnDestroy {GetHashCode()}");
             Patchers.AnimEditor.OnSelectionChanged.Changed -= OnSelectionChanged;
+            Patchers.AnimEditor.previewing.Changed -= OnPreviewingChanged;
+            EditorApplication.update -= OnEditorUpdate;
         }
-        
+
+        private void OnPreviewingChanged(bool state)
+        {
+            if (this == null || EditorUtility.IsPersistent(gameObject))
+            {
+                Patchers.AnimEditor.previewing.Changed -= OnPreviewingChanged;
+                return;
+            }
+
+            if (!state)
+            {
+                StopLastClip(lastRuntimeClip);
+                lastRuntimeClip = null;
+            }
+        }
         
         private object lastAnimPlayer;
         
@@ -243,6 +278,12 @@ namespace LSCore.AnimationsModule
         private void OnInspectorGui()
         {
             currentInspected = this;
+        }
+
+        private bool isAnimationCalled;
+        private void Handle_Editor()
+        {
+            isAnimationCalled = true;
         }
 #endif
     }

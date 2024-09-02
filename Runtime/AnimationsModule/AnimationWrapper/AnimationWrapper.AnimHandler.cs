@@ -8,9 +8,31 @@ namespace LSCore.AnimationsModule
         [Serializable]
         public abstract class Handler
         {
-            public virtual void Start(){}
+            protected bool forceHandle;
+            private bool isStarted;
+
+            public void Start()
+            {
+                if (!isStarted)
+                {
+                    isStarted = true;
+                    forceHandle = true;
+                    OnStart();
+                }
+            }
+            
+            public void Stop()
+            {
+                if (isStarted)
+                {
+                    isStarted = false;
+                    OnStop();
+                }
+            }
+
             public abstract void Handle();
-            public virtual void Stop(){}
+            protected virtual void OnStart(){}
+            protected virtual void OnStop(){}
         }
         
         [Serializable]
@@ -18,14 +40,22 @@ namespace LSCore.AnimationsModule
         {
             [LabelText("$Label")]
             public T value;
-            private T lastValue;
+            protected T lastValue;
 
             protected abstract string Label { get; }
             protected virtual bool IsEquals => value.Equals(lastValue);
 
             public sealed override void Handle()
             {
+                if (forceHandle)
+                {
+                    forceHandle = false;
+                    goto handle;
+                }
+                
                 if (IsEquals) return;
+                
+                handle:
                 OnHandle();
                 lastValue = value;
             }

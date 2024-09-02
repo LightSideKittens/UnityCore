@@ -11,10 +11,10 @@ namespace LSCore.AnimationsModule
         
         protected override string Label => "Position";
         
-        public override void Start()
+        protected override void OnStart()
         {
-            Debug.Log($"{GetHashCode()} Rb2DAddPosition Start");
-            base.Start();
+            //Debug.Log($"{GetHashCode()} Rb2DAddPosition Start");
+            base.OnStart();
 #if UNITY_EDITOR
             if (!World.IsPlaying)
             {
@@ -27,6 +27,7 @@ namespace LSCore.AnimationsModule
         
         protected override void OnHandle()
         {
+            //Debug.Log($"{GetHashCode()} Rb2DAddPosition OnHandle {value}");
             var v = startPosition + value;
 #if UNITY_EDITOR
             if (!World.IsPlaying)
@@ -39,10 +40,10 @@ namespace LSCore.AnimationsModule
         }
 
 #if UNITY_EDITOR
-        public override void Stop()
+        protected override void OnStop()
         {
-            Debug.Log($"{GetHashCode()} Rb2DAddPosition Stop");
-            base.Stop();
+            //Debug.Log($"{GetHashCode()} Rb2DAddPosition Stop");
+            base.OnStop();
 
             if (!World.IsPlaying)
             {

@@ -24,5 +24,22 @@ public static partial class Patchers
                 Changed?.Invoke();
             }
         }
+        
+        [HarmonyPatch]
+        public static class previewing
+        {
+            public static event Action<bool> Changed;
+
+            static MethodBase TargetMethod()
+            {
+                var type = typeof(Editor).Assembly.GetType("UnityEditorInternal.AnimationWindowState");
+                return type.GetProperty("previewing").GetSetMethod(true);
+            }
+
+            static void Postfix(bool value)
+            {
+                Changed?.Invoke(value);
+            }
+        }
     }
 }
