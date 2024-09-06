@@ -13,7 +13,6 @@ namespace LSCore.AnimationsModule
         
         protected override void OnStart()
         {
-            //Debug.Log($"{GetHashCode()} Rb2DAddPosition Start");
             base.OnStart();
 #if UNITY_EDITOR
             if (World.IsEditMode)
@@ -27,22 +26,20 @@ namespace LSCore.AnimationsModule
         
         protected override void OnHandle()
         {
-            //Debug.Log($"{GetHashCode()} Rb2DAddPosition OnHandle {value}");
-            var v = startPosition + value;
+            var target = startPosition + value;
 #if UNITY_EDITOR
             if (World.IsEditMode)
             {
-                rigidbody.transform.position = v;
+                rigidbody.transform.position = target;
                 return;
             }
 #endif
-            rigidbody.position = v;
+            rigidbody.position = target;
         }
 
 #if UNITY_EDITOR
         protected override void OnStop()
         {
-            //Debug.Log($"{GetHashCode()} Rb2DAddPosition Stop");
             base.OnStop();
 
             if (World.IsEditMode)

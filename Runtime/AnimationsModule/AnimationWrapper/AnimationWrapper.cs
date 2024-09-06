@@ -49,6 +49,12 @@ namespace LSCore.AnimationsModule
             
             if (World.IsEditMode)
             {
+                if (particleSystem == null)
+                {
+                    EditorApplication.update -= Play;
+                    return;
+                }
+                
                 particleSystem.Simulate((float)(t - lastTime), true, false);
             }
             else
@@ -74,10 +80,12 @@ namespace LSCore.AnimationsModule
             public AnimationClip clip;
             [SerializeReference] public List<Handler> handlers;
 
+#if UNITY_EDITOR
             private void OnClipChanged()
             {
                 currentInspected.FillHandlers();
             }
+#endif
         }
 
         [SerializeField] private Data[] handlers;
@@ -171,8 +179,9 @@ namespace LSCore.AnimationsModule
             var notEqual = lastRuntimeClip != clip || isPlayCalled;
             
             isPlayCalled = false;
+#if UNITY_EDITOR
             TryCallEvent(clip, time);
-            
+#endif
             var currentClipHandlers = handlersByClip[clip];
 
             if (notEqual)
@@ -224,10 +233,11 @@ namespace LSCore.AnimationsModule
                 handlersByClip.Add(h.clip, h.handlers);
             }
         }
+
+#if UNITY_EDITOR
         
         private float lastTime = -1;
         
-        [Conditional("UNITY_EDITOR")]
         private void TryCallEvent(AnimationClip clip, float time)
         {
             if(World.IsPlaying) return;
@@ -272,9 +282,7 @@ namespace LSCore.AnimationsModule
 
             lastTime = time;
         }
-
-#if UNITY_EDITOR
-
+        
         private static AnimationWindow window;
         private static AnimationWindow Window => window ??= EditorWindow.GetWindow<AnimationWindow>(null, false);
         

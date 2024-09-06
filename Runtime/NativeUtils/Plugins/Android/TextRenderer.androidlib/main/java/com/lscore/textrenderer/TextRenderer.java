@@ -108,50 +108,55 @@ public class TextRenderer
         faceDilate = dilate;
     }
 
-    public static Bitmap renderToBitmap(String text)
-    {
+    public static Bitmap renderToBitmap(String text) {
        TextPaint paint = new TextPaint();
        paint.setTextSize(customTextSize);
        paint.setTypeface(customTypeface != null ? customTypeface : Typeface.DEFAULT);
        paint.setAntiAlias(true);
-
-        if (faceDilate != 0) {
-            paint.setFakeBoldText(true); // Используем жирный текст для увеличения толщины
-            paint.setStyle(Paint.Style.FILL_AND_STROKE);
-            paint.setStrokeWidth(faceDilate * customTextSize); // Пропорциональная обводка для Face Dilate
-        }
-        
+    
+       if (faceDilate != 0) {
+           paint.setFakeBoldText(true); // Используем жирный текст для увеличения толщины
+           paint.setStyle(Paint.Style.FILL_AND_STROKE);
+           paint.setStrokeWidth(faceDilate * customTextSize); // Пропорциональная обводка для Face Dilate
+       }
+    
        int adjustedWidth = (width > 0) ? width : (int) Math.ceil(Layout.getDesiredWidth(text, paint));
-
+    
        // Рассчитываем максимальное количество строк, которые могут поместиться по высоте
        int maxLines = Integer.MAX_VALUE;
-
+    
        StaticLayout.Builder builder = StaticLayout.Builder.obtain(text, 0, text.length(), paint, adjustedWidth)
                .setAlignment(alignment)
                .setLineSpacing(0, 1.0f)
                .setIncludePad(false)
                .setEllipsize(overflow);
-
+    
        StaticLayout staticLayout = builder.build();
-       
-       if (height > 0) {
+    
+       if (height > 0 && staticLayout.getLineCount() > 0) { // Добавляем проверку
            int lineHeight = staticLayout.getHeight() / staticLayout.getLineCount();
-           maxLines = height / lineHeight;
-           builder.setMaxLines(maxLines);
-           staticLayout = builder.build();
+           maxLines = Math.max(1, height / lineHeight); // Убедитесь, что maxLines всегда >= 1
+           
+           builder = StaticLayout.Builder.obtain(text, 0, text.length(), paint, adjustedWidth) // Пересоздаем билдер
+                   .setAlignment(alignment)
+                   .setLineSpacing(0, 1.0f)
+                   .setIncludePad(false)
+                   .setEllipsize(overflow)
+                   .setMaxLines(maxLines); // Устанавливаем maxLines
+           staticLayout = builder.build(); // Перестраиваем staticLayout
        }
-
+    
        int adjustedHeight = staticLayout.getHeight();
-
+    
        // Учитываем максимальное значение обводки и тени для увеличения размера Bitmap
        float maxPadding = Math.max(strokeWidth, Math.max(underlayOffsetX + underlayDilate, underlayOffsetY + underlayDilate));
-
+    
        // Создаем Bitmap с большими размерами для предотвращения обрезки текста
        Bitmap bitmap = Bitmap.createBitmap(adjustedWidth + (int)maxPadding * 2, adjustedHeight + (int)maxPadding * 2, Bitmap.Config.ARGB_8888);
        Canvas canvas = new Canvas(bitmap);
-
+    
        canvas.translate(maxPadding, maxPadding); // Перемещаем текст внутрь битмапа
-
+    
        // Сначала рисуем обводку
        if (strokeWidth > 0) {
            paint.setStyle(Paint.Style.STROKE);
@@ -159,7 +164,7 @@ public class TextRenderer
            paint.setColor(strokeColor);
            staticLayout.draw(canvas);
        }
-       
+    
        if (underlayOffsetX != 0 || underlayOffsetY != 0 || underlayDilate != 0 || underlaySoftness != 0) {
            paint.setStyle(Paint.Style.STROKE);
            paint.setStrokeWidth(strokeWidth * customTextSize); // Пропорциональная обводка
@@ -167,14 +172,15 @@ public class TextRenderer
            canvas.translate(underlayOffsetX * 5, underlayOffsetY * 5);
            staticLayout.draw(canvas);
        }
-
+    
        // Затем рисуем основной текст
        paint.setStyle(Paint.Style.FILL);
        paint.setColor(customTextColor);
        staticLayout.draw(canvas);
-
+    
        return bitmap;
     }
+
 
     public static byte[] render(String text)
     {
