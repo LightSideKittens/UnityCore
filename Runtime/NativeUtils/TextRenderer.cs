@@ -3,6 +3,7 @@ using LSCore.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using View;
 using Color = UnityEngine.Color;
 
 public static class TextRenderer
@@ -45,11 +46,27 @@ public static class TextRenderer
         Debug.Log($"SetCustomTextColor: {textColor}");
         TextRendererClass.CallStatic("setCustomTextColor", textColor.ToARGB());
     }
-    
-    public static void SetRect(RectTransform rectTransform)
+
+    public static (int width, int height) GetSize(NativeTextMeshPro text)
     {
-        int width = Mathf.RoundToInt(rectTransform.rect.width);
-        int height = Mathf.RoundToInt(rectTransform.rect.height);
+        RectTransform rectTransform = text.rectTransform;
+        float w = rectTransform.rect.width;
+        float h = rectTransform.rect.height;
+        Vector4 m = text.margin;
+        
+        w -= m.x;
+        w -= m.z;
+        h -= m.y;
+        h -= m.w;
+        
+        int width = Mathf.RoundToInt(w);
+        int height = Mathf.RoundToInt(h);
+        return (width, height);
+    }
+    
+    public static void SetRect(NativeTextMeshPro text)
+    {
+        var (width, height) = GetSize(text);
         Debug.Log($"SetRect: {(width, height)}");
         TextRendererClass.CallStatic("setRect", width, height);
     }
@@ -139,29 +156,49 @@ public static class TextRenderer
         TextRendererClass.CallStatic("setUnderlay", color.ToARGB(), offsetX, offsetY, dilate, softness);
     }
     
-    public static RawImage ConvertToNative(TextMeshProUGUI text)
+    public static bool IsValidString(string text)
     {
+        if (string.IsNullOrEmpty(text))
+        {
+            return false;
+        }
+        
+        foreach (var c in text)
+        {
+            if (c != '\u200B')
+            {
+                return true; 
+            }
+        }
+        
+        return false;
+    }
+    
+    public static RawImage ConvertToNative(NativeTextMeshPro text)
+    {
+        if (!IsValidString(text.text))
+        {
+            return null;
+        }
+        
         const string imageGoName = "native-image";
         
         var imageTransform = text.transform.Find(imageGoName);
 
         GameObject imageGo;
         RawImage rawImage;
-        AspectRatioFitter fitter;
         
         if (imageTransform == null)
         {
             imageGo = new GameObject(imageGoName);
             imageGo.hideFlags = HideFlags.HideAndDontSave;
             rawImage = imageGo.AddComponent<RawImage>();
-            fitter = imageGo.AddComponent<AspectRatioFitter>();
         }
         else
         {
             imageGo = imageTransform.gameObject;
             imageGo.hideFlags = HideFlags.HideAndDontSave;
             rawImage = imageGo.GetComponent<RawImage>();
-            fitter = imageGo.GetComponent<AspectRatioFitter>();
             if (rawImage.texture != null)
             {
 #if UNITY_EDITOR
@@ -183,52 +220,70 @@ public static class TextRenderer
         rawImage.texture = texture;
         rawImage.transform.SetParent(text.transform, false);
         
-        fitter.aspectMode = AspectRatioFitter.AspectMode.WidthControlsHeight;
-        fitter.aspectRatio = texture.AspectRatio();
         var pivot = text.rectTransform.pivot;
+        var pos = Vector2.zero;
+        var m = text.margin;
+        
         switch (text.verticalAlignment)
         {
             case VerticalAlignmentOptions.Top:
                 pivot.y = 1;
+                pos.y -= m.y;
                 break;
             case VerticalAlignmentOptions.Middle:
                 pivot.y = 0.5f;
                 break;
             case VerticalAlignmentOptions.Bottom:
                 pivot.y = 0;
+                pos.y += m.w;
                 break;
         }
 
+        switch (text.horizontalAlignment)
+        {
+            case HorizontalAlignmentOptions.Right:
+                pivot.x = 1;
+                pos.x -= m.z;
+                break;
+            case HorizontalAlignmentOptions.Center:
+                pivot.x = 0.5f;
+                break;
+            case HorizontalAlignmentOptions.Left:
+                pivot.x = 0;
+                pos.x += m.x;
+                break;
+        }
+        
         var rawImageRect = rawImage.rectTransform;
         rawImageRect.anchorMin = pivot;
         rawImageRect.anchorMax = pivot;
-        rawImageRect.anchoredPosition = Vector2.zero;
-        rawImageRect.SetSizeDeltaX(text.rectTransform.rect.width);
+        rawImageRect.anchoredPosition = pos;
+        rawImageRect.sizeDelta = texture.Size();
         rawImageRect.SetPivot(pivot);
         return rawImage;
     }
     
-    public static Texture2D RenderText(TextMeshProUGUI textMeshProUGUI)
+    public static Texture2D RenderText(NativeTextMeshPro textComp)
     {
         byte[] imageBytes = null;
-        string fontName = textMeshProUGUI.font.name.ToLower();
+        string fontName = textComp.font.name.ToLower();
         
 #if !UNITY_EDITOR
     #if UNITY_ANDROID
-        string text = textMeshProUGUI.text;
-        float fontSize = textMeshProUGUI.fontSize;
-        Color color = textMeshProUGUI.color;
+        string text = textComp.text;
+        float fontSize = textComp.fontSize;
+        Color color = textComp.color;
 
         // Установка шрифта, размера текста и цвета текста
         SetCustomFont(fontName);
         SetCustomTextSize(fontSize);
         SetCustomTextColor(color);
-        SetRect(textMeshProUGUI.rectTransform);
-        SetAlignment(textMeshProUGUI.alignment);
-        SetWrapText(textMeshProUGUI.textWrappingMode == TextWrappingModes.Normal);
-        SetOverflow(textMeshProUGUI.overflowMode);
+        SetRect(textComp);
+        SetAlignment(textComp.alignment);
+        SetWrapText(textComp.textWrappingMode == TextWrappingModes.Normal);
+        SetOverflow(textComp.overflowMode);
         
-        Material mat = textMeshProUGUI.fontMaterial;
+        Material mat = textComp.fontMaterial;
         if (mat.HasProperty(ShaderUtilities.ID_OutlineWidth))
         {
             float outlineWidth = mat.GetFloat(ShaderUtilities.ID_OutlineWidth);
@@ -260,7 +315,8 @@ public static class TextRenderer
         if (imageBytes == null)
         {
             Debug.LogError("Failed to render text");
-            texture = Texture2DExtensions.GetTextureByColor(new Color(0.5f, 0.5f, 0.5f, 0.5f));
+            var (width, height) = GetSize(textComp);
+                texture = Texture2DExtensions.GetTextureByColor(new Color(0.5f, 0.5f, 0.5f, 0.5f), width, height);
             return texture;
         }
         
@@ -269,3 +325,4 @@ public static class TextRenderer
         return texture;
     }
 }
+

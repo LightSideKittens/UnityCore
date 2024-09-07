@@ -109,79 +109,75 @@ public class TextRenderer
     }
 
     public static Bitmap renderToBitmap(String text) {
-       TextPaint paint = new TextPaint();
-       paint.setTextSize(customTextSize);
-       paint.setTypeface(customTypeface != null ? customTypeface : Typeface.DEFAULT);
-       paint.setAntiAlias(true);
-    
-       if (faceDilate != 0) {
-           paint.setFakeBoldText(true); // Используем жирный текст для увеличения толщины
-           paint.setStyle(Paint.Style.FILL_AND_STROKE);
-           paint.setStrokeWidth(faceDilate * customTextSize); // Пропорциональная обводка для Face Dilate
-       }
-    
-       int adjustedWidth = (width > 0) ? width : (int) Math.ceil(Layout.getDesiredWidth(text, paint));
-    
-       // Рассчитываем максимальное количество строк, которые могут поместиться по высоте
-       int maxLines = Integer.MAX_VALUE;
-    
-       StaticLayout.Builder builder = StaticLayout.Builder.obtain(text, 0, text.length(), paint, adjustedWidth)
-               .setAlignment(alignment)
-               .setLineSpacing(0, 1.0f)
-               .setIncludePad(false)
-               .setEllipsize(overflow);
-    
-       StaticLayout staticLayout = builder.build();
-    
-       if (height > 0 && staticLayout.getLineCount() > 0) { // Добавляем проверку
-           int lineHeight = staticLayout.getHeight() / staticLayout.getLineCount();
-           maxLines = Math.max(1, height / lineHeight); // Убедитесь, что maxLines всегда >= 1
-           
-           builder = StaticLayout.Builder.obtain(text, 0, text.length(), paint, adjustedWidth) // Пересоздаем билдер
-                   .setAlignment(alignment)
-                   .setLineSpacing(0, 1.0f)
-                   .setIncludePad(false)
-                   .setEllipsize(overflow)
-                   .setMaxLines(maxLines); // Устанавливаем maxLines
-           staticLayout = builder.build(); // Перестраиваем staticLayout
-       }
-    
-       int adjustedHeight = staticLayout.getHeight();
-    
-       // Учитываем максимальное значение обводки и тени для увеличения размера Bitmap
-       float maxPadding = Math.max(strokeWidth, Math.max(underlayOffsetX + underlayDilate, underlayOffsetY + underlayDilate));
-    
-       // Создаем Bitmap с большими размерами для предотвращения обрезки текста
-       Bitmap bitmap = Bitmap.createBitmap(adjustedWidth + (int)maxPadding * 2, adjustedHeight + (int)maxPadding * 2, Bitmap.Config.ARGB_8888);
-       Canvas canvas = new Canvas(bitmap);
-    
-       canvas.translate(maxPadding, maxPadding); // Перемещаем текст внутрь битмапа
-    
-       // Сначала рисуем обводку
-       if (strokeWidth > 0) {
-           paint.setStyle(Paint.Style.STROKE);
-           paint.setStrokeWidth(strokeWidth * customTextSize); // Пропорциональная обводка
-           paint.setColor(strokeColor);
-           staticLayout.draw(canvas);
-       }
-    
-       if (underlayOffsetX != 0 || underlayOffsetY != 0 || underlayDilate != 0 || underlaySoftness != 0) {
-           paint.setStyle(Paint.Style.STROKE);
-           paint.setStrokeWidth(strokeWidth * customTextSize); // Пропорциональная обводка
-           paint.setColor(strokeColor);
-           canvas.translate(underlayOffsetX * 5, underlayOffsetY * 5);
-           staticLayout.draw(canvas);
-       }
-    
-       // Затем рисуем основной текст
-       paint.setStyle(Paint.Style.FILL);
-       paint.setColor(customTextColor);
-       staticLayout.draw(canvas);
-    
-       return bitmap;
+        TextPaint paint = new TextPaint();
+        paint.setTextSize(customTextSize);
+        paint.setTypeface(customTypeface != null ? customTypeface : Typeface.DEFAULT);
+        paint.setAntiAlias(true);
+
+        if (faceDilate != 0) {
+            paint.setFakeBoldText(true);
+            paint.setStyle(Paint.Style.FILL_AND_STROKE);
+            paint.setStrokeWidth(faceDilate * customTextSize); // Пропорциональная обводка для Face Dilate
+        }
+
+        int adjustedWidth = (width > 0) ? width : (int) Math.ceil(Layout.getDesiredWidth(text, paint)); // Используем заданную ширину
+
+        // Рассчитываем StaticLayout, который учитывает перенос текста на следующие строки
+        StaticLayout staticLayout = StaticLayout.Builder.obtain(text, 0, text.length(), paint, adjustedWidth)
+                .setAlignment(alignment)
+                .setLineSpacing(0, 1.0f)
+                .setIncludePad(false)
+                .setEllipsize(overflow)
+                .build();
+
+        // Определяем ширину текста с учетом того, как он переносится на строки
+        int lineCount = staticLayout.getLineCount();
+        float maxLineWidth = 0;
+
+        // Проходим по каждой строке, чтобы найти максимальную ширину
+        for (int i = 0; i < lineCount; i++) {
+            float lineWidth = staticLayout.getLineWidth(i);
+            if (lineWidth > maxLineWidth) {
+                maxLineWidth = lineWidth;
+            }
+        }
+
+        int adjustedHeight = staticLayout.getHeight(); // Высота текста с учетом всех строк
+
+        // Учитываем максимальное значение обводки и тени для увеличения размера Bitmap
+        float maxPadding = Math.max(strokeWidth, Math.max(underlayOffsetX + underlayDilate, underlayOffsetY + underlayDilate));
+
+        // Создаем Bitmap с большими размерами для предотвращения обрезки текста
+        Bitmap bitmap = Bitmap.createBitmap((int) maxLineWidth + (int) maxPadding * 2, adjustedHeight + (int) maxPadding * 2, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+
+        canvas.translate(maxPadding, maxPadding); // Перемещаем текст внутрь битмапа
+
+        // Сначала рисуем обводку
+        if (strokeWidth > 0) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(strokeWidth * customTextSize); // Пропорциональная обводка
+            paint.setColor(strokeColor);
+            staticLayout.draw(canvas);
+        }
+
+        if (underlayOffsetX != 0 || underlayOffsetY != 0 || underlayDilate != 0 || underlaySoftness != 0) {
+            paint.setStyle(Paint.Style.STROKE);
+            paint.setStrokeWidth(strokeWidth * customTextSize); // Пропорциональная обводка
+            paint.setColor(strokeColor);
+            canvas.translate(underlayOffsetX * 5, underlayOffsetY * 5);
+            staticLayout.draw(canvas);
+        }
+
+        // Затем рисуем основной текст
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(customTextColor);
+        staticLayout.draw(canvas);
+
+        // Возвращаем массив с максимальной шириной текста, высотой и битмапом
+        return bitmap;
     }
-
-
+    
     public static byte[] render(String text)
     {
         Bitmap bitmap = renderToBitmap(text);
