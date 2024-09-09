@@ -43,6 +43,34 @@ namespace View
                 return h;
             }
         }
+        
+        public override float preferredWidth
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (UseDefault)
+                {
+                    return base.preferredWidth;
+                }
+#endif
+
+                Vector4 m = base.margin;
+                float w = width;
+                
+                if (m.x > 0)
+                {
+                    w += m.x;
+                }
+
+                if (m.z > 0)
+                {
+                    w += m.z;
+                }
+                
+                return w;
+            }
+        }
 
         protected override void Awake()
         {
@@ -85,16 +113,17 @@ namespace View
 
         private void DestroyRawImage()
         {
-            DestroyRawImageTexture();
 #if UNITY_EDITOR
             if (rawImage != null)
             {
                 if (!Application.isPlaying)
                 {
+                    DestroyImmediate(rawImage.texture);
                     DestroyImmediate(rawImage.gameObject);
                 }
                 else
                 {
+                    Destroy(rawImage.texture);
                     Destroy(rawImage.gameObject);
                 }
             }
@@ -102,6 +131,7 @@ namespace View
 #else
             if (rawImage != null)
             {
+                Destroy(rawImage.texture);
                 Destroy(rawImage.gameObject);
             }
 #endif
@@ -215,7 +245,7 @@ namespace View
                 }
             }
             
-            var newRawImage = TextRenderer.ConvertToNative(this);
+            RawImage newRawImage = TextRenderer.ConvertToNative(this);
             
             if (newRawImage == null)
             {
@@ -228,7 +258,7 @@ namespace View
             }
 
             rawImage = newRawImage;
-            var texture = rawImage.texture;
+            Texture texture = rawImage.texture;
             width = texture.width;
             height = texture.height;
             rawImageRenderer = canvasRenderer;
@@ -246,9 +276,8 @@ namespace View
                 Destroy(rawImage.texture);
             }
 #else
-                    Destroy(rawImage.texture);
+            Destroy(rawImage.texture);
 #endif
-            return;
         }
 
         private void OnRawImageCullStateChanged(bool cull)

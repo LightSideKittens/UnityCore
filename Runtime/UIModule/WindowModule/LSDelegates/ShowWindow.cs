@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using LSCore.Attributes;
 using LSCore.ConfigModule;
+using LSCore.ConfigModule.Old;
 using LSCore.Extensions;
 using Sirenix.OdinInspector;
 #if UNITY_EDITOR

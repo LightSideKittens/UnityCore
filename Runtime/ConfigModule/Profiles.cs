@@ -16,7 +16,7 @@ using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
 
-namespace LSCore.ConfigModule
+namespace LSCore.ConfigModule.Old
 {
     [Serializable]
     public class Profiles

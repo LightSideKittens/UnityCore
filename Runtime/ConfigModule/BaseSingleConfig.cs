@@ -15,7 +15,7 @@ using Debug = UnityEngine.Debug;
 
 [assembly: InternalsVisibleTo("LSCore.DebugModule")]
 
-namespace LSCore.ConfigModule
+namespace LSCore.ConfigModule.Old
 {
     [Serializable]
     public abstract class BaseConfig

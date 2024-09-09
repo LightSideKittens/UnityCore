@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using LSCore.ConfigModule;
+using LSCore.ConfigModule.Old;
 using Newtonsoft.Json;
 using static SoundventTypes;
 

@@ -1,4 +1,5 @@
 ﻿using LSCore.ConfigModule;
+using LSCore.ConfigModule.Old;
 using Sirenix.Utilities;
 
 public class BackuperSettings : BaseStaticConfig<BackuperSettings>

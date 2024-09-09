@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore.ConfigModule;
+using LSCore.ConfigModule.Old;
 using Newtonsoft.Json;
 
 namespace LSCore

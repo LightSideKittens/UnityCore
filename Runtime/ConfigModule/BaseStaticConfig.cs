@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using static LSCore.ConfigModule.FolderNames;
 
-namespace LSCore.ConfigModule
+namespace LSCore.ConfigModule.Old
 {
     public abstract class BaseStaticConfig<T> : BaseSingleConfig<T> where T : BaseStaticConfig<T>, new()
     {

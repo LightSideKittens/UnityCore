@@ -1,6 +1,6 @@
 using System;
 
-namespace LSCore.ConfigModule
+namespace LSCore.ConfigModule.Old
 {
     [Serializable]
     public abstract class BaseConfig<T> : BaseConfig where T : BaseConfig, new()

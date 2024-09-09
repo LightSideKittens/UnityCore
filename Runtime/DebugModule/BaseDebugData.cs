@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using LSCore.ConfigModule;
+using LSCore.ConfigModule.Old;
 using static LSCore.ConfigModule.FolderNames;
 
 namespace LSCore

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace LSCore.ConfigModule
+namespace LSCore.ConfigModule.Old
 {
     public class FirstTime : BaseSingleConfig<FirstTime>
     {

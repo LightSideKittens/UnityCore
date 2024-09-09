@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 
-namespace LSCore.ConfigModule
+namespace LSCore.ConfigModule.Old
 {
     public static class ConfigUtils
     {
