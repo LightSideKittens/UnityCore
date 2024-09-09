@@ -16,7 +16,7 @@ using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
 
-namespace LSCore.ConfigModule.Old
+namespace LSCore.ConfigModule
 {
     [Serializable]
     public class Profiles
@@ -48,7 +48,7 @@ namespace LSCore.ConfigModule.Old
             [TableColumnWidth(100, false)]
             public void Apply()
             {
-                var destinationDirectory = $"{BaseConfig.ConfigsPath}/{FolderNames.DynamicData}";
+                var destinationDirectory = ConfigPaths.Game.DynamicRoot;
                 Directory.Delete(destinationDirectory, true);
                 Directory.CreateDirectory(destinationDirectory);
                 using var fs = new FileStream(path, FileMode.Open, FileAccess.Read);
@@ -131,7 +131,7 @@ namespace LSCore.ConfigModule.Old
         [Button(30, Icon = SdfIconType.XCircleFill)]
         private void DeleteCurrent()
         {
-            var path = Path.Combine("Assets", FolderNames.Configs, FolderNames.DynamicData);
+            var path = ConfigPaths.Game.DynamicRoot;
             var directories = Directory.GetDirectories(path);
             var files = Directory.GetFiles(path);
             AssetDatabase.DeleteAssets(directories.Concat(files).ToArray(), new List<string>());
@@ -151,7 +151,7 @@ namespace LSCore.ConfigModule.Old
 
         private string Internal_Save()
         {
-            var directoryPath = Path.Combine("Assets", FolderNames.Configs, FolderNames.DynamicData);
+            var directoryPath = ConfigPaths.Game.DynamicRoot;
             var outputDirectory = ProfilesPath;
             var tarGzFileName = $"{outputDirectory}/{FileName}.tar.gz";
             Directory.CreateDirectory(outputDirectory);

@@ -24,7 +24,7 @@ internal class AddressablesWindowExt : BaseWindowExtender
             var id = settings.activeProfileId;
             var profileSettings = settings.profileSettings;
             var path = profileSettings.EvaluateString(id, profileSettings.GetValueByName(id, "Remote.BuildPath"));
-            Process.Start($"{ApplicationUtils.ProjectPath}/{path}");
+            Process.Start($"{LSPaths.ProjectPath}/{path}");
         }
     }
 }

@@ -1,17 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore.ConfigModule.Old;
+using LSCore.ConfigModule;
 using Newtonsoft.Json;
 using static SoundventTypes;
 
 namespace MusicEventSystem.Configs
 {
+    public class MusicDataConfigManager : ResourcesConfigManager<MusicData>
+    {
+        protected override JsonSerializerSettings Settings { get; } = new() {ContractResolver = new MusicDataContractResolver()};
+    }
+    
     //TODO: Refactor for new Config logic
-    public partial class MusicData : BaseStaticConfig<MusicData>
+    public partial class MusicData : LocalDynamicConfig
     {
         //protected override string FileName => configName;
-        protected override string RelativeFolderPath => "MusicData";
-        protected override JsonSerializerSettings Settings { get; } = new() {ContractResolver = new MusicDataContractResolver()};
+        public static MusicData Config => Manager.Config;
+        public static MusicDataConfigManager Manager => ConfigMaster<MusicDataConfigManager>.Get($"MusicData/{configName}");
         
         public const float DefaultEndTime = 600;
         private static string configName = string.Empty;
@@ -61,15 +66,15 @@ namespace MusicEventSystem.Configs
             Burger.Error($"Music config with name {ConfigName} not found");
         }
 
-        protected override void OnLoading()
+        protected override void OnSerializing()
         {
-            base.OnLoading();
+            base.OnSerializing();
             MusicDataContractResolver.current = this;
         }
 
-        protected override void OnLoaded()
+        protected override void OnSerialized()
         {
-            base.OnLoaded();
+            base.OnSerialized();
             shortNoteTrack.Init();
             longNoteTrack.Init();
             lastCurrentTime = 0;
@@ -83,7 +88,6 @@ namespace MusicEventSystem.Configs
             //var lastInstance = instance;
             var config = new MusicData();
             SetConfig(config, cfgName, startTime, endTime);
-            config.Load();
             //SetConfig(lastInstance, lastCfgName, lastStartTime, lastEndTime);
 
             return config;

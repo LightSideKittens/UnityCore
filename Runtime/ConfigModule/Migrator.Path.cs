@@ -12,7 +12,7 @@ namespace LSCore.ConfigModule
             }
             
             private static Dictionary<string, List<string>> byKey = new();
-            private static readonly AutoSaveConfigManager<Versions> manager = new(ConfigPaths.Game.Dynamic("PathVersions"));
+            private static readonly AutoSaveConfigManager<Versions> manager = AutoSaveConfigManager<Versions>.Get("PathVersions");
             private static Versions Config => manager.Config;
         
             public static void Add(string key, string path)

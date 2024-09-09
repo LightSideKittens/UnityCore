@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace LSCore.ConfigModule.Old
+namespace LSCore.ConfigModule
 {
-    public class FirstTime : BaseSingleConfig<FirstTime>
+    public class FirstTime : GameSingleConfig<FirstTime>
     {
         [JsonProperty] private HashSet<string> states = new();
 

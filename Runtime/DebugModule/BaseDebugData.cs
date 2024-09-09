@@ -1,11 +1,11 @@
-﻿using System.IO;
-using LSCore.ConfigModule.Old;
-using static LSCore.ConfigModule.FolderNames;
+﻿using LSCore.ConfigModule;
 
 namespace LSCore
 {
-    public class BaseDebugData<T> : BaseSingleConfig<T> where T : BaseDebugData<T>, new()
+    public abstract class BaseDebugData<T> : LocalDynamicConfig where T : BaseDebugData<T>, new()
     {
-        protected sealed override string RootPath => Path.Combine(ConfigsPath, DebugData);
+        public static T Config => Manager.Config;
+        public static DebugConfigManager<T> Manager => GetManager(typeof(T).Name);
+        protected static DebugConfigManager<T> GetManager(string path) => ConfigMaster<DebugConfigManager<T>>.Get(path);
     }
 }

@@ -1,11 +1,44 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LSCore.ConfigModule
 {
-    public class LocalDynamicConfigManager<T> : BaseConfigManager<T> where T : LocalDynamicConfig, new()
+    public interface ILocalConfigManager
     {
+        void SetPath(string fullPath);
+    }
+
+    public static class ConfigMaster<TManager> where TManager : ILocalConfigManager, new()
+    {
+        private static Dictionary<string, TManager> configs = new();
+
+        public static TManager Get(string fullPath)
+        {
+            if (!configs.TryGetValue(fullPath, out var manager))
+            {
+                manager = new TManager();
+                manager.SetPath(fullPath);
+                configs.Add(fullPath, manager);
+            }
+
+            return manager;
+        }
+    }
+
+    public class LocalDynamicConfigManager<T> : BaseConfigManager<T>, ILocalConfigManager where T : LocalDynamicConfig, new()
+    {
+        protected virtual string GetPath(string path)
+        {
+            return path;
+        }
+
+        void ILocalConfigManager.SetPath(string fullPath)
+        {
+            this.fullPath = GetPath(fullPath);
+        }
+        
         protected string fullPath;
         
         private bool wasLoaded;
@@ -19,11 +52,6 @@ namespace LSCore.ConfigModule
             }
         }
 
-        public LocalDynamicConfigManager(string fullPath)
-        {
-            this.fullPath = fullPath;
-        }
-
         public void LoadOnNextAccess() => wasLoaded = false;
 
         protected string GetFullFileName(string path)
@@ -31,7 +59,7 @@ namespace LSCore.ConfigModule
             return $"{path}.json";
         }
 
-        internal virtual void Load()
+        public virtual void Load()
         {
             string json;
             
@@ -39,7 +67,17 @@ namespace LSCore.ConfigModule
             if (!Migrator.Path.TryGet(fullPath, out data))
             {
                 var fullFileName = GetFullFileName(fullPath);
-                json = File.ReadAllText(fullFileName);
+                if (File.Exists(fullFileName))
+                {
+                    json = File.ReadAllText(fullFileName);
+                }
+                else
+                {
+                    cached ??= new T();
+                    cached.SetDefault();
+                    wasLoaded = true;
+                    return;
+                }
             }
             else
             {
@@ -59,21 +97,22 @@ namespace LSCore.ConfigModule
             wasLoaded = true;
         }
 
-        internal virtual void Save()
+        public virtual void Save()
         {
             var json = Serialize();
             string fullFileName = GetFullFileName(fullPath);
-            Directory.CreateDirectory(fullFileName);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullFileName)!);
             File.WriteAllText(fullFileName,json); 
         }
-
-        internal void Delete()
+        
+        public void Delete()
         {
-            cached.OnDeleting();
+            cached?.OnDeleting();
             OnDelete();
-            cached.OnDeleted();
+            cached?.OnDeleted();
         }
 
+        
         protected virtual void OnDelete()
         {
             string fullFileName = GetFullFileName(fullPath);

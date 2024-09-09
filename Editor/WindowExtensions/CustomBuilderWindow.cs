@@ -72,7 +72,7 @@ public static class CustomBuilder
             }
 
             var date = DateTime.UtcNow;
-            var buildPath = $"{ApplicationUtils.ProjectPath}/Builds/{buildTarget}";
+            var buildPath = $"{LSPaths.ProjectPath}/Builds/{buildTarget}";
 
             var productName = PlayerSettings.productName.Replace(" ", string.Empty);
             string buildName = $"{productName}_{date.Day:00}-{date.Month:00}_({mode}_{PlayerSettings.bundleVersion})";

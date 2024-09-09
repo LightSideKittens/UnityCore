@@ -14,7 +14,6 @@ namespace LSCore
         {
             ToolbarExtender.RightToolbarGUI.Add(OnToolbarRightGUI);
             popupContent = new NavigationPopup();
-            onStaticConstructor.Push(() => fileName = nameof(LSDebugData));
         }
 
         private static void OnToolbarRightGUI()
@@ -38,7 +37,7 @@ namespace LSCore
                     if (GUILayout.Button(environment + (isSelected ? " ❤️" : "")))
                     {
                         Config.Environment = environment;
-                        Config.Save();
+                        Manager.Save();
                         ToolbarExtender.Repaint();
                     }
                 }

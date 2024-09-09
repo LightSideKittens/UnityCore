@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using LSCore.ConfigModule;
-using LSCore.ConfigModule.Old;
+using LSCore.ConfigModule;
 using Newtonsoft.Json;
 
-public class TutorialData : BaseSingleConfig<TutorialData>
+public class TutorialData : GameSingleConfig<TutorialData>
 {
     [JsonProperty] private readonly HashSet<Type> completedSteps = new();
     

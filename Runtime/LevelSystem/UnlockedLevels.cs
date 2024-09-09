@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using LSCore.ConfigModule.Old;
+using LSCore.ConfigModule;
 using Newtonsoft.Json;
 
 namespace LSCore.LevelSystem
 {
-    public class UnlockedLevels : BaseSingleConfig<UnlockedLevels>
+    public class UnlockedLevels : GameSingleConfig<UnlockedLevels>
     {
         [JsonProperty("entitiesLevel")] private Dictionary<string, int> levelById = new();
         

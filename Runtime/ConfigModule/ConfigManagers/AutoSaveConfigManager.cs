@@ -7,9 +7,10 @@ namespace LSCore.ConfigModule
 {
     public class AutoSaveConfigManager<T> : LocalDynamicConfigManager<T> where T : LocalDynamicConfig, new()
     {
-        public AutoSaveConfigManager(string fullPath) : base(fullPath) { }
-
-        internal override void Load()
+        public new static AutoSaveConfigManager<T> Get(string fullPath) =>
+            ConfigMaster<AutoSaveConfigManager<T>>.Get(fullPath); 
+        
+        public override void Load()
         {
             base.Load();
             SetupAutoSave();
@@ -23,6 +24,10 @@ namespace LSCore.ConfigModule
 
         private void SetupAutoSave()
         {
+#if UNITY_EDITOR
+            if(!World.IsPlaying) return;
+#endif
+            
             UnSetupAutoSave();
             Editor_Init();
             Runtime_Init();
@@ -30,6 +35,9 @@ namespace LSCore.ConfigModule
         
         private void UnSetupAutoSave()
         {
+#if UNITY_EDITOR
+            if(!World.IsPlaying) return;
+#endif
             UnsubOnWorldDestroy();
             UnsubOnApplicationPaused();
         }
@@ -46,6 +54,7 @@ namespace LSCore.ConfigModule
         {
             UnsubOnWorldDestroy();
             Save();
+            LoadOnNextAccess();
         }
         
         [Conditional("UNITY_EDITOR")]

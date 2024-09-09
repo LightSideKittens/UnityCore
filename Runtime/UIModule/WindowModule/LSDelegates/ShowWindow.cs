@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using LSCore.Attributes;
 using LSCore.ConfigModule;
-using LSCore.ConfigModule.Old;
 using LSCore.Extensions;
 using Sirenix.OdinInspector;
 #if UNITY_EDITOR
@@ -21,9 +19,12 @@ namespace LSCore
     [Serializable]
     public class ShowWindow : LSAction
     {
-        public class WindowTypes : BaseStaticConfig<WindowTypes>
+        public class WindowTypes : LocalDynamicConfig
         {
             public List<Type> types;
+            public static WindowTypes Config => Manager.Config;
+            public static ResourcesConfigManager<WindowTypes> Manager =>
+                ConfigMaster<ResourcesConfigManager<WindowTypes>>.Get(nameof(WindowTypes));
         }
         
 
@@ -46,7 +47,7 @@ namespace LSCore
             var type = typeof(BaseWindow<>);
 #if UNITY_EDITOR
             var allAssembly = type.Assembly.GetRelevantAssemblies();
-            ConfigUtils.Delete<WindowTypes>();
+            WindowTypes.Manager.Delete();
             
             WindowTypes.Config.types = allAssembly
                 .SelectMany(assembly => assembly.GetTypes())
@@ -54,7 +55,7 @@ namespace LSCore
                 .Where(t => t.IsSubclassOfRawGeneric(type))
                 .ToList();
 
-            ConfigUtils.Save<WindowTypes>();
+            WindowTypes.Manager.Save();
 #endif
             
 

@@ -1,10 +1,13 @@
 ﻿using LSCore.ConfigModule;
-using LSCore.ConfigModule.Old;
-using Sirenix.Utilities;
 
-public class BackuperSettings : BaseStaticConfig<BackuperSettings>
+public class BackuperSettings : LocalDynamicConfig
 {
     public int maxBackupsCount = 5;
     public int saveInterval = 1;
-    protected override string RootPath => ApplicationUtils.LibraryPath;
+
+    public static BackuperSettings Config => Manager.Config;
+
+    public static LocalDynamicConfigManager<BackuperSettings> Manager =>
+        ConfigMaster<LocalDynamicConfigManager<BackuperSettings>>.Get(
+            $"{LSPaths.LibraryPath}/{nameof(BackuperSettings)}");
 }

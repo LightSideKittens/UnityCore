@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore.ConfigModule.Old;
+using LSCore.ConfigModule;
 using Newtonsoft.Json;
 
 namespace LSCore
 {
-    internal class Currencies : BaseSingleConfig<Currencies>
+    internal class Currencies : GameSingleConfig<Currencies>
     {
         [JsonProperty] private Dictionary<string, int> currencies = new();
         internal static readonly Dictionary<string, Action<int>> onChangedActions = new();

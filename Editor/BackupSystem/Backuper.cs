@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using LSCore.ConfigModule;
-using LSCore.ConfigModule.Old;
+using LSCore.ConfigModule;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
@@ -175,13 +175,13 @@ namespace LSCore.Editor.BackupSystem
             delay = TimeSpan.FromMinutes(saveInterval);
             CheckForCanSave();
             BackuperSettings.Config.saveInterval = saveInterval;
-            ConfigUtils.Save<BackuperSettings>();
+            BackuperSettings.Manager.Save();
         }
 
         private void OnMaxBackupsCountChanged()
         {
             BackuperSettings.Config.maxBackupsCount = maxBackupsCount;
-            ConfigUtils.Save<BackuperSettings>();
+            BackuperSettings.Manager.Save();
         }
 
         private void TryAdd(string backupPath)

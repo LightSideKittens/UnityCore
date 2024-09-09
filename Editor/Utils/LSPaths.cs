@@ -44,8 +44,11 @@ public static class LSPaths
         public const string AssetIconSetter = Root + "/Asset Icon Setter";
         public const string AssetsViewer = Root + "/Assets Viewer";
     }
-    
+
+    public static string ProjectPath { get; } = Application.dataPath[..^7];
+    public static string ProjectSettingsPath { get; } = $"{ProjectPath}/ProjectSettings";
+    public static string LibraryPath { get; } = $"{ProjectPath}/Library";
         
     public static string ToFull(this string path) => $"{Application.dataPath}/{path}";
-    public static string AssetsPathToFull(this string path) => $"{ApplicationUtils.ProjectPath}/{path}";
+    public static string AssetsPathToFull(this string path) => $"{ProjectPath}/{path}";
 }

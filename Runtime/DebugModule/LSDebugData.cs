@@ -38,9 +38,9 @@ namespace LSCore
         [JsonProperty] 
         public bool LogWindowsActivity { get; set; }
 
-        protected override void OnLoaded() 
+        protected override void OnDeserialized()
         {
-            base.OnLoaded();
+            base.OnDeserialized();
             if (string.IsNullOrEmpty(Country))
             {
                 Country = "World";
