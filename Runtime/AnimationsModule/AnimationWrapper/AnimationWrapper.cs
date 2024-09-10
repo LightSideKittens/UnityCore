@@ -288,8 +288,8 @@ namespace LSCore.AnimationsModule
         
         public AnimationWrapper()
         {
-            Patchers.AnimEditor.OnSelectionChanged.Changed += OnSelectionChanged;
-            Patchers.AnimEditor.previewing.Changed += OnPreviewingChanged;
+            Patchers.AnimEditor.OnSelectionChanged.Called += OnSelectionChanged;
+            Patchers.AnimEditor.previewing.Called += OnPreviewingChanged;
             EditorApplication.update += OnEditorUpdate;
         }
 
@@ -310,8 +310,8 @@ namespace LSCore.AnimationsModule
 
         private void OnDestroy()
         {
-            Patchers.AnimEditor.OnSelectionChanged.Changed -= OnSelectionChanged;
-            Patchers.AnimEditor.previewing.Changed -= OnPreviewingChanged;
+            Patchers.AnimEditor.OnSelectionChanged.Called -= OnSelectionChanged;
+            Patchers.AnimEditor.previewing.Called -= OnPreviewingChanged;
             EditorApplication.update -= OnEditorUpdate;
         }
 
@@ -319,7 +319,7 @@ namespace LSCore.AnimationsModule
         {
             if (this == null || EditorUtility.IsPersistent(gameObject))
             {
-                Patchers.AnimEditor.previewing.Changed -= OnPreviewingChanged;
+                Patchers.AnimEditor.previewing.Called -= OnPreviewingChanged;
                 return;
             }
 
@@ -337,7 +337,7 @@ namespace LSCore.AnimationsModule
         {
             if (this == null || EditorUtility.IsPersistent(gameObject))
             {
-                Patchers.AnimEditor.OnSelectionChanged.Changed -= OnSelectionChanged;
+                Patchers.AnimEditor.OnSelectionChanged.Called -= OnSelectionChanged;
                 return;
             }
             

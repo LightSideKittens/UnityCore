@@ -218,8 +218,6 @@ public static partial class AssetDatabaseUtils
         EditorApplication.update -= SaveGraphData;
         string json = JsonConvert.SerializeObject(graph, Formatting.None);
         File.WriteAllText(GraphFilePath, json);
-        AssetDatabase.Refresh();
-        Debug.Log($"Asset usages saved at: {GraphFilePath}");
     }
 
     private static void LoadGraphData()

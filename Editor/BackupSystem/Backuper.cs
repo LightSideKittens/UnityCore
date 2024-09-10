@@ -6,8 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using LSCore.ConfigModule;
-using LSCore.ConfigModule;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
@@ -17,6 +15,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 using static System.IO.Path;
 using Debug = UnityEngine.Debug;
+using Object = UnityEngine.Object;
 
 namespace LSCore.Editor.BackupSystem
 {
@@ -30,7 +29,8 @@ namespace LSCore.Editor.BackupSystem
         private static PropertyTree tree = PropertyTree.Create(instance);
         private static int editCount;
         private static TimeSpan delay;
-        private static bool canSave;
+        private static Object currentObject;
+        private static bool canSave = true;
         private static CancellationTokenSource source = new();
 
         [Serializable]
@@ -98,16 +98,18 @@ namespace LSCore.Editor.BackupSystem
         [InitializeOnLoadMethod]
         private static void InitializeOnLoadMethod()
         {
-            Undo.willFlushUndoRecord += OnEdit;
-            Undo.undoRedoEvent += OnEdit;
+            Patchers._EditorUtility.SetDirty.Called += OnChanged;
+            Patchers._SerializedObject.ApplyModifiedProperties.Called += OnChanged;
+            
             delay = TimeSpan.FromMinutes(BackuperSettings.Config.saveInterval);
-            CheckForCanSave();
+            
             if (!Directory.Exists(BackupPath))
             {
                 Directory.CreateDirectory(BackupPath);
             }
         }
         
+
         private static void OnGui(string s)
         {
             tree.BeginDraw(false);
@@ -170,10 +172,7 @@ namespace LSCore.Editor.BackupSystem
         
         private void OnSaveIntervalChanged()
         {
-            source.Cancel();
-            source = new CancellationTokenSource();
             delay = TimeSpan.FromMinutes(saveInterval);
-            CheckForCanSave();
             BackuperSettings.Config.saveInterval = saveInterval;
             BackuperSettings.Manager.Save();
         }
@@ -211,13 +210,60 @@ namespace LSCore.Editor.BackupSystem
             }
         }
 
-        private static void OnEdit(in UndoRedoInfo _) => OnEdit();
-
-        private static void OnEdit()
+        private static void OnChanged(SerializedObject obj, bool res)
+        {
+            if (res)
+            {
+                OnChanged(obj.targetObject);
+            }
+        }
+        
+        private static void OnChanged(Object obj)
         {
             if (canSave && !Application.isPlaying)
             {
-                if (!TrySaveCurrentPrefab())
+                bool isPrefab = false;
+                bool isScene = false;
+                
+                if (obj is Component comp)
+                {
+                    obj = comp.gameObject;
+                }
+
+                if (obj is GameObject go)
+                {
+                    var prefabStage = PrefabStageUtility.GetCurrentPrefabStage();
+
+                    if (prefabStage != null && prefabStage.IsPartOfPrefabContents(go))
+                    {
+                        isPrefab = true;
+                    }
+                    else if (!PrefabUtility.IsPartOfPrefabAsset(obj) && go.scene.IsValid())
+                    {
+                        isScene = true;
+                    }
+                }
+                else if (!AssetDatabase.Contains(obj))
+                {
+                    return;
+                }
+
+                if (isPrefab || isScene)
+                {
+                    if (currentObject != obj)
+                    {
+                        currentObject = obj;
+                        canSave = false;
+                        CheckForCanSave();
+                        return;
+                    }
+                }
+                
+                if (isPrefab)
+                {
+                    TrySaveCurrentPrefab();
+                }
+                else if (isScene)
                 {
                     TrySaveCurrentScene();
                 }
@@ -225,9 +271,13 @@ namespace LSCore.Editor.BackupSystem
                 canSave = false;
             }
         }
+
         
         private static async void CheckForCanSave()
         {
+            source?.Cancel();
+            source = new();
+            
             try
             {
                 await Task.Delay(delay, source.Token);

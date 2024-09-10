@@ -87,7 +87,7 @@ public static class GameObjectUtils
         EditorSceneManager.sceneOpened += OnSceneLoaded;
         EditorSceneManager.sceneClosed += OnSceneUnloaded;
         
-        LSEditorUtility.DirtySet += OnSetDirty;
+        Patchers._EditorUtility.SetDirty.Called += OnSetDirty;
     }
 
     

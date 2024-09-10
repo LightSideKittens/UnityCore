@@ -10,7 +10,7 @@ public static partial class Patchers
         [HarmonyPatch]
         public static class OnSelectionChanged
         {
-            public static event Action Changed;
+            public static event Action Called;
 
             static MethodBase TargetMethod()
             {
@@ -21,14 +21,14 @@ public static partial class Patchers
 
             static void Postfix()
             {
-                Changed?.Invoke();
+                Called?.Invoke();
             }
         }
         
         [HarmonyPatch]
         public static class previewing
         {
-            public static event Action<bool> Changed;
+            public static event Action<bool> Called;
 
             static MethodBase TargetMethod()
             {
@@ -38,7 +38,7 @@ public static partial class Patchers
 
             static void Postfix(bool value)
             {
-                Changed?.Invoke(value);
+                Called?.Invoke(value);
             }
         }
     }
