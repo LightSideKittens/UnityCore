@@ -4,7 +4,8 @@ namespace LSCore.ConfigModule
 {
     public static partial class Migrator
     {
-        public static class Path
+        //TODO: Implement cool and convenient logic of path migration
+        /*public static class Path
         {
             private class Versions : LocalDynamicConfig
             {
@@ -12,8 +13,8 @@ namespace LSCore.ConfigModule
             }
             
             private static Dictionary<string, List<string>> byKey = new();
-            private static readonly AutoSaveConfigManager<Versions> manager = AutoSaveConfigManager<Versions>.Get("PathVersions");
-            private static Versions Config => manager.Config;
+            private static AutoSaveConfigManager<Versions> Manager => ConfigMaster<AutoSaveConfigManager<Versions>>.Get(ConfigPaths.Root + "/PathVersions");
+            private static Versions Config => Manager.Config;
         
             public static void Add(string key, string path)
             {
@@ -39,13 +40,13 @@ namespace LSCore.ConfigModule
                         versions[key] = version;
 
                         data = (path, paths[version]);
-                        return true;
+                        return data.current != data.target;
                     }
                 }
                 
                 data = default;
                 return false;
             }
-        }
+        }*/
     }
 }

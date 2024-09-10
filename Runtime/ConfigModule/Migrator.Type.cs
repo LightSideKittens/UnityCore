@@ -21,7 +21,7 @@ namespace LSCore.ConfigModule
                 migrators.Add(migrator);
             }
 
-            internal static void Migrate(JToken token)
+            internal static bool Migrate(JToken token)
             {
                 const string versionKey = "type_version";
                 if (byKey.TryGetValue(typeof(T), out var migration))
@@ -37,8 +37,11 @@ namespace LSCore.ConfigModule
                         }
 
                         token[versionKey] = i;
+                        return i < migration.Count;
                     }
                 }
+
+                return false;
             }
         }
     }

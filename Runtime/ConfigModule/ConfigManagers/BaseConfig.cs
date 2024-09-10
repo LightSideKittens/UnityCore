@@ -10,6 +10,7 @@
     
     public abstract class LocalDynamicConfig : BaseConfig
     {
+        protected internal virtual void AddMigrations(){}
         protected internal virtual void SetDefault(){}
         protected internal virtual void OnDeleting() {}
         protected internal virtual void OnDeleted() {}

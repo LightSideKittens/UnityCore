@@ -7,9 +7,6 @@ namespace LSCore.ConfigModule
 {
     public class AutoSaveConfigManager<T> : LocalDynamicConfigManager<T> where T : LocalDynamicConfig, new()
     {
-        public new static AutoSaveConfigManager<T> Get(string fullPath) =>
-            ConfigMaster<AutoSaveConfigManager<T>>.Get(fullPath); 
-        
         public override void Load()
         {
             base.Load();
