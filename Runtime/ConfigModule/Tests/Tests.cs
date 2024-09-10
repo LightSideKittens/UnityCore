@@ -86,6 +86,7 @@ namespace LSCore.ConfigModule.Test
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         public static void Init()
         {
+            return;
             TestConfig.Config.Name = names.Random();
             TestConfig.Config.Name = names.Random();
             TestConfig.Get("NotMain1").Name = names.Random();
