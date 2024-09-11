@@ -148,7 +148,7 @@ namespace LSCore.ConfigModule
 
         public virtual void Save()
         {
-            var json = Serialize(token);
+            var json = token != null ? Serialize(token) : Serialize();
             string fullFileName = GetFullFileName(fullPath);
             Save(fullFileName, json);
         }
