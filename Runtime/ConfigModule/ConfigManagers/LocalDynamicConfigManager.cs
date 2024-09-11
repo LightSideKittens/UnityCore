@@ -119,7 +119,19 @@ namespace LSCore.ConfigModule
                 Save(targetPath, json);
             }*/
 
-            json = File.ReadAllText(GetFullFileName(fullPath));
+            var fullFileName = GetFullFileName(fullPath);
+            
+            if (File.Exists(fullFileName))
+            {
+                json = File.ReadAllText(fullFileName);
+            }
+            else
+            {
+                cached.SetDefault();
+                wasLoaded = true;
+                return;
+            }
+            
             SetMeta($"{FullFileNameMeta}\nJson:\n{json}");
             Log("Read json");
             token = JObject.Parse(json);
