@@ -51,7 +51,7 @@ namespace LSCore
             
             if (needFaceToTarget)
             {
-                sequence.Append();
+                //sequence.Append();
             }
             
             animation.Play(clip.name);
