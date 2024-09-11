@@ -1,22 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LSCore.ConfigModule
 {
     public interface ILocalConfigManager
     {
+        string DefaultPath { get; }
         void SetPath(string fullPath);
     }
 
     public static class ConfigMaster<TManager> where TManager : ILocalConfigManager, new()
     {
+        private static TManager meowfault;
         private static Dictionary<string, TManager> configs = new();
 
+        public static TManager Default
+        {
+            get
+            {
+                if (meowfault == null)
+                {
+                    meowfault = new TManager();
+                    meowfault.SetPath(meowfault.DefaultPath);
+                }
+                
+                return meowfault;
+            }
+        }
+        
         public static TManager Get(string fullPath)
         {
+            if (meowfault?.DefaultPath == fullPath)
+            {
+                return meowfault;
+            }
+            
             if (!configs.TryGetValue(fullPath, out var manager))
             {
                 manager = new TManager();
@@ -37,9 +57,12 @@ namespace LSCore.ConfigModule
             return path;
         }
 
-        void ILocalConfigManager.SetPath(string fullPath)
+        protected virtual string DefaultPath => typeof(T).Name;
+        string ILocalConfigManager.DefaultPath => DefaultPath;
+
+        void ILocalConfigManager.SetPath(string path)
         {
-            this.fullPath = GetPath(fullPath);
+            fullPath = GetPath(path);
         }
         
         protected string fullPath;
@@ -66,18 +89,31 @@ namespace LSCore.ConfigModule
         private string FullFileNameMeta => $"Full file name: {GetFullFileName(fullPath)}";
         public virtual void Load()
         {
+            var fullFileName = GetFullFileName(fullPath);
+            string json = string.Empty;
+            
+            if (File.Exists(fullFileName))
+            {
+                json = File.ReadAllText(fullFileName);
+            }
+            else
+            {
+                cached = null;
+            }
+            
             SetMeta(FullFileNameMeta);
             Log("Loading");
-            
+
             if (cached == null)
             {
                 Log("Config created");
                 cached = new T();
                 cached.AddMigrations();
+                cached.SetDefault();
+                wasLoaded = true;
+                return;
             }
 
-            string json;
-            
             //TODO: Implement cool and convenient logic of path migration
             /*(string current, string target) data;
             if (!Migrator.Path.TryGet(fullPath, out data))
@@ -118,19 +154,6 @@ namespace LSCore.ConfigModule
                 
                 Save(targetPath, json);
             }*/
-
-            var fullFileName = GetFullFileName(fullPath);
-            
-            if (File.Exists(fullFileName))
-            {
-                json = File.ReadAllText(fullFileName);
-            }
-            else
-            {
-                cached.SetDefault();
-                wasLoaded = true;
-                return;
-            }
             
             SetMeta($"{FullFileNameMeta}\nJson:\n{json}");
             Log("Read json");

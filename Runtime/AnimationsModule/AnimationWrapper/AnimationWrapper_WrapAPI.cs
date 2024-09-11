@@ -5,7 +5,7 @@ namespace LSCore.AnimationsModule
     public partial class AnimationWrapper
     {
         private bool isPlayCalled;
-        
+
         public void Play(string clipName = null, PlayMode playMode = PlayMode.StopSameLayer)
         {
             bool needSet = !animation.isPlaying;

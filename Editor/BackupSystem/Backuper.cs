@@ -321,18 +321,22 @@ namespace LSCore.Editor.BackupSystem
             if (prefabStage != null)
             {
                 GameObject prefabRoot = prefabStage.prefabContentsRoot;
-                var fileName = $"{prefabRoot.name}{DateKey}.prefab";
+                var fileName = $"{Combine(GetDirectoryName(prefabStage.assetPath)[7..], prefabRoot.name)}{DateKey}.prefab";
                 Debug.Log($"Saving {fileName}");
                 string prefabAssetPath = $"{Application.dataPath}/{fileName}";
                 string backupPath = $"{BackupPath}/{fileName}";
 
                 PrefabUtility.SaveAsPrefabAsset(prefabRoot, prefabAssetPath);
 
-                if (!File.Exists(backupPath)) File.Create(backupPath).Dispose();
+                if (!File.Exists(backupPath))
+                {
+                    Directory.CreateDirectory(GetDirectoryName(backupPath));
+                    File.Create(backupPath).Dispose();
+                }
 
                 File.Copy(prefabAssetPath, backupPath, true);
                 AssetDatabase.DeleteAsset($"Assets/{fileName}");
-                //Linker.PathByName[fileName] = prefabStage.assetPath.AssetsPathToFull();
+                
                 instance?.TryAdd(backupPath);
                 return true;
             }

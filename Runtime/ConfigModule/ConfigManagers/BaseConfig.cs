@@ -24,7 +24,7 @@
     
     public abstract class GameSingleConfig<T> : LocalDynamicConfig where T : GameSingleConfig<T>, new()
     {
-        private static readonly GameConfigManager<T> manager = ConfigMaster<GameConfigManager<T>>.Get(typeof(T).Name);
-        public static T Config => manager.Config;
+        private static GameConfigManager<T> Manager => ConfigMaster<GameConfigManager<T>>.Default;
+        public static T Config => Manager.Config;
     }
 }

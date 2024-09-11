@@ -45,5 +45,14 @@ namespace LSCore.ConfigModule
                 return Combine(DebugRoot, path, Combine(paths));
             }
         }
+#if UNITY_EDITOR        
+        public static class Editor
+        {
+            public static string Library(string path, params string[] paths)
+            {
+                return Combine(LSPaths.LibraryPath, path, Combine(paths));
+            }
+        }
+#endif
     }
 }

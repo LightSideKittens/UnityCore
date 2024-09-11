@@ -24,7 +24,7 @@ namespace LSCore
             public List<Type> types;
             public static WindowTypes Config => Manager.Config;
             public static ResourcesConfigManager<WindowTypes> Manager =>
-                ConfigMaster<ResourcesConfigManager<WindowTypes>>.Get(nameof(WindowTypes));
+                ConfigMaster<ResourcesConfigManager<WindowTypes>>.Default;
         }
         
 

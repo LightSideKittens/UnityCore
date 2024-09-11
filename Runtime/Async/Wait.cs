@@ -11,7 +11,8 @@ namespace LSCore.Async
         public static Tween Run(in float time, TweenCallback update) =>  DOTween.Sequence().AppendInterval(time).OnUpdate(update).SetEase(Ease.Linear);
         public static Tween TimerForward(in float time, TweenCallback<float> update) => DOVirtual.Float(0, time, time, update).SetEase(Ease.Linear);
         public static Tween TimerBack(in float time, TweenCallback<float> update) => DOVirtual.Float(time, 0, time, update).SetEase(Ease.Linear);
-        public static Tween Delay(in float time, TweenCallback onComplete) => DOTween.Sequence().AppendInterval(time).OnComplete(onComplete);
+        public static Tween Delay(in float time, TweenCallback onComplete) => Delay(time).OnComplete(onComplete);
+        public static Tween Delay(in float time) => DOTween.Sequence().AppendInterval(time);
         public static Tween Cycles(in float delay, int cycles, TweenCallback onLoop) => DOTween.Sequence().AppendInterval(delay).SetLoops(cycles).OnStepComplete(onLoop);
         public static Tween InfinityLoop(in float delay, TweenCallback onLoop) => Cycles(delay, -1, onLoop);
 

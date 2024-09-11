@@ -5,6 +5,8 @@ namespace LSCore.ConfigModule
 {
     public class ResourcesConfigManager<T> : BaseConfigManager<T>, ILocalConfigManager where T : LocalDynamicConfig, new()
     {
+        public string DefaultPath => typeof(T).Name;
+
         void ILocalConfigManager.SetPath(string path)
         {
             this.path = path;

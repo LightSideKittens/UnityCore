@@ -6,7 +6,7 @@ namespace LSCore.AnimationsModule
     public partial class AnimationWrapper
     {
         [Serializable]
-        public abstract class Handler
+        public abstract class  Handler
         {
             protected bool forceHandle;
             private bool isStarted;

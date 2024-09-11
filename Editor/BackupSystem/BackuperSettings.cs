@@ -7,7 +7,5 @@ public class BackuperSettings : LocalDynamicConfig
 
     public static BackuperSettings Config => Manager.Config;
 
-    public static LocalDynamicConfigManager<BackuperSettings> Manager =>
-        ConfigMaster<LocalDynamicConfigManager<BackuperSettings>>.Get(
-            $"{LSPaths.LibraryPath}/{nameof(BackuperSettings)}");
+    public static EditorConfigManager<BackuperSettings> Manager => ConfigMaster<EditorConfigManager<BackuperSettings>>.Default;
 }
