@@ -12,7 +12,7 @@ namespace LSCore
         public Transform pivot;
         public Vector3 offset;
         
-        public Vector3 Position => pivot.position + pivot.rotation * offset;
+        public Vector3 Position => pivot.position + pivot.rotation * Vector3.Scale(offset, pivot.lossyScale);
 
         public abstract Collider2D[] Overlap(in ContactFilter2D filter);
 

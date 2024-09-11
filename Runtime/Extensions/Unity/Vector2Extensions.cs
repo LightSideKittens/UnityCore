@@ -4,6 +4,7 @@ namespace LSCore.Extensions.Unity
 {
     public static class LSVector2
     {
+        public static readonly float oneMagnitude = Vector2.one.magnitude;
         public static readonly Vector2 half = Vector2.one / 2;
         public static readonly Vector2 one = Vector2.one;
     }
