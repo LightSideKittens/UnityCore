@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LSCore
@@ -27,7 +28,23 @@ namespace LSCore
             }
         }
 
+#if UNITY_EDITOR
+
+        [SerializeField] private bool alwaysGizmos;
+
         private void OnDrawGizmosSelected()
+        {
+            if(alwaysGizmos) return;
+            DrawGizmos();
+        }
+
+        private void OnDrawGizmos()
+        {
+            if(!alwaysGizmos) return;
+            DrawGizmos();
+        }
+
+        private void DrawGizmos()
         {
             if(triggers == null) return;
             
@@ -36,6 +53,7 @@ namespace LSCore
                 trigger.DrawGizmos();
             }
         }
+#endif
 
         private void FixedUpdate()
         {
