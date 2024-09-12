@@ -86,11 +86,38 @@ public static class GameObjectUtils
 
         EditorSceneManager.sceneOpened += OnSceneLoaded;
         EditorSceneManager.sceneClosed += OnSceneUnloaded;
+
+        Undo.undoRedoEvent += OnUndoRedo;
+        Undo.postprocessModifications += OnUndoRedo;
         
         Patchers._EditorUtility.SetDirty.Called += OnSetDirty;
+        Patchers._SerializedObject.ApplyModifiedProperties.Called += OnSetDirty;
     }
 
-    
+    private static UndoPropertyModification[] OnUndoRedo(UndoPropertyModification[] modifications)
+    {
+        for (int i = 0; i < modifications.Length; i++)
+        {
+            UnityEngine.Debug.Log(modifications.GetValue(0));
+        }
+
+        return  modifications;
+    }
+
+    private static void OnUndoRedo(in UndoRedoInfo undo)
+    {
+        Debug.Log(undo.undoName);
+    }
+
+    private static void OnSetDirty(SerializedObject obj, bool isDirty)
+    {
+        if (isDirty)
+        {
+            OnSetDirty(obj.targetObject);
+        }
+    }
+
+
     private static void SetGraphUpdated()
     {
         EditorApplication.update -= OnEditorUpdate;
@@ -121,7 +148,7 @@ public static class GameObjectUtils
                 deps = GetDependenciesForComponent(comp);
             }
 
-            if (target is not null)
+            if (target is not null && graph.ContainsKey(target)) //TODO: Remove && graph.ContainsKey(target) and implement GameObject creating and deleting tracking 
             {
                 var uses = graph[target].uses;
                 graph[target].uses = deps;
