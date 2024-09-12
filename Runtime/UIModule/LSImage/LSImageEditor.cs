@@ -1,7 +1,9 @@
 ﻿#if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Reflection;
+using LSCore.Extensions;
 using LSCore.Extensions.Unity;
+using Sirenix.Utilities;
 using UnityEditor;
 using UnityEditor.UI;
 using UnityEngine;
@@ -22,6 +24,7 @@ namespace LSCore
         SerializedProperty m_UseSpriteMesh;
         SerializedProperty combineFilledWithSliced;
         SerializedProperty m_PixelsPerUnitMultiplier;
+        SerializedProperty flip;
         FieldInfo bIsDriven;
         private LSImage image;
         private RectTransform rect;
@@ -38,6 +41,7 @@ namespace LSCore
             rotateId = serializedObject.FindProperty("rotateId");
             combineFilledWithSliced = serializedObject.FindProperty("combineFilledWithSliced");
             m_PixelsPerUnitMultiplier = serializedObject.FindProperty("m_PixelsPerUnitMultiplier");
+            flip = serializedObject.FindProperty("flip");
             bIsDriven = typeof(ImageEditor).GetField("m_bIsDriven", BindingFlags.Instance | BindingFlags.NonPublic);
             image = (LSImage)target;
             rect = image.GetComponent<RectTransform>();
@@ -74,7 +78,20 @@ namespace LSCore
 
             EditorGUILayout.EndFadeGroup();
             NativeSizeButtonGUI();
+            
+            EditorGUILayout.BeginHorizontal();
+            
+            Rect totalRect = EditorGUILayout.GetControlRect();
+            Rect fieldRect = EditorGUI.PrefixLabel(totalRect, new GUIContent("Flip"));
+            
+            GUI.Label(fieldRect.TakeFromLeft(18), "X");
+            var xFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), flip.vector2IntValue.x == 1);
+            GUI.Label(fieldRect.TakeFromLeft(18), "Y");
+            var yFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), flip.vector2IntValue.y == 1);
+            flip.vector2IntValue = new Vector2Int(xFlipValue.ToInt(), yFlipValue.ToInt());
 
+            EditorGUILayout.EndHorizontal();
+            
             DrawRotateButton();
 
             serializedObject.ApplyModifiedProperties();

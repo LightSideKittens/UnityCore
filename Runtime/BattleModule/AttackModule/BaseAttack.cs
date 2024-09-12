@@ -13,6 +13,7 @@ namespace LSCore
     [TypeFrom]
     public abstract class BaseAttack
     {
+        [SerializeField] public List<BaseImpactObject> impactObjects;
         [NonSerialized] public Transform transform;
         [NonSerialized] public FindTargetComp findTargetComp;
 
@@ -24,6 +25,7 @@ namespace LSCore
         {
             this.transform = transform;
             this.findTargetComp = findTargetComp;
+            SetupImpactObjects(impactObjects);
             OnInit();
         }
 

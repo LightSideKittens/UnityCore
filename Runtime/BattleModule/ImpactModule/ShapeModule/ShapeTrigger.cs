@@ -54,7 +54,7 @@ namespace LSCore
                     
                     for (int j = 0; j < result.Length; j++)
                     {
-                        yield return result[i];
+                        yield return result[j];
                     }
                 }
             }

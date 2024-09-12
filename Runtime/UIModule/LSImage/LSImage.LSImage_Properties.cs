@@ -5,7 +5,7 @@ namespace LSCore
     public partial class LSImage
     {
         [SerializeField] private int rotateId = 0;
-        [SerializeField] private bool invert;
+        [SerializeField] private Vector2Int flip;
         [SerializeField] private bool combineFilledWithSliced;
 
         public int RotateId

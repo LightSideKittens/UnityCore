@@ -116,8 +116,6 @@ namespace LSCore
 
         private void RotateMesh(LSVertexHelper vh)
         {
-            if(rotateId == 0) return;
-            
             UIVertex vert = new UIVertex();
             var count = vh.currentVertCount;
             var center = rt.rect.center * 2;
@@ -127,8 +125,10 @@ namespace LSCore
                 1 => Rotate90,
                 2 => Rotate180,
                 3 => Rotate270,
-                _ => rotateAction
+                _ => null
             };
+
+            rotateAction += Invert;
             
             for (int i = 0; i < count; i++)
             {
@@ -159,6 +159,22 @@ namespace LSCore
                 }
             }
 
+        }
+
+        private void Invert(ref Vector3 pos, in Vector2 center)
+        {
+            float xOffset = pos.x - center.x;
+            float yOffset = pos.y - center.y;
+            
+            if (flip.x == 1)
+            {
+                pos.x = -xOffset + center.x;
+            }
+
+            if (flip.y == 1)
+            {
+                pos.y = -yOffset + center.y;
+            }
         }
 
         private void Rotate90(ref Vector3 pos, in Vector2 center)
