@@ -68,8 +68,8 @@ namespace LSCore
         protected virtual void OnShowed() => onShowed.Invoke();
         protected virtual void OnHidden() => onHidden.Invoke();
 
-        protected virtual Tween ShowAnim => showHideAnim?.Show;
-        protected virtual Tween HideAnim => showHideAnim?.Hide;
+        protected virtual Tween ShowAnim => showHideAnim?.Show();
+        protected virtual Tween HideAnim => showHideAnim?.Hide();
 
         protected virtual void OnBackButton() => WindowsData.GoBack();
 

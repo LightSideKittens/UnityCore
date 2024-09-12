@@ -7,7 +7,7 @@ namespace LSCore
     {
         public DefaultUIViewAnimation anim;
 
-        public Tween Show() => anim.Show;
-        public Tween Hide() => anim.Hide;
+        public Tween Show() => anim.Show();
+        public Tween Hide() => anim.Hide();
     }
 }

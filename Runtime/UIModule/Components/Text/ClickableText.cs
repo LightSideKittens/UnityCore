@@ -19,6 +19,8 @@ namespace LSCore
         [SerializeField] private ClickActions clickActions;
         
         public ref ClickAnim Anim => ref anim;
+        public Transform Transform => transform;
+        public Action Clicked { get; set; }
 
         protected override void Awake()
         {
@@ -31,32 +33,22 @@ namespace LSCore
             base.Start();
             clickActions.Init();
         }
-
-#if UNITY_EDITOR
-        protected override void OnValidate()
-        {
-            base.OnValidate();
-        }
-#endif
         
-        public void OnPointerClick(PointerEventData eventData)
+        void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
         {
             clickActions.OnClick();
             anim.OnClick();
             Clicked?.Invoke();
         }
 
-        public void OnPointerDown(PointerEventData eventData) => anim.OnPointerDown();
-        public void OnPointerUp(PointerEventData eventData) => anim.OnPointerUp();
+        void IPointerDownHandler.OnPointerDown(PointerEventData eventData) => anim.OnPointerDown();
+        void IPointerUpHandler.OnPointerUp(PointerEventData eventData) => anim.OnPointerUp();
 
         protected override void OnDisable()
         {
             base.OnDisable();
             anim.OnDisable();
         }
-        
-        public Transform Transform => transform;
-        public Action Clicked { get; set; }
     }
     
 #if UNITY_EDITOR
@@ -75,7 +67,7 @@ namespace LSCore
 
         public override void OnInspectorGUI()
         {
-            base.OnInspectorGUI();
+            DrawTextPropertiesAsFoldout();
             propertyTree.BeginDraw(true);
             clickActions.Draw();
             propertyTree.EndDraw();

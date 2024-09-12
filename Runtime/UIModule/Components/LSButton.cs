@@ -27,15 +27,15 @@ namespace LSCore
             clickActions.Init();
         }
 
-        public void OnPointerClick(PointerEventData eventData)
+        void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
         {
             clickActions.OnClick();
             anim.OnClick();
             Clicked?.Invoke();
         }
 
-        public void OnPointerDown(PointerEventData eventData) => anim.OnPointerDown();
-        public void OnPointerUp(PointerEventData eventData) => anim.OnPointerUp();
+        void IPointerDownHandler.OnPointerDown(PointerEventData eventData) => anim.OnPointerDown(); 
+        void IPointerUpHandler.OnPointerUp(PointerEventData eventData) => anim.OnPointerUp();
 
         protected override void OnDisable()
         {
@@ -55,6 +55,7 @@ namespace LSCore
         private LSButton button;
         private PropertyTree propertyTree;
         private InspectorProperty clickActions;
+        
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -71,7 +72,7 @@ namespace LSCore
 
         public override void OnInspectorGUI()
         {
-            base.OnInspectorGUI();
+            DrawImagePropertiesAsFoldout();
             propertyTree.BeginDraw(true);
             clickActions.Draw();
             propertyTree.EndDraw();

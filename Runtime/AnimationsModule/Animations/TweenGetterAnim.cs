@@ -1,8 +1,10 @@
-﻿using DG.Tweening;
+﻿using System;
+using DG.Tweening;
 using Sirenix.OdinInspector;
 
 namespace LSCore.AnimationsModule.Animations
 {
+    [Serializable]
     public class TweenGetterAnim : BaseAnim
     {
         public bool useMultiple;

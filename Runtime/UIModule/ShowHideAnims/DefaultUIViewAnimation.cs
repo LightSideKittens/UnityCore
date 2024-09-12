@@ -12,7 +12,7 @@ namespace LSCore
         [SerializeField] private float duration = 0.2f;
         public override void Init() { }
 
-        public override Tween Show => canvasGroup.DOFade(1, duration);
-        public override Tween Hide => canvasGroup.DOFade(0, duration);
+        public override Tween Show() => canvasGroup.DOFade(1, duration);
+        public override Tween Hide() => canvasGroup.DOFade(0, duration);
     }
 }

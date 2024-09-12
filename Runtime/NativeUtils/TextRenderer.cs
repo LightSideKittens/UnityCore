@@ -316,7 +316,7 @@ public static class TextRenderer
         {
             Debug.LogError("Failed to render text");
             var (width, height) = GetSize(textComp);
-                texture = Texture2DExtensions.GetTextureByColor(new Color(0.5f, 0.5f, 0.5f, 0.5f), width, height);
+                texture = Texture2DExt.GetTextureByColor(new Color(0.5f, 0.5f, 0.5f, 0.5f), width, height);
             return texture;
         }
         

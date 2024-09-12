@@ -8,8 +8,8 @@ namespace LSCore
     public abstract class ShowHideAnim
     {
         public abstract void Init();
-        public abstract Tween Show { get; }
-        public abstract Tween Hide { get; }
+        public abstract Tween Show();
+        public abstract Tween Hide();
     }
 
     public class TwoShowHidAnim : ShowHideAnim
@@ -23,7 +23,7 @@ namespace LSCore
             hideAnim.Init();
         }
 
-        public override Tween Show => showAnim.Animate();
-        public override Tween Hide => hideAnim.Animate();
+        public override Tween Show() => showAnim.Animate();
+        public override Tween Hide() => hideAnim.Animate();
     }
 }

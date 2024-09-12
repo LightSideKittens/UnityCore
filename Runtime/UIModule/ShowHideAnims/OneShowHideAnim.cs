@@ -11,22 +11,19 @@ namespace LSCore
 
         public override void Init() => animation.Init();
 
-        public override Tween Show => animation.Animate();
-        public override Tween Hide => animation.Animate();
+        public override Tween Show() => animation.Animate();
+        public override Tween Hide() => animation.Animate();
     }
     
     [Serializable]
     public class InOutShowHideAnim : OneShowHideAnim
     {
-        public override Tween Hide
+        public override Tween Hide()
         {
-            get
-            {
-                var tween = base.Hide;
-                tween.Goto(tween.Duration(), true);
-                tween.PlayBackwards();
-                return tween;
-            }
+            var tween = base.Hide();
+            tween.Goto(tween.Duration(), true);
+            tween.PlayBackwards();
+            return tween;
         }
     }
 }

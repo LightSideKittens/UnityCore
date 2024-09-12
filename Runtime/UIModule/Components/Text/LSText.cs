@@ -231,6 +231,17 @@ namespace LSCore
         private InspectorProperty localizationKey;
         private InspectorProperty tableData;
         
+        private bool showImageProperties;
+
+        protected void DrawTextPropertiesAsFoldout()
+        {
+            showImageProperties = EditorGUILayout.Foldout(showImageProperties, "Text Properties");
+            if (showImageProperties)
+            {
+                OnInspectorGUI();
+            }
+        }
+        
         protected override void OnEnable()
         {
             base.OnEnable();

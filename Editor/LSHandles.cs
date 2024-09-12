@@ -16,7 +16,6 @@ namespace LSCore.Editor
         public static int bezieQuality = 50;
         private static readonly EditorHiddenObjectPool<LineRenderer> lines = new(shouldStoreActive: true);
         private static readonly EditorHiddenObjectPool<Transform> points = new(shouldStoreActive: true);
-        private static CombineInstance[] meshesToBake = new CombineInstance[1000];
         private static Rect rect;
         private static Camera cam;
         private static Material lineMaterial;

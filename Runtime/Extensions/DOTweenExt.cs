@@ -7,6 +7,8 @@ namespace LSCore.Extensions
 {
     public static class DOTweenExt
     {
+        public static void Complete(object id) => DOTween.TweensById(id)?.ForEach(x => x.Goto(x.isBackwards ? 0 : 1));
+        
         public static Tween DOFloat(this MaterialPropertyBlock target, float duration, int propId, float endValue)
         {
             if (!target.HasProperty(propId))

@@ -19,7 +19,7 @@ public abstract class LSAction<T>
     public abstract void Invoke(T value);
 }
 
-public static class LSDelegatesExtensions
+public static class LSActionExtensions
 {
     public static void Invoke(this IEnumerable<LSAction> actions)
     {
@@ -34,6 +34,22 @@ public static class LSDelegatesExtensions
         foreach (var action in actions)
         {
             action.Invoke(value);
+        }
+    }
+    
+    public static void Invoke(this IList<LSAction> actions)
+    {
+        for (int i = 0; i < actions.Count; i++)
+        {
+            actions[i].Invoke();
+        }
+    }
+    
+    public static void Invoke<T>(this IList<LSAction<T>> actions, T value)
+    {
+        for (int i = 0; i < actions.Count; i++)
+        {
+            actions[i].Invoke(value);
         }
     }
 }

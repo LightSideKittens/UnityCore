@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Sirenix.OdinInspector.Editor;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -9,10 +10,10 @@ namespace LSCore
     [Serializable]
     public class ClickActions : ISerializationCallbackReceiver
     {
-        [SerializeReference] public List<LSAction> actions;
+        [SerializeReference] public List<LSAction> actions = new();
         [HideInInspector] [SerializeField] private bool isClickSoundOverride;
         
-        public void OnBeforeSerialize()
+        void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
 #if UNITY_EDITOR
             if (World.IsEditMode)
@@ -22,7 +23,7 @@ namespace LSCore
 #endif
         }
 
-        public void OnAfterDeserialize() { }
+        void ISerializationCallbackReceiver.OnAfterDeserialize() { }
 
         public void Init()
         {
@@ -47,5 +48,15 @@ namespace LSCore
         {
             actions?.Invoke();
         }
+            
+#if UNITY_EDITOR
+        public class Drawer : OdinValueDrawer<ClickActions>
+        {
+            protected override void DrawPropertyLayout(GUIContent label)
+            {
+                Property.Children.First().Draw(label);
+            }
+        }
+#endif
     }
 }

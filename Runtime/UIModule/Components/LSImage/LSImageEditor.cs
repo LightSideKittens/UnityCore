@@ -1,13 +1,12 @@
 ﻿#if UNITY_EDITOR
-using System.Collections.Generic;
 using System.Reflection;
 using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using Sirenix.Utilities;
+using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEditor.UI;
 using UnityEngine;
-using UnityToolbarExtender;
 using UnityEngine.UI;
 
 namespace LSCore
@@ -29,7 +28,29 @@ namespace LSCore
         private LSImage image;
         private RectTransform rect;
         private bool isDragging;
+        private bool showImageProperties;
+        private static Texture2D texture;
+        
+        protected void DrawImagePropertiesAsFoldout()
+        {
+            texture ??= Texture2DExt.GetTextureByColor(new Color(0.2f, 0.19f, 0.29f));
+            
+            var old = SirenixGUIStyles.BoxContainer.normal.background;
+            SirenixGUIStyles.BoxContainer.normal.background = texture;
+            SirenixEditorGUI.BeginBox();
+            SirenixEditorGUI.BeginBoxHeader();
+            showImageProperties = SirenixEditorGUI.Foldout(showImageProperties, "Image Properties");
+            SirenixEditorGUI.EndBoxHeader();
+            if (SirenixEditorGUI.BeginFadeGroup(this, showImageProperties))
+            {
+                DrawImageProperties();
+            }
 
+            SirenixEditorGUI.EndFadeGroup();
+            SirenixEditorGUI.EndBox();
+            SirenixGUIStyles.BoxContainer.normal.background = old;
+        }
+        
         protected override void OnEnable()
         {
             base.OnEnable();
@@ -48,6 +69,11 @@ namespace LSCore
         }
 
         public override void OnInspectorGUI()
+        {
+            DrawImageProperties();
+        }
+
+        protected void DrawImageProperties()
         {
             serializedObject.Update();
             bIsDriven.SetValue(this, (rect.drivenByObject as Slider)?.fillRect == rect);
@@ -96,7 +122,7 @@ namespace LSCore
 
             serializedObject.ApplyModifiedProperties();
         }
-
+        
         void SetShowNativeSize(bool instant)
         {
             Image.Type type = (Image.Type)m_Type.enumValueIndex;
