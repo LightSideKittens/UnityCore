@@ -5,6 +5,15 @@ namespace Core.Server
 {
     public static class DelegateExtensions
     {
+        public static void InverseInvoke(this Action action)
+        {
+            var invocationList = action.GetInvocationList();
+            for (int i = invocationList.Length - 1; i >= 0; i--)
+            {
+                ((Action)invocationList[i])();
+            }
+        }
+        
         public static void SafeInvoke(this Action action)
         {
 #if DEBUG

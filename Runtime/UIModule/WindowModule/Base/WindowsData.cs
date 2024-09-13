@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Core.Server;
 
 namespace LSCore
 {
@@ -43,7 +44,7 @@ namespace LSCore
             IsGoBack = true;
             if (states.TryPop(out var action))
             {
-                action();
+                action.InverseInvoke();
             }
             IsGoBack = false;
         }
@@ -58,7 +59,7 @@ namespace LSCore
         internal static void HideAllPrevious()
         {
             IsHideAllPrevious = true;
-            hideAllPrevious?.Invoke();
+            hideAllPrevious?.InverseInvoke();
             IsHideAllPrevious = false;
         }
 
@@ -129,6 +130,8 @@ namespace LSCore
 
         public static void CallOption(ShowWindowOption option)
         {
+            if(IsGoBack) return;
+            
             if (showWindowOptions.TryGetValue(option, out var action))
             {
                 action();

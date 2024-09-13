@@ -33,7 +33,7 @@ namespace LSCore
         
         public void Show()
         {
-            if (WindowsData.IsAt(this, ^2))
+            if (WindowsData.IsAt(this, 0))
             {
                 Debug.Log($"{gameObject.name} Show WindowsData.IsAt");
                 WindowsData.GoBack();
@@ -77,7 +77,7 @@ namespace LSCore
         private void InternalHide()
         {
             if (hideTween != null) return;
-            
+            Debug.Log($"{gameObject.name} InternalHide");
             IsShow = false;
             if (canvas)
             {
