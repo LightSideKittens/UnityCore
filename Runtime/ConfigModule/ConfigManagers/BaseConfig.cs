@@ -15,16 +15,4 @@
         protected internal virtual void OnDeleting() {}
         protected internal virtual void OnDeleted() {}
     }
-    
-    public abstract class GameConfig<T> : LocalDynamicConfig where T : GameConfig<T>, new()
-    {
-        public static T Get(string path) => GetManager(path).Config;
-        protected static GameConfigManager<T> GetManager(string path) => ConfigMaster<GameConfigManager<T>>.Get(path);
-    }
-    
-    public abstract class GameSingleConfig<T> : LocalDynamicConfig where T : GameSingleConfig<T>, new()
-    {
-        private static GameConfigManager<T> Manager => ConfigMaster<GameConfigManager<T>>.Default;
-        public static T Config => Manager.Config;
-    }
 }

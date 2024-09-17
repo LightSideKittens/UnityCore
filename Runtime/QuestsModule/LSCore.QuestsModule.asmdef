@@ -1,3 +1,4 @@
 ﻿{
-  "name": "LSCore.QuestsModule"
+  "name": "LSCore.QuestsModule",
+  "references":[ "GUID:75992adb30bf51f40a7a0f3283432aa2", "GUID:1bc6eecb763177148a383c0cb9ad9369", "GUID:488fbb5f4bad8a94daedd0c8d1239e93", "GUID:bb5ab3e5517faff4287376ae8f1fc9fc", "GUID:3dd2cb52eff6e5743bdb8fcc64baed91" ]
 }

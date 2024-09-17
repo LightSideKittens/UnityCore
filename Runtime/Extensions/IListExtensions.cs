@@ -6,6 +6,14 @@ namespace LSCore.Extensions
 {
     public static class IListExtensions
     {
+        public static IEnumerable<T> BySelectEx<T>(this IList<T> list, string expression)
+        {
+            foreach (var index in SelectEx.GetIndexes(expression, list.Count))
+            {
+                yield return list[index];
+            }
+        }
+        
         public static ListSpan<T> Range<T>(this IList<T> list, Range range)
         {
             var count = list.Count;

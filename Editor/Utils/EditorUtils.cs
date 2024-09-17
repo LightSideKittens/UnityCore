@@ -1,4 +1,6 @@
-﻿using DG.DemiEditor;
+﻿using System;
+using DG.DemiEditor;
+using LSCore.Extensions.Unity;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -72,5 +74,55 @@ public static class EditorUtils
         var active = SirenixGUIStyles.Button.active;
         active.textColor = textColor;
         active.background = gray2Tex;
+    }
+    
+    private static Texture2D texture;
+
+    public static void DrawWithCustomLabelWidth(float width, Action draw)
+    {
+        var old = EditorGUIUtility.labelWidth; 
+        EditorGUIUtility.labelWidth = width;
+        draw();
+        EditorGUIUtility.labelWidth = old;
+    }
+    
+    public static bool DrawInBoxFoldout(string label, Action draw, object key, bool show) 
+        => DrawInBoxFoldout(new GUIContent(label), draw, key, show);
+
+    public static bool DrawInBoxFoldout(GUIContent label, Action draw, object key, bool show)
+    {
+        DrawInBox(() =>
+        {
+            show = DrawInFoldout(label, draw, key, show);
+        });
+
+        return show;
+    }
+
+    public static void DrawInBox(Action draw)
+    {
+        texture ??= Texture2DExt.GetTextureByColor(new Color(0.2f, 0.19f, 0.29f));
+            
+        var old = SirenixGUIStyles.BoxContainer.normal.background;
+        SirenixGUIStyles.BoxContainer.normal.background = texture;
+        SirenixEditorGUI.BeginBox();
+        draw();
+        SirenixEditorGUI.EndBox();
+        SirenixGUIStyles.BoxContainer.normal.background = old;
+    }
+
+    public static bool DrawInFoldout(GUIContent label, Action draw, object key, bool show)
+    {
+        SirenixEditorGUI.BeginBoxHeader();
+        show = SirenixEditorGUI.Foldout(show, label);
+        SirenixEditorGUI.EndBoxHeader();
+        
+        if (SirenixEditorGUI.BeginFadeGroup(key, show))
+        {
+            draw();
+        }
+
+        SirenixEditorGUI.EndFadeGroup();
+        return show;
     }
 }

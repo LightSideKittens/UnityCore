@@ -1,6 +1,6 @@
 {
     "name": "LSCore.Extensions",
-    "rootNamespace": "",
+    "rootNamespace": "LSCore.Extensions",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

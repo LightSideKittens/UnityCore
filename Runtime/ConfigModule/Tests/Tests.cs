@@ -10,7 +10,7 @@ namespace LSCore.ConfigModule.Test
         public static TestConfig Config => Manager.Config;
         public static TestConfig Get(string path) => GetManager(path).Config;
         public static void Delete(string path) => GetManager(path).Delete();
-        public static GameConfigManager<TestConfig> GetManager(string path) => GameConfigManager<TestConfig>.Get(path);
+        public static GameConfigManager<TestConfig> GetManager(string path) => ConfigMaster<GameConfigManager<TestConfig>>.Get(path);
         
 
         public string name1;

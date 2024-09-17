@@ -106,31 +106,9 @@ namespace LSCore.AnimationsModule
         
         public void Call(string expression)
         {
-            if (int.TryParse(expression, out var ind))
+            foreach (var action in actions.BySelectEx(expression))
             {
-                actions[ind].Invoke();
-            }
-            else if (expression.Contains(','))
-            {
-                var split = expression.Split(',');
-
-                for (int i = 0; i < split.Length; i++)
-                {
-                    actions[int.Parse(split[i])].Invoke();
-                }
-            }
-            else if(expression.TryParseIndex(out var index))
-            {
-                actions[index].Invoke();
-            }
-            else if(expression.TryParseRange(out var range))
-            {
-                var a = actions.Range(range);
-
-                for (int i = 0; i < a.Count; i++)
-                {
-                    a[i].Invoke();
-                }
+                action.Invoke();
             }
         }
 

@@ -196,6 +196,11 @@ namespace LSCore.ConfigModule
             File.Delete(fullFileName);
         }
         
+        public bool Exists()
+        {
+            string fullFileName = GetFullFileName(fullPath);
+            return File.Exists(fullFileName);
+        }
         
         /*public void AddPathMigration(string newPath)
         {

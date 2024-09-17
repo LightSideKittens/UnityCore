@@ -29,26 +29,10 @@ namespace LSCore
         private RectTransform rect;
         private bool isDragging;
         private bool showImageProperties;
-        private static Texture2D texture;
         
         protected void DrawImagePropertiesAsFoldout()
         {
-            texture ??= Texture2DExt.GetTextureByColor(new Color(0.2f, 0.19f, 0.29f));
-            
-            var old = SirenixGUIStyles.BoxContainer.normal.background;
-            SirenixGUIStyles.BoxContainer.normal.background = texture;
-            SirenixEditorGUI.BeginBox();
-            SirenixEditorGUI.BeginBoxHeader();
-            showImageProperties = SirenixEditorGUI.Foldout(showImageProperties, "Image Properties");
-            SirenixEditorGUI.EndBoxHeader();
-            if (SirenixEditorGUI.BeginFadeGroup(this, showImageProperties))
-            {
-                DrawImageProperties();
-            }
-
-            SirenixEditorGUI.EndFadeGroup();
-            SirenixEditorGUI.EndBox();
-            SirenixGUIStyles.BoxContainer.normal.background = old;
+            showImageProperties = EditorUtils.DrawInBoxFoldout("Image Properties", DrawImageProperties, this, showImageProperties);
         }
         
         protected override void OnEnable()

@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "",
-        "LSCore.Editor.HarmonyPatchers"
+        "LSCore.Editor.HarmonyPatchers",
+        "LSCore.Extensions.Unity"
     ],
     "includePlatforms": [
         "Editor"
