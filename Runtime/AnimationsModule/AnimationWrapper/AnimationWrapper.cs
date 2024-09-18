@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
@@ -281,7 +280,19 @@ namespace LSCore.AnimationsModule
                 Patchers.AnimationWindowControl.time.Called -= OnWindowTimeChanged;
                 return;
             }
-            
+
+            var selected = Selection.activeGameObject;
+            if (selected == null || EditorUtility.IsPersistent(selected))
+            {
+                return;
+            }
+
+            var wrapper = selected.GetComponentInParent<AnimationWrapper>();
+            if (wrapper != this)
+            {
+                return;
+            }
+
             Handle_Editor();
         }
 
@@ -295,8 +306,8 @@ namespace LSCore.AnimationsModule
 
             if (isAnimationCalled)
             {
-                Handle();
                 isAnimationCalled = false;
+                Handle();
             }
         }
 
