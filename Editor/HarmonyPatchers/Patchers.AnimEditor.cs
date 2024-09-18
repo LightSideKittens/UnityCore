@@ -24,6 +24,24 @@ public static partial class Patchers
                 Called?.Invoke(value);
             }
         }
+        
+        [HarmonyPatch]
+        public static class PlaybackUpdate
+        {
+            public static event Action Called;
+
+            static MethodBase TargetMethod()
+            {
+                var type = typeof(Editor).Assembly.GetType("UnityEditorInternal.AnimationWindowControl");
+                return type.GetMethod("PlaybackUpdate", BindingFlags.Instance | BindingFlags.Public);
+                
+            }
+
+            static void Postfix()
+            {
+                Called?.Invoke();
+            }
+        }
     }
     
     public static partial class AnimEditor

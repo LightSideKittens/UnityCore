@@ -268,16 +268,20 @@ namespace LSCore.AnimationsModule
         public AnimationWrapper()
         {
             Patchers.AnimationWindowControl.time.Called += OnWindowTimeChanged;
+            Patchers.AnimationWindowControl.PlaybackUpdate.Called += OnWindowTimeChanged;
             Patchers.AnimEditor.OnSelectionChanged.Called += OnSelectionChanged;
             Patchers.AnimEditor.previewing.Called += OnPreviewingChanged;
             EditorApplication.update += OnEditorUpdate;
         }
+
+        private void OnWindowTimeChanged() => OnWindowTimeChanged(0);
 
         private void OnWindowTimeChanged(float obj)
         {
             if (this == null || EditorUtility.IsPersistent(gameObject))
             {
                 Patchers.AnimationWindowControl.time.Called -= OnWindowTimeChanged;
+                Patchers.AnimationWindowControl.PlaybackUpdate.Called -= OnWindowTimeChanged;
                 return;
             }
 
@@ -314,6 +318,7 @@ namespace LSCore.AnimationsModule
         private void OnDestroy()
         {
             Patchers.AnimationWindowControl.time.Called -= OnWindowTimeChanged;
+            Patchers.AnimationWindowControl.PlaybackUpdate.Called -= OnWindowTimeChanged;
             Patchers.AnimEditor.OnSelectionChanged.Called -= OnSelectionChanged;
             Patchers.AnimEditor.previewing.Called -= OnPreviewingChanged;
             EditorApplication.update -= OnEditorUpdate;
