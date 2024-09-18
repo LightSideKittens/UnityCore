@@ -214,7 +214,11 @@ namespace LSCore.Editor.BackupSystem
         {
             if (res)
             {
-                OnChanged(obj.targetObject);
+                try
+                {
+                    OnChanged(obj.targetObject);
+                }
+                catch { }
             }
         }
         

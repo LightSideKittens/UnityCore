@@ -18,7 +18,8 @@ namespace LSCore.QuestModule
         [Serializable]
         public class StartAfterCreate : StartHandler
         {
-            [TimeSpan] public long time;
+            [TimeSpan(0, 5, 0)] 
+            public long time;
             
             protected void Start(string questId, TimeSpan timeForStart)
             {

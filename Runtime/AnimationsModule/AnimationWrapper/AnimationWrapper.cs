@@ -56,6 +56,8 @@ namespace LSCore.AnimationsModule
                 }
                 
                 particleSystem.Simulate((float)(t - lastTime), true, false);
+                SceneView.RepaintAll();
+                GameViewExt.Repaint();
             }
             else
             {
@@ -266,9 +268,21 @@ namespace LSCore.AnimationsModule
         
         public AnimationWrapper()
         {
+            Patchers.AnimationWindowControl.time.Called += OnWindowTimeChanged;
             Patchers.AnimEditor.OnSelectionChanged.Called += OnSelectionChanged;
             Patchers.AnimEditor.previewing.Called += OnPreviewingChanged;
             EditorApplication.update += OnEditorUpdate;
+        }
+
+        private void OnWindowTimeChanged(float obj)
+        {
+            if (this == null || EditorUtility.IsPersistent(gameObject))
+            {
+                Patchers.AnimationWindowControl.time.Called -= OnWindowTimeChanged;
+                return;
+            }
+            
+            Handle_Editor();
         }
 
         private void OnEditorUpdate()
@@ -288,6 +302,7 @@ namespace LSCore.AnimationsModule
 
         private void OnDestroy()
         {
+            Patchers.AnimationWindowControl.time.Called -= OnWindowTimeChanged;
             Patchers.AnimEditor.OnSelectionChanged.Called -= OnSelectionChanged;
             Patchers.AnimEditor.previewing.Called -= OnPreviewingChanged;
             EditorApplication.update -= OnEditorUpdate;

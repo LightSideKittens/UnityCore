@@ -28,11 +28,10 @@ namespace LSCore
         private LSImage image;
         private RectTransform rect;
         private bool isDragging;
-        private bool showImageProperties;
         
         protected void DrawImagePropertiesAsFoldout()
         {
-            showImageProperties = EditorUtils.DrawInBoxFoldout("Image Properties", DrawImageProperties, this, showImageProperties);
+            EditorUtils.DrawInBoxFoldout("Image Properties", DrawImageProperties, image, false);
         }
         
         protected override void OnEnable()

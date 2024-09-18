@@ -5,6 +5,27 @@ using UnityEditor;
 
 public static partial class Patchers
 {
+    public static class AnimationWindowControl
+    {
+        [HarmonyPatch]
+        public static class time
+        {
+            public static event Action<float> Called;
+
+            static MethodBase TargetMethod()
+            {
+                var type = typeof(Editor).Assembly.GetType("UnityEditorInternal.AnimationWindowControl");
+                return type.GetProperty("time").GetSetMethod(false);
+                
+            }
+
+            static void Postfix(float value)
+            {
+                Called?.Invoke(value);
+            }
+        }
+    }
+    
     public static partial class AnimEditor
     {
         [HarmonyPatch]

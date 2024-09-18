@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sirenix.OdinInspector.Editor;
+using LSCore.Attributes;
 using UnityEngine;
 using UnityEngine.Audio;
 
 namespace LSCore
 {
     [Serializable]
+    [Unwrap]
     public class ClickActions : ISerializationCallbackReceiver
     {
         [SerializeReference] public List<LSAction> actions = new();
@@ -48,15 +49,5 @@ namespace LSCore
         {
             actions?.Invoke();
         }
-            
-#if UNITY_EDITOR
-        public class Drawer : OdinValueDrawer<ClickActions>
-        {
-            protected override void DrawPropertyLayout(GUIContent label)
-            {
-                Property.Children.First().Draw(label);
-            }
-        }
-#endif
     }
 }

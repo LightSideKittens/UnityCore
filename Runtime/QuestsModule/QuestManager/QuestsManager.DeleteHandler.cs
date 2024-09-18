@@ -13,7 +13,7 @@ namespace LSCore.QuestModule
         {
             protected void Delete(string questId)
             {
-                Config[questIds]![questId]!.Remove();
+                Config[questIds]?[questId]?.Parent?.Remove();
                 QuestConfig.Delete(QuestConfig.Type.Data, GetQuestPath(questId));
                 QuestConfig.DeletePath(QuestConfig.Type.View, questId);
             }
@@ -24,9 +24,11 @@ namespace LSCore.QuestModule
         {
             [ValueDropdown("Keys")] 
             [SerializeField]
+            [Required]
             private string timeMarkKey;
-
-            [TimeSpan] public long time;
+            
+            [TimeSpan(0, 5, 0)] 
+            public long time;
 
             private IEnumerable<string> Keys => TimeMarkKeys;
             

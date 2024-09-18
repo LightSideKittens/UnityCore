@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Cronos;
 using LSCore.Attributes;
@@ -15,24 +16,25 @@ namespace LSCore.QuestModule
         public abstract class CreateHandler : Handler
         {
             public static string NewQuestId => Guid.NewGuid().ToString("N");
-            private JArray questIdsArr;
+            private JObject questIdsMap;
+            [NonSerialized] public List<Quest> selected = new();
 
             protected sealed override void OnInit()
             {
                 if (Config[questIds] == null)
                 {
-                    questIdsArr = new JArray();
-                    Config[questIds] = questIdsArr;
+                    questIdsMap = new JObject();
+                    Config[questIds] = questIdsMap;
                 }
             }
             
             protected abstract void StartCreating();
 
-            protected RJToken Create(string questId)
+            protected RJToken Create(string questId, Quest quest)
             {
                 var questToken = GetQuest(questId);
                 questToken[createdAt] = DateTime.UtcNow.Ticks;
-                questIdsArr.Add(questId);
+                questIdsMap.Add(questId, quest.Id);
                 
                 return questToken;
             }
@@ -41,7 +43,8 @@ namespace LSCore.QuestModule
             {
                 foreach (var quest in selector.Select(quests))
                 {
-                    quest.BuildTargetData(Create(NewQuestId));
+                    selected.Add(quest);
+                    quest.BuildTargetData(Create(NewQuestId, quest));
                 }
             }
         }
@@ -75,7 +78,7 @@ namespace LSCore.QuestModule
             {
                 if (Config[lastCreationDt] == null)
                 {
-                    if (CreateImmediately)
+                    if (CreateImmediately && !oneTime)
                     {
                         Create();
                         return;
@@ -101,7 +104,10 @@ namespace LSCore.QuestModule
         [Serializable]
         public class CreateByTimeSpan : CreateByTime
         {
-            [TimeSpan] private long time;
+            [TimeSpan(0, 5, 0)] 
+            public long time;
+            
+            [field: HideIf("oneTime")]
             [field: SerializeField] protected override bool CreateImmediately { get; set; }
             
             protected override async Task Wait()
@@ -121,7 +127,7 @@ namespace LSCore.QuestModule
         [Serializable]
         public class CreateByDateTime : CreateByTime
         {
-            [DateTime] private long time;
+            [DateTime] public long time;
             
             protected override void StartCreating()
             {
@@ -147,7 +153,7 @@ namespace LSCore.QuestModule
         [Serializable]
         public class CreateByCron : CreateByTime
         {
-            [CronEx] private string cron;
+            [CronEx] public string cron;
             protected override bool CreateImmediately { get; set; } = false;
             
             protected override async Task Wait()

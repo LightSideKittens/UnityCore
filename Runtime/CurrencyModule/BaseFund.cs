@@ -41,7 +41,9 @@ public abstract class BaseFund
     {
         SetIcon(ref icon);
         var rect = EditorGUILayout.GetControlRect(GUILayout.Height(30));
-        var boxRect = rect.TakeFromLeft(60);
+        var boxRect = rect;
+        boxRect = boxRect.TakeFromLeft(30);
+        boxRect = boxRect.AddX(EditorGUI.indentLevel * 15);
         GUI.DrawTexture(boxRect, icon, ScaleMode.ScaleToFit);
         return rect;
     }

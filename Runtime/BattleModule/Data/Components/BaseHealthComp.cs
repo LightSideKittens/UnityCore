@@ -13,6 +13,7 @@ namespace LSCore.BattleModule
         protected AffiliationType affiliation;
         public int Health => health;
         [NonSerialized] public bool isImmune;
+        public event Action Killed;
 
         protected override void OnRegister() => Reg(this);
         protected override void Init()
@@ -37,6 +38,7 @@ namespace LSCore.BattleModule
 
         protected virtual void Reset()
         {
+            Killed = null;
             realHealth = health;
             isKilled = false;
         }
@@ -58,13 +60,17 @@ namespace LSCore.BattleModule
             {
                 isKilled = true;
                 var killTween = OnKilled();
+                Killed?.Invoke();
+                
+                var unit = transform.Get<Unit>();
+                
                 if (killTween != null)
                 {
-                    killTween.OnComplete(() => transform.Get<Unit>().Release());
+                    killTween.OnComplete(unit.Release);
                 }
                 else
                 {
-                    transform.Get<Unit>().Release();
+                    unit.Release();
                 }
             }
         }

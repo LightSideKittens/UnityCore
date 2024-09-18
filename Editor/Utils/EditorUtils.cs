@@ -1,6 +1,7 @@
 ﻿using System;
 using DG.DemiEditor;
 using LSCore.Extensions.Unity;
+using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -85,18 +86,26 @@ public static class EditorUtils
         draw();
         EditorGUIUtility.labelWidth = old;
     }
+
+    public static bool GetExpandState(object key, bool defaultValue)
+    {
+        return SessionState.GetBool(key.ToString(), defaultValue);
+    }
     
-    public static bool DrawInBoxFoldout(string label, Action draw, object key, bool show) 
+    public static void SetExpandState(object key, bool value)
+    {
+        SessionState.SetBool(key.ToString(), value);
+    }
+    
+    public static void DrawInBoxFoldout(string label, Action draw, object key, bool show) 
         => DrawInBoxFoldout(new GUIContent(label), draw, key, show);
 
-    public static bool DrawInBoxFoldout(GUIContent label, Action draw, object key, bool show)
+    public static void DrawInBoxFoldout(GUIContent label, Action draw, object key, bool show)
     {
         DrawInBox(() =>
         {
-            show = DrawInFoldout(label, draw, key, show);
+            DrawInFoldout(label, draw, key, show);
         });
-
-        return show;
     }
 
     public static void DrawInBox(Action draw)
@@ -111,18 +120,18 @@ public static class EditorUtils
         SirenixGUIStyles.BoxContainer.normal.background = old;
     }
 
-    public static bool DrawInFoldout(GUIContent label, Action draw, object key, bool show)
+    public static void DrawInFoldout(GUIContent label, Action draw, object key, bool show = false)
     {
         SirenixEditorGUI.BeginBoxHeader();
-        show = SirenixEditorGUI.Foldout(show, label);
+        show = GetExpandState(key, show);
+        SetExpandState(key, SirenixEditorGUI.Foldout(show, label));
         SirenixEditorGUI.EndBoxHeader();
-        
+
         if (SirenixEditorGUI.BeginFadeGroup(key, show))
         {
             draw();
         }
 
         SirenixEditorGUI.EndFadeGroup();
-        return show;
     }
 }

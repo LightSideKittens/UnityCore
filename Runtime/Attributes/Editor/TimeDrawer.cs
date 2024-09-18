@@ -39,12 +39,10 @@ public abstract class TimeDrawer<T> : OdinAttributeDrawer<T, long> where T : Tim
         };
     }
 
-    private bool show;
-
     protected override void DrawPropertyLayout(GUIContent label)
     { 
         BeforeDraw();
-        show = EditorUtils.DrawInBoxFoldout(label, Draw, this, show);
+        EditorUtils.DrawInBoxFoldout(label, Draw, Property.Tree.WeakTargets[0], false);
         ValueEntry.SmartValue = AfterDraw();
     }
 
@@ -227,7 +225,7 @@ public class TimeSpanDrawer : TimeDrawer<TimeSpanAttribute>
         
         var abs = Math.Abs(ValueEntry.SmartValue);
         
-        span = abs is > 0 and < 10000
+        span = abs == 0
             ? Attribute.defaultValue 
             : new TimeSpan(ValueEntry.SmartValue);
 
@@ -249,7 +247,8 @@ public class TimeSpanDrawer : TimeDrawer<TimeSpanAttribute>
         if (span > maxSpan) span = maxSpan;
         
         UpdateData(span);
-        return span.Ticks;
+        var tick = span.Ticks;
+        return tick == 0 ? 1 : tick;
     }
 
     private void UpdateData(TimeSpan span)

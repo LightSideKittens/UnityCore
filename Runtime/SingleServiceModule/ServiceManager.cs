@@ -39,8 +39,7 @@ namespace LSCore
         {
             return Services.ContainsKey(typeof(TService));
         }
-
-        [Conditional("UNITY_EDITOR")]
+        
         private static void CheckIsServiceExist<TService>()
         {
             if (IsExists<TService>() == false)
@@ -55,7 +54,6 @@ namespace LSCore
             }
         }
         
-        [Conditional("UNITY_EDITOR")]
         private static void CheckServiceNull(BaseSingleService service, ref bool isError)
         {
             isError = service == null;

@@ -11,25 +11,29 @@ public class CronExDrawer : OdinAttributeDrawer<CronExAttribute, string>
     private string dayOfMonth = "*";
     private string month = "*";
     private string dayOfWeek = "*";
-    private bool show;
     private static GUIStyle style;
 
     protected override void Initialize()
     {
         base.Initialize();
-
-        var split = ValueEntry.SmartValue.Split(" ");
-        minute = split[0];
-        hour = split[1];
-        dayOfMonth = split[2];
-        month = split[3];
-        dayOfWeek = split[4];
+        
+        try
+        { 
+            CronExpression.Parse(ValueEntry.SmartValue);
+            var split = ValueEntry.SmartValue.Split(" ");
+            minute = split[0];
+            hour = split[1];
+            dayOfMonth = split[2];
+            month = split[3];
+            dayOfWeek = split[4];
+        }
+        catch { }
     }
     
 
     protected override void DrawPropertyLayout(GUIContent label)
     {
-        show = EditorUtils.DrawInBoxFoldout(label, Draw, this, show);
+        EditorUtils.DrawInBoxFoldout(label, Draw, Property.Tree.WeakTargets[0], false);
     }
 
     private void Draw()

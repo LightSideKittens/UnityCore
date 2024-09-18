@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using LSCore.Attributes;
 using Newtonsoft.Json.Linq;
+using Sirenix.OdinInspector;
 
 namespace LSCore.QuestModule
 {
@@ -11,6 +13,7 @@ namespace LSCore.QuestModule
         public Dictionary<object, Action<JToken>> setActions = new();
         
         private JToken token;
+        public JToken Token => token;
 
         public RJToken(JToken token) => this.token = token;
         
@@ -37,6 +40,8 @@ namespace LSCore.QuestModule
     public partial class QuestsManager
     {
         [Serializable]
+        [HideReferenceObjectPicker]
+        [TypeFrom]
         public abstract class Handler
         {
             public const string questIds = nameof(questIds);
@@ -58,15 +63,16 @@ namespace LSCore.QuestModule
 
             public void DoForEachAfterTime(long time, Action<string, TimeSpan> action)
             {
-                var questIdsArr= Config[questIds];
+                var questIdsMap = (JObject)Config[questIds];
                 
-                if(questIdsArr == null) return;
+                if(questIdsMap == null) return;
                 
                 var timeForDo = new TimeSpan(time);
-                
-                foreach (var questId in questIdsArr)
+            
+                foreach (var prop in questIdsMap.Properties())
                 {
-                    action(questId.ToString(), timeForDo);
+                    string questId = prop.Name;
+                    action(questId, timeForDo);
                 }
             }
             

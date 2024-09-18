@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using LSCore.Attributes;
 using LSCore.ConditionModule;
+using Newtonsoft.Json.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,6 +12,21 @@ namespace LSCore.QuestModule
 {
     public class Quest : MonoBehaviour
     {
+        [Serializable]
+        public abstract class Action : LSAction<Quest> { }
+
+        [Serializable]
+        [Unwrap]
+        public class Wrapper : Action
+        {
+            [SerializeReference] public LSAction action;
+            
+            public override void Invoke(Quest value)
+            {
+                action?.Invoke();
+            }
+        }
+        
         [Serializable]
         public class Handlers : Conditions<Handler> { }
         
@@ -19,26 +37,53 @@ namespace LSCore.QuestModule
             public RJToken targetQuestData;
             
             public abstract void BuildTargetData(RJToken questToken);
-            public abstract void SetupView();
+
+            public void SetupView()
+            {
+                OnSetupView();
+            }
 
             public void OnCullChanged(bool cull)
             {
                 if (!cull)
                 {
                     OnShowed();
-                    lastQuestData.Replace(targetQuestData);
                 }
             }
             
+            public abstract void OnSetupView();
             public abstract void OnShowed();
+
+            protected bool CheckDiffAndSync<T>(object key, RJToken target,
+                Action<(T lastValue, T currentValue)> onSync) where T : struct
+            {
+                return CheckDiffAndSync(key, target[key], onSync);
+            }
+
+            protected bool CheckDiffAndSync<T>(object key, JToken currentValue, Action<(T lastValue, T currentValue)> onSync = null) 
+            {
+                var lastValue = lastQuestData[key];
+                
+                if (lastValue == null || !JToken.DeepEquals(lastValue, currentValue))
+                {
+                    var lastVal = lastValue != null ? lastValue.ToObject<T>() ?? default(T) : default;
+                    
+                    onSync?.Invoke((lastVal, currentValue.ToObject<T>()));
+                    lastQuestData[key] = currentValue;
+                    return true;
+                }
+                
+                return false;
+            }
         }
 
-        [SerializeReference] public Image cullEvent;
+        [SerializeField] public Image cullEvent;
         [SerializeReference] public Handlers handlers;
+        [SerializeReference] public List<Action> onComplete;
 
-        [SerializeField] private bool useViewId;
+        [SerializeField] private bool useId;
 
-        [ShowIf("useViewId")]
+        [ShowIf("useId")]
         [GenerateGuid]
         [SerializeField] private string id;
 
@@ -48,7 +93,8 @@ namespace LSCore.QuestModule
         private RJToken lastQuestData;
         private RJToken targetQuestData;
 
-        private string ViewDataPath => useViewId ? Path.Combine(questId, $"{placementId}{id}") : questId;
+        public string Id => id;
+        private string ViewDataPath => useId ? Path.Combine(questId, $"{placementId}{id}") : questId;
 
         public static Quest Create(string placementId, string questId, Quest prefab)
         {
@@ -73,6 +119,11 @@ namespace LSCore.QuestModule
                 var handler = handlers[i];
                 handler.lastQuestData = lastQuestData;
                 handler.targetQuestData = targetQuestData;
+            }
+
+            if (handlers)
+            {
+                onComplete.Invoke(this);
             }
         }
         

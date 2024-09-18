@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using LSCore.Attributes;
 using LSCore.Extensions;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace LSCore.QuestModule
 {
     [Serializable]
+    [HideReferenceObjectPicker]
+    [TypeFrom]
     public abstract class QuestSelector
     {
         public abstract Quest Select(List<Quest> quests);
@@ -22,6 +26,8 @@ namespace LSCore.QuestModule
     
 
     [Serializable]
+    [HideReferenceObjectPicker]
+    [TypeFrom]
     public abstract class QuestsSelector
     {
         public abstract IEnumerable<Quest> Select(List<Quest> quests);

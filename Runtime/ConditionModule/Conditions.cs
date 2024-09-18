@@ -6,7 +6,7 @@ using UnityEngine;
 namespace LSCore.ConditionModule
 {
     [Serializable]
-    public class Conditions<T> : Condition, ISerializationCallbackReceiver, IList<T> where T : Condition
+    public class Conditions<T> : Condition, ISerializationCallbackReceiver where T : Condition
     {
         [SerializeReference] public List<T> conditions;
         [NonSerialized] public ConditionBuilder conditionBuilder;
@@ -32,7 +32,7 @@ namespace LSCore.ConditionModule
         }
 
         public IEnumerator<T> GetEnumerator() => conditions.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
         public void Add(T item) => conditions.Add(item);
         public void Clear() => conditions.Clear();
 

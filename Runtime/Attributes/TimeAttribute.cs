@@ -17,6 +17,7 @@ namespace LSCore.Attributes
             Second = 1 << 5,
             Millisecond = 1 << 6,
             
+            Default = FullDate | Timer,
             FullDateTime = FullDate | FullTime,
             FullDate = Year | Date,
             FullTime = Timer | Millisecond,
@@ -28,7 +29,7 @@ namespace LSCore.Attributes
             WatchDateTime = Date | WatchTime
         }
 
-        public TimeAttribute(Options options = Options.WatchDateTime)
+        public TimeAttribute(Options options = Options.Default)
         {
             this.options = options;
         }
@@ -38,15 +39,26 @@ namespace LSCore.Attributes
     {
         public DateTime defaultValue;
 
-        public DateTimeAttribute()
+        public DateTimeAttribute(int addHours, int addMinutes, int addSeconds)
         {
             defaultValue = DateTime.Now;
+            defaultValue = defaultValue.AddHours(addHours);
+            defaultValue = defaultValue.AddMinutes(addMinutes);
+            defaultValue = defaultValue.AddSeconds(addSeconds);
         }
 
-        public DateTimeAttribute(Options options) : base(options)
+        public DateTimeAttribute(int addDays, int addHours, int addMinutes, int addSeconds) : this(addHours, addMinutes, addSeconds)
         {
-            defaultValue = DateTime.Now;
+            defaultValue = defaultValue.AddDays(addDays);
         }
+
+        public DateTimeAttribute(int addDays, int addHours, int addMinutes, int addSeconds, int addMilliseconds) : this(addDays, addHours,
+            addMinutes, addSeconds)
+        {
+            defaultValue = defaultValue.AddMilliseconds(addMilliseconds);
+        }
+        
+        public DateTimeAttribute() : this(4, 0, 0) { }
     }
 
     public class MinTimeSpanAttribute : Attribute

@@ -25,7 +25,14 @@ namespace LSCore
         [SerializeField] private LSText text; 
         [SerializeField] private TextMode textMode;
         [SerializeField] private bool wholeNumberInText;
+        [SerializeField] private bool onlyDiff;
 
+        public float OffsetMaxValue => maxValue - minValue;
+        public float OffsetValue => value - minValue;
+        
+        public float DisplayedMaxValue => onlyDiff ? maxValue - minValue : maxValue;
+        public float DisplayedValue => onlyDiff ? value - minValue : value;
+        
         public new bool wholeNumbers
         {
             get => base.wholeNumbers;
@@ -46,7 +53,7 @@ namespace LSCore
             {
                 if (wholeNumberInText != value)
                 {
-                    base.wholeNumbers = !base.wholeNumbers;
+                    base.wholeNumbers = !base.wholeNumbers; //HACK: need for calling "private void UpdateVisuals()" in base
                     base.wholeNumbers = !base.wholeNumbers;
                     wholeNumberInText = value;
                     UpdateValueTextGetters();
@@ -68,7 +75,20 @@ namespace LSCore
                 UpdateTextGetter();
             }
         }
-        
+
+        public bool OnlyDiff
+        {
+            get => onlyDiff;
+            set
+            {
+                if (onlyDiff != value)
+                {
+                    onlyDiff = value;
+                    UpdateText();
+                }
+            }
+        }
+
 #if UNITY_EDITOR
         protected override void Reset()
         {
@@ -98,10 +118,12 @@ namespace LSCore
             if (text != null)
             {
                 onValueChanged.AddListener(UpdateText);
-                UpdateText(0);
+                UpdateText();
             }
         }
-        
+
+        private void UpdateText() => UpdateText(0);
+
         private void UpdateText(float _)
         {
             text.text = textGetter();
@@ -149,11 +171,12 @@ namespace LSCore
             getter = wholeNumbers || WholeNumberInText ? intGetter : defaultGetter;
         }
 
-        private string IntValue() => $"{(int)value}";
-        private string IntMaxValue() => $"{(int)maxValue}";
+        private string IntValue() => $"{(int)DisplayedValue}";
+        private string IntMaxValue() => $"{(int)DisplayedMaxValue}";
         
-        private string ValueText() => $"{value}";
-        private string MaxValue() => $"{maxValue}";
+        private string ValueText() => $"{DisplayedValue}";
+        private string MaxValue() => $"{DisplayedMaxValue}";
+        
     }
 #if UNITY_EDITOR
 
@@ -165,6 +188,7 @@ namespace LSCore
         SerializedProperty text;
         SerializedProperty textMode;
         SerializedProperty wholeNumberInText;
+        SerializedProperty onlyDiff;
         
         
         protected override void OnEnable()
@@ -174,6 +198,7 @@ namespace LSCore
             text = serializedObject.FindProperty("text");
             textMode = serializedObject.FindProperty("textMode");
             wholeNumberInText = serializedObject.FindProperty("wholeNumberInText");
+            onlyDiff = serializedObject.FindProperty("onlyDiff");
         }
 
         public override void OnInspectorGUI()
@@ -184,6 +209,7 @@ namespace LSCore
             EditorGUILayout.PropertyField(text);
             EditorGUILayout.PropertyField(textMode);
             EditorGUILayout.PropertyField(wholeNumberInText);
+            EditorGUILayout.PropertyField(onlyDiff);
             
             serializedObject.ApplyModifiedProperties();
         }

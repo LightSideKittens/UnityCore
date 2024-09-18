@@ -10,9 +10,15 @@ namespace LSCore.Extensions
             return enumerator.MoveNext();
         }
         
-        public static bool TryParseEveryPart(string expression, List<string> incorrectParts)
+        public static bool TryParseEveryPart(string expression, List<string> exceptions)
         {
-            incorrectParts.Clear();
+            exceptions.Clear();
+            
+            if (string.IsNullOrEmpty(expression))
+            {
+                exceptions.Add("Expression value is null or empty");
+                return false;
+            }
             
             if (expression.Contains(','))
             {
@@ -23,7 +29,7 @@ namespace LSCore.Extensions
                     using var enumerator = GetIndexes(split[i], int.MaxValue).GetEnumerator();
                     if (!enumerator.MoveNext())
                     {
-                        incorrectParts.Add($"\"{split[i]}\" at {i}");
+                        exceptions.Add($"\"{split[i]}\" at {i}");
                     }
                 }
             }
@@ -32,11 +38,11 @@ namespace LSCore.Extensions
                 using var enumerator = GetIndexes(expression, int.MaxValue).GetEnumerator();
                 if (!enumerator.MoveNext())
                 {
-                    incorrectParts.Add($"\"{expression}\"");
+                    exceptions.Add($"\"{expression}\"");
                 }
             }
             
-            return incorrectParts.Count == 0;
+            return exceptions.Count == 0;
         }
         
         public static IEnumerable<int> GetIndexes(string expression, int count)

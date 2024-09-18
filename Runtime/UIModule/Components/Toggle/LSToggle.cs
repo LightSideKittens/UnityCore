@@ -115,6 +115,12 @@ namespace LSCore
             DOTweenExt.Complete(this);
         }
 
+        protected override void Start()
+        {
+            base.Start();
+            clickedActions.Init();
+        }
+
         protected override void OnDidApplyAnimationProperties()
         {
             base.OnDidApplyAnimationProperties();

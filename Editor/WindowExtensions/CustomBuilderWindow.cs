@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using LSCore.Editor;
 using UnityEditor;
@@ -88,14 +89,18 @@ public static class CustomBuilder
         private static string[] GetEnabledScenePaths()
         {
             EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
-            string[] scenePaths = new string[scenes.Length];
-
+            List<string> enabledScenePaths = new List<string>();
+            
             for (int i = 0; i < scenes.Length; i++)
             {
-                scenePaths[i] = scenes[i].path;
+                if (scenes[i].enabled)
+                {
+                    enabledScenePaths.Add(scenes[i].path);
+                }
             }
-
-            return scenePaths;
+            
+            return enabledScenePaths.ToArray();
         }
+
     }
 }

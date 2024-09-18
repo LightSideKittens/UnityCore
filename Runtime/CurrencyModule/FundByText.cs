@@ -1,5 +1,6 @@
 ﻿using System;
 using Sirenix.OdinInspector;
+using Sirenix.Utilities;
 using UnityEditor;
 using UnityEngine;
 
@@ -40,7 +41,7 @@ namespace LSCore
         {
             EditorGUILayout.BeginHorizontal();
             var rect = DrawIcon();
-            value = (FundText)EditorGUI.ObjectField(rect, GUIContent.none, value, typeof(FundText), true);
+            value = (FundText)EditorGUI.ObjectField(rect, " ", value, typeof(FundText), true);
             EditorGUILayout.EndHorizontal();
             return value;
         }

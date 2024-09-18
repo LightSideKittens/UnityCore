@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using LSCore.Attributes;
 #if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
 #endif
@@ -10,6 +11,7 @@ using static LSCore.Currencies;
 
 namespace LSCore
 {
+    [Unwrap]
     [Serializable]
     public class Funds : IEnumerable<BaseFund>
     {
@@ -74,14 +76,4 @@ namespace LSCore
             return GetEnumerator();
         }
     }
-    
-#if UNITY_EDITOR
-    public class FundsDrawer : OdinValueDrawer<Funds>
-    {
-        protected override void DrawPropertyLayout(GUIContent label)
-        {
-            Property.Children.First().Draw(label);
-        }
-    }
-#endif
 }
