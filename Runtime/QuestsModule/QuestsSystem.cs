@@ -11,9 +11,13 @@ namespace LSCore.QuestModule
         {
             public string placementId;
             [SerializeReference] public List<TransformAction> transformActions;
-            
+            private bool isCreated;
+
             public override void Invoke()
             {
+                if(isCreated) return;
+                isCreated = true;
+                
                 foreach (var quest in Create(placementId))
                 {
                     transformActions.Invoke(quest.transform);

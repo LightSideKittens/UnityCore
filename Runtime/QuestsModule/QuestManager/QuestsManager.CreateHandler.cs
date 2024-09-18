@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Cronos;
 using LSCore.Attributes;
@@ -17,7 +16,6 @@ namespace LSCore.QuestModule
         {
             public static string NewQuestId => Guid.NewGuid().ToString("N");
             private JObject questIdsMap;
-            [NonSerialized] public List<Quest> selected = new();
 
             protected sealed override void OnInit()
             {
@@ -26,6 +24,8 @@ namespace LSCore.QuestModule
                     questIdsMap = new JObject();
                     Config[questIds] = questIdsMap;
                 }
+
+                StartCreating();
             }
             
             protected abstract void StartCreating();
@@ -43,8 +43,9 @@ namespace LSCore.QuestModule
             {
                 foreach (var quest in selector.Select(quests))
                 {
-                    selected.Add(quest);
-                    quest.BuildTargetData(Create(NewQuestId, quest));
+                    var id = NewQuestId;
+                    var token = Create(id, quest);
+                    quest.BuildTargetData(token);
                 }
             }
         }

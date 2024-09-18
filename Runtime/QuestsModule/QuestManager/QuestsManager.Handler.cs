@@ -50,7 +50,8 @@ namespace LSCore.QuestModule
             [NonSerialized] public List<Quest> quests;
             protected JToken Config => QuestConfig.Get(QuestConfig.Type.Data, managerId);
             protected RJToken GetQuest(string questId) => new(QuestConfig.Get(QuestConfig.Type.Data, GetQuestPath(questId)));
-            protected string GetQuestPath(string questId) => Path.Combine(managerId, questId);
+            
+            public string GetQuestPath(string questId) => Path.Combine(managerId, questId);
             
             public void Init(string id, List<Quest> quests)
             {

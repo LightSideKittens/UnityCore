@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace LSCore.QuestModule
@@ -10,6 +11,7 @@ namespace LSCore.QuestModule
         public const string createdAt = nameof(createdAt);
         public const string startedAt = nameof(startedAt);
         public const string finishedAt = nameof(finishedAt);
+        public const string completedAt = nameof(completedAt);
 
         public static IEnumerable<string> TimeMarkKeys
         {
@@ -24,6 +26,7 @@ namespace LSCore.QuestModule
         [GenerateGuid] public string id;
         public List<Quest> quests;
         
+        [Required]
         [SerializeReference] public CreateHandler create;
         [SerializeReference] public StartHandler start;
         [SerializeReference] public FinishHandler finish;
@@ -44,7 +47,7 @@ namespace LSCore.QuestModule
 
         public IEnumerable<Quest> Create(string placementId)
         {
-            var questIdsMap= (JObject)Config[Handler.questIds];
+            var questIdsMap = (JObject)Config[Handler.questIds];
                 
             if(questIdsMap == null) yield break;
             
@@ -53,7 +56,7 @@ namespace LSCore.QuestModule
                 string questId = prop.Name;
                 string viewId = prop.Value.ToString();
    
-                yield return Quest.Create(placementId, questId, questById[viewId]);
+                yield return Quest.Create(placementId, create.GetQuestPath(questId), questById[viewId]);
             }
         }
     }

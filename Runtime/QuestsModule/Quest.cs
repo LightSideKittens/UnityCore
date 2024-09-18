@@ -103,6 +103,7 @@ namespace LSCore.QuestModule
             var quest = Instantiate(prefab);
             quest.InitData(placementId, questId);
             
+            quest.gameObject.SetActive(true);
             prefab.gameObject.SetActive(true);
             return quest;
         }
@@ -123,6 +124,7 @@ namespace LSCore.QuestModule
 
             if (handlers)
             {
+                targetQuestData[QuestsManager.completedAt] = DateTime.UtcNow.Ticks;
                 onComplete.Invoke(this);
             }
         }
@@ -137,6 +139,8 @@ namespace LSCore.QuestModule
 
         private void Awake()
         {
+            cullEvent.canvasRenderer.cull = true;
+            
             for (int i = 0; i < handlers.Count; i++)
             {
                 cullEvent.onCullStateChanged.AddListener(handlers[i].OnCullChanged);
