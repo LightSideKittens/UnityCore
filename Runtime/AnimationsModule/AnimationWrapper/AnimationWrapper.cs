@@ -285,14 +285,11 @@ namespace LSCore.AnimationsModule
                 return;
             }
 
-            var selected = Selection.activeGameObject;
-            if (selected == null || EditorUtility.IsPersistent(selected))
-            {
-                return;
-            }
+            if(Window == null) return;
+            
+            var activeRootGameObject = (GameObject)LSReflection.Eval(Window, "state.activeRootGameObject");
 
-            var wrapper = selected.GetComponentInParent<AnimationWrapper>();
-            if (wrapper != this)
+            if (activeRootGameObject == null || activeRootGameObject != gameObject)
             {
                 return;
             }
