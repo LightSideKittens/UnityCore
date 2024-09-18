@@ -49,16 +49,15 @@ namespace LSCore.ConfigModule
         
         private void OnWorldDestroy()
         {
-            UnsubOnWorldDestroy();
-            Save();
             LoadOnNextAccess();
+            Save();
+            UnsubOnWorldDestroy();
         }
         
         [Conditional("UNITY_EDITOR")]
         private void UnsubOnWorldDestroy() => World.Destroyed -= OnWorldDestroy;
 
         #endregion
-
         #region RUNTIME
         
         [Conditional("RUNTIME")]

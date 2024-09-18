@@ -104,7 +104,7 @@ namespace LSCore.ConfigModule
             SetMeta(FullFileNameMeta);
             Log("Loading");
 
-            if (cached == null)
+            if (string.IsNullOrEmpty(json) && cached == null)
             {
                 Log("Config created");
                 cached = new T();

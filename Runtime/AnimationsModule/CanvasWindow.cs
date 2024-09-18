@@ -5,6 +5,9 @@ using UnityEditor;
 
 public class CanvasWindow : EditorWindow
 {
+    private Vector2 startTangent = new Vector2(0.5f, 0f);
+    private Vector2 endTangent = new Vector2(0.5f, 1f);
+    
     public LSHandles.CameraData camData = new();
     public LSHandles.GridData gridData = new();
     
@@ -20,15 +23,16 @@ public class CanvasWindow : EditorWindow
         rect.position = Vector2.zero;
         LSHandles.Begin(rect, camData);
 
-        for (int i = 0; i < 100; i++)
-        {
-            LSHandles.DrawBezier(Vector2.one * i, new Vector2(0.5f + i, 0f + i), new Vector2(0.5f + i, 1f + i),
-                Vector2.one * (i + 1), Color.yellow, null, (i + 1) * 0.01f);
-        }
+        LSHandles.DrawBezier(Vector2.zero, startTangent, endTangent,
+            Vector2.one, Color.yellow, null, (1) * 0.01f);
 
         LSHandles.DrawGrid(gridData);
         LSHandles.End();
+
+        startTangent = EditorGUILayout.Vector2Field("Start Tangent", startTangent);
+        endTangent = EditorGUILayout.Vector2Field("End Tangent", endTangent);
     }
 }
+
 
 #endif
