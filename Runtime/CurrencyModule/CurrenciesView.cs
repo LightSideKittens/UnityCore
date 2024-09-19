@@ -21,6 +21,11 @@ namespace LSCore
                 Funds.AddOnChanged(id, OnChanged, true);
             }
 
+            public void DeInit()
+            {
+                Funds.RemoveOnChanged(id, OnChanged);
+            }
+
             private void OnChanged(int value)
             {
                 text.text = $"{value}";
@@ -34,6 +39,14 @@ namespace LSCore
             for (int i = 0; i < data.Length; i++)
             {
                 data[i].Init();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i].DeInit();
             }
         }
     }
