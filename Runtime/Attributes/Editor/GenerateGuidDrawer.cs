@@ -16,15 +16,14 @@ public class GenerateGuidDrawer : OdinAttributeDrawer<GenerateGuidAttribute, str
         
         GUILayout.FlexibleSpace();
         GUILayout.Label(value, GUILayout.Width(250));
-        if (SirenixEditorGUI.IconButton(EditorIcons.Refresh) 
+        if (SirenixEditorGUI.IconButton(EditorIcons.Refresh)
             || !Guid.TryParse(value, out _))
         {
             value = Guid.NewGuid().ToString("N");
             ValueEntry.SmartValue = value;
         }
-
+        
         SirenixEditorGUI.EndHorizontalToolbar();
-
     }
 }
 

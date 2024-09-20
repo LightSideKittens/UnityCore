@@ -20,21 +20,13 @@ namespace LSCore.ConditionModule
 
         public static implicit operator bool(BaseCondition conditions) => conditions.checker();
 
-        protected virtual void Init(){}
-
         private bool FirstCheck()
         {
-            Init();
             checker = FullCheck;
             return checker();
         }
 
         private bool FullCheck() => Check() ^ not;
         protected internal abstract bool Check();
-        
-        public virtual void Reset()
-        {
-            
-        }
     }
 }

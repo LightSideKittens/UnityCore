@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using LSCore.Attributes;
 using LSCore.ConditionModule;
-using Newtonsoft.Json.Linq;
+using LSCore.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,7 +17,7 @@ namespace LSCore.QuestModule
 
         [Serializable]
         [Unwrap]
-        public class Wrapper : Action
+        public class ActionWrapper : Action
         {
             [SerializeReference] public LSAction action;
             
@@ -51,30 +51,8 @@ namespace LSCore.QuestModule
                 }
             }
             
-            public abstract void OnSetupView();
-            public abstract void OnShowed();
-
-            protected bool CheckDiffAndSync<T>(object key, RJToken target,
-                Action<(T lastValue, T currentValue)> onSync) where T : struct
-            {
-                return CheckDiffAndSync(key, target[key], onSync);
-            }
-
-            protected bool CheckDiffAndSync<T>(object key, JToken currentValue, Action<(T lastValue, T currentValue)> onSync = null) 
-            {
-                var lastValue = lastQuestData[key];
-                
-                if (lastValue == null || !JToken.DeepEquals(lastValue, currentValue))
-                {
-                    var lastVal = lastValue != null ? lastValue.ToObject<T>() ?? default(T) : default;
-                    
-                    onSync?.Invoke((lastVal, currentValue.ToObject<T>()));
-                    lastQuestData[key] = currentValue;
-                    return true;
-                }
-                
-                return false;
-            }
+            protected abstract void OnSetupView();
+            protected abstract void OnShowed();
         }
 
         [SerializeField] public Image cullEvent;

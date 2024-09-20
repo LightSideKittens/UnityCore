@@ -20,8 +20,9 @@ namespace LSCore.QuestModule
         }
 
         [Serializable]
-        public class DeleteAfterFinish : DeleteHandler
+        public class DeleteAfterTimeMark : DeleteHandler
         {
+   
             [ValueDropdown("Keys")] 
             [SerializeField]
             [Required]

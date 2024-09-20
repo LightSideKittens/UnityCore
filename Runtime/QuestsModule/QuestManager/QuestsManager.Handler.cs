@@ -3,40 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using LSCore.Attributes;
+using LSCore.Extensions;
 using Newtonsoft.Json.Linq;
 using Sirenix.OdinInspector;
 
 namespace LSCore.QuestModule
 {
-    public class RJToken
-    {
-        public Dictionary<object, Action<JToken>> setActions = new();
-        
-        private JToken token;
-        public JToken Token => token;
-
-        public RJToken(JToken token) => this.token = token;
-        
-        public virtual JToken? this[object key]
-        {
-            get => token[key];
-            set
-            {
-                token[key] = value;
-
-                if (setActions.Remove(key, out var action))
-                {
-                    action(value);
-                }
-            }
-        }
-
-        public void Replace(RJToken value)
-        {
-            token.Replace(value.token);
-        }
-    }
-
     public partial class QuestsManager
     {
         [Serializable]
