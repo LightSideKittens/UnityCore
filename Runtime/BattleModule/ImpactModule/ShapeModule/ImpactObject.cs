@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace LSCore
@@ -8,6 +7,7 @@ namespace LSCore
     {
         public List<ShapeTrigger> triggers;
         [SerializeReference] public List<ShapeImpact> impacts;
+        [SerializeReference] public List<LSAction> onImpactsApplied;
         
         private void Awake()
         {
@@ -26,6 +26,8 @@ namespace LSCore
             {
                 impacts[i].Apply(initiator, collider);
             }
+            
+            onImpactsApplied.Invoke();
         }
 
 #if UNITY_EDITOR

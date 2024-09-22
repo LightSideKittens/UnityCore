@@ -33,7 +33,7 @@ public class CronExDrawer : OdinAttributeDrawer<CronExAttribute, string>
 
     protected override void DrawPropertyLayout(GUIContent label)
     {
-        EditorUtils.DrawInBoxFoldout(label, Draw, Property.Tree.WeakTargets[0], false);
+        EditorUtils.DrawInBoxFoldout(label, Draw, this, false);
     }
 
     private void Draw()

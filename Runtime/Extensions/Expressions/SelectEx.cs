@@ -4,13 +4,13 @@ namespace LSCore.Extensions
 {
     public static class SelectEx
     {
-        public static bool TryParse(string expression)
+        public static bool TryParse(string expression, int count)
         {
-            using var enumerator = GetIndexes(expression, int.MaxValue).GetEnumerator();
+            using var enumerator = GetIndexes(expression, count).GetEnumerator();
             return enumerator.MoveNext();
         }
         
-        public static bool TryParseEveryPart(string expression, List<string> exceptions)
+        public static bool TryParseEveryPart(string expression, int count, List<string> exceptions)
         {
             exceptions.Clear();
             
@@ -26,7 +26,7 @@ namespace LSCore.Extensions
 
                 for (int i = 0; i < split.Length; i++)
                 {
-                    using var enumerator = GetIndexes(split[i], int.MaxValue).GetEnumerator();
+                    using var enumerator = GetIndexes(split[i], count).GetEnumerator();
                     if (!enumerator.MoveNext())
                     {
                         exceptions.Add($"\"{split[i]}\" at {i}");
@@ -35,7 +35,7 @@ namespace LSCore.Extensions
             }
             else
             {
-                using var enumerator = GetIndexes(expression, int.MaxValue).GetEnumerator();
+                using var enumerator = GetIndexes(expression, count).GetEnumerator();
                 if (!enumerator.MoveNext())
                 {
                     exceptions.Add($"\"{expression}\"");

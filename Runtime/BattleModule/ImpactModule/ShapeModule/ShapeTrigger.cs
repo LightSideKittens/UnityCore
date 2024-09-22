@@ -111,17 +111,12 @@ namespace LSCore
             }
         }
 
-        private void InitTriggerAction()
-        {
-            switch (type)
+        private void InitTriggerAction() =>
+            triggerAction = type switch
             {
-                case EventType.Enter:
-                    triggerAction = OnEnter;
-                    break;
-                case EventType.Exit:
-                    triggerAction = OnExit;
-                    break;
-            }
-        }
+                EventType.Enter => OnEnter,
+                EventType.Exit => OnExit,
+                _ => triggerAction
+            };
     }
 }

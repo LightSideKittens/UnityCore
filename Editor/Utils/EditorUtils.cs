@@ -8,6 +8,24 @@ using UnityEngine;
 
 public static class EditorUtils
 {
+    public struct FloatSetter : IDisposable
+    {
+        public float old;
+        public Action<float> setter;
+
+        public FloatSetter(float newValue, Func<float> getter, Action<float> setter)
+        {
+            old = getter();
+            this.setter = setter;
+            setter(newValue);
+        }
+        
+        public void Dispose()
+        {
+            setter(old);
+        }
+    }
+    
     public struct ColorData
     {
         public Color color;
@@ -79,24 +97,27 @@ public static class EditorUtils
     
     private static Texture2D texture;
 
-    public static void DrawWithCustomLabelWidth(float width, Action draw)
+    public static FloatSetter SetLabelWidth(float width)
     {
-        var old = EditorGUIUtility.labelWidth; 
-        EditorGUIUtility.labelWidth = width;
-        draw();
-        EditorGUIUtility.labelWidth = old;
+        var setter = new FloatSetter(width, () => EditorGUIUtility.labelWidth,
+            val => EditorGUIUtility.labelWidth = val);
+        return setter;
+    }
+    
+    public static FloatSetter SetFieldWidth(float width)
+    {
+        var setter = new FloatSetter(width, () => EditorGUIUtility.fieldWidth,
+            val => EditorGUIUtility.fieldWidth = val);
+        return setter;
     }
 
-    public static bool GetExpandState(object key, bool defaultValue)
-    {
-        return SessionState.GetBool(key.ToString(), defaultValue);
-    }
-    
-    public static void SetExpandState(object key, bool value)
-    {
-        SessionState.SetBool(key.ToString(), value);
-    }
-    
+    private static string GetKeyForBool(object obj) => $"Bool_{obj.GetHashCode().ToString()}";
+    private static string GetKeyForInt(object obj) => $"Int_{obj.GetHashCode().ToString()}";
+    public static bool GetBool(object key, bool defaultValue) => SessionState.GetBool(GetKeyForBool(key), defaultValue);
+    public static void SetBool(object key, bool value) => SessionState.SetBool(GetKeyForBool(key), value);
+    public static int GetInt(object key, int defaultValue) => SessionState.GetInt(GetKeyForInt(key), defaultValue);
+    public static void SetInt(object key, int value) => SessionState.SetInt(GetKeyForInt(key), value);
+
     public static void DrawInBoxFoldout(string label, Action draw, object key, bool show) 
         => DrawInBoxFoldout(new GUIContent(label), draw, key, show);
 
@@ -105,6 +126,14 @@ public static class EditorUtils
         DrawInBox(() =>
         {
             DrawInFoldout(label, draw, key, show);
+        });
+    }
+    
+    public static void DrawInBoxFoldout(GUIContent label, Action draw, OdinDrawer drawer, bool show)
+    {
+        DrawInBox(() =>
+        {
+            DrawInFoldout(label, draw, $"{drawer.Property.Tree.WeakTargets[0].GetHashCode()}{drawer.Property.UnityPropertyPath}", show);
         });
     }
 
@@ -123,8 +152,8 @@ public static class EditorUtils
     public static void DrawInFoldout(GUIContent label, Action draw, object key, bool show = false)
     {
         SirenixEditorGUI.BeginBoxHeader();
-        show = GetExpandState(key, show);
-        SetExpandState(key, SirenixEditorGUI.Foldout(show, label));
+        show = GetBool(key, show);
+        SetBool(key, SirenixEditorGUI.Foldout(show, label));
         SirenixEditorGUI.EndBoxHeader();
 
         if (SirenixEditorGUI.BeginFadeGroup(key, show))

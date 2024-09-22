@@ -42,7 +42,7 @@ public abstract class TimeDrawer<T> : OdinAttributeDrawer<T, long> where T : Tim
     protected override void DrawPropertyLayout(GUIContent label)
     { 
         BeforeDraw();
-        EditorUtils.DrawInBoxFoldout(label, Draw, Property.Tree.WeakTargets[0], false);
+        EditorUtils.DrawInBoxFoldout(label, Draw, this, false);
         ValueEntry.SmartValue = AfterDraw();
     }
 

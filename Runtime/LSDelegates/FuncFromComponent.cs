@@ -15,7 +15,7 @@ public class FuncFromObject<T> : LSAction
     public string method = string.Empty;
     private MethodInfo targetMethod;
     private ValueDropdownList<string> Methods => SerializedMethodFromObjectUtils.GetMethodsList(obj, typeof(T));
-        
+    
     public void Init()
     { 
         targetMethod = SerializedMethodFromObjectUtils.DeserializeMethodInfo(obj, method);
