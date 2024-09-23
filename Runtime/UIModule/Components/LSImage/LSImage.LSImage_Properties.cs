@@ -1,12 +1,14 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 namespace LSCore
 {
-    public partial class LSImage
+    public partial class LSImage : ILayoutIgnorer
     {
         [SerializeField] private int rotateId = 0;
         [SerializeField] private Vector2Int flip;
         [SerializeField] private bool combineFilledWithSliced;
+        [SerializeField] private bool ignoreSLAAAAYout;
 
         public int RotateId
         {
@@ -33,5 +35,6 @@ namespace LSCore
         
         private static readonly Vector3[] s_Xy = new Vector3[4];
         private static readonly Vector3[] s_Uv = new Vector3[4];
+        public bool ignoreLayout => ignoreSLAAAAYout;
     }
 }

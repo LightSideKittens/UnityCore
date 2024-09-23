@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace LSCore
 {
-#if UNITY_5_3_OR_NEWER
+    //TODO: Look at ParticleSystemUI and ParticleSystemWindow
     [ExecuteInEditMode]
     [RequireComponent(typeof(CanvasRenderer), typeof(ParticleSystem))]
     [AddComponentMenu("UI/Effects/Extensions/UIParticleSystem")]
@@ -348,5 +348,4 @@ namespace LSCore
             ps.Stop(false, ParticleSystemStopBehavior.StopEmitting);
         }
     }
-#endif
 }

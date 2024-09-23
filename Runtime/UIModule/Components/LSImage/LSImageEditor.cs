@@ -24,6 +24,7 @@ namespace LSCore
         SerializedProperty combineFilledWithSliced;
         SerializedProperty m_PixelsPerUnitMultiplier;
         SerializedProperty flip;
+        SerializedProperty ignoreSLAAAAYout;
         FieldInfo bIsDriven;
         private LSImage image;
         private RectTransform rect;
@@ -46,6 +47,7 @@ namespace LSCore
             combineFilledWithSliced = serializedObject.FindProperty("combineFilledWithSliced");
             m_PixelsPerUnitMultiplier = serializedObject.FindProperty("m_PixelsPerUnitMultiplier");
             flip = serializedObject.FindProperty("flip");
+            ignoreSLAAAAYout = serializedObject.FindProperty("ignoreSLAAAAYout");
             bIsDriven = typeof(ImageEditor).GetField("m_bIsDriven", BindingFlags.Instance | BindingFlags.NonPublic);
             image = (LSImage)target;
             rect = image.GetComponent<RectTransform>();
@@ -100,6 +102,8 @@ namespace LSCore
             flip.vector2IntValue = new Vector2Int(xFlipValue.ToInt(), yFlipValue.ToInt());
 
             EditorGUILayout.EndHorizontal();
+            
+            EditorGUILayout.PropertyField(ignoreSLAAAAYout);
             
             DrawRotateButton();
 
