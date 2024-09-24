@@ -3,7 +3,7 @@ using UnityEngine.UI;
 
 namespace LSCore
 {
-    public partial class LSImage : ILayoutIgnorer
+    public partial class LSImage
     {
         [SerializeField] private int rotateId = 0;
         [SerializeField] private Vector2Int flip;
@@ -35,6 +35,7 @@ namespace LSCore
         
         private static readonly Vector3[] s_Xy = new Vector3[4];
         private static readonly Vector3[] s_Uv = new Vector3[4];
-        public bool ignoreLayout => ignoreSLAAAAYout;
+        
+        public override int layoutPriority => ignoreSLAAAAYout ? int.MinValue : base.layoutPriority;
     }
 }
