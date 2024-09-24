@@ -26,7 +26,7 @@ namespace LSCore.Editor.BackupSystem
         private const string DateTimeSeparator = "_@#$";
         private const int TimeThreshold = 1;
         private static Backuper instance = new();
-        private static PropertyTree tree;
+        private static PropertyTree tree = PropertyTree.Create(instance);
         private static int editCount;
         private static TimeSpan delay;
         private static Object currentObject;
@@ -79,11 +79,14 @@ namespace LSCore.Editor.BackupSystem
             }
         }
 
-        [SerializeField, Min(1)] [LabelText("Save Interval in minutes")]
+        [SerializeField]
+        [Range(1, 10)]
+        [LabelText("Save Interval in minutes")]
         [OnValueChanged(nameof(OnSaveIntervalChanged))]
         private int saveInterval = 1;
 
-        [SerializeField, Min(5)] 
+        [SerializeField]
+        [Range(5, 200)]
         [LabelText("Max backups count")]
         [OnValueChanged(nameof(OnMaxBackupsCountChanged))]
         private int maxBackupsCount = 200;
@@ -143,9 +146,7 @@ namespace LSCore.Editor.BackupSystem
         
         private static void Init(string s, VisualElement v)
         {
-            tree?.Dispose();
             instance.Init();
-            tree = PropertyTree.Create(instance);
         }
         
         private void Init()
