@@ -10,9 +10,17 @@ namespace LSCore.AnimationsModule
         {
             protected bool forceHandle;
             private bool isStarted;
-
+            
+            protected virtual bool IsRuntimeOnly => false;
+            
             public void Start()
             {
+#if UNITY_EDITOR
+                if (World.IsEditMode && IsRuntimeOnly)
+                {
+                    return;
+                }
+#endif
                 if (!isStarted)
                 {
                     isStarted = true;
@@ -23,6 +31,13 @@ namespace LSCore.AnimationsModule
             
             public void Stop()
             {
+#if UNITY_EDITOR
+                if (World.IsEditMode && IsRuntimeOnly)
+                {
+                    return;
+                }
+#endif
+                
                 if (isStarted)
                 {
                     isStarted = false;
@@ -47,6 +62,12 @@ namespace LSCore.AnimationsModule
 
             public sealed override void Handle()
             {
+#if UNITY_EDITOR
+                if (World.IsEditMode && IsRuntimeOnly)
+                {
+                    return;
+                }
+#endif
                 if (forceHandle)
                 {
                     forceHandle = false;
