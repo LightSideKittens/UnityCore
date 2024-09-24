@@ -26,7 +26,7 @@ namespace LSCore.Editor.BackupSystem
         private const string DateTimeSeparator = "_@#$";
         private const int TimeThreshold = 1;
         private static Backuper instance = new();
-        private static PropertyTree tree = PropertyTree.Create(instance);
+        private static PropertyTree tree;
         private static int editCount;
         private static TimeSpan delay;
         private static Object currentObject;
@@ -143,7 +143,9 @@ namespace LSCore.Editor.BackupSystem
         
         private static void Init(string s, VisualElement v)
         {
+            tree?.Dispose();
             instance.Init();
+            tree = PropertyTree.Create(instance);
         }
         
         private void Init()
