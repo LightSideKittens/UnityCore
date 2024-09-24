@@ -67,6 +67,7 @@ public class MenuItemTools : MonoBehaviour
             t.anchorMin = newAnchorsMin;
             t.anchorMax = newAnchorsMax;
             t.offsetMin = t.offsetMax = new Vector2(0, 0);
+            EditorUtility.SetDirty(t);
         }
     }
 }
