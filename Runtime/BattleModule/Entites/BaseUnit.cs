@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -9,7 +10,19 @@ namespace LSCore.BattleModule
     public class BaseUnit : MonoBehaviour
     {
 #if UNITY_EDITOR
-        protected IEnumerable<Id> Ids1 => manager.Ids;
+        protected IEnumerable<Id> Ids1
+        {
+            get
+            {
+                if (manager != null)
+                {
+                    return manager.Ids;
+                }
+                
+                return Array.Empty<Id>();
+            }
+        }
+
         private bool HideManager => name.Contains("_Base");
 #endif
         

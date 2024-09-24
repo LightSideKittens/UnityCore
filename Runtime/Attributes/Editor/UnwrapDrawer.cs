@@ -7,6 +7,9 @@ public class UnwrapDrawer : OdinAttributeDrawer<UnwrapAttribute>
 {
     protected override void DrawPropertyLayout(GUIContent label)
     {
-        Property.Children.First().Draw(label);
+        foreach (var child in Property.Children)
+        {
+            child.Draw();
+        }
     }
 }

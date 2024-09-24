@@ -9,7 +9,8 @@ namespace LSCore.BattleModule
     public abstract class BaseAttackComponent : BaseComp
     {
         public PSImpactObject impactObjectPrefab;
-        [SerializeField] protected FindTargetComp findTargetComp;
+        [SerializeField] protected FindTargetFactory findTargetFactory;
+        protected FindTargetComp findTargetComp;
         [NonSerialized] public PSImpactObject impactObject;
         public float attackSpeed;
 
@@ -19,6 +20,7 @@ namespace LSCore.BattleModule
             data.enable += Enable;
             data.disable += Disable;
             data.destroy += Destroy;
+            findTargetComp = findTargetFactory.Create();
             findTargetComp.Init(transform);
             impactObject = Object.Instantiate(impactObjectPrefab, transform, false);
             impactObject.IgnoredCollider = transform.GetComponent<Collider2D>();

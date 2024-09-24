@@ -1,5 +1,4 @@
-﻿/*
-using Sirenix.OdinInspector.Editor;
+﻿using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
 using System;
@@ -18,8 +17,8 @@ public class GlobalContextMenuProcessor : OdinAttributeProcessor<object>
 public class GlobalContextMenuAttribute : Attribute
 {
     internal static Color changeColor = new Color(0.43f, 1f, 0.39f);
-    internal static FontStyle defaulLabelFontStyle;
-    internal static Color defaulLabelColor;
+    internal static FontStyle defaultLabelFontStyle;
+    internal static Color defaultLabelColor;
     private static bool isInited;
     
     internal static void Init()
@@ -30,9 +29,8 @@ public class GlobalContextMenuAttribute : Attribute
         }
 
         isInited = true;
-        defaulLabelColor = EditorStyles.label.normal.textColor;
-        defaulLabelFontStyle = FontStyle.Normal;
-        
+        defaultLabelColor = EditorStyles.label.normal.textColor;
+        defaultLabelFontStyle = FontStyle.Normal;
     }
 }
 
@@ -62,8 +60,8 @@ public class GlobalContextMenuDrawer<T> : OdinAttributeDrawer<GlobalContextMenuA
         ResetStyle();
         void ResetStyle()
         {
-            EditorStyles.label.fontStyle = defaulLabelFontStyle;
-            EditorStyles.label.normal.textColor = defaulLabelColor;
+            EditorStyles.label.fontStyle = defaultLabelFontStyle;
+            EditorStyles.label.normal.textColor = defaultLabelColor;
         }
     }
 
@@ -163,6 +161,5 @@ public class GlobalContextMenuDrawer<T> : OdinAttributeDrawer<GlobalContextMenuA
         return targetPath;
     }
 }
-*/
 
 

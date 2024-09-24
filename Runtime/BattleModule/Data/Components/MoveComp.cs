@@ -34,7 +34,8 @@ namespace LSCore.BattleModule
     [Serializable]
     public class MoveComp : BaseMoveComp
     {
-        [SerializeField] private FindTargetComp findTargetComp;
+        [SerializeField] protected FindTargetFactory findTargetFactory;
+        protected FindTargetComp findTargetComp;
         private bool isTargetFound;
         private Transform target;
                 
@@ -62,6 +63,7 @@ namespace LSCore.BattleModule
         {
             ShouldLookAtTarget = true;
             base.Init();
+            findTargetComp = findTargetFactory.Create();
             findTargetComp.Init(transform);
         }
 
