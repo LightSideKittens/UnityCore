@@ -81,7 +81,6 @@ namespace LSCore
             
             isShowed = true;
             Showed?.Invoke();
-            if(name.Contains("BaseQuestButton")) Debug.Log("Showed");
         }
         
         protected virtual void OnHidden()
@@ -90,7 +89,6 @@ namespace LSCore
             
             isShowed = false;
             Hidden?.Invoke();
-            if(name.Contains("BaseQuestButton")) Debug.Log("Hidden");
         }
         
         protected override void UpdateGeometry()
