@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Pool;
 using UnityEngine.UI;
@@ -11,6 +12,9 @@ namespace LSCore
         private static readonly VertexHelper legacyVertexHelper = new VertexHelper();
         private RectTransform rt;
         private Rect currentRect;
+        private bool isShowed;
+        public event Action Showed;
+        public event Action Hidden;
         
 #if UNITY_EDITOR
         protected override void OnValidate()
@@ -26,13 +30,69 @@ namespace LSCore
         }
 #endif
 
-
         protected override void OnEnable()
         {
             rt = rectTransform;
             base.OnEnable();
+            StartCoroutine(DelayedOnEnable());
         }
 
+        private IEnumerator DelayedOnEnable()
+        {
+            yield return null;
+            
+            if (!canvasRenderer.cull)
+            {
+                OnShowed();
+            }
+            
+            onCullStateChanged.AddListener(OnCullStateChanged);
+        }
+
+        private void OnCullStateChanged(bool cull)
+        {
+            if (cull)
+            {
+                OnHidden();
+            }
+            else
+            {
+                OnShowed();
+            }
+        }
+        
+        protected override void OnDisable()
+        {
+            onCullStateChanged.RemoveListener(OnCullStateChanged);
+            
+            var cull = canvasRenderer.cull;
+            
+            base.OnDisable();
+            
+            if (!cull)
+            {
+                OnHidden();
+            }
+        }
+
+        protected virtual void OnShowed()
+        {
+            if(isShowed) return;
+            
+            isShowed = true;
+            Showed?.Invoke();
+            if(name.Contains("BaseQuestButton")) Debug.Log("Showed");
+        }
+        
+        protected virtual void OnHidden()
+        {
+            if(!isShowed) return;
+            
+            isShowed = false;
+            Hidden?.Invoke();
+            if(name.Contains("BaseQuestButton")) Debug.Log("Hidden");
+        }
+        
         protected override void UpdateGeometry()
         {
             DoMeshGeneration();

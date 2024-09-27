@@ -9,5 +9,6 @@ namespace LSCore
     public abstract class BaseSingleService : MonoBehaviour
     {
         public abstract Type Type { get; }
+        protected internal virtual bool CreateImmediately => false;
     }
 }

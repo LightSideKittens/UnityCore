@@ -8,7 +8,7 @@ namespace MusicEventSystem.Configs
 {
     public class MusicDataConfigManager : ResourcesConfigManager<MusicData>
     {
-        protected override JsonSerializerSettings Settings { get; } = new() {ContractResolver = new MusicDataContractResolver()};
+        protected override ConfigSerializationSettings Settings { get; } = new(new() {ContractResolver = new MusicDataContractResolver()});
     }
     
     //TODO: Refactor for new Config logic

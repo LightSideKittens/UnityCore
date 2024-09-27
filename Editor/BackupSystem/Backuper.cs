@@ -24,7 +24,6 @@ namespace LSCore.Editor.BackupSystem
     {
         private const string Name = nameof(Backuper);
         private const string DateTimeSeparator = "_@#$";
-        private const int TimeThreshold = 1;
         private static Backuper instance = new();
         private static PropertyTree tree = PropertyTree.Create(instance);
         private static int editCount;

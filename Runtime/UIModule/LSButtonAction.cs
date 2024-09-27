@@ -1,5 +1,6 @@
 ﻿using System;
 using LSCore;
+using LSCore.Attributes;
 using UnityEngine;
 
 [Serializable]

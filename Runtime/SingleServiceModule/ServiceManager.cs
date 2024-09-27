@@ -23,6 +23,10 @@ namespace LSCore
                 if (!isError)
                 {
                     Services.Add(service.Type, service);
+                    if (service.CreateImmediately)
+                    {
+                        Instantiate(service);
+                    }
                 }
             }
         }

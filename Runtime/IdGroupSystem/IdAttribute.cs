@@ -22,5 +22,12 @@ namespace LSCore
             this.groupType = groupType;
             IsUniqueList = true;
         }
+        
+        public IdAttribute(Type groupType, params string[] groupNames) : base("")
+        {
+            this.groupType = groupType;
+            this.groupNames = groupNames;
+            IsUniqueList = true;
+        }
     }
 }

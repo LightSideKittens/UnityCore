@@ -99,6 +99,7 @@ namespace LSCore.ConfigModule
             else
             {
                 cached = null;
+                token = null;
             }
             
             SetMeta(FullFileNameMeta);
@@ -171,8 +172,21 @@ namespace LSCore.ConfigModule
 
         public virtual void Save()
         {
-            var json = token != null ? Serialize(token) : Serialize();
             string fullFileName = GetFullFileName(fullPath);
+            string json;
+            
+            if (token != null)
+            {
+                var target = SerializeAsToken(); 
+                Migrator.Type<T>.PopulateMeta(token, target);
+                Migrator.PopulateMeta(token, target);
+                json = target.ToString();
+            }
+            else
+            {
+                json = Serialize();
+            }
+            
             Save(fullFileName, json);
         }
 

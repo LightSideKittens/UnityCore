@@ -5,19 +5,38 @@ using UnityEngine;
 
 namespace LSCore.ConfigModule
 {
+    public class ConfigSerializationSettings
+    {
+        public JsonSerializerSettings settings;
+        public JsonSerializer serializer;
+
+        public ConfigSerializationSettings(JsonSerializerSettings settings)
+        {
+            this.settings = settings;
+            serializer = JsonSerializer.Create(settings);
+        }
+        
+        public ConfigSerializationSettings()
+        {
+            settings = new()
+            {
+                ContractResolver = UnityJsonContractResolver.Instance,
+                Error = (_, args) =>
+                {
+                    args.ErrorContext.Handled = true;
+                }
+            };
+
+            serializer = JsonSerializer.Create(settings);
+        }
+    }
+    
     public abstract class BaseConfigManager<T> where T : BaseConfig, new()
     {
         private static string GetLogTag(string tag) => $"[{tag}]".ToTag(new Color(1f, 0.8f, 0.05f));
         protected T cached;
 
-        [JsonIgnore] protected virtual JsonSerializerSettings Settings { get; } = new()
-        {
-            ContractResolver = UnityJsonContractResolver.Instance,
-            Error = (_, args) =>
-            {
-                args.ErrorContext.Handled = true;
-            }
-        };
+        [JsonIgnore] protected virtual ConfigSerializationSettings Settings { get; } = new();
 
         protected virtual string Tag => typeof(T).Name;
 
@@ -49,7 +68,7 @@ namespace LSCore.ConfigModule
             Log("Deserializing");
             cached.OnDeserializing();
             
-            JsonConvert.PopulateObject(json, cached, Settings);
+            JsonConvert.PopulateObject(json, cached, Settings.settings);
             
             Log("Deserialized");
             cached.OnDeserialized();
@@ -64,10 +83,9 @@ namespace LSCore.ConfigModule
             Log("Deserializing");
             cached.OnDeserializing();
             
-            var serializer = JsonSerializer.Create(Settings);
             using (var reader = token.CreateReader())
             {
-                serializer.Populate(reader, cached);
+                Settings.serializer.Populate(reader, cached);
             }
             
             Log("Deserialized");
@@ -79,7 +97,7 @@ namespace LSCore.ConfigModule
             Log("Serializing");
             cached.OnSerializing();
             
-            var json = JsonConvert.SerializeObject(cached, Settings);
+            var json = JsonConvert.SerializeObject(cached, Settings.settings);
             SetMeta(json);
             
             cached.OnSerialized();
@@ -88,26 +106,18 @@ namespace LSCore.ConfigModule
             return json;
         }
         
-        protected virtual string Serialize(JObject token)
+        protected virtual JToken SerializeAsToken()
         {
             Log("Serializing");
             cached.OnSerializing();
             
-            var serializer = JsonSerializer.Create(Settings);
-            var updatedToken = JObject.FromObject(cached, serializer);
-            
-            token.Merge(updatedToken, new JsonMergeSettings
-            {
-                MergeArrayHandling = MergeArrayHandling.Replace
-            });
-
-            var json = token.ToString();
-            SetMeta(json);
+            var token = JObject.FromObject(cached, Settings.serializer);
+            SetMeta(token.ToString());
             
             cached.OnSerialized();
             Log("Serialized");
 
-            return json;
+            return token;
         }
     }
 }

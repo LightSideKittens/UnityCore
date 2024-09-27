@@ -42,20 +42,15 @@ namespace LSCore.QuestModule
             {
                 OnSetupView();
             }
-
-            public void OnCullChanged(bool cull)
-            {
-                if (!cull)
-                {
-                    OnShowed();
-                }
-            }
             
             protected abstract void OnSetupView();
-            protected abstract void OnShowed();
+            public abstract void OnShowed();
         }
 
-        [SerializeField] public Image cullEvent;
+        public const string isNew = nameof(isNew);
+
+        [SerializeField] private NumberMark markPrefab;
+        [SerializeField] public LSImage cullEvent;
         [SerializeReference] public Handlers handlers;
         [SerializeReference] public List<Action> onComplete;
 
@@ -109,19 +104,35 @@ namespace LSCore.QuestModule
         
         public void BuildTargetData(RJToken token)
         {
+            token[isNew] = true;
+            
             for (int i = 0; i < handlers.Count; i++)
             {
                 handlers[i].BuildTargetData(token);
             }
+            
+            markPrefab.Increase();
         }
 
         private void Awake()
         {
-            cullEvent.canvasRenderer.cull = true;
+            cullEvent.Showed += OnShowed;
             
             for (int i = 0; i < handlers.Count; i++)
             {
-                cullEvent.onCullStateChanged.AddListener(handlers[i].OnCullChanged);
+                cullEvent.Showed += handlers[i].OnShowed;
+            }
+
+            void OnShowed()
+            {
+                cullEvent.Showed -= OnShowed;
+                
+                if (targetQuestData[isNew]!.ToObject<bool>())
+                {
+                    Debug.Log("OnCullChanged");
+                    targetQuestData[isNew] = false;
+                    markPrefab.Decrease();
+                }
             }
         }
 

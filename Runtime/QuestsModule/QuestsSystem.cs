@@ -26,7 +26,9 @@ namespace LSCore.QuestModule
         }
         
         [SerializeField] private QuestsManager[] managers;
-        
+
+        protected override bool CreateImmediately => true;
+
         protected override void Init()
         {
             base.Init();

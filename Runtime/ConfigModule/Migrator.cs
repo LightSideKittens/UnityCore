@@ -7,6 +7,7 @@ namespace LSCore.ConfigModule
     public static partial class Migrator
     {
         private static readonly Dictionary<object, List<Action<JToken>>> byKey = new();
+        private const string versionKey = "version";
         
         public static void Add(object key, Action<JToken> migrator)
         {
@@ -18,10 +19,18 @@ namespace LSCore.ConfigModule
             
             migrators.Add(migrator);
         }
+        
+        internal static void PopulateMeta(JToken src, JToken dst)
+        {
+            var token = src[versionKey];
+            if (token != null)
+            {
+                dst[versionKey] = token;
+            }
+        }
 
         internal static bool Migrate(object key, JToken token)
         {
-            const string versionKey = "version";
             if (byKey.TryGetValue(key, out var migration))
             {
                 if (migration.Count > 0)
@@ -42,17 +51,17 @@ namespace LSCore.ConfigModule
             return false;
         }
 
-        private static int GetVersion(JToken token, string versionKey)
+        private static int GetVersion(JToken token, string key)
         {
             int version;
-            if (token[versionKey] == null)
+            if (token[key] == null)
             {
-                token[versionKey] = 0;
+                token[key] = 0;
                 version = 0;
             }
             else
             {
-                version = token[versionKey].ToObject<int>();
+                version = token[key].ToObject<int>();
             }
 
             return version;

@@ -8,7 +8,15 @@ namespace LSCore.Extensions
     {
         public static void Remove(this JToken target, object key)
         {
-            target[key].Parent!.Remove();
+            target[key]?.Parent?.Remove();
+        }
+        
+        public static int Increase(this JToken target, object key, int value)
+        {
+            var count = target[key]?.ToObject<int>() ?? 0;
+            count += value;
+            target[key] = count;
+            return count;
         }
         
         public static bool CheckDiffAndSync<T>(this JToken lastData, object key, JToken currentValue, Action<(T lastValue, T currentValue)> onSync = null) 
@@ -32,7 +40,7 @@ namespace LSCore.Extensions
     {
         public static void Remove(this RJToken target, object key)
         {
-            target[key].Parent!.Remove();
+            target[key]?.Parent?.Remove();
         }
 
         public static bool CheckDiffAndSync<T>(this RJToken lastData, object key, JToken currentValue, Action<(T lastValue, T currentValue)> onSync = null) 

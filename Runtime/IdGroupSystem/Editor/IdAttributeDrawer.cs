@@ -11,7 +11,16 @@ namespace LSCore
             var names = Attribute.groupNames;
             var type = Attribute.groupType;
             
-            if (names is { Length: > 0 })
+            if (names is { Length: > 0 } && type != null && typeof(IdGroup).IsAssignableFrom(type))
+            {
+                source = (IdGroup)AssetDatabaseUtils.LoadAny(type, names[0]);
+                
+                for (int i = 1; i < names.Length; i++)
+                {
+                    source = source.Concat((IdGroup)AssetDatabaseUtils.LoadAny(type, names[i]));
+                }
+            }
+            else if(names is { Length: > 0 })
             {
                 source = AssetDatabaseUtils.LoadAny<IdGroup>(names[0]);
                 
