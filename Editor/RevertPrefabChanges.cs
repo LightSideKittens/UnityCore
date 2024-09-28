@@ -25,32 +25,34 @@ public static class RevertPrefabChanges
     
     public static void RevertChanges(Func<string, bool> predicate)
     {
-        GameObject selectedObject = Selection.activeGameObject;
+        var selectedObjects = Selection.gameObjects;
 
-        if (selectedObject == null)
+        if (selectedObjects == null || selectedObjects.Length == 0)
         {
-            Debug.LogWarning("Выберите объект в сцене.");
             return;
         }
 
-        var rect = selectedObject.GetComponent<RectTransform>();
-
-        if (PrefabUtility.IsPartOfPrefabInstance(rect))
+        foreach (var selectedObject in selectedObjects)
         {
-            SerializedObject serializedObject = new SerializedObject(rect);
-            
-            SerializedProperty property = serializedObject.GetIterator();
-            
-            if (property.NextVisible(true))
+            var rect = selectedObject.GetComponent<RectTransform>();
+
+            if (PrefabUtility.IsPartOfPrefabInstance(rect))
             {
-                do
+                SerializedObject serializedObject = new SerializedObject(rect);
+            
+                SerializedProperty property = serializedObject.GetIterator();
+            
+                if (property.NextVisible(true))
                 {
-                    if (predicate == null || predicate.Invoke(property.name))
+                    do
                     {
-                        PrefabUtility.RevertPropertyOverride(property, InteractionMode.UserAction);
+                        if (predicate == null || predicate.Invoke(property.name))
+                        {
+                            PrefabUtility.RevertPropertyOverride(property, InteractionMode.UserAction);
+                        }
                     }
+                    while (property.NextVisible(false));
                 }
-                while (property.NextVisible(false));
             }
         }
     }
