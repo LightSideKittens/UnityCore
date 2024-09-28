@@ -1,10 +1,12 @@
-﻿namespace LSCore
+﻿using System.Linq;
+
+namespace LSCore
 {
     public class GoMark : Mark<bool>
     {
         protected override void HandleView()
         {
-            gameObject.SetActive(TryGet(out _));
+            gameObject.SetActive(Get().Any());
         }
     }
 }

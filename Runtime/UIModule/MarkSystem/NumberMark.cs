@@ -8,26 +8,38 @@ namespace LSCore
 
         protected override void HandleView()
         {
-            var has = TryGet(out var value) && value > 0;
-            gameObject.SetActive(has);
-            text.text = value.ToString();
+            var total = GetTotal();
+            gameObject.SetActive(total > 0);
+            text.text = total.ToString();
         }
 
+        private int GetTotal()
+        {
+            var total = 0;
+            
+            foreach (var value in Get())
+            {
+                total += value;
+            }
+
+            return total;
+        }
+        
         public void Increase()
         {
-            TryGet(out var value);
-            DoMark(++value);
+            var value = GetTotal();
+            DoMark(value + 1);
         }
         
         public void Decrease()
         {
-            TryGet(out var value);
+            var value = GetTotal();
             if (value - 1 <= 0)
             {
                 DoUnMark();
                 return;
             }
-            DoMark(--value);
+            DoMark(value - 1);
         }
     }
 }
