@@ -5,8 +5,8 @@ namespace LSCore
 {
     [Serializable]
     public abstract class FundAction : LSAction
-    {
-        [SerializeReference] public Funds funds;
+    { 
+        public Funds funds;
     }
 
     [Serializable]
