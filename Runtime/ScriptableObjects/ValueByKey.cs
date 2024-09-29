@@ -64,7 +64,7 @@ namespace LSCore
 #endif
         }
 
-        private void Init()
+        public void Init()
         {
             ByKey.Clear();
 
