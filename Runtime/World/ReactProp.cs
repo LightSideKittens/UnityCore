@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-[JsonConverter(typeof(ReactPropConverter<>))]
+[JsonConverter(typeof(ReactPropConverter))]
 public class ReactProp<T> : IDisposable
 {
     public void SubOnChangedAndCall(Action<T> action)
@@ -69,16 +69,26 @@ public class FloatReact : ReactProp<float>
     public static float operator +(in float a, FloatReact b) => a + b.value;
 }
 
-public class ReactPropConverter<T> : JsonConverter<ReactProp<T>>
+public class ReactPropConverter : JsonConverter
 {
-    public override void WriteJson(JsonWriter writer, ReactProp<T> value, JsonSerializer serializer)
+    public override bool CanConvert(Type objectType)
     {
-        serializer.Serialize(writer, value.Value);
+        // Проверяем, что это тип ReactProp<>
+        return objectType.IsGenericType && objectType.GetGenericTypeDefinition() == typeof(ReactProp<>);
     }
 
-    public override ReactProp<T> ReadJson(JsonReader reader, Type objectType, ReactProp<T> existingValue, bool hasExistingValue, JsonSerializer serializer)
+    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
     {
-        T value = serializer.Deserialize<T>(reader);
-        return new ReactProp<T> { Value = value };
+        var prop = value.GetType().GetProperty("Value").GetValue(value);
+        serializer.Serialize(writer, prop);
+    }
+
+    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    {
+        var valueType = objectType.GetGenericArguments()[0];
+        var deserializedValue = serializer.Deserialize(reader, valueType);
+        var propInstance = Activator.CreateInstance(objectType);
+        objectType.GetProperty("Value").SetValue(propInstance, deserializedValue);
+        return propInstance;
     }
 }
