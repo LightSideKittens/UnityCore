@@ -20,13 +20,10 @@ namespace LSCore
         public RectTransform RectTransform { get; private set; }
         public virtual WindowManager Manager { get; } = new();
         
-        [FoldoutGroup("Optional")]
-        [SerializeReference] protected List<LSClickAction> clickActions;
-        
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowing;
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHiding;
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowed;
-        [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHidden;
+        [SerializeReference, FoldoutGroup("Optional")] protected List<LSAction> onShowing;
+        [SerializeReference, FoldoutGroup("Optional")] protected List<LSAction> onHiding;
+        [SerializeReference, FoldoutGroup("Optional")] protected List<LSAction> onShowed;
+        [SerializeReference, FoldoutGroup("Optional")] protected List<LSAction> onHidden;
         
 
         protected virtual ShowWindowOption ShowOption { get; set; }
@@ -40,7 +37,6 @@ namespace LSCore
         protected override void Init()
         {
             base.Init();
-            clickActions.Invoke();
             InitManager();
             showHideAnim?.Init();
 

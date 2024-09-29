@@ -10,13 +10,12 @@ public class MenuItemTools : MonoBehaviour
     {
         var objs = Selection.objects;
 
-        for (int i = 0; i < objs.Length; i++)
+        foreach (var obj in objs)
         {
-            var obj = objs[i];
-            
-            if (obj.IsFolder(out var path))
+            string path = AssetDatabase.GetAssetPath(obj);
+            if (AssetDatabase.IsValidFolder(path))
             {
-                ForceSaveAssets(AssetDatabaseUtils.LoadAllAssets<Object>(path));
+                ForceSaveAssetsInFolder(path);
             }
             else
             {
@@ -25,11 +24,19 @@ public class MenuItemTools : MonoBehaviour
         }
     }
 
-    private static void ForceSaveAssets(IEnumerable<Object> objs)
+    private static void ForceSaveAssetsInFolder(string folderPath)
     {
-        foreach (var obj in objs)
+        var assetPaths = AssetDatabase.FindAssets("", new[] { folderPath });
+
+        foreach (var assetGUID in assetPaths)
         {
-            obj.ForceSave();
+            string assetPath = AssetDatabase.GUIDToAssetPath(assetGUID);
+            var obj = AssetDatabase.LoadMainAssetAtPath(assetPath);
+
+            if (obj != null)
+            {
+                obj.ForceSave();
+            }
         }
     }
     
