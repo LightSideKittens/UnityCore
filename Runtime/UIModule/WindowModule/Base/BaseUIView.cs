@@ -22,8 +22,7 @@ namespace LSCore
         
         [FoldoutGroup("Optional")]
         [SerializeReference] protected List<LSClickAction> clickActions;
-        [field: SerializeField, FoldoutGroup("Optional")] protected virtual LSButton HomeButton { get; private set; }
-        [field: SerializeField, FoldoutGroup("Optional")] protected virtual LSButton BackButton { get; private set; }
+        
         [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowing;
         [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onHiding;
         [SerializeReference, FoldoutGroup("Optional/Events")] protected List<LSAction> onShowed;
@@ -44,8 +43,6 @@ namespace LSCore
             clickActions.Invoke();
             InitManager();
             showHideAnim?.Init();
-            if (BackButton != null) BackButton.Clicked += OnBackButton;
-            if (HomeButton != null) HomeButton.Clicked += OnHomeButton;
 
             var rectTransform = (RectTransform)transform;
             RectTransform = rectTransform;
@@ -70,10 +67,6 @@ namespace LSCore
 
         protected virtual Tween ShowAnim => showHideAnim?.Show();
         protected virtual Tween HideAnim => showHideAnim?.Hide();
-
-        protected virtual void OnBackButton() => WindowsData.GoBack();
-
-        protected virtual void OnHomeButton() => WindowsData.GoHome();
 
         public void AsHome() => WindowsData.SetHome(Manager);
 
