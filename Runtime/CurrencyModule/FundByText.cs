@@ -50,6 +50,9 @@ namespace LSCore
 
         public void OnAfterDeserialize()
         {
+#if UNITY_EDITOR
+            if(World.IsEditMode) return;
+#endif
             if (!changeTextColorIfNotEnough) return;
             fundText.Enabled += Sub;
             fundText.Disabled += UnSub;
