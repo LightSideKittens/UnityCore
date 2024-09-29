@@ -20,4 +20,5 @@ namespace LSCore.BattleModule
     }
     
     public class TransformDict<TValue> : StaticDict<Transform, TValue>{}
+    public class StringDict<TValue> : StaticDict<string, TValue>{}
 }

@@ -1,7 +1,15 @@
 ﻿using System;
+using Newtonsoft.Json;
 
+[JsonConverter(typeof(ReactPropConverter<>))]
 public class ReactProp<T> : IDisposable
 {
+    public void SubOnChangedAndCall(Action<T> action)
+    {
+        Changed += action;
+        action(value);
+    }
+    
     public event Action<T> Changed;
     protected T value;
 
@@ -10,23 +18,24 @@ public class ReactProp<T> : IDisposable
         get => value;
         set
         {
-            if (!this.value.Equals(value))
+            if (!this.value?.Equals(value) ?? value != null)
             {
                 this.value = value;
                 Changed?.Invoke(value);
             }
         }
     }
-    
-    public static explicit operator ReactProp<T>(T value) => new() {value = value};
-    public static explicit operator T(ReactProp<T> prop) => prop.value;
-    public override string ToString() => value.ToString();
+
+    public static explicit operator ReactProp<T>(T value) => new() { Value = value };
+    public static explicit operator T(ReactProp<T> prop) => prop.Value;
+    public override string ToString() => Value.ToString();
 
     public void Dispose()
     {
         Changed = null;
     }
 }
+
 
 public class IntReact : ReactProp<int>
 {
@@ -58,4 +67,18 @@ public class FloatReact : ReactProp<float>
     }
     
     public static float operator +(in float a, FloatReact b) => a + b.value;
+}
+
+public class ReactPropConverter<T> : JsonConverter<ReactProp<T>>
+{
+    public override void WriteJson(JsonWriter writer, ReactProp<T> value, JsonSerializer serializer)
+    {
+        serializer.Serialize(writer, value.Value);
+    }
+
+    public override ReactProp<T> ReadJson(JsonReader reader, Type objectType, ReactProp<T> existingValue, bool hasExistingValue, JsonSerializer serializer)
+    {
+        T value = serializer.Deserialize<T>(reader);
+        return new ReactProp<T> { Value = value };
+    }
 }
