@@ -78,9 +78,9 @@ namespace LSCore
         {
             if (onChangedActions.TryGetValue(id, out var action))
             {
-                onChanged -= action;
+                action -= onChanged;
             }
-            onChangedActions[id] = onChanged;
+            onChangedActions[id] = action;
         }
         
         public static void ClearOnChanged(Id id)

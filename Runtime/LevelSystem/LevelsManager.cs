@@ -9,9 +9,6 @@ namespace LSCore.LevelSystem
 {
     public partial class LevelsManager : SerializedScriptableObject
     {
-        public event Action<Id, int> LevelChanged;
-        private Dictionary<Id, Action<int>> LevelChangedById { get; } = new();
-        
         [IdGroup]
         [OdinSerialize]
         [HideReferenceObjectPicker]
@@ -40,8 +37,7 @@ namespace LSCore.LevelSystem
         public void Init()
         {
             Burger.Log($"[{nameof(LevelsManager)}] Init");
-            LevelChanged = null;
-            LevelChangedById.Clear();
+            UnlockedLevels.ClearEvents();
             levelsById.Clear();
             AddedIds = new();
             
@@ -63,30 +59,17 @@ namespace LSCore.LevelSystem
 
         public void SubAndCallLevelChanged(Id id, Action<int> action)
         {
-            LevelChangedById.TryGetValue(id, out var existAction);
+            UnlockedLevels.Config.LevelChangedById.TryGetValue(id, out var existAction);
             existAction += action;
-            LevelChangedById[id] = existAction; 
+            UnlockedLevels.Config.LevelChangedById[id] = existAction; 
             action(GetCurrentLevelNum(id));
         }
         
         public void UnSubLevelChanged(Id id, Action<int> action)
         {
-            LevelChangedById.TryGetValue(id, out var existAction);
+            UnlockedLevels.Config.LevelChangedById.TryGetValue(id, out var existAction);
             existAction -= action;
-            LevelChangedById[id] = existAction; 
-        }
-
-        private void OnSetLevel(Id id, int level)
-        {
-            UnlockedLevels.TryGetLevel(id, out var oldLevel);
-            if (level != oldLevel)
-            {
-                LevelChanged?.Invoke(id, level);
-                if (LevelChangedById.TryGetValue(id, out var action))
-                {
-                    action(level);
-                }
-            }
+            UnlockedLevels.Config.LevelChangedById[id] = existAction; 
         }
 
         public void SetLevel(Id id, int level)
@@ -97,7 +80,6 @@ namespace LSCore.LevelSystem
                 ? level
                 : levels.Count;
 
-            OnSetLevel(id, level);
             UnlockedLevels.SetLevel(id, level);
         }
         
@@ -108,8 +90,7 @@ namespace LSCore.LevelSystem
                 var newLevel = level < levels.Count
                     ? level
                     : levels.Count;
-                
-                OnSetLevel(id, level);
+
                 UnlockedLevels.SetLevel(id, newLevel);
             }
         }
@@ -122,7 +103,6 @@ namespace LSCore.LevelSystem
             if (currentLevel < levels.Count)
             {
                 currentLevel++;
-                OnSetLevel(id, currentLevel);
                 UnlockedLevels.SetLevel(id, currentLevel);
                 Burger.Log($"{id} Upgraded to {currentLevel}");
             }
