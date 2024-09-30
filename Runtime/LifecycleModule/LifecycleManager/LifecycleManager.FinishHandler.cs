@@ -1,17 +1,17 @@
 ﻿using System;
 using LSCore.Attributes;
 
-namespace LSCore.QuestModule
+namespace LSCore.ObjectModule
 {
-    public partial class QuestsManager
+    public partial class LifecycleManager<T>
     {
         [Serializable]
         public abstract class FinishHandler : Handler
         {
-            protected void Finish(string questId)
+            protected void Finish(string objId)
             {
-                var questToken = GetQuest(questId);
-                questToken[finishedAt] = DateTime.UtcNow.Ticks;
+                var objToken = GetObject(objId);
+                objToken[finishedAt] = DateTime.UtcNow.Ticks;
             }
         }
 
@@ -21,9 +21,9 @@ namespace LSCore.QuestModule
             [TimeSpan(0, 5, 0)] 
             public long time;
             
-            protected void Finish(string questId, TimeSpan timeForFinish)
+            protected void Finish(string objId, TimeSpan timeForFinish)
             {
-                DoForQuestAfterTime(questId, startedAt, timeForFinish, Finish);
+                DoForObjectAfterTime(objId, startedAt, timeForFinish, Finish);
             }
             
             protected override void OnInit()

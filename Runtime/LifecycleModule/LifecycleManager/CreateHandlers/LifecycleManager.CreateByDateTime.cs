@@ -4,15 +4,15 @@ using LSCore.Attributes;
 using LSCore.Extensions;
 using UnityEngine;
 
-namespace LSCore.QuestModule
+namespace LSCore.ObjectModule
 {
-    public partial class QuestsManager
+    public partial class LifecycleManager<T>
     {
         [Serializable]
         public class CreateByDateTime : CreateHandler
         {
             [DateTime] public long time;
-            [SerializeReference] public QuestsSelector selector;
+            [SerializeReference] public ObjectsSelector selector;
 
             protected void Wait(Action onComplete)
             {
