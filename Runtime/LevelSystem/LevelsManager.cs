@@ -34,17 +34,14 @@ namespace LSCore.LevelSystem
         }
         
         public HashSet<Id> AddedIds { get; private set; }
-
-        [IdGroup]
-        [OdinSerialize]
-        [HideReferenceObjectPicker]
-        public CurrencyIdGroup CurrencyGroup { get; private set; }
         
         private readonly Dictionary<Id, List<Object>> levelsById = new();
 
         public void Init()
         {
             Burger.Log($"[{nameof(LevelsManager)}] Init");
+            LevelChanged = null;
+            LevelChangedById.Clear();
             levelsById.Clear();
             AddedIds = new();
             

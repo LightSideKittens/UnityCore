@@ -55,7 +55,7 @@ namespace LSCore
             target.anchorMin = zero;
             target.anchorMax = one;
             target.anchoredPosition = zero;
-            target.localScale = one;
+            target.localScale = Vector3.one;
 
             target.offsetMin = safeArea.min * xFactor;
             target.offsetMax = (safeArea.max - new Vector2(LSScreen.Width, LSScreen.Height)) * yFactor;

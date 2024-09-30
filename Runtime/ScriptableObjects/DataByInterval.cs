@@ -18,6 +18,7 @@ namespace LSCore
         private T[] data;
 
         public (T element, Intervals.Data data) Get(int value) => intervals.Get<T, T[]>(value, data);
+        public T GetData(int value) => Get(value).element;
 
 #if UNITY_EDITOR
         private bool hideData => intervals == null || intervals.Count == 0;

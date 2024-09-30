@@ -16,6 +16,30 @@ namespace LSCore
     public class Funds : IEnumerable<BaseFund>
     {
         [SerializeReference] private List<BaseFund> funds = new();
+
+        public bool Contains(Id id)
+        {
+            return funds.Any(x => x.Id == id);
+        }
+        
+        public bool TryGetById(Id id, out BaseFund fund)
+        {
+            fund = GetById(id);
+            return fund != null;
+        }
+        
+        public BaseFund GetById(Id id)
+        {
+            foreach (var item in funds)
+            {
+                if (item.Id == id)
+                {
+                    return item;
+                }
+            }
+            
+            return null;
+        }
         
         public void Earn()
         {
