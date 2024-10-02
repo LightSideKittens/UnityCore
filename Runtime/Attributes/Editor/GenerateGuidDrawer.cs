@@ -3,6 +3,7 @@
 using System;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
+using UnityEditor;
 using UnityEngine;
 
 public class GenerateGuidDrawer : OdinAttributeDrawer<GenerateGuidAttribute, string>
@@ -10,10 +11,14 @@ public class GenerateGuidDrawer : OdinAttributeDrawer<GenerateGuidAttribute, str
     protected override void DrawPropertyLayout(GUIContent label)
     {
         var value = ValueEntry.SmartValue;
-        
+
+        SirenixEditorGUI.BeginIndentedVertical();
         SirenixEditorGUI.BeginHorizontalToolbar();
-        GUILayout.Label(label, GUILayout.Width(20));
-        
+        if (label != null)
+        {
+            GUILayout.Label(label, GUILayout.Width(20));
+        }
+
         GUILayout.FlexibleSpace();
         GUILayout.Label(value, GUILayout.Width(250));
         if (SirenixEditorGUI.IconButton(EditorIcons.Refresh)
@@ -22,8 +27,9 @@ public class GenerateGuidDrawer : OdinAttributeDrawer<GenerateGuidAttribute, str
             value = Guid.NewGuid().ToString("N");
             ValueEntry.SmartValue = value;
         }
-        
+
         SirenixEditorGUI.EndHorizontalToolbar();
+        SirenixEditorGUI.EndIndentedVertical();
     }
 }
 

@@ -1,7 +1,10 @@
+using System;
 using System.Reflection;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
+[Serializable]
 public class ActionFromObject<T> : LSAction
 {
     public Object obj;

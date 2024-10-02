@@ -1,4 +1,7 @@
-﻿public class PlaySound : LSAction
+﻿using System;
+
+[Serializable]
+public class PlaySound : LSAction
 {
     public LaLaLa.Settings settings;
     public override void Invoke()

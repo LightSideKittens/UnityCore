@@ -1,25 +1,8 @@
-﻿using System;
-using Sirenix.Utilities;
-using UnityEngine;
+﻿using UnityEngine;
 using static System.IO.Path;
 
 namespace LSCore.ConfigModule
 {
-    public class ConfigPathAttribute : Attribute
-    {
-        public string path;
-
-        public ConfigPathAttribute(string path)
-        {
-            this.path = path;
-        }
-
-        public static string Path<T>()
-        {
-            return typeof(T).GetAttribute<ConfigPathAttribute>().path;
-        }
-    }
-    
     public static class ConfigPaths
     {
         public static string DataPath

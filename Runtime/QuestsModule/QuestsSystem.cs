@@ -24,7 +24,8 @@ namespace LSCore.QuestModule
                 }
             }
         }
-        
+
+        [SerializeField] private string systemId = "Quests";
         [SerializeField] private QuestsManager[] managers;
 
         protected override bool CreateImmediately => true;
@@ -35,7 +36,7 @@ namespace LSCore.QuestModule
             
             for (int i = 0; i < managers.Length; i++)
             {
-                managers[i].Init();
+                managers[i].Init(systemId);
             }
         }
 

@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using LSCore.Attributes;
 using LSCore.ConditionModule;
-using LSCore.ConfigModule;
 using LSCore.Extensions;
-using LSCore.LifecycleSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace LSCore.QuestModule
 {
-    [ConfigPath("Quests")]
-    public class Quest : MonoBehaviour, ILifecycleObject<Quest>
+    public class Quest : MonoBehaviour
     {
         [Serializable]
         public abstract class Action : LSAction<Quest> { }
@@ -62,45 +60,35 @@ namespace LSCore.QuestModule
         [GenerateGuid]
         [SerializeField] private string id;
 
+        private string systemId;
         private string placementId;
-        
         private string questId;
+        
         private RJToken lastQuestData;
         private RJToken targetQuestData;
 
         public string Id => id;
         private string ViewDataPath => useId ? Path.Combine(questId, $"{placementId}{id}") : questId;
 
-        public Quest Create(string placementId, string questId)
+        public Quest Create(string systemId, string placementId, string questId)
         {
             gameObject.SetActive(false);
 
             var quest = Instantiate(this);
-            quest.InitData(placementId, questId);
+            quest.InitData(systemId, placementId, questId);
             
             quest.gameObject.SetActive(true);
             gameObject.SetActive(true);
             return quest;
         }
 
-        public void BuildTargetData(RJToken token)
+        private void InitData(string systemId, string placementId, string questId)
         {
-            token[isNew] = true;
-            
-            for (int i = 0; i < handlers.Count; i++)
-            {
-                handlers[i].BuildTargetData(token);
-            }
-            
-            markPrefab.Increase();
-        }
-
-        private void InitData(string placementId, string questId)
-        {
+            this.systemId = systemId;
             this.placementId = placementId;
             this.questId = questId;
-            lastQuestData = new(QuestsManager.Config.View(ViewDataPath));
-            targetQuestData = new(QuestsManager.Config.Data(questId));
+            lastQuestData = new(QuestConfig.Get(systemId, QuestConfig.Type.View, ViewDataPath));
+            targetQuestData = new(QuestConfig.Get(systemId, QuestConfig.Type.Data, questId));
             
             for (int i = 0; i < handlers.Count; i++)
             {
@@ -111,9 +99,21 @@ namespace LSCore.QuestModule
 
             if (handlers)
             {
-                targetQuestData["completedAt"] = DateTime.UtcNow.Ticks;
+                targetQuestData[QuestsManager.completedAt] = DateTime.UtcNow.Ticks;
                 onComplete.Invoke(this);
             }
+        }
+        
+        public void BuildTargetData(RJToken token)
+        {
+            token[isNew] = true;
+            
+            for (int i = 0; i < handlers.Count; i++)
+            {
+                handlers[i].BuildTargetData(token);
+            }
+            
+            markPrefab.Increase();
         }
 
         private void Awake()

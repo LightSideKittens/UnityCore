@@ -27,6 +27,7 @@ namespace LSCore
         }
     }
     
+    [Serializable]
     public class Create<T> : LSAction where T : Component
     {
         public T prefab;
@@ -40,6 +41,7 @@ namespace LSCore
         }
     }
     
+    [Serializable]
     public class CreateSinglePrefab<T> : Create<T> where T : Component
     {
         private static readonly Dictionary<T, T> objectByPrefab = new();
@@ -59,6 +61,7 @@ namespace LSCore
         }
     }
     
+    [Serializable]
     public class CreateOrShowUIView<T> : CreateSinglePrefab<T> where T : BaseUIView<T>
     {
         public ShowWindowOption option;

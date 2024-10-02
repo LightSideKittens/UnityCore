@@ -1,10 +1,12 @@
-﻿using DG.Tweening;
+﻿using System;
+using DG.Tweening;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace LSCore.AnimationsModule
 {
+    [Serializable]
     public class LocalPosFollower : MonoBehaviour
     {
         public float duration = 0.2f;
@@ -27,6 +29,7 @@ namespace LSCore.AnimationsModule
         }
     }
 
+    [Serializable]
     public class SetTargetToFollower : LSAction
     {
         public bool useValuePath;

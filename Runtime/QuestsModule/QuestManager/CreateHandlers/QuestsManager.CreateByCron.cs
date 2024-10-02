@@ -4,16 +4,16 @@ using Cronos;
 using LSCore.Extensions;
 using UnityEngine;
 
-namespace LSCore.ObjectModule
+namespace LSCore.QuestModule
 {
-    public partial class LifecycleManager<T>
+    public partial class QuestsManager
     {
         [Serializable]
         public class CreateByCron : CreateHandler
         {
             [CronEx] public string cron;
             
-            [SerializeReference] public ObjectsSelector selector;
+            [SerializeReference] public QuestsSelector selector;
             private DateTime target;
 
             protected void Wait()

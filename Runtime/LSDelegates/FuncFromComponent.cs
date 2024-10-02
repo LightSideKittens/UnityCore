@@ -7,6 +7,7 @@ using Object = UnityEngine.Object;
 [Serializable]
 public class TweenGetter : FuncFromObject<Tween> { }
 
+[Serializable]
 public class FuncFromObject<T> : LSAction
 {
     public Object obj;
