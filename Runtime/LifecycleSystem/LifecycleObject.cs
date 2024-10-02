@@ -6,14 +6,13 @@ using LSCore.ConditionModule;
 using LSCore.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.UI;
 
-namespace LSCore.QuestModule
+namespace LSCore.LifecycleSystem
 {
-    public class Quest : MonoBehaviour
+    public class LifecycleObject : MonoBehaviour
     {
         [Serializable]
-        public abstract class Action : LSAction<Quest> { }
+        public abstract class Action : LSAction<LifecycleObject> { }
 
         [Serializable]
         [Unwrap]
@@ -21,7 +20,7 @@ namespace LSCore.QuestModule
         {
             [SerializeReference] public LSAction action;
             
-            public override void Invoke(Quest value)
+            public override void Invoke(LifecycleObject value)
             {
                 action?.Invoke();
             }
@@ -33,10 +32,10 @@ namespace LSCore.QuestModule
         [Serializable]
         public abstract class Handler : Condition
         {
-            public RJToken lastQuestData;
-            public RJToken targetQuestData;
+            public RJToken lastObjData;
+            public RJToken targetObjData;
             
-            public abstract void BuildTargetData(RJToken questToken);
+            public abstract void BuildTargetData(RJToken objToken);
 
             public void SetupView()
             {
@@ -62,44 +61,44 @@ namespace LSCore.QuestModule
 
         private string systemId;
         private string placementId;
-        private string questId;
+        private string objId;
         
-        private RJToken lastQuestData;
-        private RJToken targetQuestData;
+        private RJToken lastObjData;
+        private RJToken targetObjData;
 
         public string Id => id;
-        private string ViewDataPath => useId ? Path.Combine(questId, $"{placementId}{id}") : questId;
+        private string ViewDataPath => useId ? Path.Combine(objId, $"{placementId}{id}") : objId;
 
-        public Quest Create(string systemId, string placementId, string questId)
+        public LifecycleObject Create(string systemId, string placementId, string objId)
         {
             gameObject.SetActive(false);
 
-            var quest = Instantiate(this);
-            quest.InitData(systemId, placementId, questId);
+            var obj = Instantiate(this);
+            obj.InitData(systemId, placementId, objId);
             
-            quest.gameObject.SetActive(true);
+            obj.gameObject.SetActive(true);
             gameObject.SetActive(true);
-            return quest;
+            return obj;
         }
 
-        private void InitData(string systemId, string placementId, string questId)
+        private void InitData(string systemId, string placementId, string objId)
         {
             this.systemId = systemId;
             this.placementId = placementId;
-            this.questId = questId;
-            lastQuestData = new(QuestConfig.Get(systemId, QuestConfig.Type.View, ViewDataPath));
-            targetQuestData = new(QuestConfig.Get(systemId, QuestConfig.Type.Data, questId));
+            this.objId = objId;
+            lastObjData = new(LifecycleConfig.Get(systemId, LifecycleConfig.Type.View, ViewDataPath));
+            targetObjData = new(LifecycleConfig.Get(systemId, LifecycleConfig.Type.Data, objId));
             
             for (int i = 0; i < handlers.Count; i++)
             {
                 var handler = handlers[i];
-                handler.lastQuestData = lastQuestData;
-                handler.targetQuestData = targetQuestData;
+                handler.lastObjData = lastObjData;
+                handler.targetObjData = targetObjData;
             }
 
             if (handlers)
             {
-                targetQuestData[QuestsManager.completedAt] = DateTime.UtcNow.Ticks;
+                targetObjData[LifecycleManager.completedAt] = DateTime.UtcNow.Ticks;
                 onComplete.Invoke(this);
             }
         }
@@ -129,10 +128,10 @@ namespace LSCore.QuestModule
             {
                 cullEvent.Showed -= OnShowed;
                 
-                if (targetQuestData[isNew]!.ToObject<bool>())
+                if (targetObjData[isNew]!.ToObject<bool>())
                 {
                     Debug.Log("OnCullChanged");
-                    targetQuestData[isNew] = false;
+                    targetObjData[isNew] = false;
                     markPrefab.Decrease();
                 }
             }

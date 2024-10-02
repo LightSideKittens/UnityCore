@@ -1,4 +1,4 @@
 ﻿{
-  "name": "LSCore.QuestsModule",
+  "name": "LSCore.LifecycleSystem",
   "references":[ "GUID:75992adb30bf51f40a7a0f3283432aa2", "GUID:1bc6eecb763177148a383c0cb9ad9369", "GUID:488fbb5f4bad8a94daedd0c8d1239e93", "GUID:bb5ab3e5517faff4287376ae8f1fc9fc", "GUID:3dd2cb52eff6e5743bdb8fcc64baed91", "GUID:247942eb90ec48b696028c8e4c1f8e20", "GUID:a6b7f487c8a89734f91e6aeb16bba6ca", "GUID:d426b638445cc2f428ed8ba7c1325767", "GUID:d5a6795f87674d24b9f54744173883ac" ]
 }

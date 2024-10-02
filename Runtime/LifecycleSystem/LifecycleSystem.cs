@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace LSCore.QuestModule
+namespace LSCore.LifecycleSystem
 {
-    public class QuestsSystem : SingleService<QuestsSystem>
+    public abstract class LifecycleSystem<T> : SingleService<T> where T : LifecycleSystem<T>
     {
         [Serializable]
-        public class CreateQuests : LSAction
+        public class CreateLifecycleObjects : LSAction
         {
             public string placementId;
             [SerializeReference] public List<TransformAction> transformActions;
@@ -18,15 +18,15 @@ namespace LSCore.QuestModule
                 if(isCreated) return;
                 isCreated = true;
                 
-                foreach (var quest in Create(placementId))
+                foreach (var obj in Create(placementId))
                 {
-                    transformActions.Invoke(quest.transform);
+                    transformActions.Invoke(obj.transform);
                 }
             }
         }
 
-        [SerializeField] private string systemId = "Quests";
-        [SerializeField] private QuestsManager[] managers;
+        [SerializeField] private string systemId = "DefaultLifecycleSystem";
+        [SerializeField] private LifecycleManager[] managers;
 
         protected override bool CreateImmediately => true;
 
@@ -40,13 +40,13 @@ namespace LSCore.QuestModule
             }
         }
 
-        public static IEnumerable<Quest> Create(string placementId)
+        public static IEnumerable<LifecycleObject> Create(string placementId)
         {
             foreach (var manager in Instance.managers)
             {
-                foreach (var quest in manager.Create(placementId))
+                foreach (var obj in manager.Create(placementId))
                 {
-                    yield return quest;
+                    yield return obj;
                 }
             }
         }

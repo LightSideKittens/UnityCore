@@ -4,9 +4,9 @@ using Newtonsoft.Json.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace LSCore.QuestModule
+namespace LSCore.LifecycleSystem
 {
-    public partial class QuestsManager : ScriptableObject
+    public partial class LifecycleManager : ScriptableObject
     {
         public const string createdAt = nameof(createdAt);
         public const string startedAt = nameof(startedAt);
@@ -24,7 +24,7 @@ namespace LSCore.QuestModule
         }
 
         [GenerateGuid] public string id;
-        public List<Quest> quests;
+        public List<LifecycleObject> objs;
         
         [Required]
         [SerializeReference] public CreateHandler create;
@@ -32,33 +32,33 @@ namespace LSCore.QuestModule
         [SerializeReference] public FinishHandler finish;
         [SerializeReference] public DeleteHandler delete;
 
-        private Dictionary<string, Quest> questById = new();
+        private Dictionary<string, LifecycleObject> objById = new();
         private string systemId;
-        protected JToken Config => QuestConfig.Get(systemId, QuestConfig.Type.Data, id);
+        protected JToken Config => LifecycleConfig.Get(systemId, LifecycleConfig.Type.Data, id);
         
         public void Init(string systemId)
         {
             this.systemId = systemId;
-            questById = quests.ToDictionary(x => x.Id);
+            objById = objs.ToDictionary(x => x.Id);
             
-            create?.Init(systemId, id, quests);
-            start?.Init(systemId, id, quests);
-            finish?.Init(systemId, id, quests);
-            delete?.Init(systemId, id, quests);
+            create?.Init(systemId, id, objs);
+            start?.Init(systemId, id, objs);
+            finish?.Init(systemId, id, objs);
+            delete?.Init(systemId, id, objs);
         }
 
-        public IEnumerable<Quest> Create(string placementId)
+        public IEnumerable<LifecycleObject> Create(string placementId)
         {
-            var questIdsMap = (JObject)Config[Handler.questIds];
+            var objIdsMap = (JObject)Config[Handler.ids];
                 
-            if(questIdsMap == null) yield break;
+            if(objIdsMap == null) yield break;
             
-            foreach (var prop in questIdsMap.Properties())
+            foreach (var prop in objIdsMap.Properties())
             {
-                string questId = prop.Name;
+                string objId = prop.Name;
                 string viewId = prop.Value.ToString();
    
-                yield return questById[viewId].Create(systemId, placementId, create.GetQuestPath(questId));
+                yield return objById[viewId].Create(systemId, placementId, create.GetObjPath(objId));
             }
         }
     }

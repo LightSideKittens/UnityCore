@@ -4,18 +4,18 @@ using LSCore.Attributes;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace LSCore.QuestModule
+namespace LSCore.LifecycleSystem
 {
-    public partial class QuestsManager
+    public partial class LifecycleManager
     {
         [Serializable]
         public abstract class DeleteHandler : Handler
         {
-            protected void Delete(string questId)
+            protected void Delete(string objId)
             {
-                Config[questIds]?[questId]?.Parent?.Remove();
-                QuestConfig.Delete(systemId, QuestConfig.Type.Data, GetQuestPath(questId));
-                QuestConfig.DeletePath(systemId, QuestConfig.Type.View, questId);
+                Config[ids]?[objId]?.Parent?.Remove();
+                LifecycleConfig.Delete(systemId, LifecycleConfig.Type.Data, GetObjPath(objId));
+                LifecycleConfig.DeletePath(systemId, LifecycleConfig.Type.View, objId);
             }
         }
 
@@ -33,9 +33,9 @@ namespace LSCore.QuestModule
 
             private IEnumerable<string> Keys => TimeMarkKeys;
             
-            protected void Delete(string questId, TimeSpan timeForDelete)
+            protected void Delete(string objId, TimeSpan timeForDelete)
             {
-                DoForQuestAfterTime(questId, timeMarkKey, timeForDelete, Delete);
+                DoForObjAfterTime(objId, timeMarkKey, timeForDelete, Delete);
             }
             
             protected override void OnInit()

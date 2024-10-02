@@ -4,9 +4,9 @@ using LSCore.Attributes;
 using LSCore.Extensions;
 using UnityEngine;
 
-namespace LSCore.QuestModule
+namespace LSCore.LifecycleSystem
 {
-    public partial class QuestsManager
+    public partial class LifecycleManager
     {
         [Serializable]
         public class CreateByTimeSpan : CreateHandler
@@ -16,7 +16,7 @@ namespace LSCore.QuestModule
             [Min(1)] public int limit = 1;
             public bool createImmediately;
 
-            [SerializeReference] public QuestsSelector selector;
+            [SerializeReference] public MultipleSelector selector;
             private DateTime target;
             
             protected void Wait(Action onComplete)

@@ -7,30 +7,30 @@ using LSCore.Extensions;
 using Newtonsoft.Json.Linq;
 using Sirenix.OdinInspector;
 
-namespace LSCore.QuestModule
+namespace LSCore.LifecycleSystem
 {
-    public partial class QuestsManager
+    public partial class LifecycleManager
     {
         [Serializable]
         [HideReferenceObjectPicker]
         [TypeFrom]
         public abstract class Handler
         {
-            public const string questIds = nameof(questIds);
+            public const string ids = nameof(ids);
             
             [NonSerialized] public string systemId;
             [NonSerialized] public string managerId;
-            [NonSerialized] public List<Quest> quests;
-            protected JToken Config => QuestConfig.Get(systemId, QuestConfig.Type.Data, managerId);
-            protected RJToken GetQuest(string questId) => new(QuestConfig.Get(systemId, QuestConfig.Type.Data, GetQuestPath(questId)));
+            [NonSerialized] public List<LifecycleObject> objs;
+            protected JToken Config => LifecycleConfig.Get(systemId, LifecycleConfig.Type.Data, managerId);
+            protected RJToken GetObj(string objId) => new(LifecycleConfig.Get(systemId, LifecycleConfig.Type.Data, GetObjPath(objId)));
             
-            public string GetQuestPath(string questId) => Path.Combine(managerId, questId);
+            public string GetObjPath(string objId) => Path.Combine(managerId, objId);
             
-            public void Init(string systemId, string id, List<Quest> quests)
+            public void Init(string systemId, string id, List<LifecycleObject> objs)
             {
                 this.systemId = systemId;
                 managerId = id;
-                this.quests = quests;
+                this.objs = objs;
                 OnInit();
             }
 
@@ -38,27 +38,27 @@ namespace LSCore.QuestModule
 
             public void DoForEachAfterTime(long time, Action<string, TimeSpan> action)
             {
-                var questIdsMap = (JObject)Config[questIds];
+                var objIdsMap = (JObject)Config[ids];
                 
-                if(questIdsMap == null) return;
+                if(objIdsMap == null) return;
                 
                 var timeForDo = new TimeSpan(time);
             
-                foreach (var prop in questIdsMap.Properties())
+                foreach (var prop in objIdsMap.Properties())
                 {
-                    string questId = prop.Name;
-                    action(questId, timeForDo);
+                    string objId = prop.Name;
+                    action(objId, timeForDo);
                 }
             }
             
-            public void DoForQuestAfterTime(string questId, string timeMarkKey, TimeSpan timeForDo, Action<string> action)
+            public void DoForObjAfterTime(string objId, string timeMarkKey, TimeSpan timeForDo, Action<string> action)
             {
-                var questToken = GetQuest(questId);
-                var timeMark = questToken[timeMarkKey];
+                var objToken = GetObj(objId);
+                var timeMark = objToken[timeMarkKey];
                 
                 if (timeMark == null)
                 {
-                    questToken.setActions.Add(timeMarkKey, Do);
+                    objToken.setActions.Add(timeMarkKey, Do);
                     return;
                 }
 
@@ -76,7 +76,7 @@ namespace LSCore.QuestModule
                         await Task.Delay(timeForDo - timeSince);
                     }
                 
-                    action(questId);
+                    action(objId);
                 }
             }
         }

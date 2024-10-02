@@ -2,9 +2,9 @@
 using Newtonsoft.Json.Linq;
 using static System.IO.Path;
 
-namespace LSCore.QuestModule
+namespace LSCore.LifecycleSystem
 {
-    public static class QuestConfig
+    public static class LifecycleConfig
     {
         public enum Type
         {
@@ -17,11 +17,11 @@ namespace LSCore.QuestModule
         public static void Delete(string systemId, Type type, string path) => GetManager(systemId, type, path).Delete();
         public static void DeletePath(string systemId, Type type, string path)
         {
-            path = QuestConfigManager.Path(Combine(systemId, type.ToString(), path));
+            path = LifecycleConfigManager.Path(Combine(systemId, type.ToString(), path));
             FileExt.DeletePath(path);
         }
 
-        private static QuestConfigManager GetManager(string systemId, Type type, string path) => 
-            ConfigMaster<QuestConfigManager>.Get(Combine(systemId, type.ToString(), path));
+        private static LifecycleConfigManager GetManager(string systemId, Type type, string path) => 
+            ConfigMaster<LifecycleConfigManager>.Get(Combine(systemId, type.ToString(), path));
     }
 }

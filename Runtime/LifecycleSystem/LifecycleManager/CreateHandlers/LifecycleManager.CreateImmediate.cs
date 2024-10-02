@@ -1,14 +1,14 @@
 using System;
 using UnityEngine;
 
-namespace LSCore.QuestModule
+namespace LSCore.LifecycleSystem
 {
-    public partial class QuestsManager
+    public partial class LifecycleManager
     {
         [Serializable]
         public class CreateImmediate : CreateHandler
         {
-            [SerializeReference] public QuestsSelector selector;
+            [SerializeReference] public MultipleSelector selector;
             [Range(1, 10)] public int count = 1;
 
             protected override void StartCreating()
