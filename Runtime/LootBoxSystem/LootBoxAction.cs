@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LSCore.Extensions;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace LSCore
 {
@@ -14,29 +14,18 @@ namespace LSCore
         [GenerateGuid] public string id;
         [SerializeReference] public List<LSAction> actions;
         
-        [OnValueChanged("OnGuaranteedAtChanged")]
         public int guaranteedAt = -1;
-        
-        [OnValueChanged("OnChanceChanged")]
         [CustomValueDrawer("ChanceDrawer")] 
         public float chance;
         public float NormalizedChange => chance / 100;
         
-        internal LootBox box;
-        internal float maxValue;
-        private void OnChanceChanged()
-        {
-            box.OnChanceChanged();
-        }
+        internal float minValue;
+        internal float maxValue = 100;
         
-        private void OnGuaranteedAtChanged()
-        {
-            box.OnGuaranteedAtChanged();
-        }
 
         private float ChanceDrawer(float value, GUIContent label)
         {
-            value = Mathf.Clamp(EditorGUILayout.Slider(label, value, 0, 100), 0, maxValue);
+            value = Mathf.Clamp(EditorGUILayout.Slider(label, value, 0, 100), minValue, maxValue);
             return value;
         }
 
@@ -52,14 +41,14 @@ namespace LSCore
     {
         [GenerateGuid] public string id;
         [SerializeReference]
-        [OnCollectionChanged("OnInspectorInit")]
         public List<LootBoxAction> actions;
         
+        [Button]
         public override void Invoke()
         {
             var totalOpenings = LootBoxConfig.OnOpen(id);
 
-            var guaranteed = actions.FirstOrDefault(x => x.guaranteedAt > 1 && x.guaranteedAt == totalOpenings);
+            var guaranteed = actions.FirstOrDefault(x => x.guaranteedAt > 1 && totalOpenings % x.guaranteedAt == 0);
             
             if (guaranteed != null)
             {
@@ -75,58 +64,105 @@ namespace LSCore
                 return x.NormalizedChange >= ratio;
             });
 
-            var picked = filteredActions.RandomElement();
+            var picked = GetRandomItem(filteredActions.ToList());
             picked.Invoke();
             LootBoxConfig.OnActionPick(id, picked.id);
         }
-
-        [OnInspectorInit]
-        private void OnInspectorInit()
+        
+        public LootBoxAction GetRandomItem(List<LootBoxAction> picked)
         {
-            actions ??= new();
-            guaranteedSet.Clear();
+            var randomValue = Random.Range(0f, 100f);
+            var cumulativeProbability = 0f;
             
-            float maxValue = 100;
-            foreach (var action in actions)
+            foreach (var action in picked)
             {
-                action.box = this;
-                action.maxValue = maxValue;
-                maxValue -= action.chance;
-                if (action.guaranteedAt > 1)
+                cumulativeProbability += action.chance;
+                if (randomValue <= cumulativeProbability)
                 {
-                    guaranteedSet.Add(action.guaranteedAt);
+                    return action;
                 }
             }
+            
+            return picked[^1];
         }
 
+        private bool isInited;
+        
+        [OnInspectorGUI]
+        private void OnInspectorGui()
+        {
+            if(World.IsPlaying) return;
+            actions ??= new();
+            
+            if (!isInited)
+            {
+                float maxValue = 100;
+                foreach (var action in actions)
+                {
+                    action.minValue = 0;
+                    action.maxValue = maxValue;
+                    maxValue -= action.chance;
+                }
+            }
+            
+            OnChanceChanged();
+            OnGuaranteedAtChanged();
+        }
+        
         public void OnChanceChanged()
         {
             float maxValue = 100;
-            int c = 0;
+            int i = 0;
+            int count = actions.Count - 1;
             
             foreach (var action in actions)
             {
-                if (c > 0 && action.maxValue > 0)
+                action.minValue = 0;
+                
+                if (i > 0 && action.maxValue > 0 && i < count)
                 {
                     action.chance *= maxValue / action.maxValue;
                 }
+                else if(i == count)
+                {
+                    action.minValue = maxValue;
+                    action.maxValue = maxValue;
+                    action.chance = maxValue;
+                    break;
+                }
 
-                c++;   
+                i++;   
                 action.maxValue = maxValue;
                 maxValue -= action.chance;
             }
         }
 
         private HashSet<int> guaranteedSet = new();
+        private HashSet<string> idSet = new();
         
         public void OnGuaranteedAtChanged()
         {
+            guaranteedSet.Clear();
+            idSet.Clear();
+            
             foreach (var action in actions)
             {
                 if (guaranteedSet.Contains(action.guaranteedAt))
                 {
                     action.guaranteedAt++;
                 }
+
+                if (action.guaranteedAt > 1)
+                {
+                    guaranteedSet.Add(action.guaranteedAt);
+                }
+                
+                if (idSet.Contains(action.id))
+                {
+                    action.id = Guid.NewGuid().ToString("N");
+                }
+                
+                idSet.Add(action.id);
             }
         }
     }

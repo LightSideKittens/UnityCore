@@ -1,4 +1,4 @@
 ﻿{
   "name": "LSCore.LootBoxSystem",
-  "references":[ "GUID:488fbb5f4bad8a94daedd0c8d1239e93", "GUID:bb5ab3e5517faff4287376ae8f1fc9fc", "GUID:247942eb90ec48b696028c8e4c1f8e20", "GUID:3dd2cb52eff6e5743bdb8fcc64baed91" ]
+  "references":[ "GUID:488fbb5f4bad8a94daedd0c8d1239e93", "GUID:bb5ab3e5517faff4287376ae8f1fc9fc", "GUID:247942eb90ec48b696028c8e4c1f8e20", "GUID:3dd2cb52eff6e5743bdb8fcc64baed91", "GUID:e2d262c07fab33347bf583c077610e88" ]
 }
