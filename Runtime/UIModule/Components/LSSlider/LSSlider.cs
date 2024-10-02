@@ -107,6 +107,12 @@ namespace LSCore
             Init();
         }
 
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            UpdateCachedReferences();
+        }
+
         private void Init()
         {
             UpdateValueTextGetters();
