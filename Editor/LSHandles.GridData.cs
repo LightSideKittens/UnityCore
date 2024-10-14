@@ -11,7 +11,7 @@ namespace LSCore.Editor
         {
             public int cellDivides = 10;
             public Vector2 scale = Vector2.one;
-            public Color color = new (0.5f, 0.5f, 0.5f, 1);
+            public Color color = new (0.5f, 0.5f, 0.5f, 0.5f);
             public Vector2 scaleRange = new(0.0001f, 100);
             public Vector2 stepRef = new Vector2(0.1f, 0.1f);
 
@@ -49,7 +49,7 @@ namespace LSCore.Editor
                 while (startPoint.x < endPoint.x)
                 {
                     HandleOpacity(0);
-                    var line = GetLine(c, lw);
+                    var line = GetLine(c, lw, false);
                     positions[0] = new Vector3(startPoint.x, minValue);
                     positions[1] = new Vector3(startPoint.x, maxValue);
                     line.positionCount = 2;
@@ -62,7 +62,7 @@ namespace LSCore.Editor
                 while (startPoint.y < endPoint.y)
                 {
                     HandleOpacity(1);
-                    var line = GetLine(c, lw);
+                    var line = GetLine(c, lw, false);
                     positions[0] = new Vector3(minValue, startPoint.y);
                     positions[1] = new Vector3(maxValue, startPoint.y);
                     line.positionCount = 2;
@@ -118,12 +118,12 @@ namespace LSCore.Editor
 
             public float GetProgressToNextDoublingByZoom(int doublingDepth)
             {
-                return GetLerped(camData.size, cellDivides, doublingDepth);
+                return GetLerped(camData.Size, cellDivides, doublingDepth);
             }
             
             public float GetGridMultiplyByZoom()
             {
-                float scaleRatio = camData.size;
+                float scaleRatio = camData.Size;
                 int doublingCount = (int)Mathf.Log(scaleRatio, cellDivides);
                 float gridSpacingMultiply = Mathf.Pow(cellDivides, doublingCount);
                 return gridSpacingMultiply;

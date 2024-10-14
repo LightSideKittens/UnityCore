@@ -71,30 +71,13 @@ namespace LSCore.AnimationsModule
     [ExecuteAlways]
     [RequireComponent(typeof(Animation))]
     [DefaultExecutionOrder(-1000)]
-    public partial class AnimationWrapper : MonoBehaviour, ISerializationCallbackReceiver
+    public partial class AnimationWrapper : MonoBehaviour
     {
-        [Serializable]
-        private struct Data
-        {
-            [Required]
-            [OnValueChanged("OnClipChanged")]
-            public AnimationClip clip;
-            [SerializeReference] public List<Handler> handlers;
-
-#if UNITY_EDITOR
-            private void OnClipChanged()
-            {
-                currentInspected.FillHandlers();
-            }
-#endif
-        }
-
-        [SerializeField] private Data[] handlers;
+        [SerializeReference] public List<Handler> handlers;
         [PropertySpace(SpaceBefore = 10)]
         [SerializeReference] private List<LSAction> actions;
         private Animation animation;
-
-        private readonly Dictionary<AnimationClip, List<Handler>> handlersByClip = new();
+        
         private AnimationClip lastRuntimeClip;
         private AnimationClip lastClip;
 
@@ -161,19 +144,17 @@ namespace LSCore.AnimationsModule
 #if UNITY_EDITOR
             TryCallEvent(clip, time);
 #endif
-            var currentClipHandlers = handlersByClip[clip];
-
             if (notEqual)
             {
-                StopLastClip(lastRuntimeClip);
+                StopHandlers();
                 
-                foreach (var handler in currentClipHandlers)
+                foreach (var handler in handlers)
                 {
                     handler.Start();
                 }
             }
             
-            foreach (var handler in currentClipHandlers)
+            foreach (var handler in handlers)
             {
                 handler.Handle();
             }
@@ -181,37 +162,14 @@ namespace LSCore.AnimationsModule
             lastRuntimeClip = clip;
         }
 
-        private void StopLastClip(AnimationClip clip)
+        private void StopHandlers()
         {
-            if (clip != null)
+            foreach (var handler in handlers)
             {
-                if (handlersByClip.TryGetValue(clip, out var lastClipHandlers))
-                {
-                    foreach (var handler in lastClipHandlers)
-                    {
-                        handler.Stop();
-                    }   
-                }
+                handler.Stop();
             }
         }
-
-        public void OnBeforeSerialize() { }
-
-        public void OnAfterDeserialize()
-        {
-            FillHandlers();
-        }
-
-        private void FillHandlers()
-        {
-            handlersByClip.Clear();
-
-            for (int i = 0; i < handlers.Length; i++)
-            {
-                var h = handlers[i];
-                handlersByClip.Add(h.clip, h.handlers);
-            }
-        }
+        
 
 #if UNITY_EDITOR
         
@@ -331,7 +289,7 @@ namespace LSCore.AnimationsModule
 
             if (!state)
             {
-                StopLastClip(lastRuntimeClip);
+                StopHandlers();
                 lastRuntimeClip = null;
                 lastTime = -1;
             }
@@ -356,7 +314,7 @@ namespace LSCore.AnimationsModule
             {
                 lastTime = -1;
                 lastRuntimeClip = null;
-                StopLastClip(lastClip);
+                StopHandlers();
             }
             
             lastClip = clip;

@@ -6,6 +6,7 @@ using UnityEngine;
 
 namespace LSCore
 {
+    [Serializable]
     public class AttackToTarget : BaseAttack
     {
         [SerializeField] private AnimSequencer anim;
@@ -28,11 +29,11 @@ namespace LSCore
         }
     }
     
+    [Serializable]
     public class AttackToTargetAnimation : BaseAttack
     {
         [SerializeField] private AnimationWrapper animation;
         [SerializeField] private AnimationClip clip;
-        [SerializeField] private bool needFaceToTarget = true;
         [NonSerialized] public bool inRadius;
         [NonSerialized] public Transform target;
         
@@ -47,15 +48,9 @@ namespace LSCore
 
         public override Tween Attack()
         {
-            var sequence = DOTween.Sequence().Append(Wait.Delay(clip.length));
-            
-            if (needFaceToTarget)
-            {
-                //sequence.Append();
-            }
-            
+            var tween = Wait.Delay(clip.length);
             animation.Play(clip.name);
-            return sequence;
+            return tween;
         }
     }
 }

@@ -7,4 +7,9 @@ public static class LSIcons
     {
         return AssetDatabase.LoadAssetAtPath<Texture2D>($"Assets/{LSPaths.Icons}/{iconName}.{extension}");
     }
+    
+    public static Sprite GetSprite(string iconName, string extension = "png")
+    {
+        return AssetDatabase.LoadAssetAtPath<Sprite>($"Assets/{LSPaths.Icons}/{iconName}.{extension}");
+    }
 }

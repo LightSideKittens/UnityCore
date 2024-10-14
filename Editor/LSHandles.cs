@@ -16,9 +16,11 @@ namespace LSCore.Editor
         public static int bezieQuality = 50;
         private static readonly EditorHiddenObjectPool<LineRenderer> lines = new(shouldStoreActive: true);
         private static readonly EditorHiddenObjectPool<Transform> points = new(shouldStoreActive: true);
+        private static readonly EditorHiddenObjectPool<SpriteRenderer> sprites = new(shouldStoreActive: true);
         private static Rect rect;
         private static Camera cam;
         private static Material lineMaterial;
+        private static Material spriteMaterial;
         private static CameraData camData;
         private static RenderTexture targetTexture;
         private static readonly MethodInfo blitMaterialInfo;
@@ -26,6 +28,9 @@ namespace LSCore.Editor
         private static EventType eventType;
         private static Vector3 lastMp;
         private static Scene scene;
+        private static int currentDrawLayer;
+
+        public static float CamSize => cam.orthographicSize;
         
         static LSHandles()
         {
@@ -33,10 +38,19 @@ namespace LSCore.Editor
             var propInfo = guiType.GetProperty("blitMaterial", BindingFlags.Static | BindingFlags.NonPublic);
             blitMaterialInfo = propInfo.GetGetMethod(true);
             lineMaterial = new Material(Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply"));
+            spriteMaterial = new Material(Shader.Find("Sprites/Default"));
             lines.Created += AddGameObject;
             lines.Got += line => line.enabled = true;
             lines.Released += line => line.enabled = false;
+            releasePools += lines.ReleaseAll;
+
             points.Created += AddGameObject;
+            releasePools += points.ReleaseAll;
+
+            sprites.Created += AddGameObject;
+            sprites.Got += sprite => sprite.enabled = true;
+            sprites.Released += sprite => sprite.enabled = false;
+            releasePools += sprites.ReleaseAll;
         }
         
         public static void Begin(Rect rect, CameraData camData)
@@ -61,7 +75,7 @@ namespace LSCore.Editor
                 cam.cameraType = CameraType.Preview;
                 cam.scene = scene;
                 cam.orthographic = true;
-                cam.orthographicSize = camData.size;
+                cam.orthographicSize = camData.Size;
                 cam.renderingPath = RenderingPath.Forward;
             }
             
@@ -75,6 +89,8 @@ namespace LSCore.Editor
             
             cam.targetTexture = targetTexture;
         }
+
+        private static Action releasePools;
         
         public static void End()
         {
@@ -87,9 +103,9 @@ namespace LSCore.Editor
                 0, 0,
                 0, 0,
                 GUI.color, (Material)blitMaterialInfo.Invoke(null, null));
-
-            lines.ReleaseAll();
-            points.ReleaseAll();
+            
+            releasePools();
+            currentDrawLayer = 0;
         }
         
         private static void AddGameObject<T>(T comp) where T : Component
@@ -101,9 +117,42 @@ namespace LSCore.Editor
             SceneManager.MoveGameObjectToScene(go, scene);
             allObjects.Add(go);
         }
-        
+
+        public static Vector2 MouseInWorldPoint
+        {
+            get
+            {
+                Event e = Event.current;
+                Vector2 mp = e.mousePosition;
+                mp.y *= -1;
+                mp.y += rect.height;
+
+                return cam.ScreenToWorldPoint(mp);
+            }
+        }
+
+        private static Vector3 lastMpForDelta;
+
+        public static Vector2 MouseDeltaInWorldPoint
+        {
+            get
+            {
+                Event e = Event.current;
+                Vector3 mp = e.mousePosition;
+                mp.y *= -1;
+                mp.y += rect.height;
+                
+                var wpForDelta = cam.ScreenToWorldPoint(mp);
+                var value = wpForDelta - lastMpForDelta;
+                lastMpForDelta = wpForDelta;
+                return value;
+            }
+        }
+
         private static void HandleInput()
         {
+            if(cam == null) return;
+            
             Event e = Event.current;
             Vector3 mp = e.mousePosition;
             mp.y *= -1;
@@ -121,8 +170,8 @@ namespace LSCore.Editor
             else if (e.type == EventType.ScrollWheel)
             {
                 var point = cam.ScreenToWorldPoint(mp);
-                camData.size += e.delta.y * camData.size / 30;
-                cam.orthographicSize = camData.size;
+                camData.Size += e.delta.y * camData.Size / 30;
+                cam.orthographicSize = camData.Size;
                 var newPoint = cam.ScreenToWorldPoint(mp);
                 camData.position -= newPoint - point;
                 GUI.changed = true;
@@ -205,23 +254,35 @@ namespace LSCore.Editor
             Vector3 endTangent,
             Vector3 endPoint,
             Color color,
-            Texture2D texture,
-            float width)
+            float width,
+            bool dependsOnCam = true)
         {
             if(eventType != EventType.Repaint) return; 
-            var bezie = GetLine(color, width);
+            var bezie = GetLine(color, width, dependsOnCam);
             DrawBezierCurve(bezie, startPoint, startTangent, endTangent, endPoint);
         }
 
-        private static LineRenderer GetLine(Color color, float width)
+        private static LineRenderer GetLine(Color color, float width, bool dependsOnCam = true)
         {
             var line = lines.Get();
             line.material = lineMaterial;
             line.startColor = color;
             line.endColor = color;
+            if (dependsOnCam)
+            {
+                width *= cam.orthographicSize / 3;
+            }
             line.startWidth = width;
             line.endWidth = width;
             return line;
+        }
+        
+        private static SpriteRenderer GetCircle()
+        {
+            var sprite = sprites.Get();
+            sprite.material = spriteMaterial;
+            sprite.sprite = LSIcons.GetSprite("circle");
+            return sprite;
         }
 
         private static void DrawBezierCurve(LineRenderer bezie,
@@ -256,6 +317,47 @@ namespace LSCore.Editor
 
             return p;
         }
-
+        
+        public static void DrawLine(float width, Color color, params Vector3[] points)
+        {
+            DrawLine(width, color, true, points);
+        }
+        
+        public static void DrawLine(float width, Color color, bool dependsOnCam, params Vector3[] points)
+        {
+            if(eventType != EventType.Repaint) return; 
+            var line = GetLine(color, width, dependsOnCam);
+            
+            line.positionCount = 2;
+            line.SetPositions(points);
+            line.sortingOrder = currentDrawLayer++;
+        }
+        
+        public static void DrawSolidCircle(Vector2 pos, float size, Color color)
+        {
+            DrawSolidCircle(pos, new Vector2(size, size), color);
+        }
+        
+        public static void DrawSolidCircle(Vector2 pos, Vector2 size, Color color, bool dependsOnCam = true)
+        {
+            if(eventType != EventType.Repaint) return; 
+            var sprite = GetCircle();
+            var tr = sprite.transform;
+            tr.position = pos;
+            Vector3 scale = size;
+            scale.z = 1;
+            tr.localScale = scale;
+            sprite.color = color;
+            sprite.sortingOrder = currentDrawLayer++;
+            
+            if (dependsOnCam)
+            {
+                tr.localScale = scale * (cam.orthographicSize / 3);
+            }
+            else
+            {
+                tr.localScale = scale;
+            }
+        }
     }
 }
