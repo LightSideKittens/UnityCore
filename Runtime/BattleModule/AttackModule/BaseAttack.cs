@@ -93,13 +93,6 @@ namespace LSCore
             impactObject.Initiator = transform;
         }
         
-        public void IWantToFuckYou() where T : BaseImpactObject
-        {
-            impactObject.IgnoredCollider = transform.GetComponent<Collider2D>();
-            impactObject.CanImpactChecker = findTargetComp.Check;
-            impactObject.Initiator = transform;
-        }
-        
         public void InitImpactObjects<T>(IEnumerable<T> impactObjects) where T : BaseImpactObject
         {
             foreach (var impactObject in impactObjects)

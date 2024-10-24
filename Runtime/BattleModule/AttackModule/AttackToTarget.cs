@@ -25,7 +25,7 @@ namespace LSCore
             }
         }
 
-        public override Tween Attack()
+        protected override Tween Attack()
         {
             anim.ResolveBinds("target", target);
             return anim.Animate();
@@ -65,7 +65,7 @@ namespace LSCore
             }
         }
 
-        public override Tween Attack()
+        protected override Tween Attack()
         {
             var tween = Wait.Delay(clip.length);
             Play();
