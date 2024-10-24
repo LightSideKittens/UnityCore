@@ -7,6 +7,8 @@ namespace LSCore.AnimationsModule
     public class Rb2DAddPosition : AnimationWrapper.Handler<Vector2>
     {
         [SerializeField] private Rigidbody2D rigidbody;
+        [SerializeField] private bool useWorldSpace;
+        private Transform transform;
         private Vector2 startPosition;
         
         protected override string Label => "Position";
@@ -14,10 +16,11 @@ namespace LSCore.AnimationsModule
         protected override void OnStart()
         {
             base.OnStart();
+            transform = rigidbody.transform;
 #if UNITY_EDITOR
             if (World.IsEditMode)
             {
-                startPosition = rigidbody.transform.position;
+                startPosition = transform.position;
                 return;
             }
 #endif
@@ -26,11 +29,23 @@ namespace LSCore.AnimationsModule
         
         protected override void OnHandle()
         {
-            var target = startPosition + value;
+            var target = startPosition;
+            
+            if (useWorldSpace)
+            {
+                target += value;
+            }
+            else
+            {
+                var newValue = transform.TransformDirection(value);
+                target.x += newValue.x;
+                target.y += newValue.y;
+            }
+            
 #if UNITY_EDITOR
             if (World.IsEditMode)
             {
-                rigidbody.transform.position = target;
+                transform.position = target;
                 return;
             }
 #endif
@@ -44,7 +59,7 @@ namespace LSCore.AnimationsModule
 
             if (World.IsEditMode)
             {
-                rigidbody.transform.position = startPosition;
+                transform.position = startPosition;
             }
         }
 #endif

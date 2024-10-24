@@ -8,6 +8,7 @@ namespace LSCore
     [Serializable]
     [HideReferenceObjectPicker]
     [TypeFrom]
+    [Unwrap]
     public class ShapeImpact
     {
         [SerializeReference] public Impact impact;

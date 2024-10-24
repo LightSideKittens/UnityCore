@@ -166,7 +166,7 @@ namespace LSCore.AnimationsModule
         {
             foreach (var handler in handlers)
             {
-                handler.Stop();
+                handler?.Stop();
             }
         }
         

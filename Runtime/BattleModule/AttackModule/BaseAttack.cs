@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DG.Tweening;
+using LSCore.Async;
 using LSCore.Attributes;
 using LSCore.BattleModule;
 using Sirenix.OdinInspector;
@@ -14,6 +15,7 @@ namespace LSCore
     public abstract class BaseAttack
     {
         [SerializeField] public List<BaseImpactObject> impactObjects;
+        [SerializeField] public float cooldown;
         [NonSerialized] public Transform transform;
         [NonSerialized] public FindTargetComp findTargetComp;
 
@@ -25,7 +27,7 @@ namespace LSCore
         {
             this.transform = transform;
             this.findTargetComp = findTargetComp;
-            SetupImpactObjects(impactObjects);
+            InitImpactObjects(impactObjects);
             OnInit();
         }
 
@@ -58,23 +60,51 @@ namespace LSCore
                 OnAttackCompleted();
             }
         }
+
+        public (Tween attack, Tween cooldown) Trigger(float additionalCooldown)
+        {
+            var attackTween = Attack();
+            Tween cooldownTween = null;
+            
+            if (attackTween != null)
+            {
+                var sequence = DOTween.Sequence().Append(attackTween);
+                attackTween = sequence;
+                var totalCooldown = cooldown + additionalCooldown;
+                
+                if (totalCooldown > 0.005f)
+                {
+                    cooldownTween = Wait.Delay(totalCooldown);
+                    sequence.Append(cooldownTween);
+                }
+            }
+
+            return (attackTween, cooldownTween);
+        }
         
-        public abstract Tween Attack();
+        protected abstract Tween Attack();
         
         public virtual void OnAttackCompleted() { }
 
-        public void SetupImpactObject<T>(T impactObject) where T : BaseImpactObject
+        public void InitImpactObject<T>(T impactObject) where T : BaseImpactObject
         {
             impactObject.IgnoredCollider = transform.GetComponent<Collider2D>();
             impactObject.CanImpactChecker = findTargetComp.Check;
             impactObject.Initiator = transform;
         }
         
-        public void SetupImpactObjects<T>(IEnumerable<T> impactObjects) where T : BaseImpactObject
+        public void IWantToFuckYou() where T : BaseImpactObject
+        {
+            impactObject.IgnoredCollider = transform.GetComponent<Collider2D>();
+            impactObject.CanImpactChecker = findTargetComp.Check;
+            impactObject.Initiator = transform;
+        }
+        
+        public void InitImpactObjects<T>(IEnumerable<T> impactObjects) where T : BaseImpactObject
         {
             foreach (var impactObject in impactObjects)
             {
-                SetupImpactObject(impactObject);
+                InitImpactObject(impactObject);
             }
         }
     }

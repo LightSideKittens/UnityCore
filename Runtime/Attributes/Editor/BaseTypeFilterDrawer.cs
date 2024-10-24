@@ -14,7 +14,17 @@ using UnityEngine;
 
 namespace LSCore.Attributes
 {
-    /// <summary>
+    internal static class VisibleTypesByAssembly
+    {
+        private static Dictionary<string, HashSet<Type>> visibleTypesByAssembly = new();
+
+        public static bool TryGetValue(string assemblyFullName, out HashSet<Type> set) =>
+            visibleTypesByAssembly.TryGetValue(assemblyFullName, out set);
+
+        public static void Add(string assemblyFullName, HashSet<Type> setTypes) => visibleTypesByAssembly.Add(assemblyFullName, setTypes);
+    }
+
+/// <summary>
     /// Draws properties marked with <see cref="T:Sirenix.OdinInspector.TypeFilterAttribute" />.
     /// </summary>
     [DrawerPriority(0.0, 0.0, 2002.0)]
@@ -63,10 +73,17 @@ namespace LSCore.Attributes
         }
 
         
+        
         private void InitAllTypes(Type type)
         {
             var assembly = Property.SerializationRoot.Info.TypeOfValue.Assembly;
-            var setTypes = assembly.GetVisibleTypes();
+            
+            if (!VisibleTypesByAssembly.TryGetValue(assembly.FullName, out var setTypes))
+            {
+                setTypes = assembly.GetVisibleTypes();
+                VisibleTypesByAssembly.Add(assembly.FullName, setTypes);
+            }
+            
             var nestedTypes = new HashSet<Type>();
             
             allTypes = setTypes

@@ -130,7 +130,6 @@ namespace LSCore.LifecycleSystem
                 
                 if (targetObjData[isNew]!.ToObject<bool>())
                 {
-                    Debug.Log("OnCullChanged");
                     targetObjData[isNew] = false;
                     markPrefab.Decrease();
                 }
