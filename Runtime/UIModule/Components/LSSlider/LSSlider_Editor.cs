@@ -75,10 +75,10 @@ namespace LSCore
                 {
                     Undo.RecordObjects(serializedObject.targetObjects, "Change Slider Direction");
 
-                    Slider.Direction direction = (Slider.Direction)m_Direction.enumValueIndex;
+                    LSSlider.Direction direction = (LSSlider.Direction)m_Direction.enumValueIndex;
                     foreach (var obj in serializedObject.targetObjects)
                     {
-                        Slider slider = obj as Slider;
+                        LSSlider slider = obj as LSSlider;
                         slider.SetDirection(direction, true);
                     }
                 }
@@ -140,9 +140,9 @@ namespace LSCore
                 bool warning = false;
                 foreach (var obj in serializedObject.targetObjects)
                 {
-                    Slider slider = obj as Slider;
-                    Slider.Direction dir = slider.direction;
-                    if (dir == Slider.Direction.LeftToRight || dir == Slider.Direction.RightToLeft)
+                    LSSlider slider = obj as LSSlider;
+                    LSSlider.Direction dir = slider.direction;
+                    if (dir == LSSlider.Direction.LeftToRight || dir == LSSlider.Direction.RightToLeft)
                         warning = (slider.navigation.mode != Navigation.Mode.Automatic && (slider.FindSelectableOnLeft() != null || slider.FindSelectableOnRight() != null));
                     else
                         warning = (slider.navigation.mode != Navigation.Mode.Automatic && (slider.FindSelectableOnDown() != null || slider.FindSelectableOnUp() != null));
