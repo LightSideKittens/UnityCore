@@ -1,5 +1,6 @@
 ﻿using System;
 using LSCore.AnimationsModule;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Animations;
 
@@ -9,13 +10,17 @@ namespace LSCore.BattleModule.Animation
     public class RotateToTarget : AnimationWrapper.Handler<float>
     {
         public Transform transform;
-        public Transform target;
         public FindTargetFactory findTargetFactory;
         public Axis rotationAxis = Axis.Y;
-        
+
         private FindTargetComp findTargetComp;
         private Quaternion initialRotation;
         private Quaternion targetRotation;
+
+#if UNITY_EDITOR
+        [LabelText("Target for Editor testing")]
+        public Transform target;
+#endif
 
         protected override string Label => "Normalized value";
 
@@ -24,13 +29,13 @@ namespace LSCore.BattleModule.Animation
             get
             {
 #if UNITY_EDITOR
-                if (World.IsEditMode)
+                if (target != null)
                 {
                     return target;
                 }
 #endif
-                findTargetComp.Find(out target);
-                return target;
+                findTargetComp.Find(out var target1);
+                return target1;
             }
         }
         
@@ -44,7 +49,11 @@ namespace LSCore.BattleModule.Animation
         {
             base.OnStart();
             
-            if (World.IsPlaying)
+            if (
+#if UNITY_EDITOR
+            target != null &&
+#endif
+                World.IsPlaying)
             {
                 InitFindTarget();
             }
