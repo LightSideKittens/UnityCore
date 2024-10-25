@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Text;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static LSCore.LSSlider.TextMode;
 
 namespace LSCore
 {
-    public partial class LSSlider : Slider
+    public partial class LSSlider : Selectable, IDragHandler, IInitializePotentialDragHandler, ICanvasElement
     {
         [Serializable]
         public enum TextMode
@@ -30,19 +31,6 @@ namespace LSCore
         public float DisplayedMaxValue => onlyDiff ? maxValue - minValue : maxValue;
         public float DisplayedValue => onlyDiff ? value - minValue : value;
         
-        public new bool wholeNumbers
-        {
-            get => base.wholeNumbers;
-            set
-            {
-                if (base.wholeNumbers != value)
-                {
-                    base.wholeNumbers = value;
-                    UpdateValueTextGetters();
-                }
-            }
-        }
-        
         public bool WholeNumberInText
         {
             get => wholeNumberInText;
@@ -50,8 +38,7 @@ namespace LSCore
             {
                 if (wholeNumberInText != value)
                 {
-                    base.wholeNumbers = !base.wholeNumbers; //HACK: need for calling "private void UpdateVisuals()" in base
-                    base.wholeNumbers = !base.wholeNumbers;
+                    UpdateVisuals();
                     wholeNumberInText = value;
                     UpdateValueTextGetters();
                 }
@@ -92,13 +79,6 @@ namespace LSCore
             wholeNumbers = true;
             base.Reset();
         }
-
-        protected override void OnValidate()
-        {
-            base.OnValidate();
-            onValueChanged.RemoveAllListeners();
-            Init();
-        }
 #endif
         
         protected override void Awake()
@@ -110,6 +90,9 @@ namespace LSCore
         protected override void OnEnable()
         {
             base.OnEnable();
+            UpdateCachedReferences();
+            Set(m_Value, false);
+            UpdateVisuals();
             UpdateCachedReferences();
         }
 
@@ -179,9 +162,16 @@ namespace LSCore
         
         private string ValueText() => $"{DisplayedValue}";
         private string MaxValue() => $"{DisplayedMaxValue}";
-
-
-        protected override void Set(float input, bool sendCallback = true)
+        
+        /// <summary>
+        /// Set the value of the slider.
+        /// </summary>
+        /// <param name="input">The new value for the slider.</param>
+        /// <param name="sendCallback">If the OnValueChanged callback should be invoked.</param>
+        /// <remarks>
+        /// Process the input to ensure the value is between min and max value. If the input is different set the value and send the callback is required.
+        /// </remarks>
+        protected virtual void Set(float input, bool sendCallback = true)
         {
             float newValue = clampValue ? ClampValue(input) : input;
             
