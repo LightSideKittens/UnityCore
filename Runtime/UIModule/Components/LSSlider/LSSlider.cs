@@ -24,12 +24,13 @@ namespace LSCore
         [SerializeField] private bool wholeNumberInText;
         [SerializeField] private bool onlyDiff;
         [SerializeField] private bool clampValue;
-
+        
         public float OffsetMaxValue => maxValue - minValue;
         public float OffsetValue => value - minValue;
         
-        public float DisplayedMaxValue => onlyDiff ? maxValue - minValue : maxValue;
-        public float DisplayedValue => onlyDiff ? value - minValue : value;
+        public float DisplayedMaxValue => GetDisplayedValue(maxValue);
+        public float DisplayedValue => GetDisplayedValue(value);
+        public float GetDisplayedValue(float val) => onlyDiff ? val - minValue : val;
         
         public bool WholeNumberInText
         {
@@ -40,14 +41,13 @@ namespace LSCore
                 {
                     UpdateVisuals();
                     wholeNumberInText = value;
-                    UpdateValueTextGetters();
+                    UpdateValueTextGetter();
                 }
             }
         }
 
-        private Func<string> textGetter;
-        private Func<string> valueTextGetter;
-        private Func<string> maxValueTextGetter;
+        private Func<float, string> textGetter;
+        private Func<float, string> valueTextGetter;
         private StringBuilder stringBuilder = new();
         
         public TextMode TextModee
@@ -57,6 +57,7 @@ namespace LSCore
             {
                 textMode = value;
                 UpdateTextGetter();
+                UpdateText();
             }
         }
 
@@ -72,14 +73,6 @@ namespace LSCore
                 }
             }
         }
-
-#if UNITY_EDITOR
-        protected override void Reset()
-        {
-            wholeNumbers = true;
-            base.Reset();
-        }
-#endif
         
         protected override void Awake()
         {
@@ -96,28 +89,40 @@ namespace LSCore
             UpdateCachedReferences();
         }
 
-        private void Init()
+        protected virtual void Init()
         {
-            UpdateValueTextGetters();
+            UpdateValueTextGetter();
             UpdateTextGetter();
-            
+
             if (text != null)
             {
-                onValueChanged.AddListener(UpdateText);
-                UpdateText();
+                onValueChanged.AddListener(UpdateValueText);
+            }
+
+            UpdateText();
+        }
+
+        private void UpdateText()
+        {
+            if (text != null)
+            {
+                UpdateValueText(value);
             }
         }
 
-        private void UpdateText() => UpdateText(0);
-
-        private void UpdateText(float _)
+        private void UpdateValueText(float val)
         {
-            text.text = textGetter();
+            text.text = textGetter(val);
         }
 
         private void UpdateTextGetter()
         {
-            textGetter = textMode switch
+            textGetter = GetTextGetter(textMode);
+        }
+
+        protected Func<float, string> GetTextGetter(TextMode mode)
+        {
+            return mode switch
             {
                 Value => valueTextGetter,
                 Percent => PercentGetter,
@@ -127,13 +132,13 @@ namespace LSCore
             };
         }
 
-        private string PercentGetter() => $"{valueTextGetter()}%";
-        private string NormalizedPercentGetter() => $"{(int)(normalizedValue * 100)}%";
-        private string ValueToMaxGetter()
+        private string PercentGetter(float val) => $"{valueTextGetter(val)}%";
+        private string NormalizedPercentGetter(float val) => $"{(int)(normalizedValue * 100)}%";
+        private string ValueToMaxGetter(float val1)
         {
             stringBuilder.Clear();
-            var max = maxValueTextGetter();
-            var val = valueTextGetter();
+            var max = valueTextGetter(maxValue);
+            var val = valueTextGetter(val1);
             stringBuilder.Append("<mspace=0.6em>");
             for (int i = max.Length - val.Length; i > 0; i--)
             {
@@ -146,22 +151,18 @@ namespace LSCore
             return stringBuilder.ToString();
         }
 
-        private void UpdateValueTextGetters()
+        private void UpdateValueTextGetter()
         {
             UpdateValueTextGetter(ValueText, IntValue, out valueTextGetter);
-            UpdateValueTextGetter(MaxValue, IntMaxValue, out maxValueTextGetter);
         }
         
-        private void UpdateValueTextGetter(Func<string> defaultGetter, Func<string> intGetter, out Func<string> getter)
+        private void UpdateValueTextGetter(Func<float, string> defaultGetter, Func<float, string> intGetter, out Func<float, string> getter)
         {
-            getter = wholeNumbers || WholeNumberInText ? intGetter : defaultGetter;
+            getter = WholeNumberInText ? intGetter : defaultGetter;
         }
 
-        private string IntValue() => $"{(int)DisplayedValue}";
-        private string IntMaxValue() => $"{(int)DisplayedMaxValue}";
-        
-        private string ValueText() => $"{DisplayedValue}";
-        private string MaxValue() => $"{DisplayedMaxValue}";
+        private string IntValue(float val) => $"{(int)GetDisplayedValue(val)}";
+        private string ValueText(float val) => $"{GetDisplayedValue(val)}";
         
         /// <summary>
         /// Set the value of the slider.

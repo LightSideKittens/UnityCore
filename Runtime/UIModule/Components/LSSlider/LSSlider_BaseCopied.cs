@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LSCore.Extensions.Unity;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -365,50 +366,6 @@ namespace LSCore
         public float maxValue { get { return m_MaxValue; } set { if (SetPropertyUtility.SetStruct(ref m_MaxValue, value)) { Set(m_Value); UpdateVisuals(); } } }
 
         [SerializeField]
-        private bool m_WholeNumbers = false;
-
-        /// <summary>
-        /// Should the value only be allowed to be whole numbers?
-        /// </summary>
-        /// <example>
-        /// <code>
-        /// <![CDATA[
-        /// using UnityEngine;
-        /// using System.Collections;
-        /// using UnityEngine.UI; // Required when Using UI elements.
-        ///
-        /// public class Example : MonoBehaviour
-        /// {
-        ///     public Slider mainSlider;
-        ///
-        ///     public void Start()
-        ///     {
-        ///         //sets the slider's value to accept whole numbers only.
-        ///         mainSlider.wholeNumbers = true;
-        ///     }
-        /// }
-        /// ]]>
-        ///</code>
-        /// </example>
-        public bool wholeNumbers
-        {
-            get
-            {
-                return m_WholeNumbers;
-            }
-            set
-            {
-                if (m_WholeNumbers != value)
-                {
-                    m_WholeNumbers = value;
-                    Set(m_Value); 
-                    UpdateVisuals();
-                    UpdateValueTextGetters();
-                }
-            }
-        }
-
-        [SerializeField]
         protected float m_Value;
 
         /// <summary>
@@ -439,7 +396,7 @@ namespace LSCore
         {
             get
             {
-                return wholeNumbers ? Mathf.Round(m_Value) : m_Value;
+                return m_Value;
             }
             set
             {
@@ -480,7 +437,7 @@ namespace LSCore
         /// ]]>
         ///</code>
         /// </example>
-        public float normalizedValue
+        public virtual float normalizedValue
         {
             get
             {
@@ -537,7 +494,7 @@ namespace LSCore
         private bool m_DelayedUpdateVisuals = false;
 
         // Size of each step.
-        float stepSize { get { return wholeNumbers ? 1 : (maxValue - minValue) * 0.1f; } }
+        float stepSize { get { return (maxValue - minValue) * 0.1f; } }
 
         protected LSSlider()
         {}
@@ -546,12 +503,6 @@ namespace LSCore
         protected override void OnValidate()
         {
             base.OnValidate();
-
-            if (wholeNumbers)
-            {
-                m_MinValue = Mathf.Round(m_MinValue);
-                m_MaxValue = Mathf.Round(m_MaxValue);
-            }
 
             //Onvalidate is called before OnEnabled. We need to make sure not to touch any other objects before OnEnable is run.
             if (IsActive())
@@ -830,8 +781,6 @@ namespace LSCore
         private float ClampValue(float input)
         {
             float newValue = Mathf.Clamp(input, minValue, maxValue);
-            if (wholeNumbers)
-                newValue = Mathf.Round(newValue);
             return newValue;
         }
 
