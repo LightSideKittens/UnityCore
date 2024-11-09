@@ -9,11 +9,12 @@ namespace Animatable
     {
         private Canvas canvas;
         private static Camera Cam => Instance.canvas.worldCamera;
-        
+
         [ColoredField, SerializeField] private AnimText animText;
         [ColoredField, SerializeField] private HealthBar healthBar;
         [ColoredField, SerializeField] private HealthBar opponentHealthBar;
         [ColoredField, SerializeField] private Loader loader;
+        [ColoredField, SerializeField] private PopupText popupText;
 
         public static int SortingOrder
         {
@@ -23,6 +24,7 @@ namespace Animatable
         
         public static Transform SpawnPoint => Instance.transform;
         internal static AnimText AnimText => Instance.animText;
+        internal static PopupText PopupText => Instance.popupText;
         internal static HealthBar HealthBar => Instance.healthBar;
         internal static HealthBar OpponentHealthBar => Instance.opponentHealthBar;
         internal static Loader Loader => Instance.loader;
@@ -36,6 +38,7 @@ namespace Animatable
         {
             base.Init();
             animText.Init();
+            popupText.Init();
             healthBar.Init();
             opponentHealthBar.Init();
             canvas = GetComponent<Canvas>();
@@ -69,6 +72,7 @@ namespace Animatable
             var instance = Instance;
             instance.animText.ReleaseAll();
             instance.healthBar.ReleaseAll();
+            instance.popupText.ReleaseAll();
             instance.opponentHealthBar.ReleaseAll();
         }
     }
