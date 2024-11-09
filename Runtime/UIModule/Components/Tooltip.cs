@@ -42,7 +42,7 @@ namespace LSCore
             Vector2 tooltipPosition = GetBestTooltipPosition(cameraBounds, worldPoint);
             tooltipContainer.position = tooltipPosition;
             
-            PositionPointer(screenPoint, tooltipPosition);
+            PositionPointer(worldPoint, tooltipPosition);
         }
         
         private Vector3 GetProjectionPointOnCameraPlane(Vector3 objectPosition)
@@ -66,21 +66,21 @@ namespace LSCore
             float tooltipHeight = tooltipContainer.sizeDelta.y;
 
             // Изначально тултип показывается справа и чуть выше точки
-            Vector2 tooltipPosition = screenPoint + new Vector3(tooltipWidth / 2, tooltipHeight / 2);
+            Vector2 tooltipPosition = worldPoint + new Vector3(tooltipWidth / 2, tooltipHeight / 2);
 
             // Проверка, чтобы тултип не вышел за правую и верхнюю границы экрана
             if (tooltipPosition.x + tooltipWidth > screenWidth)
-                tooltipPosition.x = screenPoint.x - tooltipWidth / 2; // Перемещаем тултип влево
+                tooltipPosition.x = worldPoint.x - tooltipWidth / 2; // Перемещаем тултип влево
 
             if (tooltipPosition.y + tooltipHeight > screenHeight)
-                tooltipPosition.y = screenPoint.y - tooltipHeight / 2; // Перемещаем тултип вниз
+                tooltipPosition.y = worldPoint.y - tooltipHeight / 2; // Перемещаем тултип вниз
 
             // Проверка левой и нижней границы
             if (tooltipPosition.x < 0)
-                tooltipPosition.x = screenPoint.x + tooltipWidth / 2;
+                tooltipPosition.x = worldPoint.x + tooltipWidth / 2;
 
             if (tooltipPosition.y < 0)
-                tooltipPosition.y = screenPoint.y + tooltipHeight / 2;
+                tooltipPosition.y = worldPoint.y + tooltipHeight / 2;
 
             return tooltipPosition;
         }
