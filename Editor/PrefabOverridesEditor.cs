@@ -1,4 +1,5 @@
-﻿using Sirenix.OdinInspector.Editor;
+﻿/*
+using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
 using System;
@@ -161,5 +162,6 @@ public class GlobalContextMenuDrawer<T> : OdinAttributeDrawer<GlobalContextMenuA
         return targetPath;
     }
 }
+*/
 
 

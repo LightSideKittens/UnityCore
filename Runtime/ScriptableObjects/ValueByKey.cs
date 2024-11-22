@@ -50,28 +50,31 @@ namespace LSCore
         [OdinSerialize]
         private HashSet<Entry> byKey = new();
 
-        public Dictionary<TKey, TValue> ByKey { get; } = new();
+        private Dictionary<TKey, TValue> byKeyDict = new();
 
-
-        protected override void OnAfterDeserialize()
+        public Dictionary<TKey, TValue> ByKey
         {
-            Init();
-#if UNITY_EDITOR
-            World.Created -= Init;
-            World.Created += Init;
-            World.Destroyed -= Init;
-            World.Destroyed += Init;
-#endif
+            get
+            {
+                Init();
+                return byKeyDict;
+            }
         }
+        
+        [NonSerialized] private bool isInited;
 
         public void Init()
         {
-            ByKey.Clear();
+            if (isInited) return;
+            
+            byKeyDict.Clear();
 
             foreach (var entry in byKey)
             {
-                ByKey.Add(entry.key, entry.value);
+                byKeyDict.Add(entry.key, entry.value);
             }
+
+            isInited = true;
         }
 
 #if UNITY_EDITOR

@@ -1,13 +1,11 @@
 ﻿using System.Diagnostics;
-using System.IO;
-using System.Reflection;
-using Sirenix.Utilities;
-using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 public static class Burger
 {
+    public static bool logToFile;
+    
     [Conditional("DEBUG")]
     public static void Log(object log) => Debug.Log(log);
 
@@ -16,26 +14,10 @@ public static class Burger
 
     [Conditional("DEBUG")]
     public static void Warning(object log) => Debug.LogWarning(log);
-
-    [MenuItem(LSPaths.MenuItem.Root + "/Update Burger")]
-    private static void Update()
-    {
-        var dllSrcPath = Assembly.GetExecutingAssembly().GetAssemblyFilePath();
-        var dllDstPath = LSPaths.Root.ToFull();
-        var newFileName = "LSCore.Burger.dll";
-        var newFilePath = Path.Combine(dllDstPath, newFileName);
-        
-        if (File.Exists(newFilePath))
-        {
-            File.Delete(newFilePath);
-        }
-        
-        File.Copy(dllSrcPath, newFilePath);
-    }
     
     public static string ToTag(this string text, Color color)
     {
-        return text.ToColor(color).ToBold();
+        return ToBold(ToColor(text, color));
     }
     
     public static string ToBold(this string text)

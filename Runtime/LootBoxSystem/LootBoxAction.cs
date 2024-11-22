@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Sirenix.OdinInspector;
-using UnityEditor;
 using UnityEngine;
 using Random = UnityEngine.Random;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace LSCore
 {
@@ -22,12 +25,13 @@ namespace LSCore
         internal float minValue;
         internal float maxValue = 100;
         
-
+#if UNITY_EDITOR
         private float ChanceDrawer(float value, GUIContent label)
         {
             value = Mathf.Clamp(EditorGUILayout.Slider(label, value, 0, 100), minValue, maxValue);
             return value;
         }
+#endif
 
         public override void Invoke()
         {

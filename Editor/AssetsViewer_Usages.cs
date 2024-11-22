@@ -28,11 +28,21 @@ internal partial class AssetsViewer
     }
     
     
-    [TabGroup("Tabs", "Used")] [TableList(IsReadOnly = true)] public List<AssetInfo> usedDirect = new();
-    [TabGroup("Tabs", "Used")] [TableList(IsReadOnly = true)] public List<AssetInfo> usedIndirect = new();
+    [TabGroup("Tabs", "Used")] 
+    [TableList(IsReadOnly = true, ShowPaging = true, NumberOfItemsPerPage = 10)] 
+    public List<AssetInfo> usedDirect = new();
     
-    [TabGroup("Tabs", "Uses")] [TableList(IsReadOnly = true)] public List<AssetInfo> usesDirect = new();
-    [TabGroup("Tabs", "Uses")] [TableList(IsReadOnly = true)] public List<AssetInfo> usesIndirect = new();
+    [TabGroup("Tabs", "Used")] 
+    [TableList(IsReadOnly = true, ShowPaging = true, NumberOfItemsPerPage = 10)] 
+    public List<AssetInfo> usedIndirect = new();
+    
+    [TabGroup("Tabs", "Uses")] 
+    [TableList(IsReadOnly = true, ShowPaging = true, NumberOfItemsPerPage = 10)] 
+    public List<AssetInfo> usesDirect = new();
+    
+    [TabGroup("Tabs", "Uses")] 
+    [TableList(IsReadOnly = true, ShowPaging = true, NumberOfItemsPerPage = 10)] 
+    public List<AssetInfo> usesIndirect = new();
 
     private readonly List<AssetInfo> fullUsedDirect = new();
     private readonly List<AssetInfo> fullUsedIndirect = new();
@@ -42,7 +52,7 @@ internal partial class AssetsViewer
     
     private void UpdateReferences()
     {
-        ClearAllUsages();
+        ClearAllUsages();   
         selector.Clear();
 
         if (Selection.activeObject == null)

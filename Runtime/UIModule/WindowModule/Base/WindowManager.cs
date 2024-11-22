@@ -35,7 +35,7 @@ namespace LSCore
         {
             if (WindowsData.IsAt(this, 0))
             {
-                Debug.Log($"{gameObject.name} Show WindowsData.IsAt");
+                Burger.Log($"{gameObject.name} Show WindowsData.IsAt");
                 WindowsData.GoBack();
                 return;
             }
@@ -53,7 +53,7 @@ namespace LSCore
         private void InternalShow()
         {
             if (showTween != null) return;
-            Debug.Log($"{gameObject.name} InternalShow");
+            Burger.Log($"{gameObject.name} InternalShow");
             IsShow = true;
             WindowsData.CallOption(showOption());
             RecordState();
@@ -77,7 +77,7 @@ namespace LSCore
         private void InternalHide()
         {
             if (hideTween != null) return;
-            Debug.Log($"{gameObject.name} InternalHide");
+            Burger.Log($"{gameObject.name} InternalHide");
             IsShow = false;
             if (canvas)
             {

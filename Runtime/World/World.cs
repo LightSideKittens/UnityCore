@@ -51,6 +51,7 @@ namespace LSCore
         private void OnDestroy()
         {
             IsPlaying = false;
+            Burger.logToFile = false;
             Destroyed?.Invoke();
         }
 

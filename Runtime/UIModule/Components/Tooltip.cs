@@ -42,7 +42,7 @@ namespace LSCore
             Vector2 tooltipPosition = GetBestTooltipPosition(cameraBounds, worldPoint);
             tooltipContainer.position = tooltipPosition;
             
-            PositionPointer(worldPoint, tooltipPosition);
+            PositionPointer(cameraBounds, tooltipPosition, 1);
         }
         
         private Vector3 GetProjectionPointOnCameraPlane(Vector3 objectPosition)
@@ -85,15 +85,9 @@ namespace LSCore
             return tooltipPosition;
         }
 
-        private void PositionPointer(Vector2 screenPoint, Vector2 tooltipPosition)
+        private void PositionPointer(Rect cameraBounds, Vector3 worldPoint, int side)
         {
-            // Определить направление поинтера
-            Vector2 direction = screenPoint - tooltipPosition;
-
-            // Задать вращение и позицию поинтера относительно тултипа
-            pointer.anchoredPosition = direction.normalized * (pointer.sizeDelta.x / 2); // Сдвиг указателя
-            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            pointer.rotation = Quaternion.Euler(0, 0, angle);
+            
         }
 
         public void HideTooltip()

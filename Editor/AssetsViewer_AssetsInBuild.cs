@@ -6,7 +6,7 @@ using Sirenix.OdinInspector;
 internal partial class AssetsViewer
 {
     [TabGroup("Tabs", "Assets in Build")]
-    [TableList(HideToolbar = true, IsReadOnly = true, AlwaysExpanded = true)]
+    [TableList(IsReadOnly = true, AlwaysExpanded = true, ShowPaging = true, NumberOfItemsPerPage = 10)]
     public List<AssetInfo> buildAssets = new();
     
     private List<AssetInfo> fullBuildAssets = new();
