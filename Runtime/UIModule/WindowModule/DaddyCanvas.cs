@@ -2,7 +2,7 @@
 
 namespace LSCore
 {
-    public class DaddyWindowManager : WindowManager
+    public class NotRecordableWindowManager : WindowManager
     {
         protected override void RecordState() { }
     }
@@ -11,6 +11,6 @@ namespace LSCore
     {
         protected override bool ActiveByDefault => true;
         protected override RectTransform Daddy => null;
-        public override WindowManager Manager { get; } = new DaddyWindowManager();
+        public override WindowManager Manager { get; } = new NotRecordableWindowManager();
     }
 }

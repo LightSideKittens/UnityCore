@@ -24,12 +24,12 @@ namespace LSCore
         protected override void Start()
         {
             base.Start();
-            clickActions.Init();
+            clickActions?.Init();
         }
 
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
         {
-            clickActions.OnClick();
+            clickActions?.OnClick();
             anim.OnClick();
             Clicked?.Invoke();
         }
