@@ -23,6 +23,7 @@ namespace LSCore
         }
     }
     
+    [ExecuteAlways]
     public class Tooltip : MonoBehaviour
     {
         public RectTransform tooltipContainer;
@@ -33,6 +34,8 @@ namespace LSCore
         [SerializeField] private float pointerSideOffset;
         [SerializeField] private float canvasSizeOffset;
         [SerializeField] private ScrollRect scrollRect;
+        [SerializeField] private CustomContentSizeFitter sizeFitter;
+        [SerializeField] private float maxHeight = 500;
         [SerializeReference] public ShowHideAnim showHideAnim = new DefaultUIViewAnimation();
         
         private Direction direction;
@@ -42,11 +45,19 @@ namespace LSCore
         private Canvas canvas;
         private LSButton backButton;
         private GraphicRaycaster raycaster;
+        private Tween currentTween;
         
         private float OffsetFactor => canvas.transform.localScale.x;
 
         private void Awake()
         {
+#if UNITY_EDITOR
+            if (World.IsEditMode)
+            {
+                return;
+            }
+#endif
+            sizeFitter.SizeChanged += OnSizeChanged;
             mainCamera = Camera.main;
             canvas = new GameObject(name).AddComponent<Canvas>();
             backButton = canvas.gameObject.AddComponent<LSButton>();
@@ -60,6 +71,23 @@ namespace LSCore
             transform.SetParent(canvas.transform);
             transform.localScale = Vector3.one;
             transform.localRotation = Quaternion.identity;
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            if (sizeFitter != null)
+            {
+                sizeFitter.SizeChanged -= OnSizeChanged;
+                sizeFitter.SizeChanged += OnSizeChanged;
+            }
+        }
+#endif
+        
+        private void OnSizeChanged(Vector2 size)
+        {
+            size.y = Mathf.Clamp(size.y, 0, maxHeight);
+            tooltipContainer.sizeDelta = size;
         }
         
         public void Hide()
@@ -81,8 +109,6 @@ namespace LSCore
         {
             Show(worldPoint.position, message);
         }
-
-        private Tween currentTween;
         
         public void Show(Vector3 worldPoint, string message)
         {
@@ -93,10 +119,20 @@ namespace LSCore
             currentTween?.Kill();
             currentTween = showHideAnim.Show();
             scrollRect.verticalNormalizedPosition = 1;
+
+            var contentRect = scrollRect.content.rect;
+            var tooltipContainerRect = tooltipContainer.rect;
+            var vertical = contentRect.height > scrollRect.viewport.rect.height + 0.1f;
+            var verticalOffset = 0f;
+
+            if (!vertical)
+            {
+                verticalOffset = (tooltipContainerRect.height - contentRect.height) / 2;
+            }
             
             tooltipText.text = message;
             LayoutRebuilder.ForceRebuildLayoutImmediate(tooltipContainer);
-            scrollRect.vertical = scrollRect.content.rect.height > scrollRect.viewport.rect.height + 0.1f;
+            scrollRect.vertical = vertical;
             
             Rect cameraBounds = GetRect();
 
@@ -155,6 +191,8 @@ namespace LSCore
             tooltipContainer.pivot = GetPivot(side);
             tooltipContainer.position = pos;
             Vector3 totalOffset = GetOffsetForTooltipContainer();
+            if (side == Direction.Top) totalOffset.y += verticalOffset;
+            if (side == Direction.Bottom) totalOffset.y -= verticalOffset;
             tooltipContainer.localPosition += totalOffset;
             
             tooltipContainer.GetWorldCorners(tooltipCorners);
