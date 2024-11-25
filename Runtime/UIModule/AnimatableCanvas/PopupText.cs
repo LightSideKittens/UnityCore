@@ -49,17 +49,18 @@ namespace Animatable
             var scale = template.group.transform.localScale;
             var group = template.pool.Get();
             var text = Object.Instantiate(message, group.transform);
-            var groupTransform = group.transform;
+            var groupTransform = (RectTransform)group.transform;
             groupTransform.SetParent(SpawnPoint, true);
-            groupTransform.position = pos;
+            groupTransform.localPosition = pos;
             groupTransform.localScale = scale;
-            var rect = (RectTransform) group.transform;
+            groupTransform.localRotation = Quaternion.identity;
+            
             group.alpha = 1;
-            rect.localScale = Vector3.zero;
+            groupTransform.localScale = Vector3.zero;
             
             var sequence = DOTween.Sequence();
-            sequence.Insert(0, rect.DOMove(rect.position + (Vector3)template.animOffset, template.duration * 1.5f));
-            sequence.Insert(0,rect.DOScale(1, template.duration * 0.2f));
+            sequence.Insert(0, groupTransform.DOLocalMove(groupTransform.localPosition + (Vector3)template.animOffset, template.duration * 1.5f));
+            sequence.Insert(0,groupTransform.DOScale(1, template.duration * 0.2f));
             sequence.Insert(0,group.DOFade(0, template.duration).SetEase(Ease.InExpo));
             sequence.OnComplete(() =>
             {
