@@ -238,7 +238,7 @@ namespace LSCore
             showImageProperties = EditorGUILayout.Foldout(showImageProperties, "Text Properties");
             if (showImageProperties)
             {
-                OnInspectorGUI();
+                TextOnInspector();
             }
         }
         
@@ -253,6 +253,11 @@ namespace LSCore
         }
         
         public override void OnInspectorGUI()
+        {
+            TextOnInspector();
+        }
+
+        private void TextOnInspector()
         {
             propertyTree.BeginDraw(true);
             localizationKey.Draw();
