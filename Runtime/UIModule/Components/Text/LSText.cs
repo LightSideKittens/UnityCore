@@ -231,20 +231,17 @@ namespace LSCore
         private InspectorProperty localizationKey;
         private InspectorProperty tableData;
         
-        private bool showImageProperties;
+        private LSText text;
 
         protected void DrawTextPropertiesAsFoldout()
         {
-            showImageProperties = EditorGUILayout.Foldout(showImageProperties, "Text Properties");
-            if (showImageProperties)
-            {
-                TextOnInspector();
-            }
+            EditorUtils.DrawInBoxFoldout("Text Properties", TextOnInspector, text, false);
         }
         
         protected override void OnEnable()
         {
             base.OnEnable();
+            text = (LSText)target;
             padding = serializedObject.FindProperty("m_RaycastPadding");
             propertyTree = PropertyTree.Create(serializedObject);
             localizationKey = propertyTree.RootProperty.Children["localizationKey"];
