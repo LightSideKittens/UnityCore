@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using DG.Tweening;
 using LSCore.Extensions;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -82,12 +83,12 @@ namespace LSCore
 #endif
             if (isOn)
             {
-                onOffAnim.Show();
+                onOffAnim.Show().SetId(this);
                 on.Invoke();
             }
             else
             {
-                onOffAnim.Hide();
+                onOffAnim.Hide().SetId(this);
                 off.Invoke();
             }
         }
