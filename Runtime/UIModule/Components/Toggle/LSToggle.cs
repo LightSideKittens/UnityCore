@@ -76,7 +76,7 @@ namespace LSCore
         protected void OnValueChanged()
         {
 #if UNITY_EDITOR
-            if (!World.IsPlaying)
+            if (World.IsEditMode)
             {
                 return;
             }
