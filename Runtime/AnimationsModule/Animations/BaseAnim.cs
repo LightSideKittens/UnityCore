@@ -132,9 +132,12 @@ namespace LSCore.AnimationsModule.Animations
         protected override void Internal_Init()
         {
             InitAction(target);
-            for (int i = 0; i < targets.Length; i++)
+            if (targets != null)
             {
-                InitAction(targets[i]);
+                for (int i = 0; i < targets.Length; i++)
+                {
+                    InitAction(targets[i]);
+                }
             }
         }
 
