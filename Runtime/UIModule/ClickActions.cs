@@ -20,7 +20,6 @@ namespace LSCore
         [HideInInspector] [SerializeField] private bool isClickSoundOverride;
         
         
-        [Button]
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
 #if UNITY_EDITOR
