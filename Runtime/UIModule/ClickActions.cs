@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using LSCore.Attributes;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Audio;
+using Object = UnityEngine.Object;
 
 namespace LSCore
 {
@@ -11,9 +13,14 @@ namespace LSCore
     [Unwrap]
     public class ClickActions : ISerializationCallbackReceiver
     {
+#if UNITY_EDITOR
+        [GetContext] private Object context;
+#endif
         [SerializeReference] public List<LSAction> actions = new();
         [HideInInspector] [SerializeField] private bool isClickSoundOverride;
         
+        
+        [Button]
         void ISerializationCallbackReceiver.OnBeforeSerialize()
         {
 #if UNITY_EDITOR
@@ -30,6 +37,7 @@ namespace LSCore
         {
 #if UNITY_EDITOR
             if(World.IsEditMode) return;
+            if(context) return;
             isClickSoundOverride = actions?.Any(x => x is PlayOneShotSound) ?? false;
 #endif
             if (!isClickSoundOverride)

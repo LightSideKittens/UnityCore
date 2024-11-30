@@ -22,15 +22,38 @@ namespace LSCore
             obj.Show(target, message);
         }
     }
-    
+
     [ExecuteAlways]
     public class Tooltip : MonoBehaviour
     {
-        public RectTransform tooltipContainer;
-        public LSText tooltipText;
-        public RectTransform pointer;
-        public float defaultPointOffset;
-        public float defaultTooltipContainerOffset;
+        [Serializable]
+        public struct PointerData
+        {
+            public Sprite top;
+            public Sprite bottom;
+            public Sprite left;
+            public Sprite right;
+
+            public void SetupImage(Image target, Direction direction)
+            {
+                var sprite = direction switch
+                {
+                    Direction.Left => left,
+                    Direction.Right => right,
+                    Direction.Top => top,
+                    Direction.Bottom => bottom,
+                };
+                target.sprite = sprite; 
+            }
+        }
+        
+        [SerializeField] private RectTransform tooltipContainer;
+        [SerializeField] private LSText tooltipText;
+        [SerializeField] private Image pointerImage;
+        [SerializeField] private PointerData pointerData;
+        [SerializeField] private RectTransform pointer;
+        [SerializeField] private float defaultPointOffset;
+        [SerializeField] private float defaultTooltipContainerOffset;
         [SerializeField] private float pointerSideOffset;
         [SerializeField] private float canvasSizeOffset;
         [SerializeField] private ScrollRect scrollRect;
@@ -176,6 +199,7 @@ namespace LSCore
             Vector3 pos = canvas.transform.InverseTransformPoint(point);
 
             var side = DetermineQuadrant(pos, cameraBounds.width, cameraBounds.height);
+            pointerData.SetupImage(pointerImage, side);
             
             if (pos.x < canvasMin.x) pos.x = canvasMin.x;
             if (pos.x > canvasMax.x) pos.x = canvasMax.x;
