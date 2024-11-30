@@ -154,11 +154,11 @@ namespace LSCore
             }
             
             tooltipText.text = message;
-            LayoutRebuilder.ForceRebuildLayoutImmediate(tooltipContainer);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollRect.content);
             scrollRect.vertical = vertical;
             
             Rect cameraBounds = GetRect();
-
+            
             var f = OffsetFactor;
             var defaultPointOffset = this.defaultPointOffset * f;
             var defaultTooltipContainerOffset = this.defaultTooltipContainerOffset * f;
@@ -221,10 +221,10 @@ namespace LSCore
             
             tooltipContainer.GetWorldCorners(tooltipCorners);
             canvas.transform.InverseTransformPoints(tooltipCorners);
-            
+
             Vector3 tooltipMin = tooltipCorners[0];
             Vector3 tooltipMax = tooltipCorners[2];
-
+            
             pos = canvas.transform.InverseTransformPoint(pos);
 
             if (axis == Axis.Vertical)
