@@ -152,7 +152,7 @@ public class Playlist : SingleService<Playlist>
     
     public void Update()
     {
-        if (LGInput.UIExcluded.IsTouchDown)
+        if (LSInput.UIExcluded.IsTouchDown)
         {
             Internal_Play();
         }

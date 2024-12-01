@@ -1,9 +1,11 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.PlayerLoop;
 
 namespace LSCore
 {
-    public static partial class LGInput
+    public static partial class LSInput
     {
         private static IInputProvider provider = DefaultInputProvider.Instance;
         private static Vector3 lastPosition;
@@ -12,7 +14,31 @@ namespace LSCore
         {
             set => provider = value ? Simulator.Instance : DefaultInputProvider.Instance;
         }
-        
+
+        static LSInput()
+        {
+            World.Updated += Update;
+        }
+
+        private static void Update()
+        {
+            if (TouchDown != null && IsTouchDown)
+            {
+                TouchDown();
+            }
+            else if(Touching != null && IsTouching)
+            {
+                Touching();
+            }
+            else if(TouchUp != null && IsTouchUp)
+            {
+                TouchUp();
+            }
+        }
+
+        public static event Action TouchDown;
+        public static event Action Touching;
+        public static event Action TouchUp;
         public static bool IsTouchDown => provider.IsTouchDown;
         public static bool IsTouching => provider.IsTouching;
         public static bool IsTouchUp => provider.IsTouchUp;
@@ -50,9 +76,9 @@ namespace LSCore
             }
 
 
-            public static bool IsTouchDown => LGInput.IsTouchDown && !IsPointerOverUI;
-            public static bool IsTouching => LGInput.IsTouching && !IsPointerOverUI;
-            public static bool IsTouchUp => LGInput.IsTouchUp && !IsPointerOverUI;
+            public static bool IsTouchDown => LSInput.IsTouchDown && !IsPointerOverUI;
+            public static bool IsTouching => LSInput.IsTouching && !IsPointerOverUI;
+            public static bool IsTouchUp => LSInput.IsTouchUp && !IsPointerOverUI;
         }
     }
 }

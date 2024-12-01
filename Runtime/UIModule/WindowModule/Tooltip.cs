@@ -4,6 +4,7 @@ using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static UnityEngine.UI.GridLayoutGroup;
 using Vector3 = UnityEngine.Vector3;
@@ -24,7 +25,7 @@ namespace LSCore
     }
 
     [ExecuteAlways]
-    public class Tooltip : MonoBehaviour
+    public class Tooltip : MonoBehaviour, IPointerDownHandler
     {
         [Serializable]
         public struct PointerData
@@ -66,7 +67,6 @@ namespace LSCore
         private Vector3[] canvasCorners = new Vector3[4];
         private Camera mainCamera;
         private Canvas canvas;
-        private LSButton backButton;
         private GraphicRaycaster raycaster;
         private Tween currentTween;
         
@@ -83,9 +83,6 @@ namespace LSCore
             sizeFitter.SizeChanged += OnSizeChanged;
             mainCamera = Camera.main;
             canvas = new GameObject(name).AddComponent<Canvas>();
-            backButton = canvas.gameObject.AddComponent<LSButton>();
-            backButton.color = Color.clear;
-            backButton.Clicked += Hide;
             raycaster = canvas.gameObject.AddComponent<GraphicRaycaster>();
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.planeDistance = 10;
@@ -94,7 +91,23 @@ namespace LSCore
             transform.SetParent(canvas.transform);
             transform.localScale = Vector3.one;
             transform.localRotation = Quaternion.identity;
+            LSInput.TouchUp += TouchUp;
         }
+
+        private void OnDestroy()
+        {
+            LSInput.TouchUp -= TouchUp;
+        }
+
+        private void TouchUp()
+        {
+            if (!wasDown)
+            {
+                Hide();
+            }
+            wasDown = false;
+        }
+        
 
 #if UNITY_EDITOR
         private void OnValidate()
@@ -350,6 +363,13 @@ namespace LSCore
             }
             
             return Direction.Bottom;
+        }
+
+        private bool wasDown;
+
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            wasDown = true;
         }
     }
 }

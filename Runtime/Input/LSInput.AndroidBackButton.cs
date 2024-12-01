@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace LSCore
 {
-    public static partial class LGInput
+    public static partial class LSInput
     {
         public static class AndroidBackButton
         {

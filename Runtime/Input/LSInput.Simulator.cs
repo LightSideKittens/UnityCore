@@ -5,7 +5,7 @@ using Debug = UnityEngine.Debug;
 
 namespace LSCore
 {
-    public static partial class LGInput
+    public static partial class LSInput
     {
         public class Simulator : IInputProvider
         {
@@ -28,7 +28,7 @@ namespace LSCore
             {
                 if (IsTouchDown && IsTouchUp)
                 {
-                    Debug.LogWarning($"[{nameof(LGInput)}] {nameof(IsTouchDown)} and {nameof(IsTouchUp)} cannot be enabled in the same frame.");
+                    Debug.LogWarning($"[{nameof(LSInput)}] {nameof(IsTouchDown)} and {nameof(IsTouchUp)} cannot be enabled in the same frame.");
                 }
             }
 
