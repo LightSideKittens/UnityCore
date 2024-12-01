@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 
 namespace LSCore
 {
@@ -7,6 +6,7 @@ namespace LSCore
     {
         [SerializeField] private int rotateId = 0;
         [SerializeField] private Vector2Int flip;
+        [SerializeField] private Vector2Int mirror;
         [SerializeField] private bool combineFilledWithSliced;
         [SerializeField] private bool ignoreSLAAAAYout;
 
