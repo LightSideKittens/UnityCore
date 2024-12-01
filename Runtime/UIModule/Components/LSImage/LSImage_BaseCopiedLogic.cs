@@ -14,8 +14,7 @@ namespace LSCore
             TryRotateRect(ref rect);
             currentRect = rect;
             var v = new Vector4(rect.x, rect.y, rect.x + rect.width, rect.y + rect.height);
-            
-            vh.Clear();
+
             AddVert(vh, new Vector3(v.x, v.y), new Vector4(0f, 0f));
             AddVert(vh, new Vector3(v.x, v.w), new Vector4(0f, 1f));
             AddVert(vh, new Vector3(v.z, v.w), new Vector4(1f, 1f));
@@ -24,14 +23,20 @@ namespace LSCore
             vh.AddTriangle(0, 1, 2);
             vh.AddTriangle(2, 3, 0);
         }
-        
-        
+
+
         //-------------GENERATORS-------------
         private void GenerateSlicedSprite(LSVertexHelper toFill)
         {
             SlicedPrepare(toFill);
-            toFill.Clear();
 
+            var posMin = default(Vector2);
+            var posMax = default(Vector2);
+            
+            var uvMin = default(Vector2);
+            var uvMax = default(Vector2);
+            
+            
             for (int x = 0; x < 3; ++x)
             {
                 int x2 = x + 1;
@@ -42,17 +47,17 @@ namespace LSCore
                         continue;
 
                     int y2 = y + 1;
-
-                    AddQuad(toFill,
-                        new Vector2(vertScratch[x].x, vertScratch[y].y),
-                        new Vector2(vertScratch[x2].x, vertScratch[y2].y),
-                        
-                        new Vector2(uVScratch[x].x, uVScratch[y].y),
-                        new Vector2(uVScratch[x2].x, uVScratch[y2].y));
+                    posMin.x = vertScratch[x].x; posMin.y = vertScratch[y].y;
+                    posMax.x = vertScratch[x2].x; posMax.y = vertScratch[y2].y;
+                    
+                    uvMin.x = uVScratch[x].x; uvMin.y = uVScratch[y].y;
+                    uvMax.x = uVScratch[x2].x; uvMax.y = uVScratch[y2].y;
+                    
+                    AddQuad(toFill, posMin, posMax, uvMin, uvMax);
                 }
             }
         }
-
+        
         private void SlicedPrepare(LSVertexHelper toFill)
         {
             if (!hasBorder)
@@ -80,10 +85,12 @@ namespace LSCore
             }
 
             Rect rect = GetPixelAdjustedRect();
+            var lastCenter = rect.center * 2;
             TryRotateRect(ref rect);
             currentRect = rect;
-            Vector4 adjustedBorders = GetAdjustedBorders(border / multipliedPixelsPerUnit, rect);
-            padding /= multipliedPixelsPerUnit;
+            var pixelsPerUnit = multipliedPixelsPerUnit;
+            Vector4 adjustedBorders = GetAdjustedBorders(border / pixelsPerUnit, rect);
+            padding /= pixelsPerUnit;
 
 
             vertScratch[0] = new Vector2(padding.x, padding.y);
@@ -94,7 +101,7 @@ namespace LSCore
 
             vertScratch[2].x = rect.width - adjustedBorders.z;
             vertScratch[2].y = rect.height - adjustedBorders.w;
-                
+
             for (int i = 0; i < 4; ++i)
             {
                 vertScratch[i].x += rect.x;
@@ -106,14 +113,26 @@ namespace LSCore
             uVScratch[2] = new Vector2(inner.z, inner.w);
             uVScratch[3] = new Vector2(outer.z, outer.w);
         }
+        
+        public new Rect GetPixelAdjustedRect()
+        {
+            var canv = canvas;
+            
+            if (!canv || canv.renderMode == RenderMode.WorldSpace || canv.scaleFactor == 0.0f || !canv.pixelPerfect)
+            {
+                return rectTransform.rect;
+            }
+            
+            return RectTransformUtility.PixelAdjustRect(rectTransform, canv);
+        }
+        
+        private void GenerateSimpleSprite(LSVertexHelper toFill) => GenerateSimpleSprite(toFill, preserveAspect);
 
         private void GenerateSimpleSprite(LSVertexHelper vh, bool lPreserveAspect)
         {
             var activeSprite = overrideSprite;
             Vector4 v = GetDrawingDimensions(lPreserveAspect);
             var uv = activeSprite != null ? DataUtility.GetOuterUV(activeSprite) : Vector4.zero;
-            
-            vh.Clear();
             
             AddVert(vh, new Vector3(v.x, v.y), new Vector4(uv.x, uv.y));
             AddVert(vh, new Vector3(v.x, v.w), new Vector4(uv.x, uv.w));
@@ -124,6 +143,7 @@ namespace LSCore
             vh.AddTriangle(2, 3, 0);
         }
 
+        private void GenerateSprite(LSVertexHelper vh) => GenerateSprite(vh, preserveAspect);
         private void GenerateSprite(LSVertexHelper vh, bool lPreserveAspect)
         {
             var activeSprite = overrideSprite;
@@ -147,8 +167,6 @@ namespace LSCore
 
             // Calculate the drawing offset based on the difference between the two pivots.
             var drawOffset = (rectPivot - spritePivot) * drawingSize;
-            
-            vh.Clear();
 
             Vector2[] vertices = activeSprite.vertices;
             Vector2[] uvs = activeSprite.uv;
@@ -203,8 +221,7 @@ namespace LSCore
             float xMax = rect.width - border.z;
             float yMin = border.y;
             float yMax = rect.height - border.w;
-
-            toFill.Clear();
+            
             var clipped = uvMax;
 
             // if either width is zero we cant tile so just assume it was the full width.
@@ -413,10 +430,9 @@ namespace LSCore
             }
         }
 
+        private void GenerateFilledSprite(LSVertexHelper toFill) => GenerateFilledSprite(toFill, preserveAspect);
         private void GenerateFilledSprite(LSVertexHelper toFill, bool preserveAspect)
         {
-            toFill.Clear();
-
             if (fillAmount < 0.001f)
                 return;
 
@@ -618,7 +634,17 @@ namespace LSCore
         private void GenerateFilledSlicedSprite(LSVertexHelper toFill)
         {
             SlicedPrepare(toFill);
-            toFill.Clear();
+            float maxX = float.MinValue;
+            float maxY = float.MinValue;
+            
+            for (int i = 0; i < vertScratch.Length; i++)
+            {
+                var pos = vertScratch[i];
+                
+                if (pos.x > maxX) maxX = pos.x;
+                if (pos.y > maxY) maxY = pos.y;
+            }
+            
             var rect = rectTransform.rect;
 
             for (int x = 0; x < 3; ++x)
@@ -631,15 +657,75 @@ namespace LSCore
                         continue;
 
                     int y2 = y + 1;
-
-                    var min = new Vector2(vertScratch[x].x, vertScratch[y].y);
-                    var max = new Vector2(vertScratch[x2].x, vertScratch[y2].y);
-                    var uvMin = new Vector2(uVScratch[x].x, uVScratch[y].y);
-                    var uvMax = new Vector2(uVScratch[x2].x, uVScratch[y2].y);
                     
-                    if (CanAddQuad(ref min, ref max, ref uvMin, ref uvMax))
+                    var defMin = new Vector2(vertScratch[x].x, vertScratch[y].y);
+                    var defMax = new Vector2(vertScratch[x2].x, vertScratch[y2].y);
+                    var defUvMin = new Vector2(uVScratch[x].x, uVScratch[y].y);
+                    var defUvMax = new Vector2(uVScratch[x2].x, uVScratch[y2].y);
+                    
+                    var min = defMin;
+                    var max = defMax;
+                    var uvMin = defUvMin;
+                    var uvMax = defUvMax;
+                    
+                    TryAddQuad();
+                    
+                    if (mirror.x == 1)
                     {
-                        AddQuad(toFill, min, max, uvMin, uvMax);
+                        Reset();
+                        MirrorX();
+                        Reset();
+                        if (mirror.y == 1)
+                        {
+                            MirrorY();
+                            Reset();
+                            MirrorYWithoutAdd();
+                            MirrorX();
+                        }
+                    }
+                    else if (mirror.y == 1)
+                    {
+                        Reset();
+                        MirrorY();
+                    }
+
+                    void Reset()
+                    {
+                        min = defMin;
+                        max = defMax;
+                        uvMin = defUvMin;
+                        uvMax = defUvMax;
+                    }
+                    
+                    void MirrorX()
+                    {
+                        min.x = maxX + (maxX - min.x);
+                        max.x = maxX + (maxX - max.x);
+                        (min.x, max.x) = (max.x, min.x);
+                        (uvMin.x, uvMax.x) = (uvMax.x, uvMin.x);
+                        TryAddQuad();
+                    }
+                    
+                    void MirrorY()
+                    {
+                        MirrorYWithoutAdd();
+                        TryAddQuad();
+                    }
+                    
+                    void MirrorYWithoutAdd()
+                    {
+                        min.y = maxY + (maxY - min.y);
+                        max.y = maxY + (maxY - max.y);
+                        (min.y, max.y) = (max.y, min.y);
+                        (uvMin.y, uvMax.y) = (uvMax.y, uvMin.y);
+                    }
+                    
+                    void TryAddQuad()
+                    {
+                        if (CanAddQuad(ref min, ref max, ref uvMin, ref uvMax))
+                        {
+                            AddQuad(toFill, min, max, uvMin, uvMax);
+                        }
                     }
                 }
             }
@@ -776,11 +862,7 @@ namespace LSCore
             for (int axis = 0; axis <= 1; axis++)
             {
                 float borderScaleRatio;
-
-                // The adjusted rect (adjusted for pixel correctness)
-                // may be slightly larger than the original rect.
-                // Adjust the border to match the adjustedRect to avoid
-                // small gaps between borders (case 833201).
+                
                 var size = currentRect.size;
                 var size2 = adjustedRect.size;
                 
@@ -790,9 +872,7 @@ namespace LSCore
                     border[axis] *= borderScaleRatio;
                     border[axis + 2] *= borderScaleRatio;
                 }
-
-                // If the rect is smaller than the combined borders, then there's not room for the borders at their normal size.
-                // In order to avoid artefacts with overlapping borders, we scale the borders down to fit.
+                
                 float combinedBorders = border[axis] + border[axis + 2];
                 if (size2[axis] < combinedBorders && combinedBorders != 0)
                 {
@@ -818,11 +898,18 @@ namespace LSCore
         void AddQuad(LSVertexHelper vertexHelper, in Vector2 posMin, in Vector2 posMax, in Vector2 uvMin, in Vector2 uvMax)
         {
             int startIndex = vertexHelper.currentVertCount;
-
-            AddVert(vertexHelper, new Vector3(posMin.x, posMin.y, 0), new Vector4(uvMin.x, uvMin.y));
-            AddVert(vertexHelper, new Vector3(posMin.x, posMax.y, 0), new Vector4(uvMin.x, uvMax.y));
-            AddVert(vertexHelper, new Vector3(posMax.x, posMax.y, 0), new Vector4(uvMax.x, uvMax.y));
-            AddVert(vertexHelper, new Vector3(posMax.x, posMin.y, 0), new Vector4(uvMax.x, uvMin.y));
+            var pos = new Vector3(posMin.x, posMin.y);
+            var uv = new Vector4(uvMin.x, uvMin.y);
+            AddVert(vertexHelper, pos, uv);
+            pos.y = posMax.y;
+            uv.y = uvMax.y;
+            AddVert(vertexHelper, pos, uv);
+            pos.x = posMax.x;
+            uv.x = uvMax.x;
+            AddVert(vertexHelper, pos, uv);
+            pos.y = posMin.y;
+            uv.y = uvMin.y;
+            AddVert(vertexHelper, pos, uv);
 
             vertexHelper.AddTriangle(startIndex, startIndex + 1, startIndex + 2);
             vertexHelper.AddTriangle(startIndex + 2, startIndex + 3, startIndex);

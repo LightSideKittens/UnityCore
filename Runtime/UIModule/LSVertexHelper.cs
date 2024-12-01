@@ -27,7 +27,7 @@ namespace UnityEngine.UI
 
         public LSVertexHelper(Mesh m)
         {
-            InitializeListIfRequired();
+            
 
             positions.AddRange(m.vertices);
             colors.AddRange(m.colors32);
@@ -60,22 +60,19 @@ namespace UnityEngine.UI
                 vh.AddTriangle(indices[i], indices[i+1], indices[i+2]);
             }
         }
-        
-        private void InitializeListIfRequired()
+
+        public void Init()
         {
-            if (!listsInitalized)
-            {
-                positions = ListPool<Vector3>.Get();
-                colors = ListPool<Color32>.Get();
-                uvs0 = ListPool<Vector4>.Get();
-                uvs1 = ListPool<Vector4>.Get();
-                uvs2 = ListPool<Vector4>.Get();
-                uvs3 = ListPool<Vector4>.Get();
-                normals = ListPool<Vector3>.Get();
-                tangents = ListPool<Vector4>.Get();
-                indices = ListPool<int>.Get();
-                listsInitalized = true;
-            }
+            positions = ListPool<Vector3>.Get();
+            colors = ListPool<Color32>.Get();
+            uvs0 = ListPool<Vector4>.Get();
+            uvs1 = ListPool<Vector4>.Get();
+            uvs2 = ListPool<Vector4>.Get();
+            uvs3 = ListPool<Vector4>.Get();
+            normals = ListPool<Vector3>.Get();
+            tangents = ListPool<Vector4>.Get();
+            indices = ListPool<int>.Get();
+            listsInitalized = true;
         }
 
         /// <summary>
@@ -152,8 +149,6 @@ namespace UnityEngine.UI
         /// <param name="i">Index to populate.</param>
         public void PopulateUIVertex(ref UIVertex vertex, int i)
         {
-            InitializeListIfRequired();
-
             vertex.position = positions[i];
             vertex.color = colors[i];
             vertex.uv0 = uvs0[i];
@@ -163,6 +158,18 @@ namespace UnityEngine.UI
             vertex.normal = normals[i];
             vertex.tangent = tangents[i];
         }
+        
+        public void PopulatePosition(ref Vector3 position, int i)
+        {
+            position = positions[i];
+        }
+        
+        public void GetIndexes(int i, out int i0, out int i1, out int i2)
+        {
+            i0 = indices[i];
+            i1 = indices[i + 1];
+            i2 = indices[i + 2];
+        }
 
         /// <summary>
         /// Set a UIVertex at the given index.
@@ -171,7 +178,7 @@ namespace UnityEngine.UI
         /// <param name="i">the position in the current list to fill.</param>
         public void SetUIVertex(in UIVertex vertex, int i)
         {
-            InitializeListIfRequired();
+            
 
             positions[i] = vertex.position;
             colors[i] = vertex.color;
@@ -188,8 +195,6 @@ namespace UnityEngine.UI
         /// </summary>
         public void FillMesh(Mesh mesh)
         {
-            InitializeListIfRequired();
-
             mesh.Clear();
 
             if (positions.Count >= 65000)
@@ -206,6 +211,18 @@ namespace UnityEngine.UI
             mesh.SetTriangles(indices, 0);
             mesh.RecalculateBounds();
         }
+        
+        /// <summary>
+        /// Fill the given mesh with the stream data.
+        /// </summary>
+        public void FillMeshUI(Mesh mesh)
+        {
+            mesh.Clear();
+            mesh.SetVertices(positions);
+            mesh.SetColors(colors);
+            mesh.SetUVs(0, uvs0);
+            mesh.SetTriangles(indices, 0);
+        }
 
         /// <summary>
         /// Add a single vertex to the stream.
@@ -220,8 +237,6 @@ namespace UnityEngine.UI
         /// <param name="tangent">Tangent of the vert</param>
         public void AddVert(in Vector3 position, in Color32 color, in Vector4 uv0, in Vector4 uv1, in Vector4 uv2, in Vector4 uv3, in Vector3 normal, in Vector4 tangent)
         {
-            InitializeListIfRequired();
-
             positions.Add(position);
             colors.Add(color);
             uvs0.Add(uv0);
@@ -234,7 +249,7 @@ namespace UnityEngine.UI
         
         public void AddVert(in Vector3 position, in Color32 color, in Vector4 uv0, in Vector4 uv1, in Vector4 uv2, in Vector4 uv3)
         {
-            InitializeListIfRequired();
+            
 
             positions.Add(position);
             colors.Add(color);
@@ -257,7 +272,7 @@ namespace UnityEngine.UI
         /// <param name="tangent">Tangent of the vert</param>
         public void AddVert(in Vector3 position, in Color32 color, in Vector4 uv0, in Vector4 uv1, in Vector3 normal, in Vector4 tangent)
         {
-            InitializeListIfRequired();
+            
             
             positions.Add(position);
             colors.Add(color);
@@ -277,7 +292,7 @@ namespace UnityEngine.UI
         /// <param name="uv0">UV of the vert</param>
         public void AddVert(in Vector3 position, in Color32 color, in Vector4 uv0)
         {
-            InitializeListIfRequired();
+            
             
             positions.Add(position);
             colors.Add(color);
@@ -295,7 +310,7 @@ namespace UnityEngine.UI
         /// <param name="v">The vertex to add</param>
         public void AddVert(in UIVertex v)
         {
-            InitializeListIfRequired();
+            
             
             positions.Add(v.position);
             colors.Add(v.color);
@@ -315,7 +330,7 @@ namespace UnityEngine.UI
         /// <param name="idx2">index 2</param>
         public void AddTriangle(int idx0, int idx1, int idx2)
         {
-            InitializeListIfRequired();
+            
 
             indices.Add(idx0);
             indices.Add(idx1);
@@ -324,7 +339,7 @@ namespace UnityEngine.UI
         
         public void ClearTriangles()
         {
-            InitializeListIfRequired();
+            
             indices.Clear();
         }
 
@@ -338,7 +353,7 @@ namespace UnityEngine.UI
 
             for (int i = 0; i < 4; i++)
             {
-                InitializeListIfRequired();
+                
                 ref var vert = ref verts[i];
                 positions.Add(vert.position);
                 colors.Add(vert.color);
@@ -361,7 +376,7 @@ namespace UnityEngine.UI
         /// <param name="indices">The custom stream of indices to add to the helpers internal data.</param>
         public void AddUIVertexStream(List<UIVertex> verts, List<int> indices)
         {
-            InitializeListIfRequired();
+            
 
             if (verts != null)
             {
@@ -383,7 +398,7 @@ namespace UnityEngine.UI
             if (verts == null)
                 return;
 
-            InitializeListIfRequired();
+            
 
             CanvasRenderer.SplitUIVertexStreams(verts, positions, colors, uvs0, uvs1, uvs2, uvs3, normals, tangents, indices);
         }
@@ -396,7 +411,7 @@ namespace UnityEngine.UI
             if (stream == null)
                 return;
 
-            InitializeListIfRequired();
+            
 
             CanvasRenderer.CreateUIVertexStream(stream, positions, colors, uvs0, uvs1, uvs2, uvs3, normals, tangents, indices);
         }

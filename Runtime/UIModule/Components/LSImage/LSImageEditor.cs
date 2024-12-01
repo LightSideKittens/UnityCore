@@ -24,6 +24,7 @@ namespace LSCore
         SerializedProperty combineFilledWithSliced;
         SerializedProperty m_PixelsPerUnitMultiplier;
         SerializedProperty flip;
+        SerializedProperty mirror;
         SerializedProperty ignoreSLAAAAYout;
         FieldInfo bIsDriven;
         private LSImage image;
@@ -47,6 +48,7 @@ namespace LSCore
             combineFilledWithSliced = serializedObject.FindProperty("combineFilledWithSliced");
             m_PixelsPerUnitMultiplier = serializedObject.FindProperty("m_PixelsPerUnitMultiplier");
             flip = serializedObject.FindProperty("flip");
+            mirror = serializedObject.FindProperty("mirror");
             ignoreSLAAAAYout = serializedObject.FindProperty("ignoreSLAAAAYout");
             bIsDriven = typeof(ImageEditor).GetField("m_bIsDriven", BindingFlags.Instance | BindingFlags.NonPublic);
             image = (LSImage)target;
@@ -89,25 +91,31 @@ namespace LSCore
 
             EditorGUILayout.EndFadeGroup();
             NativeSizeButtonGUI();
-            
-            EditorGUILayout.BeginHorizontal();
-            
-            Rect totalRect = EditorGUILayout.GetControlRect();
-            Rect fieldRect = EditorGUI.PrefixLabel(totalRect, new GUIContent("Flip"));
-            
-            GUI.Label(fieldRect.TakeFromLeft(18), "X");
-            var xFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), flip.vector2IntValue.x == 1);
-            GUI.Label(fieldRect.TakeFromLeft(18), "Y");
-            var yFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), flip.vector2IntValue.y == 1);
-            flip.vector2IntValue = new Vector2Int(xFlipValue.ToInt(), yFlipValue.ToInt());
 
-            EditorGUILayout.EndHorizontal();
+            DrawFlipProperty("Flip", flip);
+            DrawFlipProperty("Mirror", mirror);
             
-            EditorGUILayout.PropertyField(ignoreSLAAAAYout);
+            EditorGUILayout.PropertyField(ignoreSLAAAAYout, new GUIContent("Ignore SLAAAAYout"));
             
             DrawRotateButton();
 
             serializedObject.ApplyModifiedProperties();
+        }
+
+        private void DrawFlipProperty(string label, SerializedProperty prop)
+        {
+            EditorGUILayout.BeginHorizontal();
+            
+            Rect totalRect = EditorGUILayout.GetControlRect();
+            Rect fieldRect = EditorGUI.PrefixLabel(totalRect, new GUIContent(label));
+            
+            GUI.Label(fieldRect.TakeFromLeft(18), "X");
+            var xFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), prop.vector2IntValue.x == 1);
+            GUI.Label(fieldRect.TakeFromLeft(18), "Y");
+            var yFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), prop.vector2IntValue.y == 1);
+            prop.vector2IntValue = new Vector2Int(xFlipValue.ToInt(), yFlipValue.ToInt());
+
+            EditorGUILayout.EndHorizontal();
         }
         
         void SetShowNativeSize(bool instant)
@@ -126,7 +134,8 @@ namespace LSCore
             for (int i = 0; i < 4; i++)
             {
                 var targetAngle = i * 90;
-                if (GUILayout.Button($"{targetAngle}°", GUILayout.Height(30)) && rotateId.intValue != i)
+                var text = rotateId.intValue == i ? $"{targetAngle}° ❤️" : $"{targetAngle}°";
+                if (GUILayout.Button(text, GUILayout.Height(30)) && rotateId.intValue != i)
                 {
                     rotateId.intValue = i;
                     image.SetVerticesDirty();

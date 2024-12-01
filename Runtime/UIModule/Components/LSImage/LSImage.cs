@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections;
+using Sirenix.Utilities;
 using UnityEngine;
-using UnityEngine.Pool;
 using UnityEngine.UI;
 
 namespace LSCore
@@ -9,20 +9,24 @@ namespace LSCore
     public partial class LSImage : Image
     {
         private static readonly LSVertexHelper vertexHelper = new LSVertexHelper();
-        private static readonly VertexHelper legacyVertexHelper = new VertexHelper();
         private RectTransform rt;
         private Rect currentRect;
         private bool isShowed;
         public event Action Showed;
         public event Action Hidden;
-        
+
+        static LSImage()
+        {
+            vertexHelper.Init();
+        }
+
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
             rt = rectTransform;
             base.OnValidate();
         }
-        
+
         protected override void Reset()
         {
             rt = rectTransform;
@@ -40,12 +44,12 @@ namespace LSCore
         private IEnumerator DelayedOnEnable()
         {
             yield return null;
-            
+
             if (!canvasRenderer.cull)
             {
                 OnShowed();
             }
-            
+
             onCullStateChanged.AddListener(OnCullStateChanged);
         }
 
@@ -60,15 +64,15 @@ namespace LSCore
                 OnShowed();
             }
         }
-        
+
         protected override void OnDisable()
         {
             onCullStateChanged.RemoveListener(OnCullStateChanged);
-            
+
             var cull = canvasRenderer.cull;
-            
+
             base.OnDisable();
-            
+
             if (!cull)
             {
                 OnHidden();
@@ -77,96 +81,159 @@ namespace LSCore
 
         protected virtual void OnShowed()
         {
-            if(isShowed) return;
-            
+            if (isShowed) return;
+
             isShowed = true;
             Showed?.Invoke();
         }
-        
+
         protected virtual void OnHidden()
         {
-            if(!isShowed) return;
-            
+            if (!isShowed) return;
+
             isShowed = false;
             Hidden?.Invoke();
         }
-        
+
         protected override void UpdateGeometry()
         {
             DoMeshGeneration();
         }
-        
+
         private void DoMeshGeneration()
         {
-            Action<Mesh> fillMesh = vertexHelper.FillMesh;
+            Action<Mesh> fillMesh = vertexHelper.FillMeshUI;
+            vertexHelper.Clear();
+
             if (rt != null && rt.rect is { width: > 0, height: > 0 })
+            {
+                InitMeshPopulator();
                 OnPopulateMesh(vertexHelper);
-            else
-                vertexHelper.Clear(); // clear the vertex helper so invalid graphics dont draw.
-
-            var components = ListPool<Component>.Get();
-            GetComponents(typeof(IMeshModifier), components);
-            
-            if (components.Count > 0)
-            {
-                vertexHelper.FillLegacy(legacyVertexHelper);
-                fillMesh = legacyVertexHelper.FillMesh;
             }
 
-            for (var i = 0; i < components.Count; i++)
-            {
-                ((IMeshModifier)components[i]).ModifyMesh(legacyVertexHelper);
-            }
-
-            ListPool<Component>.Release(components);
-            
-            fillMesh(workerMesh);
-            canvasRenderer.SetMesh(workerMesh);
+            var mesh = workerMesh;
+            fillMesh(mesh);
+            canvasRenderer.SetMesh(mesh);
         }
-        
-        
-        private void OnPopulateMesh(LSVertexHelper toFill)
+
+        private Action<LSVertexHelper> meshPopulator;
+
+        private void InitMeshPopulator()
         {
-            defaultColor = color;
             if (overrideSprite == null)
             {
-                GenerateDefaultSprite(toFill);
-                PostProcessMesh(toFill);
+                meshPopulator = GenerateDefaultSprite;
                 return;
             }
-            
+
             switch (type)
             {
                 case Type.Simple:
                     if (!useSpriteMesh)
-                        GenerateSimpleSprite(toFill, preserveAspect);
+                    {
+                        meshPopulator = GenerateSimpleSprite;
+                    }
                     else
-                        GenerateSprite(toFill, preserveAspect);
+                    {
+                        meshPopulator = GenerateSprite;
+                    }
                     break;
                 case Type.Sliced:
-                    GenerateSlicedSprite(toFill);
+                    meshPopulator = GenerateSlicedSprite;
                     break;
                 case Type.Tiled:
-                    GenerateTiledSprite(toFill);
+                    meshPopulator = GenerateTiledSprite;
                     break;
                 case Type.Filled:
-                    if (combineFilledWithSliced && hasBorder && type == Type.Filled && fillMethod is FillMethod.Horizontal or FillMethod.Vertical)
+                    if (combineFilledWithSliced && hasBorder && type == Type.Filled &&
+                        fillMethod is FillMethod.Horizontal or FillMethod.Vertical)
                     {
-                        GenerateFilledSlicedSprite(toFill);
+                        meshPopulator = GenerateFilledSlicedSprite;
                     }
                     else
                     {
-                        GenerateFilledSprite(toFill, preserveAspect);
+                        meshPopulator = GenerateFilledSprite;
                     }
+
                     break;
             }
+        }
 
+        private void OnPopulateMesh(LSVertexHelper toFill)
+        {
+            defaultColor = color;
+            meshPopulator(toFill);
             PostProcessMesh(toFill);
         }
         
         private void PostProcessMesh(LSVertexHelper vh)
         {
+            if (meshPopulator != GenerateFilledSlicedSprite)
+            {
+                Mirror(vh);
+            }
+            
             RotateMesh(vh);
+        }
+
+        private void Mirror(LSVertexHelper vh)
+        {
+            if (mirror.x == 1)
+            {
+                Mirror(vh, true);
+            }
+            
+            if (mirror.y == 1)
+            {
+                Mirror(vh, false);
+            }
+        }
+        
+        private void Mirror(LSVertexHelper vh, bool reflectHorizontally)
+        {
+            Vector3 tempPos = default;
+            var count = vh.currentVertCount;
+            if (count == 0) return;
+            
+            float maxX = float.MinValue;
+            float maxY = float.MinValue;
+            
+            for (int i = 0; i < count; i++)
+            {
+                vh.PopulatePosition(ref tempPos, i);
+                
+                if (tempPos.x > maxX) maxX = tempPos.x;
+                if (tempPos.y > maxY) maxY = tempPos.y;
+            }
+            
+            UIVertex reflectedVertex = default;
+            
+            for (int i = 0; i < count; i++)
+            {
+                vh.PopulateUIVertex(ref reflectedVertex, i);
+                var pos = reflectedVertex.position;
+                
+                if (reflectHorizontally)
+                {
+                    float offsetX = maxX - pos.x;
+                    pos.x = maxX + offsetX;
+                }
+                else
+                {
+                    float offsetY = maxY - pos.y;
+                    pos.y = maxY + offsetY;
+                }
+                
+                reflectedVertex.position = pos;
+                vh.AddVert(reflectedVertex);
+            }
+            
+            var currentTriangleCount = vh.currentIndexCount;
+            for (int i = 0; i < currentTriangleCount; i += 3)
+            {
+                vh.GetIndexes(i, out int i0, out int i1, out int i2);
+                vh.AddTriangle(i0 + count, i1 + count, i2 + count);
+            }
         }
 
         public delegate void RotateAction(ref Vector3 value, in Vector2 center);
@@ -174,6 +241,8 @@ namespace LSCore
 
         private void RotateMesh(LSVertexHelper vh)
         {
+            if(rotateId == 0 && flip is { x: 0, y: 0 }) return;
+            
             UIVertex vert = new UIVertex();
             var count = vh.currentVertCount;
             var center = rt.rect.center * 2;
@@ -226,12 +295,28 @@ namespace LSCore
             
             if (flip.x == 1)
             {
-                pos.x = -xOffset + center.x;
+                pos.x = -xOffset;
             }
 
             if (flip.y == 1)
             {
-                pos.y = -yOffset + center.y;
+                pos.y = -yOffset;
+            }
+        }
+        
+        private void Invert(ref Vector2 pos, in Vector2 center, bool flipX, bool flipY)
+        {
+            float xOffset = pos.x - center.x;
+            float yOffset = pos.y - center.y;
+            
+            if (flipX)
+            {
+                pos.x = -xOffset;
+            }
+
+            if (flipY)
+            {
+                pos.y = -yOffset;
             }
         }
 
@@ -263,6 +348,16 @@ namespace LSCore
                 var pos = rect.position;
                 (pos.x, pos.y) = (pos.y, pos.x);
                 rect.position = pos;
+            }
+            
+            if (mirror.x == 1)
+            {
+                rect = rect.Split(0, 2);
+            }
+            
+            if (mirror.y == 1)
+            {
+                rect = rect.SplitVertical(0, 2);
             }
         }
     }
