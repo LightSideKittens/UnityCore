@@ -168,7 +168,11 @@ namespace LSCore
         
         private void PostProcessMesh(LSVertexHelper vh)
         {
-            Mirror(vh);
+            if (meshPopulator != GenerateFilledSlicedSprite)
+            {
+                Mirror(vh);
+            }
+            
             RotateMesh(vh);
         }
 

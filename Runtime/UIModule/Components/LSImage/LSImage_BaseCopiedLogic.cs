@@ -634,6 +634,16 @@ namespace LSCore
         private void GenerateFilledSlicedSprite(LSVertexHelper toFill)
         {
             SlicedPrepare(toFill);
+            float maxX = float.MinValue;
+            float maxY = float.MinValue;
+            
+            for (int i = 0; i < vertScratch.Length; i++)
+            {
+                var pos = vertScratch[i];
+                
+                if (pos.x > maxX) maxX = pos.x;
+                if (pos.y > maxY) maxY = pos.y;
+            }
             
             var rect = rectTransform.rect;
 
@@ -647,15 +657,75 @@ namespace LSCore
                         continue;
 
                     int y2 = y + 1;
-
-                    var min = new Vector2(vertScratch[x].x, vertScratch[y].y);
-                    var max = new Vector2(vertScratch[x2].x, vertScratch[y2].y);
-                    var uvMin = new Vector2(uVScratch[x].x, uVScratch[y].y);
-                    var uvMax = new Vector2(uVScratch[x2].x, uVScratch[y2].y);
                     
-                    if (CanAddQuad(ref min, ref max, ref uvMin, ref uvMax))
+                    var defMin = new Vector2(vertScratch[x].x, vertScratch[y].y);
+                    var defMax = new Vector2(vertScratch[x2].x, vertScratch[y2].y);
+                    var defUvMin = new Vector2(uVScratch[x].x, uVScratch[y].y);
+                    var defUvMax = new Vector2(uVScratch[x2].x, uVScratch[y2].y);
+                    
+                    var min = defMin;
+                    var max = defMax;
+                    var uvMin = defUvMin;
+                    var uvMax = defUvMax;
+                    
+                    TryAddQuad();
+                    
+                    if (mirror.x == 1)
                     {
-                        AddQuad(toFill, min, max, uvMin, uvMax);
+                        Reset();
+                        MirrorX();
+                        Reset();
+                        if (mirror.y == 1)
+                        {
+                            MirrorY();
+                            Reset();
+                            MirrorYWithoutAdd();
+                            MirrorX();
+                        }
+                    }
+                    else if (mirror.y == 1)
+                    {
+                        Reset();
+                        MirrorY();
+                    }
+
+                    void Reset()
+                    {
+                        min = defMin;
+                        max = defMax;
+                        uvMin = defUvMin;
+                        uvMax = defUvMax;
+                    }
+                    
+                    void MirrorX()
+                    {
+                        min.x = maxX + (maxX - min.x);
+                        max.x = maxX + (maxX - max.x);
+                        (min.x, max.x) = (max.x, min.x);
+                        (uvMin.x, uvMax.x) = (uvMax.x, uvMin.x);
+                        TryAddQuad();
+                    }
+                    
+                    void MirrorY()
+                    {
+                        MirrorYWithoutAdd();
+                        TryAddQuad();
+                    }
+                    
+                    void MirrorYWithoutAdd()
+                    {
+                        min.y = maxY + (maxY - min.y);
+                        max.y = maxY + (maxY - max.y);
+                        (min.y, max.y) = (max.y, min.y);
+                        (uvMin.y, uvMax.y) = (uvMax.y, uvMin.y);
+                    }
+                    
+                    void TryAddQuad()
+                    {
+                        if (CanAddQuad(ref min, ref max, ref uvMin, ref uvMax))
+                        {
+                            AddQuad(toFill, min, max, uvMin, uvMax);
+                        }
                     }
                 }
             }
