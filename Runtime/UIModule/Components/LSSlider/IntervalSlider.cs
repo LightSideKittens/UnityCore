@@ -81,21 +81,20 @@ namespace LSCore
                     value = i
                 });
             }
+            
+            TrySort();
+        }
 
-            float min = intervals[0].value;
-            float max = intervals[^1].value;
-            if (min > max)
-            {
-                max = min;
-            }
+        internal void TrySort()
+        {
+            if(EditorGUIUtility.editingTextField) return;
+            
+            intervals.Sort((a, b) => (int)Mathf.Sign(a.value - b.value));
 
             for (int i = 0; i < intervals.Count; i++)
             {
                 var data = intervals[i];
-                data.value = Mathf.Clamp(data.value, min, max);
-                min = data.value;
                 total += data.proportion;
-                intervals[i] = data;
             }
 
             float time = 0;
@@ -112,6 +111,8 @@ namespace LSCore
                 curve.AddKey(GetKey(time, data.value));
                 inverseCurve.AddKey(GetKey(data.value, time));
             }
+            
+            UpdateRectPositions();
         }
 
         private Keyframe GetKey(float time, float value)
@@ -130,13 +131,17 @@ public class IntervalSliderEditor : LSSliderEditor
 {
     SerializedProperty intervalTextMode;
     SerializedProperty intervals;
-
+    private IntervalSlider slider;
+    private bool lastIsEditing;
+    
     protected override void OnEnable()
     {
         base.OnEnable();
 
         intervalTextMode = serializedObject.FindProperty("intervalTextMode");
         intervals = serializedObject.FindProperty("intervals");
+        slider = (IntervalSlider)target;
+        lastIsEditing = true;
     }
     
     public override void OnInspectorGUI()
@@ -144,6 +149,12 @@ public class IntervalSliderEditor : LSSliderEditor
         base.OnInspectorGUI();
         EditorGUILayout.PropertyField(intervalTextMode);
         EditorGUILayout.PropertyField(intervals);
+        var isEditing = EditorGUIUtility.editingTextField;
+        if (!isEditing && lastIsEditing)
+        {
+            slider.TrySort();
+        }
+        lastIsEditing = EditorGUIUtility.editingTextField;
         serializedObject.ApplyModifiedProperties();
     }
 }
