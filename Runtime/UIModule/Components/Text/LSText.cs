@@ -15,22 +15,57 @@ using UnityEditor;
 
 namespace LSCore
 {
-    public class LSText : TextMeshProUGUI
+    [Serializable]
+    public struct LocalizationData
     {
         [ValueDropdown("LocalizationKeys")]
-        [OnValueChanged("OnLocalizationKeyChanged")]
-        [SerializeField] private string localizationKey;
+        public string key;
         
-        [SerializeField] private SharedTableData tableData;
+        public SharedTableData tableData;
         
+#if UNITY_EDITOR
+        public IEnumerable<string> LocalizationKeys
+        {
+            get
+            {
+                yield return "";
+                if (tableData != null)
+                {
+                    foreach (var entry in tableData.Entries)
+                    {
+                        yield return entry.Key;
+                    }
+                }
+            }
+        }
+#endif
+    }
+    
+    public class LSText : TextMeshProUGUI
+    {
+        [LSOnValueChanged("OnLocalizationKeyChanged", true, "key")]
+        [SerializeField] private LocalizationData localizationData;
+
+        public void SetLocalizationData(LocalizationData localizationData)
+        {
+            TableData = localizationData.tableData;
+            LocalizationKey = localizationData.key;
+        }
+        
+#if UNITY_EDITOR
+        private void OnLocalizationKeyChanged(string key)
+        {
+            UpdateLocalizedText();
+        }
+#endif
         public SharedTableData TableData
         {
-            get => tableData;
+            get => localizationData.tableData;
             set
             {
-                if (tableData != value)
+                if (localizationData.tableData != value)
                 {
-                    tableData = value;
+                    localizationData.tableData = value;
                     UpdateTable();
                 }
             }
@@ -45,7 +80,7 @@ namespace LSCore
 #if UNITY_EDITOR
                 if (World.IsEditMode)
                 {
-                    table = AssetDatabaseUtils.LoadAny<StringTable>($"{tableData.TableCollectionName}_{LocalizationSettings.ProjectLocale.Identifier.Code}");
+                    table = AssetDatabaseUtils.LoadAny<StringTable>($"{localizationData.tableData.TableCollectionName}_{LocalizationSettings.ProjectLocale.Identifier.Code}");
                 }
 #endif
                 return table;
@@ -76,12 +111,13 @@ namespace LSCore
 
         public string LocalizationKey
         {
-            get => localizationKey;
+            get => localizationData.key;
             set
             {
-                if (value != localizationKey)
+                m_text = string.Empty;
+                if (value != localizationData.key)
                 {
-                    localizationKey = value;
+                    localizationData.key = value;
                     if (Table == null)
                     {
                         UpdateTable();
@@ -93,37 +129,23 @@ namespace LSCore
         }
 
         private string localizedText;
+        
         private void UpdateLocalizedText()
         {
             var lastText = m_text;
-            localizedText = localizationKey.Translate(Table);
+            localizedText = localizationData.key.Translate(Table);
             base.text = localizedText;
             m_text = lastText;
         }
-        
-        public IEnumerable<string> LocalizationKeys
-        {
-            get
-            {
-                yield return "";
-                if (tableData != null)
-                {
-                    foreach (var entry in tableData.Entries)
-                    {
-                        yield return entry.Key;
-                    }
-                }
-            }
-        }
 
-        public bool IsLocalized => !string.IsNullOrEmpty(localizationKey);
+        public bool IsLocalized => !string.IsNullOrEmpty(localizationData.key);
         
         public override string text
         {
             get => IsLocalized ? localizedText : base.text;
             set
             {
-                localizationKey = string.Empty;
+                localizationData.key = string.Empty;
                 base.text = value;
             }
         }
@@ -203,10 +225,7 @@ namespace LSCore
             }
         }
 
-        private void OnLocalizationKeyChanged()
-        {
-            UpdateLocalizedText();
-        }
+
         
         private TableReference lastTableRef;
         private void UpdateTable()
@@ -216,7 +235,7 @@ namespace LSCore
 #if UNITY_EDITOR
             if (World.IsEditMode) return;
 #endif
-            lastTableRef = tableData.TableCollectionName;
+            lastTableRef = localizationData.tableData.TableCollectionName;
             LocalizationSettings.StringDatabase.GetTableAsync(lastTableRef).OnComplete(t => Table = t);
         }
     }
@@ -228,8 +247,7 @@ namespace LSCore
     {
         SerializedProperty padding;
         protected PropertyTree propertyTree;
-        private InspectorProperty localizationKey;
-        private InspectorProperty tableData;
+        private InspectorProperty localizationData;
         
         private LSText text;
 
@@ -244,8 +262,7 @@ namespace LSCore
             text = (LSText)target;
             padding = serializedObject.FindProperty("m_RaycastPadding");
             propertyTree = PropertyTree.Create(serializedObject);
-            localizationKey = propertyTree.RootProperty.Children["localizationKey"];
-            tableData = propertyTree.RootProperty.Children["tableData"];
+            localizationData = propertyTree.RootProperty.Children["localizationData"];
             SceneView.duringSceneGui += DrawAnchorsOnSceneView;
         }
         
@@ -257,8 +274,7 @@ namespace LSCore
         private void TextOnInspector()
         {
             propertyTree.BeginDraw(true);
-            localizationKey.Draw();
-            tableData.Draw();
+            localizationData.Draw();
             propertyTree.EndDraw();
             base.OnInspectorGUI();
         }

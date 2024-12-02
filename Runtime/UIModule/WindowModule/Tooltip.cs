@@ -15,12 +15,25 @@ namespace LSCore
     public class ShowTooltip : CreateSinglePrefab<Tooltip>
     {
         public Transform target;
-        public string message;
+        
+        public bool useLocalization;
+        
+        [ShowIf("useLocalization")]
+        public LocalizationData localizationData;
+        [HideIf("useLocalization")]
+        [MultiLineProperty] public string message;
         
         public override void Invoke()
         {
             base.Invoke();
-            obj.Show(target, message);
+            if (useLocalization)
+            {
+                obj.Show(target, localizationData);
+            }
+            else
+            {
+                obj.Show(target, message);
+            }
         }
     }
 
@@ -119,43 +132,14 @@ namespace LSCore
             }
         }
 #endif
+
+        private Vector3 worldPoint;
         
         private void OnSizeChanged(Vector2 size)
         {
             size.y = Mathf.Clamp(size.y, 0, maxHeight);
             tooltipContainer.sizeDelta = size;
-        }
-        
-        public void Hide()
-        {
-            raycaster.enabled = false;
-            currentTween?.Kill();
-            currentTween = showHideAnim.Hide();
-        }
-        
-        [Button]
-        public void EditorShow(Transform worldPoint, string message)
-        {
-            mainCamera = Camera.main;
-            canvas = ((RectTransform)transform).root.GetComponent<Canvas>();
-            Show(worldPoint.position, message);
-        }
-        
-        public void Show(Transform worldPoint, string message)
-        {
-            Show(worldPoint.position, message);
-        }
-        
-        public void Show(Vector3 worldPoint, string message)
-        {
-            raycaster.enabled = true;
-            transform.localScale = Vector3.one;
-            transform.localRotation = Quaternion.identity;
-            
-            currentTween?.Kill();
-            currentTween = showHideAnim.Show();
-            scrollRect.verticalNormalizedPosition = 1;
-
+         
             var contentRect = scrollRect.content.rect;
             var tooltipContainerRect = tooltipContainer.rect;
             var vertical = contentRect.height > scrollRect.viewport.rect.height + 0.1f;
@@ -166,8 +150,6 @@ namespace LSCore
                 verticalOffset = (tooltipContainerRect.height - contentRect.height) / 2;
             }
             
-            tooltipText.text = message;
-            LayoutRebuilder.ForceRebuildLayoutImmediate(scrollRect.content);
             scrollRect.vertical = vertical;
             
             Rect cameraBounds = GetRect();
@@ -256,6 +238,56 @@ namespace LSCore
             pos -= sideDir * defaultPointOffset;
             pointer.localEulerAngles = new Vector3(0, 0, GetRot(side));
             pointer.position = pos;
+        }
+        
+        public void Hide()
+        {
+            raycaster.enabled = false;
+            currentTween?.Kill();
+            currentTween = showHideAnim.Hide();
+        }
+        
+        [Button]
+        public void EditorShow(Transform worldPoint, string message)
+        {
+            mainCamera = Camera.main;
+            canvas = ((RectTransform)transform).root.GetComponent<Canvas>();
+            Show(worldPoint.position, message);
+        }
+        
+        public void Show(Transform worldPoint, string message)
+        {
+            Show(worldPoint.position, message);
+        }
+        
+        public void Show(Transform worldPoint, LocalizationData data)
+        {
+            Show(worldPoint.position, data);
+        }
+        
+        public void Show(Vector3 worldPoint, string message)
+        {
+            this.worldPoint = worldPoint;
+            PrepareToShow();
+            tooltipText.text = message;
+        }
+        
+        public void Show(Vector3 worldPoint, LocalizationData data)
+        {
+            this.worldPoint = worldPoint;
+            PrepareToShow();
+            tooltipText.SetLocalizationData(data);
+        }
+
+        private void PrepareToShow()
+        {
+            raycaster.enabled = true;
+            transform.localScale = Vector3.one;
+            transform.localRotation = Quaternion.identity;
+            
+            currentTween?.Kill();
+            currentTween = showHideAnim.Show();
+            scrollRect.verticalNormalizedPosition = 1;
         }
 
         private void UpdateCanvasCorners()
