@@ -842,18 +842,22 @@ namespace LSCore
         {
             var spriteRatio = spriteSize.x / spriteSize.y;
             var rectRatio = rect.width / rect.height;
+            var pivot = rt.pivot;
+            
+            if(mirror.x == 1) pivot.x *= 2f;
+            if(mirror.y == 1) pivot.y *= 2f;
 
             if (spriteRatio > rectRatio)
             {
                 var oldHeight = rect.height;
                 rect.height = rect.width * (1.0f / spriteRatio);
-                rect.y += (oldHeight - rect.height) * rt.pivot.y;
+                rect.y += (oldHeight - rect.height) * pivot.y;
             }
             else
             {
                 var oldWidth = rect.width;
                 rect.width = rect.height * spriteRatio;
-                rect.x += (oldWidth - rect.width) * rt.pivot.x;
+                rect.x += (oldWidth - rect.width) * pivot.x;
             }
         }
         

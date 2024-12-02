@@ -81,12 +81,7 @@ namespace LSCore
 
         protected override void DrawRotateButton()
         {
-            EditorGUI.BeginChangeCheck();
-            button.Anim.Editor_Draw();
-            if (EditorGUI.EndChangeCheck())
-            {
-                EditorUtility.SetDirty(target);
-            }
+            button.Anim.Editor_Draw(target);
             base.DrawRotateButton();
         }
     }

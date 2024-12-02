@@ -22,10 +22,3 @@ public class LSButtonAction : LSClickAction
     public LSButton button;
     public override IClickable Clickable => button;
 }
-
-[Serializable]
-public class LSTextAction : LSClickAction
-{
-    public ClickableText text;
-    public override IClickable Clickable => text;
-}

@@ -7,10 +7,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace LSCore
-{
-    public partial class LSSlider
-    {
-        private static class MultipleDisplayUtilities
+{ 
+    public static class LSMultipleDisplayUtilities
         {
             /// <summary>
             /// Converts the current drag position into a relative position for the display.
@@ -151,6 +149,10 @@ namespace LSCore
 #endif
             }
         }
+            
+    public partial class LSSlider
+    {
+
         private static class SetPropertyUtility
         {
             public static bool SetColor(ref Color currentValue, Color newValue)
@@ -609,7 +611,7 @@ namespace LSCore
             if (clickRect != null && clickRect.rect.size[(int)axis] > 0)
             {
                 Vector2 position = Vector2.zero;
-                if (!MultipleDisplayUtilities.GetRelativeMousePositionForDrag(eventData, ref position))
+                if (!LSMultipleDisplayUtilities.GetRelativeMousePositionForDrag(eventData, ref position))
                     return;
 
                 Vector2 localCursor;

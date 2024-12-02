@@ -1,9 +1,7 @@
 ﻿#if UNITY_EDITOR
 using System.Reflection;
 using LSCore.Extensions;
-using LSCore.Extensions.Unity;
 using Sirenix.Utilities;
-using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEditor.UI;
 using UnityEngine;
@@ -105,16 +103,18 @@ namespace LSCore
         private void DrawFlipProperty(string label, SerializedProperty prop)
         {
             EditorGUILayout.BeginHorizontal();
-            
+
+            var lbl = new GUIContent(label);
             Rect totalRect = EditorGUILayout.GetControlRect();
-            Rect fieldRect = EditorGUI.PrefixLabel(totalRect, new GUIContent(label));
+            EditorGUI.BeginProperty(totalRect, lbl, prop);
+            Rect fieldRect = EditorGUI.PrefixLabel(totalRect, lbl);
             
             GUI.Label(fieldRect.TakeFromLeft(18), "X");
             var xFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), prop.vector2IntValue.x == 1);
             GUI.Label(fieldRect.TakeFromLeft(18), "Y");
             var yFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), prop.vector2IntValue.y == 1);
             prop.vector2IntValue = new Vector2Int(xFlipValue.ToInt(), yFlipValue.ToInt());
-
+            EditorGUI.EndProperty();
             EditorGUILayout.EndHorizontal();
         }
         

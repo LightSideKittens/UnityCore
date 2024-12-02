@@ -1,17 +1,22 @@
 ﻿using System;
 using DG.Tweening;
+using LSCore.Attributes;
+using Sirenix.OdinInspector;
 
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace LSCore
 {
+    [Unwrap]
     [Serializable]
     public struct ClickAnim
     {
+        [CustomValueDrawer("DrawClickAnim")]
         [SerializeField] private bool isDisabled;
         private Transform transform;
         private Tween current;
@@ -25,11 +30,20 @@ namespace LSCore
         }
 
 #if UNITY_EDITOR
-        public void Editor_Draw()
+        
+        public bool DrawClickAnim(bool value, GUIContent _)
         {
-
+            return !EditorGUILayout.Toggle("Is Animatable", !value);
+        }
+        
+        public void Editor_Draw(Object target)
+        {
+            EditorGUI.BeginChangeCheck();
             isDisabled = !EditorGUILayout.Toggle("Is Animatable", !isDisabled);
-
+            if (EditorGUI.EndChangeCheck())
+            {
+                EditorUtility.SetDirty(target);
+            }
         }
 #endif
        
