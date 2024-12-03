@@ -62,7 +62,13 @@ namespace LSCore
         }
         
         [SerializeField] private RectTransform tooltipContainer;
+        
+        [SerializeField] private bool useLocalization;
+        [HideIf("useLocalization")] 
         [SerializeField] private LSText tooltipText;
+        [ShowIf("useLocalization")] 
+        [SerializeField] private LocalizationText localizationTooltipText;
+        
         [SerializeField] private Image pointerImage;
         [SerializeField] private PointerData pointerData;
         [SerializeField] private RectTransform pointer;
@@ -137,6 +143,9 @@ namespace LSCore
         
         private void OnSizeChanged(Vector2 size)
         {
+#if UNITY_EDITOR
+            if(World.IsEditMode) return;
+#endif
             size.y = Mathf.Clamp(size.y, 0, maxHeight);
             tooltipContainer.sizeDelta = size;
          
@@ -269,14 +278,21 @@ namespace LSCore
         {
             this.worldPoint = worldPoint;
             PrepareToShow();
-            tooltipText.text = message;
+            if (useLocalization)
+            {
+                localizationTooltipText.text = message;
+            }
+            else
+            {
+                tooltipText.text = message;
+            }
         }
         
         public void Show(Vector3 worldPoint, LocalizationData data)
         {
             this.worldPoint = worldPoint;
             PrepareToShow();
-            tooltipText.SetLocalizationData(data);
+            localizationTooltipText.SetLocalizationData(data);
         }
 
         private void PrepareToShow()

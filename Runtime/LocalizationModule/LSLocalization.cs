@@ -1,5 +1,6 @@
 ﻿using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace LSCore
 {
@@ -7,14 +8,30 @@ namespace LSCore
     {
         public static string MissedText = "Oops...";
         
-        public static string Translate(this string key, StringTable table)
+        public static string Translate(this string key, StringTable table, params object[] args)
         {
-            return table?.GetEntry(key)?.GetLocalizedString() ?? MissedText;
+            return key.Translate(table, MissedText, args);
         }
         
-        public static string Translate(this string key, StringTable table, string missedText)
+        public static string Translate(this string key, StringTable table, string missedText, params object[] args)
         {
-            return table?.GetEntry(key)?.GetLocalizedString() ?? missedText;
+            var text = table?.GetEntry(key)?.GetLocalizedString();
+            if (text != null)
+            {
+                text = string.Format(text, args);
+            }
+            else
+            {
+                text = missedText;
+            }
+            
+            return text;
+        }
+
+        public static AsyncOperationHandle<StringTable> GetStringTableAsync(this SharedTableData tableData, out TableReference tableReference)
+        {
+            tableReference = tableData.TableCollectionName;
+            return LocalizationSettings.StringDatabase.GetTableAsync(tableReference);
         }
     }
 }
