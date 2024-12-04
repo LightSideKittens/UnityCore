@@ -71,6 +71,12 @@ public static partial class AssetDatabaseUtils
         return AssetDatabase.FindAssets($"t:{type.Name} {filter}", paths);
     }
     
+    public static string GetGUID(Object obj, out string path)
+    {
+        path = AssetDatabase.GetAssetPath(obj);
+        return AssetDatabase.AssetPathToGUID(path);
+    }
+    
     public static List<T> LoadAllAssets<T>(string filter = "", params string[] paths) where T : Object
     {
         return LoadAllAssets(typeof(T), filter, paths).Cast<T>().ToList();

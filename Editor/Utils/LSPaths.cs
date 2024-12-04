@@ -43,6 +43,7 @@ public static class LSPaths
         public const string ThemeEditor = Root + "/Theme Editor";
         public const string AssetIconSetter = Root + "/Asset Icon Setter";
         public const string AssetsViewer = Root + "/Assets Viewer";
+        public const string SourcePrefabChanger = Root + "/Source Prefab Changer";
     }
 
     public static string ProjectPath { get; } = Application.dataPath[..^7];
