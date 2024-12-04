@@ -96,6 +96,7 @@ namespace LSCore
 
             if (text != null)
             {
+                onValueChanged.RemoveListener(UpdateValueText);
                 onValueChanged.AddListener(UpdateValueText);
             }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LSCore;
+using LSCore.Extensions;
 using UnityEditor;
 using UnityEngine;
 
@@ -37,6 +38,26 @@ namespace LSCore
             textGetter = GetTextGetter(intervalTextMode);
             UpdateRectPositions();
             UpdateText();
+        }
+
+        public struct Data
+        {
+            public int index;
+            public IntervalData from;
+            public IntervalData to;
+
+            public Data(int index, IntervalData from, IntervalData to)
+            {
+                this.index = index;
+                this.from = from;
+                this.to = to;
+            }
+        }
+        
+        public Data GetIntervalData(float value)
+        {
+            intervals.ClosestBinarySearch(x => x.value, value, out int index);
+            return new Data(index, index > 0 ? intervals[index - 1] : intervals[0], intervals[index]);
         }
 
         private void UpdateRectPositions()

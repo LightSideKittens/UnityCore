@@ -502,8 +502,15 @@ namespace LSCore
         {}
 
 #if UNITY_EDITOR
+        private float lastValue;
+        
         protected override void OnValidate()
         {
+            if (!Mathf.Approximately(lastValue, m_Value))
+            {
+                onValueChanged.Invoke(m_Value);
+            }
+            
             base.OnValidate();
 
             //Onvalidate is called before OnEnabled. We need to make sure not to touch any other objects before OnEnable is run.
@@ -519,8 +526,8 @@ namespace LSCore
                 CanvasUpdateRegistry.RegisterCanvasElementForLayoutRebuild(this);
             }
             
-            onValueChanged.RemoveAllListeners();
             Init();
+            lastValue = m_Value;
         }
 
 #endif
