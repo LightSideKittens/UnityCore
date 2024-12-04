@@ -12,8 +12,9 @@ using Vector3 = UnityEngine.Vector3;
 namespace LSCore
 {
     [Serializable]
-    public class ShowTooltip : CreateSinglePrefab<Tooltip>
+    public class ShowTooltip : LSAction
     {
+        public Tooltip prefab;
         public Transform target;
         
         public bool useLocalization;
@@ -22,18 +23,21 @@ namespace LSCore
         public LocalizationData localizationData;
         [HideIf("useLocalization")]
         [MultiLineProperty] public string message;
-        
+
+        public bool hideManually;
+
         public override void Invoke()
         {
-            base.Invoke();
+            Tooltip obj;
             if (useLocalization)
             {
-                obj.Show(target, localizationData);
+                obj = Tooltip.Show(prefab, target, localizationData);
             }
             else
             {
-                obj.Show(target, message);
+                obj = Tooltip.Show(prefab, target, message);
             }
+            obj.hideManually = hideManually;
         }
     }
 
@@ -60,7 +64,7 @@ namespace LSCore
                 target.sprite = sprite; 
             }
         }
-        
+
         [SerializeField] private RectTransform tooltipContainer;
         
         [SerializeField] private bool useLocalization;
@@ -81,6 +85,9 @@ namespace LSCore
         [SerializeField] private float maxHeight = 500;
         [SerializeReference] public ShowHideAnim showHideAnim = new DefaultUIViewAnimation();
         
+        public bool hideManually;
+
+        private Tooltip daddyPrefab;
         private Direction direction;
         private Vector3[] tooltipCorners = new Vector3[4];
         private Vector3[] canvasCorners = new Vector3[4];
@@ -110,17 +117,21 @@ namespace LSCore
             transform.SetParent(canvas.transform);
             transform.localScale = Vector3.one;
             transform.localRotation = Quaternion.identity;
+        }
+
+        private void OnEnable()
+        {
             LSInput.TouchUp += TouchUp;
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             LSInput.TouchUp -= TouchUp;
         }
 
         private void TouchUp()
         {
-            if (!wasDown)
+            if (!wasDown && !hideManually)
             {
                 Hide();
             }
@@ -251,30 +262,56 @@ namespace LSCore
         
         public void Hide()
         {
+            LSInput.TouchUp -= TouchUp;
             raycaster.enabled = false;
             currentTween?.Kill();
-            currentTween = showHideAnim.Hide();
+            currentTween = showHideAnim.Hide().OnComplete(Release);
         }
-        
+
+        private void Release()
+        {
+            OnOffPool<Tooltip>.GetOrCreatePool(daddyPrefab).Release(this);
+        }
+
         [Button]
         public void EditorShow(Transform worldPoint, string message)
         {
             mainCamera = Camera.main;
             canvas = ((RectTransform)transform).root.GetComponent<Canvas>();
-            Show(worldPoint.position, message);
+            Internal_Show(worldPoint.position, message);
         }
-        
-        public void Show(Transform worldPoint, string message)
+
+        public static Tooltip Show(Tooltip prefab, Transform worldPoint, string message)
         {
-            Show(worldPoint.position, message);
+            return Show(prefab, worldPoint.position, message);
         }
         
-        public void Show(Transform worldPoint, LocalizationData data)
+        public static Tooltip Show(Tooltip prefab, Vector3 worldPoint, string message)
         {
-            Show(worldPoint.position, data);
+            return Get(prefab).Internal_Show(worldPoint, message);
         }
         
-        public void Show(Vector3 worldPoint, string message)
+        public static Tooltip Show(Tooltip prefab, Transform worldPoint, LocalizationData data)
+        {
+            return Show(prefab, worldPoint.position, data);
+        }
+        
+        public static Tooltip Show(Tooltip prefab, Vector3 worldPoint, LocalizationData data)
+        {
+            return Get(prefab).Internal_Show(worldPoint, data);
+        }
+
+        private static Tooltip Get(Tooltip prefab)
+        {
+            var tooltip = OnOffPool<Tooltip>.GetOrCreatePool(prefab).Get();
+            tooltip.daddyPrefab = prefab;
+            return tooltip;
+        }
+        
+        public Tooltip Internal_Show(Transform worldPoint, string message) => Internal_Show(worldPoint.position, message);
+        public Tooltip Internal_Show(Transform worldPoint, LocalizationData data) => Internal_Show(worldPoint.position, data);
+
+        public Tooltip Internal_Show(Vector3 worldPoint, string message)
         {
             this.worldPoint = worldPoint;
             PrepareToShow();
@@ -286,13 +323,16 @@ namespace LSCore
             {
                 tooltipText.text = message;
             }
+
+            return this;
         }
         
-        public void Show(Vector3 worldPoint, LocalizationData data)
+        public Tooltip Internal_Show(Vector3 worldPoint, LocalizationData data)
         {
             this.worldPoint = worldPoint;
             PrepareToShow();
             localizationTooltipText.SetLocalizationData(data);
+            return this;
         }
 
         private void PrepareToShow()
