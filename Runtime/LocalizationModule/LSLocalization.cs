@@ -18,7 +18,10 @@ namespace LSCore
             var text = table?.GetEntry(key)?.GetLocalizedString();
             if (text != null)
             {
-                text = string.Format(text, args);
+                if (args != null)
+                {
+                    text = string.Format(text, args);
+                }
             }
             else
             {
