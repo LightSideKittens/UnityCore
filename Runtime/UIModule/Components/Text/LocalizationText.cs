@@ -115,12 +115,7 @@ namespace LSCore
             m_text = string.Empty;
             arguments = args;
             localizationData.key = key;
-            if (Table == null)
-            {
-                UpdateTable();
-                return;
-            }
-            UpdateLocalizedText();
+            UpdateLocalizedTextOrUpdateTable();
         }
 
         private string localizedText;
@@ -132,7 +127,19 @@ namespace LSCore
             base.text = localizedText;
             m_text = lastText;
         }
+        
+        private void UpdateLocalizedTextOrUpdateTable()
+        {
+            if (Table == null)
+            {
+                UpdateTable();
+                return;
+            }
 
+            UpdateLocalizedText();
+        }
+
+        
         public bool IsLocalized => !string.IsNullOrEmpty(localizationData.key);
         
         public override string text
@@ -181,6 +188,12 @@ namespace LSCore
         {
             base.Awake();
             UpdateTable();
+#if UNITY_EDITOR
+            if (World.IsEditMode)
+            {
+                UpdateLocalizedTextOrUpdateTable();
+            }
+#endif
         }
 
         protected override void OnDestroy()
