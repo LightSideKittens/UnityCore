@@ -45,7 +45,6 @@ namespace LSCore
     {
         [LSOnValueChanged("OnLocalizationKeyChanged", true, "key")]
         [SerializeField] private LocalizationData localizationData;
-        private object[] arguments;
         
         public void SetLocalizationData(LocalizationData localizationData)
         {
@@ -113,7 +112,7 @@ namespace LSCore
         public void Localize(string key, params object[] args)
         {
             m_text = string.Empty;
-            arguments = args;
+            localizationData.arguments = args;
             localizationData.key = key;
             UpdateLocalizedTextOrUpdateTable();
         }
@@ -123,7 +122,7 @@ namespace LSCore
         private void UpdateLocalizedText()
         {
             var lastText = m_text;
-            localizedText = localizationData.key.Translate(Table, arguments);
+            localizedText = localizationData.key.Translate(Table, localizationData.arguments);
             base.text = localizedText;
             m_text = lastText;
         }
