@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using LSCore.Attributes;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -15,13 +15,49 @@ using UnityEditor;
 namespace LSCore
 {
     [Serializable]
+    [Unwrap]
+    public class Int : ILocalizationArgument
+    {
+        public int value;
+        public override string ToString() => value.ToString();
+    }
+
+    [Serializable]
+    [Unwrap]
+    public class String : ILocalizationArgument
+    {
+        public string value;
+        public override string ToString() => value;
+    }
+
+    public interface ILocalizationArgument { }
+    
+    //Example
+    /*public class HealthOfUnit : ILocalizationArgument
+    {
+        public Id id;
+        public LevelsManager levelsManager;
+        public int  level;
+        public override string ToString()
+        {
+            var unit = levelsManager.GetLevel<Unit>(id, level);
+            unit.RegisterComps();
+            return unit.GetComp<BaseHealthComp>().Health.ToString();
+        }
+    }*/
+
+    [Serializable]
     public struct LocalizationData
     {
+        public SharedTableData tableData;
+
         [ValueDropdown("LocalizationKeys")]
         public string key;
+
+        [SerializeReference] private ILocalizationArgument[] arguments;
+        public object[] rawArguments;
         
-        public SharedTableData tableData;
-        [SerializeReference] public object[] arguments;
+        public object[] Arguments => rawArguments ?? arguments;
         
 #if UNITY_EDITOR
         public IEnumerable<string> LocalizationKeys
@@ -43,19 +79,19 @@ namespace LSCore
     
     public class LocalizationText : LSText
     {
-        [LSOnValueChanged("OnLocalizationKeyChanged", true, "key")]
+        [OnValueChanged("OnLocalizationKeyChanged", true)]
         [SerializeField] private LocalizationData localizationData;
         
         public void SetLocalizationData(LocalizationData localizationData)
         {
             TableData = localizationData.tableData;
-            Localize(localizationData.key, localizationData.arguments);
+            Localize(localizationData.key, localizationData.Arguments);
         }
         
 #if UNITY_EDITOR
-        private void OnLocalizationKeyChanged(string key)
+        private void OnLocalizationKeyChanged()
         {
-            UpdateLocalizedText();
+            UpdateLocalizedTextOrUpdateTable();
         }
 #endif
         public SharedTableData TableData
@@ -112,7 +148,7 @@ namespace LSCore
         public void Localize(string key, params object[] args)
         {
             m_text = string.Empty;
-            localizationData.arguments = args;
+            localizationData.rawArguments = args;
             localizationData.key = key;
             UpdateLocalizedTextOrUpdateTable();
         }
@@ -122,7 +158,7 @@ namespace LSCore
         private void UpdateLocalizedText()
         {
             var lastText = m_text;
-            localizedText = localizationData.key.Translate(Table, localizationData.arguments);
+            localizedText = localizationData.key.Translate(Table, localizationData.Arguments);
             base.text = localizedText;
             m_text = lastText;
         }
