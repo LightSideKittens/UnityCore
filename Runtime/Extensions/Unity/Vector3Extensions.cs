@@ -4,6 +4,14 @@ namespace LSCore.Extensions.Unity
 {
     public static class Vector3Extensions
     {
+        public static Vector3 RotateAroundPivot(this Vector3 point, Vector3 pivot, Vector3 eulerAngles)
+        {
+            Vector3 direction = point - pivot;
+            Quaternion rotation = Quaternion.Euler(eulerAngles);
+            direction = rotation * direction;
+            return pivot + direction;
+        }
+        
         public static void ClampX(this ref Vector3 target, in float min, in float max)
         {
             target.x = Mathf.Clamp(target.x, min, max);

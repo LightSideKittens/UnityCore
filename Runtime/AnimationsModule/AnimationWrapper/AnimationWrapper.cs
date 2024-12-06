@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LSCore.Attributes;
 using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
@@ -87,6 +88,29 @@ namespace LSCore.AnimationsModule
         {
             animation = GetComponent<Animation>();
         }
+
+#if UNITY_EDITOR
+        private void OnDrawGizmos()
+        {
+            var selection = Selection.activeGameObject;
+            if (selection != null && selection.transform.IsChildOf(transform))
+            {
+                foreach (var handler in handlers)
+                {
+                    handler.DrawGizmos();
+                }   
+            }
+        }
+
+        [SceneGUI]
+        private void OnSceneGUI()
+        {
+            foreach (var handler in handlers)
+            {
+                handler.OnSceneGUI();
+            }
+        }
+#endif
         
         public void Call(string expression)
         {

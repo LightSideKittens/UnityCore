@@ -16,7 +16,8 @@ namespace LSCore.BattleModule
         private MaterialPropertyBlock block;
         private Animatable.HealthBar healthBar;
         private static readonly int exposure = Shader.PropertyToID("_Exposure");
-        private static readonly Vector3 shakeStrength = new Vector3(0.15f, 0.15f, 0); 
+        private static readonly Vector3 shakeStrength = new Vector3(0.15f, 0.15f, 0);
+        
         
         protected override void OnInit()
         {

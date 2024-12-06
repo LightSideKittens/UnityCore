@@ -1,5 +1,6 @@
 ﻿using System;
 using Sirenix.OdinInspector;
+using UnityEditor;
 
 namespace LSCore.AnimationsModule
 {
@@ -48,6 +49,21 @@ namespace LSCore.AnimationsModule
             public abstract void Handle();
             protected virtual void OnStart(){}
             protected virtual void OnStop(){}
+
+#if UNITY_EDITOR
+            [ShowInInspector] private bool gizmos;
+            
+            public void DrawGizmos()
+            {
+                if (gizmos)
+                {
+                    OnDrawGizmos();
+                }
+            }
+            
+            protected virtual void OnDrawGizmos(){}
+            public virtual void OnSceneGUI(){}
+#endif
         }
         
         [Serializable]
