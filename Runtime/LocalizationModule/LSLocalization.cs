@@ -1,4 +1,8 @@
-﻿using UnityEngine.Localization.Settings;
+﻿using System;
+using System.Globalization;
+using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
@@ -7,6 +11,42 @@ namespace LSCore
     public static class LSLocalization
     {
         public static string MissedText = "Oops...";
+        private static Locale locale;
+
+        private static Locale Locale
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (World.IsEditMode)
+                {
+                    return LocalizationSettings.ProjectLocale;
+                }
+#endif
+                return locale;
+            }
+        }
+        
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Init()
+        {
+            if (LocalizationSettings.SelectedLocaleAsync.IsDone)
+            {
+                locale = LocalizationSettings.SelectedLocaleAsync.Result;
+            }
+            else
+            {
+                LocalizationSettings.SelectedLocaleAsync.OnComplete(x => locale = x);
+            }
+
+            LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
+            LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
+        }
+
+        private static void OnLocaleChanged(Locale newLocale)
+        {
+            locale = newLocale;
+        }
         
         public static string Translate(this string key, StringTable table, params object[] args)
         {
@@ -15,20 +55,45 @@ namespace LSCore
         
         public static string Translate(this string key, StringTable table, string missedText, params object[] args)
         {
-            var text = table?.GetEntry(key)?.GetLocalizedString();
-            if (text != null)
+            if (key == null)
             {
-                if (args != null)
-                {
-                    text = string.Format(text, args);
-                }
+#if UNITY_EDITOR
+                if (World.IsEditMode) return "Key is null";
+#endif
+                return missedText;
             }
-            else
+
+            if (table == null)
             {
-                text = missedText;
+#if UNITY_EDITOR
+                if (World.IsEditMode) return "StringTable is null";
+#endif
+                return missedText;
             }
             
-            return text;
+            var text = table.GetEntry(key)?.Value;
+            if (text != null)
+            {
+                if (args is { Length: > 0 })
+                {
+                    try
+                    {
+                        var culture = Locale.Identifier.CultureInfo ?? CultureInfo.InvariantCulture;
+                        text = string.Format(culture, text, args);
+                    }
+                    catch(Exception e)
+                    {
+                        text = e.ToString();
+                    }
+                }
+                
+                return text;
+            }
+            
+#if UNITY_EDITOR
+            if (World.IsEditMode) return $"No value for key {key}";
+#endif
+            return missedText;
         }
 
         public static AsyncOperationHandle<StringTable> GetStringTableAsync(this SharedTableData tableData, out TableReference tableReference)

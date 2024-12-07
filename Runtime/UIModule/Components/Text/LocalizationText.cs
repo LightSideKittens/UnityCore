@@ -55,6 +55,10 @@ namespace LSCore
         public string key;
 
         [SerializeReference] private ILocalizationArgument[] arguments;
+#if UNITY_EDITOR
+        [ReadOnly] [ShowInInspector] [HideLabel] [MultiLineProperty] internal string text;
+#endif
+        
         public object[] rawArguments;
         
         public object[] Arguments => rawArguments ?? arguments;
@@ -80,7 +84,8 @@ namespace LSCore
     public class LocalizationText : LSText
     {
         [OnValueChanged("OnLocalizationKeyChanged", true)]
-        [SerializeField] private LocalizationData localizationData;
+        [SerializeField]
+        internal LocalizationData localizationData;
         
         public void SetLocalizationData(LocalizationData localizationData)
         {
@@ -91,7 +96,7 @@ namespace LSCore
 #if UNITY_EDITOR
         private void OnLocalizationKeyChanged()
         {
-            UpdateLocalizedTextOrUpdateTable();
+            UpdateLocalizedText();
         }
 #endif
         public SharedTableData TableData
@@ -107,7 +112,6 @@ namespace LSCore
             }
         }
         
-        private Locale currentLocale;
         private StringTable table;
         public StringTable Table
         {
@@ -116,6 +120,7 @@ namespace LSCore
 #if UNITY_EDITOR
                 if (World.IsEditMode)
                 {
+                    if (localizationData.tableData == null) return null;
                     table = AssetDatabaseUtils.LoadAny<StringTable>($"{localizationData.tableData.TableCollectionName}_{LocalizationSettings.ProjectLocale.Identifier.Code}");
                 }
 #endif
@@ -133,12 +138,6 @@ namespace LSCore
                         return;
                     }
 #endif
-                    if (currentLocale != null && currentLocale != LocalizationSettings.SelectedLocale)
-                    {
-                        LocalizationSettings.StringDatabase.ReleaseTable(lastTableRef, currentLocale);
-                    }
-                    
-                    currentLocale = LocalizationSettings.SelectedLocale;
                     table = value;
                     UpdateLocalizedText();
                 }
@@ -150,30 +149,20 @@ namespace LSCore
             m_text = string.Empty;
             localizationData.rawArguments = args;
             localizationData.key = key;
-            UpdateLocalizedTextOrUpdateTable();
+            UpdateLocalizedText();
         }
 
         private string localizedText;
         
         private void UpdateLocalizedText()
         {
+            if(!IsLocalized) return;
+            
             var lastText = m_text;
             localizedText = localizationData.key.Translate(Table, localizationData.Arguments);
             base.text = localizedText;
             m_text = lastText;
         }
-        
-        private void UpdateLocalizedTextOrUpdateTable()
-        {
-            if (Table == null)
-            {
-                UpdateTable();
-                return;
-            }
-
-            UpdateLocalizedText();
-        }
-
         
         public bool IsLocalized => !string.IsNullOrEmpty(localizationData.key);
         
@@ -222,57 +211,63 @@ namespace LSCore
         protected override void Awake()
         {
             base.Awake();
+            LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
             UpdateTable();
+            
 #if UNITY_EDITOR
             if (World.IsEditMode)
             {
-                UpdateLocalizedTextOrUpdateTable();
+                UpdateLocalizedText();
             }
 #endif
         }
 
         protected override void OnDestroy()
         {
-            base.OnDestroy();
-#if UNITY_EDITOR
-            if (World.IsEditMode) return;
-#endif
-            if (table != null)
-            {
-                LocalizationSettings.StringDatabase.ReleaseTable(lastTableRef);
-            }
-        }
-
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
-        }
-
-        protected override void OnDisable()
-        {
-            base.OnDisable();
             LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+            releaseAction?.Invoke();
+            base.OnDestroy();
         }
 
         private void OnSelectedLocaleChanged(Locale _)
         {
-            if (IsLocalized)
-            {
-                UpdateTable();
-            }
+            UpdateTable();
         }
         
-        private TableReference lastTableRef;
+        private Action releaseAction;
+        private bool isTableLoading;
         
         private void UpdateTable()
         {
-            if (!IsLocalized) return;
-            
 #if UNITY_EDITOR
             if (World.IsEditMode) return;
 #endif
-            localizationData.tableData.GetStringTableAsync(out lastTableRef).OnComplete(t => Table = t);
+            
+            if (isTableLoading) return;
+            if (!IsLocalized) return;
+            
+            isTableLoading = true;
+            TableReference tableRef = default;
+            Locale locale = null;
+            
+            if (LocalizationSettings.SelectedLocaleAsync.IsDone)
+            {
+                locale = LocalizationSettings.SelectedLocaleAsync.Result;
+            }
+            else
+            {
+                LocalizationSettings.SelectedLocaleAsync.OnComplete(x => locale = x);
+            }
+            releaseAction?.Invoke();
+            releaseAction = () =>
+            {
+                LocalizationSettings.StringDatabase.ReleaseTable(tableRef, locale);
+            };
+            localizationData.tableData.GetStringTableAsync(out tableRef).OnComplete(t =>
+            {
+                isTableLoading = false;
+                Table = t;
+            });
         }
     }
     
@@ -282,10 +277,12 @@ namespace LSCore
     public class LocalizationTextEditor : LSTextEditor
     {
         private InspectorProperty localizationData;
+        private LocalizationText localizationText;
         
         protected override void OnEnable()
         {
             base.OnEnable();
+            localizationText = (LocalizationText)target;
             localizationData = propertyTree.RootProperty.Children["localizationData"];
         }
         
@@ -297,6 +294,7 @@ namespace LSCore
         private void TextOnInspector()
         {
             propertyTree.BeginDraw(true);
+            localizationText.localizationData.text = text.text;
             localizationData.Draw();
             propertyTree.EndDraw();
             base.OnInspectorGUI();
