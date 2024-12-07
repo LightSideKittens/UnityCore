@@ -15,6 +15,17 @@ using UnityEditor;
 namespace LSCore
 {
     [Serializable]
+    public class ChangeLocale : LSAction
+    {
+        public Locale locale;
+
+        public override void Invoke()
+        {
+            LocalizationSettings.SelectedLocale = locale;
+        }
+    }
+    
+    [Serializable]
     [Unwrap]
     public class Int : ILocalizationArgument
     {
@@ -259,10 +270,7 @@ namespace LSCore
                 LocalizationSettings.SelectedLocaleAsync.OnComplete(x => locale = x);
             }
             releaseAction?.Invoke();
-            releaseAction = () =>
-            {
-                LocalizationSettings.StringDatabase.ReleaseTable(tableRef, locale);
-            };
+            releaseAction = () => LocalizationSettings.StringDatabase.ReleaseTable(tableRef, locale);
             localizationData.tableData.GetStringTableAsync(out tableRef).OnComplete(t =>
             {
                 isTableLoading = false;
