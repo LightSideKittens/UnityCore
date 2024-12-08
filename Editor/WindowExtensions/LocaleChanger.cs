@@ -17,12 +17,20 @@ public static class LocaleChanger
     {
         if (GUILayout.Button(LocalizationSettings.ProjectLocale.ToString(), GUILayout.MaxWidth(100)))
         {
-            PopupWindow.Show(GUILayoutUtility.GetLastRect().Expand(0, 30), new NavigationPopup());
+            PopupWindow.Show(GUILayoutUtility.GetLastRect(), new NavigationPopup());
         }
     }
     
     private class NavigationPopup : PopupWindowContent
     {
+        public override Vector2 GetWindowSize()
+        {
+            var size = base.GetWindowSize();
+            size.x += 15;
+            size.y += 300;
+            return size;
+        }
+
         private Vector2 scrollPosition;
         public override void OnGUI(Rect rect)
         {
