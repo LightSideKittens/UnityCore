@@ -239,9 +239,27 @@ namespace LSCore
             releaseAction?.Invoke();
             base.OnDestroy();
         }
-
+#if UNITY_EDITOR
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+            if (didAwake)
+            {
+                LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+                LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+                LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
+            }
+        }
+#endif
         private void OnSelectedLocaleChanged(Locale _)
         {
+#if UNITY_EDITOR
+            if (World.IsEditMode)
+            {
+                UpdateLocalizedText();
+                return;
+            }
+#endif
             UpdateTable();
         }
         
