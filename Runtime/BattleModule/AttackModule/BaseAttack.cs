@@ -83,6 +83,7 @@ namespace LSCore
         }
         
         protected abstract Tween Attack();
+        public abstract void Stop();
         
         public virtual void OnAttackCompleted() { }
 

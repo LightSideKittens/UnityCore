@@ -15,6 +15,8 @@ public static class LocaleChanger
 
     private static void OnGUI()
     {
+        var i = LocalizationSettings.InitializationOperation;
+        if(LocalizationSettings.ProjectLocale == null) return;
         if (GUILayout.Button(LocalizationSettings.ProjectLocale.ToString(), GUILayout.MaxWidth(100)))
         {
             PopupWindow.Show(GUILayoutUtility.GetLastRect(), new NavigationPopup());
@@ -34,7 +36,6 @@ public static class LocaleChanger
         private Vector2 scrollPosition;
         public override void OnGUI(Rect rect)
         {
-            var s = LocalizationSettings.SelectedLocaleAsync;
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
             foreach (var locale in LocalizationSettings.AvailableLocales.Locales)
             {

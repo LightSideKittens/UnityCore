@@ -1,4 +1,5 @@
 ﻿using System;
+using LSCore.BattleModule.States;
 using UnityEngine;
 
 namespace LSCore.BattleModule
@@ -7,7 +8,14 @@ namespace LSCore.BattleModule
     public abstract class BaseMoveComp : BaseComp
     {
         public float speed;
+        [SerializeReference] private BaseUnitAnim anim;
+        [SerializeField] private State animState;
+        [SerializeField] private State state;
         [NonSerialized] public Rigidbody2D rigidbody;
+        protected UnitStates unitStates;
+        
+        private bool isStateActive;
+        
         public float Speed => speed * Buffs;
         public Buffs Buffs { get; private set; }
 
@@ -21,13 +29,47 @@ namespace LSCore.BattleModule
             rigidbody.position = transform.position;
             Buffs = new Buffs();
             data.reset += Buffs.Reset;
+            unitStates = transform.Get<UnitStates>();
+            unitStates.StateEnabled += OnStateEnabled;
+            unitStates.StateDisabled += OnStateDisabled;
+        }
+
+        private void OnStateEnabled(State obj)
+        {
+            SetState(obj, true);
+        }
+
+        private void OnStateDisabled(State obj)
+        {
+            SetState(obj, false);
+        }
+
+        private void SetState(State obj, bool active)
+        {
+            if (obj.Equals(state))
+            {
+                isStateActive = active;
+            }
+            else if(obj.Equals(animState))
+            {
+                if (active) anim.Animate();
+                else anim.Stop();
+            }
         }
 
         protected abstract void Move();
 
         protected override void FixedUpdate()
         {
-            Move();
+            if (!unitStates.TrySetState(animState))
+            {
+                unitStates.TrySetState(state);
+            }
+            
+            if (isStateActive)
+            {
+                Move();
+            }
         }
     }
     

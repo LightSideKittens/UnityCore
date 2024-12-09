@@ -24,5 +24,11 @@ namespace LSCore.AnimationsModule
                 isPlayCalled = true;
             }
         }
+        
+        public void Stop(string clipName = null)
+        {
+            animation.Stop(clipName);
+            StopHandlers();
+        }
     }
 }

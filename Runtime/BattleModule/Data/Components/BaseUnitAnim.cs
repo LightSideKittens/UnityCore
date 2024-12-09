@@ -4,31 +4,29 @@ using System.Linq;
 using DG.Tweening;
 using LSCore.AnimationsModule;
 using LSCore.Async;
+using LSCore.Attributes;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace LSCore
+namespace LSCore.BattleModule
 {
     [Serializable]
-    public class AttackToTarget : BaseAttack
+    [HideReferenceObjectPicker]
+    [TypeFrom]
+    public abstract class BaseUnitAnim
+    {
+        public abstract Tween Animate();
+        public abstract void Stop();
+    }
+
+    [Serializable]
+    public class TweenUnitAnim : BaseUnitAnim
     {
         [SerializeField] private AnimSequencer anim;
-        [NonSerialized] public bool inRadius;
-        [NonSerialized] public Transform target;
         private Tween tween;
         
-        public override bool AttackCondition
+        public override Tween Animate()
         {
-            get
-            {
-                inRadius = findTargetComp.Find(out target);
-                return inRadius;
-            }
-        }
-
-        protected override Tween Attack()
-        {
-            anim.ResolveBinds("target", target);
             tween = anim.Animate();
             return tween;
         }
@@ -40,21 +38,19 @@ namespace LSCore
     }
     
     [Serializable]
-    public class AttackToTargetAnimation : BaseAttack
+    public class AnimationUnitAnim : BaseUnitAnim
     {
         [HideIf("@animation != null")]
         [SerializeField] private AnimationWrapper wrapper;
         [HideIf("@wrapper != null")]
-        [SerializeField] private Animation animation;
+        [SerializeField] private UnityEngine.Animation animation;
         
         [ValueDropdown("Clips")]
         [SerializeField] private AnimationClip clip;
-        [NonSerialized] public bool inRadius;
-        [NonSerialized] public Transform target;
 
         private IEnumerable<AnimationClip> Clips => from AnimationState state in Anim select state.clip;
 
-        private Animation Anim
+        private UnityEngine.Animation Anim
         {
             get
             {
@@ -62,17 +58,8 @@ namespace LSCore
                 return wrapper.Animation;
             }
         }
-
-        public override bool AttackCondition
-        {
-            get
-            {
-                inRadius = findTargetComp.Find(out target);
-                return inRadius;
-            }
-        }
-
-        protected override Tween Attack()
+        
+        public override Tween Animate()
         {
             var tween = Wait.Delay(clip.length);
             Play();
