@@ -70,6 +70,7 @@ namespace LSCore
         [ReadOnly] [ShowInInspector] [HideLabel] [MultiLineProperty] internal string text;
 #endif
         
+        [ShowInInspector]
         public object[] rawArguments;
         
         public object[] Arguments => rawArguments ?? arguments;
@@ -102,6 +103,7 @@ namespace LSCore
         {
             TableData = localizationData.tableData;
             Localize(localizationData.key, localizationData.Arguments);
+            if (!isTableLoading && table == null) UpdateTable();
         }
         
 #if UNITY_EDITOR
