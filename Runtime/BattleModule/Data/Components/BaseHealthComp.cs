@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using LSCore.BattleModule.States;
 using UnityEngine;
 
 namespace LSCore.BattleModule
@@ -15,12 +16,19 @@ namespace LSCore.BattleModule
         [NonSerialized] public bool isImmune;
         public event Action Killed;
 
+        [SerializeReference] private BaseUnitAnim killAnim;
+        [SerializeField] private State killState;
+        [SerializeReference] private BaseUnitAnim aliveAnim;
+        [SerializeField] private State aliveState;
+        protected UnitStates unitStates; 
+
         protected override void OnRegister() => Reg(this);
         protected override void Init()
         {
             data.onInit += OnInit;
             data.reset += Reset;
             data.enable += OnEnable;
+            unitStates = transform.Get<UnitStates>();
         }
 
         protected virtual void OnEnable()
@@ -77,9 +85,31 @@ namespace LSCore.BattleModule
 
         protected virtual void OnDamageTaken(float damage) { }
         protected virtual void OnHealTaken(float heal) { }
-        protected virtual Tween OnAlive() => null;
-        protected virtual Tween OnKilled() => null;
-        
+        protected virtual Tween OnAlive()
+        {
+            unitStates.RemoveState(killState);
+            var tween = aliveAnim?.Animate();
+            if (tween != null)
+            {
+                unitStates.TrySetState(aliveState);
+                tween.onComplete += () => { unitStates.RemoveState(aliveState); };
+            }
+            killAnim?.Stop();
+            return tween;
+        }
+
+        protected virtual Tween OnKilled()
+        {
+            unitStates.RemoveState(aliveState);
+            var tween = killAnim?.Animate();
+            if (tween != null)
+            {
+                unitStates.TrySetState(killState);
+            }
+            aliveAnim?.Stop();
+            return tween;
+        }
+
         public void Heal(int heal)
         {
             if (isImmune) return;

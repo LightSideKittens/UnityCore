@@ -73,6 +73,6 @@ namespace LSCore.BattleModule
         
         protected virtual void OnRegister() { }
         
-        protected abstract void Init();
+        protected virtual void Init() {}
     }
 }

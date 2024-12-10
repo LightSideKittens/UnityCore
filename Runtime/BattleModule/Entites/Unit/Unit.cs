@@ -14,7 +14,7 @@ namespace LSCore.BattleModule
         {
             new HealthComp(),
             new MoveComp(),
-            new AutoAttackComponent()
+            new AttackComp()
         };
         
         private readonly CompData compData = new();

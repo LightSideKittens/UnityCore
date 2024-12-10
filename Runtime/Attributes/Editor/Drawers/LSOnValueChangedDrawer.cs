@@ -5,17 +5,12 @@ using Sirenix.OdinInspector.Editor;
 using UnityEngine;
 
 [DrawerPriority(DrawerPriorityLevel.SuperPriority)]
-public sealed class LSOnValueChangedAttributeDrawer<T> :
+public class LSOnValueChangedAttributeDrawer<T> :
     OdinAttributeDrawer<LSOnValueChangedAttribute, T>,
     IDisposable
 {
     private ActionResolver onChangeAction;
     private bool subscribedToOnUndoRedo;
-
-    private object Get(ref ActionResolverContext xxx, int d)
-    {
-        return null;
-    }
     
     protected override void Initialize()
     {
