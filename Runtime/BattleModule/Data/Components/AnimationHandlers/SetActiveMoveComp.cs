@@ -11,9 +11,9 @@ namespace LSCore.BattleModule.Animation
         public BaseMoveComp moveComp;
         
         protected override string Label => "Active";
-        protected override bool IsRuntimeOnly => true;
+        protected override bool CanUse => !AnimationTestMode.Is && !World.IsEditMode;
         private bool startValue;
-
+        
         protected override void OnStart()
         {
             base.OnStart();
