@@ -19,6 +19,8 @@ public abstract class LSAction<T>
     public abstract void Invoke(T value);
 }
 
+public abstract class BoolAction : LSAction<bool> { }
+
 public static class LSActionExtensions
 {
     public static void Invoke(this IEnumerable<LSAction> actions)

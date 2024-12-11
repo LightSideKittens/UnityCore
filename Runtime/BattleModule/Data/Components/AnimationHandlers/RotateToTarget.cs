@@ -18,6 +18,7 @@ namespace LSCore.BattleModule.Animation
         private Quaternion targetRotation;
 
 #if UNITY_EDITOR
+        public bool forceUseTarget;
         [LabelText("Target for Editor testing")]
         public Transform target;
 #endif
@@ -29,7 +30,7 @@ namespace LSCore.BattleModule.Animation
             get
             {
 #if UNITY_EDITOR
-                if (target != null)
+                if (target != null || forceUseTarget)
                 {
                     return target;
                 }
@@ -51,7 +52,7 @@ namespace LSCore.BattleModule.Animation
             
             if (
 #if UNITY_EDITOR
-            target != null &&
+            target != null && !forceUseTarget &&
 #endif
                 World.IsPlaying)
             {

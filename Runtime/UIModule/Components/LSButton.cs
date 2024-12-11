@@ -29,13 +29,23 @@ namespace LSCore
 
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
         {
+            if (!eventData.IsFirstTouch()) return;
             clickActions?.OnClick();
             anim.OnClick();
             Clicked?.Invoke();
         }
 
-        void IPointerDownHandler.OnPointerDown(PointerEventData eventData) => anim.OnPointerDown(); 
-        void IPointerUpHandler.OnPointerUp(PointerEventData eventData) => anim.OnPointerUp();
+        void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
+        {
+            if (!eventData.IsFirstTouch()) return;
+            anim.OnPointerDown();
+        }
+
+        void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
+        {
+            if (!eventData.IsFirstTouch()) return;
+            anim.OnPointerUp();
+        }
 
         protected override void OnDisable()
         {

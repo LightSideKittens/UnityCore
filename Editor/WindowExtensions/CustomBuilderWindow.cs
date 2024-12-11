@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using LSCore.Editor;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEngine;
 using UnityToolbarExtender;
 using Debug = UnityEngine.Debug;
@@ -53,13 +54,15 @@ public static class CustomBuilder
             var buildTarget = EditorUserBuildSettings.activeBuildTarget;
             BuildTargetGroup buildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
             BuildOptions buildOptions = BuildOptions.None;
-        
+            var stacktraceInfo = Il2CppStacktraceInformation.MethodOnly;
+
             if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
             {
                 if (mode == BuildMode.Debug)
                 {
                     Defines.Enable("DEBUG");
                     buildOptions |= BuildOptions.CompressWithLz4;
+                    stacktraceInfo = Il2CppStacktraceInformation.MethodFileLineNumber;
                 }
                 else
                 {
@@ -72,6 +75,7 @@ public static class CustomBuilder
                 buildOptions |= BuildOptions.SymlinkSources;
             }
 
+            PlayerSettings.SetIl2CppStacktraceInformation(NamedBuildTarget.FromBuildTargetGroup(buildTargetGroup), stacktraceInfo);
             var date = DateTime.UtcNow;
             var buildPath = $"{LSPaths.ProjectPath}/Builds/{buildTarget}";
 

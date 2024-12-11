@@ -14,7 +14,7 @@ namespace LSCore
     public class LSToggle : LSImage, IPointerClickHandler, IToggle
     {
         [SerializeReference] public ShowHideAnim onOffAnim = new InOutShowHideAnim();
-        [SerializeField] private ClickActions clickedActions;
+        [SerializeField] private ClickActions clickActions;
         [SerializeReference] public List<LSAction> on = new();
         [SerializeReference] public List<LSAction> off = new();
         [SerializeField] private bool isOn;
@@ -95,7 +95,8 @@ namespace LSCore
         
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
         {
-            clickedActions.OnClick();
+            if(!eventData.IsFirstTouch()) return;
+            clickActions.OnClick();
             ForceSetState(!isOn);
             Notify();
             Clicked?.Invoke();
@@ -119,7 +120,7 @@ namespace LSCore
         protected override void Start()
         {
             base.Start();
-            clickedActions.Init();
+            clickActions.Init();
         }
 
         protected override void OnDidApplyAnimationProperties()
