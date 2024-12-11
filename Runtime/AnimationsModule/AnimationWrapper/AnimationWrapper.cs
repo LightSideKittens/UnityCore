@@ -77,7 +77,7 @@ namespace LSCore.AnimationsModule
         [SerializeReference] public List<Handler> handlers;
         [PropertySpace(SpaceBefore = 10)]
         [SerializeReference] private List<LSAction> actions;
-        private Animation animation;
+        private new Animation animation;
         
         private AnimationClip lastRuntimeClip;
         private AnimationClip lastClip;

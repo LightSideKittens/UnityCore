@@ -39,3 +39,21 @@ public static class Burger
         return text;
     }
 }
+
+public struct DisableLog : System.IDisposable
+{
+    private bool lastValue;
+    private ILogger logger;
+
+    public DisableLog(ILogger logger)
+    {
+        lastValue = logger.logEnabled;
+        logger.logEnabled = false;
+        this.logger = logger;
+    }
+    
+    public void Dispose()
+    {
+        logger.logEnabled = lastValue;
+    }
+}

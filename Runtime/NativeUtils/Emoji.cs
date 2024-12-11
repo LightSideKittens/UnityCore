@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ namespace LSCore.NativeUtils
         public string imagePath;
     }
 
-    public  static partial class Emoji
+    public static partial class Emoji
     {
         private static string packageName = "com.lscore.emoji";
         private static AndroidJavaClass textRenderer;
@@ -37,12 +38,40 @@ namespace LSCore.NativeUtils
             }
         }
 
+        private static Dictionary<string, Texture2D> cachedTextures = new();
+        private static Texture2D[] texturesArr = new Texture2D[100];
+
         /// <summary>
         /// Вызывает parseEmojis у плагина и возвращает массив EmojiRange.
         /// text - текст для анализа
         /// saveDirPath - путь к директории, где будут сохранены PNG-файлы эмодзи
         /// </summary>
-        public static EmojiRange[] ParseEmojis(string text, string saveDirPath)
+        public static EmojiRange[] ParseEmojis(string text, string saveDirPath, out Texture2D[] textures)
+        {
+            var result = GetArray(text, saveDirPath);
+            int i = 0;
+            
+            for (; i < result.Length; i++)
+            {
+                var entry = result[i];
+                var path = entry.imagePath;
+                
+                if (!cachedTextures.TryGetValue(path, out Texture2D texture))
+                {
+                    texture = new Texture2D(2, 2);
+                    texture.LoadImage(File.ReadAllBytes(path));
+                    texture.hideFlags = HideFlags.DontSave;
+                    cachedTextures[path] = texture;
+                }
+                
+                texturesArr[i] = texture;
+            }
+            
+            textures = texturesArr[..i];
+            return result;
+        }
+        
+        public static EmojiRange[] GetArray(string text, string saveDirPath)
         {
 #if UNITY_EDITOR
             if (Application.isEditor)

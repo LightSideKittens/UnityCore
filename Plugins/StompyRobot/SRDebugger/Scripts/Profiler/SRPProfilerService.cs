@@ -1,4 +1,6 @@
-﻿#if UNITY_2018_1_OR_NEWER
+﻿using System.Collections.Generic;
+
+#if UNITY_2018_1_OR_NEWER
 
 namespace SRDebugger.Profiler
 {
@@ -50,7 +52,7 @@ namespace SRDebugger.Profiler
             CachedTransform.SetParent(Hierarchy.Get("SRDebugger"), true);
 
 #if UNITY_2019_3_OR_NEWER
-            RenderPipelineManager.beginFrameRendering += RenderPipelineOnBeginFrameRendering;
+            RenderPipelineManager.beginContextRendering += RenderPipelineOnBeginFrameRendering;
 #else
             RenderPipeline.beginFrameRendering += RenderPipelineOnBeginFrameRendering;
 #endif
@@ -112,7 +114,7 @@ namespace SRDebugger.Profiler
         }
 
 #if UNITY_2019_3_OR_NEWER
-        private void RenderPipelineOnBeginFrameRendering(ScriptableRenderContext context, Camera[] cameras)
+        private void RenderPipelineOnBeginFrameRendering(ScriptableRenderContext context, List<Camera> list)
 #else
         private void RenderPipelineOnBeginFrameRendering(Camera[] obj)
 #endif

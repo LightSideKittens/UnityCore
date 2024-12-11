@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using LSCore.NativeUtils;
 using TMPro;
 using UnityEngine;
@@ -13,11 +14,67 @@ namespace LSCore
 {
     public class LSText : TextMeshProUGUI
     {
+        public static OnOffPool<EmojiImage> EmojiImagePool => OnOffPool<EmojiImage>.GetOrCreatePool(emojiImagePrefab);
+        private static EmojiImage emojiImagePrefab;
+        private static Transform currentParent;
         private EmojiRange[] emojis;
+        private Texture2D[] textures;
+        private Action releaseEmojiImages;
 
+#if UNITY_EDITOR
+        static LSText()
+        {
+            World.Creating += () =>
+            {
+                EmojiImagePool.Created -= OnCreate;
+                emojiImagePrefab = null;
+            };
+            
+            World.Destroyed += () =>
+            {
+                EmojiImagePool.Created -= OnCreate;
+                emojiImagePrefab = null;
+            };
+        }
+#endif
+        
+        private static void OnCreate(EmojiImage rawImage)
+        {
+            rawImage.gameObject.hideFlags = HideFlags.HideAndDontSave;
+            rawImage.transform.SetParent(currentParent);
+        }
+        
         protected override void Awake()
         {
             base.Awake();
+            Init();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            ReleaseAllEmojiImages();
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            ReleaseAllEmojiImages();
+        }
+
+        private void Init()
+        {
+            if (emojiImagePrefab is null)
+            {
+                emojiImagePrefab = new GameObject("EmojiImage").AddComponent<EmojiImage>();
+                emojiImagePrefab.gameObject.hideFlags = HideFlags.HideAndDontSave;
+                EmojiImagePool.Created += OnCreate;
+                if (World.IsPlaying)
+                {
+                    DontDestroyOnLoad(emojiImagePrefab.gameObject);
+                }
+            }
+            
             OnPreRenderText += HandleOnPreRenderText;
         }
         
@@ -28,7 +85,10 @@ namespace LSCore
             
             OnPreRenderText -= HandleOnPreRenderText;
             OnPreRenderText -= HandleOnPreRenderText;
-            OnPreRenderText += HandleOnPreRenderText;
+            if (World.IsEditMode)
+            {
+                Init();
+            }
         }
 #endif
 
@@ -56,15 +116,18 @@ namespace LSCore
 
         private void ModifyText()
         {
-            emojis = Emoji.ParseEmojis(m_text, Path.Combine(Application.persistentDataPath, "Emojis"));
+            emojis = Emoji.ParseEmojis(m_text, Path.Combine(Application.persistentDataPath, "Emojis"), out textures);
             m_text = Emoji.ReplaceWithEmojiRanges(m_text, emojis, "\ue000\u200b");
         }
 
         private void HandleOnPreRenderText(TMP_TextInfo textInfo)
         {
+            ReleaseAllEmojiImages();
             var clear = new Color32(0, 0, 0, 0);
-            foreach (var emoji in emojis)
+
+            for (int i = 0; i < emojis.Length; i++)
             {
+                var emoji = emojis[i];
                 int charIndexToHide = emoji.index;
                 
                 if (charIndexToHide < 0 || charIndexToHide >= textInfo.characterCount) return;
@@ -78,39 +141,39 @@ namespace LSCore
                 
                 var vertexColors = meshInfo.colors32;
                 
-                for (int i = 0; i < 4; i++)
+                for (int x = 0; x < 4; x++)
                 {
-                    vertexColors[vertexIndex + i] = clear;
+                    vertexColors[vertexIndex + x] = clear;
                 }
 
-                CreateRawImageForChar(charInfo);
+                CreateRawImageForChar(charInfo, i);
             }
         }
         
-        private void CreateRawImageForChar(TMP_CharacterInfo charInfo)
+        private void CreateRawImageForChar(TMP_CharacterInfo charInfo, int i)
         {
-            // Создаем новый объект RawImage внутри текущего GameObject
-            GameObject rawImageObj = new GameObject("Emoji");
-            rawImageObj.transform.SetParent(transform);
+            currentParent = transform;
+            var rawImage = EmojiImagePool.Get();
+            releaseEmojiImages += () => EmojiImagePool.Release(rawImage);
 
-            // Добавляем компонент RawImage
-            RawImage rawImage = rawImageObj.AddComponent<EmojiImage>();
-            //rawImage.texture = emojiTexture;
-
-            // Получаем размеры символа
+            rawImage.texture = textures[i];
             Vector3 bottomLeft = charInfo.bottomLeft;
             Vector3 topRight = charInfo.topRight;
-
-            // Настраиваем RectTransform RawImage
-            RectTransform rectTransform = rawImage.GetComponent<RectTransform>();
-            rectTransform.localPosition = Vector3.zero; // Локальная позиция относительно родителя
-            rectTransform.sizeDelta = new Vector2(topRight.x - bottomLeft.x, topRight.y - bottomLeft.y); // Устанавливаем размер RawImage
-
-            // Смещаем RawImage на позицию символа
+            
+            RectTransform r = rawImage.rectTransform;
+            r.localPosition = Vector3.zero;
+            r.sizeDelta = new Vector2(topRight.x - bottomLeft.x, topRight.y - bottomLeft.y);
+            
             Vector3 charPosition = (bottomLeft + topRight) / 2;
-            rectTransform.anchoredPosition = new Vector2(charPosition.x, charPosition.y);
+            r.anchoredPosition = new Vector2(charPosition.x, charPosition.y);
+            
+            r.localScale = Vector3.one;
+        }
 
-            rectTransform.localScale = Vector3.one; // Убедитесь, что масштаб нормальный
+        private void ReleaseAllEmojiImages()
+        {
+            releaseEmojiImages?.Invoke();
+            releaseEmojiImages = null;
         }
     }
     

@@ -69,7 +69,6 @@ namespace LSCore
     [CustomEditor(typeof(FundText), true), CanEditMultipleObjects]
     public class FundTextEditor : LSNumberEditor
     {
-        private PropertyTree propertyTree;
         private InspectorProperty id;
         private InspectorProperty changeTextColorIfNotEnough;
         private InspectorProperty enoughColorId;
@@ -78,7 +77,6 @@ namespace LSCore
         protected override void OnEnable()
         {
             base.OnEnable();
-            propertyTree = PropertyTree.Create(serializedObject);
             var children = propertyTree.RootProperty.Children;
             
             id = children["<Id>k__BackingField"];

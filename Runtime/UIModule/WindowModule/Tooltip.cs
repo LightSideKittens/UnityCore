@@ -60,6 +60,7 @@ namespace LSCore
                     Direction.Right => right,
                     Direction.Top => top,
                     Direction.Bottom => bottom,
+                    _ => left
                 };
                 target.sprite = sprite; 
             }
@@ -404,7 +405,8 @@ namespace LSCore
                 Direction.Left => -tr.right,
                 Direction.Right => tr.right,
                 Direction.Top => tr.up,
-                Direction.Bottom => -tr.up
+                Direction.Bottom => -tr.up,
+                _ => Vector3.negativeInfinity
             };
         }
         
@@ -416,6 +418,7 @@ namespace LSCore
                 Direction.Right => new Vector2(1, 0.5f),
                 Direction.Top => new Vector2(0.5f, 1f),
                 Direction.Bottom => new Vector2(0.5f, 0f),
+                _ => Vector2.negativeInfinity
             };
         }
         
@@ -426,7 +429,8 @@ namespace LSCore
                 Direction.Left => 90,
                 Direction.Right => -90,
                 Direction.Top => 0,
-                Direction.Bottom => 180
+                Direction.Bottom => 180,
+                _ => float.NegativeInfinity
             };
         }
 

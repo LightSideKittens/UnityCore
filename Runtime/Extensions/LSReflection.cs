@@ -5,12 +5,12 @@ namespace LSCore.Extensions
 {
     public static class LSReflection
     {
-        private static object GetPrivatePropertyOrField(object obj, string name)
+        private static object GetPrivatePropertyOrField(object obj, string name, Type type)
         {
-            if (obj == null)
-                throw new ArgumentNullException(nameof(obj));
-
-            var type = obj.GetType();
+            if (obj != null)
+            {
+                type = obj.GetType();
+            }
             
             var prop = type.GetProperty(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             if (prop != null)
@@ -33,7 +33,19 @@ namespace LSCore.Extensions
             
             foreach (var name in names)
             {
-                obj = GetPrivatePropertyOrField(obj, name);
+                obj = GetPrivatePropertyOrField(obj, name, null);
+            }
+            return obj;
+        }
+        
+        public static object Eval(Type type, string expression)
+        {
+            var names = expression.Split('.');
+            object obj = null;
+            
+            foreach (var name in names)
+            {
+                obj = GetPrivatePropertyOrField(obj, name, type);
             }
             return obj;
         }

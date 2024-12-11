@@ -18,7 +18,7 @@ namespace Controllers.Support
         }
         private void OnOpenCameraButton()
         {
-            var emojis = Emoji.ParseEmojis(inputField.text, Path.Combine(Application.persistentDataPath, "Emojis"));
+            var emojis = Emoji.ParseEmojis(inputField.text, Path.Combine(Application.persistentDataPath, "Emojis"), out var texs);
             
             for (int i = 0; i < emojis.Length; i++)
             {

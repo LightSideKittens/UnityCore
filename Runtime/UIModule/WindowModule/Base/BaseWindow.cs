@@ -7,11 +7,13 @@ namespace LSCore
     [RequireComponent(typeof(RectTransform))]
     public abstract class BaseWindow<T> : BaseCanvasView<T> where T : BaseWindow<T>
     {
+#pragma warning disable CS0067
         public static event Action Showing;
         public static event Action Hiding;
 
         public static event Action Showed;
         public static event Action Hidden;
+#pragma warning restore CS0067
         
         private static bool isCalledFromStatic;
         
@@ -29,10 +31,10 @@ namespace LSCore
         }
         
         private static string logTag = $"[{typeof(T).Name}]".ToTag(new Color(0f, 0.79f, 0.22f));
-        public static void AsHome() => WindowsData.SetHome(Instance.Manager);
+        public new static void AsHome() => WindowsData.SetHome(Instance.Manager);
         
         [Preserve]
-        public static void Show(ShowWindowOption option)
+        public new static void Show(ShowWindowOption option)
         {
             Burger.Log($"{logTag} Show {option}");
             isCalledFromStatic = true;
@@ -40,7 +42,7 @@ namespace LSCore
             Show();
         }
 
-        public static void Show()
+        public new static void Show()
         {
             Burger.Log($"{logTag} Show");
             isCalledFromStatic = true;

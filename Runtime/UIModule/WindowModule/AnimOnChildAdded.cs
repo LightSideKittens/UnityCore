@@ -10,7 +10,7 @@ namespace LSCore
     [RequireComponent(typeof(ChildrenTracker))]
     public class AnimOnChildAdded : MonoBehaviour
     {
-        public AnimSequencer animation;
+        public new AnimSequencer animation;
         private SizeDeltaAnim sizeAnim;
         private HashSet<IUIView> views = new();
         private ChildrenTracker childrenTracker;

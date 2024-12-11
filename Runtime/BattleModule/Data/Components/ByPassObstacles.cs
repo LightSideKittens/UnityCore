@@ -9,8 +9,8 @@ namespace LSCore.BattleModule
     public class ByPassObstacles : MonoBehaviour
     {
         [SerializeField] public Transform player;
-        [SerializeField] public Transform rigidbody;
-        [SerializeField] public CircleCollider2D collider;
+        [SerializeField] public new Transform rigidbody;
+        [SerializeField] public new CircleCollider2D collider;
         [SerializeField] public LayerMask obstaclesMask;
         [SerializeField] public ContactFilter2D contactFilter;
         

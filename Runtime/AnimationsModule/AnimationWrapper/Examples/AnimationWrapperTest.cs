@@ -6,7 +6,7 @@ namespace LSCore.AnimationsModule.Examples
 {
     public class AnimationWrapperTest : MonoBehaviour
     {
-        [SerializeField] private AnimationWrapper animation;
+        [SerializeField] private new AnimationWrapper animation;
 
         public IEnumerator Start()
         {

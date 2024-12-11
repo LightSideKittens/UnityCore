@@ -1,7 +1,10 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -10,6 +13,8 @@ namespace LSCore.NativeUtils
 {
     public static partial class Emoji
     {
+        private static Event repaintEvent;
+        private static FieldInfo ignoreGuiDepth;
         private static string EmojiCachePath => Path.Combine(Application.persistentDataPath, "EmojiCache");
 
         private static EmojiRange[] ProcessEmojis(string text)
@@ -37,9 +42,24 @@ namespace LSCore.NativeUtils
                 
                 if (!File.Exists(cachedPath))
                 {
-                    var texture = RenderEmojiToTexture(emoji);
-                    SaveTextureAsPNG(texture, cachedPath);
-                    Object.DestroyImmediate(texture);
+                    ignoreGuiDepth ??= typeof(Event).GetField("ignoreGuiDepth", BindingFlags.Static | BindingFlags.NonPublic);
+                    var prev =  ignoreGuiDepth.GetValue(null);
+                    ignoreGuiDepth.SetValue(null, true);
+                    Event previousEvent = Event.current;
+                    repaintEvent = new Event { type = EventType.Repaint };
+
+                    try
+                    {
+                        Event.current = repaintEvent;
+                        var texture = RenderEmojiToTexture(emoji);
+                        SaveTextureAsPNG(texture, cachedPath);
+                        Object.DestroyImmediate(texture);
+                    }
+                    finally
+                    {
+                        ignoreGuiDepth.SetValue(null, prev);
+                        Event.current = previousEvent;
+                    }
                 }
             }
 
@@ -90,7 +110,7 @@ namespace LSCore.NativeUtils
 
             return false;
         }
-
+        
         private static Texture2D RenderEmojiToTexture(string emoji)
         {
             // Размер текстуры и шрифта
@@ -170,3 +190,4 @@ namespace LSCore.NativeUtils
         }
     }
 }
+#endif
