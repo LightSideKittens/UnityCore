@@ -17,7 +17,7 @@ namespace LSCore.AnimationsModule
             public void Start()
             {
 #if UNITY_EDITOR
-                if (World.IsEditMode || !CanUse)
+                if (!CanUse)
                 {
                     return;
                 }
@@ -33,7 +33,7 @@ namespace LSCore.AnimationsModule
             public void Stop()
             {
 #if UNITY_EDITOR
-                if (World.IsEditMode || !CanUse)
+                if (!CanUse)
                 {
                     return;
                 }
@@ -79,7 +79,7 @@ namespace LSCore.AnimationsModule
             public sealed override void Handle()
             {
 #if UNITY_EDITOR
-                if (World.IsEditMode || !CanUse)
+                if (!CanUse)
                 {
                     return;
                 }

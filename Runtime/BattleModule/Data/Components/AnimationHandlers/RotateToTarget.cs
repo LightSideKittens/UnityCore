@@ -2,7 +2,13 @@
 using LSCore.AnimationsModule;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Animations;
+
+public enum Vector3Axis
+{
+    X,
+    Y,
+    Z
+}
 
 namespace LSCore.BattleModule.Animation
 {
@@ -11,7 +17,7 @@ namespace LSCore.BattleModule.Animation
     {
         public Transform transform;
         public FindTargetFactory findTargetFactory;
-        public Axis rotationAxis = Axis.Y;
+        public Vector3Axis rotationAxis = Vector3Axis.Z;
 
         private FindTargetComp findTargetComp;
         private Quaternion initialRotation;
@@ -59,26 +65,18 @@ namespace LSCore.BattleModule.Animation
             }
             
             initialRotation = transform.rotation;
-            
-            var directionToTarget = (Target.position - transform.position).normalized;
-
-            switch (rotationAxis)
-            {
-                case Axis.Z:
-                    targetRotation = Quaternion.LookRotation(directionToTarget, transform.up);
-                    break;
-                case Axis.X:
-                    targetRotation = Quaternion.LookRotation(Vector3.Cross(transform.up, directionToTarget), transform.up);
-                    break;
-                case Axis.Y:
-                    targetRotation = Quaternion.LookRotation(transform.forward, directionToTarget);
-                    break;
-            }
         }
 
         protected override void OnHandle()
         {
-            transform.rotation = Quaternion.Lerp(initialRotation, targetRotation, value);
+            UpdateTargetRotation();
+            transform.rotation = Quaternion.Slerp(initialRotation, targetRotation, value);
+        }
+
+        private void UpdateTargetRotation()
+        {
+            var directionToTarget = (Target.position - transform.position).normalized;
+            targetRotation = Quaternion.LookRotation(transform.forward, directionToTarget);
         }
         
 #if UNITY_EDITOR
