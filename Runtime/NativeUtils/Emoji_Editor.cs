@@ -124,7 +124,7 @@ namespace LSCore.NativeUtils
             if (dpiScaling <= 0) dpiScaling = 1;
             
             var textureSize = 256; // Размер текстуры
-            var fontSize = (int)(200 / dpiScaling); // Размер шрифта
+            var fontSize = (int)(230 / dpiScaling); // Размер шрифта
 
             // Настройка шрифта
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -148,8 +148,10 @@ namespace LSCore.NativeUtils
             GL.Clear(true, true, Color.clear);
 
             // Поднимаем текст вверх (смещение)
-            var offsetY = textureSize * 0.05f; // Смещение на 10% вверх
-            var rect = new Rect(0, -offsetY, textureSize, textureSize);
+            var offsetX = textureSize - (textureSize / dpiScaling);
+            offsetX /= 2;
+            var offsetY = textureSize * (0.05f / dpiScaling); // Смещение на 10% вверх
+            var rect = new Rect(-offsetX, -offsetY, textureSize, textureSize);
 
             // Рендеринг через GUI с использованием заданного стиля
             GUI.matrix = Matrix4x4.identity;
