@@ -124,7 +124,7 @@ namespace LSCore.NativeUtils
             if (dpiScaling <= 0) dpiScaling = 1;
             
             var textureSize = 256; // Размер текстуры
-            var fontSize = (int)(200 * dpiScaling); // Размер шрифта
+            var fontSize = (int)(200 / dpiScaling); // Размер шрифта
 
             // Настройка шрифта
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
