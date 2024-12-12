@@ -26,8 +26,11 @@ namespace LSCore
         {
             World.Creating += () =>
             {
-                EmojiImagePool.Created -= OnCreate;
-                emojiImagePrefab = null;
+                if (emojiImagePrefab != null)
+                {
+                    EmojiImagePool.Created -= OnCreate;
+                    emojiImagePrefab = null;
+                }
             };
             
             World.Destroyed += () =>
@@ -37,6 +40,7 @@ namespace LSCore
             };
         }
 #endif
+        
         
         private static void OnCreate(EmojiImage rawImage)
         {
