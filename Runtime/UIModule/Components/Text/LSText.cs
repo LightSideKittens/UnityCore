@@ -16,10 +16,10 @@ namespace LSCore
     {
         public static OnOffPool<EmojiImage> EmojiImagePool => OnOffPool<EmojiImage>.GetOrCreatePool(emojiImagePrefab);
         private static EmojiImage emojiImagePrefab;
-        private static Transform currentParent;
         private EmojiRange[] emojis;
         private Texture2D[] textures;
         private Action releaseEmojiImages;
+        private Action removeEmojiImages;
 
 #if UNITY_EDITOR
         static LSText()
@@ -45,7 +45,6 @@ namespace LSCore
         private static void OnCreate(EmojiImage rawImage)
         {
             rawImage.gameObject.hideFlags = HideFlags.HideAndDontSave;
-            rawImage.transform.SetParent(currentParent);
         }
         
         protected override void Awake()
@@ -63,7 +62,8 @@ namespace LSCore
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            ReleaseAllEmojiImages();
+            removeEmojiImages?.Invoke();
+            releaseEmojiImages = null;
         }
 
         private void Init()
@@ -126,6 +126,7 @@ namespace LSCore
 
         private void HandleOnPreRenderText(TMP_TextInfo textInfo)
         {
+            removeEmojiImages = null;
             ReleaseAllEmojiImages();
             var clear = new Color32(0, 0, 0, 0);
 
@@ -156,10 +157,12 @@ namespace LSCore
         
         private void CreateRawImageForChar(TMP_CharacterInfo charInfo, int i)
         {
-            currentParent = transform;
             var rawImage = EmojiImagePool.Get();
+            rawImage.transform.SetParent(transform);
+            
             releaseEmojiImages += () => EmojiImagePool.Release(rawImage);
-
+            removeEmojiImages += () => EmojiImagePool.Remove(rawImage);
+            
             rawImage.texture = textures[i];
             Vector3 bottomLeft = charInfo.bottomLeft;
             Vector3 topRight = charInfo.topRight;

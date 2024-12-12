@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using LSCore.Extensions;
 using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -119,8 +120,7 @@ namespace LSCore.NativeUtils
         
         private static Texture2D RenderEmojiToTexture(string emoji)
         {
-            // Размер текстуры и шрифта
-            float dpiScaling = Screen.dpi / 96f; // DPI стандартного экрана — 96
+            float dpiScaling = typeof(GUIUtility).Eval<float>("pixelsPerPoint"); // DPI стандартного экрана — 96
             if (dpiScaling <= 0) dpiScaling = 1;
             
             var textureSize = 256; // Размер текстуры
@@ -161,7 +161,7 @@ namespace LSCore.NativeUtils
             // Чтение из RenderTexture
             texture.ReadPixels(new Rect(0, 0, textureSize, textureSize), 0, 0);
             texture.Apply();
-
+            
             // Очистка
             RenderTexture.ReleaseTemporary(renderTexture);
             RenderTexture.active = null;
