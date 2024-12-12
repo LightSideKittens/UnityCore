@@ -13,6 +13,12 @@ namespace LSCore.NativeUtils
 {
     public static partial class Emoji
     {
+        [MenuItem("CONTEXT/LSText/Clear Emoji Cache")]
+        public static void ClearEmojiCache()
+        {
+            Directory.Delete(EmojiCachePath, true);
+        }
+        
         private static Event repaintEvent;
         private static FieldInfo ignoreGuiDepth;
         private static string EmojiCachePath => Path.Combine(Application.persistentDataPath, "EmojiCache");
@@ -114,11 +120,15 @@ namespace LSCore.NativeUtils
         private static Texture2D RenderEmojiToTexture(string emoji)
         {
             // Размер текстуры и шрифта
+            float dpiScaling = Screen.dpi / 96f; // DPI стандартного экрана — 96
+            if (dpiScaling <= 0) dpiScaling = 1;
+            
             var textureSize = 256; // Размер текстуры
-            var fontSize = 200; // Размер шрифта
+            var fontSize = (int)(200 * dpiScaling); // Размер шрифта
 
             // Настройка шрифта
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
             var style = new GUIStyle
             {
                 font = font,
