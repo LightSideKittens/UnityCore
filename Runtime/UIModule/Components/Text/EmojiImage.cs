@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Reflection;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace LSCore
@@ -7,6 +8,12 @@ namespace LSCore
     {
         private bool vertsDirty;
         private bool materialDirty;
+        private static MethodInfo updateClipParent;
+
+        static EmojiImage()
+        {
+            updateClipParent = typeof(MaskableGraphic).GetMethod("UpdateClipParent", BindingFlags.NonPublic | BindingFlags.Instance);
+        }
 
         protected override void OnEnable()
         {
@@ -39,6 +46,7 @@ namespace LSCore
             
             m_ShouldRecalculateStencil = true;
             SetMaterialDirty();
+            updateClipParent.Invoke(this, null);
             StencilMaterial.Remove(m_MaskMaterial);
             m_MaskMaterial = null;
 
