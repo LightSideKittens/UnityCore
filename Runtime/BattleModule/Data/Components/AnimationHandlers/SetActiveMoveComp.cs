@@ -9,11 +9,13 @@ namespace LSCore.BattleModule.Animation
     {
         public Transform transform;
         public BaseMoveComp moveComp;
-        
+
         protected override string Label => "Active";
+#if UNITY_EDITOR
         protected override bool CanUse => !AnimationTestMode.Is && !World.IsEditMode;
+#endif
         private bool startValue;
-        
+
         protected override void OnStart()
         {
             base.OnStart();

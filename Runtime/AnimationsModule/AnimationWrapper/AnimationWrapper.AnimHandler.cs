@@ -11,8 +11,9 @@ namespace LSCore.AnimationsModule
         {
             protected bool forceHandle;
             private bool isStarted;
-            
+#if UNITY_EDITOR    
             protected virtual bool CanUse => true;
+#endif
             
             public void Start()
             {
