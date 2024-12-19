@@ -75,14 +75,16 @@ namespace LSCore
         
         public void Show(ShowWindowOption option)
         {
-            Burger.Log($"{logTag} {gameObject.name} Show with option {option}");
+            Burger.Log($"{logTag} {gameObject.name} Show." +
+                       $"\nOption: {option.ToString().ToTag(new Color(0.49f, 0.64f, 1f))}" +
+                       $"\nId: {WindowsData.Id.ToTag(new Color(0.6f, 0.85f, 0.18f))}");
             ShowOption = option;
             Manager.Show();
         }
 
         public void Show()
         {
-            Burger.Log($"{logTag} {gameObject.name} Show");
+            Burger.Log($"{logTag} {gameObject.name} Show by Id {WindowsData.Id}");
             Manager.Show();
         }
     }

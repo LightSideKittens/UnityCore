@@ -65,10 +65,31 @@ namespace LSCore
     public class CreateOrShowUIView<T> : CreateSinglePrefab<T> where T : BaseUIView<T>
     {
         public ShowWindowOption option;
+        public string id;
+        public bool showOnlyWhenCreated;
+        
         public override void Invoke()
         {
+            var last = obj;
             base.Invoke();
-            obj.Show(option);
+            var isCreated = obj != last;
+
+            if (!isCreated && showOnlyWhenCreated)
+            {
+                return;
+            }
+            
+            if (string.IsNullOrEmpty(id))
+            {
+                obj.Show(option);
+            }
+            else
+            {
+                using (new WindowsData.UseId(id))
+                {
+                    obj.Show(option);
+                }
+            }
         }
     }
 

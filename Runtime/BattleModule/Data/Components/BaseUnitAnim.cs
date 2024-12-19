@@ -17,12 +17,13 @@ namespace LSCore.BattleModule
     {
         public abstract Tween Animate();
         public abstract void Stop();
+        public abstract void ResolveBinds<T>(string key, T target);
     }
 
     [Serializable]
     public class TweenUnitAnim : BaseUnitAnim
     {
-        [SerializeField] private AnimSequencer anim;
+        public AnimSequencer anim;
         private Tween tween;
         
         public override Tween Animate()
@@ -35,22 +36,24 @@ namespace LSCore.BattleModule
         {
             tween?.Kill();
         }
+
+        public override void ResolveBinds<T>(string key, T target) => anim.ResolveBinds(key, target);
     }
     
     [Serializable]
     public class AnimationUnitAnim : BaseUnitAnim
     {
         [HideIf("@animation != null")]
-        [SerializeField] private AnimationWrapper wrapper;
+        public AnimationWrapper wrapper;
         [HideIf("@wrapper != null")]
-        [SerializeField] private UnityEngine.Animation animation;
+        public UnityEngine.Animation animation;
         
         [ValueDropdown("Clips")]
-        [SerializeField] private AnimationClip clip;
+        public AnimationClip clip;
 
         private IEnumerable<AnimationClip> Clips => from AnimationState state in Anim select state.clip;
 
-        private UnityEngine.Animation Anim
+        public UnityEngine.Animation Anim
         {
             get
             {
@@ -61,7 +64,7 @@ namespace LSCore.BattleModule
         
         public override Tween Animate()
         {
-            var tween = Wait.Delay(clip.length);
+            var tween = Wait.Delay(clip.length).OnKill(Stop);
             Play();
             return tween;
         }
@@ -76,6 +79,11 @@ namespace LSCore.BattleModule
             {
                 wrapper.Stop(clip.name);
             }
+        }
+
+        public override void ResolveBinds<T>(string key, T target)
+        {
+            
         }
 
         private void Play()

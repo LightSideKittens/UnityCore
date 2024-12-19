@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using DG.Tweening;
-using LSCore.AnimationsModule;
-using LSCore.Async;
-using Sirenix.OdinInspector;
+using LSCore.BattleModule;
 using UnityEngine;
 
 namespace LSCore
@@ -12,10 +8,9 @@ namespace LSCore
     [Serializable]
     public class AttackToTarget : BaseAttack
     {
-        [SerializeField] private AnimSequencer anim;
+        [SerializeReference] public BaseUnitAnim anim;
         [NonSerialized] public bool inRadius;
         [NonSerialized] public Transform target;
-        private Tween tween;
         
         public override bool AttackCondition
         {
@@ -29,78 +24,9 @@ namespace LSCore
         protected override Tween Attack()
         {
             anim.ResolveBinds("target", target);
-            tween = anim.Animate();
-            return tween;
+            return anim.Animate();
         }
 
-        public override void Stop()
-        {
-            tween?.Kill();
-        }
-    }
-    
-    [Serializable]
-    public class AttackToTargetAnimation : BaseAttack
-    {
-        [HideIf("@animation != null")]
-        [SerializeField] private AnimationWrapper wrapper;
-        [HideIf("@wrapper != null")]
-        [SerializeField] private Animation animation;
-        
-        [ValueDropdown("Clips")]
-        [SerializeField] private AnimationClip clip;
-        [NonSerialized] public bool inRadius;
-        [NonSerialized] public Transform target;
-
-        private IEnumerable<AnimationClip> Clips => from AnimationState state in Anim select state.clip;
-
-        private Animation Anim
-        {
-            get
-            {
-                if (animation != null) return animation;
-                return wrapper.Animation;
-            }
-        }
-
-        public override bool AttackCondition
-        {
-            get
-            {
-                inRadius = findTargetComp.Find(out target);
-                return inRadius;
-            }
-        }
-
-        protected override Tween Attack()
-        {
-            var tween = Wait.Delay(clip.length);
-            Play();
-            return tween;
-        }
-
-        public override void Stop()
-        {
-            if (animation != null)
-            {
-                animation.Stop(clip.name);
-            }
-            else
-            {
-                wrapper.Stop(clip.name);
-            }
-        }
-
-        private void Play()
-        {
-            if (animation != null)
-            {
-                animation.Play(clip.name);
-            }
-            else
-            {
-                wrapper.Play(clip.name);
-            }
-        }
+        public override void Stop() => anim.Stop();
     }
 }

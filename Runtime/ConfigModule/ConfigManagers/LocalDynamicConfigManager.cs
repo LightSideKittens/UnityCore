@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json.Linq;
+using UnityEngine;
 
 namespace LSCore.ConfigModule
 {
@@ -50,7 +51,8 @@ namespace LSCore.ConfigModule
 
     public class LocalDynamicConfigManager<T> : BaseConfigManager<T>, ILocalConfigManager where T : LocalDynamicConfig, new()
     {
-        protected override string Tag => $"{base.Tag}.{Path.GetFileNameWithoutExtension(GetFullFileName(fullPath))}";
+        protected override string Tag => $"{base.Tag} {FileNameTag}";
+        private string FileNameTag => $"({Path.GetFileNameWithoutExtension(GetFullFileName(fullPath))})".ToTag(new Color(1f, 0.8f, 0.05f));
 
         protected virtual string GetPath(string path)
         {

@@ -10,12 +10,7 @@ namespace LSCore.BattleModule
         public static event Action<Unit> Releasedd;
         public event Action Released;
         
-        [SerializeReference] private List<BaseComp> comps = new()
-        {
-            new HealthComp(),
-            new MoveComp(),
-            new AttackComp()
-        };
+        [SerializeReference] private List<BaseComp> comps = new();
         
         private readonly CompData compData = new();
         private bool isRegistered;

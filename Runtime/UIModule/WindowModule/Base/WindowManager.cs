@@ -52,6 +52,7 @@ namespace LSCore
         
         public void Show()
         {
+            if (showTween != null) return;
             if (WindowsData.IsAt(this, 0))
             {
                 Burger.Log($"{gameObject.name} Show WindowsData.IsAt");
@@ -72,7 +73,7 @@ namespace LSCore
         private void InternalShow()
         {
             if (showTween != null) return;
-            Burger.Log($"{gameObject.name} InternalShow");
+            Burger.Log($"{gameObject.name} InternalShow by Id {WindowsData.Id}");
             IsShow = true;
             WindowsData.CallOption(showOption());
             RecordState();
@@ -88,8 +89,8 @@ namespace LSCore
 
         protected virtual void RecordState()
         {
-            WindowsData.hidePrevious = InternalHide;
-            WindowsData.hideAllPrevious += InternalHide;
+            WindowsData.Current.hidePrevious = InternalHide;
+            WindowsData.Current.hideAllPrevious += InternalHide;
             WindowsData.Record(InternalHide);
         }
 
@@ -102,7 +103,7 @@ namespace LSCore
             {
                 WindowsData.sortingOrder--;
             }
-            WindowsData.hideAllPrevious -= InternalHide;
+            WindowsData.Current.hideAllPrevious -= InternalHide;
             WindowsData.Record(InternalShow);
             
             Hiding?.Invoke();

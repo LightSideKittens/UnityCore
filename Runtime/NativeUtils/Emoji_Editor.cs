@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using LSCore.Extensions;
 using UnityEditor;
 using UnityEngine;
@@ -97,25 +98,12 @@ namespace LSCore.NativeUtils
             return emojiClusters;
         }
 
-        private static bool IsEmoji(string element)
+        public static bool IsEmoji(string input)
         {
-            foreach (var ch in element)
-            {
-                var codePoint = char.ConvertToUtf32(element, 0);
+            if (string.IsNullOrEmpty(input)) return false;
 
-                if ((codePoint >= 0x1F300 && codePoint <= 0x1F5FF) || // Символы эмодзи
-                    (codePoint >= 0x1F600 && codePoint <= 0x1F64F) || // Эмоции
-                    (codePoint >= 0x1F680 && codePoint <= 0x1F6FF) || // Транспорт
-                    (codePoint >= 0x2600 && codePoint <= 0x26FF) || // Разное
-                    (codePoint >= 0x2700 && codePoint <= 0x27BF) || // Символы
-                    (codePoint >= 0x1F1E6 && codePoint <= 0x1F1FF) || // Региональные индикаторы
-                    (codePoint >= 0x1F900 && codePoint <= 0x1F9FF)) // Дополнительные эмодзи
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            string emojiPattern = @"(\p{Cs})|([\u203C-\u3299]|\uD83C[\uDC04-\uDFFF]|\uD83D[\uDC00-\uDE4F]|\uD83D[\uDE80-\uDEF6])";
+            return Regex.IsMatch(input, emojiPattern);
         }
         
         private static Texture2D RenderEmojiToTexture(string emoji)

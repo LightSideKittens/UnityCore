@@ -26,11 +26,21 @@ namespace LSCore
         }
 
         [Serializable]
-        public class RandomAttackSelector : AttackSelector
+        public class Random : AttackSelector
         {
             protected override BaseAttack Select(IEnumerable<BaseAttack> attacks)
             {
                 var attack = attacks.RandomElement();
+                return attack;
+            }
+        }
+        
+        [Serializable]
+        public class First : AttackSelector
+        {
+            protected override BaseAttack Select(IEnumerable<BaseAttack> attacks)
+            {
+                var attack = attacks.FirstOrDefault();
                 return attack;
             }
         }

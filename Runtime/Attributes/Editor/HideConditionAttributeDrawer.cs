@@ -8,7 +8,7 @@ namespace LSCore.Attributes
     {
         protected override void DrawPropertyLayout(GUIContent label)
         {
-            var property = this.Property.Parent;
+            var property = Property.Parent;
             var parent = property.Parent;
             
             if (parent != null)

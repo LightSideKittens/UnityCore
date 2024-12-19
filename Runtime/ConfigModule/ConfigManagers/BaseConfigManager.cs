@@ -33,12 +33,12 @@ namespace LSCore.ConfigModule
     
     public abstract class BaseConfigManager<T> where T : BaseConfig, new()
     {
-        private static string GetLogTag(string tag) => $"[{tag}]".ToTag(new Color(1f, 0.8f, 0.05f));
+        private static string GetLogTag(string tag) => $"{BaseConfig.ConfigTag} {tag}";
         protected T cached;
 
         [JsonIgnore] protected virtual ConfigSerializationSettings Settings { get; } = new();
 
-        protected virtual string Tag => typeof(T).Name;
+        protected virtual string Tag => $"[{typeof(T).Name}]".ToTag(new Color(0.15f, 0.82f, 0.42f));
 
         private string meta;
         
