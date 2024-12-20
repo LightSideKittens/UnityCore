@@ -20,10 +20,8 @@ namespace LSCore.NativeUtils
         private static AndroidJavaClass textRenderer;
         private static AndroidJavaObject currentActivity;
 
-        // Ссылка на Java класс API
         private static AndroidJavaClass API => textRenderer ??= new AndroidJavaClass($"{packageName}.API");
 
-        // Ссылка на текущую активити Unity
         private static AndroidJavaObject CurrentActivity 
         {
             get 
@@ -41,12 +39,7 @@ namespace LSCore.NativeUtils
 
         private static Dictionary<string, Texture2D> cachedTextures = new();
         private static Texture2D[] texturesArr = new Texture2D[100];
-
-        /// <summary>
-        /// Вызывает parseEmojis у плагина и возвращает массив EmojiRange.
-        /// text - текст для анализа
-        /// saveDirPath - путь к директории, где будут сохранены PNG-файлы эмодзи
-        /// </summary>
+        
         public static EmojiRange[] ParseEmojis(string text, string saveDirPath, out Texture2D[] textures)
         {
             var result = GetArray(text, saveDirPath);

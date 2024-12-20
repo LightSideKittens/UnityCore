@@ -174,6 +174,9 @@ namespace LSCore
             r.sizeDelta = new Vector2(topRight.x - bottomLeft.x, topRight.y - bottomLeft.y);
             
             Vector3 charPosition = (bottomLeft + topRight) / 2;
+            Vector2 pivot = rectTransform.pivot;
+            r.anchorMin = pivot;
+            r.anchorMax = pivot;
             r.anchoredPosition = new Vector2(charPosition.x, charPosition.y);
             
             r.localScale = Vector3.one;
