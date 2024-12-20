@@ -34,6 +34,18 @@ namespace LSCore.BattleModule
             unitStates.StateDisabled += OnStateDisabled;
         }
 
+        public void Stop()
+        {
+            unitStates.RemoveState(state);
+            unitStates.RemoveState(animState);
+        }
+        
+        public void Start()
+        {
+            unitStates.TrySetState(state);
+            unitStates.TrySetState(animState);
+        }
+        
         private void OnStateEnabled(State obj)
         {
             SetState(obj, true);
@@ -82,6 +94,8 @@ namespace LSCore.BattleModule
         private Transform target;
                 
         private bool shouldLookAtTarget;
+        private Vector3 direction;
+
         public bool ShouldLookAtTarget
         {
             get => shouldLookAtTarget;
@@ -107,6 +121,18 @@ namespace LSCore.BattleModule
             base.Init();
             findTargetComp = findTargetFactory.Create();
             findTargetComp.Init(transform);
+            data.fixedUpdate += FindTarget;
+        }
+
+        private void FindTarget()
+        {
+            isTargetFound = findTargetComp.Find(out target);
+            if (isTargetFound)
+            {
+                var position = (Vector3)rigidbody.position;
+                var targetPos = target.position;
+                direction = targetPos - position;
+            }
         }
 
         public Transform Target
@@ -126,12 +152,9 @@ namespace LSCore.BattleModule
 
         private void LookAtTarget()
         {
-            isTargetFound = findTargetComp.Find(out target);
             if (isTargetFound)
             {
-                var position = (Vector3)rigidbody.position;
-                var targetPos = target.position;
-                transform.up = targetPos - position;
+                transform.up = direction;
             }
         }
         
@@ -140,7 +163,7 @@ namespace LSCore.BattleModule
             Buffs.Update();
             if (isTargetFound)
             {
-                rigidbody.position += (Vector2)transform.up * (Speed * Time.deltaTime);
+                rigidbody.position += (Vector2)transform.up * (Speed * Time.fixedDeltaTime);
             }
         }
     }

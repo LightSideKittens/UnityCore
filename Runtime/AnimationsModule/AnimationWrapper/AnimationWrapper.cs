@@ -24,11 +24,20 @@ namespace LSCore.AnimationsModule
     [Serializable]
     public class ParticleSystemPlay : LSAction
     {
+        [Serializable]
+        public enum PlayType
+        {
+            Play,
+            Stop
+        }
+
         public ParticleSystem particleSystem;
-        
+        public PlayType playType = PlayType.Play;
+
         public override void Invoke()
         {
             particleSystem.Stop();
+            if (playType == PlayType.Stop) return;
             particleSystem.Play();
 #if UNITY_EDITOR
             if (World.IsEditMode)

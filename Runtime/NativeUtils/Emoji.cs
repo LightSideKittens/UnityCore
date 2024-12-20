@@ -9,6 +9,7 @@ namespace LSCore.NativeUtils
     public class EmojiRange
     {
         public int index;
+        public int adjustedIndex;
         public int length;
         public string imagePath;
     }
@@ -107,15 +108,16 @@ namespace LSCore.NativeUtils
         public static string ReplaceWithEmojiRanges(string input, EmojiRange[] emojiRanges, string replacement)
         {
             StringBuilder result = new StringBuilder(input);
-            int offset = 0;
+            int offset = 0; 
+            int replacementLength = replacement.Length;
 
             foreach (var range in emojiRanges)
             {
                 int adjustedIndex = range.index + offset;
+                range.adjustedIndex = adjustedIndex;
                 result.Remove(adjustedIndex, range.length);
                 result.Insert(adjustedIndex, replacement);
-                range.index += offset;
-                offset += replacement.Length - range.length;
+                offset += replacementLength - range.length;
             }
 
             return result.ToString();

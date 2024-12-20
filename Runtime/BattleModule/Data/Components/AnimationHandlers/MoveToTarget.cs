@@ -91,12 +91,8 @@ namespace LSCore.BattleModule.Animation
         
         private void UpdateTargetPosition()
         {
-            var t = Target;
-            var bounds = collider.bounds;
-            var rbPos = (Vector2)bounds.center;
-            var radius = bounds.CircumscribedCircleRadius();
-            var dir = (t.attachedRigidbody.position - rbPos).normalized * radius;
-            targetPosition = t.ClosestPoint(rbPos) - dir;
+            var dis = collider.Distance(Target);
+            targetPosition = dis.pointB;
         }
         
 #if UNITY_EDITOR

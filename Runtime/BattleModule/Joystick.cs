@@ -4,8 +4,16 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
+public interface IJoystick
 {
+    public Vector2 Direction { get; }
+    public ReactProp<float> Magnitude { get; }
+    public ReactProp<bool> IsUsing { get; }
+}
+
+public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler, IJoystick
+{
+    
 #if UNITY_EDITOR
     [Serializable]
     private struct KeysData
@@ -24,7 +32,8 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
 
     public Vector2 Direction { get; private set; }
     public ReactProp<float> Magnitude { get; private set; } = new();
-    public ReactProp<bool> IsUsing { get; set; } = new();
+    public ReactProp<bool> IsUsing { get; private set; } = new();
+    
     [SerializeField] private RectTransform area;
     [SerializeField] private RectTransform handleArea;
     [SerializeField] private RectTransform handle;
@@ -88,7 +97,7 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
     }
 #endif
 
-    public void OnPointerDown(PointerEventData eventData)
+    void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
     {
         isUsingByTouch = true;
         IsUsing.Value = true;
@@ -98,7 +107,7 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
         handle.localPosition = Vector3.zero;
     }
 
-    public void OnDrag(PointerEventData eventData)
+    void IDragHandler.OnDrag(PointerEventData eventData)
     {
         Direction = (eventData.position - startTouchPosition).normalized;
         var position = handleArea.GetLocalPositionByScreenPoint(eventData.position, canvas);
@@ -107,7 +116,7 @@ public class Joystick : MonoBehaviour, IPointerDownHandler, IDragHandler, IPoint
         SetupDirections();
     }
 
-    public void OnPointerUp(PointerEventData eventData)
+    void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
     {
         isUsingByTouch = false;
         IsUsing.Value = false;

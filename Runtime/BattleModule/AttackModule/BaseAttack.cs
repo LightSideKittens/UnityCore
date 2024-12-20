@@ -32,6 +32,7 @@ namespace LSCore
         }
 
         protected virtual void OnInit(){}
+        public virtual void DeInit(){}
 
         public bool TryAttack(out Tween tween)
         {
@@ -87,18 +88,20 @@ namespace LSCore
         
         public virtual void OnAttackCompleted() { }
 
-        public void InitImpactObject<T>(T impactObject) where T : BaseImpactObject
+        public void InitImpactObject<T>(T impactObject, Collider2D collider) where T : BaseImpactObject
         {
-            impactObject.IgnoredCollider = transform.GetComponent<Collider2D>();
+            impactObject.IgnoredCollider = collider;
             impactObject.CanImpactChecker = findTargetComp.Check;
             impactObject.Initiator = transform;
         }
         
         public void InitImpactObjects<T>(IEnumerable<T> impactObjects) where T : BaseImpactObject
         {
+            var collider = transform.GetComponent<Collider2D>();
+            
             foreach (var impactObject in impactObjects)
             {
-                InitImpactObject(impactObject);
+                InitImpactObject(impactObject, collider);
             }
         }
     }

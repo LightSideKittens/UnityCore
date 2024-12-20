@@ -68,6 +68,15 @@ namespace LSCore
             }
             
             Attack();
+            data.destroy += DeInit;
+        }
+
+        private void DeInit()
+        {
+            for (int i = 0; i < attacks.Count; i++)
+            {
+                attacks[i].DeInit();
+            }
         }
 
         private void OnStateDisabled(State state)

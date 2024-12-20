@@ -18,6 +18,40 @@ namespace LSCore
         private Texture2D[] textures;
         private Action releaseEmojiImages;
         
+        public override float preferredWidth
+        {
+            get
+            {
+                if (emojis is { Length: > 0 })
+                {
+                    var lastText = m_text;
+                    m_text = Emoji.ReplaceWithEmojiRanges(m_text, emojis, "\ue000\u200b");
+                    var width = base.preferredWidth;
+                    m_text = lastText;
+                    return width;
+                }
+                
+                return base.preferredWidth;
+            }
+        }
+
+        public override float preferredHeight
+        {
+            get
+            {
+                if (emojis is { Length: > 0 })
+                {
+                    var lastText = m_text;
+                    m_text = Emoji.ReplaceWithEmojiRanges(m_text, emojis, "\ue000\u200b");
+                    var height = base.preferredHeight;
+                    m_text = lastText;
+                    return height;
+                }
+
+                return base.preferredHeight;
+            }
+        }
+        
         protected override void Awake()
         {
             base.Awake();
@@ -103,7 +137,7 @@ namespace LSCore
             for (int i = 0; i < emojis.Length; i++)
             {
                 var emoji = emojis[i];
-                int charIndexToHide = emoji.index;
+                int charIndexToHide = emoji.adjustedIndex;
                 
                 if (charIndexToHide < 0 || charIndexToHide >= textInfo.characterCount) return;
                 
@@ -160,11 +194,6 @@ namespace LSCore
         protected SerializedProperty padding;
         protected PropertyTree propertyTree;
         protected LSText text;
-
-        protected void DrawTextPropertiesAsFoldout()
-        {
-            EditorUtils.DrawInBoxFoldout("Text Properties", base.OnInspectorGUI, text, false);
-        }
         
         protected override void OnEnable()
         {
