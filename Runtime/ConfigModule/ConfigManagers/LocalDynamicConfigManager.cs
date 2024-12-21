@@ -31,18 +31,18 @@ namespace LSCore.ConfigModule
             }
         }
         
-        public static TManager Get(string fullPath)
+        public static TManager Get(string path)
         {
-            if (meowfault?.DefaultPath == fullPath)
+            if (meowfault?.DefaultPath == path)
             {
                 return meowfault;
             }
             
-            if (!configs.TryGetValue(fullPath, out var manager))
+            if (!configs.TryGetValue(path, out var manager))
             {
                 manager = new TManager();
-                manager.SetPath(fullPath);
-                configs.Add(fullPath, manager);
+                manager.SetPath(path);
+                configs.Add(path, manager);
             }
 
             return manager;

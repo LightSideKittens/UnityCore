@@ -20,7 +20,7 @@ namespace LSCore
         }
             
         public static void Mark(string group, string id, object value) => GetTarget(group)[id] = JToken.FromObject(value);
-        public static void UnMark(string group, string id) => GetTarget(group).Remove(id);
+        public static void UnMark(string group, string id) => GetTarget(group).RemoveKey(id);
 
         public static bool TryGet<T>(string group, string id, out T value)
         {

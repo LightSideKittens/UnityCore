@@ -2,9 +2,8 @@
     "name": "LSCore.Editor.Utils",
     "rootNamespace": "",
     "references": [
-        "",
-        "LSCore.Editor.HarmonyPatchers",
-        "LSCore.Extensions.Unity"
+        "GUID:a8db40cbaf444aa3aedf3bb887de5433",
+        "GUID:16ff3c4c8a84432c968429344c271c5a"
     ],
     "includePlatforms": [
         "Editor"

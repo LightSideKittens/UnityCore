@@ -6,6 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using LSCore.ConfigModule;
+using LSCore.Extensions;
+using Newtonsoft.Json.Linq;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
@@ -24,6 +27,8 @@ namespace LSCore.Editor.BackupSystem
     {
         private const string Name = nameof(Backuper);
         private const string DateTimeSeparator = "_@#$";
+        private static JToken Config => Manager.Config.data;
+        private static EditorConfigManager Manager => EditorConfig.GetManager(nameof(Backuper));
         private static Backuper instance = new();
         private static PropertyTree tree = PropertyTree.Create(instance);
         private static int editCount;
@@ -96,14 +101,14 @@ namespace LSCore.Editor.BackupSystem
         private List<Data> backups = new();
 
         private HashSet<Data> backupsSet = new();
-
+        
         [InitializeOnLoadMethod]
         private static void InitializeOnLoadMethod()
         {
             Patchers._EditorUtility.SetDirty.Called += OnChanged;
             Patchers._SerializedObject.ApplyModifiedProperties.Called += OnChanged;
             
-            delay = TimeSpan.FromMinutes(BackuperSettings.Config.saveInterval);
+            delay = TimeSpan.FromMinutes(Config.As<int>("saveInterval"));
             
             if (!Directory.Exists(BackupPath))
             {
@@ -150,14 +155,17 @@ namespace LSCore.Editor.BackupSystem
         
         private void Init()
         {
-            if (BackuperSettings.Config.maxBackupsCount > 0)
+            var maxBackupsCountT = Config.As<int>("maxBackupsCount");
+            var saveIntervalT = Config.As<int>("saveInterval");
+            
+            if (maxBackupsCountT > 0)
             {
-                maxBackupsCount = BackuperSettings.Config.maxBackupsCount;
+                maxBackupsCount = maxBackupsCountT;
             }
 
-            if (BackuperSettings.Config.saveInterval > 0)
+            if (saveIntervalT > 0)
             {
-                saveInterval = BackuperSettings.Config.saveInterval;
+                saveInterval = saveIntervalT;
             }
             
             backups.Clear();
@@ -174,15 +182,15 @@ namespace LSCore.Editor.BackupSystem
         
         private void OnSaveIntervalChanged()
         {
-            delay = TimeSpan.FromMinutes(saveInterval);
-            BackuperSettings.Config.saveInterval = saveInterval;
-            BackuperSettings.Manager.Save();
+            delay = TimeSpan.FromMinutes(saveInterval); 
+            Config["saveInterval"] = saveInterval;
+            Manager.Save();
         }
 
         private void OnMaxBackupsCountChanged()
         {
-            BackuperSettings.Config.maxBackupsCount = maxBackupsCount;
-            BackuperSettings.Manager.Save();
+            Config["maxBackupsCount"] = maxBackupsCount;
+            Manager.Save();
         }
 
         private void TryAdd(string backupPath)

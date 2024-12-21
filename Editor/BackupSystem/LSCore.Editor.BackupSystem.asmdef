@@ -6,7 +6,9 @@
         "GUID:e459b463d83745848ea2169051a1c68a",
         "GUID:488fbb5f4bad8a94daedd0c8d1239e93",
         "GUID:58d36a8de6484fa1904a1be4fb03ac3a",
-        "GUID:16ff3c4c8a84432c968429344c271c5a"
+        "GUID:16ff3c4c8a84432c968429344c271c5a",
+        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
+        "LSCore.ConfigModule.Editor"
     ],
     "includePlatforms": [
         "Editor"

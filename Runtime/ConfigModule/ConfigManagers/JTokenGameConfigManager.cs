@@ -28,6 +28,6 @@ namespace LSCore.ConfigModule
     {
         public JToken data = new JObject();
         protected static JToken Get(string path) => GetManager(path).Config.data;
-        protected static GameConfigManager<JTokenGameConfig> GetManager(string path) => ConfigMaster<GameConfigManager<JTokenGameConfig>>.Get(path);
+        protected static JTokenGameConfigManager GetManager(string path) => ConfigMaster<JTokenGameConfigManager>.Get(path);
     }
 }

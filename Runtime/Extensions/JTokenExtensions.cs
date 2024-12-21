@@ -6,7 +6,17 @@ namespace LSCore.Extensions
 {
     public static class JTokenExtensions
     {
-        public static void Remove(this JToken target, object key)
+        public static T As<T>(this JToken token, string key, T defaultValue = default)
+        {
+            return token[key] != null ? token[key].ToObject<T>() : defaultValue;
+        }
+        
+        public static T As<T>(this JToken token, T defaultValue = default)
+        {
+            return token != null ? token.ToObject<T>() : defaultValue;
+        }
+        
+        public static void RemoveKey(this JToken target, object key)
         {
             target[key]?.Parent?.Remove();
         }

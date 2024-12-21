@@ -1,6 +1,33 @@
 ﻿#if UNITY_EDITOR
+using System.Runtime.InteropServices;
+using UnityEngine;
 using WindowsInput;
 using WindowsInput.Native;
+
+public static class CursorPoint
+{
+    [StructLayout(LayoutKind.Sequential)]
+    public struct POINT
+    {
+        public int X;
+        public int Y;
+    }
+
+    [DllImport("user32.dll")]
+    public static extern bool GetCursorPos(out POINT point);
+
+    public static Vector2 Position
+    {
+        get
+        {
+            if (GetCursorPos(out POINT point))
+            {
+                return new Vector2(point.X, Screen.currentResolution.height - point.Y);
+            }
+            return Vector2.zero;
+        }
+    }
+}
 
 public static class KeyWatcher
 {
