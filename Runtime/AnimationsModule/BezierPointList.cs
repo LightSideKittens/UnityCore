@@ -4,12 +4,72 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
-public class BezierPointList : IList<Vector2>
+public struct BezierPoint
 {
-    public List<Vector2> points = new();
+    public Vector2 p;
+    
+    public float x
+    {
+        get => p.x;
+        set => p.x = value;
+    }
+    
+    public float y
+    {
+        get => p.y;
+        set => p.y = value;
+    }
+    
+#if UNITY_EDITOR
+    public Vector2 e;
+    
+    public float ex
+    {
+        get => e.x;
+        set => e.x = value;
+    }
+    
+    public float ey
+    {
+        get => e.y;
+        set => e.y = value;
+    }
+    
+    public BezierPoint ePlus(Vector2 b)
+    {
+        e += b;
+        p = e;
+        return this;
+    }
+
+#endif
+    
+    public static BezierPoint operator +(BezierPoint a, Vector2 b)
+    {
+        a.p += b;
+        return a;
+    }
+    
+    public static implicit operator Vector2(BezierPoint point) => point.p;
+    public static implicit operator Vector3(BezierPoint point) => point.p;
+
+    public static explicit operator BezierPoint(Vector2 point)
+    {
+        return new BezierPoint
+        {
+            p = point,
+            e = point,
+        };
+    }
+}
+
+[Serializable]
+public class BezierPointList : IList<BezierPoint>
+{
+    public List<BezierPoint> points = new();
     public bool loop;
     
-    public IEnumerator<Vector2> GetEnumerator()
+    public IEnumerator<BezierPoint> GetEnumerator()
     {
         return points.GetEnumerator();
     }
@@ -19,7 +79,9 @@ public class BezierPointList : IList<Vector2>
         return GetEnumerator();
     }
 
-    public void Add(Vector2 item)
+    public void Add(Vector2 item) => Add((BezierPoint)item);
+
+    public void Add(BezierPoint item)
     {
         points.Add(item);
     }
@@ -29,17 +91,17 @@ public class BezierPointList : IList<Vector2>
         points.Clear();
     }
 
-    public bool Contains(Vector2 item)
+    public bool Contains(BezierPoint item)
     {
         return points.Contains(item);
     }
 
-    public void CopyTo(Vector2[] array, int arrayIndex)
+    public void CopyTo(BezierPoint[] array, int arrayIndex)
     {
         points.CopyTo(array, arrayIndex);
     }
 
-    public bool Remove(Vector2 item)
+    public bool Remove(BezierPoint item)
     {
         return points.Remove(item);
     }
@@ -47,12 +109,12 @@ public class BezierPointList : IList<Vector2>
     public int Count => points.Count;
     public bool IsReadOnly => false;
     
-    public int IndexOf(Vector2 item)
+    public int IndexOf(BezierPoint item)
     {
         return points.IndexOf(item);
     }
 
-    public void Insert(int index, Vector2 item)
+    public void Insert(int index, BezierPoint item)
     {
         points.Insert(index, item);
     }
@@ -62,7 +124,7 @@ public class BezierPointList : IList<Vector2>
         points.RemoveAt(index);
     }
 
-    public Vector2 this[int index]
+    public BezierPoint this[int index]
     {
         get => points[index];
         set => points[index] = value;
@@ -101,10 +163,10 @@ public class BezierPointList : IList<Vector2>
             return;
         }
         
-        Vector2 p0 = points[i];
-        Vector2 p1 = points[i + 1];
-        Vector2 p2 = points[i + 2];
-        Vector2 p3 = points[i + 3];
+        BezierPoint p0 = points[i];
+        BezierPoint p1 = points[i + 1];
+        BezierPoint p2 = points[i + 2];
+        BezierPoint p3 = points[i + 3];
 
         Vector2 q0 = Vector2.Lerp(p0, p1, t);
         Vector2 q1 = Vector2.Lerp(p1, p2, t);
@@ -114,12 +176,11 @@ public class BezierPointList : IList<Vector2>
         Vector2 r1 = Vector2.Lerp(q1, q2, t);
         Vector2 s = Vector2.Lerp(r0, r1, t);
         
-        points[i] = p0;
-        points[i + 1] = q0;
-        points[i + 2] = r0;
-        points[i + 3] = s;
-        Insert(i + 4, r1);
-        Insert(i + 5, q2);
+        points[i + 1] = (BezierPoint)q0;
+        points[i + 2] = (BezierPoint)r0;
+        points[i + 3] = (BezierPoint)s;
+        Insert(i + 4, (BezierPoint)r1);
+        Insert(i + 5, (BezierPoint)q2);
         Insert(i + 6, p3);
     }
     

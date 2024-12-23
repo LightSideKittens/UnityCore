@@ -4,6 +4,14 @@ namespace LSCore.Extensions.Unity
 {
     public static class Vector3Extensions
     {
+        public static Vector3 Divide(this Vector3 a, Vector3 b)
+        {
+            a.x /= b.x;
+            a.y /= b.y;
+            a.z /= b.z;
+            return a;
+        }
+        
         public static Vector3 RotateAroundPivot(this Vector3 point, Vector3 pivot, Vector3 eulerAngles)
         {
             Vector3 direction = point - pivot;

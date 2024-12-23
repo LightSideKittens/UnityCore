@@ -28,7 +28,8 @@ namespace LSCore.Editor
         private static Vector3 lastMp;
         private static Scene scene;
         private static int currentDrawLayer;
-
+        
+        private static Matrix4x4 currentMatrix = Matrix4x4.identity;
         public static float CamSize => cam.orthographicSize;
         
         static LSHandles()
@@ -51,7 +52,21 @@ namespace LSCore.Editor
             sprites.Released += sprite => sprite.enabled = false;
             releasePools += sprites.ReleaseAll;
         }
+
+        #region Matrix stack
         
+        public static void StartMatrix(Matrix4x4 matrix)
+        {
+            currentMatrix = matrix;
+        }
+        
+        public static Matrix4x4 EndMatrix()
+        {
+            return currentMatrix;
+        }
+
+        #endregion
+
         public static void Begin(Rect rect, CameraData camData)
         {
             HandleInput();
@@ -66,7 +81,7 @@ namespace LSCore.Editor
                     throw new InvalidOperationException("Preview scene could not be created");
 
                 scene.name = "PreviewScene";
-                GameObject objectWithHideFlags1 = EditorUtility.CreateGameObjectWithHideFlags("GridCam", HideFlags.None, typeof (Camera));
+                var objectWithHideFlags1 = EditorUtility.CreateGameObjectWithHideFlags("GridCam", HideFlags.None, typeof (Camera));
                 cam = objectWithHideFlags1.GetComponent<Camera>();
                 AddGameObject(cam);
                 cam.clearFlags = CameraClearFlags.SolidColor;
@@ -121,8 +136,8 @@ namespace LSCore.Editor
         {
             get
             {
-                Event e = Event.current;
-                Vector2 mp = e.mousePosition;
+                var e = Event.current;
+                var mp = e.mousePosition;
                 mp.y *= -1;
                 mp.y += rect.height;
 
@@ -136,7 +151,7 @@ namespace LSCore.Editor
         {
             get
             {
-                Event e = Event.current;
+                var e = Event.current;
                 Vector3 mp = e.mousePosition;
                 mp.y *= -1;
                 mp.y += rect.height;
@@ -148,22 +163,49 @@ namespace LSCore.Editor
             }
         }
 
+        private static Vector3 mpForMatrix;
+        
         private static void HandleInput()
         {
-            if(cam == null) return;
-            
+            if (cam == null) return;
+
             Event e = Event.current;
+            if (e.type is EventType.Layout or EventType.Repaint) return;
             Vector3 mp = e.mousePosition;
             mp.y *= -1;
             mp.y += rect.height;
-            
+
             if (e.type == EventType.MouseDown && e.button == 2)
             {
-                lastMp = cam.ScreenToWorldPoint(mp);
+                lastMp = mp;
+                mpForMatrix = mp;
             }
             else if (e.type == EventType.MouseDrag && e.button == 2)
             {
-                camData.position -= cam.ScreenToWorldPoint(mp) - lastMp;
+                if (e.control)
+                {
+                    var lmp = cam.ScreenToWorldPoint(mpForMatrix);
+                    float sensitivity = 0.01f;
+
+                    float scaleX = 1 + e.delta.x * sensitivity;
+                    float scaleY = 1 + e.delta.y * sensitivity;
+
+                    Matrix4x4 translateToPoint = Matrix4x4.Translate(lmp);
+                    Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(scaleX, scaleY, 1f));
+                    Matrix4x4 translateBack = Matrix4x4.Translate(-lmp);
+
+                    Matrix4x4 transformMatrix = translateToPoint * scaleMatrix * translateBack;
+
+                    currentMatrix = transformMatrix * currentMatrix;
+                }
+                else
+                {
+                    var delta = mp - lastMp;
+                    delta *= camData.Size / 398;
+                    camData.position -= delta;
+                }
+
+                lastMp = mp;
                 GUI.changed = true;
             }
             else if (e.type == EventType.ScrollWheel)
@@ -176,24 +218,23 @@ namespace LSCore.Editor
                 GUI.changed = true;
             }
         }
-        
-        
+
         private static bool inProgress;
         private static int lastWidth;
         private static int lastHeight;
 
         private static void CreateCameraTargetTexture(Rect cameraRect, bool hdr)
         {
-            GraphicsFormat colorFormat = !hdr || !SystemInfo.IsFormatSupported(GraphicsFormat.R16G16B16A16_SFloat, FormatUsage.Render) ? SystemInfo.GetGraphicsFormat(DefaultFormat.LDR) : GraphicsFormat.R16G16B16A16_SFloat;
+            var colorFormat = !hdr || !SystemInfo.IsFormatSupported(GraphicsFormat.R16G16B16A16_SFloat, FormatUsage.Render) ? SystemInfo.GetGraphicsFormat(DefaultFormat.LDR) : GraphicsFormat.R16G16B16A16_SFloat;
             if (targetTexture != null && targetTexture.graphicsFormat != colorFormat)
             {
                 Object.DestroyImmediate(targetTexture);
                 targetTexture = null;
             }
             
-            Rect cameraRect1 = cameraRect;
-            int width = (int) cameraRect1.width;
-            int height = (int) cameraRect1.height;
+            var cameraRect1 = cameraRect;
+            var width = (int) cameraRect1.width;
+            var height = (int) cameraRect1.height;
             
             if (targetTexture == null || lastWidth != width || lastHeight != height)
             {
@@ -203,7 +244,7 @@ namespace LSCore.Editor
                 {
                     UnityEngine.Object.DestroyImmediate(targetTexture);
                 }
-                RenderTexture renderTexture = new RenderTexture(0, 0, colorFormat, SystemInfo.GetGraphicsFormat(DefaultFormat.DepthStencil));
+                var renderTexture = new RenderTexture(0, 0, colorFormat, SystemInfo.GetGraphicsFormat(DefaultFormat.DepthStencil));
                 renderTexture.name = "GridCam RT";
                 renderTexture.antiAliasing = 1;
                 renderTexture.hideFlags = HideFlags.HideAndDontSave;
@@ -241,7 +282,7 @@ namespace LSCore.Editor
 
         private static bool IsInCamera(Vector2 point)
         {
-            Vector3 pointInView = cam.WorldToViewportPoint(point);
+            var pointInView = cam.WorldToViewportPoint(point);
             return pointInView.x is >= 0 and <= 1 
                    && pointInView.y is >= 0 and <= 1 
                    && pointInView.z > 0;
@@ -258,6 +299,12 @@ namespace LSCore.Editor
         {
             if(eventType != EventType.Repaint) return; 
             var bezie = GetLine(color, width, dependsOnCam);
+
+            startPoint   = currentMatrix.MultiplyPoint3x4(startPoint);
+            startTangent = currentMatrix.MultiplyPoint3x4(startTangent);
+            endTangent   = currentMatrix.MultiplyPoint3x4(endTangent);
+            endPoint     = currentMatrix.MultiplyPoint3x4(endPoint);
+
             DrawBezierCurve(bezie, startPoint, startTangent, endTangent, endPoint);
         }
 
@@ -290,10 +337,10 @@ namespace LSCore.Editor
             Vector3 endTangent,
             Vector3 endPoint)
         {
-            Vector3[] positions = new Vector3[bezieQuality];
-            for (int i = 0; i < bezieQuality; i++)
+            var positions = new Vector3[bezieQuality];
+            for (var i = 0; i < bezieQuality; i++)
             {
-                float t = i / (float)(bezieQuality - 1);
+                var t = i / (float)(bezieQuality - 1);
                 positions[i] = CalculateBezierPoint(t, startPoint, startTangent, endTangent, endPoint);
             }
             
@@ -303,13 +350,13 @@ namespace LSCore.Editor
 
         private static Vector3 CalculateBezierPoint(float t, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3)
         {
-            float u = 1 - t;
-            float tt = t * t;
-            float uu = u * u;
-            float uuu = uu * u;
-            float ttt = tt * t;
+            var u = 1 - t;
+            var tt = t * t;
+            var uu = u * u;
+            var uuu = uu * u;
+            var ttt = tt * t;
 
-            Vector3 p = uuu * p0;
+            var p = uuu * p0;
             p += 3 * uu * t * p1;
             p += 3 * u * tt * p2;
             p += ttt * p3;
@@ -326,8 +373,13 @@ namespace LSCore.Editor
         {
             if(eventType != EventType.Repaint) return; 
             var line = GetLine(color, width, dependsOnCam);
+
+            for (var i = 0; i < points.Length; i++)
+            {
+                points[i] = currentMatrix.MultiplyPoint3x4(points[i]);
+            }
             
-            line.positionCount = 2;
+            line.positionCount = points.Length;
             line.SetPositions(points);
             line.sortingOrder = currentDrawLayer++;
         }
@@ -341,22 +393,23 @@ namespace LSCore.Editor
         {
             if(eventType != EventType.Repaint) return; 
             var sprite = GetCircle();
+
+            var transformedPos = currentMatrix.MultiplyPoint3x4(pos);
+            
             var tr = sprite.transform;
-            tr.position = pos;
+            tr.position = transformedPos;
+
             Vector3 scale = size;
             scale.z = 1;
+
+            if (dependsOnCam)
+            {
+                scale *= cam.orthographicSize / 3;
+            }
+
             tr.localScale = scale;
             sprite.color = color;
             sprite.sortingOrder = currentDrawLayer++;
-            
-            if (dependsOnCam)
-            {
-                tr.localScale = scale * (cam.orthographicSize / 3);
-            }
-            else
-            {
-                tr.localScale = scale;
-            }
         }
     }
 }

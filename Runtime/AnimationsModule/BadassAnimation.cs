@@ -4,7 +4,7 @@ using LSCore.Editor;
 using UnityEngine;
 using UnityEditor;
 
-public class FuckingAnimation : EditorWindow
+public class BadassAnimation : EditorWindow
 {
     [SerializeField] [Range(0, 1)] private float time = 0.5f;
     public BezierPointList points;
@@ -14,6 +14,7 @@ public class FuckingAnimation : EditorWindow
     private Color keyPointColor = Color.red;
     private Color tangentPointColor = Color.green;
     private Color selectionColor = new Color(0.21f, 0.48f, 1f, 0.6f);
+    private Matrix4x4 matrix = Matrix4x4.identity;
     
     public void TryInit()
     {
@@ -32,10 +33,10 @@ public class FuckingAnimation : EditorWindow
     public LSHandles.CameraData camData = new();
     public LSHandles.GridData gridData = new();
     
-    [MenuItem("Window/Custom Editor Window")]
+    [MenuItem(LSPaths.Windows.BadassAnimation)]
     public static void ShowWindow()
     {
-        GetWindow<FuckingAnimation>("Custom Workspace");
+        GetWindow<BadassAnimation>();
     }
 
     private void OnGUI()
@@ -43,6 +44,7 @@ public class FuckingAnimation : EditorWindow
         TryInit();
         var rect = position;
         rect.position = Vector2.zero;
+        LSHandles.StartMatrix(matrix);
         LSHandles.Begin(rect, camData);
 
         if (points.Count >= 4)
@@ -77,17 +79,18 @@ public class FuckingAnimation : EditorWindow
                 var endTangent = points[i+2];
                 var endPosition = points[i+3];
                 
-                LSHandles.DrawBezier(startPosition, startTangent, endTangent, endPosition, curveColor, constWidth);
-                LSHandles.DrawLine(constWidth, tangentLineColor, startTangent, startPosition);
-                LSHandles.DrawLine(constWidth, tangentLineColor, endTangent, endPosition);
+                LSHandles.DrawBezier(startPosition.p, startTangent.p, endTangent.p, endPosition.p, curveColor, constWidth);
                 
-                LSHandles.DrawSolidCircle(startPosition, constWidth, keyPointColor);
-                LSHandles.DrawSolidCircle(startTangent, constWidth, tangentPointColor);
-                LSHandles.DrawSolidCircle(endTangent, constWidth, tangentPointColor);
+                LSHandles.DrawLine(constWidth, tangentLineColor, startTangent.e, startPosition.e);
+                LSHandles.DrawLine(constWidth, tangentLineColor, endTangent.e, endPosition.e);
+                
+                LSHandles.DrawSolidCircle(startPosition.e, constWidth, keyPointColor);
+                LSHandles.DrawSolidCircle(startTangent.e, constWidth, tangentPointColor);
+                LSHandles.DrawSolidCircle(endTangent.e, constWidth, tangentPointColor);
             }
             
-            LSHandles.DrawSolidCircle(points[selectedPointIndex], constWidth * 1.5f, selectionColor);
-            LSHandles.DrawSolidCircle(points[^1], constWidth, keyPointColor);
+            LSHandles.DrawSolidCircle(points[selectedPointIndex].e, constWidth * 1.5f, selectionColor);
+            LSHandles.DrawSolidCircle(points[^1].e, constWidth, keyPointColor);
             ProcessEvents(Event.current);
 
             var dp = points.EvaluateNormalized(time);
@@ -108,8 +111,9 @@ public class FuckingAnimation : EditorWindow
         }
 
         LSHandles.DrawGrid(gridData);
-        LSHandles.End();
-
+        LSHandles.End(); 
+        matrix = LSHandles.EndMatrix();
+        
         time = EditorGUILayout.Slider("Time", time, 0, 1);
     }
     
@@ -184,7 +188,7 @@ public class FuckingAnimation : EditorWindow
                 break;
 
             case EventType.MouseDrag:
-                if (draggingPointIndex != -1)
+                if (draggingPointIndex != -1 && e.button == 0)
                 {
                     var dt = LSHandles.MouseDeltaInWorldPoint;
                     
@@ -203,7 +207,7 @@ public class FuckingAnimation : EditorWindow
     
     private void MoveAsAnimation(ref int i, Vector2 delta)
     {
-        points[i] += delta;
+        points[i] = points[i].ePlus(delta);
         if (!ClampTangent(i))
         {
             var root = points[i];
@@ -310,13 +314,13 @@ public class FuckingAnimation : EditorWindow
         return i % 3 == 2;
     }
     
-    private bool IsPointClicked(Vector2 point, Vector2 worldMousePos, float distance, bool dependsOnCamera = true)
+    private bool IsPointClicked(BezierPoint point, Vector2 worldMousePos, float distance, bool dependsOnCamera = true)
     {
         if (dependsOnCamera)
         {
             distance *= LSHandles.CamSize / 3;
         }
-        return Vector2.Distance(point, worldMousePos) <= distance;
+        return Vector2.Distance(point.e, worldMousePos) <= distance;
     }
 
     public void SwapKeys(ref int root1, int root2)

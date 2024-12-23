@@ -1,5 +1,5 @@
 ﻿using System;
-using Sirenix.Utilities;
+using LSCore.Extensions.Unity;
 using UnityEngine;
 
 namespace LSCore.Editor
@@ -10,66 +10,66 @@ namespace LSCore.Editor
         public class GridData
         {
             public int cellDivides = 10;
-            public Vector2 scale = Vector2.one;
-            public Color color = new (0.5f, 0.5f, 0.5f, 0.5f);
+            public Color color = new(0.5f, 0.5f, 0.5f, 0.5f);
             public Vector2 scaleRange = new(0.0001f, 100);
             public Vector2 stepRef = new Vector2(0.1f, 0.1f);
 
             public void Draw()
             {
-                HandleGridInput();
-                if(eventType != EventType.Repaint) return; 
+                if (eventType != EventType.Repaint) return;
+
                 Vector2 startPoint = cam.ViewportToWorldPoint(new Vector3(0, 0, cam.nearClipPlane));
                 Vector2 endPoint = cam.ViewportToWorldPoint(new Vector3(1, 1, cam.nearClipPlane));
-                var zoomStepMultiplies = GetGridMultiplyByZoom();
-                var scaleStepMultiplies = GetGridMultiplyByGridScale();
-                scaleStepMultiplies.x += zoomStepMultiplies;
-                scaleStepMultiplies.y += zoomStepMultiplies;
-                scaleStepMultiplies -= Vector2.one;
-
-                var lw = 0.001f * cam.orthographicSize;
-                var step = stepRef * scale;
+                var invMatrix = currentMatrix.inverse;
+                startPoint = invMatrix.MultiplyPoint3x4(startPoint);
+                endPoint = invMatrix.MultiplyPoint3x4(endPoint);
+                
+                Vector2 step = stepRef ;
+                var scaleStepMultiplies = GetGridMultiply();
                 step *= scaleStepMultiplies;
-
+                
                 startPoint.x -= startPoint.x % step.x;
                 startPoint.y -= startPoint.y % step.y;
 
                 var positions = new Vector3[2];
                 var c = color;
 
-                var alphaByZoom = GetProgressToNextDoublingByZoom(1);
-                var alphaByScale = GetProgressToNextDoublingByScale(1);
-                alphaByScale *= alphaByZoom;
-
+                var alphaByZoom = GetProgressToNextDoubling();
+                
                 float minValue = -100_000_000_000_000f;
                 float maxValue = 100_000_000_000_000f;
 
+                var lw = 0.001f * cam.orthographicSize;
                 var index = Mathf.RoundToInt(startPoint.x / step.x);
-
+                
                 while (startPoint.x < endPoint.x)
                 {
                     HandleOpacity(0);
                     var line = GetLine(c, lw, false);
-                    positions[0] = new Vector3(startPoint.x, minValue);
-                    positions[1] = new Vector3(startPoint.x, maxValue);
+
+                    positions[0] = currentMatrix.MultiplyPoint3x4(new Vector3(startPoint.x, minValue));
+                    positions[1] = currentMatrix.MultiplyPoint3x4(new Vector3(startPoint.x, maxValue));
+
                     line.positionCount = 2;
                     line.SetPositions(positions);
                     startPoint.x += step.x;
                 }
-                
+
                 index = Mathf.RoundToInt(startPoint.y / step.y);
 
                 while (startPoint.y < endPoint.y)
                 {
                     HandleOpacity(1);
                     var line = GetLine(c, lw, false);
-                    positions[0] = new Vector3(minValue, startPoint.y);
-                    positions[1] = new Vector3(maxValue, startPoint.y);
+
+                    positions[0] = currentMatrix.MultiplyPoint3x4(new Vector3(minValue, startPoint.y));
+                    positions[1] = currentMatrix.MultiplyPoint3x4(new Vector3(maxValue, startPoint.y));
+
                     line.positionCount = 2;
                     line.SetPositions(positions);
                     startPoint.y += step.y;
                 }
-                
+
                 void HandleOpacity(int compIndex)
                 {
                     if (index % cellDivides == 0)
@@ -80,72 +80,53 @@ namespace LSCore.Editor
                     else
                     {
                         lw = 0.002f * cam.orthographicSize;
-                        c.a = Mathf.Pow(alphaByZoom, 4);
+                        c.a = Mathf.Pow(alphaByZoom[compIndex], 4);
                     }
 
                     index++;
                 }
             }
 
-            private void HandleGridInput()
+            private Vector3 Scale => Vector3.one.Divide(currentMatrix.lossyScale) * camData.Size;
+            public Vector2 GetGridMultiply()
             {
-                Event e = Event.current;
-                Vector3 mp = e.mousePosition;
-                mp.y *= -1;
-                mp.y += rect.height;
-                var gridDelta = e.delta.y / 300;
-            
-                if (e.type == EventType.ScrollWheel)
+                return NextPowerOfScale(Scale, cellDivides);
+            }
+
+            private static Vector2 NextPowerOfScale(Vector3 scale, int cellDivides)
+            {
+                var min = Math.Pow(cellDivides, -5);
+                var max = Mathf.Pow(cellDivides, 6);
+                return new Vector2(NextPowerOf((int)(scale.x / min), cellDivides) / max, NextPowerOf((int)(scale.y / min), cellDivides) / max);
+            }
+
+            private static int NextPowerOf(int value, int baseValue)
+            {
+                if (value < 1)
+                    return 1;
+
+                float logValue = Mathf.Log(value, baseValue);
+                int ceilPower = Mathf.CeilToInt(logValue);
+                int candidate = (int)Mathf.Pow(baseValue, ceilPower);
+                if (candidate <= value)
                 {
-                    if (e.control)
-                    {
-                        scale.x -= gridDelta;
-                        ClampGridScale();
-                    }
-                    else if(e.alt)
-                    {
-                        scale.y -= gridDelta;
-                        ClampGridScale();
-                    }
-                    GUI.changed = true;
+                    candidate *= baseValue;
                 }
-            }
-            
-            private void ClampGridScale()
-            {
-                scale = scale.Clamp(Vector2.one * scaleRange.x, Vector2.one * scaleRange.y);
+
+                return candidate;
             }
 
-            public float GetProgressToNextDoublingByZoom(int doublingDepth)
+            public Vector2 GetProgressToNextDoubling()
             {
-                return GetLerped(camData.Size, cellDivides, doublingDepth);
-            }
-            
-            public float GetGridMultiplyByZoom()
-            {
-                float scaleRatio = camData.Size;
-                int doublingCount = (int)Mathf.Log(scaleRatio, cellDivides);
-                float gridSpacingMultiply = Mathf.Pow(cellDivides, doublingCount);
-                return gridSpacingMultiply;
-            }
-    
-            public Vector2 GetGridMultiplyByGridScale()
-            {
-                int doublingXCount = (int)Mathf.Log(scale.x, 2);
-                int doublingYCount = (int)Mathf.Log(scale.y, 2);
-                float gridSpacingMultiplyX = Mathf.Pow(2, doublingXCount);
-                float gridSpacingMultiplyY = Mathf.Pow(2, doublingYCount);
+                var scale = Scale;
+                var current = NextPowerOfScale(scale, cellDivides);
 
-                return new Vector2(gridSpacingMultiplyX, gridSpacingMultiplyY);
+                var prev = current / cellDivides;
+                var next = current * cellDivides;
+                
+                return new Vector2(Mathf.InverseLerp(next.x, prev.x, scale.x), Mathf.InverseLerp(next.y, prev.y, scale.y));
             }
-    
-            public Vector2 GetProgressToNextDoublingByScale(int doublingDepth)
-            {
-                return new Vector2(
-                    GetLerped(scale.x, 2, doublingDepth),
-                    GetLerped(scale.y, 2, doublingDepth));
-            }
-            
+
             public static float GetLerped(float scaleRatio, float logBase, int depth)
             {
                 float value = Mathf.Log(scaleRatio, logBase);
