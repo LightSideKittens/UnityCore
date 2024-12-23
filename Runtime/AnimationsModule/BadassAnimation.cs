@@ -20,13 +20,15 @@ public class BadassAnimation : EditorWindow
     {
         points ??= new BezierPointList();
         
-        if (points.Count < 4)
+        if (points.Count < 6)
         {
             points.Clear();
+            points.Add(new Vector2(-0.5f, 0));
             points.Add(new Vector2());
             points.Add(new Vector2(0.5f, 0));
             points.Add(new Vector2(0.5f, 1));
             points.Add(new Vector2(1, 1));
+            points.Add(new Vector2(1.5f, 1));
         }
     }
     
@@ -63,16 +65,23 @@ public class BadassAnimation : EditorWindow
             }
             else
             {
-                var minPoint = points[0];
+                var minPoint = points[1];
                 minPoint.x = -10000;
-                LSHandles.DrawLine(constWidth, curveColor, points[0], minPoint);
+                LSHandles.DrawLine(constWidth, curveColor, points[1], minPoint);
                 
-                var maxPoint = points[^1];
+                var maxPoint = points[^2];
                 maxPoint.x = 10000;
-                LSHandles.DrawLine(constWidth, curveColor, points[^1], maxPoint);
+                LSHandles.DrawLine(constWidth, curveColor, points[^2], maxPoint);
             }
             
-            for (int i = 0; i < points.Count - 1; i += 3)
+            LSHandles.DrawSolidCircle(points[selectedPointIndex].e, constWidth * 1.5f, selectionColor);
+            
+            var st = points[0];
+            var sp = points[1];
+            LSHandles.DrawLine(constWidth, tangentLineColor, st.e, sp.e);
+            LSHandles.DrawSolidCircle(st.e, constWidth, tangentPointColor);
+            
+            for (int i = 1; i < points.Count - 2; i += 3)
             {
                 var startPosition = points[i];
                 var startTangent = points[i+1];
@@ -89,8 +98,12 @@ public class BadassAnimation : EditorWindow
                 LSHandles.DrawSolidCircle(endTangent.e, constWidth, tangentPointColor);
             }
             
-            LSHandles.DrawSolidCircle(points[selectedPointIndex].e, constWidth * 1.5f, selectionColor);
-            LSHandles.DrawSolidCircle(points[^1].e, constWidth, keyPointColor);
+            var ep = points[^2];
+            var et = points[^1];
+            LSHandles.DrawLine(constWidth, tangentLineColor, et.e, ep.e);
+            LSHandles.DrawSolidCircle(et.e, constWidth, tangentPointColor);
+            
+            LSHandles.DrawSolidCircle(ep.e, constWidth, keyPointColor);
             ProcessEvents(Event.current);
 
             var dp = points.EvaluateNormalized(time);
@@ -211,20 +224,22 @@ public class BadassAnimation : EditorWindow
         if (!ClampTangent(i))
         {
             var root = points[i];
-            if (i == 0)
+            
+            TrySwapNext(ref i);
+            TrySwapPrev(ref i);
+            ClampTangent(i + 1);
+            ClampTangent(i - 1);
+
+            if (i == 1)
             {
-                TrySwapNext(ref i);
-                ClampTangent(2);
+                ClampTangent(i + 2);
             }
-            else if(i == points.Count - 1)
+            else if(i == points.Count - 2)
             {
-                TrySwapPrev(ref i);
                 ClampTangent(i - 2);
             }
             else
             {
-                TrySwapNext(ref i);
-                TrySwapPrev(ref i);
                 ClampTangent(i + 2);
                 ClampTangent(i - 2);
             }
@@ -233,6 +248,8 @@ public class BadassAnimation : EditorWindow
             
             void TrySwapNext(ref int ii)
             {
+                if(ii + 3 > points.Count - 1) return;
+                
                 var next = points[ii + 3];
                 if (root.x > next.x)
                 {
@@ -242,6 +259,8 @@ public class BadassAnimation : EditorWindow
 
             void TrySwapPrev(ref int ii)
             {
+                if(ii - 3 < 0) return;
+                
                 var prev = points[ii - 3];
                 if (root.x < prev.x)
                 {
@@ -258,17 +277,17 @@ public class BadassAnimation : EditorWindow
             if (IsForwardTangent(i))
             {
                 var root = points[i - 1];
-                var nextRoot = points[i + 2];
+                var nextRoot = i < (points.Count-1) ? points[i + 2] : (BezierPoint)Vector2.positiveInfinity;
                 var pos = points[i];
-                pos.x = Mathf.Clamp(pos.x, root.x, nextRoot.x);
+                pos.x = Mathf.Clamp(pos.ex, root.x, nextRoot.x);
                 points[i] = pos;
             }
             else
             {
                 var root = points[i + 1];
-                var prevRoot = points[i - 2];
+                var prevRoot = i > 0 ? points[i - 2] : (BezierPoint)Vector2.negativeInfinity;
                 var pos = points[i];
-                pos.x = Mathf.Clamp(pos.x, prevRoot.x, root.x);
+                pos.x = Mathf.Clamp(pos.ex, prevRoot.x, root.x);
                 points[i] = pos;
             }
 
@@ -282,36 +301,25 @@ public class BadassAnimation : EditorWindow
     {
         if (IsTangent(i)) return Array.Empty<int>();
         
-        if (i == 0)
-        {
-            workedPointIndexesArr[0] = 1;
-            return workedPointIndexesArr[..1];
-        }
-        
-        if(i == points.Count - 1)
-        {
-            workedPointIndexesArr[0] = i - 1;
-            return workedPointIndexesArr[..1];
-        }
-        
-        workedPointIndexesArr[0] = i + 1;
-        workedPointIndexesArr[1] = i - 1;
-        return workedPointIndexesArr[..2];
+        workedPointIndexesArr[0] = i - 1;
+        workedPointIndexesArr[1] = i + 1;
+        return workedPointIndexesArr[..];
     }
     
     private bool IsTangent(int i)
     {
-        return !(i == 0 || i == points.Count - 1 || i % 3 == 0);
+        var f = i % 3;
+        return f is 0 or 2;
     }
     
     private bool IsForwardTangent(int i)
     {
-        return i % 3 == 1;
+        return i % 3 == 2;
     }
     
     private bool IsBackwardTangent(int i)
     {
-        return i % 3 == 2;
+        return i % 3 == 0;
     }
     
     private bool IsPointClicked(BezierPoint point, Vector2 worldMousePos, float distance, bool dependsOnCamera = true)
@@ -332,6 +340,12 @@ public class BadassAnimation : EditorWindow
         tangentIndexes = root2Tangents;
         (points[root1], points[root2]) = (points[root2], points[root1]);
         (root1, root2) = (root2, root1);
+        selectedPointIndex = root1;
+        
+        for (int i = 0; i < 2; i++)
+        {
+            (points[root1Tangents[i]], points[root2Tangents[i]]) = (points[root2Tangents[i]], points[root1Tangents[i]]);
+        }
     }
 
     
