@@ -100,34 +100,19 @@ public class BezierPointList : IList<BezierPoint>
     /// </summary>
     public void DeleteKey(int keyIndex)
     {
-        // Индекс самой root-точки в списке
         int rootIndex = keyIndex * 3 + 1;
-        
-        // Для удобства проверим границы
+
         if (rootIndex < 0 || rootIndex >= Count)
             return;
 
-        // У нас сегмент выглядит (rootIndex - 1): tangent, (rootIndex): root, (rootIndex + 1): tangent
-        // и до следующего root ещё (rootIndex + 2): tangent, (rootIndex + 3): следующий root.
-        // Обычно достаточно убрать root + два соседних тангента.
-        // Однако если keyIndex - это первая или последняя точка, смотрим на границы.
-
-        // Примерно такая логика:
         int leftTangent = rootIndex - 1;
         int rightTangent = rootIndex + 1;
 
-        // Если это "первый" ключ, то leftTangent может быть 0 (что валидно)
-        // Если это "последний" ключ, то rightTangent может оказаться за границей.
-        // Поэтому аккуратно удаляем в порядке убывания индексов (чтобы не сместить оставшиеся раньше времени).
-
-        // Удаляем правую точку, если она в пределах
         if (rightTangent < Count)
             RemoveAt(rightTangent);
 
-        // Удаляем сам root
         RemoveAt(rootIndex);
 
-        // Удаляем левую точку, если она в пределах
         if (leftTangent >= 0)
             RemoveAt(leftTangent);
     }
@@ -139,21 +124,16 @@ public class BezierPointList : IList<BezierPoint>
     /// </summary>
     public void InsertKey(int keyIndex, float t)
     {
-        // Индекс root'а, от которого пойдёт сегмент
         int i = keyIndex * 3 + 1;
 
-        // Проверка, чтобы не вылететь за границы
-        // Нам нужны точки i, i+1, i+2, i+3 (потому что до следующего root идёт +3)
         if (i + 3 >= Count)
             return;
 
-        // Вот наш "кубический" сегмент: root, tangent, tangent, root
-        BezierPoint p0 = points[i];     // текущий root
-        BezierPoint p1 = points[i + 1]; // tangent
-        BezierPoint p2 = points[i + 2]; // tangent
-        BezierPoint p3 = points[i + 3]; // следующий root
+        BezierPoint p0 = points[i];
+        BezierPoint p1 = points[i + 1];
+        BezierPoint p2 = points[i + 2];
+        BezierPoint p3 = points[i + 3];
 
-        // Интерполяции (стандартная формула деления Безье на две части)
         Vector2 q0 = Vector2.Lerp(p0, p1, t);
         Vector2 q1 = Vector2.Lerp(p1, p2, t);
         Vector2 q2 = Vector2.Lerp(p2, p3, t);
@@ -162,45 +142,39 @@ public class BezierPointList : IList<BezierPoint>
         Vector2 r1 = Vector2.Lerp(q1, q2, t);
         Vector2 s  = Vector2.Lerp(r0, r1, t);
 
-        // Перезаписываем часть точек в "левом" сегменте
         points[i + 1] = (BezierPoint)q0;
         points[i + 2] = (BezierPoint)r0;
         points[i + 3] = (BezierPoint)s;
 
-        // Во "вторую половину"Bezier добавим 3 новые точки 
-        // (т.к. у нас исходный root (p3) мы сохраним, но он сместится правее)
-        // Инсерты делать удобнее в порядке возрастания индексов:
-
-        Insert(i + 4, (BezierPoint)r1);    // новый tangent
-        Insert(i + 5, (BezierPoint)q2);    // ещё один tangent
-        Insert(i + 6, p3);                // старый root (смещён)
+        Insert(i + 4, (BezierPoint)r1);
+        Insert(i + 5, (BezierPoint)q2);
+        Insert(i + 6, p3);
     }
     
     /// <summary>
     /// Найти индекс "левого" ключа (root), у которого x <= xTarget,
     /// но у следующего root x уже > xTarget
     /// </summary>
-    private int GetLeftKeyIndexByX(float xTarget)
+    public int GetLeftKeyIndexByX(float xTarget)
     {
-        // Если xTarget вообще левее первой root-точки => возвращаем 0
         if (xTarget <= points[1].x)
+        {
             return 0;
+        }
 
-        // Если xTarget правее последней root-точки => возвращаем индекс последнего ключа
-        // Последний root лежит по индексу (Count - 2), если структура ровная.
-        // Но на всякий случай возьмём формулу (points.Count-1 - 1) / 3:
-        // Т.е. (последний rootIndex - 1)/3
         int lastKeyIndex = (Count - 2) / 3;
         if (xTarget >= points[Count - 2].x)
+        {
             return lastKeyIndex;
+        }
 
-        // Теперь пробегаем по root-индексам 1,4,7,... (шаг 3)
-        // Ищем тот root, у которого x >= xTarget
         int keyIndex = 0;
         for (int i = 1; i < Count; i += 3)
         {
             if (points[i].x >= xTarget)
+            {
                 return Mathf.Max(0, keyIndex - 1);
+            }
             keyIndex++;
         }
 
@@ -213,23 +187,18 @@ public class BezierPointList : IList<BezierPoint>
     public void InsertKeyByX(float x)
     {
         int leftKeyIndex = GetLeftKeyIndexByX(x);
-        // Индекс root'a для сегмента
         int i = leftKeyIndex * 3 + 1;
 
-        // Границы
         if (i + 3 >= Count)
             return;
 
-        // Точки сегмента
         BezierPoint p0 = points[i];
         BezierPoint p1 = points[i + 1];
         BezierPoint p2 = points[i + 2];
         BezierPoint p3 = points[i + 3];
 
-        // Ищем t, при котором на кривой будет нужный x
         float t = FindBezierTForX(p0.x, p1.x, p2.x, p3.x, x);
 
-        // Далее просто вставляем
         InsertKey(leftKeyIndex, t);
     }
 
@@ -239,7 +208,6 @@ public class BezierPointList : IList<BezierPoint>
     /// </summary>
     public Vector2 EvaluateNormalized(float t)
     {
-        // Линейно берём x от левого (points[1]) к правому (points[^2]).
         float xMin = points[1].x;
         float xMax = points[^2].x; 
         float xTarget = Mathf.Lerp(xMin, xMax, t);
@@ -254,16 +222,13 @@ public class BezierPointList : IList<BezierPoint>
         int curveIndex = GetLeftKeyIndexByX(x);
         int i = curveIndex * 3 + 1;
 
-        // Берём 4 точки сегмента
-        Vector2 p0 = points[i];     // root
-        Vector2 p1 = points[i + 1]; // tangent
-        Vector2 p2 = points[i + 2]; // tangent
-        Vector2 p3 = points[i + 3]; // следующий root
+        Vector2 p0 = points[i];
+        Vector2 p1 = points[i + 1];
+        Vector2 p2 = points[i + 2];
+        Vector2 p3 = points[i + 3];
 
-        // Ищем t, при котором x(t) ≈ нужному x
         float tForX = FindBezierTForX(p0.x, p1.x, p2.x, p3.x, x);
 
-        // Считаем кубический Безье
         return EvaluateCubicBezier(p0, p1, p2, p3, tForX);
     }
 
@@ -278,10 +243,10 @@ public class BezierPointList : IList<BezierPoint>
         float uuu = uu * u;
         float ttt = tt * t;
 
-        Vector2 p = uuu * p0;            // (1 - t)^3 * p0
-        p += 3 * uu * t * p1;            // 3 * (1 - t)^2 * t * p1
-        p += 3 * u * tt * p2;            // 3 * (1 - t) * t^2 * p2
-        p += ttt * p3;                   // t^3 * p3
+        Vector2 p = uuu * p0;
+        p += 3 * uu * t * p1;
+        p += 3 * u * tt * p2;
+        p += ttt * p3;
 
         return p;
     }

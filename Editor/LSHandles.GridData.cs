@@ -87,6 +87,7 @@ namespace LSCore.Editor
                 }
             }
 
+            
             private Vector3 Scale => Vector3.one.Divide(currentMatrix.lossyScale) * camData.Size;
             public Vector2 GetGridMultiply()
             {

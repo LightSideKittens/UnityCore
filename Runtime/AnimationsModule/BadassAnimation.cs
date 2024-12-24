@@ -1,5 +1,6 @@
 ﻿#if UNITY_EDITOR
 using System;
+using System.Collections.Generic;
 using LSCore.Editor;
 using UnityEngine;
 using UnityEditor;
@@ -73,8 +74,11 @@ public class BadassAnimation : EditorWindow
                 maxPoint.x = 10000;
                 LSHandles.DrawLine(constWidth, curveColor, points[^2], maxPoint);
             }
-            
-            LSHandles.DrawSolidCircle(points[selectedPointIndex].e, constWidth * 1.5f, selectionColor);
+
+            for (int i = 0; i < selectedPointIndexes.Count; i++)
+            {
+                LSHandles.DrawSolidCircle(points[selectedPointIndexes[i]].e, constWidth * 1.5f, selectionColor);
+            }
             
             var st = points[0];
             var sp = points[1];
@@ -131,9 +135,8 @@ public class BadassAnimation : EditorWindow
     }
     
     private readonly int[] workedPointIndexesArr = new int[2];
-    private int[] tangentIndexes;
     private int draggingPointIndex;
-    private int selectedPointIndex;
+    private List<int> selectedPointIndexes = new();
     
     private void ProcessEvents(Event e)
     {
@@ -143,55 +146,71 @@ public class BadassAnimation : EditorWindow
                 var _ = LSHandles.MouseDeltaInWorldPoint;
                 if (e.button == 1)
                 {
-                    for (int i = 0; i < points.Count; i++)
+                    var wasClicked = TryGetPointIndex(out var i);
+                    
+                    if (e.control)
                     {
-                        if (IsPointClicked(points[i], LSHandles.MouseInWorldPoint, 0.1f))
+                        if (wasClicked)
                         {
-                            selectedPointIndex = i;
-                            var popup = new Popup();
-                            PopupWindow.Show(new Rect(e.mousePosition, new Vector2(200, 0)), popup);
-
-                            Action onGui = () =>
+                            if (IsRoot(i))
                             {
-                                if (popup.DrawButton("Codependents"))
-                                {
-                                    
-                                }
-                            };
-
-                            popup.onGui = onGui;
-                            GUI.changed = true;
-                            break;
+                                points.DeleteKey((i-1) / 3);
+                                selectedPointIndexes.Remove(i);
+                                selectedPointIndexes.Remove(i-1);
+                                selectedPointIndexes.Remove(i+1);
+                                GUI.changed = true;
+                            }
                         }
+                        else
+                        {
+                            var x = LSHandles.MouseInWorldPoint.x;
+                            int leftKeyIndex = points.GetLeftKeyIndexByX(x) + 1;
+                            points.InsertKeyByX(x);
+                            selectedPointIndexes.Clear();
+                            selectedPointIndexes.Add(leftKeyIndex * 3 + 1);
+                            GUI.changed = true;
+                        }
+                    }
+                    else if (wasClicked)
+                    {
+                        var popup = new Popup();
+
+                        Action onGui = () =>
+                        {
+                            if (popup.DrawButton("Aligned"))
+                            {
+                                    
+                            }
+                                
+                            if (popup.DrawButton("Free"))
+                            {
+                                    
+                            }
+                        };
+
+                        popup.onGui = onGui;
+                        PopupWindow.Show(new Rect(e.mousePosition, new Vector2(10, 10)), popup);
+                        GUI.changed = true;
                     }
                 }
                 else if (e.button == 0)
                 {
                     GUI.changed = true;
-                    for (int i = 0; i < points.Count; i++)
-                    {
-                        if (IsPointClicked(points[i], LSHandles.MouseInWorldPoint, 0.1f))
-                        {
-                            if ((e.modifiers & EventModifiers.Alt) != 0)
-                            {
-                                if (i % 3 == 0)
-                                {
-                                    points.DeleteKey(i / 3);
-                                    return;
-                                }
-                            }
-                            
-                            draggingPointIndex = i;
-                            selectedPointIndex = i;
-
-                            tangentIndexes = GetTangentIndexes(i);
-                            break;
-                        }
-                    }
                     
-                    if ((e.modifiers & EventModifiers.Alt) != 0)
+                    var wasClicked = TryGetPointIndex(out var i);
+                    
+                    if (!e.shift && !(wasClicked && selectedPointIndexes.Contains(i)))
                     {
-                        points.InsertKeyByX(LSHandles.MouseInWorldPoint.x);
+                        selectedPointIndexes.Clear();
+                    }
+                        
+                    if (wasClicked)
+                    {
+                        draggingPointIndex = i;
+                        if (!selectedPointIndexes.Contains(i))
+                        {
+                            selectedPointIndexes.Add(i);
+                        }
                     }
                 }
                 break;
@@ -204,17 +223,56 @@ public class BadassAnimation : EditorWindow
                 if (draggingPointIndex != -1 && e.button == 0)
                 {
                     var dt = LSHandles.MouseDeltaInWorldPoint;
+                    var isRoot = IsRoot(draggingPointIndex);
                     
-                    MoveAsAnimation(ref draggingPointIndex, dt);
-                    
-                    for (int i = 0; i < tangentIndexes.Length; i++)
+                    for (int i = 0; i < selectedPointIndexes.Count; i++)
                     {
-                        MoveAsAnimation(ref tangentIndexes[i], dt);
+                        var targetIndex = selectedPointIndexes[i];
+                        
+                        if (isRoot)
+                        {
+                            if (IsRoot(targetIndex))
+                            {
+                                var ind = targetIndex;
+                                MoveAsAnimation(ref ind, dt);
+                                selectedPointIndexes[i] = ind;
+                                
+                                for (int j = -1; j < 2; j+=2)
+                                {
+                                     ind = targetIndex + j;
+                                    MoveAsAnimation(ref ind, dt);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (IsTangent(targetIndex))
+                            {
+                                var ind = targetIndex;
+                                MoveAsAnimation(ref ind, dt);
+                                selectedPointIndexes[i] = ind;
+                            }
+                        }
                     }
         
                     GUI.changed = true;
                 }
                 break;
+        }
+
+        bool TryGetPointIndex(out int index)
+        {
+            for (int i = 0; i < points.Count; i++)
+            {
+                if (IsPointClicked(points[i], LSHandles.MouseInWorldPoint, 0.1f))
+                {
+                    index = i;
+                    return true;
+                }
+            }
+
+            index = -1;
+            return false;
         }
     }
     
@@ -306,6 +364,12 @@ public class BadassAnimation : EditorWindow
         return workedPointIndexesArr[..];
     }
     
+    private bool IsRoot(int i)
+    {
+        i--;
+        return i % 3 == 0;
+    }
+    
     private bool IsTangent(int i)
     {
         var f = i % 3;
@@ -337,10 +401,9 @@ public class BadassAnimation : EditorWindow
 
         var root1Tangents = GetTangentIndexes(root1);
         var root2Tangents = GetTangentIndexes(root2);
-        tangentIndexes = root2Tangents;
+        
         (points[root1], points[root2]) = (points[root2], points[root1]);
         (root1, root2) = (root2, root1);
-        selectedPointIndex = root1;
         
         for (int i = 0; i < 2; i++)
         {

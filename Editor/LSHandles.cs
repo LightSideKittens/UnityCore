@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.PlayerLoop;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
@@ -34,6 +36,11 @@ namespace LSCore.Editor
         
         static LSHandles()
         {
+            CompilationPipeline.compilationStarted += x =>
+            {
+                EditorSceneManager.ClosePreviewScene(scene);
+            };
+            
             var guiType = Type.GetType("UnityEngine.GUI,UnityEngine");
             var propInfo = guiType.GetProperty("blitMaterial", BindingFlags.Static | BindingFlags.NonPublic);
             blitMaterialInfo = propInfo.GetGetMethod(true);
@@ -53,6 +60,7 @@ namespace LSCore.Editor
             releasePools += sprites.ReleaseAll;
         }
 
+        
         #region Matrix stack
         
         public static void StartMatrix(Matrix4x4 matrix)
@@ -62,11 +70,13 @@ namespace LSCore.Editor
         
         public static Matrix4x4 EndMatrix()
         {
-            return currentMatrix;
+            var m = currentMatrix;
+            currentMatrix = Matrix4x4.identity;
+            return m;
         }
 
         #endregion
-
+        
         public static void Begin(Rect rect, CameraData camData)
         {
             HandleInput();
@@ -74,11 +84,15 @@ namespace LSCore.Editor
             LSHandles.rect = rect;
             LSHandles.camData = camData;
             
-            if (cam == null)
+            if (cam is null)
             {
+                Debug.Log($"Begin {EditorSceneManager.previewSceneCount}");
                 scene = EditorSceneManager.NewPreviewScene();
+                
                 if (!scene.IsValid())
+                {
                     throw new InvalidOperationException("Preview scene could not be created");
+                }
 
                 scene.name = "PreviewScene";
                 var objectWithHideFlags1 = EditorUtility.CreateGameObjectWithHideFlags("GridCam", HideFlags.None, typeof (Camera));
@@ -105,6 +119,7 @@ namespace LSCore.Editor
         }
 
         private static Action releasePools;
+        
         
         public static void End()
         {
@@ -141,7 +156,7 @@ namespace LSCore.Editor
                 mp.y *= -1;
                 mp.y += rect.height;
 
-                return cam.ScreenToWorldPoint(mp);
+                return currentMatrix.inverse.MultiplyPoint3x4(cam.ScreenToWorldPoint(mp));
             }
         }
 
@@ -156,7 +171,7 @@ namespace LSCore.Editor
                 mp.y *= -1;
                 mp.y += rect.height;
                 
-                var wpForDelta = cam.ScreenToWorldPoint(mp);
+                var wpForDelta = currentMatrix.inverse.MultiplyPoint3x4(cam.ScreenToWorldPoint(mp));
                 var value = wpForDelta - lastMpForDelta;
                 lastMpForDelta = wpForDelta;
                 return value;
@@ -188,7 +203,7 @@ namespace LSCore.Editor
                     float sensitivity = 0.01f;
 
                     float scaleX = 1 + e.delta.x * sensitivity;
-                    float scaleY = 1 + e.delta.y * sensitivity;
+                    float scaleY = 1 + -e.delta.y * sensitivity;
 
                     Matrix4x4 translateToPoint = Matrix4x4.Translate(lmp);
                     Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(scaleX, scaleY, 1f));
