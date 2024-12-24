@@ -6,7 +6,6 @@ using UnityEditor.Compilation;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
-using UnityEngine.PlayerLoop;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 

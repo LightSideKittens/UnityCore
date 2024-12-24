@@ -4,6 +4,13 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
+public enum AlignType
+{
+    Free,
+    Aligned,
+}
+
+[Serializable]
 public struct BezierPoint
 {
     public Vector2 p;
@@ -21,6 +28,7 @@ public struct BezierPoint
     }
     
 #if UNITY_EDITOR
+    public AlignType alignType;
     public Vector2 e;
     
     public float ex
@@ -38,6 +46,13 @@ public struct BezierPoint
     public BezierPoint ePlus(Vector2 b)
     {
         e += b;
+        p = e;
+        return this;
+    }
+    
+    public BezierPoint eSet(Vector2 b)
+    {
+        e = b;
         p = e;
         return this;
     }
@@ -60,6 +75,7 @@ public struct BezierPoint
             p = point,
 #if UNITY_EDITOR
             e = point,
+            alignType = AlignType.Aligned
 #endif
         };
     }
@@ -88,6 +104,13 @@ public class BezierPointList : IList<BezierPoint>
     public void Insert(int index, BezierPoint item) => points.Insert(index, item);
     public void RemoveAt(int index) => points.RemoveAt(index);
 
+    public void SetAlign(int index, AlignType alignType)
+    {
+        var p = points[index];
+        p.alignType = alignType;
+        points[index] = p;
+    }
+    
     public BezierPoint this[int index]
     {
         get => points[index];

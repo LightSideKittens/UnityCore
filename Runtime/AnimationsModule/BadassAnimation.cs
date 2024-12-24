@@ -174,18 +174,34 @@ public class BadassAnimation : EditorWindow
                     else if (wasClicked)
                     {
                         var popup = new Popup();
+                        HashSet<AlignType> types = new();
 
+                        for (int j = 0; j < selectedPointIndexes.Count; j++)
+                        {
+                            var point = points[selectedPointIndexes[j]];
+                            types.Add(point.alignType);
+                        }
+                        
                         Action onGui = () =>
                         {
-                            if (popup.DrawButton("Aligned"))
+                            popup.DrawFoldout(string.Join(", ", types), () =>
                             {
-                                    
-                            }
+                                if (popup.DrawButton(AlignType.Aligned.ToString()))
+                                {
+                                    for (int j = 0; j < selectedPointIndexes.Count; j++)
+                                    {
+                                        ChangeType(selectedPointIndexes[j], AlignType.Aligned);
+                                    }
+                                }
                                 
-                            if (popup.DrawButton("Free"))
-                            {
-                                    
-                            }
+                                if (popup.DrawButton(AlignType.Free.ToString()))
+                                {
+                                    for (int j = 0; j < selectedPointIndexes.Count; j++)
+                                    {
+                                        ChangeType(selectedPointIndexes[j], AlignType.Free);
+                                    }
+                                }
+                            });
                         };
 
                         popup.onGui = onGui;
@@ -234,13 +250,13 @@ public class BadassAnimation : EditorWindow
                             if (IsRoot(targetIndex))
                             {
                                 var ind = targetIndex;
-                                MoveAsAnimation(ref ind, dt);
+                                MoveAsAnimation(ref ind, dt, true);
                                 selectedPointIndexes[i] = ind;
                                 
                                 for (int j = -1; j < 2; j+=2)
                                 {
                                      ind = targetIndex + j;
-                                    MoveAsAnimation(ref ind, dt);
+                                    MoveAsAnimation(ref ind, dt, true);
                                 }
                             }
                         }
@@ -249,7 +265,7 @@ public class BadassAnimation : EditorWindow
                             if (IsTangent(targetIndex))
                             {
                                 var ind = targetIndex;
-                                MoveAsAnimation(ref ind, dt);
+                                MoveAsAnimation(ref ind, dt, false);
                                 selectedPointIndexes[i] = ind;
                             }
                         }
@@ -276,13 +292,43 @@ public class BadassAnimation : EditorWindow
         }
     }
     
-    private void MoveAsAnimation(ref int i, Vector2 delta)
+    private void MoveAsAnimation(ref int i, Vector2 delta, bool isRootMoving)
     {
-        points[i] = points[i].ePlus(delta);
-        if (!ClampTangent(i))
+        var point = points[i];
+        points[i] = point.ePlus(delta);
+        
+        if (ClampTangent(i))
         {
-            var root = points[i];
+            if(isRootMoving) return;
             
+            int f1;
+            int f2;
+            
+            if (IsForwardTangent(i))
+            {
+                f1 = -1;
+                f2 = -2;
+            }
+            else
+            {
+                f1 = 1;
+                f2 = 2;
+            }
+            
+            var root = points[i + f1];
+            var tangent = points[i + f2];
+            var dir = (point.e - root.p).normalized;
+                
+            if (root.alignType == AlignType.Aligned)
+            {
+                var dis = (tangent.e - root.p).magnitude;
+                tangent.eSet(root.p + -dir * dis);
+                points[i + f2] = tangent;
+                ClampTangent(i + f2);
+            }
+        }
+        else
+        {
             TrySwapNext(ref i);
             TrySwapPrev(ref i);
             ClampTangent(i + 1);
@@ -309,7 +355,7 @@ public class BadassAnimation : EditorWindow
                 if(ii + 3 > points.Count - 1) return;
                 
                 var next = points[ii + 3];
-                if (root.x > next.x)
+                if (point.x > next.x)
                 {
                     SwapKeys(ref ii, ii + 3);
                 }
@@ -320,7 +366,7 @@ public class BadassAnimation : EditorWindow
                 if(ii - 3 < 0) return;
                 
                 var prev = points[ii - 3];
-                if (root.x < prev.x)
+                if (point.x < prev.x)
                 {
                     SwapKeys(ref ii, ii - 3);
                 }
@@ -334,18 +380,22 @@ public class BadassAnimation : EditorWindow
         {
             if (IsForwardTangent(i))
             {
+                var inf = Vector2.positiveInfinity;
                 var root = points[i - 1];
-                var nextRoot = i < (points.Count-1) ? points[i + 2] : (BezierPoint)Vector2.positiveInfinity;
+                var nextRoot = i < (points.Count-1) ? points[i + 2] : (BezierPoint)inf;
                 var pos = points[i];
                 pos.x = Mathf.Clamp(pos.ex, root.x, nextRoot.x);
+                pos.ex = Mathf.Clamp(pos.ex, root.x, inf.x);
                 points[i] = pos;
             }
             else
             {
+                var inf = Vector2.negativeInfinity;
                 var root = points[i + 1];
-                var prevRoot = i > 0 ? points[i - 2] : (BezierPoint)Vector2.negativeInfinity;
+                var prevRoot = i > 0 ? points[i - 2] : (BezierPoint)inf;
                 var pos = points[i];
                 pos.x = Mathf.Clamp(pos.ex, prevRoot.x, root.x);
+                pos.ex = Mathf.Clamp(pos.ex, inf.x, root.x);
                 points[i] = pos;
             }
 
@@ -353,6 +403,43 @@ public class BadassAnimation : EditorWindow
         }
 
         return false;
+    }
+
+    private void ChangeType(int i, AlignType alignType)
+    {
+        int f1;
+        int f2;
+        
+        if (IsRoot(i))
+        {
+            f1 = -1;
+            f2 = 1;
+        }
+        else if(IsForwardTangent(i))
+        {
+            f1 = -1;
+            f2 = -2;
+        }
+        else
+        {
+            f1 = 1;
+            f2 = 2;
+        }
+
+        points.SetAlign(i, alignType);
+        points.SetAlign(i + f1, alignType);
+        points.SetAlign(i + f2, alignType);
+
+        if (alignType == AlignType.Aligned)
+        {
+            var a = i;
+            var zero = Vector2.zero;
+            MoveAsAnimation(ref a, zero, true);
+            a = i + f1;
+            MoveAsAnimation(ref a, zero, false);
+            a = i + f2;
+            MoveAsAnimation(ref a, zero, false);
+        }
     }
     
     private int[] GetTangentIndexes(int i)
@@ -420,6 +507,11 @@ public class BadassAnimation : EditorWindow
         public override void OnGUI(Rect rect)
         {
             onGui();
+        }
+        
+        public void DrawFoldout(string name, Action gui, bool show = false)
+        {
+            EditorUtils.DrawInBoxFoldout(new GUIContent(name), gui, "BadassAnimation", show);
         }
 
         public bool DrawButton(string name)
