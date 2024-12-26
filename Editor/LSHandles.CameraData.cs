@@ -9,7 +9,7 @@ namespace LSCore.Editor
         public class CameraData
         {
             public Color backColor = new(0.2f, 0.2f, 0.2f);
-            public Vector3 position = Vector3.forward * -10;
+            public Vector3 position = Vector3.forward * -100;
 
             [SerializeField] private float size = 5;
             
@@ -23,7 +23,7 @@ namespace LSCore.Editor
                 }
             }
             
-            public Vector2 sizeRange = new(0.1f, 100);
+            public Vector2 sizeRange = new(0.02f, 100000);
         }
     }
 }

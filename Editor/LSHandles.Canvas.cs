@@ -1,5 +1,6 @@
+using LSCore.Extensions.Unity;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.Rendering;
 
 namespace LSCore.Editor
 {
@@ -7,44 +8,39 @@ namespace LSCore.Editor
     {
         public static class Canvas
         {
-            private static readonly EditorHiddenObjectPool<Text> texts = new(shouldStoreActive: true);
-            private static UnityEngine.Canvas canvas;
-
-            private static UnityEngine.Canvas Canvas
-            {
-                get
-                {
-                    if (canvas == null)
-                    {
-                        canvas = new GameObject("PreviewCanvas").AddComponent<UnityEngine.Canvas>();
-                        canvas.gameObject.hideFlags = HideFlags.HideAndDontSave;
-                        AddGameObject(canvas);
-                    }
-                    
-                    return canvas;
-                }
-            }
+            private static readonly EditorHiddenObjectPool<TextMesh> texts = new(shouldStoreActive: true);
 
             static Canvas()
             {
                 texts.Created += AddCanvasGameObject;
-                texts.Got += text => text.enabled = true;
-                texts.Released += text => text.enabled = false;
+                texts.Got += text => text.GetComponent<MeshRenderer>().enabled = true;
+                texts.Released += text => text.GetComponent<MeshRenderer>().enabled = false;
                 releasePools += texts.ReleaseAll;
             }
 
             private static void AddCanvasGameObject<T>(T comp) where T : Component
             {
                 AddGameObject(comp);
-                comp.transform.SetParent(Canvas.transform);
+                comp.gameObject.AddComponent<SortingGroup>();
+                comp.transform.localScale = Vector3.one / 3;
             }
             
-            private static Text GetText(Color color, int fontSize)
+            public static TextMesh GetText(string message, int fontSize, bool dependsOnCam = true)
             {
                 var text = texts.Get();
-                text.color = color;
+                currentDrawLayer += 10;
+                text.GetComponent<SortingGroup>().sortingOrder = currentDrawLayer;
+                text.text = message;
                 text.fontSize = fontSize;
+                var scale = LSVector3.one;
                 
+                if (dependsOnCam)
+                {
+                    scale *= (cam.orthographicSize / 100);
+                }
+
+                scale *= ScaleMultiplier;
+                text.transform.localScale = scale;
                 return text;
             }
         }

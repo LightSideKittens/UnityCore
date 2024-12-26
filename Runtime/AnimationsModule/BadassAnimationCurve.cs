@@ -82,11 +82,19 @@ public struct BezierPoint
 }
 
 [Serializable]
-public class BezierPointList : IList<BezierPoint>
+public class BadassAnimationCurve : IList<BezierPoint>
 {
     public List<BezierPoint> points = new();
     public bool loop;
-    
+
+    public BadassAnimationCurve() { }
+
+    public BadassAnimationCurve(BadassAnimationCurve badassAnimationCurve)
+    {
+        points = new List<BezierPoint>(badassAnimationCurve.points);
+        loop = badassAnimationCurve.loop;
+    }
+
     public IEnumerator<BezierPoint> GetEnumerator() => points.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -121,23 +129,18 @@ public class BezierPointList : IList<BezierPoint>
     /// Удаляем ключ (root) по его порядковому номеру (0,1,2,...),
     /// где фактический индекс root-а = keyIndex * 3 + 1.
     /// </summary>
-    public void DeleteKey(int keyIndex)
+    public void DeleteKey(int i)
     {
-        int rootIndex = keyIndex * 3 + 1;
-
-        if (rootIndex < 0 || rootIndex >= Count)
-            return;
-
-        int leftTangent = rootIndex - 1;
-        int rightTangent = rootIndex + 1;
-
-        if (rightTangent < Count)
-            RemoveAt(rightTangent);
-
-        RemoveAt(rootIndex);
-
-        if (leftTangent >= 0)
-            RemoveAt(leftTangent);
+        if (i < 0 || i >= Count) return;
+        
+        int leftTangent = i - 1;
+        int rightTangent = i + 1;
+        
+        if (rightTangent < Count) RemoveAt(rightTangent);
+        
+        RemoveAt(i);
+        
+        if (leftTangent >= 0) RemoveAt(leftTangent);
     }
 
     /// <summary>
@@ -145,10 +148,8 @@ public class BezierPointList : IList<BezierPoint>
     /// keyIndex – порядковый индекс ключа, в который "врезаемся", 
     /// t – доля (0..1) вдоль соответствующего участка Безье.
     /// </summary>
-    public void InsertKey(int keyIndex, float t)
+    public void InsertKey(int i, float t)
     {
-        int i = keyIndex * 3 + 1;
-
         if (i + 3 >= Count)
             return;
 
@@ -173,6 +174,8 @@ public class BezierPointList : IList<BezierPoint>
         Insert(i + 5, (BezierPoint)q2);
         Insert(i + 6, p3);
     }
+
+    private int LastKeyIndex => Count - 2;
     
     /// <summary>
     /// Найти индекс "левого" ключа (root), у которого x <= xTarget,
@@ -180,13 +183,14 @@ public class BezierPointList : IList<BezierPoint>
     /// </summary>
     public int GetLeftKeyIndexByX(float xTarget)
     {
-        if (xTarget <= points[1].x)
+        if (points.Count < 3 || xTarget <= points[1].x)
         {
-            return 0;
+            return -1;
         }
 
-        int lastKeyIndex = (Count - 2) / 3;
-        if (xTarget >= points[Count - 2].x)
+        int lastKeyIndex = LastKeyIndex;
+        
+        if (xTarget >= points[lastKeyIndex].x)
         {
             return lastKeyIndex;
         }
@@ -196,24 +200,32 @@ public class BezierPointList : IList<BezierPoint>
         {
             if (points[i].x >= xTarget)
             {
-                return Mathf.Max(0, keyIndex - 1);
+                return Mathf.Max(0, keyIndex - 1) * 3 + 1;
             }
             keyIndex++;
         }
 
-        return lastKeyIndex; 
+        return lastKeyIndex;
     }
 
     /// <summary>
     /// Вставить ключ (root) по нужному x (автоматически найдём, в какой сегмент попадает)
     /// </summary>
-    public void InsertKeyByX(float x)
+    public int InsertKeyByX(float x)
     {
-        int leftKeyIndex = GetLeftKeyIndexByX(x);
-        int i = leftKeyIndex * 3 + 1;
+        int i = GetLeftKeyIndexByX(x);
 
-        if (i + 3 >= Count)
-            return;
+        if (i == -1)
+        {
+            InsertDefault(1, x, true);
+            return 1;
+        }
+
+        if (i == LastKeyIndex)
+        {
+            InsertDefault(i, x, false);
+            return i + 3;
+        }
 
         BezierPoint p0 = points[i];
         BezierPoint p1 = points[i + 1];
@@ -222,7 +234,24 @@ public class BezierPointList : IList<BezierPoint>
 
         float t = FindBezierTForX(p0.x, p1.x, p2.x, p3.x, x);
 
-        InsertKey(leftKeyIndex, t);
+        InsertKey(i, t);
+        return i + 3;
+    }
+
+    private void InsertDefault(int i, float x, bool before)
+    {
+        Vector2 root = points.Count > 2 ? points[i] : Vector2.zero;
+        root.x = x;
+        var half = Vector2.right / 2;
+        Vector2 backTangent = root - half;
+        Vector2 forwardTangent = root + half;
+
+        if (before) i--;
+        else i += 2;
+
+        Insert(i, (BezierPoint)forwardTangent);
+        Insert(i, (BezierPoint)root);
+        Insert(i, (BezierPoint)backTangent);
     }
 
     /// <summary>
@@ -242,16 +271,18 @@ public class BezierPointList : IList<BezierPoint>
     /// </summary>
     public Vector2 Evaluate(float x)
     {
-        int curveIndex = GetLeftKeyIndexByX(x);
-        int i = curveIndex * 3 + 1;
-
+        int i = GetLeftKeyIndexByX(x);
+        
+        if (i == -1) return points[1];
+        if (i == LastKeyIndex) return points[^2];
+        
         Vector2 p0 = points[i];
         Vector2 p1 = points[i + 1];
         Vector2 p2 = points[i + 2];
         Vector2 p3 = points[i + 3];
-
+        
         float tForX = FindBezierTForX(p0.x, p1.x, p2.x, p3.x, x);
-
+        
         return EvaluateCubicBezier(p0, p1, p2, p3, tForX);
     }
 

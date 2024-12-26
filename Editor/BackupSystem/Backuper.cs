@@ -108,7 +108,7 @@ namespace LSCore.Editor.BackupSystem
             Patchers._EditorUtility.SetDirty.Called += OnChanged;
             Patchers._SerializedObject.ApplyModifiedProperties.Called += OnChanged;
             
-            delay = TimeSpan.FromMinutes(Config.As<int>("saveInterval"));
+            delay = TimeSpan.FromMinutes(Config.As("saveInterval", instance.saveInterval));
             
             if (!Directory.Exists(BackupPath))
             {
@@ -155,8 +155,8 @@ namespace LSCore.Editor.BackupSystem
         
         private void Init()
         {
-            var maxBackupsCountT = Config.As<int>("maxBackupsCount");
-            var saveIntervalT = Config.As<int>("saveInterval");
+            var maxBackupsCountT = Config.As("maxBackupsCount", instance.maxBackupsCount);
+            var saveIntervalT = Config.As("saveInterval", instance.saveInterval);
             
             if (maxBackupsCountT > 0)
             {

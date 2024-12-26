@@ -8,7 +8,13 @@ namespace LSCore.Extensions
     {
         public static T As<T>(this JToken token, string key, T defaultValue = default)
         {
-            return token[key] != null ? token[key].ToObject<T>() : defaultValue;
+            if (token[key] != null)
+            {
+                return token[key].ToObject<T>();
+            }
+            
+            token[key] = JToken.FromObject(defaultValue);
+            return defaultValue;
         }
         
         public static T As<T>(this JToken token, T defaultValue = default)

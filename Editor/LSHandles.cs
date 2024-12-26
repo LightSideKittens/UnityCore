@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using LSCore.Extensions.Unity;
 using UnityEditor;
 using UnityEditor.Compilation;
 using UnityEditor.SceneManagement;
@@ -15,7 +16,6 @@ namespace LSCore.Editor
     {
         public static int bezieQuality = 50;
         private static readonly EditorHiddenObjectPool<LineRenderer> lines = new(shouldStoreActive: true);
-        private static readonly EditorHiddenObjectPool<Transform> points = new(shouldStoreActive: true);
         private static readonly EditorHiddenObjectPool<SpriteRenderer> sprites = new(shouldStoreActive: true);
         private static Rect rect;
         private static Camera cam;
@@ -29,9 +29,11 @@ namespace LSCore.Editor
         private static Vector3 lastMp;
         private static Scene scene;
         private static int currentDrawLayer;
-        
+
+        public static Matrix4x4 Matrix => currentMatrix;
         private static Matrix4x4 currentMatrix = Matrix4x4.identity;
         public static float CamSize => cam.orthographicSize;
+        public static float ScaleMultiplier => 1000 / rect.height;
         
         static LSHandles()
         {
@@ -49,9 +51,6 @@ namespace LSCore.Editor
             lines.Got += line => line.enabled = true;
             lines.Released += line => line.enabled = false;
             releasePools += lines.ReleaseAll;
-
-            points.Created += AddGameObject;
-            releasePools += points.ReleaseAll;
 
             sprites.Created += AddGameObject;
             sprites.Got += sprite => sprite.enabled = true;
@@ -85,7 +84,6 @@ namespace LSCore.Editor
             
             if (cam is null)
             {
-                Debug.Log($"Begin {EditorSceneManager.previewSceneCount}");
                 scene = EditorSceneManager.NewPreviewScene();
                 
                 if (!scene.IsValid())
@@ -99,11 +97,11 @@ namespace LSCore.Editor
                 AddGameObject(cam);
                 cam.clearFlags = CameraClearFlags.SolidColor;
                 cam.enabled = false;
-                cam.cameraType = CameraType.Preview;
+                cam.cameraType = CameraType.Game;
                 cam.scene = scene;
                 cam.orthographic = true;
                 cam.orthographicSize = camData.Size;
-                cam.renderingPath = RenderingPath.Forward;
+                cam.renderingPath = RenderingPath.UsePlayerSettings;
             }
             
             cam.backgroundColor = camData.backColor;
@@ -146,18 +144,27 @@ namespace LSCore.Editor
             allObjects.Add(go);
         }
 
-        public static Vector2 MouseInWorldPoint
+        public static bool IsInDistance(Vector2 point, Vector2 worldMousePos, float distance)
+        {
+            distance *= ScaleMultiplier;
+            Vector2 dis = Vector2.Scale(LSVector2.oneDir * distance, Scale);
+            return Vector2.Distance(point, worldMousePos) <= dis.magnitude;
+        }
+
+        public static Vector2 MousePos
         {
             get
             {
                 var e = Event.current;
                 var mp = e.mousePosition;
+                mp -= rect.position;
                 mp.y *= -1;
                 mp.y += rect.height;
-
-                return currentMatrix.inverse.MultiplyPoint3x4(cam.ScreenToWorldPoint(mp));
+                return mp;
             }
         }
+
+        public static Vector2 MouseInWorldPoint => currentMatrix.inverse.MultiplyPoint3x4(cam.ScreenToWorldPoint(MousePos));
 
         private static Vector3 lastMpForDelta;
 
@@ -165,12 +172,7 @@ namespace LSCore.Editor
         {
             get
             {
-                var e = Event.current;
-                Vector3 mp = e.mousePosition;
-                mp.y *= -1;
-                mp.y += rect.height;
-                
-                var wpForDelta = currentMatrix.inverse.MultiplyPoint3x4(cam.ScreenToWorldPoint(mp));
+                var wpForDelta = currentMatrix.inverse.MultiplyPoint3x4(cam.ScreenToWorldPoint(MousePos));
                 var value = wpForDelta - lastMpForDelta;
                 lastMpForDelta = wpForDelta;
                 return value;
@@ -178,16 +180,16 @@ namespace LSCore.Editor
         }
 
         private static Vector3 mpForMatrix;
-        
+        private const float minScale = 0.0001f;
+        private const float maxScale = 10000f;
+
         private static void HandleInput()
         {
             if (cam == null) return;
 
             Event e = Event.current;
             if (e.type is EventType.Layout or EventType.Repaint) return;
-            Vector3 mp = e.mousePosition;
-            mp.y *= -1;
-            mp.y += rect.height;
+            Vector3 mp = MousePos;
 
             if (e.type == EventType.MouseDown && e.button == 2)
             {
@@ -198,24 +200,14 @@ namespace LSCore.Editor
             {
                 if (e.control)
                 {
-                    var lmp = cam.ScreenToWorldPoint(mpForMatrix);
                     float sensitivity = 0.01f;
-
                     float scaleX = 1 + e.delta.x * sensitivity;
                     float scaleY = 1 + -e.delta.y * sensitivity;
-
-                    Matrix4x4 translateToPoint = Matrix4x4.Translate(lmp);
-                    Matrix4x4 scaleMatrix = Matrix4x4.Scale(new Vector3(scaleX, scaleY, 1f));
-                    Matrix4x4 translateBack = Matrix4x4.Translate(-lmp);
-
-                    Matrix4x4 transformMatrix = translateToPoint * scaleMatrix * translateBack;
-
-                    currentMatrix = transformMatrix * currentMatrix;
+                    ScaleMatrix(new Vector3(scaleX, scaleY, 1), cam.ScreenToWorldPoint(mpForMatrix));
                 }
                 else
                 {
-                    var delta = mp - lastMp;
-                    delta *= camData.Size / 398;
+                    var delta = cam.ScreenToWorldPoint(mp) - cam.ScreenToWorldPoint(lastMp);
                     camData.position -= delta;
                 }
 
@@ -224,12 +216,51 @@ namespace LSCore.Editor
             }
             else if (e.type == EventType.ScrollWheel)
             {
-                var point = cam.ScreenToWorldPoint(mp);
-                camData.Size += e.delta.y * camData.Size / 30;
-                cam.orthographicSize = camData.Size;
+                float sensitivity = 0.04f;
+                float scalex = 1 + -e.delta.y * sensitivity;
+                var scale = new Vector3(scalex, scalex, 1);
+                ScaleMatrix(scale, cam.ScreenToWorldPoint(mp));
+                
+                /*var point = cam.ScreenToWorldPoint(mp);
+                var camSize = camData.Size;
+                camSize += e.delta.y * camData.Size / 30;
+                var matrixScale = GetScaleByCameraSize(camSize);
+                    
+                if((matrixScale.x is < minScale or > maxScale)
+                   || (matrixScale.y is < minScale or > maxScale))
+                {
+                    return;
+                }
+
+                camData.Size = camSize;
+                cam.orthographicSize = camSize;
                 var newPoint = cam.ScreenToWorldPoint(mp);
-                camData.position -= newPoint - point;
+                camData.position -= newPoint - point;*/
+                
                 GUI.changed = true;
+            }
+
+            void ScaleMatrix(Vector3 scale, Vector3 lmp)
+            {
+                var matrixScale = Vector3.one.Divide(Vector3.Scale(currentMatrix.lossyScale, scale)) * camData.Size;
+                    
+                if(matrixScale.x is < minScale or > maxScale)
+                {
+                    scale.x = 1;
+                }
+                    
+                if(matrixScale.y is < minScale or > maxScale)
+                {
+                    scale.y = 1;
+                }
+                    
+                Matrix4x4 translateToPoint = Matrix4x4.Translate(lmp);
+                Matrix4x4 scaleMatrix = Matrix4x4.Scale(scale);
+                Matrix4x4 translateBack = Matrix4x4.Translate(-lmp);
+
+                Matrix4x4 transformMatrix = translateToPoint * scaleMatrix * translateBack;
+
+                currentMatrix = transformMatrix * currentMatrix;
             }
         }
 
@@ -256,7 +287,7 @@ namespace LSCore.Editor
                 lastHeight = height;
                 if (targetTexture != null)
                 {
-                    UnityEngine.Object.DestroyImmediate(targetTexture);
+                    Object.DestroyImmediate(targetTexture);
                 }
                 var renderTexture = new RenderTexture(0, 0, colorFormat, SystemInfo.GetGraphicsFormat(DefaultFormat.DepthStencil));
                 renderTexture.name = "GridCam RT";
@@ -272,7 +303,7 @@ namespace LSCore.Editor
                 inProgress = true;
                 if (targetTexture != null)
                 {
-                    UnityEngine.Object.DestroyImmediate(targetTexture);
+                    Object.DestroyImmediate(targetTexture);
                 }
                 var renderTexture = new RenderTexture(0, 0, colorFormat, SystemInfo.GetGraphicsFormat(DefaultFormat.DepthStencil));
                 renderTexture.name = "GridCam RT";
@@ -290,8 +321,11 @@ namespace LSCore.Editor
         }
         
         public static void DrawGrid(GridData data)
-        { 
+        {
+            var layer = currentDrawLayer;
+            currentDrawLayer = -32000;
             data.Draw();
+            currentDrawLayer = layer;
         }
 
         private static bool IsInCamera(Vector2 point)
@@ -330,18 +364,28 @@ namespace LSCore.Editor
             line.endColor = color;
             if (dependsOnCam)
             {
-                width *= cam.orthographicSize / 3;
+                width *= cam.orthographicSize;
             }
+
+            width *= ScaleMultiplier;
             line.startWidth = width;
             line.endWidth = width;
+            currentDrawLayer += 10;
+            line.sortingOrder = currentDrawLayer;
             return line;
         }
         
-        private static SpriteRenderer GetCircle()
+        private static SpriteRenderer GetCircle() => GetSprite("circle");
+        private static SpriteRenderer GetRing() => GetSprite("ring");
+        private static SpriteRenderer GetSquare() => GetSprite("square");
+
+        private static SpriteRenderer GetSprite(string iconName)
         {
             var sprite = sprites.Get();
             sprite.material = spriteMaterial;
-            sprite.sprite = LSIcons.GetSprite("circle");
+            sprite.sprite = LSIcons.GetSprite(iconName);
+            currentDrawLayer += 10;
+            sprite.sortingOrder = currentDrawLayer;
             return sprite;
         }
 
@@ -395,19 +439,49 @@ namespace LSCore.Editor
             
             line.positionCount = points.Length;
             line.SetPositions(points);
-            line.sortingOrder = currentDrawLayer++;
         }
         
-        public static void DrawSolidCircle(Vector2 pos, float size, Color color)
+        public static void DrawCircle(Vector2 pos, float size, Color color)
         {
-            DrawSolidCircle(pos, new Vector2(size, size), color);
+            DrawCircle(pos, new Vector2(size, size), color);
         }
         
-        public static void DrawSolidCircle(Vector2 pos, Vector2 size, Color color, bool dependsOnCam = true)
+        public static void DrawCircle(Vector2 pos, Vector2 size, Color color, bool dependsOnCam = true)
         {
             if(eventType != EventType.Repaint) return; 
             var sprite = GetCircle();
+            SetupSpriteRenderer(sprite, pos, size, color, dependsOnCam);
+        }
+        
+        public static void DrawRing(Vector2 pos, float size, Color color)
+        {
+            DrawRing(pos, new Vector2(size, size), color);
+        }
+        
+        public static void DrawRing(Vector2 pos, Vector2 size, Color color, bool dependsOnCam = true)
+        {
+            if(eventType != EventType.Repaint) return; 
+            var sprite = GetRing();
+            SetupSpriteRenderer(sprite, pos, size, color, dependsOnCam);
+        }
+        
+        public static void DrawSquare(Rect r, Color color, bool dependsOnCam = true)
+        {
+            if(eventType != EventType.Repaint) return; 
+            var sprite = GetSquare();
+            SetupSpriteRenderer(sprite, r.center, r.size, color, dependsOnCam);
+        }
+        
+        public static void DrawSquare(Vector2 pos, Vector2 size, Color color, bool dependsOnCam = true)
+        {
+            if(eventType != EventType.Repaint) return; 
+            var sprite = GetSquare();
+            SetupSpriteRenderer(sprite, pos, size, color, dependsOnCam);
+        }
 
+        private static void SetupSpriteRenderer(SpriteRenderer sprite, Vector2 pos, Vector2 size, Color color,
+            bool dependsOnCam = true)
+        {
             var transformedPos = currentMatrix.MultiplyPoint3x4(pos);
             
             var tr = sprite.transform;
@@ -418,12 +492,29 @@ namespace LSCore.Editor
 
             if (dependsOnCam)
             {
-                scale *= cam.orthographicSize / 3;
+                scale *= cam.orthographicSize;
             }
 
+            scale *= ScaleMultiplier;
             tr.localScale = scale;
             sprite.color = color;
-            sprite.sortingOrder = currentDrawLayer++;
+        }
+        
+        public static RestoreMatrix SetMatrix(Matrix4x4 target)
+        {
+            var last = currentMatrix;
+            currentMatrix = target;
+            return new RestoreMatrix{ matrix = last };
+        }
+        
+        public struct RestoreMatrix : IDisposable
+        {
+            public Matrix4x4 matrix;
+            
+            public void Dispose()
+            {
+                currentMatrix = matrix;
+            }
         }
     }
 }
