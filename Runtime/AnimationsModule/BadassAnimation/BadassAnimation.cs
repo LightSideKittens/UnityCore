@@ -9,8 +9,7 @@ using UnityEngine.Animations;
 
 public partial class BadassAnimation : EditorWindow
 {
-    public BadassAnimationCurve points = new();
-    [SerializeField] [Range(0, 1)] private float time = 0.5f;
+    public BadassAnimationCurve curve;
     private const float constWidth = 0.05f / 3;
     private const float bezierWidth = constWidth / 5;
     private const float tangentWidth = constWidth / 10;
@@ -26,15 +25,25 @@ public partial class BadassAnimation : EditorWindow
     public LSHandles.CameraData camData = new();
     public LSHandles.GridData gridData = new();
     
-    [MenuItem(LSPaths.Windows.BadassAnimation)]
-    public static void ShowWindow()
+    public static BadassAnimation ShowWindow(BadassAnimationCurve curve)
     {
         var window = GetWindow<BadassAnimation>();
+        window.curve = curve;
         window.gridData.displayScale = true;
+        return window;
+    }
+    
+    public static BadassAnimation CreateAndShowWindow(BadassAnimationCurve curve)
+    {
+        var window = CreateWindow<BadassAnimation>();
+        window.curve = curve;
+        window.gridData.displayScale = true;
+        return window;
     }
 
     private void OnGUI()
     {
+        OnBeforeGui?.Invoke();
         GUI.SetNextControlName("InvisibleFocus");
         GUI.FocusControl("InvisibleFocus");
         
@@ -50,43 +59,43 @@ public partial class BadassAnimation : EditorWindow
         LSHandles.DrawGrid(gridData);
         
         
-        if (points.Count > 2)
+        if (curve.Count > 2)
         {
-            var min = points[0];
-            var max = points[0];
+            var min = curve[0];
+            var max = curve[0];
             
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < curve.Count; i++)
             {
-                UpdateMinMax(points[i]);
+                UpdateMinMax(curve[i]);
             }
             
             
-            if (points.loop)
+            if (curve.Loop)
             {
                 
             }
             else
             {
-                var minPoint = points[1];
+                var minPoint = curve[1];
                 minPoint.x = -100000;
-                LSHandles.DrawLine(bezierWidth, curveColor, points[1], minPoint);
+                LSHandles.DrawLine(bezierWidth, curveColor, curve[1], minPoint);
                 
-                var maxPoint = points[^2];
+                var maxPoint = curve[^2];
                 maxPoint.x = 100000;
-                LSHandles.DrawLine(bezierWidth, curveColor, points[^2], maxPoint);
+                LSHandles.DrawLine(bezierWidth, curveColor, curve[^2], maxPoint);
             }
             
-            var st = points[0];
-            var sp = points[1];
+            var st = curve[0];
+            var sp = curve[1];
             LSHandles.DrawLine(tangentWidth, tangentLineColor, st.e, sp.e);
-            LSHandles.DrawCircle(st.e, constWidth, tangentPointColor);
+            LSHandles.DrawRing(st.e, constWidth, tangentPointColor);
             
-            for (int i = 1; i < points.Count - 2; i += 3)
+            for (int i = 1; i < curve.Count - 2; i += 3)
             {
-                var startPosition = points[i];
-                var startTangent = points[i+1];
-                var endTangent = points[i+2];
-                var endPosition = points[i+3];
+                var startPosition = curve[i];
+                var startTangent = curve[i+1];
+                var endTangent = curve[i+2];
+                var endPosition = curve[i+3];
                 
                 LSHandles.DrawBezier(startPosition.p, startTangent.p, endTangent.p, endPosition.p, curveColor, bezierWidth);
                 
@@ -98,10 +107,10 @@ public partial class BadassAnimation : EditorWindow
                 LSHandles.DrawRing(endTangent.e, constWidth, tangentPointColor);
             }
             
-            var ep = points[^2];
-            var et = points[^1];
+            var ep = curve[^2];
+            var et = curve[^1];
             LSHandles.DrawLine(tangentWidth, tangentLineColor, et.e, ep.e);
-            LSHandles.DrawCircle(et.e, constWidth, tangentPointColor);
+            LSHandles.DrawRing(et.e, constWidth, tangentPointColor);
             
             LSHandles.DrawCircle(ep.e, constWidth, keyPointColor);
             
@@ -110,16 +119,16 @@ public partial class BadassAnimation : EditorWindow
                 var target = selectedPointIndexes[i];
                 if (IsRoot(target))
                 {
-                    LSHandles.DrawCircle(points[target].e, constWidth, selectionColor);
+                    LSHandles.DrawCircle(curve[target].e, constWidth, selectionColor);
                 }
                 else
                 {
-                    LSHandles.DrawRing(points[target].e, constWidth, selectionColor);
+                    LSHandles.DrawRing(curve[target].e, constWidth, selectionColor);
                 }
             }
 
-            var dp = points.EvaluateNormalized(time);
-            LSHandles.DrawCircle(dp, constWidth, Color.white);
+            /*var dp = points.EvaluateNormalized(time);
+            LSHandles.DrawCircle(dp, constWidth, Color.white);*/
             LSHandles.SelectRect.Draw();
             
             void UpdateMinMax(in Vector2 vector)
@@ -130,16 +139,19 @@ public partial class BadassAnimation : EditorWindow
                 if (vector.y > max.y) max.y = vector.y;
             }
         }
-        
-        LSHandles.End(); 
-        matrix = LSHandles.EndMatrix();
-        
+
         ProcessEvents(Event.current);
         
+        LSHandles.End();
+        matrix = LSHandles.EndMatrix();
+
+
         if (GUI.changed)
         {
             Repaint();
         }
+        
+        OnAfterGui?.Invoke();
     }
     
     private readonly int[] workedPointIndexesArr = new int[2];
@@ -175,7 +187,7 @@ public partial class BadassAnimation : EditorWindow
         {
             for (int i = 0; i < selectedPointIndexes.Count; i++)
             {
-                yield return points[selectedPointIndexes[i]];
+                yield return curve[selectedPointIndexes[i]];
             }
         }
     }
@@ -210,6 +222,20 @@ public partial class BadassAnimation : EditorWindow
     private Vector2 lastMousePosition;
     private Vector2 startMousePosition;
     private bool isRecorded;
+
+    private bool IsRecorded
+    {
+        get => isRecorded;
+        set
+        {
+            isRecorded = value;
+            if (value == false)
+            {
+                OnEdited?.Invoke();
+            }
+        }
+    }
+    
     private BadassAnimationCurve copyPoints;
     private List<int> copySelectedPointIndexes;
     
@@ -237,6 +263,7 @@ public partial class BadassAnimation : EditorWindow
                     StopEventHandling();
                     break;
                 case EventType.KeyDown:
+                    if (e.modifiers != EventModifiers.None) break;
                     TrySetupEventHandler();
                     switch (e.keyCode)
                     {
@@ -262,19 +289,23 @@ public partial class BadassAnimation : EditorWindow
         switch (e.type)
         {
             case EventType.KeyDown:
+                if (e.modifiers != EventModifiers.None && e.keyCode != KeyCode.Delete) break;
                 TrySetupEventHandler();
                 if (e.keyCode == KeyCode.A)
                 {
                     RecordSelect();
                     selectedPointIndexes.Clear();
-                    for (int i = 0; i < points.Count; i++)
+                    for (int i = 0; i < curve.Count; i++)
                     {
                         selectedPointIndexes.Add(i);
                     }
                     GUI.changed = true;
+                    IsRecorded = false;
                 }
                 else if(e.keyCode == KeyCode.Delete)
                 {
+                    if (selectedPointIndexes.Count == 0) break;
+                    
                     for (int i = 0; i < selectedPointIndexes.Count; i++)
                     {
                         var removed = TryDeleteRoot(ref i, selectedPointIndexes[i]);
@@ -295,6 +326,8 @@ public partial class BadassAnimation : EditorWindow
                         }
                         
                     }
+                    
+                    IsRecorded = false;
                 }
                 break;
             case EventType.MouseDown:
@@ -321,7 +354,7 @@ public partial class BadassAnimation : EditorWindow
 
                         for (int j = 0; j < selectedPointIndexes.Count; j++)
                         {
-                            var point = points[selectedPointIndexes[j]];
+                            var point = curve[selectedPointIndexes[j]];
                             types.Add(point.alignType);
                         }
                         
@@ -380,7 +413,7 @@ public partial class BadassAnimation : EditorWindow
                             TrySelectPoint(i);
                         }
                         
-                        copyPoints = new BadassAnimationCurve(points);
+                        copyPoints = new BadassAnimationCurve(curve);
                         copySelectedPointIndexes = new List<int>(selectedPointIndexes);
                     }
                     else
@@ -396,7 +429,7 @@ public partial class BadassAnimation : EditorWindow
 
                 draggingPointIndex = -1;
                 GUI.changed = true;
-                isRecorded = false;
+                IsRecorded = false;
                 break;
 
             case EventType.MouseDrag:
@@ -455,9 +488,9 @@ public partial class BadassAnimation : EditorWindow
         
         bool TryGetPointIndex(out int index)
         {
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < curve.Count; i++)
             {
-                if (IsInDistance(points[i], LSHandles.MouseInWorldPoint, constWidth))
+                if (IsInDistance(curve[i], LSHandles.MouseInWorldPoint, constWidth))
                 {
                     index = i;
                     return true;
@@ -470,9 +503,9 @@ public partial class BadassAnimation : EditorWindow
 
         void SelectPointsByRect(Rect rect)
         {
-            for (int i = 0; i < points.Count; i++)
+            for (int i = 0; i < curve.Count; i++)
             {
-                if (rect.Contains(points[i].e))
+                if (rect.Contains(curve[i].e))
                 {
                     TrySelectPoint(i);
                 }
@@ -507,9 +540,9 @@ public partial class BadassAnimation : EditorWindow
         void SetupEventHandler()
         {
             discardEventHandler?.Invoke(e);
-            var last = points;
-            var copy = new BadassAnimationCurve(points);
-            points = copy;
+            var last = curve;
+            var copy = new BadassAnimationCurve(curve);
+            curve = copy;
             
             var lastSelectedPointIndexesCopy = selectedPointIndexes;
             var selectedPointIndexesCopy = new List<int>(selectedPointIndexes);
@@ -557,7 +590,7 @@ public partial class BadassAnimation : EditorWindow
             };
             discardEventHandler = _ =>
             {
-                points = last;
+                curve = last;
                 selectedPointIndexes = lastSelectedPointIndexesCopy;
             };
         }
@@ -569,7 +602,7 @@ public partial class BadassAnimation : EditorWindow
 
         void StopEventHandling()
         {
-            isRecorded = false;
+            IsRecorded = false;
             currentAxis = Axis.None;
             eventHandler = null;
             discardEventHandler = null;
@@ -582,7 +615,7 @@ public partial class BadassAnimation : EditorWindow
         RecordInsertKey();
         var mousePos = LSHandles.MouseInWorldPoint;
         var x = mousePos.x;
-        var i = points.InsertKeyByX(x);
+        var i = curve.InsertKeyByX(x);
         selectedPointIndexes.Clear();
         selectedPointIndexes.Add(i);
         SetKeyPosAsAnimation(i, mousePos);
@@ -598,7 +631,7 @@ public partial class BadassAnimation : EditorWindow
         if (IsRoot(i))
         {
             RecordDeleteKey();
-            points.DeleteKey(i);
+            curve.DeleteKey(i);
             ClampTangentsByKey(i);
             
             for (int j = -1; j < 2; j++)
@@ -625,7 +658,7 @@ public partial class BadassAnimation : EditorWindow
 
     private void UpdatePosAsAnimation(ref int i, bool isRootMoving)
     {
-        SetPosAsAnimation(ref i, points[i], isRootMoving);
+        SetPosAsAnimation(ref i, curve[i], isRootMoving);
     }
 
 
@@ -633,11 +666,11 @@ public partial class BadassAnimation : EditorWindow
     {
         if (IsRoot(i))
         {
-            var delta = pos - points[i].e;
+            var delta = pos - curve[i].e;
             for (int j = -1; j < 2; j++)
             {
                 var ind = i + j;
-                SetPosAsAnimation(ref ind, points[ind].e + delta, true);
+                SetPosAsAnimation(ref ind, curve[ind].e + delta, true);
             }
         }
     }
@@ -645,8 +678,8 @@ public partial class BadassAnimation : EditorWindow
     private void SetPosAsAnimation(ref int i, Vector2 pos, bool isRootMoving)
     {
         RecordMove();
-        var point = points[i];
-        points[i] = point.eSet(pos);
+        var point = curve[i];
+        curve[i] = point.eSet(pos);
         
         if (ClampTangent(i))
         {
@@ -666,15 +699,15 @@ public partial class BadassAnimation : EditorWindow
                 f2 = 2;
             }
             
-            var root = points[i + f1];
-            var tangent = points[i + f2];
-            var dir = (points[i].e - root.p).normalized;
+            var root = curve[i + f1];
+            var tangent = curve[i + f2];
+            var dir = (curve[i].e - root.p).normalized;
                 
             if (root.alignType == AlignType.Aligned)
             {
                 var dis = (tangent.e - root.p).magnitude;
                 tangent.eSet(root.p + -dir * dis);
-                points[i + f2] = tangent;
+                curve[i + f2] = tangent;
                 ClampTangent(i + f2);
             }
         }
@@ -693,9 +726,9 @@ public partial class BadassAnimation : EditorWindow
             
             void TrySwapNext(ref int ii)
             {
-                if(ii + 3 > points.Count - 1) return;
+                if(ii + 3 > curve.Count - 1) return;
                 
-                var next = points[ii + 3];
+                var next = curve[ii + 3];
                 if (point.x > next.x)
                 {
                     SwapKeys(ref ii, ii + 3);
@@ -706,7 +739,7 @@ public partial class BadassAnimation : EditorWindow
             {
                 if(ii - 3 < 0) return;
                 
-                var prev = points[ii - 3];
+                var prev = curve[ii - 3];
                 if (point.x < prev.x)
                 {
                     SwapKeys(ref ii, ii - 3);
@@ -725,7 +758,7 @@ public partial class BadassAnimation : EditorWindow
 
     private bool ClampTangent(int i)
     {
-        if(i < 0 || i > points.Count - 1) return false;
+        if(i < 0 || i > curve.Count - 1) return false;
         
         RecordMove();
         if (IsTangent(i))
@@ -733,22 +766,22 @@ public partial class BadassAnimation : EditorWindow
             if (IsForwardTangent(i))
             {
                 var inf = Vector2.positiveInfinity;
-                var root = points[i - 1];
-                var nextRoot = i < (points.Count-1) ? points[i + 2] : (BezierPoint)inf;
-                var pos = points[i];
+                var root = curve[i - 1];
+                var nextRoot = i < (curve.Count-1) ? curve[i + 2] : (BezierPoint)inf;
+                var pos = curve[i];
                 pos.x = Mathf.Clamp(pos.ex, root.x, nextRoot.x);
                 pos.ex = Mathf.Clamp(pos.ex, root.x, inf.x);
-                points[i] = pos;
+                curve[i] = pos;
             }
             else
             {
                 var inf = Vector2.negativeInfinity;
-                var root = points[i + 1];
-                var prevRoot = i > 0 ? points[i - 2] : (BezierPoint)inf;
-                var pos = points[i];
+                var root = curve[i + 1];
+                var prevRoot = i > 0 ? curve[i - 2] : (BezierPoint)inf;
+                var pos = curve[i];
                 pos.x = Mathf.Clamp(pos.ex, prevRoot.x, root.x);
                 pos.ex = Mathf.Clamp(pos.ex, inf.x, root.x);
-                points[i] = pos;
+                curve[i] = pos;
             }
 
             return true;
@@ -779,9 +812,9 @@ public partial class BadassAnimation : EditorWindow
             f2 = 2;
         }
 
-        points.SetAlign(i, alignType);
-        points.SetAlign(i + f1, alignType);
-        points.SetAlign(i + f2, alignType);
+        curve.SetAlign(i, alignType);
+        curve.SetAlign(i + f1, alignType);
+        curve.SetAlign(i + f2, alignType);
 
         if (alignType == AlignType.Aligned)
         {
@@ -835,12 +868,12 @@ public partial class BadassAnimation : EditorWindow
         var root1Tangents = GetTangentIndexes(root1);
         var root2Tangents = GetTangentIndexes(root2);
         
-        (points[root1], points[root2]) = (points[root2], points[root1]);
+        (curve[root1], curve[root2]) = (curve[root2], curve[root1]);
         (root1, root2) = (root2, root1);
         
         for (int i = 0; i < 2; i++)
         {
-            (points[root1Tangents[i]], points[root2Tangents[i]]) = (points[root2Tangents[i]], points[root1Tangents[i]]);
+            (curve[root1Tangents[i]], curve[root2Tangents[i]]) = (curve[root2Tangents[i]], curve[root1Tangents[i]]);
         }
 
         ClampTangentsByKey(root1);

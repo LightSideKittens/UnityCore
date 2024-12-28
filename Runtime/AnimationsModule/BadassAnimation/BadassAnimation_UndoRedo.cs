@@ -1,7 +1,11 @@
+using System;
 using UnityEditor;
 
 public partial class BadassAnimation
 {
+    public event Action OnBeforeGui;
+    public event Action OnAfterGui;
+    public event Action OnEdited;
     private void RecordDeleteKey() => RecordUndo("Delete Bezier Point");
     private void RecordInsertKey() => RecordUndo("Insert Bezier Point");
     private void RecordChangeType() => RecordUndo("Change Bezier Point Type");
@@ -10,8 +14,8 @@ public partial class BadassAnimation
     
     private void RecordUndo(string name)
     {
-        if(isRecorded) return;
-        isRecorded = true;
+        if(IsRecorded) return;
+        IsRecorded = true;
         Undo.RegisterCompleteObjectUndo(this, name);
     }
 
@@ -20,13 +24,17 @@ public partial class BadassAnimation
         Undo.undoRedoPerformed += OnUndoRedoPerformed;
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
+        OnBeforeGui = null;
+        OnAfterGui = null;
+        OnEdited = null;
         Undo.undoRedoPerformed -= OnUndoRedoPerformed;
     }
 
     private void OnUndoRedoPerformed()
     {
+        OnEdited?.Invoke();
         Repaint();
     }
 }

@@ -5,8 +5,35 @@ using LSCore.ConfigModule.Converters;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace LSCore.ConfigModule
+namespace LSCore
 {
+	public class SerializationSettings
+	{
+		public static SerializationSettings Default { get; } = new();
+		public JsonSerializerSettings settings;
+		public JsonSerializer serializer;
+
+		public SerializationSettings(JsonSerializerSettings settings)
+		{
+			this.settings = settings;
+			serializer = JsonSerializer.Create(settings);
+		}
+        
+		public SerializationSettings()
+		{
+			settings = new()
+			{
+				ContractResolver = UnityJsonContractResolver.Instance,
+				Error = (_, args) =>
+				{
+					args.ErrorContext.Handled = true;
+				}
+			};
+
+			serializer = JsonSerializer.Create(settings);
+		}
+	}
+	
 	public class UnityJsonContractResolver : DefaultContractResolver
 	{
 		public static readonly UnityJsonContractResolver Instance = new UnityJsonContractResolver();

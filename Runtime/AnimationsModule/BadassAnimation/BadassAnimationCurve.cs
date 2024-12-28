@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using LSCore;
+using Newtonsoft.Json;
+using UnityEditor;
 using UnityEngine;
 
 [Serializable]
@@ -13,7 +16,7 @@ public enum AlignType
 [Serializable]
 public struct BezierPoint
 {
-    public Vector2 p;
+    [JsonIgnore] public Vector2 p;
     
     public float x
     {
@@ -29,7 +32,7 @@ public struct BezierPoint
     
 #if UNITY_EDITOR
     public AlignType alignType;
-    public Vector2 e;
+    [JsonIgnore] public Vector2 e;
     
     public float ex
     {
@@ -82,47 +85,51 @@ public struct BezierPoint
 }
 
 [Serializable]
-public class BadassAnimationCurve : IList<BezierPoint>
+[JsonObject(MemberSerialization.OptIn)]
+public class BadassAnimationCurve : IList<BezierPoint>, ISerializationCallbackReceiver
 {
-    public List<BezierPoint> points = new();
-    public bool loop;
+    [SerializeField] [JsonIgnore] private string json;
+    
+    [JsonProperty] public List<BezierPoint> Points { get; set; } = new();
+    [JsonProperty] public bool Loop { get; set; }
+    
 
     public BadassAnimationCurve() { }
 
     public BadassAnimationCurve(BadassAnimationCurve badassAnimationCurve)
     {
-        points = new List<BezierPoint>(badassAnimationCurve.points);
-        loop = badassAnimationCurve.loop;
+        Points = new List<BezierPoint>(badassAnimationCurve.Points);
+        Loop = badassAnimationCurve.Loop;
     }
 
-    public IEnumerator<BezierPoint> GetEnumerator() => points.GetEnumerator();
+    public IEnumerator<BezierPoint> GetEnumerator() => Points.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     public void Add(Vector2 item) => Add((BezierPoint)item);
-    public void Add(BezierPoint item) => points.Add(item);
+    public void Add(BezierPoint item) => Points.Add(item);
 
-    public void Clear() => points.Clear();
-    public bool Contains(BezierPoint item) => points.Contains(item);
-    public void CopyTo(BezierPoint[] array, int arrayIndex) => points.CopyTo(array, arrayIndex);
-    public bool Remove(BezierPoint item) => points.Remove(item);
-    public int Count => points.Count;
+    public void Clear() => Points.Clear();
+    public bool Contains(BezierPoint item) => Points.Contains(item);
+    public void CopyTo(BezierPoint[] array, int arrayIndex) => Points.CopyTo(array, arrayIndex);
+    public bool Remove(BezierPoint item) => Points.Remove(item);
+    public int Count => Points.Count;
     public bool IsReadOnly => false;
     
-    public int IndexOf(BezierPoint item) => points.IndexOf(item);
-    public void Insert(int index, BezierPoint item) => points.Insert(index, item);
-    public void RemoveAt(int index) => points.RemoveAt(index);
+    public int IndexOf(BezierPoint item) => Points.IndexOf(item);
+    public void Insert(int index, BezierPoint item) => Points.Insert(index, item);
+    public void RemoveAt(int index) => Points.RemoveAt(index);
 
     public void SetAlign(int index, AlignType alignType)
     {
-        var p = points[index];
+        var p = Points[index];
         p.alignType = alignType;
-        points[index] = p;
+        Points[index] = p;
     }
     
     public BezierPoint this[int index]
     {
-        get => points[index];
-        set => points[index] = value;
+        get => Points[index];
+        set => Points[index] = value;
     }
 
     /// <summary>
@@ -153,10 +160,10 @@ public class BadassAnimationCurve : IList<BezierPoint>
         if (i + 3 >= Count)
             return;
 
-        BezierPoint p0 = points[i];
-        BezierPoint p1 = points[i + 1];
-        BezierPoint p2 = points[i + 2];
-        BezierPoint p3 = points[i + 3];
+        BezierPoint p0 = Points[i];
+        BezierPoint p1 = Points[i + 1];
+        BezierPoint p2 = Points[i + 2];
+        BezierPoint p3 = Points[i + 3];
 
         Vector2 q0 = Vector2.Lerp(p0, p1, t);
         Vector2 q1 = Vector2.Lerp(p1, p2, t);
@@ -166,9 +173,9 @@ public class BadassAnimationCurve : IList<BezierPoint>
         Vector2 r1 = Vector2.Lerp(q1, q2, t);
         Vector2 s  = Vector2.Lerp(r0, r1, t);
 
-        points[i + 1] = (BezierPoint)q0;
-        points[i + 2] = (BezierPoint)r0;
-        points[i + 3] = (BezierPoint)s;
+        Points[i + 1] = (BezierPoint)q0;
+        Points[i + 2] = (BezierPoint)r0;
+        Points[i + 3] = (BezierPoint)s;
 
         Insert(i + 4, (BezierPoint)r1);
         Insert(i + 5, (BezierPoint)q2);
@@ -183,14 +190,14 @@ public class BadassAnimationCurve : IList<BezierPoint>
     /// </summary>
     public int GetLeftKeyIndexByX(float xTarget)
     {
-        if (points.Count < 3 || xTarget <= points[1].x)
+        if (Points.Count < 3 || xTarget <= Points[1].x)
         {
             return -1;
         }
 
         int lastKeyIndex = LastKeyIndex;
         
-        if (xTarget >= points[lastKeyIndex].x)
+        if (xTarget >= Points[lastKeyIndex].x)
         {
             return lastKeyIndex;
         }
@@ -198,7 +205,7 @@ public class BadassAnimationCurve : IList<BezierPoint>
         int keyIndex = 0;
         for (int i = 1; i < Count; i += 3)
         {
-            if (points[i].x >= xTarget)
+            if (Points[i].x >= xTarget)
             {
                 return Mathf.Max(0, keyIndex - 1) * 3 + 1;
             }
@@ -227,10 +234,10 @@ public class BadassAnimationCurve : IList<BezierPoint>
             return i + 3;
         }
 
-        BezierPoint p0 = points[i];
-        BezierPoint p1 = points[i + 1];
-        BezierPoint p2 = points[i + 2];
-        BezierPoint p3 = points[i + 3];
+        BezierPoint p0 = Points[i];
+        BezierPoint p1 = Points[i + 1];
+        BezierPoint p2 = Points[i + 2];
+        BezierPoint p3 = Points[i + 3];
 
         float t = FindBezierTForX(p0.x, p1.x, p2.x, p3.x, x);
 
@@ -240,7 +247,7 @@ public class BadassAnimationCurve : IList<BezierPoint>
 
     private void InsertDefault(int i, float x, bool before)
     {
-        Vector2 root = points.Count > 2 ? points[i] : Vector2.zero;
+        Vector2 root = Points.Count > 2 ? Points[i] : Vector2.zero;
         root.x = x;
         var half = Vector2.right / 2;
         Vector2 backTangent = root - half;
@@ -260,8 +267,8 @@ public class BadassAnimationCurve : IList<BezierPoint>
     /// </summary>
     public Vector2 EvaluateNormalized(float t)
     {
-        float xMin = points[1].x;
-        float xMax = points[^2].x; 
+        float xMin = Points[1].x;
+        float xMax = Points[^2].x; 
         float xTarget = Mathf.Lerp(xMin, xMax, t);
         return Evaluate(xTarget);
     }
@@ -273,13 +280,13 @@ public class BadassAnimationCurve : IList<BezierPoint>
     {
         int i = GetLeftKeyIndexByX(x);
         
-        if (i == -1) return points[1];
-        if (i == LastKeyIndex) return points[^2];
+        if (i == -1) return Points[1];
+        if (i == LastKeyIndex) return Points[^2];
         
-        Vector2 p0 = points[i];
-        Vector2 p1 = points[i + 1];
-        Vector2 p2 = points[i + 2];
-        Vector2 p3 = points[i + 3];
+        Vector2 p0 = Points[i];
+        Vector2 p1 = Points[i + 1];
+        Vector2 p2 = Points[i + 2];
+        Vector2 p3 = Points[i + 3];
         
         float tForX = FindBezierTForX(p0.x, p1.x, p2.x, p3.x, x);
         
@@ -334,4 +341,17 @@ public class BadassAnimationCurve : IList<BezierPoint>
 
         return (t0 + t1) * 0.5f;
     }
+
+    void ISerializationCallbackReceiver.OnBeforeSerialize()
+    {
+        json = GetJson();
+    }
+
+    void ISerializationCallbackReceiver.OnAfterDeserialize()
+    {
+        Points.Clear();
+        JsonConvert.PopulateObject(json, this, SerializationSettings.Default.settings);
+    }
+    
+    internal string GetJson() => JsonConvert.SerializeObject(this, SerializationSettings.Default.settings);
 }
