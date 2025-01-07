@@ -13,7 +13,7 @@ public partial class BadassAnimationCurveEditor
     private void RecordInsertKey() => RecordUndo("Insert Bezier Point");
     private void RecordChangeType() => RecordUndo("Change Bezier Point Type");
     private void RecordMove() => RecordUndo("Move Bezier Point");
-    private void RecordSelect() => RecordUndo("Bezier Point Selection Changed");
+    public void RecordSelect() => RecordUndo("Bezier Point Selection Changed");
     
     private void RecordUndo(string name)
     {

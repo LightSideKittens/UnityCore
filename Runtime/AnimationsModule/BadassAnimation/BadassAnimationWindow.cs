@@ -232,7 +232,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
 
     private const string CreateNewClipLabel = "Create New Clip...";
     
-    private BadassAnimationMultiCurveEditor editor;
+    [HideInInspector] public BadassAnimationMultiCurveEditor editor;
     private BadassAnimation animation;
     private Toolbar toolbar;
     
@@ -322,7 +322,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
 
             foreach (var clip in lastClip.data.SelectMany(d => d.namesToCurves.Select(nc => nc.curve)))
             {
-                listCurves.Add(new BadassAnimationCurveEditor(clip, animation));
+                listCurves.Add(new BadassAnimationCurveEditor(clip, this));
             }
 
             if (listCurves.Count > 0)
@@ -350,7 +350,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
             {
                 if (curveItem.TryGetCurve(out var curve))
                 {
-                    editor.Add(new BadassAnimationCurveEditor(curve, currentClip));
+                    editor.Add(new BadassAnimationCurveEditor(curve, this));
                 }
             }
         }

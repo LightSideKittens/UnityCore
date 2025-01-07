@@ -1,6 +1,7 @@
 ﻿#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using LSCore.Editor;
 using LSCore.Extensions;
 using UnityEngine;
@@ -12,7 +13,7 @@ using Object = UnityEngine.Object;
 public class BadassAnimationMultiCurveEditor
 {
     public BadassAnimationCurveEditor First => editors[0];
-    private List<BadassAnimationCurveEditor> editors = new();
+    public List<BadassAnimationCurveEditor> editors = new();
     private Matrix4x4 matrix = Matrix4x4.identity;
     public LSHandles.CameraData camData = new();
     public LSHandles.GridData gridData = new();
@@ -25,11 +26,16 @@ public class BadassAnimationMultiCurveEditor
     public BadassAnimationMultiCurveEditor(IEnumerable<BadassAnimationCurveEditor> editors)
     {
         this.editors.AddRange(editors);
+        foreach (var editor in this.editors)
+        {
+            SetupPointsBoundsGetter(editor);
+        }
         OnEnable();
     }
     
     public BadassAnimationMultiCurveEditor(BadassAnimationCurveEditor editor)
     {
+        SetupPointsBoundsGetter(editor);
         editors.Add(editor);
         OnEnable();
     }
@@ -40,10 +46,32 @@ public class BadassAnimationMultiCurveEditor
 
     public void Add(BadassAnimationCurveEditor editor)
     {
+        SetupPointsBoundsGetter(editor);
         editors.Add(editor);
         editor.OnEnable();
     }
 
+    private void SetupPointsBoundsGetter(BadassAnimationCurveEditor editor)
+    {
+        editor.pointsBoundsGetter = GetPointsBounds;
+    }
+    
+    private IEnumerable<Vector2> eSelectedPoints
+    {
+        get
+        {
+            foreach (var point in editors.SelectMany(x => x.eSelectedPoints))
+            {
+                yield return point;
+            }
+        }
+    }
+
+    private Rect GetPointsBounds()
+    {
+        return LSHandles.CalculateBounds(eSelectedPoints);
+    }
+    
     public void OnGUI(Rect rect)
     {
         if(editors.Count == 0) return;
@@ -194,36 +222,62 @@ public class BadassAnimationMultiCurveEditor
         }
         else if (e.type == EventType.MouseUp)
         {
-            if (!wasDragging && !wasShift)
+            if (e.button == 0)
             {
-                clickedEditors.Clear();
+                if (!wasDragging && !wasShift)
+                {
+                    clickedEditors.Clear();
                 
+                    for (int i = 0; i < editors.Count; i++)
+                    {
+                        var editor = editors[i];
+                        if (editor.TryGetPointIndex(out int index))
+                        {
+                            editor.WasClicked = true;
+                            clickedEditors.Add(editor);
+                        }
+                        editor.ForceDeselectAll();
+                    }
+                
+                    if (clickedEditors.Count > 0)
+                    {
+                        currentSelectionClickCount--;
+                        var clickedEditor = clickedEditors.GetCyclic(currentSelectionClickCount);
+                        clickedEditor.HandleMultiSelection();
+                        currentSelectionClickCount++;
+                    }
+                }
+            
+                var selectionRect = LSHandles.SelectRect.End();
+            
                 for (int i = 0; i < editors.Count; i++)
                 {
                     var editor = editors[i];
-                    if (editor.TryGetPointIndex(out int index))
-                    {
-                        editor.WasClicked = true;
-                        clickedEditors.Add(editor);
-                    }
-                    editor.ForceDeselectAll();
-                }
-                
-                if (clickedEditors.Count > 0)
-                {
-                    currentSelectionClickCount--;
-                    var clickedEditor = clickedEditors.GetCyclic(currentSelectionClickCount);
-                    clickedEditor.HandleMultiSelection();
-                    currentSelectionClickCount++;
+                    editor.SelectPointsByRect(selectionRect);
                 }
             }
-            
-            var selectionRect = LSHandles.SelectRect.End();
-            
+        }
+        
+        bool wantResetIsRecorded = false;
+        for (int i = 0; i < editors.Count; i++)
+        {
+            var editor = editors[i];
+            editor.PrepareRecordSelectIfChanged();
+            wantResetIsRecorded |= editor.WantResetIsRecorded;
+        }
+        
+        for (int i = 0; i < editors.Count; i++)
+        {
+            var editor = editors[i];
+            editor.TryRecordSelectIfChanged();
+        }
+        
+        if (wantResetIsRecorded)
+        {
             for (int i = 0; i < editors.Count; i++)
             {
                 var editor = editors[i];
-                editor.SelectPointsByRect(selectionRect);
+                editor.IsRecorded = false;
             }
         }
         
@@ -360,6 +414,7 @@ public partial class BadassAnimationCurveEditor
     
     private readonly int[] workedPointIndexesArr = new int[2];
     [SerializeField] public List<int> selectedPointIndexes = new();
+    private List<int> oldsSelectedPointIndexes;
 
     private IEnumerable<BezierPoint> SelectedPoints
     {
@@ -372,7 +427,7 @@ public partial class BadassAnimationCurveEditor
         }
     }
     
-    private IEnumerable<Vector2> eSelectedPoints
+    public IEnumerable<Vector2> eSelectedPoints
     {
         get
         {
@@ -383,17 +438,7 @@ public partial class BadassAnimationCurveEditor
         }
     }
     
-    private IEnumerable<Vector2> pSelectedPoints
-    {
-        get
-        {
-            foreach (var point in SelectedPoints)
-            {
-                yield return point.p;
-            }
-        }
-    }
-    
+    public Func<Rect> pointsBoundsGetter;
     private Action<Event> eventHandler;
     private Action<Event> applyEventHandler;
     private Action<Event> discardEventHandler;
@@ -402,7 +447,7 @@ public partial class BadassAnimationCurveEditor
     private Vector2 lastMousePosition;
     private bool lastIsRecorded;
 
-    private bool IsRecorded
+    public bool IsRecorded
     {
         get => SessionState.GetBool($"CurveEditing{context.GetInstanceID()}", false);
         set
@@ -415,6 +460,8 @@ public partial class BadassAnimationCurveEditor
             lastIsRecorded = value;
         }
     }
+    
+    public bool WantResetIsRecorded { get; private set; }
     
     public bool WasClicked { get; set; }
     public bool WasClickedOnSelected { get; set; }
@@ -479,14 +526,15 @@ public partial class BadassAnimationCurveEditor
                 TrySetupEventHandler();
                 if (e.keyCode == KeyCode.A)
                 {
-                    RecordSelect();
+                    oldsSelectedPointIndexes = new(selectedPointIndexes);
                     selectedPointIndexes.Clear();
                     for (int i = 0; i < curve.Count; i++)
                     {
                         selectedPointIndexes.Add(i);
                     }
                     GUI.changed = true;
-                    IsRecorded = false;
+                    RecordSelectIfChanged();
+                    WantResetIsRecorded = false;
                 }
                 else if(e.keyCode == KeyCode.Delete)
                 {
@@ -513,7 +561,7 @@ public partial class BadassAnimationCurveEditor
                         
                     }
                     
-                    IsRecorded = false;
+                    WantResetIsRecorded = false;
                 }
                 break;
             case EventType.MouseDown:
@@ -576,6 +624,7 @@ public partial class BadassAnimationCurveEditor
                 }
                 else if (e.button == 0)
                 {
+                    oldsSelectedPointIndexes = new(selectedPointIndexes);
                     GUI.changed = true;
                     
                     WasClicked = TryGetPointIndex(out var i);
@@ -589,7 +638,11 @@ public partial class BadassAnimationCurveEditor
 
             case EventType.MouseUp:
                 GUI.changed = true;
-                IsRecorded = false;
+                if (e.button == 0)
+                {
+                    RecordSelectIfChanged();
+                }
+                WantResetIsRecorded = false;
                 break;
         }
 
@@ -629,7 +682,7 @@ public partial class BadassAnimationCurveEditor
             var selectedPointIndexesCopy = new List<int>(selectedPointIndexes);
             selectedPointIndexes = selectedPointIndexesCopy;
 
-            var bounds = LSHandles.CalculateBounds(eSelectedPoints);
+            var bounds = pointsBoundsGetter();
             var startPos = LSHandles.MouseInWorldPoint;
                     
             applyEventHandler = _ => applyEventHandler = null;
@@ -683,12 +736,45 @@ public partial class BadassAnimationCurveEditor
 
         void StopEventHandling()
         {
-            IsRecorded = false;
+            WantResetIsRecorded = false;
             currentAxis = Axis.None;
             eventHandler = null;
             discardEventHandler = null;
             applyEventHandler = null;
         }
+    }
+
+    private Action beforeRecordSelectIfChanged;
+    private Action afterRecordSelectIfChanged;
+
+    public void PrepareRecordSelectIfChanged()
+    {
+        beforeRecordSelectIfChanged?.Invoke();
+        beforeRecordSelectIfChanged = null;
+    }
+    
+    public void TryRecordSelectIfChanged()
+    {
+        afterRecordSelectIfChanged?.Invoke();
+        afterRecordSelectIfChanged = null;
+    }
+    
+    private void RecordSelectIfChanged()
+    {
+        beforeRecordSelectIfChanged = () =>
+        {
+            if (!oldsSelectedPointIndexes.SequenceEqual(selectedPointIndexes))
+            {
+                WantResetIsRecorded = true;
+                var last = selectedPointIndexes;
+                selectedPointIndexes = oldsSelectedPointIndexes;
+                afterRecordSelectIfChanged = () =>
+                {
+                    RecordSelect();
+                    selectedPointIndexes = last;
+                };
+            }
+        };
     }
     
     public bool TryGetPointIndex(out int index)
@@ -710,7 +796,6 @@ public partial class BadassAnimationCurveEditor
     {
         if (!selectedPointIndexes.Contains(pointIndex))
         {
-            RecordSelect();
             selectedPointIndexes.Add(pointIndex);
             return true;
         }
@@ -722,7 +807,6 @@ public partial class BadassAnimationCurveEditor
     {
         if (!TrySelectPoint(pointIndex))
         {
-            RecordSelect();
             selectedPointIndexes.Remove(pointIndex);
             return false;
         }
@@ -1077,7 +1161,6 @@ public partial class BadassAnimationCurveEditor
 
     public void ForceDeselectAll()
     {
-        RecordSelect();
         selectedPointIndexes.Clear();
     }
 
