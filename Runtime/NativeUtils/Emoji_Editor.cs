@@ -108,49 +108,41 @@ namespace LSCore.NativeUtils
         
         private static Texture2D RenderEmojiToTexture(string emoji)
         {
-            float dpiScaling = typeof(GUIUtility).Eval<float>("pixelsPerPoint"); // DPI стандартного экрана — 96
+            float dpiScaling = typeof(GUIUtility).Eval<float>("pixelsPerPoint");
             if (dpiScaling <= 0) dpiScaling = 1;
             
-            var textureSize = 256; // Размер текстуры
-            var fontSize = (int)(230 / dpiScaling); // Размер шрифта
+            var textureSize = 256;
+            var fontSize = (int)(230 / dpiScaling);
 
-            // Настройка шрифта
             var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
 
             var style = new GUIStyle
             {
                 font = font,
                 fontSize = fontSize,
-                alignment = TextAnchor.UpperCenter, // Ставим текст сверху
+                alignment = TextAnchor.UpperCenter,
                 normal = { textColor = Color.white }
             };
 
-            // Создание RenderTexture
             var renderTexture = RenderTexture.GetTemporary(textureSize, textureSize, 0, RenderTextureFormat.ARGB64);
 
-            // Создание текстуры для хранения результата
             var texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA64, false);
 
-            // Настройка матрицы и рендеринг текста
             RenderTexture.active = renderTexture;
             GL.Clear(true, true, Color.clear);
 
-            // Поднимаем текст вверх (смещение)
             var offsetX = textureSize - (textureSize / dpiScaling);
             offsetX /= 2;
-            var offsetY = textureSize * (0.05f / dpiScaling); // Смещение на 10% вверх
+            var offsetY = textureSize * (0.05f / dpiScaling);
             var rect = new Rect(-offsetX, -offsetY, textureSize, textureSize);
 
-            // Рендеринг через GUI с использованием заданного стиля
             GUI.matrix = Matrix4x4.identity;
             Graphics.SetRenderTarget(renderTexture);
             style.Draw(rect, new GUIContent(emoji), GUIUtility.GetControlID(FocusType.Keyboard), false);
 
-            // Чтение из RenderTexture
             texture.ReadPixels(new Rect(0, 0, textureSize, textureSize), 0, 0);
             texture.Apply();
-            
-            // Очистка
+
             RenderTexture.ReleaseTemporary(renderTexture);
             RenderTexture.active = null;
 

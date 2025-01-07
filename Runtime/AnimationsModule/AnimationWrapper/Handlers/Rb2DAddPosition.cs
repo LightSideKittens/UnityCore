@@ -4,7 +4,7 @@ using UnityEngine;
 namespace LSCore.AnimationsModule
 {
     [Serializable]
-    public class Rb2DAddPosition : AnimationWrapper.Handler<Vector2>
+    public class Rb2DAddPosition : BadassAnimation.Handler<Vector2>
     {
         [SerializeField] private Rigidbody2D rigidbody;
         [SerializeField] private bool useWorldSpace;

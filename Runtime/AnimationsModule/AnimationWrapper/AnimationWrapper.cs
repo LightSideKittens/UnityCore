@@ -83,7 +83,7 @@ namespace LSCore.AnimationsModule
     [DefaultExecutionOrder(-1000)]
     public partial class AnimationWrapper : MonoBehaviour
     {
-        [SerializeReference] public List<Handler> handlers;
+        [SerializeReference] public List<global::BadassAnimation.Handler> handlers;
         [PropertySpace(SpaceBefore = 10)]
         [SerializeReference] private List<LSAction> actions;
         private new Animation animation;

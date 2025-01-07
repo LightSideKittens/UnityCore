@@ -17,7 +17,7 @@ namespace LSCore.Editor
             public Color color = new(0, 0, 0, 1f);
             public Vector2 scaleRange = new(0.0001f, 100);
             public Vector2 stepRef = new Vector2(0.1f, 0.1f);
-            public bool displayScale;
+            public bool displayScale = true;
             public Color scaleBackColor = new Color(0f, 0f, 0f, 0.5f);
             
             public void Draw()

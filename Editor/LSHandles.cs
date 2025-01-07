@@ -47,6 +47,8 @@ namespace LSCore.Editor
             blitMaterialInfo = propInfo.GetGetMethod(true);
             lineMaterial = new Material(Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply"));
             spriteMaterial = new Material(Shader.Find("Sprites/Default"));
+            lineMaterial.hideFlags = HideFlags.HideAndDontSave;
+            spriteMaterial.hideFlags = HideFlags.HideAndDontSave;
             lines.Created += AddGameObject;
             lines.Got += line => line.enabled = true;
             lines.Released += line => line.enabled = false;
@@ -121,7 +123,7 @@ namespace LSCore.Editor
         public static void End()
         {
             if(eventType != EventType.Repaint) return; 
-            RenderCamera();
+            cam.Render();
             Graphics.DrawTexture(
                 rect,
                 targetTexture,
@@ -314,11 +316,6 @@ namespace LSCore.Editor
                 targetTexture.height = lastHeight;
             }
         }
-
-        private static void RenderCamera()
-        {
-            cam.Render();
-        }
         
         public static void DrawGrid(GridData data)
         {
@@ -347,12 +344,12 @@ namespace LSCore.Editor
         {
             if(eventType != EventType.Repaint) return; 
             var bezie = GetLine(color, width, dependsOnCam);
-
+            
             startPoint   = currentMatrix.MultiplyPoint3x4(startPoint);
             startTangent = currentMatrix.MultiplyPoint3x4(startTangent);
             endTangent   = currentMatrix.MultiplyPoint3x4(endTangent);
             endPoint     = currentMatrix.MultiplyPoint3x4(endPoint);
-
+            
             DrawBezierCurve(bezie, startPoint, startTangent, endTangent, endPoint);
         }
 

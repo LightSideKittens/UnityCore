@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace LSCore.NativeUtils
 {
-    public class EmojiRange
+    public struct EmojiRange
     {
         public int index;
         public int adjustedIndex;
@@ -17,10 +17,10 @@ namespace LSCore.NativeUtils
     public static partial class Emoji
     {
         private static string packageName = "com.lscore.emoji";
-        private static AndroidJavaClass textRenderer;
+        private static AndroidJavaClass api;
         private static AndroidJavaObject currentActivity;
 
-        private static AndroidJavaClass API => textRenderer ??= new AndroidJavaClass($"{packageName}.API");
+        private static AndroidJavaClass API => api ??= new AndroidJavaClass($"{packageName}.API");
 
         private static AndroidJavaObject CurrentActivity 
         {
@@ -38,14 +38,16 @@ namespace LSCore.NativeUtils
         }
 
         private static Dictionary<string, Texture2D> cachedTextures = new();
-        private static Texture2D[] texturesArr = new Texture2D[100];
+        private static Texture2D[] texturesArr = new Texture2D[1000];
+        private static List<EmojiRange> emojiRanges = new (1024);
         
-        public static EmojiRange[] ParseEmojis(string text, string saveDirPath, out Texture2D[] textures)
+        public static ListSpan<EmojiRange> ParseEmojis(string text, string saveDirPath, out Texture2D[] textures)
         {
             var result = GetArray(text, saveDirPath);
             int i = 0;
+            int count = Math.Min(result.Count, texturesArr.Length);
             
-            for (; i < result.Length; i++)
+            for (; i < count; i++)
             {
                 var entry = result[i];
                 var path = entry.imagePath;
@@ -65,52 +67,77 @@ namespace LSCore.NativeUtils
             return result;
         }
         
-        public static EmojiRange[] GetArray(string text, string saveDirPath)
+        public static ListSpan<EmojiRange> GetArray(string text, string saveDirPath)
         {
 #if UNITY_EDITOR
             if (Application.isEditor)
             {
-                return ProcessEmojis(text);
+                return ProcessEmojis(text).AsSpan(..);
             }
 #endif
             AndroidJavaObject[] emojiRangesJavaArray = API.CallStatic<AndroidJavaObject[]>("parseEmojis", text, saveDirPath);
 
             if (emojiRangesJavaArray == null || emojiRangesJavaArray.Length == 0)
             {
-                return Array.Empty<EmojiRange>();
+                return Array.Empty<EmojiRange>().AsSpan(..);
             }
             
-            EmojiRange[] result = new EmojiRange[emojiRangesJavaArray.Length];
+            int i = 0;
             
-            for (int i = 0; i < emojiRangesJavaArray.Length; i++)
+            for (; i < emojiRangesJavaArray.Length; i++)
             {
                 using (var item = emojiRangesJavaArray[i])
                 {
-                    result[i] = new EmojiRange
+                    var range = new EmojiRange
                     {
                         index = item.Get<int>("index"),
                         length = item.Get<int>("length"),
                         imagePath = item.Get<string>("imagePath")
                     };
+
+                    if (emojiRanges.Count <= i)
+                    {
+                        emojiRanges.Add(range);
+                    }
+                    else
+                    {
+                        emojiRanges[i] = range;
+                    }
                 }
             }
             
-            return result;
+            return emojiRanges.AsSpan(..i);
         }
         
-        public static string ReplaceWithEmojiRanges(string input, EmojiRange[] emojiRanges, string replacement)
+        public static string ReplaceWithEmojiRanges(string input, ListSpan<EmojiRange> ranges, string replacement, Texture2D[] textures)
         {
             StringBuilder result = new StringBuilder(input);
             int offset = 0; 
             int replacementLength = replacement.Length;
 
-            foreach (var range in emojiRanges)
+            for (int i = 0; i < textures.Length; i++)
             {
+                var range = ranges[i];
                 int adjustedIndex = range.index + offset;
                 range.adjustedIndex = adjustedIndex;
                 result.Remove(adjustedIndex, range.length);
                 result.Insert(adjustedIndex, replacement);
                 offset += replacementLength - range.length;
+                ranges[i] = range;
+            }
+            
+            replacement = string.Empty;
+            replacementLength = 0;
+            
+            for (int i = textures.Length; i < ranges.Count; i++)
+            {
+                var range = ranges[i];
+                int adjustedIndex = range.index + offset;
+                range.adjustedIndex = adjustedIndex;
+                result.Remove(adjustedIndex, range.length);
+                result.Insert(adjustedIndex, replacement);
+                offset += replacementLength - range.length;
+                ranges[i] = range;
             }
 
             return result.ToString();

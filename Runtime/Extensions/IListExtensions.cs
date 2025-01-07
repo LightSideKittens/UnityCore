@@ -14,16 +14,6 @@ namespace LSCore.Extensions
             }
         }
         
-        public static ListSpan<T> Range<T>(this IList<T> list, Range range)
-        {
-            var count = list.Count;
-            var start = range.Start.GetOffset(count);
-            var end = range.End.GetOffset(count);
-            count = end - start;
-
-            return new ListSpan<T>(list, start, count);
-        }
-        
         public static T Min<T>(this IList<T> list, Func<T, float> arr, out int index)
         {
             var minValue = float.MaxValue;
@@ -53,6 +43,12 @@ namespace LSCore.Extensions
             y = (y % height + height) % height;
 
             return array[x, y];
+        }
+        
+        public static T GetCyclic<T>(this IList<T> list, int i)
+        {
+            var c = list.Count;
+            return list[(i % c + c) % c];
         }
         
         public static T Random<T>(this T[,] array)
@@ -120,52 +116,6 @@ namespace LSCore.Extensions
             }
             
             return leftItem;
-        }
-    }
-    
-    public readonly struct ListSpan<T> : IEnumerable<T>
-    {
-        private readonly IList<T> list;
-        private readonly int start;
-        private readonly int count;
-
-        public ListSpan(IList<T> list, int start, int count)
-        {
-            if (start < 0 || start > list.Count || count < 0 || start + count > list.Count)
-            {
-                throw new ArgumentOutOfRangeException();
-            }
-
-            this.list = list;
-            this.start = start;
-            this.count = count;
-        }
-
-        public T this[int index]
-        {
-            get
-            {
-                if (index < 0 || index >= count)
-                {
-                    throw new ArgumentOutOfRangeException();
-                }
-                return list[start + index];
-            }
-        }
-
-        public int Count => count;
-
-        public IEnumerator<T> GetEnumerator()
-        {
-            for (var i = 0; i < count; i++)
-            {
-                yield return list[start + i];
-            }
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 }

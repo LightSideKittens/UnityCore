@@ -11,7 +11,7 @@ using UnityEngine;
 namespace LSCore.BattleModule.Animation
 {
     [Serializable]
-    public class MoveToTarget : AnimationWrapper.Handler<float>
+    public class MoveToTarget : BadassAnimation.Handler<float>
     {
         public Rigidbody2D rigidbody;
         public FindTargetFactory findTargetFactory;

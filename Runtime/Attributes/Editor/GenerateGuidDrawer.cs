@@ -12,6 +12,15 @@ public class GenerateGuidDrawer : OdinAttributeDrawer<GenerateGuidAttribute, str
     {
         var value = ValueEntry.SmartValue;
 
+        if (Attribute.Hide)
+        {
+            if (!Guid.TryParse(value, out _))
+            {
+                Generate();
+            }
+            return;
+        }
+        
         SirenixEditorGUI.BeginIndentedVertical();
         SirenixEditorGUI.BeginHorizontalToolbar();
         if (label != null)
@@ -24,12 +33,17 @@ public class GenerateGuidDrawer : OdinAttributeDrawer<GenerateGuidAttribute, str
         if (SirenixEditorGUI.IconButton(EditorIcons.Refresh)
             || !Guid.TryParse(value, out _))
         {
-            value = Guid.NewGuid().ToString("N");
-            ValueEntry.SmartValue = value;
+            Generate();
         }
 
         SirenixEditorGUI.EndHorizontalToolbar();
         SirenixEditorGUI.EndIndentedVertical();
+
+        void Generate()
+        {
+            value = Guid.NewGuid().ToString("N");
+            ValueEntry.SmartValue = value;
+        }
     }
 }
 

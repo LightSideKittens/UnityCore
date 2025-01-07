@@ -2,11 +2,11 @@
 
 namespace LSCore.AnimationsModule
 {
-    public class GOSetActive : AnimationWrapper.Handler<bool>
+    public class GOSetActive : BadassAnimation.Handler<bool>
     {
         [SerializeField] private GameObject gameObject;
         protected override string Label => "Active";
-        
+
         protected override void OnHandle()
         {
             gameObject.SetActive(value);

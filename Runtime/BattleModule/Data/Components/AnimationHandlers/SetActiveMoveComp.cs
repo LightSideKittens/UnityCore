@@ -5,7 +5,7 @@ using UnityEngine;
 namespace LSCore.BattleModule.Animation
 {
     [Serializable]
-    public class SetActiveMoveComp : AnimationWrapper.Handler<bool>
+    public class SetActiveMoveComp : BadassAnimation.Handler<bool>
     {
         public Transform transform;
         public BaseMoveComp moveComp;

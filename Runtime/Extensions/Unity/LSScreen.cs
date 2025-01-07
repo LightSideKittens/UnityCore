@@ -20,6 +20,7 @@ namespace LSCore.Extensions.Unity
                 if (!Application.isPlaying)
                 {
                     var cam = Camera.main;
+                    if (cam == null) return 0;
                     width = cam.pixelWidth;
                 }
                 else
@@ -41,9 +42,10 @@ namespace LSCore.Extensions.Unity
             {
 #if UNITY_EDITOR
                 int height;
-                if (!Application.isPlaying)
+                var cam = Camera.main;
+                
+                if (!Application.isPlaying && cam != null)
                 {
-                    var cam = Camera.main;
                     height = cam.pixelHeight;
                 }
                 else
