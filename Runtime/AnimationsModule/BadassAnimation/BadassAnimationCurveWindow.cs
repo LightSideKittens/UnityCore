@@ -12,6 +12,7 @@ public class BadassAnimationCurveWindow : EditorWindow
     {
         var window = GetWindow<BadassAnimationCurveWindow>();
         window.editor = new BadassAnimationMultiCurveEditor(new BadassAnimationCurveEditor(curve, window));
+        window.Edited += window.Repaint;
         return window;
     }
     
@@ -19,22 +20,31 @@ public class BadassAnimationCurveWindow : EditorWindow
     {
         var window = CreateWindow<BadassAnimationCurveWindow>();
         window.editor = new BadassAnimationMultiCurveEditor(new BadassAnimationCurveEditor(curve, window));
+        window.Edited += window.Repaint;
         return window;
     }
 
     private void OnEnable()
     {
-        editor?.OnEnable();
+        if (editor != null)
+        {
+            Edited -= Repaint;
+            Edited += Repaint;
+            editor.OnEnable();
+        }
     }
 
     private void OnDisable()
     {
+        Edited -= Repaint;
         editor.OnDisable();
     }
 
     private void OnGUI()
     {
-        editor.OnGUI(position);
+        var rect = position;
+        rect.position = Vector2.zero;
+        editor.OnGUI(rect);
         
         if (GUI.changed)
         {

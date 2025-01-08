@@ -6,8 +6,6 @@ using UnityEngine;
 
 public partial class BadassAnimationCurveEditor
 {
-    public event Action OnBeforeGui;
-    public event Action OnAfterGui;
     public event Action Edited;
     private void RecordDeleteKey() => RecordUndo("Delete Bezier Point");
     private void RecordInsertKey() => RecordUndo("Insert Bezier Point");
@@ -29,8 +27,6 @@ public partial class BadassAnimationCurveEditor
 
     public void OnDisable()
     {
-        OnBeforeGui = null;
-        OnAfterGui = null;
         Edited = null;
         Undo.undoRedoPerformed -= OnUndoRedoPerformed;
     }

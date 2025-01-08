@@ -329,8 +329,6 @@ public partial class BadassAnimationCurveEditor
     
     public void OnGUI()
     {
-        OnBeforeGui?.Invoke();
-        
         if (curve.Count > 2)
         {
             var min = curve[0];
@@ -408,8 +406,6 @@ public partial class BadassAnimationCurveEditor
         }
 
         ProcessEvents(Event.current);
-        
-        OnAfterGui?.Invoke();
     }
     
     private readonly int[] workedPointIndexesArr = new int[2];
