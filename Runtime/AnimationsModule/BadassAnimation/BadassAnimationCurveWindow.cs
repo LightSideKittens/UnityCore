@@ -5,21 +5,21 @@ using UnityEngine;
 
 public class BadassAnimationCurveWindow : EditorWindow
 {
-    public BadassAnimationMultiCurveEditor editor;
+    public BadassMultiCurveEditor editor;
     public event Action Edited {add => editor.First.Edited += value; remove => editor.First.Edited -= value; }
     
-    public static BadassAnimationCurveWindow ShowWindow(BadassAnimationCurve curve)
+    public static BadassAnimationCurveWindow ShowWindow(BadassCurve curve)
     {
         var window = GetWindow<BadassAnimationCurveWindow>();
-        window.editor = new BadassAnimationMultiCurveEditor(new BadassAnimationCurveEditor(curve, window));
+        window.editor = new BadassMultiCurveEditor(new BadassCurveEditor(curve, window));
         window.Edited += window.Repaint;
         return window;
     }
     
-    public static BadassAnimationCurveWindow CreateAndShowWindow(BadassAnimationCurve curve)
+    public static BadassAnimationCurveWindow CreateAndShowWindow(BadassCurve curve)
     {
         var window = CreateWindow<BadassAnimationCurveWindow>();
-        window.editor = new BadassAnimationMultiCurveEditor(new BadassAnimationCurveEditor(curve, window));
+        window.editor = new BadassMultiCurveEditor(new BadassCurveEditor(curve, window));
         window.Edited += window.Repaint;
         return window;
     }

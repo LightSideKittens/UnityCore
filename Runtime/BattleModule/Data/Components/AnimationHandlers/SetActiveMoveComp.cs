@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace LSCore.BattleModule.Animation
 {
-    [Serializable]
+    /*[Serializable]
     public class SetActiveMoveComp : BadassAnimation.Handler<bool>
     {
         public Transform transform;
@@ -33,5 +33,10 @@ namespace LSCore.BattleModule.Animation
             base.OnStop();
             moveComp.IsRunning = startValue;
         }
-    }
+
+        public override void AddEvaluator(string key, BadassCurve curve)
+        {
+            
+        }
+    }*/
 }

@@ -34,6 +34,7 @@ namespace LSCore.Editor
         private static Matrix4x4 currentMatrix = Matrix4x4.identity;
         public static float CamSize => cam.orthographicSize;
         public static float ScaleMultiplier => 1000 / rect.height;
+        public static float TotalScaleMultiplier => ScaleMultiplier * cam.orthographicSize;
         
         static LSHandles()
         {
@@ -475,7 +476,7 @@ namespace LSCore.Editor
             var sprite = GetSquare();
             SetupSpriteRenderer(sprite, pos, size, color, dependsOnCam);
         }
-
+        
         private static void SetupSpriteRenderer(SpriteRenderer sprite, Vector2 pos, Vector2 size, Color color,
             bool dependsOnCam = true)
         {

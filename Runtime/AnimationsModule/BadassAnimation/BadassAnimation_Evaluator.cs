@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using LSCore;
 using LSCore.Attributes;
@@ -11,16 +12,30 @@ public partial class BadassAnimation
     [Unwrap]
     public class EvaluateData : IEvaluator
     {
-        public BadassAnimationCurve curve;
+        public BadassCurve curve;
         [NonSerialized] public float x;
         [NonSerialized] public float y;
 
-        public void Evaluate()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public virtual void Evaluate()
         {
             y = curve.Evaluate(x);
         }
     }
-    
+
+    public class HandlerEvaluateData : EvaluateData
+    {
+        public bool isDiff;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void Evaluate()
+        {
+            var last = y;
+            base.Evaluate();
+            isDiff = Math.Abs(y - last) > 0.0001f;
+        }
+    }
+
     private static readonly HashSet<IAnimatable> animatables = new();
     private static readonly int threshold;
     
@@ -40,12 +55,18 @@ public partial class BadassAnimation
 
     public static void Register(IAnimatable animatable)
     {
+#if UNITY_EDITOR
+        if(World.IsEditMode) return;
+#endif
         animatables.Add(animatable);
         evaluators.AddRange(animatable.Evaluators);
     }
 
     public static void Unregister(IAnimatable animatable)
     {
+#if UNITY_EDITOR
+        if(World.IsEditMode) return;
+#endif
         animatables.Remove(animatable);
         foreach (var evaluator in animatable.Evaluators)
         {

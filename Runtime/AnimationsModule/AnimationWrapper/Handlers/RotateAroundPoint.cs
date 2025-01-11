@@ -7,7 +7,7 @@ using UnityEngine;
 namespace LSCore.AnimationsModule
 {
     [Serializable]
-    public class RotateAroundPoint : BadassAnimation.Handler<Vector3>
+    public class RotateAroundPoint : BadassAnimation.Vector3Handler
     {
         [SerializeField] private Transform pivot;
         [SerializeField] private Transform target;

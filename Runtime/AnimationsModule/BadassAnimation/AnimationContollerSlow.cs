@@ -8,7 +8,7 @@ namespace LSCore.AnimationsModule
     {
         public int count;
         public AnimationCurve curve;
-        public BadassAnimationCurve curve1;
+        public BadassCurve curve1;
         public bool use;
         private float xValue;
 

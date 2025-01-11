@@ -3,315 +3,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LSCore.Editor;
-using LSCore.Extensions;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.Animations;
 using Object = UnityEngine.Object;
 
 [Serializable]
-public class BadassAnimationMultiCurveEditor
-{
-    public BadassAnimationCurveEditor First => editors[0];
-    public List<BadassAnimationCurveEditor> editors = new();
-    private Matrix4x4 matrix = Matrix4x4.identity;
-    public LSHandles.CameraData camData = new();
-    public LSHandles.GridData gridData = new();
-    private int currentSelectionClickCount = 0;
-    private bool wasDragging;
-    private bool wasShift;
-    private int draggingIndex;
-    private Vector2 startMousePosition;
-    
-    public BadassAnimationMultiCurveEditor(IEnumerable<BadassAnimationCurveEditor> editors)
-    {
-        this.editors.AddRange(editors);
-        foreach (var editor in this.editors)
-        {
-            SetupPointsBoundsGetter(editor);
-        }
-        OnEnable();
-    }
-    
-    public BadassAnimationMultiCurveEditor(BadassAnimationCurveEditor editor)
-    {
-        SetupPointsBoundsGetter(editor);
-        editors.Add(editor);
-        OnEnable();
-    }
-    
-    public BadassAnimationMultiCurveEditor()
-    {
-    }
-
-    public void Add(BadassAnimationCurveEditor editor)
-    {
-        SetupPointsBoundsGetter(editor);
-        editors.Add(editor);
-        editor.OnEnable();
-    }
-
-    private void SetupPointsBoundsGetter(BadassAnimationCurveEditor editor)
-    {
-        editor.pointsBoundsGetter = GetPointsBounds;
-    }
-    
-    private IEnumerable<Vector2> eSelectedPoints
-    {
-        get
-        {
-            foreach (var point in editors.SelectMany(x => x.eSelectedPoints))
-            {
-                yield return point;
-            }
-        }
-    }
-
-    private Rect GetPointsBounds()
-    {
-        return LSHandles.CalculateBounds(eSelectedPoints);
-    }
-    
-    public void OnGUI(Rect rect)
-    {
-        if(editors.Count == 0) return;
-        
-        GUI.SetNextControlName("InvisibleFocus");
-        GUI.FocusControl("InvisibleFocus");
-        
-        LSHandles.StartMatrix(matrix);
-        LSHandles.Begin(rect, camData);
-        LSHandles.DrawGrid(gridData);
-        LSHandles.SelectRect.Draw();
-        bool wasClicked = false;
-        bool wasClickedOnSelected = false;
-        BadassAnimationCurveEditor wasClickedOnSelectedEditor = null;
-        List<BadassAnimationCurveEditor> selectedEditors = new();
-        List<BadassAnimationCurveEditor> clickedEditors = new();
-        
-        for (int i = 0; i < editors.Count; i++)
-        {
-            var editor = editors[i];
-            editor.OnGUI();
-            
-            if (editor.selectedPointIndexes.Count > 0)
-            {
-                selectedEditors.Add(editor);
-            }
-            if (editor.WasClicked)
-            {
-                clickedEditors.Add(editor);
-                wasClicked = true;
-            }
-        }
-
-        var e = Event.current;
-
-        if (e.type == EventType.MouseDown)
-        {
-            if (e.button == 0)
-            {
-                BadassAnimationCurveEditor focusedSelectedEditor = null;
-                
-                if (clickedEditors.Count > 1)
-                {
-                    for (int i = 0; i < clickedEditors.Count; i++)
-                    {
-                        var editor = editors[i];
-                        if (editor.IsFocused)
-                        {
-                            focusedSelectedEditor = editor;
-                            break;
-                        }
-                    }
-                }
-                else if(clickedEditors.Count == 1)
-                {
-                    focusedSelectedEditor = clickedEditors[0];
-                }
-                
-                if (focusedSelectedEditor == null)
-                {
-                    for (int i = 0; i < selectedEditors.Count; i++)
-                    {
-                        var editor = editors[i];
-                        if (editor.WasClicked)
-                        {
-                            focusedSelectedEditor = editor;
-                            break;
-                        }
-                    }
-                }
-                
-                if (focusedSelectedEditor != null)
-                {
-                    if (focusedSelectedEditor.WasClickedOnSelected)
-                    {
-                        wasClickedOnSelectedEditor = focusedSelectedEditor;
-                        wasClickedOnSelected = true;
-                    }
-                
-                    if (focusedSelectedEditor.WasClicked)
-                    {
-                        draggingIndex = focusedSelectedEditor.ClickedPointIndex;
-                        startMousePosition = LSHandles.MouseInWorldPoint;
-                    }
-                }
-                
-                wasDragging = false;
-                wasShift = e.shift;
-                
-                int totalSelectedPoints = 0;
-                
-                if (!wasClickedOnSelected)
-                {
-                    for (int i = 0; i < editors.Count; i++)
-                    {
-                        var editor = editors[i];
-                        editor.TryDeselectAll();
-                    }
-                }
-                
-                for (int i = 0; i < selectedEditors.Count; i++)
-                {
-                    var editor = selectedEditors[i];
-                    editor.SetupForDragging();
-                    totalSelectedPoints += editor.selectedPointIndexes.Count;
-                }
-
-                if (!wasClicked)
-                {
-                    DeselectAll();
-                    LSHandles.SelectRect.Start();
-                }
-                
-                if (clickedEditors.Count > 0)
-                {
-                    DeselectAll();
-                    var clickedEditor = clickedEditors.GetCyclic(currentSelectionClickCount);
-                    clickedEditor.HandleMultiSelection();
-                    currentSelectionClickCount++;
-                }
-
-                void DeselectAll()
-                {
-                    for (int i = 0; i < editors.Count; i++)
-                    {
-                        var editor = editors[i];
-                        if (editor.IsFocused && !e.shift && totalSelectedPoints < 2)
-                        {
-                            editor.ForceDeselectAll();
-                        }
-                        editor.IsFocused = false;
-                    }
-                }
-            }
-        }
-        else if (e.type == EventType.MouseDrag)
-        {
-            if (e.button == 0)
-            {
-                wasDragging = true;
-                
-                for (int i = 0; i < selectedEditors.Count; i++)
-                {
-                    var editor = selectedEditors[i];
-                    editor.DragSelectedPoints(draggingIndex, startMousePosition);
-                }
-            }
-        }
-        else if (e.type == EventType.MouseUp)
-        {
-            if (e.button == 0)
-            {
-                if (!wasDragging && !wasShift)
-                {
-                    clickedEditors.Clear();
-                
-                    for (int i = 0; i < editors.Count; i++)
-                    {
-                        var editor = editors[i];
-                        if (editor.TryGetPointIndex(out int index))
-                        {
-                            editor.WasClicked = true;
-                            clickedEditors.Add(editor);
-                        }
-                        editor.ForceDeselectAll();
-                    }
-                
-                    if (clickedEditors.Count > 0)
-                    {
-                        currentSelectionClickCount--;
-                        var clickedEditor = clickedEditors.GetCyclic(currentSelectionClickCount);
-                        clickedEditor.HandleMultiSelection();
-                        currentSelectionClickCount++;
-                    }
-                }
-            
-                var selectionRect = LSHandles.SelectRect.End();
-            
-                for (int i = 0; i < editors.Count; i++)
-                {
-                    var editor = editors[i];
-                    editor.SelectPointsByRect(selectionRect);
-                }
-            }
-        }
-        
-        bool wantResetIsRecorded = false;
-        for (int i = 0; i < editors.Count; i++)
-        {
-            var editor = editors[i];
-            editor.PrepareRecordSelectIfChanged();
-            wantResetIsRecorded |= editor.WantResetIsRecorded;
-        }
-        
-        for (int i = 0; i < editors.Count; i++)
-        {
-            var editor = editors[i];
-            editor.TryRecordSelectIfChanged();
-        }
-        
-        if (wantResetIsRecorded)
-        {
-            for (int i = 0; i < editors.Count; i++)
-            {
-                var editor = editors[i];
-                editor.IsRecorded = false;
-            }
-        }
-        
-        LSHandles.End();
-        matrix = LSHandles.EndMatrix();
-    }
-
-    public void OnEnable()
-    {
-        for (int i = 0; i < editors.Count; i++)
-        {
-            var editor = editors[i];
-            editor.OnEnable();
-        }
-    }
-
-    public void OnDisable()
-    {
-        for (int i = 0; i < editors.Count; i++)
-        {
-            var editor = editors[i];
-            editor.OnDisable();
-        }
-    }
-}
-
-[Serializable]
-public partial class BadassAnimationCurveEditor
+public partial class BadassCurveEditor
 {
     public Object context;
-    public BadassAnimationCurve curve;
+    public BadassCurve curve;
     public float time;
     private const float constWidth = 0.05f / 3;
-    private const float BezierWidth = constWidth / 5;
+    private const float BezierWidth = constWidth / 4;
     private const float tangentWidth = constWidth / 10;
     
     private Color curveColor = new (1f, 0.32f, 0.36f);
@@ -321,13 +25,13 @@ public partial class BadassAnimationCurveEditor
     private Color selectionColor = new Color(1f, 0.54f, 0.16f);
     private Color lastSelectionColor = Color.white;
     
-    public BadassAnimationCurveEditor(BadassAnimationCurve curve, Object context)
+    public BadassCurveEditor(BadassCurve curve, Object context)
     {
         this.curve = curve;
         this.context = context;
     }
     
-    public void OnGUI()
+    public void OnGUI(bool processEvents)
     {
         if (curve.Count > 2)
         {
@@ -343,7 +47,23 @@ public partial class BadassAnimationCurveEditor
             minPoint.p.x = -100000;
             
             var bezierWidth = BezierWidth;
-            if (!IsFocused) bezierWidth /= 2;
+            var curveColor = this.curveColor;
+            var tangentLineColor = this.tangentLineColor;
+            var keyPointColor = this.keyPointColor;
+            var selectionColor = this.selectionColor;
+            
+            if (!IsFocused)
+            {
+                bezierWidth /= 3;
+                curveColor.a /= 3;
+                tangentLineColor.a /= 3;
+            }
+
+            if (IsLocked)
+            {
+                keyPointColor = Color.gray;
+                selectionColor = Color.gray;
+            }
             
             LSHandles.DrawLine(bezierWidth, curveColor, curve[1], minPoint);
                 
@@ -353,8 +73,8 @@ public partial class BadassAnimationCurveEditor
             
             var st = curve[0];
             var sp = curve[1];
-            LSHandles.DrawLine(tangentWidth, tangentLineColor, st.e, sp.e);
-            LSHandles.DrawRing(st.e, constWidth, tangentPointColor);
+            DrawTangentLine(tangentWidth, tangentLineColor, st.e, sp.e);
+            DrawTangentPoint(st.e, constWidth, tangentPointColor);
             
             for (int i = 1; i < curve.Count - 2; i += 3)
             {
@@ -365,18 +85,18 @@ public partial class BadassAnimationCurveEditor
                 
                 LSHandles.DrawBezier(startPosition.p, startTangent.p, endTangent.p, endPosition.p, curveColor, bezierWidth);
                 
-                LSHandles.DrawLine(tangentWidth, tangentLineColor, startTangent.e, startPosition.e);
-                LSHandles.DrawLine(tangentWidth, tangentLineColor, endTangent.e, endPosition.e);
+                DrawTangentLine(tangentWidth, tangentLineColor, startTangent.e, startPosition.e);
+                DrawTangentLine(tangentWidth, tangentLineColor, endTangent.e, endPosition.e);
                 
                 LSHandles.DrawCircle(startPosition.e, constWidth, keyPointColor);
-                LSHandles.DrawRing(startTangent.e, constWidth, tangentPointColor);
-                LSHandles.DrawRing(endTangent.e, constWidth, tangentPointColor);
+                DrawTangentPoint(startTangent.e, constWidth, tangentPointColor);
+                DrawTangentPoint(endTangent.e, constWidth, tangentPointColor);
             }
             
             var ep = curve[^2];
             var et = curve[^1];
-            LSHandles.DrawLine(tangentWidth, tangentLineColor, et.e, ep.e);
-            LSHandles.DrawRing(et.e, constWidth, tangentPointColor);
+            DrawTangentLine(tangentWidth, tangentLineColor, et.e, ep.e);
+            DrawTangentPoint(et.e, constWidth, tangentPointColor);
             
             LSHandles.DrawCircle(ep.e, constWidth, keyPointColor);
             
@@ -387,7 +107,7 @@ public partial class BadassAnimationCurveEditor
                 {
                     LSHandles.DrawCircle(curve[target].e, constWidth, selectionColor);
                 }
-                else
+                else if(!IsLocked)
                 {
                     LSHandles.DrawRing(curve[target].e, constWidth, selectionColor);
                 }
@@ -405,12 +125,29 @@ public partial class BadassAnimationCurveEditor
             }
         }
 
-        ProcessEvents(Event.current);
+        if (processEvents)
+        {
+            ProcessEvents(Event.current);
+        }
+
+        void DrawTangentPoint(Vector2 pos, float size, Color color)
+        {
+            if(IsLocked) return;
+            LSHandles.DrawRing(pos, size, color);
+        }
+        
+        void DrawTangentLine(float width, Color color, params Vector3[] points)
+        {
+            if(IsLocked) return;
+            LSHandles.DrawLine(width, color, points);
+        }
     }
     
     private readonly int[] workedPointIndexesArr = new int[2];
-    [SerializeField] public List<int> selectedPointIndexes = new();
+    [SerializeField] private List<int> selectedPointIndexes = new();
     private List<int> oldsSelectedPointIndexes;
+
+    public int SelectedPointIndexesCount => IsLocked ? 0 : selectedPointIndexes.Count;
 
     private IEnumerable<BezierPoint> SelectedPoints
     {
@@ -427,9 +164,23 @@ public partial class BadassAnimationCurveEditor
     {
         get
         {
+            if (IsLocked) yield break;
+            
             foreach (var point in SelectedPoints)
             {
                 yield return point.e;
+            }
+        }
+    }
+    
+    public IEnumerable<BezierPoint> Keys
+    {
+        get
+        {
+            var points = curve.Points;
+            for (int i = 0; i < points.Length; i++)
+            {
+                if(IsRoot(i)) yield return points[i];
             }
         }
     }
@@ -458,12 +209,16 @@ public partial class BadassAnimationCurveEditor
     }
     
     public bool WantResetIsRecorded { get; private set; }
-    
+
+    public bool IsVisible { get; set; } = true;
+    public bool IsLocked { get; set; }
     public bool WasClicked { get; set; }
     public bool WasClickedOnSelected { get; set; }
     public int ClickedPointIndex { get; private set; }
-    public bool IsFocused { get; set; }
-    private BadassAnimationCurve copyPoints;
+    [field: SerializeField] public bool IsFocused { get; set; }
+    
+    private bool oldIsFocused;
+    private BadassCurve copyPoints;
     private List<int> copySelectedPointIndexes;
     
     private void ProcessEvents(Event e)
@@ -534,7 +289,7 @@ public partial class BadassAnimationCurveEditor
                 }
                 else if(e.keyCode == KeyCode.Delete)
                 {
-                    if (selectedPointIndexes.Count == 0) break;
+                    if (selectedPointIndexes.Count == 0 || IsLocked) break;
                     
                     for (int i = 0; i < selectedPointIndexes.Count; i++)
                     {
@@ -557,7 +312,7 @@ public partial class BadassAnimationCurveEditor
                         
                     }
                     
-                    WantResetIsRecorded = false;
+                    WantResetIsRecorded = true;
                 }
                 break;
             case EventType.MouseDown:
@@ -565,7 +320,7 @@ public partial class BadassAnimationCurveEditor
                 {
                     WasClicked = TryGetPointIndex(out var i);
 
-                    if (IsFocused)
+                    if (IsFocused && !IsLocked)
                     {
                         if (e.control)
                         {
@@ -621,6 +376,7 @@ public partial class BadassAnimationCurveEditor
                 else if (e.button == 0)
                 {
                     oldsSelectedPointIndexes = new(selectedPointIndexes);
+                    oldIsFocused = IsFocused;
                     GUI.changed = true;
                     
                     WasClicked = TryGetPointIndex(out var i);
@@ -638,7 +394,7 @@ public partial class BadassAnimationCurveEditor
                 {
                     RecordSelectIfChanged();
                 }
-                WantResetIsRecorded = false;
+                WantResetIsRecorded = true;
                 break;
         }
 
@@ -671,7 +427,7 @@ public partial class BadassAnimationCurveEditor
         {
             discardEventHandler?.Invoke(e);
             var last = curve;
-            var copy = new BadassAnimationCurve(curve);
+            var copy = new BadassCurve(curve);
             curve = copy;
             
             var lastSelectedPointIndexesCopy = selectedPointIndexes;
@@ -732,7 +488,7 @@ public partial class BadassAnimationCurveEditor
 
         void StopEventHandling()
         {
-            WantResetIsRecorded = false;
+            WantResetIsRecorded = true;
             currentAxis = Axis.None;
             eventHandler = null;
             discardEventHandler = null;
@@ -759,15 +515,30 @@ public partial class BadassAnimationCurveEditor
     {
         beforeRecordSelectIfChanged = () =>
         {
-            if (!oldsSelectedPointIndexes.SequenceEqual(selectedPointIndexes))
+            if (oldsSelectedPointIndexes != null && !oldsSelectedPointIndexes.SequenceEqual(selectedPointIndexes))
             {
                 WantResetIsRecorded = true;
+                var l = IsFocused;
                 var last = selectedPointIndexes;
+                
+                IsFocused = oldIsFocused;
                 selectedPointIndexes = oldsSelectedPointIndexes;
+                
                 afterRecordSelectIfChanged = () =>
                 {
                     RecordSelect();
                     selectedPointIndexes = last;
+                    IsFocused = l;
+                };
+            } 
+            else if (IsFocused != oldIsFocused)
+            {
+                var l = IsFocused;
+                IsFocused = oldIsFocused;
+                afterRecordSelectIfChanged = () =>
+                {
+                    RecordFocus();
+                    IsFocused = l;
                 };
             }
         };
@@ -775,9 +546,10 @@ public partial class BadassAnimationCurveEditor
     
     public bool TryGetPointIndex(out int index)
     {
+        var mp = LSHandles.MouseInWorldPoint;
         for (int i = 0; i < curve.Count; i++)
         {
-            if (IsInDistance(curve[i], LSHandles.MouseInWorldPoint, constWidth))
+            if (IsInDistance(curve[i], mp, constWidth))
             {
                 index = i;
                 return true;
@@ -888,6 +660,8 @@ public partial class BadassAnimationCurveEditor
 
     private void SetPosAsAnimation(ref int i, Vector2 pos, bool isRootMoving)
     {
+        if(IsLocked) return;
+        
         RecordMove();
         var point = curve[i];
         curve[i] = point.eSet(pos);
@@ -1091,34 +865,6 @@ public partial class BadassAnimationCurveEditor
         ClampTangentsByKey(root2);
     }
 
-    
-    
-    public class Popup : PopupWindowContent
-    {
-        public Action onGui;
-        
-        public override void OnGUI(Rect rect)
-        {
-            onGui();
-        }
-        
-        public void DrawFoldout(string name, Action gui, bool show = false)
-        {
-            EditorUtils.DrawInBoxFoldout(new GUIContent(name), gui, "BadassAnimation", show);
-        }
-
-        public bool DrawButton(string name)
-        {
-            if (GUILayout.Button(name, GUILayout.MaxWidth(200)))
-            {
-                editorWindow.Close();
-                return true;
-            }
-
-            return false;
-        }
-    }
-
     public void HandleMultiSelection()
     {
         var e = Event.current;
@@ -1162,7 +908,7 @@ public partial class BadassAnimationCurveEditor
 
     public void SetupForDragging()
     {
-        copyPoints = new BadassAnimationCurve(curve);
+        copyPoints = new BadassCurve(curve);
         copySelectedPointIndexes = new List<int>(selectedPointIndexes);
     }
 
@@ -1216,7 +962,31 @@ public partial class BadassAnimationCurveEditor
             SetPosAsAnimation(ref ind, point, isRoot);
         }
     }
+    
+    public class Popup : PopupWindowContent
+    {
+        public Action onGui;
+        
+        public override void OnGUI(Rect rect)
+        {
+            onGui();
+        }
+        
+        public void DrawFoldout(string name, Action gui, bool show = false)
+        {
+            EditorUtils.DrawInBoxFoldout(new GUIContent(name), gui, "BadassAnimation", show);
+        }
+
+        public bool DrawButton(string name)
+        {
+            if (GUILayout.Button(name, GUILayout.MaxWidth(200)))
+            {
+                editorWindow.Close();
+                return true;
+            }
+
+            return false;
+        }
+    }
 }
-
-
 #endif

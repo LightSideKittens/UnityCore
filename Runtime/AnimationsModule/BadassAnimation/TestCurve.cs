@@ -12,7 +12,7 @@ namespace LSCore.AnimationsModule
     
     public class TestCurve : MonoBehaviour
     {
-        public BadassAnimationCurve[] curves;
+        public BadassCurve[] curves;
         public Test[] test;
     }
 }

@@ -73,7 +73,7 @@ public struct BezierPoint : IEquatable<BezierPoint>
 }
 
 [Serializable]
-public class BadassAnimationCurve : IList<BezierPoint>
+public class BadassCurve : IList<BezierPoint>
 {
     [SerializeField]
     private BezierPoint[] points = Array.Empty<BezierPoint>();
@@ -84,14 +84,14 @@ public class BadassAnimationCurve : IList<BezierPoint>
         set => points = value;
     }
 
-    public BadassAnimationCurve()
+    public BadassCurve()
     {
     }
 
-    public BadassAnimationCurve(BadassAnimationCurve badassAnimationCurve)
+    public BadassCurve(BadassCurve badassCurve)
     {
-        Points = new BezierPoint[badassAnimationCurve.Points.Length];
-        Array.Copy(badassAnimationCurve.Points, Points, Points.Length);
+        Points = new BezierPoint[badassCurve.Points.Length];
+        Array.Copy(badassCurve.Points, Points, Points.Length);
     }
 
     public IEnumerator<BezierPoint> GetEnumerator()
@@ -240,6 +240,7 @@ public class BadassAnimationCurve : IList<BezierPoint>
     /// Найти индекс "левого" ключа (root), у которого x <= xTarget,
     /// но у следующего root x уже > xTarget
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private unsafe int GetLeftKeyIndexByX(float xTarget)
     {
         int count = points.Length;
@@ -363,6 +364,7 @@ public class BadassAnimationCurve : IList<BezierPoint>
     /// <summary>
     /// Возвращает значение y на кривой при заданном x.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe float Evaluate(float x)
     {
         int count = points.Length;
@@ -388,6 +390,7 @@ public class BadassAnimationCurve : IList<BezierPoint>
     /// <summary>
     /// Стандартная формула кубического Безье
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private float EvaluateCubicBezier(float p0, float p1, float p2, float p3, float t)
     {
         float t2 = t * t;
@@ -402,6 +405,7 @@ public class BadassAnimationCurve : IList<BezierPoint>
     /// <summary>
     /// Численно находим параметр t, при котором x(t) ≈ xTarget
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private float FindBezierTForX(float x0, float x1, float x2, float x3, float xTarget, float tolerance = 0.0001f)
     {
         float a = -x0 + 3f * x1 - 3f * x2 + x3;

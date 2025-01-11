@@ -16,6 +16,12 @@ namespace LSCore.Extensions.Unity
             return a;
         }
         
+        public static Vector3 SetByIndex(this Vector3 a, float value, int index)
+        {
+            a[index] = value;
+            return a;
+        }
+        
         public static Vector3 Divide(this Vector3 a, Vector3 b)
         {
             a.x /= b.x;

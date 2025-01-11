@@ -13,7 +13,7 @@ public enum Vector3Axis
 namespace LSCore.BattleModule.Animation
 {
     [Serializable]
-    public class RotateToTarget : BadassAnimation.Handler<float>
+    public class RotateToTarget : BadassAnimation.FloatHandler
     {
         public Transform transform;
         public FindTargetFactory findTargetFactory;

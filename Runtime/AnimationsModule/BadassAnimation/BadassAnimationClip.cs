@@ -26,7 +26,7 @@ public class BadassAnimationClip : ScriptableObject, ISerializationCallbackRecei
     public struct NameToCurve : IEquatable<NameToCurve>
     {
         public string propertyName;
-        public BadassAnimationCurve curve;
+        public BadassCurve curve;
 
         public bool Equals(NameToCurve other)
         {
@@ -41,7 +41,7 @@ public class BadassAnimationClip : ScriptableObject, ISerializationCallbackRecei
     
     [HideInInspector] 
     [SerializeField] public List<Data> data = new();
-    public Dictionary<string, Dictionary<string, BadassAnimationCurve>> namesToCurvesByHandlerGuids = new();
+    public Dictionary<string, Dictionary<string, BadassCurve>> namesToCurvesByHandlerGuids = new();
     
     public void OnBeforeSerialize() { }
     public void OnAfterDeserialize()
@@ -53,7 +53,7 @@ public class BadassAnimationClip : ScriptableObject, ISerializationCallbackRecei
             var guid = d.handlerGuid;
             if (!namesToCurvesByHandlerGuids.TryGetValue(guid, out var curves))
             {
-                curves = new Dictionary<string, BadassAnimationCurve>();
+                curves = new Dictionary<string, BadassCurve>();
                 namesToCurvesByHandlerGuids.Add(guid, curves);
             }
 
@@ -65,13 +65,13 @@ public class BadassAnimationClip : ScriptableObject, ISerializationCallbackRecei
         }
     }
     
-    public void Add(BadassAnimation.Handler handler, string propertyName, BadassAnimationCurve curve)
+    public void Add(BadassAnimation.Handler handler, string propertyName, BadassCurve curve)
     {
-        handler.evaluators[propertyName] = new BadassAnimation.EvaluateData{curve = curve};
+        handler.AddEvaluator(propertyName, curve);
         
         if (!namesToCurvesByHandlerGuids.TryGetValue(handler.guid, out var curves))
         {
-            curves = new Dictionary<string, BadassAnimationCurve>();
+            curves = new Dictionary<string, BadassCurve>();
             namesToCurvesByHandlerGuids.Add(handler.guid, curves);
         }
 
@@ -107,13 +107,15 @@ public class BadassAnimationClip : ScriptableObject, ISerializationCallbackRecei
             data.Add(d);
         }
     }
-
-    public void Remove(BadassAnimation.Handler handler)
+    
+    public void Remove(string handlerGuid)
     {
-        namesToCurvesByHandlerGuids.Remove(handler.guid);
-        var d = data.FirstOrDefault(x => x.handlerGuid == handler.guid);
+        namesToCurvesByHandlerGuids.Remove(handlerGuid);
+        var d = data.FirstOrDefault(x => x.handlerGuid == handlerGuid);
         data.Remove(d);
     }
+
+    public void Remove(BadassAnimation.Handler handler) => Remove(handler.guid);
     
     public void Remove(BadassAnimation.Handler handler, string propertyName)
     {

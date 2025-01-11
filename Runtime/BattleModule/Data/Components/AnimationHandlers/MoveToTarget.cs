@@ -2,16 +2,14 @@
 #define RUNTIME
 #endif
 using System;
-using System.Diagnostics;
 using LSCore.AnimationsModule;
-using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace LSCore.BattleModule.Animation
 {
     [Serializable]
-    public class MoveToTarget : BadassAnimation.Handler<float>
+    public class MoveToTarget : BadassAnimation.FloatHandler
     {
         public Rigidbody2D rigidbody;
         public FindTargetFactory findTargetFactory;

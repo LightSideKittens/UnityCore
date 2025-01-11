@@ -21,7 +21,6 @@ namespace LSCore.Editor
             private static void AddCanvasGameObject<T>(T comp) where T : Component
             {
                 AddGameObject(comp);
-                comp.gameObject.AddComponent<SortingGroup>();
                 comp.transform.localScale = Vector3.one / 3;
             }
             
@@ -29,7 +28,7 @@ namespace LSCore.Editor
             {
                 var text = texts.Get();
                 currentDrawLayer += 10;
-                text.GetComponent<SortingGroup>().sortingOrder = currentDrawLayer;
+                text.GetComponent<MeshRenderer>().sortingOrder = currentDrawLayer;
                 text.text = message;
                 text.fontSize = fontSize;
                 var scale = LSVector3.one;

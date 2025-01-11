@@ -14,10 +14,12 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     }
 
     [HideInInspector] public List<Data> data;
+    [HideInInspector] public BadassAnimationClip defaultClip;
+    
     public Dictionary<string, List<Handler>> handlersByClip;
     private BadassAnimationClip currentClip;
     private List<Handler> currentHandlers = new();
-    private List<EvaluateData> currentEvaluators = new();
+    private List<HandlerEvaluateData> currentEvaluators = new();
     private float time;
 
     public BadassAnimationClip Clip
@@ -25,27 +27,35 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         get => currentClip;
         set
         {
+            Unregister(this);
+            currentEvaluators.Clear();
+            currentHandlers = ListSpan<Handler>.Empty;
+            
             if (value == null || currentClip == value || !isActiveAndEnabled)
             {
-                Unregister(this);
+                currentClip = value;
                 return;
             }
             
-            Unregister(this);
             currentClip = value;
-            currentHandlers = handlersByClip[value.name];
-            currentEvaluators.Clear();
-            for (int i = 0; i < currentHandlers.Count; i++)
+            var handlers = handlersByClip[value.name];
+            for (int i = 0; i < handlers.Count; i++)
             {
-                var handler = currentHandlers[i];
-                var evaluators = handler.evaluators;
-                evaluators.Clear();
-                foreach (var evaluator in currentClip.namesToCurvesByHandlerGuids[handler.guid])
+                var handler = handlers[i];
+                handler.ClearEvaluators();
+                
+                if (currentClip.namesToCurvesByHandlerGuids.TryGetValue(handler.guid, out var curves))
                 {
-                    evaluators.Add(evaluator.Key, new EvaluateData(){curve = evaluator.Value});
+                    foreach (var (propertyName, curve) in curves)
+                    {
+                        handler.AddEvaluator(propertyName, curve);
+                    }
+                    
+                    currentHandlers.Add(handler);
+                    currentEvaluators.AddRange(handler.Evaluators);
                 }
-                currentEvaluators.AddRange(currentHandlers[i].evaluators.Values);
             }
+            
             Register(this);
             OnClipChanged();
         }
@@ -78,9 +88,10 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     private void Awake()
     {
         TryInit();
+        Clip = defaultClip;
     }
 
-    public void TryInit()
+    internal void TryInit()
     {
         if(handlersByClip != null) return;
         
@@ -119,4 +130,16 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         data.Add(new Data { clip = newClip, handlers = handlers });
         handlersByClip.Add(newClip.name, handlers);
     }
+
+#if UNITY_EDITOR
+    internal void Editor_Evaluate(float time)
+    {
+        foreach (var evaluator in currentEvaluators)
+        {
+            evaluator.x = time;
+            evaluator.Evaluate();
+        }
+        AfterEvaluate();
+    }
+#endif
 }

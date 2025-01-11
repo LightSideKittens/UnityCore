@@ -4,7 +4,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-public partial class BadassAnimationCurveEditor
+public partial class BadassCurveEditor
 {
     public event Action Edited;
     private void RecordDeleteKey() => RecordUndo("Delete Bezier Point");
@@ -12,6 +12,7 @@ public partial class BadassAnimationCurveEditor
     private void RecordChangeType() => RecordUndo("Change Bezier Point Type");
     private void RecordMove() => RecordUndo("Move Bezier Point");
     public void RecordSelect() => RecordUndo("Bezier Point Selection Changed");
+    public void RecordFocus() => RecordUndo("Curve Focus Changed");
     
     private void RecordUndo(string name)
     {

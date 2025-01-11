@@ -7,12 +7,12 @@ using UnityEditor;
 using UnityEngine;
 
 [ResolverPriority(100)]
-public class BadassAnimationCurveResolver : ProcessedMemberPropertyResolver<BadassAnimationCurve>
+public class BadassAnimationCurveResolver : ProcessedMemberPropertyResolver<BadassCurve>
 {
     public override bool IsCollection => false;
 }
 
-[CustomPropertyDrawer(typeof(BadassAnimationCurve))]
+[CustomPropertyDrawer(typeof(BadassCurve))]
 [DrawerPriority(DrawerPriorityLevel.SuperPriority)]
 public class BadassAnimationCurveDrawer : PropertyDrawer
 {
@@ -24,7 +24,7 @@ public class BadassAnimationCurveDrawer : PropertyDrawer
         var serializedObject = property.serializedObject;
         var propertyPath = property.propertyPath;
         EditorGUI.BeginProperty(position, label, property);
-        var curve = (BadassAnimationCurve)property.boxedValue;
+        var curve = (BadassCurve)property.boxedValue;
         var oldJson = JsonConvert.SerializeObject(curve, SerializationSettings.Default.settings);
         
         var labelRect = position.TakeFromLeft(position.width / 3);
