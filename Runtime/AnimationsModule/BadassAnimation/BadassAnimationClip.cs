@@ -38,15 +38,24 @@ public class BadassAnimationClip : ScriptableObject, ISerializationCallbackRecei
             return propertyName.GetHashCode();
         }
     }
-    
+
+    [HideInInspector]
+    public string guid;
     [HideInInspector] 
     [SerializeField] public List<Data> data = new();
     [HideInInspector]
     [SerializeField] public float length;
     
     public Dictionary<string, Dictionary<string, BadassCurve>> namesToCurvesByHandlerGuids = new();
+
+    public void OnBeforeSerialize()
+    {
+        if (string.IsNullOrEmpty(guid))
+        {
+            guid = Guid.NewGuid().ToString("N");
+        }
+    }
     
-    public void OnBeforeSerialize() { }
     public void OnAfterDeserialize()
     {
         namesToCurvesByHandlerGuids = new();

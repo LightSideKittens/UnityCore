@@ -14,7 +14,6 @@ namespace LSCore.Editor
             [SerializeField] private float time;
             public float OldRealTime { get; private set; }
             public float RealTime { get; private set; }
-            private float lastTimeValue;
 
             public void SyncRealTime()
             {
@@ -26,13 +25,10 @@ namespace LSCore.Editor
                 get => time;
                 set
                 {
-                    var oldTime = time;
                     var newTime = value;
-                    var diff = value - lastTimeValue;
-                    lastTimeValue = value;
                     
                     OldRealTime = RealTime;
-                    RealTime += diff;
+                    RealTime = value;
                     
                     var max = clampRange.y - clampRange.x;
                     

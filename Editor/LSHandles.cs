@@ -154,19 +154,50 @@ namespace LSCore.Editor
             return Vector2.Distance(point, worldMousePos) <= dis.magnitude;
         }
 
+        public static Vector2 TransformScreenPosition(Vector2 screenPosition)
+        {
+            screenPosition -= rect.position;
+            screenPosition.y *= -1;
+            screenPosition.y += rect.height;
+            return screenPosition;
+        }
+
+
+        public static Vector3 ScreenToWorldPosition(Vector2 screenPosition)
+        {
+            return currentMatrix.inverse.MultiplyPoint3x4(cam.ScreenToWorldPoint(TransformScreenPosition(screenPosition)));
+        }
+
+        public static Vector2 WorldToScreen(Vector3 worldPosition) 
+        {
+            Vector3 transformedPosition = currentMatrix.MultiplyPoint3x4(worldPosition);
+            Vector3 screenPoint = cam.WorldToScreenPoint(transformedPosition);
+            Vector2 screenPosition = InverseTransformScreenPosition(screenPoint);
+
+            return screenPosition;
+        }
+
+        private static Vector2 InverseTransformScreenPosition(Vector2 transformedScreenPosition)
+        {
+            Vector2 screenPosition = transformedScreenPosition;
+
+            screenPosition.y -= rect.height;
+            screenPosition.y *= -1;
+            screenPosition += rect.position;
+
+            return screenPosition;
+        }
+
         public static Vector2 MousePos
         {
             get
             {
                 var e = Event.current;
                 var mp = e.mousePosition;
-                mp -= rect.position;
-                mp.y *= -1;
-                mp.y += rect.height;
-                return mp;
+                return TransformScreenPosition(mp);
             }
         }
-
+        
         public static Vector2 MouseInWorldPoint => currentMatrix.inverse.MultiplyPoint3x4(cam.ScreenToWorldPoint(MousePos));
 
         private static Vector3 lastMpForDelta;

@@ -111,8 +111,6 @@ public class BadassMultiCurveEditor
         if(visibleEditors.Count == 0) return;
 
         bool rectContainsMouse = rect.Contains(Event.current.mousePosition);
-        GUI.SetNextControlName("InvisibleFocus");
-        GUI.FocusControl("InvisibleFocus");
         
         LSHandles.StartMatrix(matrix);
         LSHandles.Begin(rect, camData);

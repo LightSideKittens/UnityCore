@@ -938,6 +938,7 @@ public class Popup : PopupWindowContent
 {
     public Action onGui;
     public Action onClose;
+    public Vector2 position;
     public Vector2 size;
 
     public Popup()
@@ -945,11 +946,25 @@ public class Popup : PopupWindowContent
         size = new Vector2(200f, 200f);
     }
 
-    public Popup(Vector2 size)
+    public Popup(Vector2 position, Vector2 size)
     {
+        this.position = position;
         this.size = size;
     }
 
+
+    public void OnGUIInArea()
+    {
+        GUILayout.BeginArea(new Rect(position, size));
+        onGui();
+        GUILayout.EndArea();
+    }
+    
+    public void OnGUI()
+    {
+        onGui();
+    }
+    
     public override void OnGUI(Rect rect)
     {
         onGui();
