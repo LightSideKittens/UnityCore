@@ -18,8 +18,8 @@ public partial class BadassCurveEditor
     private const float BezierWidth = constWidth / 4;
     private const float tangentWidth = constWidth / 10;
     
-    private Color curveColor = new (1f, 0.32f, 0.36f);
-    private Color tangentLineColor = new (1f, 0.32f, 0.36f);
+    public Color curveColor = new (1f, 0.32f, 0.36f);
+    public Color tangentLineColor = new (1f, 0.32f, 0.36f);
     private Color keyPointColor = Color.black;
     private Color tangentPointColor = Color.black;
     private Color selectionColor = new Color(1f, 0.54f, 0.16f);
@@ -149,7 +149,9 @@ public partial class BadassCurveEditor
 
     public int SelectedPointIndexesCount => IsLocked ? 0 : selectedPointIndexes.Count;
 
-    private IEnumerable<BezierPoint> SelectedPoints
+    public IEnumerable<int> SelectedPointsIndexes => selectedPointIndexes;
+    
+    public IEnumerable<BezierPoint> SelectedPoints
     {
         get
         {
@@ -209,7 +211,7 @@ public partial class BadassCurveEditor
     }
     
     public bool WantResetIsRecorded { get; private set; }
-
+    public bool WantOpenPopup { get; private set; }
     public bool IsVisible { get; set; } = true;
     public bool IsLocked { get; set; }
     public bool WasClicked { get; set; }
@@ -225,6 +227,7 @@ public partial class BadassCurveEditor
     {
         WasClicked = false;
         WasClickedOnSelected = false;
+        WantOpenPopup = false;
         bool isMouseMove = lastMousePosition != e.mousePosition;
         
         if (isMouseMove)
@@ -336,40 +339,7 @@ public partial class BadassCurveEditor
                         }
                         else
                         {
-                            var popup = new Popup();
-                            HashSet<AlignType> types = new();
-
-                            for (int j = 0; j < selectedPointIndexes.Count; j++)
-                            {
-                                var point = curve[selectedPointIndexes[j]];
-                                types.Add(point.alignType);
-                            }
-
-                            Action onGui = () =>
-                            {
-                                popup.DrawFoldout(string.Join(", ", types), () =>
-                                {
-                                    if (popup.DrawButton(AlignType.Aligned.ToString()))
-                                    {
-                                        for (int j = 0; j < selectedPointIndexes.Count; j++)
-                                        {
-                                            ChangeType(selectedPointIndexes[j], AlignType.Aligned);
-                                        }
-                                    }
-
-                                    if (popup.DrawButton(AlignType.Free.ToString()))
-                                    {
-                                        for (int j = 0; j < selectedPointIndexes.Count; j++)
-                                        {
-                                            ChangeType(selectedPointIndexes[j], AlignType.Free);
-                                        }
-                                    }
-                                });
-                            };
-
-                            popup.onGui = onGui;
-                            PopupWindow.Show(new Rect(e.mousePosition, new Vector2(10, 10)), popup);
-                            GUI.changed = true;
+                            WantOpenPopup = true;
                         }
                     }
                 }
@@ -775,7 +745,7 @@ public partial class BadassCurveEditor
         return false;
     }
 
-    private void ChangeType(int i, AlignType alignType)
+    public void ChangeType(int i, AlignType alignType)
     {
         RecordChangeType();
         int f1;
@@ -962,31 +932,62 @@ public partial class BadassCurveEditor
             SetPosAsAnimation(ref ind, point, isRoot);
         }
     }
-    
-    public class Popup : PopupWindowContent
-    {
-        public Action onGui;
-        
-        public override void OnGUI(Rect rect)
-        {
-            onGui();
-        }
-        
-        public void DrawFoldout(string name, Action gui, bool show = false)
-        {
-            EditorUtils.DrawInBoxFoldout(new GUIContent(name), gui, "BadassAnimation", show);
-        }
-
-        public bool DrawButton(string name)
-        {
-            if (GUILayout.Button(name, GUILayout.MaxWidth(200)))
-            {
-                editorWindow.Close();
-                return true;
-            }
-
-            return false;
-        }
-    }
 }
+
+public class Popup : PopupWindowContent
+{
+    public Action onGui;
+    public Action onClose;
+    public Vector2 size;
+
+    public Popup()
+    {
+        size = new Vector2(200f, 200f);
+    }
+
+    public Popup(Vector2 size)
+    {
+        this.size = size;
+    }
+
+    public override void OnGUI(Rect rect)
+    {
+        onGui();
+    }
+    
+    public void DrawFoldout(string name, Action gui, bool show = false)
+    {
+        EditorUtils.DrawInBoxFoldout(new GUIContent(name), gui, name, show);
+    }
+
+    public bool DrawButton(string name)
+    {
+        if (GUILayout.Button(name, GUILayout.MaxWidth(200)))
+        {
+            editorWindow.Close();
+            return true;
+        }
+
+        return false;
+    }
+
+    public override void OnClose()
+    {
+        base.OnClose();
+        onClose?.Invoke();
+    }
+
+    public override Vector2 GetWindowSize()
+    {
+        return size;
+    }
+
+    public void Close()
+    {
+        if (editorWindow != null) editorWindow.Close();
+    }
+
+    public void Repaint() => editorWindow.Repaint();
+}
+
 #endif

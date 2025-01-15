@@ -41,6 +41,9 @@ public class BadassAnimationClip : ScriptableObject, ISerializationCallbackRecei
     
     [HideInInspector] 
     [SerializeField] public List<Data> data = new();
+    [HideInInspector]
+    [SerializeField] public float length;
+    
     public Dictionary<string, Dictionary<string, BadassCurve>> namesToCurvesByHandlerGuids = new();
     
     public void OnBeforeSerialize() { }

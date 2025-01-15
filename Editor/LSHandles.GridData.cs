@@ -29,11 +29,10 @@ namespace LSCore.Editor
                 Vector2 minCamPos = cam.ViewportToWorldPoint(new Vector3(0, 0, cam.nearClipPlane));
                 Vector2 maxCamPos = cam.ViewportToWorldPoint(new Vector3(1, 1, cam.nearClipPlane));
 
-                using (SetMatrix(Matrix4x4.identity))
+                using (SetIdentityMatrix())
                 {
                     var rect = SelectRect.CreateRect(minCamPos, maxCamPos);
-                    var top = rect.TakeFromBottom(0.3f);
-                    top = top.AlignCenter(top.width / ScaleMultiplier * 1.1f);
+                    var top = rect.TakeFromBottom(0.3f * ScaleMultiplier);
                     DrawSquare(top, scaleBackColor, false);
                 }
 

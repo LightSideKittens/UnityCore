@@ -16,14 +16,20 @@ namespace LSCore.AnimationsModule
         protected override void OnStart()
         {
             base.OnStart();
-            transform = rigidbody.transform;
+            
 #if UNITY_EDITOR
             if (World.IsEditMode)
             {
-                startPosition = transform.position;
+                if (rigidbody != null)
+                {
+                    transform = rigidbody.transform;
+                    startPosition = transform.position;
+                }
                 return;
             }
 #endif
+            
+            transform = rigidbody.transform;
             startPosition = rigidbody.position;
         }
         
@@ -37,13 +43,19 @@ namespace LSCore.AnimationsModule
             }
             else
             {
+#if UNITY_EDITOR
+                if (World.IsEditMode && transform == null)
+                {
+                    return;
+                }
+#endif
                 var newValue = transform.TransformDirection(value);
                 target.x += newValue.x;
                 target.y += newValue.y;
             }
             
 #if UNITY_EDITOR
-            if (World.IsEditMode)
+            if (World.IsEditMode && transform != null)
             {
                 transform.position = target;
                 return;
@@ -57,7 +69,7 @@ namespace LSCore.AnimationsModule
         {
             base.OnStop();
 
-            if (World.IsEditMode)
+            if (World.IsEditMode && transform != null)
             {
                 transform.position = startPosition;
             }

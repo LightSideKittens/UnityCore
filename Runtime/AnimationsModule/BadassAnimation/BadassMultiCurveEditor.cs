@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Linq;
 using LSCore.Editor;
 using LSCore.Extensions;
+using UnityEditor;
 using UnityEngine;
 
 [Serializable]
 public class BadassMultiCurveEditor
 {
-    public event Action AfterDraw;
+    public event Action BeforeDraw;
     public BadassCurveEditor First => visibleEditors[0];
     public List<BadassCurveEditor> editors = new();
     private List<BadassCurveEditor> visibleEditors = new();
@@ -122,6 +123,9 @@ public class BadassMultiCurveEditor
         List<BadassCurveEditor> selectedEditors = new();
         List<BadassCurveEditor> clickedEditors = new();
         
+        BeforeDraw?.Invoke();
+        BeforeDraw = null;
+        
         for (int i = 0; i < visibleEditors.Count; i++)
         {
             var editor = visibleEditors[i];
@@ -137,9 +141,7 @@ public class BadassMultiCurveEditor
                 wasClicked = true;
             }
         }
-        
-        AfterDraw?.Invoke();
-        AfterDraw = null;
+
         ProcessEvents();
         
         LSHandles.End();
@@ -304,11 +306,14 @@ public class BadassMultiCurveEditor
             }
 
             bool wantResetIsRecorded = false;
+            bool wantOpenPopup = false;
+            
             for (int i = 0; i < visibleEditors.Count; i++)
             {
                 var editor = visibleEditors[i];
                 editor.PrepareRecordSelectIfChanged();
                 wantResetIsRecorded |= editor.WantResetIsRecorded;
+                wantOpenPopup |= editor.WantOpenPopup;
             }
 
             for (int i = 0; i < visibleEditors.Count; i++)
@@ -324,6 +329,55 @@ public class BadassMultiCurveEditor
                     var editor = visibleEditors[i];
                     editor.IsRecorded = false;
                 }
+            }
+
+            if (wantOpenPopup)
+            {
+                var popup = new Popup();
+                HashSet<AlignType> types = new();
+
+                for (int i = 0; i < visibleEditors.Count; i++)
+                {
+                    var editor = visibleEditors[i];
+                    foreach (var point in editor.SelectedPoints)
+                    {
+                        types.Add(point.alignType);
+                    }
+                }
+
+                Action onGui = () =>
+                {
+                    popup.DrawFoldout(string.Join(", ", types), () =>
+                    {
+                        DrawChangeTypeButton(popup, AlignType.Aligned);
+                        DrawChangeTypeButton(popup, AlignType.Free);
+                    });
+                };
+
+                popup.onGui = onGui;
+                PopupWindow.Show(new Rect(e.mousePosition, new Vector2(10, 10)), popup);
+                GUI.changed = true;
+
+            }
+        }
+    }
+    
+    private void DrawChangeTypeButton(Popup popup, AlignType alignType)
+    {
+        if (popup.DrawButton(alignType.ToString()))
+        {
+            ChangeType(alignType);
+        }
+    }
+
+    private void ChangeType(AlignType alignType)
+    {
+        for (int i = 0; i < visibleEditors.Count; i++)
+        {
+            var editor = visibleEditors[i];
+            foreach (var index in editor.SelectedPointsIndexes)
+            {
+                editor.ChangeType(index, alignType);
             }
         }
     }

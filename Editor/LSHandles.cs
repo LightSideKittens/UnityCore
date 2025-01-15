@@ -376,6 +376,7 @@ namespace LSCore.Editor
         private static SpriteRenderer GetCircle() => GetSprite("circle");
         private static SpriteRenderer GetRing() => GetSprite("ring");
         private static SpriteRenderer GetSquare() => GetSprite("square");
+        private static SpriteRenderer GetTriangle() => GetSprite("triangle");
 
         private static SpriteRenderer GetSprite(string iconName)
         {
@@ -467,14 +468,16 @@ namespace LSCore.Editor
         {
             if(eventType != EventType.Repaint) return; 
             var sprite = GetSquare();
-            SetupSpriteRenderer(sprite, r.center, r.size, color, dependsOnCam);
+            var c = r.center;
+            var size = r.size / ScaleMultiplier;
+            SetupSpriteRenderer(sprite, c, size, color, dependsOnCam);
         }
         
-        public static void DrawSquare(Vector2 pos, Vector2 size, Color color, bool dependsOnCam = true)
+        public static void DrawTriangle(Vector2 pos, float size, Color color, bool dependsOnCam = true)
         {
             if(eventType != EventType.Repaint) return; 
-            var sprite = GetSquare();
-            SetupSpriteRenderer(sprite, pos, size, color, dependsOnCam);
+            var sprite = GetTriangle();
+            SetupSpriteRenderer(sprite, pos, Vector2.one * size, color, dependsOnCam);
         }
         
         private static void SetupSpriteRenderer(SpriteRenderer sprite, Vector2 pos, Vector2 size, Color color,
@@ -498,6 +501,8 @@ namespace LSCore.Editor
             sprite.color = color;
         }
         
+        public static RestoreMatrix SetIdentityMatrix() => SetMatrix(Matrix4x4.identity);
+
         public static RestoreMatrix SetMatrix(Matrix4x4 target)
         {
             var last = currentMatrix;

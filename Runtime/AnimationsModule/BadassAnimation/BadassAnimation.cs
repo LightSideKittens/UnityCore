@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using LSCore.Attributes;
+using LSCore.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -9,18 +11,101 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     public struct Data
     {
         public BadassAnimationClip clip;
-        [SerializeReference] 
-        public List<Handler> handlers;
-    }
 
+        [SerializeReference]
+        public List<Handler> handlers;
+
+        [SerializeReference]
+        public List<Event> events;
+
+        public void Add(Event eevent)
+        {
+            events ??= new List<Event>();
+            var index = events.BinarySearch(eevent, eventComparer);
+            if (index < 0) index = ~index;
+            events.Insert(index, eevent);
+        }
+
+        private static readonly IComparer<Event> eventComparer = new EventXComparer();
+
+        private class EventXComparer : IComparer<Event>
+        {
+            public int Compare(Event x, Event y)
+            {
+                return x.x.CompareTo(y.x);
+            }
+        }
+    }
+    
+    public bool loop;
+    public bool reverse;
+    
     [HideInInspector] public List<Data> data;
     [HideInInspector] public BadassAnimationClip defaultClip;
+    [SerializeField] private float startTime;
     
-    public Dictionary<string, List<Handler>> handlersByClip;
+    public Dictionary<string, Data> handlersByClip;
     private BadassAnimationClip currentClip;
     private List<Handler> currentHandlers = new();
+    private List<Event> events = new();
     private List<HandlerEvaluateData> currentEvaluators = new();
     private float time;
+    private float length;
+    private Action eventsAction;
+    
+    public float StartTime
+    {
+        get => startTime;
+        set
+        {
+            if(value >= length) return;
+            
+            startTime = value;
+            var t = time;
+            time -= 1;
+            Time = t;
+        }
+    }
+    
+    public float RealTime { get; private set; }
+    
+    public float Time
+    {
+        get => time;
+        set
+        {
+            var oldTime = time;
+            var newTime = value;
+            var diff = newTime - oldTime;
+
+            var oldRealTime = RealTime;
+            RealTime += diff;
+            
+            var max = length - startTime;
+
+            var startTimeForEvents = oldRealTime;
+            startTimeForEvents = (startTimeForEvents - startTime) % max + startTimeForEvents;
+
+            if (loop)
+            {
+                if (newTime > length)
+                {
+                    newTime = startTime + (newTime - length) % max;
+                }
+                else if(newTime < startTime)
+                {
+                    newTime = length + (newTime - startTime) % max;
+                }
+            }
+            else
+            {
+                newTime = Mathf.Clamp(newTime, 0, length);
+            }
+            
+            time = newTime;
+            
+        }
+    }
 
     public BadassAnimationClip Clip
     {
@@ -29,6 +114,12 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         {
             Unregister(this);
             currentEvaluators.Clear();
+
+            foreach (var handler in currentHandlers)
+            {
+                handler.Stop();
+            }
+            
             currentHandlers = ListSpan<Handler>.Empty;
             
             if (value == null || currentClip == value || !isActiveAndEnabled)
@@ -38,7 +129,10 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
             }
             
             currentClip = value;
-            var handlers = handlersByClip[value.name];
+            var d = handlersByClip[value.name];
+            events = d.events;
+            length = value.length;
+            var handlers = d.handlers;
             for (int i = 0; i < handlers.Count; i++)
             {
                 var handler = handlers[i];
@@ -54,6 +148,11 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
                     currentHandlers.Add(handler);
                     currentEvaluators.AddRange(handler.Evaluators);
                 }
+            }
+            
+            foreach (var handler in currentHandlers)
+            {
+                handler.Start();
             }
             
             Register(this);
@@ -82,7 +181,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
 
     private void OnClipChanged()
     {
-        time = 0;
+        Time = 0;
     }
 
     private void Awake()
@@ -100,17 +199,17 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         
         for (int i = 0; i < data.Count; i++)
         {
-            handlersByClip.Add(data[i].clip.name, data[i].handlers);
+            handlersByClip.Add(data[i].clip.name, data[i]);
         }
     }
 
     public void BeforeEvaluate()
     {
-        time += Time.deltaTime;
+        Time += UnityEngine.Time.deltaTime;
         
         for (int i = 0; i < currentEvaluators.Count; i++)
         {
-            currentEvaluators[i].x = time;
+            currentEvaluators[i].x = Time;
         }
     }
 
@@ -118,6 +217,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     
     public void AfterEvaluate()
     {
+        eventsAction?.Invoke();
         for (int i = 0; i < currentHandlers.Count; i++)
         {
             var handler = currentHandlers[i];
@@ -125,21 +225,117 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         }
     }
 
-    public void Add(BadassAnimationClip newClip, List<Handler> handlers)
+    public void Add(BadassAnimationClip newClip, List<Handler> handlers, List<Event> events)
     {
-        data.Add(new Data { clip = newClip, handlers = handlers });
-        handlersByClip.Add(newClip.name, handlers);
+        var d = new Data { clip = newClip, handlers = handlers, events = events };
+        data.Add(d);
+        handlersByClip.Add(newClip.name, d);
+    }
+    
+    public static IEnumerable<Event> SelectEvents(List<Event> events, float startTime, float endTime, Vector2 clampRange, bool reverse)
+    {
+        float length = clampRange.y - clampRange.x;
+        float offsetForEvents = startTime;
+        offsetForEvents -= ((offsetForEvents - clampRange.x) % length + length) % length + clampRange.x;
+        
+        int startIndex = 0;
+        int endIndex = events.Count - 1;
+        
+        while (startIndex < events.Count && events[startIndex].x < clampRange.x)
+        {
+            startIndex++;
+        }
+
+        while (endIndex >= 0 && events[endIndex].x > clampRange.y)
+        {
+            endIndex--;
+        }
+        endIndex++;
+
+        var eventsSpan = events.AsSpan(startIndex..endIndex);
+        
+        if(eventsSpan.Count == 0) yield break;
+        
+        if (reverse)
+        {
+            startTime *= -1;
+            endTime *= -1;
+            
+            while (true)
+            {
+                for (int i = eventsSpan.Count - 1; i >= 0; i--)
+                {
+                    var eevent = eventsSpan[i];
+                    var x = eevent.x * -1 - offsetForEvents;
+                    bool start = x > startTime;
+                    bool end = x <= endTime;
+                
+                    if (start && end)
+                    {
+                        yield return eevent;
+                    }
+                    else if(!end)
+                    {
+                        yield break;
+                    }
+                }
+
+                offsetForEvents -= length;
+            }
+        }
+        else
+        {
+            while (true)
+            {
+                for (int i = 0; i < eventsSpan.Count; i++)
+                {
+                    var eevent = eventsSpan[i];
+                    var x = eevent.x + offsetForEvents;
+                    bool start = x > startTime;
+                    bool end = x <= endTime;
+                
+                    if (start && end)
+                    {
+                        yield return eevent;
+                    }
+                    else if(!end)
+                    {
+                        yield break;
+                    }
+                }
+
+                offsetForEvents += length;
+            }
+        }
     }
 
 #if UNITY_EDITOR
     internal void Editor_Evaluate(float time)
     {
+        Time = time;
         foreach (var evaluator in currentEvaluators)
         {
             evaluator.x = time;
             evaluator.Evaluate();
         }
         AfterEvaluate();
+    }
+    
+    private void OnDrawGizmos()
+    {
+        foreach (var handler in currentHandlers)
+        {
+            handler.DrawGizmos();
+        }
+    }
+
+    [SceneGUI]
+    private void OnSceneGUI()
+    {
+        foreach (var handler in currentHandlers)
+        {
+            handler.OnSceneGUI();
+        }
     }
 #endif
 }

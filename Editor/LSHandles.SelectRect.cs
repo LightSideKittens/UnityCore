@@ -22,12 +22,9 @@ namespace LSCore.Editor
                 if (!isSelecting) return;
                 
                 var rect = CreateRectInArea(startPos, MouseInWorldPoint);
-                
-                var center = rect.center;
+                var c = rect.center;
                 rect.size *= currentMatrix.lossyScale;
-                rect.size /= ScaleMultiplier;
-                rect.center = center;
-                
+                rect.center = c;
                 DrawSquare(rect, selectionColor, false);
                 GUI.changed = true;
             }

@@ -30,19 +30,171 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
     [Serializable]
     public class CurveEditor
     {
+        [Serializable]
+        public class Events
+        {
+            [SerializeReference] public List<BadassAnimation.Event> events;
+        }
+        
+        public BadassAnimationWindow window;
+        public BadassAnimation animation;
         public LSHandles.TimePointer pointer;
         public BadassMultiCurveEditor curvesEditor;
+        public float lastXForEvent;
+        private List<BadassAnimation.Event> clickedEvents = new();
+        private Popup treePopup;
 
-        public CurveEditor(LSHandles.TimePointer pointer, BadassMultiCurveEditor curvesEditor)
+        public CurveEditor(BadassAnimationWindow window, LSHandles.TimePointer pointer, BadassMultiCurveEditor curvesEditor)
         {
+            this.window = window;
+            animation = window.animation;
             this.pointer = pointer;
             this.curvesEditor = curvesEditor;
         }
 
         public void OnGUI(Rect position)
         {
-            curvesEditor.AfterDraw += pointer.OnGUI;
+            curvesEditor.BeforeDraw += TimeGUI;
             curvesEditor.OnGUI(position);
+        }
+
+        
+        private void TimeGUI()
+        {
+            var e = Event.current;
+            pointer.OnGUI();
+            
+            if (animation.handlersByClip.TryGetValue(window.CurrentClip.name, out var data))
+            {
+                if (!window.isPlaying)
+                {
+                    foreach (var selectedEventToCall in SelectEvents(data.events, pointer, window.isReversed))
+                    {
+                        selectedEventToCall.Invoke();
+                    }
+                }
+                
+                bool wasCleared = false;
+                bool needSort = false;
+                foreach (var eevent in data.events)
+                {
+                    var x = LSHandles.Matrix.MultiplyPoint3x4(new Vector3(eevent.x, 0, 0)).x;
+                    var y = pointer.mouseClickArea.yMin;
+                    var pos = new Vector2(x, y);
+                    var mp = LSHandles.MouseInWorldPoint;
+                    
+                    using (LSHandles.SetIdentityMatrix())
+                    {
+                        LSHandles.DrawCircle(pos, 0.02f, green);
+                        if (e.type == EventType.MouseDown && e.button == 1)
+                        {
+                            if (!wasCleared)
+                            {
+                                wasCleared = true;
+                                treePopup = null;
+                                clickedEvents = new List<BadassAnimation.Event>();
+                            }
+                            
+                            if (LSHandles.IsInDistance(pos, LSHandles.MouseInWorldPoint, 0.02f))
+                            {
+                                clickedEvents.Add(eevent);
+                            }
+                        }
+                        else if (e.type == EventType.MouseDrag && e.button == 1)
+                        {
+                            treePopup?.Close();
+                            foreach (var eventt in clickedEvents)
+                            {
+                                eventt.x = mp.x;
+                                needSort = true;
+                            }
+                        }
+                    }
+                }
+
+                if (needSort)
+                {
+                    data.events.Sort((a, b) => a.x.CompareTo(b.x));
+                    EditorUtility.SetDirty(animation);
+                }
+
+                if (clickedEvents.Count > 0 && treePopup == null)
+                {
+                    var firstEventX = clickedEvents[0].x;
+                    e.Use();
+                    var eventsObject = new Events{events = new List<BadassAnimation.Event>(clickedEvents)};
+                    var tree = PropertyTree.Create(eventsObject);
+                    treePopup = new Popup(new Vector2(500, 300));
+                    
+                    treePopup.onClose = () =>
+                    {
+                        tree.Dispose();
+                    };
+                    
+                    treePopup.onGui = () =>
+                    {
+                        EditorGUI.BeginChangeCheck();
+                        tree.Draw(false);
+                        if (EditorGUI.EndChangeCheck())
+                        {
+                            EditorUtility.SetDirty(animation);
+                        }
+
+                        if (!clickedEvents.SequenceEqual(eventsObject.events))
+                        {
+                            treePopup.Repaint();
+                            var removed = clickedEvents.Except(eventsObject.events).ToList();
+
+                            foreach (var ev in removed)
+                            {
+                                data.events.Remove(ev);
+                                clickedEvents.Remove(ev);
+                            }
+                            
+                            var added = eventsObject.events.Except(clickedEvents).ToList();
+                            
+                            foreach (var ev in added)
+                            {
+                                ev.x = firstEventX;
+                                data.Add(ev);
+                                clickedEvents.Add(ev);
+                            }
+                        }
+                        
+                        if (Event.current.type == EventType.Repaint)
+                        {
+                            var rect = GUILayoutUtility.GetLastRect();
+                            treePopup.size.y = rect.size.y;
+                        }
+                    };
+                    
+                    PopupWindow.Show(new Rect(e.mousePosition, new Vector2(10, 10)), treePopup);
+                }
+            }
+
+            if (e.type == EventType.MouseDown && e.button == 1)
+            {
+                var mp = LSHandles.MouseInWorldPoint;
+                lastXForEvent = mp.x;
+                using (LSHandles.SetIdentityMatrix())
+                {
+                    if (pointer.ContainsClickArea(LSHandles.MouseInWorldPoint))
+                    {
+                        var popup = new Popup();
+                        
+                        popup.onGui = () =>
+                        {
+                            if (popup.DrawButton("Create Event"))
+                            {
+                                var rect = GUILayoutUtility.GetLastRect();
+                                window.NeedAddEvent(rect);
+                            }
+                        };
+                        
+                        PopupWindow.Show(new Rect(e.mousePosition, new Vector2(10, 10)), popup);
+                    }
+                }
+            }
         }
 
         public void OnEnable()
@@ -75,7 +227,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
     {
         public event Action<Rect> NeedAddHandler;
         public event Action SelectionConfirmed;
-        
+        private Color selectionColor = new Color(1f, 0.54f, 0.16f);
         private OdinSelector<BadassAnimationClip> clipSelector;
         private readonly List<BadassAnimationClip> badassAnimationClips;
         private BadassAnimationWindow window;
@@ -159,7 +311,17 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                 else           right = SdfIconType.CaretRightFill;
             }
             
-            if (SirenixEditorGUI.SDFIconButton(buttons.TakeFromLeft(20), left, EnabledStyle))
+            
+            var enableStyle = EnabledStyle;
+
+            if (IsReversed)
+            {
+                enableStyle = new GUIStyle(enableStyle);
+                enableStyle.normal.textColor = selectionColor;
+                enableStyle.hover.textColor = selectionColor;
+            }
+
+            if (SirenixEditorGUI.SDFIconButton(buttons.TakeFromLeft(20), left, enableStyle))
             {
                 if (IsReversed)
                 {
@@ -167,8 +329,17 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                 }
                 IsReversed = true;
             }
+
+            enableStyle = EnabledStyle;
             
-            if (SirenixEditorGUI.SDFIconButton(buttons.TakeFromLeft(20), right, EnabledStyle))
+            if (!IsReversed)
+            {
+                enableStyle = new GUIStyle(enableStyle);
+                enableStyle.normal.textColor = selectionColor;
+                enableStyle.hover.textColor = selectionColor;
+            }
+            
+            if (SirenixEditorGUI.SDFIconButton(buttons.TakeFromLeft(20), right, enableStyle))
             {
                 if (!IsReversed)
                 {
@@ -177,7 +348,10 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                 IsReversed = false;
             }
             
-            if (SirenixEditorGUI.SDFIconButton(buttons, SdfIconType.ArrowRepeat, IsLoop ? EnabledStyle : DisabledStyle))
+            var disable = new GUIStyle(DisabledStyle);
+            disable.hover.textColor = disable.normal.textColor;
+            
+            if (SirenixEditorGUI.SDFIconButton(buttons, SdfIconType.ArrowRepeat, IsLoop ? EnabledStyle : disable))
             {
                 IsLoop = !IsLoop;
             }
@@ -209,7 +383,8 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         public BadassCurve curve;
         private BadassAnimation.Handler handler;
         private BadassAnimationClip clip;
-        
+        public Color color;
+
         public bool TryGetCurve(out BadassCurve curve)
         {
             if (clip.namesToCurvesByHandlerGuids.TryGetValue(handler.guid, out var curves))
@@ -233,11 +408,23 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
             EditorUtility.SetDirty(clip);
         }
 
-        public CurveItem(OdinMenuTree tree, string name, object value, BadassAnimationClip clip, BadassAnimation.Handler handler) : base(tree, name, value)
+        public CurveItem(OdinMenuTree tree, string name, Color color, BadassAnimationClip clip, BadassAnimation.Handler handler) : base(tree, name, null)
         {
+            this.color = color;
             this.clip = clip;
             this.handler = handler;
             TryGetCurve(out _);
+        }
+
+        protected override void OnDrawMenuItem(Rect rect, Rect labelRect)
+        {
+            base.OnDrawMenuItem(rect, labelRect);
+            if (handler.TryGetEvaluator(Name, out var evaluator))
+            {
+                rect.TakeFromRight(5);
+                rect.TakeFromRight(40);
+                EditorGUI.FloatField(rect.TakeFromRight(40), evaluator.y);
+            }
         }
     }
     
@@ -391,9 +578,9 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
     
     [HideInInspector] public CurveEditor editor;
     [HideInInspector] public LSHandles.TimePointer timePointer;
-    [HideInInspector] public bool isPlaying;
     [HideInInspector] public bool isReversed;
-    
+    private bool isPlaying;
+
     private BadassAnimation animation;
     private Toolbar toolbar;
     
@@ -406,32 +593,37 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         }
     }
 
+    private static Color red = new(1f, 0.32f, 0.36f);
+    private static Color green = new(0.55f, 0.86f, 0f);
+    private static Color blue = new(0.16f, 0.56f, 1f);
+    private static Color alpha = new(0.87f, 0.87f, 0.87f);
+    
     private static readonly Dictionary<Type, Action<string, OdinMenuTree, BadassAnimationClip, BadassAnimation.Handler>> addItemActionsByType = new()
     {
         { typeof(Color), (path, tree, clip, handler) =>
             {
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.r, null, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.g, null, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.b, null, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.a, null, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.r, red, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.g, green, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.b, blue, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.a, alpha, clip, handler));
             } 
         },
         { typeof(Vector3), (path, tree, clip, handler) =>
             {
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.x, null, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.y, null, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.z, null, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.x, red, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.y, green, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.z, blue, clip, handler));
             } 
         },
         { typeof(Vector2), (path, tree, clip, handler) =>
             {
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.x, null, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.y, null, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.x, red, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.y, green, clip, handler));
             } 
         },
         { typeof(float), (path, tree, clip, handler) =>
             {
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.value, null, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.value, red, clip, handler));
             } 
         },
     };
@@ -477,10 +669,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
             MenuWidth = 365;
             toolbar = new Toolbar(tree, this);
             
-            toolbar.NeedAddHandler += rect =>
-            {
-                NeedAddHandler(rect, toolbar.CurrentClip.GetInstanceID());
-            };
+            toolbar.NeedAddHandler += NeedAddHandler;
 
             var lastClip = CurrentClip;
         
@@ -501,14 +690,14 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         tree.AddMenuItemAtPath(string.Empty, toolbar);
         var currentClip = CurrentClip;
         handlerNamesCounter.Clear();
-        editor ??= new(timePointer, new());
+        editor ??= new(this, timePointer, new());
         editor.pointer = timePointer;
         editor.Clear();
         var toRemove = new HashSet<string>(currentClip.namesToCurvesByHandlerGuids.Keys);
         
-        if (animation.handlersByClip.TryGetValue(currentClip.name, out var handlers))
+        if (animation.handlersByClip.TryGetValue(currentClip.name, out var d))
         {
-            foreach (var handler in handlers)
+            foreach (var handler in d.handlers)
             {
                 AddHandler(tree, currentClip, handler);
                 toRemove.Remove(handler.guid);
@@ -538,6 +727,8 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         if (curveItem.TryGetCurve(out var curve))
         {
             var curveEditor = new BadassCurveEditor(curve, this);
+            curveEditor.curveColor = curveItem.color;
+            curveEditor.tangentLineColor = curveItem.color;
             curveEditor.IsLocked = curveItem.IsLockedSelf;
             curveEditor.IsVisible = curveItem.IsVisibleSelf;
                     
@@ -620,12 +811,22 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         
         if (OdinObjectSelector.IsReadyToClaim(this, CurrentClip.GetInstanceID()))
         {
-            var handler = (BadassAnimation.Handler)OdinObjectSelector.Claim();
-            if (animation.handlersByClip.TryGetValue(CurrentClip.name, out var handlers))
+            if (animation.handlersByClip.TryGetValue(CurrentClip.name, out var data))
             {
-                handlers.Add(handler);
-                EditorUtility.SetDirty(animation);
-                AddHandler(MenuTree, CurrentClip, handler);
+                var claimed = OdinObjectSelector.Claim();
+
+                if (claimed is BadassAnimation.Handler handler)
+                {
+                    data.handlers.Add(handler);
+                    EditorUtility.SetDirty(animation);
+                    AddHandler(MenuTree, CurrentClip, handler);
+                }
+                else if (claimed is BadassAnimation.Event eevent)
+                {
+                    eevent.x = editor.lastXForEvent;
+                    data.Add(eevent);
+                    EditorUtility.SetDirty(animation);
+                }
             }
         }
 
@@ -654,7 +855,9 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         
         editor.OnGUI(rect);
         var keyPointsBounds = editor.curvesEditor.GetKeyPointsBounds();
-        timePointer.clampRange = new Vector2(0, keyPointsBounds.max.x);
+        var length = keyPointsBounds.max.x;
+        CurrentClip.length = length;
+        timePointer.ClampRange = new Vector2(0, length);
         
         var e = Event.current;
 
@@ -662,6 +865,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         {
             if (e.keyCode == KeyCode.Space)
             {
+                timePointer.SetTimeAtLastPosition();
                 lastTime = EditorApplication.timeSinceStartup;
                 isPlaying = !isPlaying;
             }   
@@ -670,6 +874,15 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         if (isPlaying)
         {
             timePointer.Time -= (float)(EditorApplication.timeSinceStartup - lastTime) * isReversed.ToPosNeg();
+            
+            if (animation.handlersByClip.TryGetValue(CurrentClip.name, out var data))
+            {
+                foreach (var selectedEventToCall in SelectEvents(data.events, timePointer, isReversed))
+                {
+                    selectedEventToCall.Invoke();
+                }
+            }
+
             Repaint();
         }
 
@@ -708,33 +921,37 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
                     
-            animation.Add(newClip, new List<BadassAnimation.Handler>());
+            animation.Add(newClip, new(), new());
             toolbar?.OnClipAdded(newClip);
             EditorUtility.SetDirty(animation);
             CurrentClip = newClip;
         }
     }
-
-    private void NeedAddHandler(Rect rect, int id)
+    
+    private void NeedAddHandler(Rect rect)
     {
-        OdinObjectSelector.Show(this, id, null, typeof(BadassAnimation.Handler), position: rect);
+        ShowTypeSelectionPopup<BadassAnimation.Handler>(rect);
     }
     
-    private void ShowTypeSelectionPopup(int id, object value)
+    private void NeedAddEvent(Rect rect)
     {
-        OdinObjectSelector.Show(this, id, value, typeof(BadassAnimation.Handler));
+        ShowTypeSelectionPopup<BadassAnimation.Event>(rect);
     }
     
-    public class CurveDrawer
+    private void ShowTypeSelectionPopup<T>(Rect rect)
     {
-        [HideInInspector] public Func<Rect> rectGetter;
-        [HideInInspector] public BadassAnimationClip clip;
-        [HideInInspector] public BadassCurveEditor editor;
+        OdinObjectSelector.Show(this, toolbar.CurrentClip.GetInstanceID(), null, typeof(T), position: rect);
+    }
 
-        [CustomValueDrawer("")]
-        public void Create()
+    public static IEnumerable<BadassAnimation.Event> SelectEvents(List<BadassAnimation.Event> events, LSHandles.TimePointer pointer, bool reverse)
+    {
+        var oldRealTime = pointer.OldRealTime;
+        var realTime = pointer.RealTime;
+        pointer.SyncRealTime();
+        
+        foreach (var selectedEventToCall in BadassAnimation.SelectEvents(events, oldRealTime, realTime, pointer.ClampRange, reverse))
         {
-            
+            yield return selectedEventToCall;
         }
     }
 }

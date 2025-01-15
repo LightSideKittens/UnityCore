@@ -1,10 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
+using LSCore;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
 public partial class BadassAnimation
 {
+    [Serializable]
+    public class Event
+    {
+        [HideInInspector] public float x;
+        [SerializeReference] 
+        [HideLabel]
+        public LSAction action;
+
+        public virtual void Invoke()
+        {
+            action.Invoke();
+        }
+    }
+    
+    [Serializable]
+    public class RuntimeOnlyEvent : Event
+    {
+        public override void Invoke()
+        {
+            if (World.IsPlaying)
+            {
+                base.Invoke();
+            }
+        }
+    }
+
     [Serializable]
     public abstract class Handler
     {
@@ -76,6 +103,7 @@ public partial class BadassAnimation
         {
         }
 
+        public bool TryGetEvaluator(string key, out HandlerEvaluateData evaluator) => evaluators.TryGetValue(key, out evaluator);
         public void ClearEvaluators() => evaluators.Clear();
 
         public void AddEvaluator(string key, BadassCurve curve)
@@ -85,7 +113,6 @@ public partial class BadassAnimation
             evaluators.Add(key, evaluator);
         }
         
-        
         protected Action applyEvaluationResult;
         protected abstract Action GetApplyEvaluationResultAction(string key, HandlerEvaluateData evaluator);
 
@@ -93,6 +120,7 @@ public partial class BadassAnimation
         public abstract Type ValueType { get; }
         public abstract string HandlerName { get; }
 
+        [GUIColor(1f, 0.54f, 0.16f)]
         [ShowInInspector] private bool gizmos;
 
         public void DrawGizmos()
@@ -116,7 +144,11 @@ public partial class BadassAnimation
     [Serializable]
     public abstract class Handler<T> : Handler
     {
-        [ShowInInspector] [LabelText("$Label")] [NonSerialized]
+        [ShowInInspector] 
+        [LabelText("$Label")] 
+        [NonSerialized]
+        [GUIColor(1f, 0.54f, 0.16f)]
+        [PropertySpace(SpaceBefore = 0, SpaceAfter = 10)]
         public T value;
         protected bool isDiff;
         
