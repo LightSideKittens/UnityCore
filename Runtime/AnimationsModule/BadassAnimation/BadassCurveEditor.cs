@@ -5,7 +5,7 @@ using System.Linq;
 using LSCore.Editor;
 using UnityEngine;
 using UnityEditor;
-using UnityEngine.Animations;
+using static BadassCurve;
 using Object = UnityEngine.Object;
 
 [Serializable]
@@ -13,11 +13,11 @@ public partial class BadassCurveEditor
 {
     public Object context;
     public BadassCurve curve;
-    public float time;
     private const float constWidth = 0.05f / 3;
     private const float BezierWidth = constWidth / 4;
     private const float tangentWidth = constWidth / 10;
     
+    public RefAction<BezierPoint> OverridePointPosition;
     public Color curveColor = new (1f, 0.32f, 0.36f);
     public Color tangentLineColor = new (1f, 0.32f, 0.36f);
     private Color keyPointColor = Color.black;
@@ -31,100 +31,86 @@ public partial class BadassCurveEditor
         this.context = context;
     }
     
-    public void OnGUI(bool processEvents)
+    public void OnGUI(bool draw, bool processEvents)
     {
-        if (curve.Count > 2)
+        TryInitPointsTransformer();
+        if (draw)
         {
-            var min = curve[0];
-            var max = curve[0];
-            
-            for (int i = 0; i < curve.Count; i++)
+            if (curve.Count > 2)
             {
-                UpdateMinMax(curve[i]);
-            }
-            
-            var minPoint = curve[1];
-            minPoint.p.x = -100000;
-            
-            var bezierWidth = BezierWidth;
-            var curveColor = this.curveColor;
-            var tangentLineColor = this.tangentLineColor;
-            var keyPointColor = this.keyPointColor;
-            var selectionColor = this.selectionColor;
-            
-            if (!IsFocused)
-            {
-                bezierWidth /= 3;
-                curveColor.a /= 3;
-                tangentLineColor.a /= 3;
-            }
+                var minPoint = curve[1];
+                minPoint.p.x = -100000;
 
-            if (IsLocked)
-            {
-                keyPointColor = Color.gray;
-                selectionColor = Color.gray;
-            }
-            
-            LSHandles.DrawLine(bezierWidth, curveColor, curve[1], minPoint);
-                
-            var maxPoint = curve[^2];
-            maxPoint.p.x = 100000;
-            LSHandles.DrawLine(bezierWidth, curveColor, curve[^2], maxPoint);
-            
-            var st = curve[0];
-            var sp = curve[1];
-            DrawTangentLine(tangentWidth, tangentLineColor, st.e, sp.e);
-            DrawTangentPoint(st.e, constWidth, tangentPointColor);
-            
-            for (int i = 1; i < curve.Count - 2; i += 3)
-            {
-                var startPosition = curve[i];
-                var startTangent = curve[i+1];
-                var endTangent = curve[i+2];
-                var endPosition = curve[i+3];
-                
-                LSHandles.DrawBezier(startPosition.p, startTangent.p, endTangent.p, endPosition.p, curveColor, bezierWidth);
-                
-                DrawTangentLine(tangentWidth, tangentLineColor, startTangent.e, startPosition.e);
-                DrawTangentLine(tangentWidth, tangentLineColor, endTangent.e, endPosition.e);
-                
-                LSHandles.DrawCircle(startPosition.e, constWidth, keyPointColor);
-                DrawTangentPoint(startTangent.e, constWidth, tangentPointColor);
-                DrawTangentPoint(endTangent.e, constWidth, tangentPointColor);
-            }
-            
-            var ep = curve[^2];
-            var et = curve[^1];
-            DrawTangentLine(tangentWidth, tangentLineColor, et.e, ep.e);
-            DrawTangentPoint(et.e, constWidth, tangentPointColor);
-            
-            LSHandles.DrawCircle(ep.e, constWidth, keyPointColor);
-            
-            for (int i = 0; i < selectedPointIndexes.Count; i++)
-            {
-                var target = selectedPointIndexes[i];
-                if (IsRoot(target))
+                var bezierWidth = BezierWidth;
+                var curveColor = this.curveColor;
+                var tangentLineColor = this.tangentLineColor;
+                var keyPointColor = this.keyPointColor;
+                var selectionColor = this.selectionColor;
+
+                if (!IsFocused)
                 {
-                    LSHandles.DrawCircle(curve[target].e, constWidth, selectionColor);
+                    bezierWidth /= 3;
+                    curveColor.a /= 3;
+                    tangentLineColor.a /= 3;
                 }
-                else if(!IsLocked)
+
+                if (IsLocked)
                 {
-                    LSHandles.DrawRing(curve[target].e, constWidth, selectionColor);
+                    keyPointColor = Color.gray;
+                    selectionColor = Color.gray;
                 }
-            }
-            
-            var dp = curve.EvaluateNormalizedVector(time);
-            LSHandles.DrawCircle(dp, constWidth, Color.white);
-            
-            void UpdateMinMax(in Vector2 vector)
-            {
-                if (vector.x < min.p.x) min.p.x = vector.x;
-                if (vector.y < min.p.y) min.p.y = vector.y;
-                if (vector.x > max.p.x) max.p.x = vector.x;
-                if (vector.y > max.p.y) max.p.y = vector.y;
+
+                LSHandles.DrawLine(bezierWidth, curveColor, curve[1], minPoint);
+
+                var maxPoint = curve[^2];
+                maxPoint.p.x = 100000;
+                LSHandles.DrawLine(bezierWidth, curveColor, curve[^2], maxPoint);
+
+                var st = curve[0];
+                var sp = curve[1];
+                DrawTangentLine(tangentWidth, tangentLineColor, st.e, sp.e);
+                DrawTangentPoint(st.e, constWidth, tangentPointColor);
+
+                for (int i = 1; i < curve.Count - 2; i += 3)
+                {
+                    var startPosition = curve[i];
+                    var startTangent = curve[i + 1];
+                    var endTangent = curve[i + 2];
+                    var endPosition = curve[i + 3];
+
+                    LSHandles.DrawBezier(startPosition.p, startTangent.p, endTangent.p, endPosition.p, curveColor,
+                        bezierWidth);
+
+                    DrawTangentLine(tangentWidth, tangentLineColor, startTangent.e, startPosition.e);
+                    DrawTangentLine(tangentWidth, tangentLineColor, endTangent.e, endPosition.e);
+
+                    LSHandles.DrawCircle(startPosition.e, constWidth, keyPointColor);
+                    DrawTangentPoint(startTangent.e, constWidth, tangentPointColor);
+                    DrawTangentPoint(endTangent.e, constWidth, tangentPointColor);
+                }
+
+                var ep = curve[^2];
+                var et = curve[^1];
+                DrawTangentLine(tangentWidth, tangentLineColor, et.e, ep.e);
+                DrawTangentPoint(et.e, constWidth, tangentPointColor);
+
+                LSHandles.DrawCircle(ep.e, constWidth, keyPointColor);
+
+                for (int i = 0; i < selectedPointIndexes.Count; i++)
+                {
+                    var target = selectedPointIndexes[i];
+                    if (IsRoot(target))
+                    {
+                        LSHandles.DrawCircle(curve[target].e, constWidth, selectionColor);
+                    }
+                    else if (!IsLocked)
+                    {
+                        LSHandles.DrawRing(curve[target].e, constWidth, selectionColor);
+                    }
+                }
             }
         }
-
+        
         if (processEvents)
         {
             ProcessEvents(Event.current);
@@ -180,20 +166,27 @@ public partial class BadassCurveEditor
         get
         {
             var points = curve.Points;
-            for (int i = 0; i < points.Length; i++)
+            for (int i = 1; i < points.Length; i+=3)
             {
-                if(IsRoot(i)) yield return points[i];
+                yield return points[i];
+            }
+        }
+    }
+    
+    public IEnumerable<int> KeysIndexes
+    {
+        get
+        {
+            var count = curve.Points.Length;
+            for (int i = 1; i < count; i+=3)
+            {
+                yield return i;
             }
         }
     }
     
     public Func<Rect> pointsBoundsGetter;
-    private Action<Event> eventHandler;
-    private Action<Event> applyEventHandler;
-    private Action<Event> discardEventHandler;
-    private LSHandles.TransformationMode currentTransformationMode;
-    private Axis currentAxis = Axis.None;
-    private Vector2 lastMousePosition;
+    private LSHandles.PointsTransformer pointsTransformer;
     private bool lastIsRecorded;
 
     public bool IsRecorded
@@ -228,48 +221,9 @@ public partial class BadassCurveEditor
         WasClicked = false;
         WasClickedOnSelected = false;
         WantOpenPopup = false;
-        bool isMouseMove = lastMousePosition != e.mousePosition;
         
-        if (isMouseMove)
+        if (pointsTransformer.TryHandleEvent(e))
         {
-            lastMousePosition = e.mousePosition;
-        }
-        
-        if (applyEventHandler != null)
-        {
-            GUI.changed = true;
-            if (isMouseMove)
-            {
-                eventHandler(e);
-            }
-            
-            switch (e.type)
-            {
-                case EventType.MouseDown:
-                    applyEventHandler(e);
-                    StopEventHandling();
-                    break;
-                case EventType.KeyDown:
-                    if (e.modifiers != EventModifiers.None) break;
-                    TrySetupEventHandler();
-                    switch (e.keyCode)
-                    {
-                        case KeyCode.Escape:
-                            discardEventHandler(e);
-                            StopEventHandling();
-                            break;
-                        case KeyCode.X:
-                            SetAxis(Axis.X);
-                            SetupEventHandler();
-                            break;
-                        case KeyCode.Y:
-                            SetAxis(Axis.Y);
-                            SetupEventHandler();
-                            break;
-                    }
-                    break;
-            }
-
             return;
         }
         
@@ -277,7 +231,7 @@ public partial class BadassCurveEditor
         {
             case EventType.KeyDown:
                 if (e.modifiers != EventModifiers.None && e.keyCode != KeyCode.Delete) break;
-                TrySetupEventHandler();
+                pointsTransformer.TrySetupEventHandler(e);
                 if (e.keyCode == KeyCode.A)
                 {
                     oldsSelectedPointIndexes = new(selectedPointIndexes);
@@ -367,103 +321,6 @@ public partial class BadassCurveEditor
                 WantResetIsRecorded = true;
                 break;
         }
-
-        void TrySetupEventHandler()
-        {
-            if (selectedPointIndexes.Count > 0)
-            {
-                if (e.keyCode == KeyCode.G)
-                {
-                    SetupEventHandlerWithMode(LSHandles.TransformationMode.Translate);
-                }
-                else if (e.keyCode == KeyCode.S)
-                {
-                    SetupEventHandlerWithMode(LSHandles.TransformationMode.Scale);
-                }
-                else if (e.keyCode == KeyCode.R)
-                {
-                    SetupEventHandlerWithMode(LSHandles.TransformationMode.Rotate);
-                }
-            }
-        }
-
-        void SetupEventHandlerWithMode(LSHandles.TransformationMode mode)
-        {
-            currentTransformationMode = mode;
-            SetupEventHandler();
-        }
-
-        void SetupEventHandler()
-        {
-            discardEventHandler?.Invoke(e);
-            var last = curve;
-            var copy = new BadassCurve(curve);
-            curve = copy;
-            
-            var lastSelectedPointIndexesCopy = selectedPointIndexes;
-            var selectedPointIndexesCopy = new List<int>(selectedPointIndexes);
-            selectedPointIndexes = selectedPointIndexesCopy;
-
-            var bounds = pointsBoundsGetter();
-            var startPos = LSHandles.MouseInWorldPoint;
-                    
-            applyEventHandler = _ => applyEventHandler = null;
-            eventHandler = ev =>
-            {
-                var curPos = LSHandles.MouseInWorldPoint;
-                var transformation = LSHandles.GetMatrix(bounds, startPos, curPos, currentTransformationMode, currentAxis);
-                
-                for (int i = 0; i < selectedPointIndexes.Count; i++)
-                {
-                    var targetIndex = selectedPointIndexes[i];
-                    var lastTargetIndex = lastSelectedPointIndexesCopy[i];
-                        
-                    if (IsRoot(targetIndex))
-                    {
-                        int ind;
-
-                        Vector3 point;
-                        
-                        for (int j = -1; j < 2; j+=2)
-                        {
-                            ind = targetIndex + j;
-                            point = transformation.MultiplyPoint(last[lastTargetIndex + j].e);
-                            SetPosAsAnimation(ref ind, point, true);
-                        }
-                                
-                        ind = targetIndex;
-                        point = transformation.MultiplyPoint(last[lastTargetIndex].e);
-                        SetPosAsAnimation(ref ind, point, true);
-                        selectedPointIndexes[i] = ind;
-                    }
-                    else
-                    {
-                        var ind = targetIndex;
-                        var point = transformation.MultiplyPoint(last[lastTargetIndex].e);
-                        SetPosAsAnimation(ref ind, point, false);
-                    }
-                }
-            };
-            discardEventHandler = _ =>
-            {
-                curve = last;
-                selectedPointIndexes = lastSelectedPointIndexesCopy;
-            };
-        }
-
-        void SetAxis(Axis axis)
-        {
-            currentAxis = currentAxis == axis ? Axis.None : axis;
-        }
-
-        void StopEventHandling()
-        {
-            WantResetIsRecorded = true;
-            currentAxis = Axis.None;
-            eventHandler = null;
-            discardEventHandler = null;
-            applyEventHandler = null;
-        }
     }
 
     private Action beforeRecordSelectIfChanged;
@@ -519,7 +376,9 @@ public partial class BadassCurveEditor
         var mp = LSHandles.MouseInWorldPoint;
         for (int i = 0; i < curve.Count; i++)
         {
-            if (IsInDistance(curve[i], mp, constWidth))
+            var pos = curve[i];
+            OverridePointPosition?.Invoke(i, ref pos);
+            if (IsInDistance(pos, mp, constWidth))
             {
                 index = i;
                 return true;
@@ -556,7 +415,9 @@ public partial class BadassCurveEditor
     {
         for (int i = 0; i < curve.Count; i++)
         {
-            if (rect.Contains(curve[i].e))
+            var point = curve[i];
+            OverridePointPosition?.Invoke(i, ref point);
+            if (rect.Contains(point.e))
             {
                 TrySelectPoint(i);
             }
@@ -791,28 +652,6 @@ public partial class BadassCurveEditor
         return workedPointIndexesArr[..];
     }
     
-    private bool IsRoot(int i)
-    {
-        i--;
-        return i % 3 == 0;
-    }
-    
-    private bool IsTangent(int i)
-    {
-        var f = i % 3;
-        return f is 0 or 2;
-    }
-    
-    private bool IsForwardTangent(int i)
-    {
-        return i % 3 == 2;
-    }
-    
-    private bool IsBackwardTangent(int i)
-    {
-        return i % 3 == 0;
-    }
-    
     private static bool IsInDistance(BezierPoint point, Vector2 worldMousePos, float distance) => LSHandles.IsInDistance(point.e, worldMousePos, distance);
 
     public void SwapKeys(ref int root1, int root2)
@@ -930,6 +769,74 @@ public partial class BadassCurveEditor
             var delta = LSHandles.MouseInWorldPoint - startMousePosition;
             var point = copyPoints[copyi].e + delta;
             SetPosAsAnimation(ref ind, point, isRoot);
+        }
+    }
+
+    public void TryInitPointsTransformer()
+    {
+        if (pointsTransformer == null)
+        {
+            pointsTransformer = new();
+
+            pointsTransformer.canSetupHandler = () => selectedPointIndexes.Count > 0;
+            pointsTransformer.HandlingStopped += () => WantResetIsRecorded = true;
+            pointsTransformer.NeedSetupHandler += () =>
+            {
+                var copy = new BadassCurve(curve);
+                
+                var lastSelectedPointIndexesCopy = selectedPointIndexes;
+                var selectedPointIndexesCopy = new List<int>(selectedPointIndexes);
+                selectedPointIndexes = selectedPointIndexesCopy;
+
+                var bounds = pointsBoundsGetter();
+                var startPos = LSHandles.MouseInWorldPoint;
+
+                pointsTransformer.applyEventHandler = _ =>
+                {
+                    pointsTransformer.applyEventHandler = null;
+                };
+                pointsTransformer.eventHandler = _ =>
+                {
+                    var curPos = LSHandles.MouseInWorldPoint;
+                    var transformation = pointsTransformer.GetMatrix(bounds, startPos, curPos);
+
+                    for (int i = 0; i < selectedPointIndexes.Count; i++)
+                    {
+                        var targetIndex = selectedPointIndexes[i];
+                        var lastTargetIndex = lastSelectedPointIndexesCopy[i];
+
+                        if (IsRoot(targetIndex))
+                        {
+                            int ind;
+
+                            Vector3 point;
+
+                            for (int j = -1; j < 2; j += 2)
+                            {
+                                ind = targetIndex + j;
+                                point = transformation.MultiplyPoint(copy[lastTargetIndex + j].e);
+                                SetPosAsAnimation(ref ind, point, true);
+                            }
+
+                            ind = targetIndex;
+                            point = transformation.MultiplyPoint(copy[lastTargetIndex].e);
+                            SetPosAsAnimation(ref ind, point, true);
+                            selectedPointIndexes[i] = ind;
+                        }
+                        else
+                        {
+                            var ind = targetIndex;
+                            var point = transformation.MultiplyPoint(copy[lastTargetIndex].e);
+                            SetPosAsAnimation(ref ind, point, false);
+                        }
+                    }
+                };
+                pointsTransformer.discardEventHandler = _ =>
+                {
+                    curve.Apply(copy);
+                    selectedPointIndexes = lastSelectedPointIndexesCopy;
+                };
+            };
         }
     }
 }

@@ -24,7 +24,7 @@ namespace LSCore.Editor
 
             return new Rect(minX, minY, maxX - minX, maxY - minY);
         }
-        
+
         public static Matrix4x4 GetMatrix(
             Rect bounds,
             Vector2 startPos,
@@ -49,7 +49,7 @@ namespace LSCore.Editor
                         Axis.Y => translation.x = 0,
                         _ => 0
                     };
-                    
+
                     transformation = Matrix4x4.Translate(new Vector3(translation.x, translation.y, 0));
                     break;
                 }
@@ -94,6 +94,124 @@ namespace LSCore.Editor
             Translate,
             Rotate,
             Scale,
+        }
+
+        public class PointsTransformer
+        {
+            public event Action HandlingStopped;
+            public event Action NeedSetupHandler;
+            public Action<Event> eventHandler;
+            public Action<Event> applyEventHandler;
+            public Action<Event> discardEventHandler;
+            public Func<bool> canSetupHandler;
+
+            private Vector2 lastMousePosition;
+            private TransformationMode currentTransformationMode;
+            private Axis currentAxis;
+
+            public bool IsHandling => applyEventHandler != null;
+
+            public bool TryHandleEvent(Event e)
+            {
+                bool isMouseMove = lastMousePosition != e.mousePosition;
+
+                if (isMouseMove)
+                {
+                    lastMousePosition = e.mousePosition;
+                }
+
+                if (IsHandling)
+                {
+                    GUI.changed = true;
+                    if (isMouseMove)
+                    {
+                        eventHandler(e);
+                    }
+
+                    switch (e.type)
+                    {
+                        case EventType.MouseDown:
+                            applyEventHandler(e);
+                            StopEventHandling();
+                            break;
+                        case EventType.KeyDown:
+                            if (e.modifiers != EventModifiers.None) break;
+                            TrySetupEventHandler(e);
+                            switch (e.keyCode)
+                            {
+                                case KeyCode.Escape:
+                                    discardEventHandler(e);
+                                    StopEventHandling();
+                                    break;
+                                case KeyCode.X:
+                                    SetAxis(Axis.X);
+                                    SetupEventHandler(e);
+                                    break;
+                                case KeyCode.Y:
+                                    SetAxis(Axis.Y);
+                                    SetupEventHandler(e);
+                                    break;
+                            }
+
+                            break;
+                    }
+
+                    return true;
+                }
+
+                return false;
+                
+                void SetAxis(Axis axis)
+                {
+                    currentAxis = currentAxis == axis ? Axis.None : axis;
+                }
+
+                void StopEventHandling()
+                {
+                    HandlingStopped?.Invoke();
+                    currentAxis = Axis.None;
+                    eventHandler = null;
+                    discardEventHandler = null;
+                    applyEventHandler = null;
+                }
+            }
+
+            public void TrySetupEventHandler(Event e)
+            {
+                if (canSetupHandler())
+                {
+                    if (e.keyCode == KeyCode.G)
+                    {
+                        SetupEventHandlerWithMode(TransformationMode.Translate);
+                    }
+                    else if (e.keyCode == KeyCode.S)
+                    {
+                        SetupEventHandlerWithMode(TransformationMode.Scale);
+                    }
+                    else if (e.keyCode == KeyCode.R)
+                    {
+                        SetupEventHandlerWithMode(TransformationMode.Rotate);
+                    }
+                }
+                
+                
+                void SetupEventHandlerWithMode(TransformationMode mode)
+                {
+                    currentTransformationMode = mode;
+                    SetupEventHandler(e);
+                }
+            }
+            
+            public void SetupEventHandler(Event e)
+            {
+                discardEventHandler?.Invoke(e);
+                NeedSetupHandler?.Invoke();
+            }
+            
+            public Matrix4x4 GetMatrix(Rect bounds, Vector2 startPos, Vector2 curPos)
+            {
+                return LSHandles.GetMatrix(bounds, startPos, curPos, currentTransformationMode, currentAxis);
+            }
         }
     }
 }

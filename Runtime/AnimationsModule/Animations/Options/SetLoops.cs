@@ -5,7 +5,7 @@ using UnityEngine;
 namespace LSCore.AnimationsModule.Animations.Options
 {
     [Serializable]
-    public struct LoopOption : IOptions
+    public struct SetLoops : IOption
     {
         [SerializeField] private int loopsCount;
         [SerializeField] private LoopType loopType;

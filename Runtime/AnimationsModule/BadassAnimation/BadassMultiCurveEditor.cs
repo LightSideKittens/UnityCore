@@ -7,14 +7,18 @@ using LSCore.Extensions;
 using UnityEditor;
 using UnityEngine;
 
+public delegate void RefAction<T>(int index, ref T value);
+
 [Serializable]
 public class BadassMultiCurveEditor
 {
-    public event Action BeforeDraw;
+    public Action BeforeDraw;
+    public RefAction<BezierPoint> OverridePointPosForSelection;
+    
     public BadassCurveEditor First => visibleEditors[0];
     public List<BadassCurveEditor> editors = new();
     private List<BadassCurveEditor> visibleEditors = new();
-    private Matrix4x4 matrix = Matrix4x4.identity;
+    public Matrix4x4 matrix = Matrix4x4.identity;
     public LSHandles.CameraData camData = new();
     public LSHandles.GridData gridData = new();
     private int currentSelectionClickCount = 0;
@@ -40,10 +44,8 @@ public class BadassMultiCurveEditor
         OnEnable();
     }
     
-    public BadassMultiCurveEditor()
-    {
-    }
-
+    public BadassMultiCurveEditor() { }
+    
     public void Add(BadassCurveEditor editor)
     {
         SetupPointsBoundsGetter(editor);
@@ -72,7 +74,7 @@ public class BadassMultiCurveEditor
         }
     }
     
-    private IEnumerable<Vector2> KeyPoints
+    public IEnumerable<Vector2> KeyPoints
     {
         get
         {
@@ -83,7 +85,6 @@ public class BadassMultiCurveEditor
             }
         }
     }
-    
 
     public Rect GetKeyPointsBounds()
     {
@@ -95,10 +96,10 @@ public class BadassMultiCurveEditor
         return LSHandles.CalculateBounds(eSelectedPoints);
     }
     
-    public void OnGUI(Rect rect)
+    public void OnGUI(Rect rect, bool draw)
     {
         visibleEditors.Clear();
-
+        
         for (int i = 0; i < editors.Count; i++)
         {
             var editor = editors[i];
@@ -107,32 +108,44 @@ public class BadassMultiCurveEditor
                 visibleEditors.Add(editor);
             }
         }
-
-        if(visibleEditors.Count == 0) return;
-
-        bool rectContainsMouse = rect.Contains(Event.current.mousePosition);
         
         LSHandles.StartMatrix(matrix);
         LSHandles.Begin(rect, camData);
         LSHandles.DrawGrid(gridData);
         LSHandles.SelectRect.Draw();
+        BeforeDraw?.Invoke();
+        
+        if (visibleEditors.Count > 0)
+        {
+            DrawEditors(rect, draw);
+        }
+        
+        LSHandles.End();
+        matrix = LSHandles.EndMatrix();
+        
+        BeforeDraw = null;
+        OverridePointPosForSelection = null;
+    }
+
+    private void DrawEditors(Rect rect, bool draw)
+    {
+        bool rectContainsMouse = rect.Contains(Event.current.mousePosition);
         bool wasClicked = false;
         bool wasClickedOnSelected = false;
         List<BadassCurveEditor> selectedEditors = new();
         List<BadassCurveEditor> clickedEditors = new();
-        
-        BeforeDraw?.Invoke();
-        BeforeDraw = null;
-        
+
         for (int i = 0; i < visibleEditors.Count; i++)
         {
             var editor = visibleEditors[i];
-            editor.OnGUI(rectContainsMouse);
-            
+            editor.OverridePointPosition = OverridePointPosForSelection;
+            editor.OnGUI(draw, rectContainsMouse);
+
             if (editor.SelectedPointIndexesCount > 0)
             {
                 selectedEditors.Add(editor);
             }
+
             if (editor.WasClicked)
             {
                 clickedEditors.Add(editor);
@@ -141,14 +154,11 @@ public class BadassMultiCurveEditor
         }
 
         ProcessEvents();
-        
-        LSHandles.End();
-        matrix = LSHandles.EndMatrix();
 
         void ProcessEvents()
         {
             if (!rectContainsMouse) return;
-            
+
             var e = Event.current;
 
             if (e.type == EventType.MouseDown)
@@ -253,7 +263,7 @@ public class BadassMultiCurveEditor
             }
             else if (e.type == EventType.MouseDrag)
             {
-                if (e.button == 0)
+                if (e.button == 0 && !e.shift)
                 {
                     wasDragging = true;
 
@@ -305,7 +315,7 @@ public class BadassMultiCurveEditor
 
             bool wantResetIsRecorded = false;
             bool wantOpenPopup = false;
-            
+
             for (int i = 0; i < visibleEditors.Count; i++)
             {
                 var editor = visibleEditors[i];
@@ -359,7 +369,7 @@ public class BadassMultiCurveEditor
             }
         }
     }
-    
+
     private void DrawChangeTypeButton(Popup popup, AlignType alignType)
     {
         if (popup.DrawButton(alignType.ToString()))

@@ -44,7 +44,7 @@ public class BadassAnimationCurveWindow : EditorWindow
     {
         var rect = position;
         rect.position = Vector2.zero;
-        editor.OnGUI(rect);
+        editor.OnGUI(rect, true);
         
         if (GUI.changed)
         {

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace LSCore.AnimationsModule.Animations.Options
 {
     [Serializable]
-    public struct UpdateOption : IOptions
+    public struct SetUpdate : IOption
     {
         [SerializeField] private UpdateType updateType;
         

@@ -62,6 +62,11 @@ namespace LSCore.Editor
                     if (!isClampRangeOverride)
                     {
                         clampRange = value;
+
+                        if (float.IsNegativeInfinity(clampRange.y))
+                        {
+                            clampRange.y = 1;
+                        }
                     }
                 }
             }

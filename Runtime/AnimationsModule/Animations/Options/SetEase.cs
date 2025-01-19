@@ -6,7 +6,7 @@ using UnityEngine;
 namespace LSCore.AnimationsModule.Animations.Options
 {
     [Serializable]
-    public struct EaseOption : IOptions
+    public struct SetEase : IOption
     {
         [SerializeField] private bool useCustom;
 

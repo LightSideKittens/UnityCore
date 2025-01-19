@@ -163,7 +163,7 @@ namespace LSCore.Editor
         }
 
 
-        public static Vector3 ScreenToWorldPosition(Vector2 screenPosition)
+        public static Vector3 ScreenToWorld(Vector2 screenPosition)
         {
             return currentMatrix.inverse.MultiplyPoint3x4(cam.ScreenToWorldPoint(TransformScreenPosition(screenPosition)));
         }

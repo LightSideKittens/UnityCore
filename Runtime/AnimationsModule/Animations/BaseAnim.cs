@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations
     { 
         [BoxGroup] [LabelText("ID")] public string id;
         [HideIf("IsDurationZero")]
-        [SerializeReference] private IOptions[] options;
+        [SerializeReference] private IOption[] mainOptions;
 
         public abstract bool NeedInit { get; set; }
         public abstract float Duration { get; set; }
@@ -38,11 +38,11 @@ namespace LSCore.AnimationsModule.Animations
         public Tween Animate()
         {
             TryInit();
-            Anim = IsDurationZero ? DOTween.Sequence() : ApplyTo(Internal_Animate());
+            Anim = IsDurationZero ? DOTween.Sequence() : ApplyOptions(Internal_Animate(), mainOptions);
             return Anim;
         }
 
-        protected Tween ApplyTo(Tween tween)
+        protected static Tween ApplyOptions(Tween tween, IOption[] options)
         {
             if (options is {Length: > 0})
             {
@@ -112,6 +112,8 @@ namespace LSCore.AnimationsModule.Animations
         public bool useTargetPath;
         public bool useMultiple;
         
+        [HideIf("@IsDurationZero || !useMultiple")]
+        [SerializeReference] private IOption[] options;
         [HideIf("useTargetPath")] public TTarget target;
         [ShowIf("ShowTargets")] public TTarget[] targets;
         
@@ -121,6 +123,7 @@ namespace LSCore.AnimationsModule.Animations
         
         [ShowIf("useMultiple")] public float timeOffsetPerTarget = 0.1f;
 
+        public List<Tween> Tweens { get; private set; }
         private bool ShowTargets => useMultiple && !useTargetPath;
         private bool ShowTargetsPaths => useMultiple && useTargetPath;
         protected virtual bool ShowStartValue => NeedInit;
@@ -145,19 +148,24 @@ namespace LSCore.AnimationsModule.Animations
         {
             if (useMultiple)
             {
+                Tweens = new();
                 var sequence = DOTween.Sequence();
                 var pos = 0f;
-                sequence.Insert(pos, AnimAction(target));
+                var t = ApplyOptions(AnimAction(target), options);
+                Tweens.Add(t);
+                sequence.Insert(pos, t);
                 for (int i = 0; i < targets.Length; i++)
                 {
                     pos += timeOffsetPerTarget;
-                    sequence.Insert(pos, AnimAction(targets[i]));
+                    t = ApplyOptions(AnimAction(targets[i]), options);
+                    Tweens.Add(t);
+                    sequence.Insert(pos, t);
                 }
 
                 return sequence;
             }
             
-            return AnimAction(target);
+            return ApplyOptions(AnimAction(target), options);
         }
 
         public void Reverse()

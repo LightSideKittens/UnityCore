@@ -16,7 +16,10 @@ namespace LSCore.Editor
             public int textOnEveryLine = 2;
             public Color color = new(0, 0, 0, 1f);
             public Vector2 stepRef = new(0.1f, 0.1f);
-            public bool displayScale = true;
+            public bool displayXScale = true;
+            public bool displayYScale = true;
+            public bool displayXGrid = true;
+            public bool displayYGrid = true;
             public Color scaleBackColor = new(0f, 0f, 0f, 0.5f);
 
             public void Draw()
@@ -69,24 +72,30 @@ namespace LSCore.Editor
 
                 var index = Mathf.RoundToInt((float)(startX / stepX));
 
-                while (startX < endX)
+                if (displayXGrid)
                 {
-                    var tx = (float)startX;
-                    HandleOpacity(0);
-                    DrawLine(tx, 0, 1);
-                    if (displayScale) DrawGridText(tx, 0, 1, maxCamPos, TextAnchor.MiddleCenter);
-                    startX += stepX;
+                    while (startX < endX)
+                    {
+                        var tx = (float)startX;
+                        HandleOpacity(0);
+                        DrawLine(tx, 0, 1);
+                        if (displayXScale) DrawGridText(tx, 0, 1, maxCamPos, TextAnchor.MiddleCenter);
+                        startX += stepX;
+                    }
                 }
 
                 index = Mathf.RoundToInt((float)(startY / stepY));
 
-                while (startY < endY)
+                if (displayYGrid)
                 {
-                    var ty = (float)startY;
-                    HandleOpacity(1);
-                    DrawLine(0, ty, 0);
-                    if (displayScale) DrawGridText(ty, 1, 0, minCamPos, TextAnchor.MiddleLeft);
-                    startY += stepY;
+                    while (startY < endY)
+                    {
+                        var ty = (float)startY;
+                        HandleOpacity(1);
+                        DrawLine(0, ty, 0);
+                        if (displayYScale) DrawGridText(ty, 1, 0, minCamPos, TextAnchor.MiddleLeft);
+                        startY += stepY;
+                    }
                 }
 
                 void HandleOpacity(int compIndex)

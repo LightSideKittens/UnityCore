@@ -41,31 +41,42 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     
     [HideInInspector] public List<Data> data;
     [HideInInspector] public BadassAnimationClip defaultClip;
-    [SerializeField] private float startTime;
-    
+
     private Dictionary<string, Data> dataByClip;
     private BadassAnimationClip currentClip;
     private List<Handler> currentHandlers = new();
     private List<Event> events = new();
     private List<HandlerEvaluateData> currentEvaluators = new();
+    private float startTime;
     private float time;
     private float length;
     private Action eventsAction;
-    
+
     public float StartTime
     {
         get => startTime;
         set
         {
-            if(value >= length) return;
-            
-            startTime = value;
-            var t = time;
-            time -= 1;
-            Time = t;
+            startTime = value >= length ? length : value;
+            Time = RealTime;
         }
     }
-    
+
+    public float Length
+    {
+        get => length;
+        set
+        {
+            if (startTime >= value)
+            {
+                startTime = value;
+            }
+            
+            length = value;
+            Time = RealTime;
+        }
+    }
+
     public float RealTime { get; private set; }
     
     public float Time
@@ -73,11 +84,11 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         get => time;
         set
         {
-            var newTime = value;
-
             var oldRealTime = RealTime;
             RealTime = value;
             
+            var newTime = value;
+
             var max = length - startTime;
 
             if (loop)
@@ -130,7 +141,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
             currentClip = value;
             var d = dataByClip[value.guid];
             events = d.events;
-            length = value.length;
+            Length = value.length;
             var handlers = d.handlers;
             for (int i = 0; i < handlers.Count; i++)
             {

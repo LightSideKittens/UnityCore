@@ -32,7 +32,7 @@ namespace LSCore.AnimationsModule
         [ReadOnly]
         public float totalTime;
         
-        [SerializeReference] private IOptions[] options;
+        [SerializeReference] private IOption[] options;
         
         [TableList]
         [SerializeField] private List<AnimData> animsData = new();

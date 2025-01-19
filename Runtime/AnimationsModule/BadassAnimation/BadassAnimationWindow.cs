@@ -27,6 +27,8 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         normal = new GUIStyleState { textColor = new Color(1f, 1f, 1f, 0.47f), },
         hover = new GUIStyleState { textColor = Color.white },
     };
+
+    public bool isDopesheet = true;
     
     [Serializable]
     public class CurveEditor
@@ -43,8 +45,10 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         public BadassMultiCurveEditor curvesEditor;
         public float lastXForEvent;
         private List<BadassAnimation.Event> clickedEvents = new();
+        public LSHandles.GridData gridData = new(){displayYScale = false, displayYGrid = false};
+        private Vector2 mp;
+        private Rect position;
         
-
         public CurveEditor(BadassAnimationWindow window, LSHandles.TimePointer pointer, BadassMultiCurveEditor curvesEditor)
         {
             this.window = window;
@@ -55,11 +59,23 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
 
         public void OnGUI(Rect position)
         {
+            this.position = position;
+            mp = Event.current.mousePosition;
+            curvesEditor.gridData.displayYGrid = !window.isDopesheet;
+            curvesEditor.gridData.displayYScale = !window.isDopesheet;
+            
+            if (window.isDopesheet)
+            {
+                curvesEditor.BeforeDraw += DopesheetGUI;
+                curvesEditor.OverridePointPosForSelection += OverridePointPosition;
+            }
+            
             curvesEditor.BeforeDraw += TimeGUI;
-            curvesEditor.OnGUI(position);
+            curvesEditor.OnGUI(position, !window.isDopesheet);
+
+            Event.current.mousePosition = mp;
         }
 
-        
         private void TimeGUI()
         {
             var e = Event.current;
@@ -211,6 +227,32 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                         
                         PopupWindow.Show(new Rect(e.mousePosition, new Vector2(10, 10)), popup);
                     }
+                }
+            }
+        }
+
+        private void OverridePointPosition(int index, ref BezierPoint point)
+        {
+            if (BadassCurve.IsTangent(index))
+            {
+                point.e = Vector2.negativeInfinity;
+                return;
+            }
+            
+            var p = point.e;
+            p.y = LSHandles.ScreenToWorld(position.center).y;
+            point.e = p;
+        }
+
+        private void DopesheetGUI()
+        {
+            foreach (var editor in curvesEditor.editors)
+            {
+                foreach (var index in editor.KeysIndexes)
+                {
+                    var p = editor.curve.Points[index].e;
+                    p.y = LSHandles.ScreenToWorld(position.center).y;
+                    LSHandles.DrawCircle(p, 0.025f, Color.green);
                 }
             }
         }
@@ -597,6 +639,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
     [HideInInspector] public CurveEditor editor;
     [HideInInspector] public LSHandles.TimePointer timePointer;
     [HideInInspector] public bool isReversed;
+    [HideInInspector] public List<float> xPoints;
     private bool isPlaying;
 
     private BadassAnimation animation;
@@ -801,6 +844,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
     {
         base.OnDisable();
         editor?.OnDisable();
+        animation.Clip = null;
     }
 
     private double lastTime;
@@ -809,6 +853,19 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
     {
         if(CurrentClip == null) return;
         base.DrawMenu();
+        var rect = Rect;
+        var bottomButtonsRect = rect.TakeFromLeft(MenuWidth);
+        bottomButtonsRect = bottomButtonsRect.TakeFromBottom(20);
+
+        if (GUI.Button(bottomButtonsRect.TakeFromRight(50), "Curves"))
+        {
+            isDopesheet = false;
+        }
+        
+        if (GUI.Button(bottomButtonsRect.TakeFromRight(65), "Dopesheet"))
+        {
+            isDopesheet = true;
+        }
     }
 
     protected override void OnImGUI()
@@ -886,6 +943,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         }
         
         editor.OnGUI(rect);
+        
         var keyPointsBounds = editor.curvesEditor.GetKeyPointsBounds();
         var length = keyPointsBounds.max.x;
         CurrentClip.length = length;

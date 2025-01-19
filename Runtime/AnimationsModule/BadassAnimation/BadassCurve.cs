@@ -459,4 +459,31 @@ public class BadassCurve : IList<BezierPoint>
         t = 0.5f * (tMin + tMax);
         return t;
     }
+    
+    public static bool IsRoot(int i)
+    {
+        i--;
+        return i % 3 == 0;
+    }
+    
+    public static bool IsTangent(int i)
+    {
+        var f = i % 3;
+        return f is 0 or 2;
+    }
+    
+    public static bool IsForwardTangent(int i)
+    {
+        return i % 3 == 2;
+    }
+    
+    public static bool IsBackwardTangent(int i)
+    {
+        return i % 3 == 0;
+    }
+
+    public void Apply(BadassCurve copy)
+    {
+        Points = copy.Points;
+    }
 }

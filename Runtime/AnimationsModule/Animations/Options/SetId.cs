@@ -6,7 +6,7 @@ using Object = UnityEngine.Object;
 namespace LSCore.AnimationsModule.Animations.Options
 {
     [Serializable]
-    public struct SetId : IOptions
+    public struct SetId : IOption
     {
         [HideIf("HideKey")] public string key;
         [HideIf("HideObj")] public Object obj;

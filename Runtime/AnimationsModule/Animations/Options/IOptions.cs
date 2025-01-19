@@ -2,7 +2,7 @@
 
 namespace LSCore.AnimationsModule.Animations.Options
 {
-    internal interface IOptions
+    public interface IOption
     {
         void ApplyTo(Tween tween);
     }
