@@ -28,7 +28,7 @@ namespace LSCore.Editor
         private static EventType eventType;
         private static Vector3 lastMp;
         private static Scene scene;
-        private static int currentDrawLayer;
+        public static int currentDrawLayer;
 
         public static Matrix4x4 Matrix => currentMatrix;
         private static Matrix4x4 currentMatrix = Matrix4x4.identity;
@@ -162,10 +162,16 @@ namespace LSCore.Editor
             return screenPosition;
         }
 
-
         public static Vector3 ScreenToWorld(Vector2 screenPosition)
         {
             return currentMatrix.inverse.MultiplyPoint3x4(cam.ScreenToWorldPoint(TransformScreenPosition(screenPosition)));
+        }
+        
+        public static Rect ScreenToWorld(Rect screenRect)
+        {
+            return SelectRect.CreateRect(
+                ScreenToWorld(screenRect.min),
+                ScreenToWorld(screenRect.max));
         }
 
         public static Vector2 WorldToScreen(Vector3 worldPosition) 
@@ -501,6 +507,16 @@ namespace LSCore.Editor
             var sprite = GetSquare();
             var c = r.center;
             var size = r.size / ScaleMultiplier;
+            SetupSpriteRenderer(sprite, c, size, color, dependsOnCam);
+        }
+        
+        public static void DrawRect(Rect r, Color color, bool dependsOnCam = true)
+        {
+            if(eventType != EventType.Repaint) return; 
+            var sprite = GetSquare();
+            var c = r.center;
+            var size = r.size / ScaleMultiplier;
+            size *= currentMatrix.lossyScale;
             SetupSpriteRenderer(sprite, c, size, color, dependsOnCam);
         }
         

@@ -13,7 +13,7 @@ public partial class BadassCurveEditor
 {
     public Object context;
     public BadassCurve curve;
-    private const float constWidth = 0.05f / 3;
+    public const float constWidth = 0.05f / 3;
     private const float BezierWidth = constWidth / 4;
     private const float tangentWidth = constWidth / 10;
     
@@ -22,7 +22,7 @@ public partial class BadassCurveEditor
     public Color tangentLineColor = new (1f, 0.32f, 0.36f);
     private Color keyPointColor = Color.black;
     private Color tangentPointColor = Color.black;
-    private Color selectionColor = new Color(1f, 0.54f, 0.16f);
+    private Color SelectionColor => LSHandles.Styles.selectionColor;
     private Color lastSelectionColor = Color.white;
     
     public BadassCurveEditor(BadassCurve curve, Object context)
@@ -45,7 +45,7 @@ public partial class BadassCurveEditor
                 var curveColor = this.curveColor;
                 var tangentLineColor = this.tangentLineColor;
                 var keyPointColor = this.keyPointColor;
-                var selectionColor = this.selectionColor;
+                var selectionColor = this.SelectionColor;
 
                 if (!IsFocused)
                 {
@@ -128,6 +128,34 @@ public partial class BadassCurveEditor
             LSHandles.DrawLine(width, color, points);
         }
     }
+    
+    public void DrawKey(Vector2 pos)
+    {
+        var keyPointColor = this.keyPointColor;
+        var selectionColor = this.SelectionColor;
+
+        if (IsLocked)
+        {
+            keyPointColor = Color.gray;
+            selectionColor = Color.gray;
+        }
+
+        LSHandles.DrawCircle(pos, constWidth, keyPointColor);
+    }
+    
+    public void DrawSelectedKey(Vector2 pos)
+    {
+        var selectionColor = this.SelectionColor;
+
+        if (IsLocked)
+        {
+            selectionColor = Color.gray;
+        }
+
+        LSHandles.DrawCircle(pos, constWidth, selectionColor);
+    }
+    
+    public bool IsSelected(int index) => selectedPointIndexes.Contains(index);
     
     private readonly int[] workedPointIndexesArr = new int[2];
     [SerializeField] private List<int> selectedPointIndexes = new();
@@ -377,12 +405,16 @@ public partial class BadassCurveEditor
         for (int i = 0; i < curve.Count; i++)
         {
             var pos = curve[i];
-            OverridePointPosition?.Invoke(i, ref pos);
-            if (IsInDistance(pos, mp, constWidth))
+            OverridePointPosition?.Invoke(this, i, ref pos, Check);
+            if (Check())
             {
                 index = i;
                 return true;
             }
+
+            continue;
+
+            bool Check() => IsInDistance(pos, mp, constWidth);
         }
 
         index = -1;
@@ -416,11 +448,15 @@ public partial class BadassCurveEditor
         for (int i = 0; i < curve.Count; i++)
         {
             var point = curve[i];
-            OverridePointPosition?.Invoke(i, ref point);
-            if (rect.Contains(point.e))
+            OverridePointPosition?.Invoke(this, i, ref point, Check);
+            if (Check())
             {
                 TrySelectPoint(i);
             }
+
+            continue;
+
+            bool Check() => rect.Contains(point.e);
         }
     }
 
@@ -437,6 +473,7 @@ public partial class BadassCurveEditor
     }
 
     private int[] deleteKeyList = new int[3];
+    [NonSerialized] public bool isYBlocked;
 
     private int[] TryDeleteRoot(ref int ii, int i)
     {
@@ -472,7 +509,7 @@ public partial class BadassCurveEditor
 
     private void UpdatePosAsAnimation(ref int i, bool isRootMoving)
     {
-        SetPosAsAnimation(ref i, curve[i], isRootMoving);
+        SetPos(ref i, curve[i], isRootMoving);
     }
 
 
@@ -484,18 +521,22 @@ public partial class BadassCurveEditor
             for (int j = -1; j < 2; j++)
             {
                 var ind = i + j;
-                SetPosAsAnimation(ref ind, curve[ind].e + delta, true);
+                SetPos(ref ind, curve[ind].e + delta, true);
             }
         }
     }
 
-    private void SetPosAsAnimation(ref int i, Vector2 pos, bool isRootMoving)
+    private void SetPos(ref int i, Vector2 pos, bool isRootMoving)
     {
         if(IsLocked) return;
         
         RecordMove();
         var point = curve[i];
-        curve[i] = point.eSet(pos);
+        if (isYBlocked)
+        {
+            pos.y = point.e.y;
+        }
+        curve[i] = point.epSet(pos);
         
         if (ClampTangent(i))
         {
@@ -522,7 +563,7 @@ public partial class BadassCurveEditor
             if (root.alignType == AlignType.Aligned)
             {
                 var dis = (tangent.e - root.p).magnitude;
-                tangent.eSet(root.p + -dir * dis);
+                tangent.epSet(root.p + -dir * dis);
                 curve[i + f2] = tangent;
                 ClampTangent(i + f2);
             }
@@ -741,12 +782,12 @@ public partial class BadassCurveEditor
                     {
                         ind = targetIndex + j;
                         copyind = copyTargetIndex + j;
-                        SetPosAsAnimationByMouseDrag(ref ind, copyind, true);
+                        SetPosByMouseDrag(ref ind, copyind, true);
                     }
                                 
                     ind = targetIndex;
                     copyind = copyTargetIndex;
-                    SetPosAsAnimationByMouseDrag(ref ind, copyind, true);
+                    SetPosByMouseDrag(ref ind, copyind, true);
                     selectedPointIndexes[i] = ind;
                 }
             }
@@ -756,7 +797,7 @@ public partial class BadassCurveEditor
                 {
                     var ind = targetIndex;
                     var copyind = copyTargetIndex;
-                    SetPosAsAnimationByMouseDrag(ref ind, copyind, false);
+                    SetPosByMouseDrag(ref ind, copyind, false);
                     selectedPointIndexes[i] = ind;
                 }
             }
@@ -764,11 +805,11 @@ public partial class BadassCurveEditor
         
         GUI.changed = true;
         
-        void SetPosAsAnimationByMouseDrag(ref int ind, int copyi, bool isRoot)
+        void SetPosByMouseDrag(ref int ind, int copyi, bool isRoot)
         {
             var delta = LSHandles.MouseInWorldPoint - startMousePosition;
             var point = copyPoints[copyi].e + delta;
-            SetPosAsAnimation(ref ind, point, isRoot);
+            SetPos(ref ind, point, isRoot);
         }
     }
 
@@ -815,19 +856,19 @@ public partial class BadassCurveEditor
                             {
                                 ind = targetIndex + j;
                                 point = transformation.MultiplyPoint(copy[lastTargetIndex + j].e);
-                                SetPosAsAnimation(ref ind, point, true);
+                                SetPos(ref ind, point, true);
                             }
 
                             ind = targetIndex;
                             point = transformation.MultiplyPoint(copy[lastTargetIndex].e);
-                            SetPosAsAnimation(ref ind, point, true);
+                            SetPos(ref ind, point, true);
                             selectedPointIndexes[i] = ind;
                         }
                         else
                         {
                             var ind = targetIndex;
                             var point = transformation.MultiplyPoint(copy[lastTargetIndex].e);
-                            SetPosAsAnimation(ref ind, point, false);
+                            SetPos(ref ind, point, false);
                         }
                     }
                 };

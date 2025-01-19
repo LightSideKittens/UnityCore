@@ -20,14 +20,14 @@ public struct BezierPoint : IEquatable<BezierPoint>
     public AlignType alignType;
     public Vector2 e;
 
-    public BezierPoint ePlus(Vector2 b)
+    public BezierPoint epPlus(Vector2 b)
     {
         e += b;
         p = e;
         return this;
     }
 
-    public BezierPoint eSet(Vector2 b)
+    public BezierPoint epSet(Vector2 b)
     {
         e = b;
         p = e;

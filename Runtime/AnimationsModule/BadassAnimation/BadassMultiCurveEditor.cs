@@ -7,7 +7,7 @@ using LSCore.Extensions;
 using UnityEditor;
 using UnityEngine;
 
-public delegate void RefAction<T>(int index, ref T value);
+public delegate void RefAction<T>(BadassCurveEditor editor, int index, ref T value, Func<bool> check);
 
 [Serializable]
 public class BadassMultiCurveEditor
@@ -62,6 +62,17 @@ public class BadassMultiCurveEditor
     {
         editor.pointsBoundsGetter = GetSelectedPointsBounds;
     }
+
+    public bool IsYBlocked
+    {
+        set
+        {
+            foreach (var editor in editors)
+            {
+                editor.isYBlocked = value;
+            }
+        }
+    }
     
     private IEnumerable<Vector2> eSelectedPoints
     {
@@ -112,9 +123,9 @@ public class BadassMultiCurveEditor
         LSHandles.StartMatrix(matrix);
         LSHandles.Begin(rect, camData);
         LSHandles.DrawGrid(gridData);
-        LSHandles.SelectRect.Draw();
         BeforeDraw?.Invoke();
-        
+        LSHandles.SelectRect.Draw();
+
         if (visibleEditors.Count > 0)
         {
             DrawEditors(rect, draw);
