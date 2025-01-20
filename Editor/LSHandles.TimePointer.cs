@@ -47,7 +47,8 @@ namespace LSCore.Editor
                     {
                         newTime = Mathf.Clamp(newTime, clampRange.x, clampRange.y);
                     }
-
+                    
+                    newTime = SnapX(newTime, SnappingStep);
                     time = newTime;
                 }
             }
@@ -70,7 +71,9 @@ namespace LSCore.Editor
                     }
                 }
             }
-            
+
+            public float SnappingStep { get; set; }
+
             public bool isClampRangeOverride;
             public bool loop = true;
             public float lastClickX;
@@ -123,7 +126,7 @@ namespace LSCore.Editor
                     
                     using (SetIdentityMatrix())
                     {
-                        DrawTriangle(pos, 0.2f * ScaleMultiplier, pointerColor, false);
+                        DrawTriangle(pos, 0.2f, pointerColor, false);
                         DrawSquare(leftBlackRect, new Color(0f, 0f, 0f, 0.39f), false);
                         DrawSquare(rightBlackRect, new Color(0f, 0f, 0f, 0.39f), false);
                         DrawSquare(top, color, false);
@@ -217,7 +220,7 @@ namespace LSCore.Editor
                     {
                         compIndex = 1;
                     }
-                    
+                    x = SnapX(x, SnappingStep);
                     clampRange[compIndex] = x;
                     
                     if (clampRange.x > clampRange.y)

@@ -147,11 +147,15 @@ namespace LSCore.Editor
             allObjects.Add(go);
         }
 
-        public static bool IsInDistance(Vector2 point, Vector2 worldMousePos, float distance)
+        public static bool IsInDistance(Vector2 point, Vector2 worldMousePos, float distance, bool dependsOnCamera = true)
         {
             distance *= ScaleMultiplier;
-            Vector2 dis = Vector2.Scale(LSVector2.oneDir * distance, Scale);
-            return Vector2.Distance(point, worldMousePos) <= dis.magnitude;
+            
+            Vector2 dis = WorldToScreen(point + Vector2.Scale(LSVector2.oneDir * distance, Scale));
+            point = WorldToScreen(point);
+            worldMousePos = WorldToScreen(worldMousePos);
+
+            return Vector2.Distance(point, worldMousePos) <= Vector2.Distance(point, dis);
         }
 
         public static Vector2 TransformScreenPosition(Vector2 screenPosition)

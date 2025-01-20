@@ -14,18 +14,27 @@ public class BadassMultiCurveEditor
 {
     public Action BeforeDraw;
     public RefAction<BezierPoint> OverridePointPosForSelection;
-    
+
     public BadassCurveEditor First => visibleEditors[0];
     public List<BadassCurveEditor> editors = new();
     private List<BadassCurveEditor> visibleEditors = new();
     public Matrix4x4 matrix = Matrix4x4.identity;
     public LSHandles.CameraData camData = new();
     public LSHandles.GridData gridData = new();
+    public bool snapping = true;
     private int currentSelectionClickCount = 0;
     private bool wasDragging;
     private bool wasShift;
     private int draggingIndex;
     private Vector2 startMousePosition;
+
+    private void UpdateSnappingStep()
+    {
+        foreach (var editor in visibleEditors)
+        {
+            editor.SnappingStep = snapping ? gridData.SnappingStep : 0;
+        }
+    }
     
     public BadassMultiCurveEditor(IEnumerable<BadassCurveEditor> editors)
     {
@@ -96,6 +105,8 @@ public class BadassMultiCurveEditor
             }
         }
     }
+
+    public float SnappingStep => gridData.SnappingStep;
 
     public Rect GetKeyPointsBounds()
     {
@@ -169,7 +180,7 @@ public class BadassMultiCurveEditor
         void ProcessEvents()
         {
             if (!rectContainsMouse) return;
-
+            UpdateSnappingStep();
             var e = Event.current;
 
             if (e.type == EventType.MouseDown)

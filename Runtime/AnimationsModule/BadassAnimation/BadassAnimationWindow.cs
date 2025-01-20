@@ -38,7 +38,9 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         {
             [SerializeReference] public List<BadassAnimation.Event> events;
         }
-        
+
+        public const float eventPointSize = 0.02f;
+        public const float dopesheetKeySize = 0.02f;
         public BadassAnimationWindow window;
         public BadassAnimation animation;
         public LSHandles.TimePointer pointer;
@@ -51,7 +53,16 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         private float lastCamY = float.NegativeInfinity;
         private Vector2 mp;
         private Rect position;
+        private Color dopesheetKeyColor = new (0.75f, 0.75f, 0.75f, 1);
+
+        public bool Snapping
+        {
+            get => curvesEditor.snapping;
+            set => curvesEditor.snapping = value;
+        }
         
+        public float SnappingStep => Snapping ? curvesEditor.SnappingStep : 0;
+
         public List<CurveItem> CurveItems => curveItems ??= new List<CurveItem>();
 
         public CurveEditor(BadassAnimationWindow window, LSHandles.TimePointer pointer, BadassMultiCurveEditor curvesEditor)
@@ -104,6 +115,8 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
             lastCamY = curvesEditor.camData.position.y;
         }
 
+        private bool isEventDragging;
+        
         private void TimeGUI()
         {
             var e = Event.current;
@@ -121,6 +134,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                 
                 bool wasCleared = false;
                 bool needSort = false;
+                
                 foreach (var eevent in data.events)
                 {
                     var x = LSHandles.Matrix.MultiplyPoint3x4(new Vector3(eevent.x, 0, 0)).x;
@@ -130,8 +144,8 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                     
                     using (LSHandles.SetIdentityMatrix())
                     {
-                        LSHandles.DrawCircle(pos, 0.02f, green);
-                        if (e.type == EventType.MouseDown && e.button == 1)
+                        LSHandles.DrawCircle(pos, eventPointSize, green);
+                        if (e.OnMouseDown(1, false))
                         {
                             if (!wasCleared)
                             {
@@ -140,30 +154,39 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                                 clickedEvents = new List<BadassAnimation.Event>();
                             }
                             
-                            if (LSHandles.IsInDistance(pos, LSHandles.MouseInWorldPoint, 0.02f))
+                            if (LSHandles.IsInDistance(pos, LSHandles.MouseInWorldPoint, eventPointSize))
                             {
                                 clickedEvents.Add(eevent);
                             }
                         }
                         else if (e.type == EventType.MouseDrag && e.button == 1)
                         {
+                            isEventDragging = true;
                             treePopup?.OnClose();
+                            treePopup = null;
+                            
                             foreach (var eventt in clickedEvents)
                             {
-                                eventt.x = mp.x;
+                                var mpx = LSHandles.SnapX(mp.x, SnappingStep);
+                                eventt.x = mpx;
                                 needSort = true;
                             }
                         }
                     }
                 }
 
+                if (e.OnMouseUp(1, false))
+                {
+                    isEventDragging = false;
+                }
+                
                 if (needSort)
                 {
                     data.events.Sort((a, b) => a.x.CompareTo(b.x));
                     EditorUtility.SetDirty(animation);
                 }
 
-                if (clickedEvents.Count > 0)
+                if (clickedEvents.Count > 0 && !isEventDragging)
                 {
                     if (treePopup == null)
                     {
@@ -222,7 +245,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                     {
                         var x = LSHandles.Matrix.MultiplyPoint3x4(new Vector3(clickedEvents[0].x, 0, 0)).x;
                         var y = pointer.mouseClickArea.yMin;
-                        var pos = new Vector2(x, y);
+                        var pos = new Vector2(x + eventPointSize * 2, y - eventPointSize * 2);
                         
                         using (LSHandles.SetIdentityMatrix())
                         {
@@ -234,10 +257,11 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                 }
             }
 
-            if (e.type == EventType.MouseDown && e.button == 1)
+            if (e.OnMouseDown(1, false))
             {
                 var mp = LSHandles.MouseInWorldPoint;
-                lastXForEvent = mp.x;
+                var mpx = LSHandles.SnapX(mp.x, SnappingStep);
+                lastXForEvent = mpx;
                 using (LSHandles.SetIdentityMatrix())
                 {
                     if (pointer.ContainsClickArea(LSHandles.MouseInWorldPoint))
@@ -301,6 +325,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
             {
                 MenuItem curveItem = curveItems.FirstOrDefault(x => x.curve == editor.curve);
                 if(curveItem == null) continue;
+                if(!curveItem.IsVisibleSelf) continue;
                 
                 while (curveItem != null)
                 {
@@ -318,23 +343,70 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                     LSHandles.currentDrawLayer -= 10000;
                     LSHandles.DrawRect(worldRect, c, false);
                     LSHandles.currentDrawLayer += 10000;
-
+                    Vector2 range = Vector2.negativeInfinity;
+                    float lastY = float.NegativeInfinity;
+                    bool isCurveItem = curveItem is CurveItem;
+                    bool wasSelected = false;
+                    
                     foreach (var index in editor.KeysIndexes)
                     {
                         var p = editor.curve.Points[index].e;
-                        p.y = y;
-                        if (!editor.IsSelected(index))
+                        var isSelected = editor.IsSelected(index);
+                        
+                        if (isCurveItem)
                         {
-                            editor.DrawKey(p);
+                            DrawSameRect(p, isSelected);
+                        }
+                        
+                        p.y = y;
+                        
+                        if (!isSelected)
+                        {
+                            editor.DrawKey(p, dopesheetKeySize, dopesheetKeyColor);
                         }
                         else
                         {
-                            drawSelected += () => editor.DrawSelectedKey(p);
+                            drawSelected += () => editor.DrawSelectedKey(p, dopesheetKeySize);
                         }
                     }
-                    
+                    Draw();
                     skip:
                     curveItem = curveItem.Parent as MenuItem;
+
+                    void DrawSameRect(Vector2 p, bool isSelected)
+                    {
+                        if (float.IsNegativeInfinity(range.x))
+                        {
+                            range.x = p.x;
+                            wasSelected |= isSelected;
+                        }
+                        else if(Math.Abs(lastY - p.y) < 0.001f)
+                        {
+                            range.y = p.x;
+                            wasSelected |= isSelected;
+                        }
+                        else
+                        {
+                            Draw();
+                            wasSelected |= isSelected;
+                            range.x = p.x;
+                            range.y = float.NegativeInfinity;
+                        }
+                        
+                        lastY = p.y;
+                    }
+
+                    void Draw()
+                    {
+                        if (float.IsNegativeInfinity(range.y)) return;
+                        var w = range.y - range.x;
+                        var r = new Rect(range.x, worldRect.y, w, worldRect.height);
+                        r = r.AlignCenter(w, worldRect.height * 0.7f);
+                        LSHandles.currentDrawLayer -= 10000;
+                        var c = wasSelected ? LSHandles.Styles.selectionColor.SetAlpha(0.5f) : Color.gray.SetAlpha(0.5f);
+                        LSHandles.DrawRect(r, c, false);
+                        LSHandles.currentDrawLayer += 10000;
+                    }
                 }
             }
             
@@ -392,6 +464,12 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         {
             get => window.timePointer.loop;
             set => window.timePointer.loop = value;
+        }
+        
+        public bool Snapping
+        {
+            get => window.editor.Snapping;
+            set => window.editor.Snapping = value;
         }
 
         public BadassAnimationClip CurrentClip
@@ -498,6 +576,13 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
             if (SirenixEditorGUI.SDFIconButton(buttons, SdfIconType.ArrowRepeat, IsLoop ? EnabledStyle : disable))
             {
                 IsLoop = !IsLoop;
+            }
+
+            playbarRect.TakeFromRight(5);
+            window.timePointer.SnappingStep = Snapping && !IsPlaying ? window.editor.curvesEditor.SnappingStep : 0;
+            if (SirenixEditorGUI.SDFIconButton(playbarRect.TakeFromRight(20), Snapping ? SdfIconType.BandaidFill : SdfIconType.Bandaid, Snapping ? EnabledStyle : disable))
+            {
+                Snapping = !Snapping;
             }
             
             var toolbarRect = rect.SplitVertical(1, 2);

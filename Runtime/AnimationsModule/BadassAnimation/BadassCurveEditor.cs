@@ -25,6 +25,8 @@ public partial class BadassCurveEditor
     private Color SelectionColor => LSHandles.Styles.selectionColor;
     private Color lastSelectionColor = Color.white;
     
+    public float SnappingStep { get; set; }
+    
     public BadassCurveEditor(BadassCurve curve, Object context)
     {
         this.curve = curve;
@@ -129,21 +131,19 @@ public partial class BadassCurveEditor
         }
     }
     
-    public void DrawKey(Vector2 pos)
+    public void DrawKey(Vector2 pos, float size, Color color)
     {
-        var keyPointColor = this.keyPointColor;
-        var selectionColor = this.SelectionColor;
-
+        var keyPointColor = color;
+        
         if (IsLocked)
         {
             keyPointColor = Color.gray;
-            selectionColor = Color.gray;
         }
 
-        LSHandles.DrawCircle(pos, constWidth, keyPointColor);
+        LSHandles.DrawCircle(pos, size, keyPointColor);
     }
     
-    public void DrawSelectedKey(Vector2 pos)
+    public void DrawSelectedKey(Vector2 pos, float size)
     {
         var selectionColor = this.SelectionColor;
 
@@ -152,7 +152,7 @@ public partial class BadassCurveEditor
             selectionColor = Color.gray;
         }
 
-        LSHandles.DrawCircle(pos, constWidth, selectionColor);
+        LSHandles.DrawCircle(pos, size, selectionColor);
     }
     
     public bool IsSelected(int index) => selectedPointIndexes.Contains(index);
@@ -536,6 +536,9 @@ public partial class BadassCurveEditor
         {
             pos.y = point.e.y;
         }
+
+        pos.x = LSHandles.SnapX(pos.x, SnappingStep);
+        
         curve[i] = point.epSet(pos);
         
         if (ClampTangent(i))
@@ -899,7 +902,6 @@ public class Popup : PopupWindowContent
         this.position = position;
         this.size = size;
     }
-
 
     public void OnGUIInArea()
     {

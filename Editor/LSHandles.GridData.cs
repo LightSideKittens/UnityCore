@@ -21,7 +21,8 @@ namespace LSCore.Editor
             public bool displayXGrid = true;
             public bool displayYGrid = true;
             public Color scaleBackColor = new(0f, 0f, 0f, 0.5f);
-
+            public float SnappingStep { get; private set; }
+            
             public void Draw()
             {
                 const float minValue = -100_000_000_000_000f;
@@ -69,7 +70,8 @@ namespace LSCore.Editor
 
                 double stepX = step.x;
                 double stepY = step.y;
-
+                SnappingStep = step.x;
+                
                 var index = Mathf.RoundToInt((float)(startX / stepX));
 
                 if (displayXGrid)

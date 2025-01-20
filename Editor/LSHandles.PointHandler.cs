@@ -7,6 +7,24 @@ namespace LSCore.Editor
 {
     public static partial class LSHandles
     {
+        public static float SnapX(float x, float step)
+        {
+            if (step > 0)
+            {
+                var rem = x % step;
+                if (rem > step / 2)
+                {
+                    x += step - rem;
+                }
+                else
+                {
+                    x -= rem;
+                }
+            }
+            
+            return x;
+        }
+        
         public static Rect CalculateBounds(IEnumerable<Vector2> points)
         {
             float minX = float.MaxValue;

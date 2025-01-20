@@ -30,6 +30,13 @@ namespace LSCore.Extensions.Unity
             return a;
         }
         
+        public static Vector2 Divide(this Vector2 a, Vector2 b)
+        {
+            a.x /= b.x;
+            a.y /= b.y;
+            return a;
+        }
+        
         public static Vector3 RotateAroundPivot(this Vector3 point, Vector3 pivot, Vector3 eulerAngles)
         {
             Vector3 direction = point - pivot;
