@@ -2,8 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LightSideCore.Editor;
+using LSCore.ConfigModule;
 using LSCore.Editor;
+using LSCore.Editor.BackupSystem;
 using LSCore.Extensions;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -15,6 +19,8 @@ public class BadassMultiCurveEditor
     public Action BeforeDraw;
     public RefAction<BezierPoint> OverridePointPosForSelection;
 
+    private static JToken Config => Manager.Config.data;
+    private static EditorConfigManager Manager => EditorConfig.GetManager(nameof(BadassMultiCurveEditor));
     public BadassCurveEditor First => visibleEditors[0];
     public List<BadassCurveEditor> editors = new();
     private List<BadassCurveEditor> visibleEditors = new();
@@ -140,6 +146,7 @@ public class BadassMultiCurveEditor
         if (visibleEditors.Count > 0)
         {
             DrawEditors(rect, draw);
+            TryCopyPointsToClipboard();
         }
         
         LSHandles.End();
@@ -149,6 +156,80 @@ public class BadassMultiCurveEditor
         OverridePointPosForSelection = null;
     }
 
+    public void PastePointsFromClipboard(float x)
+    {
+        var list = (JArray)Config["copiedPoints"];
+        if(list == null) return;
+        var selectedEditors = visibleEditors.Where(e => e.IsSelected).ToList();
+        var min = Math.Min(list.Count, selectedEditors.Count);
+        
+        for (int i = 0; i < min; i++)
+        {
+            var points = (JArray)list[i];
+            var editor = selectedEditors[i];
+            var leftIndex = editor.curve.GetLeftKeyIndexByX(x);
+            var back = BezierPoint.FromJObject(points[0]);
+            var root = BezierPoint.FromJObject(points[1]);
+            var forward = BezierPoint.FromJObject(points[2]);
+            var xOffset = x - root.e.x;
+            back.epPlusX(xOffset);
+            root.epPlusX(xOffset);
+            forward.epPlusX(xOffset);
+            editor.curve.InsertKeys(leftIndex, forward, root, back);
+        }
+    }
+    
+    private void TryCopyPointsToClipboard()
+    {
+        if (!Event.current.IsCopy()) return;
+        
+        var list = new JArray();
+        
+        for (int i = 0; i < visibleEditors.Count; i++)
+        {
+            var curve = visibleEditors[i].curve;
+            
+            foreach (var index in visibleEditors[i].SelectedPointsIndexes.OrderBy(x => x))
+            {
+                var points = new JArray();
+                
+                int a;
+                int b;
+                int c;
+                
+                if (BadassCurve.IsRoot(index))
+                {
+                    a = index-1;
+                    b = index;
+                    c = index+1;
+                }
+                else
+                {
+                    if(BadassCurve.IsBackwardTangent(index))
+                    {
+                        a = index;
+                        b = index+1;
+                        c = index+2;
+                    }
+                    else
+                    {
+                        a = index-2;
+                        b = index-1;
+                        c = index;
+                    }
+                }
+                
+                points.Add(curve[a].ToJObject());
+                points.Add(curve[b].ToJObject());
+                points.Add(curve[c].ToJObject());
+                list.Add(points);
+            }
+        }
+        
+        Config["copiedPoints"] = list;
+        Manager.Save();
+    }
+    
     private void DrawEditors(Rect rect, bool draw)
     {
         bool rectContainsMouse = rect.Contains(Event.current.mousePosition);
@@ -443,6 +524,16 @@ public class BadassMultiCurveEditor
         if (e?.curve != null)
         {
             e.IsFocused = true;
+        }
+    }
+
+    public void SelectByCurve(BadassCurve curve)
+    {
+        var e = visibleEditors.FirstOrDefault(x => x.curve == curve);
+        
+        if (e?.curve != null)
+        {
+            e.IsSelected = true;
         }
     }
 }

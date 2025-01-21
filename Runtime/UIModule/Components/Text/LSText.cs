@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using LSCore.NativeUtils;
 using TMPro;
 using UnityEngine;
@@ -15,8 +16,7 @@ namespace LSCore
     public class LSText : TextMeshProUGUI
     {
         private ListSpan<EmojiRange> emojis;
-        private Texture2D[] textures;
-        private string lastTextAtEmojiCaching;
+        private ListSpan<Texture2D> textures;
         private Action releaseEmojiImages;
 
         private static string emojisPath;
@@ -26,12 +26,17 @@ namespace LSCore
         {
             get
             {
+                if (!m_isPreferredWidthDirty)
+                {
+                    return base.preferredWidth;
+                }
+                
                 if (emojis is { Count: > 0 })
                 {
-                    var lastText = m_text;
+                    string lastText = m_text;
                     ModifyText();
                     Debug.unityLogger.logEnabled = false;
-                    var width = base.preferredWidth;
+                    float width = base.preferredWidth;
                     Debug.unityLogger.logEnabled = true;
                     m_text = lastText;
                     return width;
@@ -45,12 +50,17 @@ namespace LSCore
         {
             get
             {
+                if (!m_isPreferredHeightDirty)
+                {
+                    return base.preferredHeight;
+                }
+                
                 if (emojis is { Count: > 0 })
                 {
-                    var lastText = m_text;
+                    string lastText = m_text;
                     ModifyText();
                     Debug.unityLogger.logEnabled = false;
-                    var height = base.preferredHeight;
+                    float height = base.preferredHeight;
                     Debug.unityLogger.logEnabled = true;
                     m_text = lastText;
                     return height;
@@ -105,7 +115,7 @@ namespace LSCore
 
         public override void Rebuild(CanvasUpdate update)
         {
-            var t = m_text;
+            string t = m_text;
             
             if (update == CanvasUpdate.PreRender)
             {
@@ -121,7 +131,7 @@ namespace LSCore
 
         public override void ForceMeshUpdate(bool ignoreActiveState = false, bool forceTextReparsing = false)
         {
-            var t = m_text;
+            string t = m_text;
             ModifyText();
             Debug.unityLogger.logEnabled = false;
             base.ForceMeshUpdate(ignoreActiveState, forceTextReparsing);
@@ -137,35 +147,31 @@ namespace LSCore
 
         private void ModifyText()
         {
-            if (lastTextAtEmojiCaching != m_text)
-            {
-                lastTextAtEmojiCaching = m_text;
-                emojis = Emoji.ParseEmojis(m_text, EmojiPath, out textures);
-            }
+            emojis = Emoji.ParseEmojis(m_text, EmojiPath, out textures);
             m_text = Emoji.ReplaceWithEmojiRanges(m_text, emojis, "\ue000\u200b", textures);
         }
 
         private void HandleOnPreRenderText(TMP_TextInfo textInfo)
         {
             ReleaseAllEmojiImages();
-            var clear = new Color32(0, 0, 0, 0);
-            int count = Mathf.Min(emojis.Count, textures.Length);
+            Color32 clear = new Color32(0, 0, 0, 0);
+            int count = Mathf.Min(emojis.Count, textures.Count);
             
             for (int i = 0; i < count; i++)
             {
-                var emoji = emojis[i];
+                EmojiRange emoji = emojis[i];
                 int charIndexToHide = emoji.adjustedIndex;
                 
                 if (charIndexToHide < 0 || charIndexToHide >= textInfo.characterCount) return;
                 
-                var charInfo = textInfo.characterInfo[charIndexToHide];
+                TMP_CharacterInfo charInfo = textInfo.characterInfo[charIndexToHide];
                 
                 if (!charInfo.isVisible) return;
                 
                 int vertexIndex = charInfo.vertexIndex;
-                var meshInfo = textInfo.meshInfo[charInfo.materialReferenceIndex];
+                TMP_MeshInfo meshInfo = textInfo.meshInfo[charInfo.materialReferenceIndex];
                 
-                var vertexColors = meshInfo.colors32;
+                Color32[] vertexColors = meshInfo.colors32;
                 
                 for (int x = 0; x < 4; x++)
                 {
@@ -178,7 +184,7 @@ namespace LSCore
         
         private void CreateRawImageForChar(TMP_CharacterInfo charInfo, int i)
         {
-            var rawImage = EmojiImage.Get();
+            EmojiImage rawImage = EmojiImage.Get();
             rawImage.transform.SetParent(transform);
             releaseEmojiImages += () => EmojiImage.Release(rawImage);
             

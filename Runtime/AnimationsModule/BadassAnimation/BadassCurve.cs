@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 [Serializable]
@@ -19,11 +20,11 @@ public struct BezierPoint : IEquatable<BezierPoint>
 #if UNITY_EDITOR
     public AlignType alignType;
     public Vector2 e;
-
-    public BezierPoint epPlus(Vector2 b)
+    
+    public BezierPoint epPlusX(float x)
     {
-        e += b;
-        p = e;
+        e.x += x;
+        p.x += x;
         return this;
     }
 
@@ -69,6 +70,39 @@ public struct BezierPoint : IEquatable<BezierPoint>
     public override int GetHashCode()
     {
         return HashCode.Combine(p, (int)alignType, e);
+    }
+
+    public JObject ToJObject()
+    {
+        var json = new JObject
+        {
+            { "p", VectorToJObject(p) },
+            { "e", VectorToJObject(e) },
+            { "alignType", (int)alignType},
+        };
+        
+        return json;
+    }
+    
+    public static BezierPoint FromJObject(JToken obj)
+    {
+        var bezierPoint = new BezierPoint();
+        var p = obj["p"];
+        var e = obj["e"];
+        bezierPoint.alignType = (AlignType)obj["alignType"].ToObject<int>();
+        
+        bezierPoint.p = new Vector2(p["x"].ToObject<float>(), p["y"].ToObject<float>());
+        bezierPoint.e = new Vector2(e["x"].ToObject<float>(), e["y"].ToObject<float>());
+        return bezierPoint;
+    }
+
+    private static JObject VectorToJObject(Vector2 vector)
+    {
+        return new JObject()
+        {
+            { "x", vector.x },
+            { "y", vector.y },
+        };
     }
 }
 
@@ -179,11 +213,7 @@ public class BadassCurve : IList<BezierPoint>
         p.alignType = alignType;
         points[index] = p;
     }
-
-    /// <summary>
-    /// Удаляем ключ (root) по его порядковому номеру (0,1,2,...),
-    /// где фактический индекс root-а = keyIndex * 3 + 1.
-    /// </summary>
+    
     public void DeleteKey(int i)
     {
         if (i < 0 || i >= Count)
@@ -198,12 +228,7 @@ public class BadassCurve : IList<BezierPoint>
         if (leftTangent >= 0)
             RemoveAt(leftTangent);
     }
-
-    /// <summary>
-    /// Вставить "промежуточный" ключ внутри кривой, деля сегмент пополам (или по t).
-    /// keyIndex – порядковый индекс ключа, в который "врезаемся",
-    /// t – доля (0..1) вдоль соответствующего участка Безье.
-    /// </summary>
+    
     public void InsertKey(int i, float t)
     {
         if (i + 3 >= Count)
@@ -235,13 +260,9 @@ public class BadassCurve : IList<BezierPoint>
     }
 
     private int LastKeyIndex => points.Length - 2;
-
-    /// <summary>
-    /// Найти индекс "левого" ключа (root), у которого x <= xTarget,
-    /// но у следующего root x уже > xTarget
-    /// </summary>
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private unsafe int GetLeftKeyIndexByX(float xTarget)
+    public unsafe int GetLeftKeyIndexByX(float xTarget)
     {
         int count = points.Length;
 
@@ -288,10 +309,7 @@ public class BadassCurve : IList<BezierPoint>
             return 1 + 3 * keyIndex;
         }
     }
-
-    /// <summary>
-    /// Вставить ключ (root) по нужному x (автоматически найдём, в какой сегмент попадает)
-    /// </summary>
+    
     public int InsertKeyByX(float x)
     {
         int i = GetLeftKeyIndexByX(x);
@@ -336,6 +354,36 @@ public class BadassCurve : IList<BezierPoint>
         Insert(i, (BezierPoint)root);
         Insert(i, (BezierPoint)backTangent);
     }
+    
+    public int InsertKeys(int i,
+        BezierPoint forwardTangent,
+        BezierPoint root,
+        BezierPoint backTangent)
+    {
+        if (i == -1)
+        {
+            Insert(1, true, forwardTangent, root, backTangent);
+            return 1;
+        }
+
+        Insert(i, false, forwardTangent, root, backTangent);
+        return i + 3;
+    }
+    
+    private void Insert(int i, bool before, 
+        BezierPoint forwardTangent,
+        BezierPoint root,
+        BezierPoint backTangent)
+    {
+        if (before)
+            i--;
+        else
+            i += 2;
+
+        Insert(i, forwardTangent);
+        Insert(i, root);
+        Insert(i, backTangent);
+    }
 
     public Vector2 EvaluateNormalizedVector(float t)
     {
@@ -350,20 +398,13 @@ public class BadassCurve : IList<BezierPoint>
         float xTarget = Mathf.Lerp(xMin, xMax, t);
         return xTarget;
     }
-
-    /// <summary>
-    /// Посчитать значение кривой "по оси X" (т.е. мы хотим y при заданном x),
-    /// считая что t = 0..1 распределяется между самой левой и самой правой root-точкой.
-    /// </summary>
+    
     public float EvaluateNormalized(float t)
     {
         float xTarget = GetXByNormalized(t);
         return Evaluate(xTarget);
     }
-
-    /// <summary>
-    /// Возвращает значение y на кривой при заданном x.
-    /// </summary>
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe float Evaluate(float x)
     {
@@ -387,9 +428,6 @@ public class BadassCurve : IList<BezierPoint>
         }
     }
 
-    /// <summary>
-    /// Стандартная формула кубического Безье
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private float EvaluateCubicBezier(float p0, float p1, float p2, float p3, float t)
     {
@@ -401,10 +439,7 @@ public class BadassCurve : IList<BezierPoint>
         float d = p0;
         return a * t3 + b * t2 + c * t + d;
     }
-
-    /// <summary>
-    /// Численно находим параметр t, при котором x(t) ≈ xTarget
-    /// </summary>
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private float FindBezierTForX(float x0, float x1, float x2, float x3, float xTarget, float tolerance = 0.0001f)
     {

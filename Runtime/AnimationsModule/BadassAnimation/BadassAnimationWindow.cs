@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LightSideCore.Editor;
 using LSCore.Editor;
 using LSCore.Extensions;
 using Sirenix.OdinInspector;
@@ -10,6 +11,7 @@ using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 using static BadassAnimation.Handler;
+using Object = UnityEngine.Object;
 
 public class BadassAnimationWindow : OdinMenuEditorWindow
 {
@@ -29,6 +31,18 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
     };
 
     public bool isDopesheet = true;
+    public bool IsDopesheet
+    {
+        get => isDopesheet;
+        set
+        {
+            if (value != isDopesheet)
+            {
+                editor.curvesEditor.IsYBlocked = value;
+            }
+            isDopesheet = value;
+        }
+    }
     
     [Serializable]
     public class CurveEditor
@@ -62,8 +76,9 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         }
         
         public float SnappingStep => Snapping ? curvesEditor.SnappingStep : 0;
-
         public List<CurveItem> CurveItems => curveItems ??= new List<CurveItem>();
+        public bool NeedUpdateItemSelection { get; set; }
+        public bool IsSelectionInProgress { get; private set; }
 
         public CurveEditor(BadassAnimationWindow window, LSHandles.TimePointer pointer, BadassMultiCurveEditor curvesEditor)
         {
@@ -75,18 +90,21 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
 
         public void OnGUI(Rect position)
         {
+            var e = Event.current;
+            var mouseClicked = e.OnMouseDown(0, false);
+            NeedUpdateItemSelection |= mouseClicked;
+            
             if (float.IsNegativeInfinity(lastCamY))
             {
                 InitLastData();
             }
             
             this.position = position;
-            mp = Event.current.mousePosition;
-            curvesEditor.gridData.displayYGrid = !window.isDopesheet;
-            curvesEditor.gridData.displayYScale = !window.isDopesheet;
-            curvesEditor.IsYBlocked = window.isDopesheet;
+            mp = e.mousePosition;
+            curvesEditor.gridData.displayYGrid = !window.IsDopesheet;
+            curvesEditor.gridData.displayYScale = !window.IsDopesheet;
             
-            if (window.isDopesheet)
+            if (window.IsDopesheet)
             {
                 curvesEditor.BeforeDraw += DopesheetGUI;
                 curvesEditor.OverridePointPosForSelection += OverridePointPosition;
@@ -103,7 +121,42 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
             }
             
             curvesEditor.BeforeDraw += TimeGUI;
-            curvesEditor.OnGUI(position, !window.isDopesheet);
+            curvesEditor.OnGUI(position, !window.IsDopesheet);
+
+            if (e.IsPaste())
+            {
+                curvesEditor.PastePointsFromClipboard(pointer.Time);
+            }
+            
+            if (NeedUpdateItemSelection)
+            {
+                Action action = null;
+                foreach (var item in CurveItems)
+                {
+                    bool isSelected = mouseClicked ? item.editor.IsFocusOrAnyPointSelected : item.editor.IsSelected;
+                    if (isSelected)
+                    {
+                        if(!item.IsSelected) action += () =>
+                        {
+                            item.Select(true);
+                            item.editor.IsSelected = true;
+                        };
+                    }
+                    else
+                    {
+                        if(item.IsSelected) action += () =>
+                        {
+                            item.Deselect();
+                            item.editor.IsSelected = false;
+                        };
+                    }
+                }
+
+                IsSelectionInProgress = true;
+                action?.Invoke();
+                IsSelectionInProgress = false;
+                NeedUpdateItemSelection = false;
+            }
 
             Event.current.mousePosition = mp;
         }
@@ -287,7 +340,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         {
             if (BadassCurve.IsTangent(index)) goto moveAway;
             
-            MenuItem curveItem = curveItems.FirstOrDefault(x => x.curve == badassCurveEditor.curve);
+            MenuItem curveItem = CurveItems.FirstOrDefault(x => x.editor == badassCurveEditor);
 
             if(curveItem == null) goto moveAway;
             
@@ -321,10 +374,10 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         {
             Action drawSelected = null;
             
-            foreach (var editor in curvesEditor.editors)
+            foreach (var item in CurveItems)
             {
-                MenuItem curveItem = curveItems.FirstOrDefault(x => x.curve == editor.curve);
-                if(curveItem == null) continue;
+                MenuItem curveItem = item;
+                var editor = item.editor;
                 if(!curveItem.IsVisibleSelf) continue;
                 
                 while (curveItem != null)
@@ -351,7 +404,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                     foreach (var index in editor.KeysIndexes)
                     {
                         var p = editor.curve.Points[index].e;
-                        var isSelected = editor.IsSelected(index);
+                        var isSelected = editor.IsPointSelected(index);
                         
                         if (isCurveItem)
                         {
@@ -436,6 +489,11 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         public void SetFocusByCurve(BadassCurve curve)
         {
             curvesEditor.SetFocusByCurve(curve);
+        }
+        
+        public void SelectByCurve(BadassCurve curve)
+        {
+            curvesEditor.SelectByCurve(curve);
         }
     }
     
@@ -609,6 +667,8 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
 
     public class CurveItem : MenuItem
     {
+        public CurveEditor curveEditor;
+        public BadassCurveEditor editor;
         public BadassCurve curve;
         private BadassAnimation.Handler handler;
         private BadassAnimationClip clip;
@@ -637,8 +697,9 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
             EditorUtility.SetDirty(clip);
         }
 
-        public CurveItem(OdinMenuTree tree, string name, Color color, BadassAnimationClip clip, BadassAnimation.Handler handler) : base(tree, name, null)
+        public CurveItem(OdinMenuTree tree, string name, Color color, BadassAnimationClip clip, BadassAnimation.Handler handler, CurveEditor editor) : base(tree, name, null)
         {
+            curveEditor = editor;
             this.color = color;
             this.clip = clip;
             this.handler = handler;
@@ -652,11 +713,31 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         protected override void OnDrawMenuItem(Rect rect, Rect labelRect)
         {
             base.OnDrawMenuItem(rect, labelRect);
+            
             if (handler.TryGetEvaluator(Name, out var evaluator))
             {
                 rect.TakeFromRight(5);
                 rect.TakeFromRight(40);
                 EditorGUI.FloatField(rect.TakeFromRight(40), evaluator.y);
+            }
+        }
+
+        public void TryCreateCurveEditor(Object context)
+        {
+            if (TryGetCurve(out var curve))
+            {
+                var curveEditor = new BadassCurveEditor(curve, context);
+                curveEditor.curveColor = color;
+                curveEditor.tangentLineColor = color;
+                curveEditor.IsLocked = IsLockedSelf;
+                curveEditor.IsVisible = IsVisibleSelf;
+                    
+                LockedSelfChanged += state => curveEditor.IsLocked = state;
+                VisibleSelfChanged += state => curveEditor.IsVisible = state;
+                
+                editor = curveEditor;
+                this.curveEditor.Add(curveEditor);
+                this.curveEditor.CurveItems.Add(this);
             }
         }
     }
@@ -855,7 +936,6 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
     [HideInInspector] public CurveEditor editor;
     [HideInInspector] public LSHandles.TimePointer timePointer;
     [HideInInspector] public bool isReversed;
-    [HideInInspector] public List<float> xPoints;
     private bool isPlaying;
 
     private BadassAnimation animation;
@@ -875,32 +955,32 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
     private static Color blue = new(0.16f, 0.56f, 1f);
     private static Color alpha = new(0.87f, 0.87f, 0.87f);
     
-    private static readonly Dictionary<Type, Action<string, OdinMenuTree, BadassAnimationClip, BadassAnimation.Handler>> addItemActionsByType = new()
+    private static readonly Dictionary<Type, Action<string, OdinMenuTree, BadassAnimationClip, BadassAnimation.Handler, CurveEditor>> addItemActionsByType = new()
     {
-        { typeof(Color), (path, tree, clip, handler) =>
+        { typeof(Color), (path, tree, clip, handler, editor) =>
             {
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.r, red, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.g, green, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.b, blue, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.a, alpha, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.r, red, clip, handler, editor));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.g, green, clip, handler, editor));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.b, blue, clip, handler, editor));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.a, alpha, clip, handler, editor));
             } 
         },
-        { typeof(Vector3), (path, tree, clip, handler) =>
+        { typeof(Vector3), (path, tree, clip, handler, editor) =>
             {
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.x, red, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.y, green, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.z, blue, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.x, red, clip, handler, editor));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.y, green, clip, handler, editor));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.z, blue, clip, handler, editor));
             } 
         },
-        { typeof(Vector2), (path, tree, clip, handler) =>
+        { typeof(Vector2), (path, tree, clip, handler, editor) =>
             {
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.x, red, clip, handler));
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.y, green, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.x, red, clip, handler, editor));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.y, green, clip, handler, editor));
             } 
         },
-        { typeof(float), (path, tree, clip, handler) =>
+        { typeof(float), (path, tree, clip, handler, editor) =>
             {
-                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.value, red, clip, handler));
+                tree.AddMenuItemAtPath(path, new CurveItem(tree, PropNames.value, red, clip, handler, editor));
             } 
         },
     };
@@ -915,12 +995,23 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
 
     private void OnSelectionChanged(SelectionChangedType selectionChangedType)
     {
+        if(editor.IsSelectionInProgress) return;
+        
+        editor.NeedUpdateItemSelection = true;
+        foreach (var curveItem in editor.CurveItems)
+        {
+            curveItem.editor.IsSelected = false;
+        }
+        
         foreach (var odinMenuItem in MenuTree.Selection)
         {
             if (odinMenuItem is CurveItem curveItem)
             {
-                editor.SetFocusByCurve(curveItem.curve);
-
+                if (curveItem.editor != null)
+                {
+                    curveItem.editor.IsSelected = true;
+                    editor.SetFocusByCurve(curveItem.curve);
+                }
             }
         }
     }
@@ -991,31 +1082,14 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         {
             if (item is CurveItem curveItem)
             {
-                editor.CurveItems.Add(curveItem);
-                TryCreateCurveEditor(curveItem);
+                curveItem.TryCreateCurveEditor(this);
             }
         }
         
+        editor.curvesEditor.IsYBlocked = IsDopesheet;
         tree.Selection.SupportsMultiSelect = true;
         
         return tree;
-    }
-
-    private void TryCreateCurveEditor(CurveItem curveItem)
-    {
-        if (curveItem.TryGetCurve(out var curve))
-        {
-            var curveEditor = new BadassCurveEditor(curve, this);
-            curveEditor.curveColor = curveItem.color;
-            curveEditor.tangentLineColor = curveItem.color;
-            curveEditor.IsLocked = curveItem.IsLockedSelf;
-            curveEditor.IsVisible = curveItem.IsVisibleSelf;
-                    
-            curveItem.LockedSelfChanged += state => curveEditor.IsLocked = state;
-            curveItem.VisibleSelfChanged += state => curveEditor.IsVisible = state;
-                    
-            editor.Add(curveEditor);
-        }
     }
 
     private Dictionary<string, int> handlerNamesCounter = new();
@@ -1038,7 +1112,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
             
             var path = $"{animation.name}/{handlerName}";
             tree.AddMenuItemAtPath(path, new HandlerItem(tree, handler.HandlerName, null, animation, handler));
-            action(path, tree, clip, handler);
+            action(path, tree, clip, handler, editor);
         }
     }
 
@@ -1077,17 +1151,17 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         
         var c = GUI.color;
         
-        if(isDopesheet) GUI.color = c.SetAlpha(0.5f);
+        if(IsDopesheet) GUI.color = c.SetAlpha(0.5f);
         if (GUI.Button(bottomButtonsRect.TakeFromRight(55), "Curves"))
         {
-            isDopesheet = false;
+            IsDopesheet = false;
         }
         GUI.color = c;
         
-        if(!isDopesheet) GUI.color = c.SetAlpha(0.5f);
+        if(!IsDopesheet) GUI.color = c.SetAlpha(0.5f);
         if (GUI.Button(bottomButtonsRect.TakeFromRight(75), "Dopesheet"))
         {
-            isDopesheet = true;
+            IsDopesheet = true;
         }
         GUI.color = c;
     }
@@ -1157,7 +1231,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
                 foreach (var curveItem in curveItemList)
                 {
                     curveItem.CreateCurve();
-                    TryCreateCurveEditor(curveItem);
+                    curveItem.TryCreateCurveEditor(this);
                     editor.SetFocusByCurve(curveItem.curve);
                     toolbar!.UpdateAnimationData();
                 }

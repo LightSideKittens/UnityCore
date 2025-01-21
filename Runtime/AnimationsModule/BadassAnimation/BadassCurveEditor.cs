@@ -5,6 +5,7 @@ using System.Linq;
 using LSCore.Editor;
 using UnityEngine;
 using UnityEditor;
+using UnityEngine.Animations;
 using static BadassCurve;
 using Object = UnityEngine.Object;
 
@@ -51,11 +52,17 @@ public partial class BadassCurveEditor
 
                 if (!IsFocused)
                 {
-                    bezierWidth /= 3;
+                    bezierWidth /= 2;
                     curveColor.a /= 3;
                     tangentLineColor.a /= 3;
+                    
+                    if (!IsSelected)
+                    {
+                        curveColor.a /= 4;
+                        tangentLineColor.a /= 4;
+                    }
                 }
-
+                
                 if (IsLocked)
                 {
                     keyPointColor = Color.gray;
@@ -155,12 +162,12 @@ public partial class BadassCurveEditor
         LSHandles.DrawCircle(pos, size, selectionColor);
     }
     
-    public bool IsSelected(int index) => selectedPointIndexes.Contains(index);
+    public bool IsPointSelected(int index) => selectedPointIndexes.Contains(index);
     
     private readonly int[] workedPointIndexesArr = new int[2];
     [SerializeField] private List<int> selectedPointIndexes = new();
     private List<int> oldsSelectedPointIndexes;
-
+    
     public int SelectedPointIndexesCount => IsLocked ? 0 : selectedPointIndexes.Count;
 
     public IEnumerable<int> SelectedPointsIndexes => selectedPointIndexes;
@@ -239,6 +246,16 @@ public partial class BadassCurveEditor
     public bool WasClickedOnSelected { get; set; }
     public int ClickedPointIndex { get; private set; }
     [field: SerializeField] public bool IsFocused { get; set; }
+    [SerializeField] private bool isSelected;
+    [NonSerialized] public bool isYBlocked;
+    
+    public bool IsFocusOrAnyPointSelected => IsFocused || selectedPointIndexes.Count > 0;
+    
+    public bool IsSelected
+    {
+        get => isSelected || IsFocusOrAnyPointSelected;
+        set => isSelected = value;
+    }
     
     private bool oldIsFocused;
     private BadassCurve copyPoints;
@@ -473,7 +490,6 @@ public partial class BadassCurveEditor
     }
 
     private int[] deleteKeyList = new int[3];
-    [NonSerialized] public bool isYBlocked;
 
     private int[] TryDeleteRoot(ref int ii, int i)
     {
@@ -511,8 +527,7 @@ public partial class BadassCurveEditor
     {
         SetPos(ref i, curve[i], isRootMoving);
     }
-
-
+    
     private void SetKeyPosAsAnimation(int i, Vector2 pos)
     {
         if (IsRoot(i))
@@ -532,6 +547,7 @@ public partial class BadassCurveEditor
         
         RecordMove();
         var point = curve[i];
+        
         if (isYBlocked)
         {
             pos.y = point.e.y;
@@ -822,10 +838,24 @@ public partial class BadassCurveEditor
         {
             pointsTransformer = new();
 
+            bool yWasBlocked = false;
+            
             pointsTransformer.canSetupHandler = () => selectedPointIndexes.Count > 0;
-            pointsTransformer.HandlingStopped += () => WantResetIsRecorded = true;
-            pointsTransformer.NeedSetupHandler += () =>
+            pointsTransformer.HandlingStopped += () =>
             {
+                isYBlocked = yWasBlocked;
+                WantResetIsRecorded = true;
+            };
+            
+            pointsTransformer.NeedSetupHandler += isResetup =>
+            {
+                if (!isResetup)
+                {
+                    yWasBlocked = isYBlocked;
+                    isYBlocked = false;
+                    if (yWasBlocked) pointsTransformer.currentAxis = Axis.X;
+                }
+                
                 var copy = new BadassCurve(curve);
                 
                 var lastSelectedPointIndexesCopy = selectedPointIndexes;
@@ -835,10 +865,7 @@ public partial class BadassCurveEditor
                 var bounds = pointsBoundsGetter();
                 var startPos = LSHandles.MouseInWorldPoint;
 
-                pointsTransformer.applyEventHandler = _ =>
-                {
-                    pointsTransformer.applyEventHandler = null;
-                };
+                pointsTransformer.applyEventHandler = _ => pointsTransformer.applyEventHandler = null;
                 pointsTransformer.eventHandler = _ =>
                 {
                     var curPos = LSHandles.MouseInWorldPoint;
