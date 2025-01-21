@@ -104,7 +104,6 @@ public class BadassMultiCurveEditor
     {
         get
         {
-            int index = 0;
             foreach (var point in editors.SelectMany(x => x.Keys))
             {
                 yield return point.p;

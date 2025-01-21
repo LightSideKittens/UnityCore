@@ -790,7 +790,7 @@ public class BadassAnimationWindow : OdinMenuEditorWindow
         private bool isLockedSelf;
         private bool isVisibleSelf = true;
 
-        public Rect Rect { get; protected set; }
+        public new Rect Rect { get; protected set; }
         public Color Color { get; protected set; }
         
         public bool IsLockedSelf

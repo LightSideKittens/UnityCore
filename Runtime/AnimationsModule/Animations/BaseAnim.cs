@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations
     { 
         [BoxGroup] [LabelText("ID")] public string id;
         [HideIf("IsDurationZero")]
-        [SerializeReference] private IOption[] mainOptions;
+        [SerializeReference] public List<IOption> mainOptions;
 
         public abstract bool NeedInit { get; set; }
         public abstract float Duration { get; set; }
@@ -42,11 +42,11 @@ namespace LSCore.AnimationsModule.Animations
             return Anim;
         }
 
-        protected static Tween ApplyOptions(Tween tween, IOption[] options)
+        protected static Tween ApplyOptions(Tween tween, List<IOption> options)
         {
-            if (options is {Length: > 0})
+            if (options is {Count: > 0})
             {
-                for (int i = 0; i < options.Length; i++)
+                for (int i = 0; i < options.Count; i++)
                 {
                     options[i].ApplyTo(tween);
                 }
@@ -113,7 +113,7 @@ namespace LSCore.AnimationsModule.Animations
         public bool useMultiple;
         
         [HideIf("@IsDurationZero || !useMultiple")]
-        [SerializeReference] private IOption[] options;
+        [SerializeReference] public List<IOption> options;
         [HideIf("useTargetPath")] public TTarget target;
         [ShowIf("ShowTargets")] public TTarget[] targets;
         
