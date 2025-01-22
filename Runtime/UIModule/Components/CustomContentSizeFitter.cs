@@ -1,4 +1,5 @@
 ﻿using System;
+using LSCore;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -55,7 +56,13 @@ public class CustomContentSizeFitter : ContentSizeFitter
             size = Mathf.Clamp(LayoutUtility.GetPreferredSize(m_Rect, axis), 0, _maxSize[axis]);
             rectTransform.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, size);
         }
-        
+
+        World.CanvasUpdateCompeted += CallSizeChanged;
+    }
+
+    private void CallSizeChanged()
+    {
+        World.CanvasUpdateCompeted -= CallSizeChanged;
         SizeChanged?.Invoke(rectTransform.rect.size);
     }
     

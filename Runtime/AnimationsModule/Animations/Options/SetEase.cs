@@ -15,8 +15,7 @@ namespace LSCore.AnimationsModule.Animations.Options
         private AnimationCurve curve;
         
         [HideIf(nameof(useCustom))]
-        [SerializeField]
-        private Ease ease;
+        public Ease ease;
         
         public void ApplyTo(Tween tween)
         {
