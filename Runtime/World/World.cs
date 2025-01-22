@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace LSCore
 {
@@ -15,6 +16,7 @@ namespace LSCore
         public static event Action Updated;
         public static event Action FixedUpdated;
         public static event Action Destroyed;
+        public static event Action CanvasUpdateCompeted;
         private static Queue<Action> callInMainThreadQueue = new();
         private static SynchronizationContext synchronizationContext = SynchronizationContext.Current;
         private static bool isCreated;
@@ -41,9 +43,16 @@ namespace LSCore
         
         private void Awake()
         {
+            var i = CanvasUpdateRegistry.instance;
+            Canvas.willRenderCanvases += OnCanvasUpdateCompeted;
             Camera = Camera.main;
         }
-        
+
+        private void OnCanvasUpdateCompeted()
+        {
+            CanvasUpdateCompeted?.Invoke();
+        }
+
         private void Update()
         {
             Updated?.Invoke();
@@ -58,6 +67,7 @@ namespace LSCore
         {
             IsPlaying = false;
             Burger.logToFile = false;
+            Canvas.willRenderCanvases -= OnCanvasUpdateCompeted;
             Destroyed?.Invoke();
         }
 

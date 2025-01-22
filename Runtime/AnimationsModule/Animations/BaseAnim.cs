@@ -112,7 +112,7 @@ namespace LSCore.AnimationsModule.Animations
         public bool useTargetPath;
         public bool useMultiple;
         
-        [HideIf("@IsDurationZero || !useMultiple")]
+        [HideIf("@IsDurationZero")]
         [SerializeReference] public List<IOption> options;
         [HideIf("useTargetPath")] public TTarget target;
         [ShowIf("ShowTargets")] public TTarget[] targets;
