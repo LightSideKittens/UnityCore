@@ -1,11 +1,47 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using LSCore.Attributes;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
 public partial class BadassAnimation : MonoBehaviour, IAnimatable
 {
+    [Serializable]
+    [Unwrap]
+    public class EvaluateData : IEvaluator
+    {
+        public BadassCurve curve;
+        [NonSerialized] public float x;
+        [NonSerialized] public float y;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public virtual void Evaluate()
+        {
+            y = curve.Evaluate(x);
+        }
+    }
+
+    public class HandlerEvaluateData : EvaluateData
+    {
+        public bool isDiff;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void Evaluate()
+        {
+            var last = y;
+            base.Evaluate();
+            isDiff = Math.Abs(y - last) > 0.0001f;
+        }
+    }
+    
+    public enum UpdateModeType
+    {
+        Update,
+        FixedUpdate,
+        Manual,
+    }
+    
     [Serializable]
     public struct Data
     {
@@ -38,10 +74,13 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     
     public bool loop;
     public bool reverse;
+    [SerializeField]
+    private UpdateModeType updateMode = UpdateModeType.Update;
     
     [HideInInspector] public List<Data> data;
     [HideInInspector] public BadassAnimationClip defaultClip;
 
+    private UpdateModeType updateModeAtRegister;
     private Dictionary<string, Data> dataByClip;
     private BadassAnimationClip currentClip;
     private List<Handler> currentHandlers = new();
@@ -51,7 +90,18 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     private float time;
     private float length;
     private Action eventsAction;
-
+    
+    public UpdateModeType UpdateMode
+    {
+        get => updateMode;
+        set
+        {
+            updateMode = value;
+            Unregister();
+            Register();
+        }
+    }
+    
     public float StartTime
     {
         get => startTime;
@@ -122,7 +172,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         get => currentClip;
         set
         {
-            Unregister(this);
+            Unregister();
             currentEvaluators.Clear();
 
             foreach (var handler in currentHandlers)
@@ -165,7 +215,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
                 handler.Start();
             }
             
-            Register(this);
+            BadassAnimationEvaluator.Register(this, updateMode);
             OnClipChanged();
         }
     }
@@ -174,14 +224,22 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     {
         if (currentClip != null)
         {
-            Register(this);
+            Register();
         }
     }
 
     private void OnDisable()
     {
-        Unregister(this);
+        Unregister();
     }
+
+    private void Register()
+    {
+        updateModeAtRegister = updateMode;
+        BadassAnimationEvaluator.Register(this, updateMode);
+    }
+
+    private void Unregister() => BadassAnimationEvaluator.Unregister(this, updateModeAtRegister);
 
     [Button]
     private void Edit()
@@ -213,9 +271,9 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         }
     }
 
-    public void BeforeEvaluate()
+    public void BeforeEvaluate(float deltaTime)
     {
-        Time += UnityEngine.Time.deltaTime;
+        Time += deltaTime;
         
         for (int i = 0; i < currentEvaluators.Count; i++)
         {

@@ -13,6 +13,7 @@ namespace LSCore
         public static event Action Creating;
         public static event Action Created;
         public static event Action Updated;
+        public static event Action FixedUpdated;
         public static event Action Destroyed;
         private static Queue<Action> callInMainThreadQueue = new();
         private static SynchronizationContext synchronizationContext = SynchronizationContext.Current;
@@ -46,6 +47,11 @@ namespace LSCore
         private void Update()
         {
             Updated?.Invoke();
+        }
+        
+        private void FixedUpdate()
+        {
+            FixedUpdated?.Invoke();
         }
         
         private void OnDestroy()

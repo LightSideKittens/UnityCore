@@ -1,6 +1,7 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +17,7 @@ public partial class LevelsContainer
     [SerializeField] private string targetType;
     
     private string path;
-    private bool isGameObject;
+    [UsedImplicitly] private bool isGameObject;
 
     private IEnumerable<Object> Levels
     {
