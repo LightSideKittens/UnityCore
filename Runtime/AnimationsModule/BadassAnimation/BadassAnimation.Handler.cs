@@ -52,17 +52,19 @@ public partial class BadassAnimation
 
         [GenerateGuid(Hide = true)] public string guid;
         protected Dictionary<string, HandlerEvaluateData> evaluators = new();
-
-        protected bool forceHandle;
-        private bool isStarted;
+        
+        protected bool isStarted;
 
         public IEnumerable<HandlerEvaluateData> Evaluators => evaluators.Values;
 
 #if UNITY_EDITOR
-        protected virtual bool CanUse => true;
+        protected bool CanUse => IsPreview && Target != null;
+        public bool IsPreview { get; set; } = true;
+        private HideFlags lastHideFlags = HideFlags.None;
 #endif
 
         public abstract Object Target { get; }
+        
         
         public void Start()
         {
@@ -75,7 +77,13 @@ public partial class BadassAnimation
             if (!isStarted)
             {
                 isStarted = true;
-                forceHandle = true;
+#if UNITY_EDITOR
+                lastHideFlags = Target.hideFlags;
+                if (IsPreview)
+                {
+                    Target.hideFlags = HideFlags.None;
+                }
+#endif
                 OnStart();
             }
         }
@@ -92,6 +100,12 @@ public partial class BadassAnimation
             if (isStarted)
             {
                 isStarted = false;
+#if UNITY_EDITOR
+                if (IsPreview)
+                {
+                    Target.hideFlags = lastHideFlags;
+                }
+#endif
                 OnStop();
             }
         }
@@ -169,12 +183,14 @@ public partial class BadassAnimation
             {
                 return;
             }
-#endif
-            if (forceHandle)
+
+            if (!isStarted)
             {
-                forceHandle = false;
+                Start();
+                applyEvaluationResult();
                 goto handle;
             }
+#endif
             
             isDiff = false;
             

@@ -36,6 +36,27 @@ public static partial class Patchers
         }
     }
     
+    /*public static class _SerializedProperty
+    {
+        [HarmonyPatch]
+        public static class isAnimated
+        {
+            static MethodBase TargetMethod()
+            {
+                var type = typeof(Editor).Assembly.GetType("UnityEditor.SerializedProperty");
+                return type.GetProperty("isAnimated").GetGetMethod(false);
+                
+            }
+            
+            static bool Prefix(SerializedProperty __instance, ref bool __result)
+            {
+                __result = true;
+                return false;
+            }
+        }
+    }*/
+    
+    
     public static class _EditorGUI
     {
         [HarmonyPatch(typeof(EditorGUI), "BeginPropertyInternal")]
@@ -82,8 +103,8 @@ public static partial class Patchers
         {
             static MethodBase TargetMethod()
             {
-                var type = typeof(Editor).Assembly.GetType("UnityEditor.TransformTool");
-                return type.GetMethod("ToolGUI", BindingFlags.Instance | BindingFlags.NonPublic);
+                var type = typeof(Editor).Assembly.GetType("UnityEditor.EditorTools.EditorToolManager");
+                return type.GetMethod("OnToolGUI", BindingFlags.Static | BindingFlags.NonPublic);
             }
             
             public static event Action<Transform> Calling;
@@ -106,6 +127,7 @@ public static partial class Patchers
                     Called?.Invoke(transform, isChanged);
                 }
             }
+            
         }
     }
 }

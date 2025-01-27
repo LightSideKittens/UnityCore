@@ -43,24 +43,12 @@ namespace LSCore.BattleModule
     [Serializable]
     public class AnimationUnitAnim : BaseUnitAnim
     {
-        [HideIf("@animation != null")]
-        public AnimationWrapper wrapper;
-        [HideIf("@wrapper != null")]
-        public UnityEngine.Animation animation;
+        public BadassAnimation badassAnimation;
         
         [ValueDropdown("Clips")]
-        public AnimationClip clip;
+        public BadassAnimationClip clip;
 
-        private IEnumerable<AnimationClip> Clips => from AnimationState state in Anim select state.clip;
-
-        public UnityEngine.Animation Anim
-        {
-            get
-            {
-                if (animation != null) return animation;
-                return wrapper.Animation;
-            }
-        }
+        private IEnumerable<BadassAnimationClip> Clips => badassAnimation.Clips;
         
         public override Tween Animate()
         {
@@ -71,14 +59,7 @@ namespace LSCore.BattleModule
 
         public override void Stop()
         {
-            if (animation != null)
-            {
-                animation.Stop(clip.name);
-            }
-            else
-            {
-                wrapper.Stop(clip.name);
-            }
+            badassAnimation.Stop(clip);
         }
 
         public override void ResolveBinds<T>(string key, T target)
@@ -88,14 +69,7 @@ namespace LSCore.BattleModule
 
         private void Play()
         {
-            if (animation != null)
-            {
-                animation.Play(clip.name);
-            }
-            else
-            {
-                wrapper.Play(clip.name);
-            }
+            badassAnimation.Play(clip);
         }
     }
 }

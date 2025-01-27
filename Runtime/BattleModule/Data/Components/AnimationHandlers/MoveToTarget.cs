@@ -35,7 +35,7 @@ namespace LSCore.BattleModule.Animation
             get
             {
 #if UNITY_EDITOR
-                if (World.IsEditMode || AnimationTestMode.Is)
+                if (World.IsEditMode)
                 {
                     return target;
                 }
@@ -48,7 +48,7 @@ namespace LSCore.BattleModule.Animation
         private void InitFindTarget()
         {
 #if UNITY_EDITOR
-            if (World.IsEditMode || AnimationTestMode.Is)
+            if (World.IsEditMode)
             {
                 return;
             }

@@ -5,7 +5,6 @@ using System.Linq;
 using LightSideCore.Editor;
 using LSCore.ConfigModule;
 using LSCore.Editor;
-using LSCore.Editor.BackupSystem;
 using LSCore.Extensions;
 using Newtonsoft.Json.Linq;
 using UnityEditor;

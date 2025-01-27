@@ -1,0 +1,4 @@
+{
+  "name": "LSCore.BadassAnimation.Editor",
+  "references":[ "LSCore.BadassAnimation", "LSCore.ConfigModule", "LSCore.Editor", "LSCore.Extensions", "LSCore.JsonConverters", "LSCore.Editor.Utils", "LSCore.Editor.HarmonyPatchers" ]
+}

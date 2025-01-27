@@ -38,7 +38,7 @@ namespace LSCore.BattleModule.Animation
             get
             {
 #if UNITY_EDITOR
-                if (target != null || AnimationTestMode.Is)
+                if (target != null)
                 {
                     return target;
                 }
@@ -60,7 +60,7 @@ namespace LSCore.BattleModule.Animation
             
             if (
 #if UNITY_EDITOR
-            target != null && !AnimationTestMode.Is &&
+            target != null  &&
 #endif
                 World.IsPlaying)
             {

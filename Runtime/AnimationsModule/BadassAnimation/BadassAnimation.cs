@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using LSCore.Attributes;
 using Sirenix.OdinInspector;
 using UnityEngine;
-
+[assembly: InternalsVisibleTo("LSCore.BadassAnimation.Editor")]
 public partial class BadassAnimation : MonoBehaviour, IAnimatable
 {
     [Serializable]
@@ -209,6 +210,13 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
                     currentEvaluators.AddRange(handler.Evaluators);
                 }
             }
+
+#if UNITY_EDITOR
+            foreach (var handler in currentHandlers)
+            {
+                handler.IsPreview = isPreview;
+            }
+#endif
             
             foreach (var handler in currentHandlers)
             {
@@ -243,8 +251,8 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
 
     [Button]
     private void Edit()
-    {
-        BadassAnimationWindow.ShowWindow(this);
+    { 
+        NeedShowWindow?.Invoke(this);
     }
 
     private void OnClipChanged()
@@ -282,7 +290,8 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     }
 
     public IEnumerable<IEvaluator> Evaluators => currentEvaluators;
-    
+    public IEnumerable<BadassAnimationClip> Clips => data.Select(x => x.clip);
+
     public void AfterEvaluate()
     {
         eventsAction?.Invoke();
@@ -325,7 +334,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
             endIndex--;
         }
         endIndex++;
-
+        
         var eventsSpan = events.AsSpan(startIndex..endIndex);
         
         if(eventsSpan.Count == 0) yield break;
@@ -385,6 +394,16 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     public bool TryGetData(string guid, out Data data) => dataByClip.TryGetValue(guid, out data);
 
 #if UNITY_EDITOR
+    public static event Action<BadassAnimation> NeedShowWindow;
+    private bool isPreview = true;
+    
+    internal void Editor_SetClip(BadassAnimationClip clip, bool isPreview)
+    {
+        this.isPreview = isPreview;
+        Clip = clip;
+        this.isPreview = true;
+    }
+    
     internal void Editor_Evaluate(float time)
     {
         foreach (var evaluator in currentEvaluators)
@@ -413,4 +432,14 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         }
     }
 #endif
+    
+    public void Play(BadassAnimationClip clip)
+    {
+        throw new NotImplementedException();
+    }
+    
+    public void Stop(BadassAnimationClip clip)
+    {
+        throw new NotImplementedException();
+    }
 }
