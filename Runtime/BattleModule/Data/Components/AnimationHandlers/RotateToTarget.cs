@@ -2,6 +2,7 @@
 using LSCore.AnimationsModule;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 public enum Vector3Axis
 {
@@ -30,7 +31,9 @@ namespace LSCore.BattleModule.Animation
 
         protected override string Label => "Normalized value";
 
-        private Transform Target
+        public override Object Target => target;
+
+        private Transform Targett
         {
             get
             {
@@ -75,7 +78,7 @@ namespace LSCore.BattleModule.Animation
 
         private void UpdateTargetRotation()
         {
-            var directionToTarget = (Target.position - transform.position).normalized;
+            var directionToTarget = (Targett.position - transform.position).normalized;
             targetRotation = Quaternion.LookRotation(transform.forward, directionToTarget);
         }
         

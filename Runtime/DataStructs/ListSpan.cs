@@ -4,8 +4,6 @@ using System.Collections.Generic;
 
 public readonly struct ListSpan<T> : IEnumerable<T>
 {
-    public static List<T> Empty => empty ??= new List<T>();
-    private static List<T> empty;
     private readonly IList<T> list;
     private readonly int start;
     private readonly int count;

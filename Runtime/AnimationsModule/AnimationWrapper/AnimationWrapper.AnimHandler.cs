@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using LSCore;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 public partial class BadassAnimation
 {
@@ -61,6 +62,8 @@ public partial class BadassAnimation
         protected virtual bool CanUse => true;
 #endif
 
+        public abstract Object Target { get; }
+        
         public void Start()
         {
 #if UNITY_EDITOR
@@ -104,6 +107,7 @@ public partial class BadassAnimation
         }
 
         public bool TryGetEvaluator(string key, out HandlerEvaluateData evaluator) => evaluators.TryGetValue(key, out evaluator);
+        public bool RemoveEvaluator(string key) => evaluators.Remove(key);
         public void ClearEvaluators() => evaluators.Clear();
 
         public void AddEvaluator(string key, BadassCurve curve)

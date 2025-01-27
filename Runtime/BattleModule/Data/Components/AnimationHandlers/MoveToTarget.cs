@@ -5,6 +5,7 @@ using System;
 using LSCore.AnimationsModule;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace LSCore.BattleModule.Animation
 {
@@ -27,7 +28,9 @@ namespace LSCore.BattleModule.Animation
 
         protected override string Label => "Normalized value";
 
-        private Collider2D Target
+        public override Object Target => target;
+        
+        private Collider2D Targett
         {
             get
             {
@@ -89,7 +92,7 @@ namespace LSCore.BattleModule.Animation
         
         private void UpdateTargetPosition()
         {
-            var dis = collider.Distance(Target);
+            var dis = collider.Distance(Targett);
             targetPosition = dis.pointB;
         }
         

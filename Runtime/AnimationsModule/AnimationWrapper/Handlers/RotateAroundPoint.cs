@@ -3,6 +3,7 @@ using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace LSCore.AnimationsModule
 {
@@ -21,7 +22,9 @@ namespace LSCore.AnimationsModule
         private Vector3 startRotation;
         private Vector3 startPosition;
         protected override string Label => "Rotation";
-        
+
+        public override Object Target => target;
+
         protected override void OnStart()
         {
             base.OnStart();

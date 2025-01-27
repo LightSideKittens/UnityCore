@@ -485,7 +485,7 @@ public partial class BadassCurveEditor
         var i = curve.InsertKeyByX(x);
         selectedPointIndexes.Clear();
         selectedPointIndexes.Add(i);
-        SetKeyPosAsAnimation(i, mousePos);
+        SetKeyPos(i, mousePos);
         GUI.changed = true;
     }
 
@@ -523,12 +523,8 @@ public partial class BadassCurveEditor
         return deleteKeyList[..deletedCount];
     }
 
-    private void UpdatePosAsAnimation(ref int i, bool isRootMoving)
-    {
-        SetPos(ref i, curve[i], isRootMoving);
-    }
-    
-    private void SetKeyPosAsAnimation(int i, Vector2 pos)
+
+    private void SetKeyPos(int i, Vector2 pos)
     {
         if (IsRoot(i))
         {
@@ -540,7 +536,24 @@ public partial class BadassCurveEditor
             }
         }
     }
+    
+    public void UpdateKeyPos(int i)
+    {
+        if (IsRoot(i))
+        {
+            for (int j = -1; j < 2; j++)
+            {
+                var ind = i + j;
+                UpdatePos(ref ind, true);
+            }
+        }
+    }
 
+    private void UpdatePos(ref int i, bool isRootMoving)
+    {
+        SetPos(ref i, curve[i], isRootMoving);
+    }
+    
     private void SetPos(ref int i, Vector2 pos, bool isRootMoving)
     {
         if(IsLocked) return;
@@ -695,11 +708,11 @@ public partial class BadassCurveEditor
         if (alignType == AlignType.Aligned)
         {
             var a = i;
-            UpdatePosAsAnimation(ref a, true);
+            UpdatePos(ref a, true);
             a = i + f1;
-            UpdatePosAsAnimation(ref a, false);
+            UpdatePos(ref a, false);
             a = i + f2;
-            UpdatePosAsAnimation(ref a, false);
+            UpdatePos(ref a, false);
         }
     }
     
@@ -910,6 +923,54 @@ public partial class BadassCurveEditor
             };
         }
     }
+
+    public void SetKeyY(float x, float y)
+    {
+        var lastYBlocked = isYBlocked;
+        isYBlocked = false;
+        var leftIndex = curve.GetLeftKeyIndexByX(x);
+        if (leftIndex == -1)
+        {
+            leftIndex = 1;
+        }
+
+        if (curve.Count > leftIndex)
+        {
+            var leftPoint = curve[leftIndex];
+            var mp = leftPoint.e;
+            mp.x = x;
+            
+            if (IsInDistance(leftPoint, mp, constWidth))
+            {
+                leftPoint.e.y = y;
+                SetKeyPos(leftIndex, leftPoint.e);
+                goto ret;
+            }
+        }
+        
+        var rightIndex = leftIndex + 3;
+        if(curve.Count > rightIndex)
+        {
+            var rightPoint = curve[rightIndex];
+            var mpr = rightPoint.e;
+            mpr.x = x;
+            
+            if (IsInDistance(rightPoint, mpr, constWidth))
+            {
+                rightPoint.e.y = y;
+                SetKeyPos(rightIndex, rightPoint.e);
+                goto ret;
+            }
+        }
+
+        var index = curve.InsertKeyByX(x);
+        var point = curve[index].e;
+        point.y = y;
+        SetKeyPos(index, point);
+        
+        ret:
+        isYBlocked = lastYBlocked;
+    }
 }
 
 public class Popup : PopupWindowContent
@@ -980,6 +1041,11 @@ public class Popup : PopupWindowContent
     }
 
     public void Repaint() => editorWindow.Repaint();
+
+    public void Show(Vector2 mousePos)
+    {
+        PopupWindow.Show(new Rect(mousePos, new Vector2(10, 10)), this);
+    }
 }
 
 #endif

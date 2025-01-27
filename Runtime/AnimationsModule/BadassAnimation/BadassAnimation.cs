@@ -43,7 +43,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     }
     
     [Serializable]
-    public struct Data
+    public class Data
     {
         public BadassAnimationClip clip;
 
@@ -180,7 +180,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
                 handler.Stop();
             }
             
-            currentHandlers = ListSpan<Handler>.Empty;
+            currentHandlers = new List<Handler>();
             
             if (value == null || currentClip == value || !isActiveAndEnabled)
             {
@@ -298,6 +298,12 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         var d = new Data { clip = newClip, handlers = handlers, events = events };
         data.Add(d);
         dataByClip.Add(newClip.guid, d);
+    }
+    
+    public void Remove(Handler handler)
+    {
+        var d = data.Find(d => d.handlers.Contains(handler));
+        d?.handlers.Remove(handler);
     }
     
     public static IEnumerable<Event> SelectEvents(List<Event> events, float startTime, float endTime, Vector2 clampRange, bool reverse)

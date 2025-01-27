@@ -64,9 +64,9 @@ namespace LSCore.Editor
                     {
                         clampRange = value;
 
-                        if (float.IsNegativeInfinity(clampRange.y))
+                        if (float.IsNegativeInfinity(clampRange.y) || clampRange.y - clampRange.x <= 0)
                         {
-                            clampRange.y = 1;
+                            clampRange.y = clampRange.x + 1;
                         }
                     }
                 }

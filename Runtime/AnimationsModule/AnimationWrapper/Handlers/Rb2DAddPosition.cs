@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace LSCore.AnimationsModule
 {
@@ -12,6 +13,8 @@ namespace LSCore.AnimationsModule
         private Vector2 startPosition;
         
         protected override string Label => "Position";
+
+        public override Object Target => rigidbody;
         
         protected override void OnStart()
         {

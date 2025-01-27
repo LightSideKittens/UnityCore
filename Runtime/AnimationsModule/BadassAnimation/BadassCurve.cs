@@ -259,7 +259,7 @@ public class BadassCurve : IList<BezierPoint>
         Insert(i + 6, (BezierPoint)p3);
     }
 
-    private int LastKeyIndex => points.Length - 2;
+    public int LastKeyIndex => points.Length - 2;
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public unsafe int GetLeftKeyIndexByX(float xTarget)
@@ -341,7 +341,7 @@ public class BadassCurve : IList<BezierPoint>
     {
         Vector2 root = points.Length > 2 ? points[i].p : Vector2.zero;
         root.x = x;
-        Vector2 half = Vector2.right / 2;
+        Vector2 half = Vector2.right / 5;
         Vector2 backTangent = root - half;
         Vector2 forwardTangent = root + half;
 

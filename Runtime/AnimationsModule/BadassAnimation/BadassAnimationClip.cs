@@ -131,14 +131,18 @@ public class BadassAnimationClip : ScriptableObject, ISerializationCallbackRecei
     
     public void Remove(BadassAnimation.Handler handler, string propertyName)
     {
-        namesToCurvesByHandlerGuids.Remove(handler.guid);
         var d = data.FirstOrDefault(x => x.handlerGuid == handler.guid);
         if (d.namesToCurves != null)
         {
             d.namesToCurves.Remove(new NameToCurve {propertyName = propertyName});
+            if (namesToCurvesByHandlerGuids.TryGetValue(handler.guid, out var curves))
+            {
+                curves.Remove(propertyName);
+            }
             if (d.namesToCurves.Count == 0)
             {
                 data.Remove(d);
+                namesToCurvesByHandlerGuids.Remove(handler.guid);
             }
         }
     }

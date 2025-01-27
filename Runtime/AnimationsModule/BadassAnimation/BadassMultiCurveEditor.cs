@@ -174,7 +174,8 @@ public class BadassMultiCurveEditor
             back.epPlusX(xOffset);
             root.epPlusX(xOffset);
             forward.epPlusX(xOffset);
-            editor.curve.InsertKeys(leftIndex, forward, root, back);
+            var newIndex = editor.curve.InsertKeys(leftIndex, forward, root, back);
+            editor.UpdateKeyPos(newIndex);
         }
     }
     
@@ -224,9 +225,12 @@ public class BadassMultiCurveEditor
                 list.Add(points);
             }
         }
-        
-        Config["copiedPoints"] = list;
-        Manager.Save();
+
+        if (list.Count > 0)
+        {
+            Config["copiedPoints"] = list;
+            Manager.Save();
+        }
     }
     
     private void DrawEditors(Rect rect, bool draw)
@@ -534,6 +538,21 @@ public class BadassMultiCurveEditor
         {
             e.IsSelected = true;
         }
+    }
+    
+    public void SetKeyYByCurve(BadassCurve curve, float x, float y)
+    {
+        var e = visibleEditors.FirstOrDefault(ed => ed.curve == curve);
+        
+        if (e?.curve != null)
+        {
+            e.SetKeyY(x, y);
+        }
+    }
+
+    public void Remove(BadassCurveEditor editor)
+    {
+        editors.Remove(editor);
     }
 }
 #endif
