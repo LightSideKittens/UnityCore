@@ -18,7 +18,6 @@ namespace LSCore.AnimationsModule
         
         protected override void OnStart()
         {
-            base.OnStart();
             transform = rigidbody.transform;
 #if UNITY_EDITOR
             if (World.IsEditMode)
@@ -58,8 +57,6 @@ namespace LSCore.AnimationsModule
 #if UNITY_EDITOR
         protected override void OnStop()
         {
-            base.OnStop();
-
             if (World.IsEditMode)
             {
                 transform.position = startPosition;

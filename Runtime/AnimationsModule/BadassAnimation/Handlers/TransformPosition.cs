@@ -23,7 +23,6 @@ namespace LSCore.AnimationsModule
 
         protected override void OnStart()
         {
-            base.OnStart();
             if (useWorldSpace)
             {
                 startPosition = transform.position;
@@ -32,6 +31,8 @@ namespace LSCore.AnimationsModule
             {
                 startPosition = transform.localPosition;
             }
+
+            value = startPosition;
         }
         
         protected override void OnHandle()
@@ -51,7 +52,6 @@ namespace LSCore.AnimationsModule
         
         protected override void OnStop()
         {
-            base.OnStop();
             if (!add)
             {
                 if (useWorldSpace)

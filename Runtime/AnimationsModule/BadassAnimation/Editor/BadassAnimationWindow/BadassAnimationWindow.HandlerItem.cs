@@ -29,6 +29,7 @@ public partial class BadassAnimationWindow
                 {
                     if (popup.DrawButton("Delete Handler"))
                     {
+                        window.RecordDeleteHandler();
                         foreach (var curveItem in ChildMenuItems.OfType<CurveItem>())
                         {
                             curveItem.DeleteCurve();

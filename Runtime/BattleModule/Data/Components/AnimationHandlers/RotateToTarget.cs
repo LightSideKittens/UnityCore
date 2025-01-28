@@ -56,8 +56,6 @@ namespace LSCore.BattleModule.Animation
         
         protected override void OnStart()
         {
-            base.OnStart();
-            
             if (
 #if UNITY_EDITOR
             target != null  &&
@@ -82,16 +80,15 @@ namespace LSCore.BattleModule.Animation
             targetRotation = Quaternion.LookRotation(transform.forward, directionToTarget);
         }
         
-#if UNITY_EDITOR
+
         protected override void OnStop()
         {
-            base.OnStop();
-
+#if UNITY_EDITOR
             if (World.IsEditMode)
             {
                 transform.rotation = initialRotation;
             }
-        }
 #endif
+        }
     }
 }

@@ -112,17 +112,32 @@ public partial class BadassAnimation
 
         public abstract void Handle();
 
-        protected virtual void OnStart()
-        {
-        }
+        protected abstract void OnStart();
 
-        protected virtual void OnStop()
-        {
-        }
+        protected abstract void OnStop();
 
         public bool TryGetEvaluator(string key, out HandlerEvaluateData evaluator) => evaluators.TryGetValue(key, out evaluator);
-        public bool RemoveEvaluator(string key) => evaluators.Remove(key);
-        public void ClearEvaluators() => evaluators.Clear();
+        public bool RemoveEvaluator(string key)
+        {
+            applyEvaluationResult -= GetApplyEvaluationResultAction(key, null);
+            if (isStarted)
+            {
+                Stop();
+                Start();
+            }
+            return evaluators.Remove(key);
+        }
+
+        public void ClearEvaluators()
+        {
+            applyEvaluationResult = null;
+            if (isStarted)
+            {
+                Stop();
+                Start();
+            }
+            evaluators.Clear();
+        }
 
         public void AddEvaluator(string key, BadassCurve curve)
         {
@@ -175,7 +190,7 @@ public partial class BadassAnimation
         public override Type ValueType => typeof(T);
         public override string HandlerName => GetType().Name;
 #endif
-
+        
         public sealed override void Handle()
         {
 #if UNITY_EDITOR

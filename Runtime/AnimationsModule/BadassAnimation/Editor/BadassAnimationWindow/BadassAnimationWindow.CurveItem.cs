@@ -35,6 +35,7 @@ public partial class BadassAnimationWindow
 
         public void CreateCurve()
         {
+            window.RecordAddCurve();
             curve = new BadassCurve();
             clip.Add(handler, Name, curve);
             EditorUtility.SetDirty(clip);
@@ -82,6 +83,7 @@ public partial class BadassAnimationWindow
 
         public void DeleteCurve()
         {
+            window.RecordDeleteCurve();
             curvesEditor.curvesEditor.Remove(editor);
             curvesEditor.CurveItems.Remove(this);
             clip.Remove(handler, Name);

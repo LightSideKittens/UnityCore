@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using LSCore.DataStructs;
 using UnityEngine;
 
 namespace LSCore.NativeUtils
@@ -63,14 +64,14 @@ namespace LSCore.NativeUtils
 #if UNITY_EDITOR
             if (Application.isEditor)
             {
-                return ProcessEmojis(text).AsSpan(..);
+                return IListExtensions.AsSpan(ProcessEmojis(text), ..);
             }
 #endif
             AndroidJavaObject[] emojiRangesJavaArray = API.CallStatic<AndroidJavaObject[]>("parseEmojis", text, saveDirPath);
 
             if (emojiRangesJavaArray == null || emojiRangesJavaArray.Length == 0)
             {
-                return Array.Empty<EmojiRange>().AsSpan(..);
+                return IListExtensions.AsSpan(Array.Empty<EmojiRange>(), ..);
             }
             
             int i = 0;

@@ -27,7 +27,6 @@ namespace LSCore.AnimationsModule
 
         protected override void OnStart()
         {
-            base.OnStart();
             startRotation = target.localEulerAngles;
             startPosition = target.localPosition;
             if (!setOffset)
@@ -50,7 +49,6 @@ namespace LSCore.AnimationsModule
 
         protected override void OnStop()
         {
-            base.OnStop();
             target.localEulerAngles = startRotation;
             target.localPosition = startPosition;
         }

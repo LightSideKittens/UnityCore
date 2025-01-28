@@ -60,7 +60,6 @@ namespace LSCore.BattleModule.Animation
         
         protected override void OnStart()
         {
-            base.OnStart();
             var colliders = new Collider2D[1];
             rigidbody.GetAttachedColliders(colliders);
             collider = colliders[0];
@@ -96,16 +95,15 @@ namespace LSCore.BattleModule.Animation
             targetPosition = dis.pointB;
         }
         
-#if UNITY_EDITOR
+
         protected override void OnStop()
         {
-            base.OnStop();
-
+#if UNITY_EDITOR
             if (World.IsEditMode)
             {
                 rigidbody.transform.position = initialPosition;
             }
-        }
 #endif
+        }
     }
 }

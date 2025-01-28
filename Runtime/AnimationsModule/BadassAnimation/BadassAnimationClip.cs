@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class BadassAnimationClip : ScriptableObject, ISerializationCallbackReceiver
 {
@@ -50,10 +53,22 @@ public class BadassAnimationClip : ScriptableObject, ISerializationCallbackRecei
 
     public void OnBeforeSerialize()
     {
+
+    }
+
+    public void CreateGuid()
+    {
+#if UNITY_EDITOR
         if (string.IsNullOrEmpty(guid))
         {
-            guid = Guid.NewGuid().ToString("N");
+            var path = AssetDatabase.GetAssetPath(this);
+            if (!string.IsNullOrEmpty(path))
+            {
+                guid = AssetDatabase.AssetPathToGUID(path);
+                this.ForceSave();
+            }
         }
+#endif
     }
     
     public void OnAfterDeserialize()

@@ -14,7 +14,6 @@ namespace LSCore.AnimationsModule
         
         protected override void OnStart()
         {
-            base.OnStart();
             if (useWorldSpace)
             {
                 startRotation = transform.eulerAngles;
@@ -42,7 +41,6 @@ namespace LSCore.AnimationsModule
         
         protected override void OnStop()
         {
-            base.OnStop();
             if (!add)
             {
                 if (useWorldSpace)

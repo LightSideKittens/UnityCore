@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using LSCore.DataStructs;
 using LSCore.NativeUtils;
 using TMPro;
 using UnityEngine;

@@ -13,7 +13,6 @@ namespace LSCore.AnimationsModule
         
         protected override void OnStart()
         {
-            base.OnStart();
             startScale = transform.localScale;
         }
         
@@ -26,7 +25,6 @@ namespace LSCore.AnimationsModule
         
         protected override void OnStop()
         {
-            base.OnStop();
             if (!add)
             {
                 transform.localScale = startScale;

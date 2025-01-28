@@ -168,6 +168,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
     {
         base.OnEnable();
         editor?.OnEnable();
+        Undo.undoRedoPerformed += OnUndoRedoPerformed;
     }
 
     protected override void OnDisable()
@@ -175,14 +176,28 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
         base.OnDisable();
         editor?.OnDisable();
         animation.Editor_SetClip(null, IsPreview);
+        Undo.undoRedoPerformed -= OnUndoRedoPerformed;
     }
+
+    private void OnUndoRedoPerformed()
+    {
+        isUndoPerforming = true;
+        ForceMenuTreeRebuild();
+        UpdateAnimationComponent();
+    }
+    
+    private bool isUndoPerforming;
 
     protected override OdinMenuTree BuildMenuTree()
     {
+        if (!isUndoPerforming)
+        {
+            IsRecording = false;
+            IsPreview = false;
+            lastTime = EditorApplication.timeSinceStartup;
+        }
+        
         objectByHandlerType.Clear();
-        IsRecording = false;
-        IsPreview = false;
-        lastTime = EditorApplication.timeSinceStartup;
         animation.TryInit();
         var tree = new OdinMenuTree();
         tree.Selection.SelectionChanged += OnSelectionChanged;
@@ -199,27 +214,11 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
         if (toolbar == null)
         {
             MenuWidth = 365;
-            toolbar = new Toolbar(tree, this);
+            toolbar = new Toolbar(this);
             
             toolbar.NeedAddHandler += NeedAddHandler;
-            
-            toolbar.SelectionConfirmed += clip =>
-            {
-                if(clip == CurrentClip) return;
-                
-                if (clip.name == CreateNewClipLabel)
-                {
-                    CreateNewClip();
-                }
-                else
-                {
-                    CurrentClip = clip;
-                }
-                
-                editor = null;
-                timePointer = null;
-                ForceMenuTreeRebuild();
-            };
+            toolbar.ClipSelectionConfirmed += SelectClip;
+            toolbar.ClipDeleteConfirmed += DeleteClip;
         }
         
         tree.AddMenuItemAtPath(string.Empty, new ToolbarDummy(tree));
@@ -270,7 +269,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
         
         return tree;
     }
-    
+
     protected override void DrawMenu()
     {
         if(CurrentClip == null) return;
@@ -314,7 +313,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
         GUI.color = c;
     }
     
-        private double lastTime;
+    private double lastTime;
 
     protected override void OnImGUI()
     {
@@ -344,7 +343,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
         
         if (CurrentClip == null)
         { 
-            var buttonRect = rect.AlignCenter(150, 50);
+            var buttonRect = rect.AlignCenter(150, 100);
             if (GUI.Button(buttonRect, "Create New Clip"))
             {
                 CreateNewClip();
@@ -441,6 +440,8 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
             treePopup.OnGUIInArea();
             GUI.EndClip();
         }
+
+        IsRecorded = false;
     }
     
     private void OnSelectionChanged(SelectionChangedType selectionChangedType)
@@ -472,6 +473,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
     {
         if (animation.TryGetData(CurrentClip, out var data))
         {
+            RecordAddHandler();
             data.handlers.Add(handler);
             EditorUtility.SetDirty(animation);
             AddExistHandler(MenuTree, CurrentClip, handler);
@@ -555,11 +557,43 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
                     
+            newClip.CreateGuid();
             animation.Add(newClip, new(), new());
             toolbar?.OnClipAdded(newClip);
             EditorUtility.SetDirty(animation);
             CurrentClip = newClip;
         }
+    }
+    
+    private void SelectClip(BadassAnimationClip clip)
+    {
+        if(clip == CurrentClip) return;
+                
+        if (clip.name == CreateNewClipLabel)
+        {
+            CreateNewClip();
+        }
+        else
+        {
+            CurrentClip = clip;
+        }
+                
+        editor = null;
+        timePointer = null;
+        ForceMenuTreeRebuild();
+    }
+    
+    
+    private void DeleteClip(BadassAnimationClip clip)
+    {
+        if (clip == CurrentClip)
+        {
+            editor = null;
+            timePointer = null;
+            ForceMenuTreeRebuild();
+        }
+        
+        animation.Remove(clip);
     }
     
     private void NeedAddHandler(Rect rect)

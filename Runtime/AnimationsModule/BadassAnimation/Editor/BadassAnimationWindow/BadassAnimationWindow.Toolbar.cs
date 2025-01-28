@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DG.DemiEditor;
-using LSCore.Extensions;
+using LSCore.DataStructs;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
@@ -14,9 +14,11 @@ public partial class BadassAnimationWindow
     public class Toolbar
     {
         public event Action<Rect> NeedAddHandler;
-        public event Action<BadassAnimationClip> SelectionConfirmed;
+        public event Action<BadassAnimationClip> ClipSelectionConfirmed;
+        public event Action<BadassAnimationClip> ClipDeleteConfirmed;
         private Color selectionColor = new(1f, 0.54f, 0.16f);
         private OdinSelector<BadassAnimationClip> clipSelector;
+        private OdinSelector<BadassAnimationClip> deleteClipSelector;
         private readonly List<BadassAnimationClip> badassAnimationClips;
         private BadassAnimationWindow window;
 
@@ -62,10 +64,11 @@ public partial class BadassAnimationWindow
             set => window.animation.Editor_SetClip(value, window.IsPreview);
         }
 
-        public Toolbar(OdinMenuTree tree, BadassAnimationWindow window)
+        public Toolbar(BadassAnimationWindow window)
         {
             this.window = window;
             badassAnimationClips = window.animation.data.Select(x => x.clip).ToList();
+            CreateDeleteClipSelector(badassAnimationClips);
             var createNewClip = CreateInstance<BadassAnimationClip>();
             createNewClip.name = CreateNewClipLabel;
             badassAnimationClips.Add(createNewClip);
@@ -80,17 +83,25 @@ public partial class BadassAnimationWindow
 
             CreateClipSelector(badassAnimationClips);
         }
+        
 
         public void OnClipAdded(BadassAnimationClip clip)
         {
             badassAnimationClips.Insert(badassAnimationClips.Count - 1, clip);
             CreateClipSelector(badassAnimationClips);
+            CreateDeleteClipSelector(badassAnimationClips.AsSpan(..^2));
         }
 
         private void CreateClipSelector(IEnumerable<BadassAnimationClip> clips)
         {
             clipSelector = new GenericSelector<BadassAnimationClip>("Select Clip", false, x => x.name, clips);
             clipSelector.SelectionConfirmed += OnSelectionChanged;
+        }
+        
+        private void CreateDeleteClipSelector(IEnumerable<BadassAnimationClip> clips)
+        {
+            deleteClipSelector = new GenericSelector<BadassAnimationClip>("Delete Clip", false, x => x.name, clips);
+            deleteClipSelector.SelectionConfirmed += OnDeleteSelectionChanged;
         }
 
         public void OnGUI(Rect rect)
@@ -162,8 +173,7 @@ public partial class BadassAnimationWindow
             {
                 Snapping = !Snapping;
             }
-
-            playbarRect.TakeFromLeft(5);
+            
             var c = GUI.color;
             if (!IsPreview) GUI.color = c.SetAlpha(0.5f);
             if (GUI.Button(playbarRect.TakeFromLeft(100), "Preview"))
@@ -194,16 +204,28 @@ public partial class BadassAnimationWindow
                 NeedAddHandler?.Invoke(savedRect);
             }
 
-            if (GUI.Button(toolbarRect, CurrentClip == null ? "Select Clip..." : CurrentClip.name))
+            var e = Event.current;
+            if (e.IsMouseOver(toolbarRect) && e.OnMouseUp(1))
             {
-                var w = clipSelector.ShowInPopup();
+                deleteClipSelector.ShowInPopup();
+            }
+            
+            if (GUI.Button(toolbarRect, CurrentClip == null ? "Select Clip..." : CurrentClip.name))
+            { 
+                clipSelector.ShowInPopup();
             }
         }
 
         private void OnSelectionChanged(IEnumerable<BadassAnimationClip> clips)
         {
             var clip = clips.FirstOrDefault();
-            SelectionConfirmed?.Invoke(clip);
+            ClipSelectionConfirmed?.Invoke(clip);
+        }
+        
+        private void OnDeleteSelectionChanged(IEnumerable<BadassAnimationClip> clips)
+        {
+            var clip = clips.FirstOrDefault();
+            ClipDeleteConfirmed?.Invoke(clip);
         }
     }
 }

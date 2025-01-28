@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using LSCore.Attributes;
+using LSCore.DataStructs;
 using Sirenix.OdinInspector;
 using UnityEngine;
 [assembly: InternalsVisibleTo("LSCore.BadassAnimation.Editor")]
@@ -279,7 +280,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         }
     }
 
-    public void BeforeEvaluate(float deltaTime)
+    void IAnimatable.BeforeEvaluate(float deltaTime)
     {
         Time += deltaTime;
         
@@ -289,10 +290,12 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         }
     }
 
-    public IEnumerable<IEvaluator> Evaluators => currentEvaluators;
+    IEnumerable<IEvaluator> IAnimatable.Evaluators => currentEvaluators;
     public IEnumerable<BadassAnimationClip> Clips => data.Select(x => x.clip);
 
-    public void AfterEvaluate()
+    void IAnimatable.AfterEvaluate() => AfterEvaluate();
+    
+    private void AfterEvaluate()
     {
         eventsAction?.Invoke();
         for (int i = 0; i < currentHandlers.Count; i++)
@@ -300,19 +303,6 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
             var handler = currentHandlers[i];
             handler.Handle();
         }
-    }
-
-    public void Add(BadassAnimationClip newClip, List<Handler> handlers, List<Event> events)
-    {
-        var d = new Data { clip = newClip, handlers = handlers, events = events };
-        data.Add(d);
-        dataByClip.Add(newClip.guid, d);
-    }
-    
-    public void Remove(Handler handler)
-    {
-        var d = data.Find(d => d.handlers.Contains(handler));
-        d?.handlers.Remove(handler);
     }
     
     public static IEnumerable<Event> SelectEvents(List<Event> events, float startTime, float endTime, Vector2 clampRange, bool reverse)
@@ -430,6 +420,34 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         {
             handler.OnSceneGUI();
         }
+    }
+    
+    internal bool Add(BadassAnimationClip newClip, List<Handler> handlers, List<Event> events)
+    {
+        if(dataByClip.ContainsKey(newClip.guid)) return false;
+        var d = new Data { clip = newClip, handlers = handlers, events = events };
+        data.Add(d);
+        dataByClip.Add(newClip.guid, d);
+        return true;
+    }
+    
+    internal void Remove(BadassAnimationClip clip)
+    {
+        var d = data.Find(d => d.clip == clip);
+        if (d != null)
+        {
+            dataByClip.Remove(d.clip.guid);
+            if (Clip == clip)
+            {
+                Clip = null;
+            }
+        }
+    }
+    
+    internal void Remove(Handler handler)
+    {
+        var d = data.Find(d => d.handlers.Contains(handler));
+        d?.handlers.Remove(handler);
     }
 #endif
     
