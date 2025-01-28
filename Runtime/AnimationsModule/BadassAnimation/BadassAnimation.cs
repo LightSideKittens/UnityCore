@@ -448,6 +448,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     {
         var d = data.Find(d => d.handlers.Contains(handler));
         d?.handlers.Remove(handler);
+        currentHandlers.Remove(handler);
     }
 #endif
     
