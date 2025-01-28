@@ -59,6 +59,8 @@ public class SceneGUIDrawer : OdinDrawer
 
         if (obj is Component component)
         {
+            if(component == null) goto unsub;
+            
             var tr = component.transform;
             
             if (selection is GameObject go)

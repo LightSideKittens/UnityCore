@@ -84,7 +84,13 @@ public partial class BadassAnimation
                     Target.hideFlags = HideFlags.None;
                 }
 #endif
+                foreach (var evaluator in Evaluators)
+                {
+                    evaluator.isDiff = true;
+                    evaluator.Evaluate();
+                }
                 OnStart();
+                Handle();
             }
         }
 

@@ -73,14 +73,16 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
             }
         }
     }
-    
+
+    [ValueDropdown("Clips")]
+    public BadassAnimationClip defaultClip;
     public bool loop;
     public bool reverse;
+
     [SerializeField]
     private UpdateModeType updateMode = UpdateModeType.Update;
-    
+
     [HideInInspector] public List<Data> data;
-    [HideInInspector] public BadassAnimationClip defaultClip;
 
     private UpdateModeType updateModeAtRegister;
     private Dictionary<string, Data> dataByClip;
@@ -174,23 +176,23 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         get => currentClip;
         set
         {
+            if (currentClip == value) return;
+            
             Unregister();
             currentEvaluators.Clear();
-
+            
             foreach (var handler in currentHandlers)
             {
                 handler.Stop();
             }
             
             currentHandlers = new List<Handler>();
-            
-            if (value == null || currentClip == value || !isActiveAndEnabled)
-            {
-                currentClip = value;
-                return;
-            }
-            
             currentClip = value;
+            
+            if (value == null) return;
+            
+            time = 0;
+            RealTime = 0;
             var d = dataByClip[value.guid];
             events = d.events;
             Length = value.length;
@@ -454,11 +456,11 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     
     public void Play(BadassAnimationClip clip)
     {
-        throw new NotImplementedException();
+        Clip = clip;
     }
     
     public void Stop(BadassAnimationClip clip)
     {
-        throw new NotImplementedException();
+        Clip = null;
     }
 }
