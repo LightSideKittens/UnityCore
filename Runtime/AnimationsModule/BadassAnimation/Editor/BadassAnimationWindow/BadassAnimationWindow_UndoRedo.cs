@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -25,3 +26,4 @@ public partial class BadassAnimationWindow
         Undo.RegisterCompleteObjectUndo(objs, name);
     }
 }
+#endif

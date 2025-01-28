@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
@@ -8,6 +9,15 @@ namespace LSCore.AnimationsModule
 {
     public class BadassAnimationPlayer : MonoBehaviour
     {
+        [Serializable]
+        private struct LSVector2
+        {
+            public float x;
+            public float y;
+        }
+        
+        [SerializeField] private Vector2 vector2;
+        
         public BadassAnimation animation;
         public Button first;
         public Button second;

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using LSCore.Editor;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityToolbarExtender;
 using Debug = UnityEngine.Debug;
@@ -85,9 +86,38 @@ public static class CustomBuilder
             string buildFilePath = $"{buildPath}/{buildName}{extension}";
             
             Defines.Apply();
-            BuildPipeline.BuildPlayer(GetEnabledScenePaths(), buildFilePath, buildTarget, buildOptions);
-            Debug.Log("Build completed!");
-            Process.Start(buildPath);
+            var buildPlayerOptions = new BuildPlayerOptions
+            {
+                scenes = GetEnabledScenePaths(),
+                locationPathName = buildFilePath,
+                target = buildTarget,
+                options = buildOptions
+            };
+
+            BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
+            BuildSummary summary = report.summary;
+
+            switch (summary.result)
+            {
+                case BuildResult.Succeeded:
+                    Debug.Log($"Build succeeded in {summary.totalTime} " +
+                              $"with size {summary.totalSize} bytes");
+                    Process.Start(buildPath);
+                    break;
+
+                case BuildResult.Failed:
+                    Debug.LogError("Build failed!");
+                    break;
+
+                case BuildResult.Cancelled:
+                    Debug.LogWarning("Build cancelled!");
+                    break;
+
+                case BuildResult.Unknown:
+                default:
+                    Debug.LogWarning("Build result is unknown!");
+                    break;
+            }
         }
         
         private static string[] GetEnabledScenePaths()

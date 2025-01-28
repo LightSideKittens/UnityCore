@@ -9,7 +9,9 @@ namespace LSCore.AnimationsModule
         [SerializeField] private bool add;
         private Vector3 startScale;
         
+#if UNITY_EDITOR
         protected override string Label => "Scale";
+#endif
         
         protected override void OnStart()
         {

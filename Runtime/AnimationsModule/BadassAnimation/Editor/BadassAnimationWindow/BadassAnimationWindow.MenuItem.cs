@@ -1,7 +1,7 @@
+#if UNITY_EDITOR
 using System;
 using DG.DemiEditor;
 using LSCore.Editor;
-using LSCore.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
@@ -175,3 +175,4 @@ public partial class BadassAnimationWindow
         }
     }
 }
+#endif

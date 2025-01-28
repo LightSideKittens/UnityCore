@@ -27,11 +27,10 @@ namespace LSCore.BattleModule.Animation
 #if UNITY_EDITOR
         [LabelText("Target for Editor testing")]
         public Transform target;
+        protected override string Label => "Normalized value";
 #endif
 
-        protected override string Label => "Normalized value";
-
-        public override Object Target => target;
+        public override Object Target => transform;
 
         private Transform Targett
         {

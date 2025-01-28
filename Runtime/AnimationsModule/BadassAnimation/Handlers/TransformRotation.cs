@@ -10,7 +10,9 @@ namespace LSCore.AnimationsModule
         [SerializeField] private bool add;
         private Vector3 startRotation;
         
+#if UNITY_EDITOR
         protected override string Label => "Rotation";
+#endif
         
         protected override void OnStart()
         {

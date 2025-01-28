@@ -11,8 +11,10 @@ namespace LSCore.AnimationsModule
         [SerializeField] private bool useWorldSpace;
         private Transform transform;
         private Vector2 startPosition;
-        
+
+#if UNITY_EDITOR
         protected override string Label => "Position";
+#endif
 
         public override Object Target => rigidbody;
         
@@ -54,14 +56,15 @@ namespace LSCore.AnimationsModule
             rigidbody.position = target;
         }
 
-#if UNITY_EDITOR
+
         protected override void OnStop()
         {
+#if UNITY_EDITOR
             if (World.IsEditMode)
             {
                 transform.position = startPosition;
             }
-        }
 #endif
+        }
     }
 }

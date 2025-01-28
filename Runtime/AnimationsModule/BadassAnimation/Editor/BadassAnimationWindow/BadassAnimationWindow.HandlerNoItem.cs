@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 
@@ -36,3 +37,4 @@ public partial class BadassAnimationWindow
         }
     }
 }
+#endif

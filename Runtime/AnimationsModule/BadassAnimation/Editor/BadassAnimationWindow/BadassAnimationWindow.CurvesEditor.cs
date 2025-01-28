@@ -1,10 +1,10 @@
+#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using DG.DemiEditor;
 using LightSideCore.Editor;
 using LSCore.Editor;
-using LSCore.Extensions;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
@@ -473,3 +473,4 @@ public partial class BadassAnimationWindow
         }
     }
 }
+#endif

@@ -19,7 +19,9 @@ namespace LSCore.AnimationsModule
         [SerializeField] private bool add;
         private Vector3 startPosition;
         
+#if UNITY_EDITOR
         protected override string Label => "Position";
+#endif
 
         protected override void OnStart()
         {

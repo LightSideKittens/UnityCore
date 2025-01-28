@@ -252,11 +252,13 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
 
     private void Unregister() => BadassAnimationEvaluator.Unregister(this, updateModeAtRegister);
 
+#if UNITY_EDITOR
     [Button]
     private void Edit()
     { 
         NeedShowWindow?.Invoke(this);
     }
+#endif
 
     private void OnClipChanged()
     {
@@ -284,6 +286,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
 
     void IAnimatable.BeforeEvaluate(float deltaTime)
     {
+        if (reverse) deltaTime *= -1;
         Time += deltaTime;
         
         for (int i = 0; i < currentEvaluators.Count; i++)

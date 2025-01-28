@@ -42,7 +42,7 @@ public partial class BadassCurveEditor
             if (curve.Count > 2)
             {
                 var minPoint = curve[1];
-                minPoint.p.x = -100000;
+                minPoint.x = -100000;
 
                 var bezierWidth = BezierWidth;
                 var curveColor = this.curveColor;
@@ -72,7 +72,7 @@ public partial class BadassCurveEditor
                 LSHandles.DrawLine(bezierWidth, curveColor, curve[1], minPoint);
 
                 var maxPoint = curve[^2];
-                maxPoint.p.x = 100000;
+                maxPoint.x = 100000;
                 LSHandles.DrawLine(bezierWidth, curveColor, curve[^2], maxPoint);
 
                 var st = curve[0];
@@ -618,7 +618,7 @@ public partial class BadassCurveEditor
                 if(ii + 3 > curve.Count - 1) return;
                 
                 var next = curve[ii + 3];
-                if (point.p.x > next.p.x)
+                if (point.x > next.x)
                 {
                     SwapKeys(ref ii, ii + 3);
                 }
@@ -629,7 +629,7 @@ public partial class BadassCurveEditor
                 if(ii - 3 < 0) return;
                 
                 var prev = curve[ii - 3];
-                if (point.p.x < prev.p.x)
+                if (point.x < prev.x)
                 {
                     SwapKeys(ref ii, ii - 3);
                 }
@@ -658,8 +658,8 @@ public partial class BadassCurveEditor
                 var root = curve[i - 1];
                 var nextRoot = i < (curve.Count-1) ? curve[i + 2] : (BezierPoint)inf;
                 var pos = curve[i];
-                pos.p.x = Mathf.Clamp(pos.e.x, root.p.x, nextRoot.p.x);
-                pos.e.x = Mathf.Clamp(pos.e.x, root.p.x, inf.x);
+                pos.x = Mathf.Clamp(pos.e.x, root.x, nextRoot.x);
+                pos.e.x = Mathf.Clamp(pos.e.x, root.x, inf.x);
                 curve[i] = pos;
             }
             else
@@ -668,8 +668,8 @@ public partial class BadassCurveEditor
                 var root = curve[i + 1];
                 var prevRoot = i > 0 ? curve[i - 2] : (BezierPoint)inf;
                 var pos = curve[i];
-                pos.p.x = Mathf.Clamp(pos.e.x, prevRoot.p.x, root.p.x);
-                pos.e.x = Mathf.Clamp(pos.e.x, inf.x, root.p.x);
+                pos.x = Mathf.Clamp(pos.e.x, prevRoot.x, root.x);
+                pos.e.x = Mathf.Clamp(pos.e.x, inf.x, root.x);
                 curve[i] = pos;
             }
 

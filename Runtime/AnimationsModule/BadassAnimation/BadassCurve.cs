@@ -5,37 +5,55 @@ using System.Runtime.CompilerServices;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
+#if UNITY_EDITOR
 [Serializable]
 public enum AlignType
 {
     Free,
     Aligned,
 }
+#endif
 
 [Serializable]
 public struct BezierPoint : IEquatable<BezierPoint>
 {
-    public Vector2 p;
+    public Vector2 p
+    {
+        get => new(x, y);
+        set
+        {
+            x = value.x;
+            y = value.y;
+        }
+    }
 
+    public float x;
+    public float y;
+
+    public bool Equals(BezierPoint other)
+    {
+        return p.Equals(other.p)
 #if UNITY_EDITOR
-    public AlignType alignType;
-    public Vector2 e;
-    
-    public BezierPoint epPlusX(float x)
-    {
-        e.x += x;
-        p.x += x;
-        return this;
-    }
-
-    public BezierPoint epSet(Vector2 b)
-    {
-        e = b;
-        p = e;
-        return this;
-    }
+               && alignType == other.alignType 
+               && e.Equals(other.e)
 #endif
+               ;
+    }
 
+    public override bool Equals(object obj)
+    {
+        return obj is BezierPoint other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(p
+#if UNITY_EDITOR
+            , (int)alignType, e
+#endif
+            );
+    }
+    
     public static BezierPoint operator +(BezierPoint a, Vector2 b)
     {
         a.p += b;
@@ -57,21 +75,25 @@ public struct BezierPoint : IEquatable<BezierPoint>
         };
     }
 
-    public bool Equals(BezierPoint other)
+    
+#if UNITY_EDITOR
+    public AlignType alignType;
+    public Vector2 e;
+
+    public BezierPoint epPlusX(float x)
     {
-        return p.Equals(other.p) && alignType == other.alignType && e.Equals(other.e);
+        e.x += x;
+        this.x += x;
+        return this;
     }
 
-    public override bool Equals(object obj)
+    public BezierPoint epSet(Vector2 b)
     {
-        return obj is BezierPoint other && Equals(other);
+        e = b;
+        p = e;
+        return this;
     }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(p, (int)alignType, e);
-    }
-
+    
     public JObject ToJObject()
     {
         var json = new JObject
@@ -90,9 +112,8 @@ public struct BezierPoint : IEquatable<BezierPoint>
         var p = obj["p"];
         var e = obj["e"];
         bezierPoint.alignType = (AlignType)obj["alignType"].ToObject<int>();
-        
-        bezierPoint.p = new Vector2(p["x"].ToObject<float>(), p["y"].ToObject<float>());
         bezierPoint.e = new Vector2(e["x"].ToObject<float>(), e["y"].ToObject<float>());
+        bezierPoint.p = new Vector2(p["x"].ToObject<float>(), p["y"].ToObject<float>());
         return bezierPoint;
     }
 
@@ -104,6 +125,7 @@ public struct BezierPoint : IEquatable<BezierPoint>
             { "y", vector.y },
         };
     }
+#endif
 }
 
 [Serializable]
@@ -118,9 +140,7 @@ public class BadassCurve : IList<BezierPoint>
         set => points = value;
     }
 
-    public BadassCurve()
-    {
-    }
+    public BadassCurve() { }
 
     public BadassCurve(BadassCurve badassCurve)
     {
@@ -207,12 +227,14 @@ public class BadassCurve : IList<BezierPoint>
         set => points[index] = value;
     }
 
+#if UNITY_EDITOR
     public void SetAlign(int index, AlignType alignType)
     {
         var p = points[index];
         p.alignType = alignType;
         points[index] = p;
     }
+#endif
     
     public void DeleteKey(int i)
     {
@@ -236,10 +258,10 @@ public class BadassCurve : IList<BezierPoint>
 
         var pts = points;
 
-        Vector2 p0 = pts[i].p;
-        Vector2 p1 = pts[i + 1].p;
-        Vector2 p2 = pts[i + 2].p;
-        Vector2 p3 = pts[i + 3].p;
+        Vector2 p0 = pts[i];
+        Vector2 p1 = pts[i + 1];
+        Vector2 p2 = pts[i + 2];
+        Vector2 p3 = pts[i + 3];
 
         Vector2 q0 = Vector2.Lerp(p0, p1, t);
         Vector2 q1 = Vector2.Lerp(p1, p2, t);
@@ -271,12 +293,12 @@ public class BadassCurve : IList<BezierPoint>
 
         fixed (BezierPoint* pPoints = points)
         {
-            float firstX = pPoints[1].p.x;
+            float firstX = pPoints[1].x;
             if (xTarget <= firstX)
                 return -1;
 
             int lastKeyIndex = count - 2;
-            float lastX = pPoints[lastKeyIndex].p.x;
+            float lastX = pPoints[lastKeyIndex].x;
 
             if (xTarget >= lastX)
                 return lastKeyIndex;
@@ -289,7 +311,7 @@ public class BadassCurve : IList<BezierPoint>
             {
                 int mid = (left + right) >> 1;
                 int midIndex = 1 + 3 * mid;
-                float midX = pPoints[midIndex].p.x;
+                float midX = pPoints[midIndex].x;
 
                 if (Math.Abs(midX - xTarget) < 1e-6f)
                 {
@@ -327,19 +349,14 @@ public class BadassCurve : IList<BezierPoint>
 
         var pts = points;
 
-        Vector2 p0 = pts[i].p;
-        Vector2 p1 = pts[i + 1].p;
-        Vector2 p2 = pts[i + 2].p;
-        Vector2 p3 = pts[i + 3].p;
-
-        float t = FindBezierTForX(p0.x, p1.x, p2.x, p3.x, x);
+        float t = FindBezierTForX(pts[i].x, pts[i + 1].x, pts[i + 2].x, pts[i + 3].x, x);
         InsertKey(i, t);
         return i + 3;
     }
 
     private void InsertDefault(int i, float x, bool before)
     {
-        Vector2 root = points.Length > 2 ? points[i].p : Vector2.zero;
+        Vector2 root = points.Length > 2 ? points[i] : Vector2.zero;
         root.x = x;
         Vector2 half = Vector2.right / 5;
         Vector2 backTangent = root - half;
@@ -393,8 +410,8 @@ public class BadassCurve : IList<BezierPoint>
 
     public float GetXByNormalized(float t)
     {
-        float xMin = points[1].p.x;
-        float xMax = points[points.Length - 2].p.x;
+        float xMin = points[1].x;
+        float xMax = points[points.Length - 2].x;
         float xTarget = Mathf.Lerp(xMin, xMax, t);
         return xTarget;
     }
@@ -414,13 +431,13 @@ public class BadassCurve : IList<BezierPoint>
         fixed (BezierPoint* pPoints = points)
         {
             int i = GetLeftKeyIndexByX(x);
-            if (i == -1) return pPoints[1].p.y;
-            if (i == LastKeyIndex) return pPoints[count - 2].p.y;
+            if (i == -1) return pPoints[1].y;
+            if (i == LastKeyIndex) return pPoints[count - 2].y;
 
-            Vector2* p0 = &pPoints[i].p;
-            Vector2* p1 = &pPoints[i + 1].p;
-            Vector2* p2 = &pPoints[i + 2].p;
-            Vector2* p3 = &pPoints[i + 3].p;
+            BezierPoint* p0 = &pPoints[i];
+            BezierPoint* p1 = &pPoints[i + 1];
+            BezierPoint* p2 = &pPoints[i + 2];
+            BezierPoint* p3 = &pPoints[i + 3];
 
             float tForX = FindBezierTForX(p0->x, p1->x, p2->x, p3->x, x);
             float result = EvaluateCubicBezier(p0->y, p1->y, p2->y, p3->y, tForX);

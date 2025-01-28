@@ -21,7 +21,9 @@ namespace LSCore.AnimationsModule
         private Vector3 usedOffset;
         private Vector3 startRotation;
         private Vector3 startPosition;
+#if UNITY_EDITOR
         protected override string Label => "Rotation";
+#endif
 
         public override Object Target => target;
 

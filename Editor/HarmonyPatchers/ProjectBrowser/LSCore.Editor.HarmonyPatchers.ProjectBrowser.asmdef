@@ -1,7 +1,20 @@
 {
-  "name": "LSCore.Editor.HarmonyPatchers.ProjectBrowser",
-  "references":[ 
-    "GUID:488fbb5f4bad8a94daedd0c8d1239e93",
-    "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
-    "GUID:e203c3ad7a7046548ca22a43fa4eb0de" ]
+    "name": "LSCore.Editor.HarmonyPatchers.ProjectBrowser",
+    "rootNamespace": "",
+    "references": [
+        "GUID:488fbb5f4bad8a94daedd0c8d1239e93",
+        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
+        "GUID:e203c3ad7a7046548ca22a43fa4eb0de"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

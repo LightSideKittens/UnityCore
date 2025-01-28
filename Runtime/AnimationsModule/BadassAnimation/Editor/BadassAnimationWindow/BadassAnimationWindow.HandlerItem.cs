@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Linq;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
@@ -37,6 +38,16 @@ public partial class BadassAnimationWindow
 
                         Remove();
                         animation.Remove(handler);
+                        
+                        if (window.objectByHandlerType.TryGetValue(handler.Target, out var handlers))
+                        {
+                            handlers.Remove(handler.GetType());
+                            if (handlers.Count == 0)
+                            {
+                                window.objectByHandlerType.Remove(handler.Target);
+                            }
+                        }
+                        
                         handler.Stop();
                     }
                 };
@@ -45,3 +56,4 @@ public partial class BadassAnimationWindow
         }
     }
 }
+#endif

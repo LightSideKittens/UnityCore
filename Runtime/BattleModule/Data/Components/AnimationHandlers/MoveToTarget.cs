@@ -24,11 +24,10 @@ namespace LSCore.BattleModule.Animation
 #if UNITY_EDITOR
         [LabelText("Target for Editor testing")]
         public Collider2D target;
+        protected override string Label => "Normalized value";
 #endif
 
-        protected override string Label => "Normalized value";
-
-        public override Object Target => target;
+        public override Object Target => rigidbody;
         
         private Collider2D Targett
         {
