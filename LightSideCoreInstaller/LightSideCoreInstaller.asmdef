@@ -1,11 +1,7 @@
 {
-    "name": "LSCore.IdGroupSystem.Editor",
+    "name": "LightSideCoreInstaller",
     "rootNamespace": "",
-    "references": [
-        "GUID:0383e17b21214350bace8de976684bdb",
-        "GUID:e203c3ad7a7046548ca22a43fa4eb0de",
-        "GUID:060c0c84c34efbc47989cd1b96db33f6"
-    ],
+    "references": [],
     "includePlatforms": [
         "Editor"
     ],

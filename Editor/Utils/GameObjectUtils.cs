@@ -25,8 +25,10 @@ public static class GameObjectUtils
         var set = new HashSet<Object>();
         if (obj is GameObject go)
         {
-            foreach (var comp in go.GetComponents<Component>())
+            go.GetComponents(comps);
+            foreach (var comp in comps)
             {
+                if(comp == null) continue;
                 GetDependencies(set, comp, result, indirect, used, includeDirect);
             }
         }
@@ -129,7 +131,7 @@ public static class GameObjectUtils
                 deps = GetDependenciesForComponent(comp);
             }
 
-            if (target is not null && graph.ContainsKey(target)) //TODO: Remove && graph.ContainsKey(target) and implement GameObject creating and deleting tracking 
+            if (target is not null && graph.ContainsKey(target)) //TODO: Remove "&& graph.ContainsKey(target)" and implement GameObject creating and deleting tracking 
             {
                 var uses = graph[target].uses;
                 graph[target].uses = deps;
@@ -155,7 +157,15 @@ public static class GameObjectUtils
     private static HashSet<Object> GetDependenciesForGameObject(Object go)
     {
         var dependencies = new HashSet<Object>();
-        dependencies.AddRange(((GameObject)go).GetComponents<Component>());
+        ((GameObject)go).GetComponents(comps);
+        for (int i = 0; i < comps.Count; i++)
+        {
+            var comp = comps[i];
+            if (comp != null)
+            {
+                dependencies.Add(comp);
+            }
+        }
         return dependencies;
     }
     
@@ -190,6 +200,7 @@ public static class GameObjectUtils
         return dependencies;
     }
 
+    
     private static void OnPrefabStageOpened(PrefabStage stage)
     {
         graph = prefabGraph;
@@ -259,6 +270,8 @@ public static class GameObjectUtils
         }
     }
     
+    private static List<Component> comps = new();
+    
     private static void OnImported(GameObject obj)
     {
         if (!graph.ContainsKey(obj))
@@ -267,11 +280,14 @@ public static class GameObjectUtils
         }
 
         FillDeps(obj, GetDependenciesForGameObject);
+        
+        obj.GetComponents(comps);
 
-        var comps = obj.GetComponents<Component>();
-
-        for (int i = 0; i < comps.Length; i++)
+        for (int i = 0; i < comps.Count; i++)
         {
+            var comp = comps[i];
+            if (comp == null) continue;
+            
             var compDeps = FillDeps(comps[i], GetDependenciesForComponent);
 
             foreach (var dep in compDeps)

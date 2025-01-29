@@ -38,7 +38,7 @@ public abstract class BaseEditorVideoPlayer<T> : MonoBehaviour where T : BaseEdi
             return;
         }
         
-        var gameObject = FindObjectsOfType<T>();
+        var gameObject = FindObjectsByType<T>(FindObjectsSortMode.None);
 
         for (int i = 0; i < gameObject.Length; i++)
         {

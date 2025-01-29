@@ -86,6 +86,8 @@ public static class CustomBuilder
             string buildFilePath = $"{buildPath}/{buildName}{extension}";
             
             Defines.Apply();
+            buildOptions |= BuildOptions.DetailedBuildReport;
+
             var buildPlayerOptions = new BuildPlayerOptions
             {
                 scenes = GetEnabledScenePaths(),
@@ -96,27 +98,15 @@ public static class CustomBuilder
 
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             BuildSummary summary = report.summary;
-
-            switch (summary.result)
+            
+            Debug.Log("Build result: " + summary.result);
+            
+            var packedAssets = report.packedAssets;
+            foreach (var pack in packedAssets)
             {
-                case BuildResult.Succeeded:
-                    Debug.Log($"Build succeeded in {summary.totalTime} " +
-                              $"with size {summary.totalSize} bytes");
-                    Process.Start(buildPath);
-                    break;
-
-                case BuildResult.Failed:
-                    Debug.LogError("Build failed!");
-                    break;
-
-                case BuildResult.Cancelled:
-                    Debug.LogWarning("Build cancelled!");
-                    break;
-
-                case BuildResult.Unknown:
-                default:
-                    Debug.LogWarning("Build result is unknown!");
-                    break;
+                foreach (var content in pack.contents)
+                {
+                }
             }
         }
         

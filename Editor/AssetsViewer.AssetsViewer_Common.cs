@@ -37,8 +37,26 @@ internal partial class AssetsViewer : OdinEditorWindow
         Guid = 8
     }
     
+    [PropertyOrder(-2)]
     [ShowIf("@selectedObject != null")]
     public Object selectedObject;
+    
+    [Button]
+    [PropertyOrder(-1)]
+    [ShowIf("@selectedObject != null")]
+    private void ResetGuid()
+    {
+        if (selectedObject != null)
+        {
+            if (AssetDatabase.Contains(selectedObject))
+            {
+                var path = AssetDatabase.GetAssetPath(selectedObject);
+                var meta = File.ReadAllText($"{path}.meta");
+                meta = meta.Replace(AssetDatabase.AssetPathToGUID(path), GUID.Generate().ToString());
+                File.WriteAllText($"{path}.meta", meta);
+            }
+        }
+    }
     
     [OnValueChanged("FilterAllAssets")]
     [SerializeField] private FilterType currentFilterType = FilterType.None;
@@ -58,21 +76,6 @@ internal partial class AssetsViewer : OdinEditorWindow
     private static void OpenWindow()
     {
         GetWindow<AssetsViewer>().Show();
-    }
-    
-    [Button]
-    private void ResetGuid()
-    {
-        if (selectedObject != null)
-        {
-            if (AssetDatabase.Contains(selectedObject))
-            {
-                var path = AssetDatabase.GetAssetPath(selectedObject);
-                var meta = File.ReadAllText($"{path}.meta");
-                meta = meta.Replace(AssetDatabase.AssetPathToGUID(path), GUID.Generate().ToString());
-                File.WriteAllText($"{path}.meta", meta);
-            }
-        }
     }
     
     private void UpdateColumns()

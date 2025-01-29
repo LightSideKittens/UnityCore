@@ -116,7 +116,7 @@ public static partial class AssetDatabaseUtils
         var allPaths = GetPaths(type, filter, paths);
         Object asset = null;
         
-        for (int i = 0; i < allPaths.Length; i++)
+        for (int i = 0; i < allPaths.Length;)
         {
             asset = AssetDatabase.LoadAssetAtPath(allPaths[i], type);
             break;

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.IO;
+using UnityEngine;
 
 public static class LSPaths
 {
@@ -48,9 +49,9 @@ public static class LSPaths
     }
 
     public static string ProjectPath { get; } = Application.dataPath[..^7];
-    public static string ProjectSettingsPath { get; } = $"{ProjectPath}/ProjectSettings";
-    public static string LibraryPath { get; } = $"{ProjectPath}/Library";
-        
-    public static string ToFull(this string path) => $"{Application.dataPath}/{path}";
-    public static string AssetsPathToFull(this string path) => $"{ProjectPath}/{path}";
+    public static string ProjectSettingsPath { get; } = Path.Combine(ProjectPath, "ProjectSettings");
+    public static string LibraryPath { get; } = Path.Combine(ProjectPath, "Library");
+    
+    public static string ToFull(this string path) => Path.Combine(Application.dataPath, path);
+    public static string AssetsPathToFull(this string path) => Path.Combine(ProjectPath, path);
 }

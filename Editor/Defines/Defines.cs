@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEditor;
+using UnityEditor.Build;
 using UnityEngine;
 using Path = LSPaths;
 
@@ -26,7 +27,7 @@ namespace LSCore.Editor
         static Defines()
         {
             BuildTargetGroup buildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
-            defines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup).Split(';').ToHashSet();
+            defines =  PlayerSettings.GetScriptingDefineSymbols(NamedBuildTarget.FromBuildTargetGroup(buildTargetGroup)).Split(';').ToHashSet();
         }
 
         public static bool Enable(string define)
@@ -86,7 +87,7 @@ namespace LSCore.Editor
             }
 
             BuildTargetGroup buildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
-            PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, GetDefines());
+            PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.FromBuildTargetGroup(buildTargetGroup), GetDefines());
             AssetDatabase.Refresh();
         }
 

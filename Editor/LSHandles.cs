@@ -314,7 +314,7 @@ namespace LSCore.Editor
 
         private static void CreateCameraTargetTexture(Rect cameraRect, bool hdr)
         {
-            var colorFormat = !hdr || !SystemInfo.IsFormatSupported(GraphicsFormat.R16G16B16A16_SFloat, FormatUsage.Render) ? SystemInfo.GetGraphicsFormat(DefaultFormat.LDR) : GraphicsFormat.R16G16B16A16_SFloat;
+            var colorFormat = !hdr || !SystemInfo.IsFormatSupported(GraphicsFormat.R16G16B16A16_SFloat, GraphicsFormatUsage.Render) ? SystemInfo.GetGraphicsFormat(DefaultFormat.LDR) : GraphicsFormat.R16G16B16A16_SFloat;
             if (targetTexture != null && targetTexture.graphicsFormat != colorFormat)
             {
                 Object.DestroyImmediate(targetTexture);

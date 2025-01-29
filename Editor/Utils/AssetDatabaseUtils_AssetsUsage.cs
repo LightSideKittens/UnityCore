@@ -9,7 +9,7 @@ using UnityEngine;
 [InitializeOnLoad]
 public static partial class AssetDatabaseUtils
 {
-    private const string GraphFilePath = "Assets/AssetsUsages.json";
+    private static string GraphFilePath => Path.Combine(LSPaths.ProjectSettingsPath, "AssetsUsages.json");
     private static Dictionary<string, DependenciesData> graph = new();
 
     static AssetDatabaseUtils()
