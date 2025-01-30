@@ -44,7 +44,10 @@ namespace LSCore.ConfigModule
         public virtual void Delete()
         {
             string fullFileName = $"{ConfigPaths.Game.Resources(path)}.json";
-            File.Delete(fullFileName); 
+            if (File.Exists(fullFileName))
+            {
+                File.Delete(fullFileName); 
+            }
         }
 #endif
     }
