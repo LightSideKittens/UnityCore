@@ -280,7 +280,14 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         
         for (int i = 0; i < data.Count; i++)
         {
-            dataByClip.Add(data[i].clip.guid, data[i]);
+            var d = data[i];
+            if (d == null || d.clip == null)
+            {
+                data.RemoveAt(i);
+                i--;
+                continue;
+            }
+            dataByClip.Add(d.clip.guid, d);
         }
     }
 

@@ -18,7 +18,7 @@ namespace LSCore.AnimationsModule
         
         [SerializeField] private Vector2 vector2;
         
-        public BadassAnimation animation;
+        public new BadassAnimation animation;
         public Button first;
         public Button second;
         public Button nullButton;

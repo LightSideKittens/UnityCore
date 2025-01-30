@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using LSCore.ConfigModule;
-using LSCore.ConfigModule;
 using Newtonsoft.Json;
 
 public class TutorialData : GameSingleConfig<TutorialData>

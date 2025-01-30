@@ -28,6 +28,11 @@ namespace LSCore.ConfigModule
         internal virtual void Load()
         {
             var json = Resources.Load<TextAsset>(path)?.text ?? string.Empty;
+            if (string.IsNullOrEmpty(json))
+            {
+                cached ??= new T();
+                return;
+            }
             Deserialize(json);
             wasLoaded = true;
         }
