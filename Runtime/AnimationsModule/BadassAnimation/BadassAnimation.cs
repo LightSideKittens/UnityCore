@@ -6,6 +6,11 @@ using LSCore.Attributes;
 using LSCore.DataStructs;
 using Sirenix.OdinInspector;
 using UnityEngine;
+#if UNITY_EDITOR
+using Sirenix.Utilities.Editor;
+using UnityEditor;
+#endif
+
 [assembly: InternalsVisibleTo("LSCore.BadassAnimation.Editor")]
 public partial class BadassAnimation : MonoBehaviour, IAnimatable
 {
@@ -256,7 +261,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     [Button]
     private void Edit()
     { 
-        NeedShowWindow?.Invoke(this);
+        
     }
 #endif
 
@@ -406,15 +411,18 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         this.isPreview = true;
     }
     
-    internal void Editor_Evaluate(float time)
+    internal void Editor_Evaluate(float time, bool needApply)
     {
         foreach (var evaluator in currentEvaluators)
         {
             evaluator.x = time;
             evaluator.Evaluate();
         }
-        
-        AfterEvaluate();
+
+        if (needApply)
+        {
+            AfterEvaluate();
+        }
     }
     
     private void OnDrawGizmos()
@@ -462,6 +470,23 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
         d?.handlers.Remove(handler);
         currentHandlers.Remove(handler);
     }
+    
+    public void TrimModifications(List<UndoPropertyModification> modifications)
+    {
+        foreach (var handler in currentHandlers)
+        {
+            handler.TrimModifications(modifications);
+        }
+    }
+    
+    public void StartAnimationMode()
+    {
+        foreach (var handler in currentHandlers)
+        {
+            handler.StartAnimationMode();
+        }
+    }
+    
 #endif
     
     public void Play(BadassAnimationClip clip)

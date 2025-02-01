@@ -88,6 +88,7 @@ public partial class BadassAnimationWindow
             curvesEditor.CurveItems.Remove(this);
             clip.Remove(handler, Name);
             handler.RemoveEvaluator(Name);
+            window.TryUpdateAnimationMode();
             editor = null;
             curve = null;
         }

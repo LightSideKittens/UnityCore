@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using Cronos;
-using LSCore.Extensions;
+using LSCore.Extensions.Time;
 using UnityEngine;
 
 namespace LSCore.LifecycleSystem

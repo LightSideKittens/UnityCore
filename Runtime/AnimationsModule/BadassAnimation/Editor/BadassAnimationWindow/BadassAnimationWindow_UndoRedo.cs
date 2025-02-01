@@ -15,6 +15,7 @@ public partial class BadassAnimationWindow
     private void RecordUndo(Object obj, string name)
     {
         if(IsRecorded) return;
+        EditorUtility.SetDirty(obj);
         IsRecorded = true;
         Undo.RegisterCompleteObjectUndo(obj, name);
     }
@@ -22,6 +23,10 @@ public partial class BadassAnimationWindow
     private void RecordUndo(string name, params Object[] objs)
     {
         if(IsRecorded) return;
+        foreach (var obj in objs)
+        {
+            EditorUtility.SetDirty(obj);
+        }
         IsRecorded = true;
         Undo.RegisterCompleteObjectUndo(objs, name);
     }

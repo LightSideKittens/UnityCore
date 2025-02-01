@@ -47,7 +47,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
     private static BadassAnimationWindow window;
     
     [HideInInspector] public CurvesEditor editor;
-    [HideInInspector] public LSHandles.TimePointer timePointer;
+    [HideInInspector] public GUIScene.TimePointer timePointer;
     [HideInInspector] public bool isReversed;
     
     private bool isPlaying;
@@ -76,26 +76,6 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
                 editor.curvesEditor.IsYBlocked = value;
             }
             isDopesheet = value;
-        }
-    }
-    
-    private bool isPreview;
-    private bool IsPreview
-    {
-        get => isPreview;
-        set
-        {
-            if (!value && IsRecording)
-            {
-                IsRecording = false;
-            }
-            
-            isPreview = value;
-            UpdateAnimationComponent();
-            if (value)
-            {
-                EvaluateAnimation();
-            }
         }
     }
 
@@ -185,6 +165,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
         isUndoPerforming = true;
         ForceMenuTreeRebuild();
         UpdateAnimationComponent();
+        TryUpdateAnimationMode();
     }
     
     private bool isUndoPerforming;
@@ -210,7 +191,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
             return tree;
         }
         
-        timePointer ??= new LSHandles.TimePointer();
+        timePointer ??= new GUIScene.TimePointer();
         
         if (toolbar == null)
         {
@@ -393,7 +374,8 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
             
             return;
         }
-        
+
+        var lastTimePointer = timePointer.Time;
         editor.OnGUI(rect);
         
         var keyPointsBounds = editor.curvesEditor.GetKeyPointsBounds();
@@ -428,10 +410,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
 
         lastTime = EditorApplication.timeSinceStartup;
 
-        if (e.OnRepaint())
-        {
-            EvaluateAnimation();
-        }
+        EvaluateAnimation(!IsRecording || !Mathf.Approximately(lastTimePointer, timePointer.Time));
         
         if (treePopup != null)
         {
@@ -525,7 +504,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
         animation.Editor_SetClip(clip, IsPreview);
     }
     
-    private void EvaluateAnimation() => animation.Editor_Evaluate(timePointer.Time);
+    private void EvaluateAnimation(bool needApply = true) => animation.Editor_Evaluate(timePointer.Time, needApply);
 
     private IEnumerable<CurveItem> GetSelectedCurvesWithoutCurves()
     {
@@ -612,7 +591,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
         OdinObjectSelector.Show(this, toolbar.CurrentClip.GetInstanceID(), null, typeof(T), position: rect);
     }
 
-    public static IEnumerable<BadassAnimation.Event> SelectEvents(List<BadassAnimation.Event> events, LSHandles.TimePointer pointer, bool reverse)
+    public static IEnumerable<BadassAnimation.Event> SelectEvents(List<BadassAnimation.Event> events, GUIScene.TimePointer pointer, bool reverse)
     {
         var oldRealTime = pointer.OldRealTime;
         var realTime = pointer.RealTime;

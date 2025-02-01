@@ -10,30 +10,33 @@ namespace LSCore.AnimationsModule
         [SerializeField] private Rigidbody2D rigidbody;
         [SerializeField] private bool useWorldSpace;
         private Transform transform;
-        private Vector2 startPosition;
 
 #if UNITY_EDITOR
         protected override string Label => "Position";
+        protected override string PropertyPath { get; }
 #endif
 
         public override Object Target => rigidbody;
-        
-        protected override void OnStart()
+
+        protected override Vector2 GetStartValue()
         {
-            transform = rigidbody.transform;
 #if UNITY_EDITOR
             if (World.IsEditMode)
             {
-                startPosition = transform.position;
-                return;
+                return transform.position;
             }
 #endif
-            startPosition = rigidbody.position;
+            return rigidbody.position;
+        }
+
+        protected override void OnStart()
+        {
+            transform = rigidbody.transform;
         }
         
         protected override void OnHandle()
         {
-            var target = startPosition;
+            var target = StartValue;
             
             if (useWorldSpace)
             {
@@ -62,7 +65,7 @@ namespace LSCore.AnimationsModule
 #if UNITY_EDITOR
             if (World.IsEditMode)
             {
-                transform.position = startPosition;
+                transform.position = StartValue;
             }
 #endif
         }

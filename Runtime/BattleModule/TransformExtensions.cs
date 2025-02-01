@@ -1,5 +1,4 @@
-﻿using LSCore.LevelSystem;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace LSCore.BattleModule
 {

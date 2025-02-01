@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using LSCore.AnimationsModule;
 using LSCore.Editor;
 using Sirenix.OdinInspector.Editor;
@@ -11,6 +12,54 @@ using Object = UnityEngine.Object;
 
 public partial class BadassAnimationWindow
 {
+    private bool isPreview;
+    private bool IsPreview
+    {
+        get => isPreview;
+        set
+        {
+            if (!value && IsRecording)
+            {
+                IsRecording = false;
+            }
+
+            IsAnimationMode = value;
+            
+            isPreview = value;
+            UpdateAnimationComponent();
+            if (value)
+            {
+                EvaluateAnimation();
+            }
+        }
+    }
+
+    private void TryUpdateAnimationMode()
+    {
+        if (window.IsAnimationMode)
+        {
+            window.IsAnimationMode = false;
+            window.IsAnimationMode = true;
+        }
+    }
+
+    private bool IsAnimationMode
+    {
+        get => AnimationMode.InAnimationMode();
+        set
+        {
+            if (value)
+            {
+                AnimationMode.StartAnimationMode();
+                animation.StartAnimationMode();
+            }
+            else
+            {
+                AnimationMode.StopAnimationMode();
+            }
+        }
+    }
+    
     private bool isRecording;
     private bool IsRecording
     {
@@ -27,126 +76,63 @@ public partial class BadassAnimationWindow
                 isRecording = value;
                 if (value)
                 {
-                    Patchers._Transform.TransformTool.Calling += OnCallingTransformTool;
-                    Patchers._Transform.TransformTool.Called += OnCalledTransformTool;
-                    Patchers._EditorGUI.BeginPropertyInternal.Calling += OnBeginProperty;
-                    Patchers._EditorGUI.EndProperty.Called += OnEndProperty;
+                    Undo.postprocessModifications += OnPostProcessModifications;
                 }
                 else
                 {
-                    Patchers._Transform.TransformTool.Calling -= OnCallingTransformTool;
-                    Patchers._Transform.TransformTool.Called -= OnCalledTransformTool;
-                    Patchers._EditorGUI.BeginPropertyInternal.Calling -= OnBeginProperty;
-                    Patchers._EditorGUI.EndProperty.Called -= OnEndProperty;
+                    Undo.postprocessModifications -= OnPostProcessModifications;
                 }
             }
         }
     }
-
-    private Queue<(Vector3 lastPosition, Vector3 lastEulerAngles, Vector3 lastScale)> transformsData = new();
     
-    private void OnCallingTransformTool(Transform transform)
+    private UndoPropertyModification[] OnPostProcessModifications(UndoPropertyModification[] modifications)
     {
-        transformsData.Enqueue((transform.localPosition, transform.localEulerAngles, transform.localScale));
+        var modsList = new List<UndoPropertyModification>(modifications);
+        ModifyCurves(modifications);
+        animation.TrimModifications(modsList);
+        modifications = modsList.ToArray();
+        return modifications;
     }
     
-    private void OnCalledTransformTool(Transform transform, bool isChanged)
+    private void ModifyCurves(UndoPropertyModification[] modifications)
     {
-        var (lastPosition, lastEulerAngles, lastScale) = transformsData.Dequeue();
-        if (!isChanged) return;
-        var data = GetChangedAxis(lastPosition, transform.localPosition);
-        
-        if (data.Count > 0)
+        for (int i = 0; i < modifications.Length; i++)
         {
-            Modify<TransformPosition>();
-            return;
+            var mod = modifications[i];
+            if (mod.currentValue.target is Transform transform)
+            {
+                TryModifyTransform<TransformPosition>("m_LocalPosition", mod, transform);
+                TryModifyTransform<TransformRotation>("m_LocalRotation", mod, transform);
+                TryModifyTransform<TransformScale>("m_LocalScale", mod, transform);
+            }
         }
-        
-        data = GetChangedAxis(lastEulerAngles, transform.localEulerAngles);
-        
-        if (data.Count > 0)
+    }
+    
+    private void TryModifyTransform<T>(string propertyName, UndoPropertyModification mod, Transform transform) where T : BaseTransformHandler, new()
+    {
+        var cur = mod.currentValue;
+        var propertyPath = cur.propertyPath;
+        if (!propertyPath.StartsWith(propertyName))
         {
-            Modify<TransformRotation>();
-            return;
-        }
-        
-        data = GetChangedAxis(lastScale, transform.localScale);
-        
-        if (data.Count > 0)
-        {
-            Modify<TransformScale>();
             return;
         }
 
-        void Modify<T>() where T : BaseTransformHandler, new()
+        var axis = propertyPath.Split('.')[^1];
+        var value = float.Parse(cur.value);
+            
+        if (!objectByHandlerType.TryGetValue(transform, out Dictionary<Type, BadassAnimation.Handler> handlers))
         {
-            if (!objectByHandlerType.TryGetValue(transform, out Dictionary<Type, BadassAnimation.Handler> handlers))
-            {
-                objectByHandlerType[transform] = handlers = new Dictionary<Type, BadassAnimation.Handler>();
-            }
+            objectByHandlerType[transform] = handlers = new Dictionary<Type, BadassAnimation.Handler>();
+        }
         
-            var handler = TryAddTransformHandler<T>(handlers, transform);
-            OdinMenuItem handlerItem = FindHandlerItem(handler);
+        var handler = TryAddTransformHandler<T>(handlers, transform);
+        OdinMenuItem handlerItem = FindHandlerItem(handler);
 
-            foreach (var (axis, value) in data)
-            {
-                ModifyCurve(handlerItem, axis, value);
-            }
-        }
-
-        List<(string axis, float value)> GetChangedAxis(Vector3 last, Vector3 cur)
-        {
-            (string axis, float value) data = default;
-            var result = new List<(string axis, float value)>();
-            
-            if (!Mathf.Approximately(last.x, cur.x))
-            {
-                data.axis = "x";
-                data.value = cur.x;
-                result.Add(data);
-            }
-            
-            if(!Mathf.Approximately(last.y, cur.y))
-            {
-                data.axis = "y";
-                data.value = cur.y;
-                result.Add(data);
-            }
-            
-            if(!Mathf.Approximately(last.z, cur.z))
-            {
-                data.axis = "z";
-                data.value = cur.z;
-                result.Add(data);
-            }
-            
-            return result;
-        }
+        ModifyCurve(handlerItem, axis, value);
     }
 
     private Dictionary<Object, Dictionary<Type, BadassAnimation.Handler>> objectByHandlerType = new();
-    private static readonly Stack<SerializedProperty> propertyStack = new ();
-    
-    private void OnBeginProperty(Rect arg1, GUIContent arg2, SerializedProperty arg3)
-    {
-        propertyStack.Push(arg3);
-        EditorGUI.BeginChangeCheck();
-    }
-    
-    private void OnEndProperty()
-    {
-        var prop = propertyStack.Pop();
-        if(prop == null) return;
-        if (EditorGUI.EndChangeCheck())
-        {
-            var target = prop.serializedObject.targetObject;
-            
-            if (target is Transform transform)
-            {
-                HandleTransformPropertyChanges(transform, prop);
-            }
-        }
-    }
 
     private OdinMenuItem FindHandlerItem(BadassAnimation.Handler handler)
     {
@@ -155,68 +141,6 @@ public partial class BadassAnimationWindow
         return handlerItem;
     }
     
-    private void HandleTransformPropertyChanges(Transform transform, SerializedProperty prop)
-    {
-        if (!objectByHandlerType.TryGetValue(transform, out Dictionary<Type, BadassAnimation.Handler> handlers))
-        {
-            objectByHandlerType[transform] = handlers = new Dictionary<Type, BadassAnimation.Handler>();
-        }
-
-        TryAddHandler<TransformPosition>("m_LocalPosition");
-        TryAddHandler<TransformRotation>("m_LocalRotation");
-        TryAddHandler<TransformScale>("m_LocalScale");
-
-        void TryAddHandler<T>(string propName) where T : BaseTransformHandler, new()
-        {
-            var split = prop.propertyPath.Split('.');
-            if (split.Length < 2) return;
-
-            if (split[0] == propName)
-            {
-                var handler = TryAddTransformHandler<T>(handlers, transform);
-                OdinMenuItem handlerItem = FindHandlerItem(handler);
-
-                if (handlerItem != null)
-                {
-                    if (split[0] == "m_LocalRotation")
-                    {
-                        var axis = split[1];
-                        Patchers._Transform.SetLocalEulerAngles.Called += TryModifyRotationCurve;
-
-                        void TryModifyRotationCurve(Vector3 eulerAngles)
-                        {
-                            Patchers._Transform.SetLocalEulerAngles.Called -= TryModifyRotationCurve;
-                            
-                            TryModify("x", eulerAngles.x);
-                            TryModify("y", eulerAngles.y);
-                            TryModify("z", eulerAngles.z);
-                            void TryModify(string curveName, float value)
-                            {
-                                if (axis == curveName)
-                                {
-                                    ModifyCurve(handlerItem, curveName, value);
-                                }
-                            }
-                        }
-                        return;
-                    }
-                    
-                    TryModifyCurve("x");
-                    TryModifyCurve("y");
-                    TryModifyCurve("z");
-
-                    void TryModifyCurve(string curveName)
-                    {
-                        if (split[1] == curveName)
-                        {
-                            ModifyCurve(handlerItem, curveName, prop.floatValue);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     private BadassAnimation.Handler TryAddTransformHandler<T>(Dictionary<Type, BadassAnimation.Handler> handlers, Transform transform) where T : BaseTransformHandler, new()
     {
         if (!handlers.TryGetValue(typeof(T), out var handler))
@@ -242,9 +166,9 @@ public partial class BadassAnimationWindow
             }
 
             curveItem.TryCreateCurveEditor(this);
-            LSHandles.StartMatrix(editor.curvesEditor.matrix);
+            GUIScene.StartMatrix(editor.curvesEditor.matrix);
             curveItem.editor.SetKeyY(timePointer.Time, value);
-            LSHandles.EndMatrix();
+            GUIScene.EndMatrix();
         }
     }
 }

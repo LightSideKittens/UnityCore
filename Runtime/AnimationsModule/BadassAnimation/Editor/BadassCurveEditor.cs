@@ -23,7 +23,7 @@ public partial class BadassCurveEditor
     public Color tangentLineColor = new (1f, 0.32f, 0.36f);
     private Color keyPointColor = Color.black;
     private Color tangentPointColor = Color.black;
-    private Color SelectionColor => LSHandles.Styles.selectionColor;
+    private Color SelectionColor => GUIScene.Styles.selectionColor;
     private Color lastSelectionColor = Color.white;
     
     public float SnappingStep { get; set; }
@@ -69,11 +69,11 @@ public partial class BadassCurveEditor
                     selectionColor = Color.gray;
                 }
 
-                LSHandles.DrawLine(bezierWidth, curveColor, curve[1], minPoint);
+                GUIScene.DrawLine(bezierWidth, curveColor, curve[1], minPoint);
 
                 var maxPoint = curve[^2];
                 maxPoint.x = 100000;
-                LSHandles.DrawLine(bezierWidth, curveColor, curve[^2], maxPoint);
+                GUIScene.DrawLine(bezierWidth, curveColor, curve[^2], maxPoint);
 
                 var st = curve[0];
                 var sp = curve[1];
@@ -87,13 +87,13 @@ public partial class BadassCurveEditor
                     var endTangent = curve[i + 2];
                     var endPosition = curve[i + 3];
 
-                    LSHandles.DrawBezier(startPosition.p, startTangent.p, endTangent.p, endPosition.p, curveColor,
+                    GUIScene.DrawBezier(startPosition.p, startTangent.p, endTangent.p, endPosition.p, curveColor,
                         bezierWidth);
 
                     DrawTangentLine(tangentWidth, tangentLineColor, startTangent.e, startPosition.e);
                     DrawTangentLine(tangentWidth, tangentLineColor, endTangent.e, endPosition.e);
 
-                    LSHandles.DrawCircle(startPosition.e, constWidth, keyPointColor);
+                    GUIScene.DrawCircle(startPosition.e, constWidth, keyPointColor);
                     DrawTangentPoint(startTangent.e, constWidth, tangentPointColor);
                     DrawTangentPoint(endTangent.e, constWidth, tangentPointColor);
                 }
@@ -103,18 +103,18 @@ public partial class BadassCurveEditor
                 DrawTangentLine(tangentWidth, tangentLineColor, et.e, ep.e);
                 DrawTangentPoint(et.e, constWidth, tangentPointColor);
 
-                LSHandles.DrawCircle(ep.e, constWidth, keyPointColor);
+                GUIScene.DrawCircle(ep.e, constWidth, keyPointColor);
 
                 for (int i = 0; i < selectedPointIndexes.Count; i++)
                 {
                     var target = selectedPointIndexes[i];
                     if (IsRoot(target))
                     {
-                        LSHandles.DrawCircle(curve[target].e, constWidth, selectionColor);
+                        GUIScene.DrawCircle(curve[target].e, constWidth, selectionColor);
                     }
                     else if (!IsLocked)
                     {
-                        LSHandles.DrawRing(curve[target].e, constWidth, selectionColor);
+                        GUIScene.DrawRing(curve[target].e, constWidth, selectionColor);
                     }
                 }
             }
@@ -128,13 +128,13 @@ public partial class BadassCurveEditor
         void DrawTangentPoint(Vector2 pos, float size, Color color)
         {
             if(IsLocked) return;
-            LSHandles.DrawRing(pos, size, color);
+            GUIScene.DrawRing(pos, size, color);
         }
         
         void DrawTangentLine(float width, Color color, params Vector3[] points)
         {
             if(IsLocked) return;
-            LSHandles.DrawLine(width, color, points);
+            GUIScene.DrawLine(width, color, points);
         }
     }
     
@@ -147,7 +147,7 @@ public partial class BadassCurveEditor
             keyPointColor = Color.gray;
         }
 
-        LSHandles.DrawCircle(pos, size, keyPointColor);
+        GUIScene.DrawCircle(pos, size, keyPointColor);
     }
     
     public void DrawSelectedKey(Vector2 pos, float size)
@@ -159,7 +159,7 @@ public partial class BadassCurveEditor
             selectionColor = Color.gray;
         }
 
-        LSHandles.DrawCircle(pos, size, selectionColor);
+        GUIScene.DrawCircle(pos, size, selectionColor);
     }
     
     public bool IsPointSelected(int index) => selectedPointIndexes.Contains(index);
@@ -221,7 +221,7 @@ public partial class BadassCurveEditor
     }
     
     public Func<Rect> pointsBoundsGetter;
-    private LSHandles.PointsTransformer pointsTransformer;
+    private GUIScene.PointsTransformer pointsTransformer;
     private bool lastIsRecorded;
 
     public bool IsRecorded
@@ -418,7 +418,7 @@ public partial class BadassCurveEditor
     
     public bool TryGetPointIndex(out int index)
     {
-        var mp = LSHandles.MouseInWorldPoint;
+        var mp = GUIScene.MouseInWorldPoint;
         for (int i = 0; i < curve.Count; i++)
         {
             var pos = curve[i];
@@ -480,7 +480,7 @@ public partial class BadassCurveEditor
     private void InsertKey()
     {
         RecordInsertKey();
-        var mousePos = LSHandles.MouseInWorldPoint;
+        var mousePos = GUIScene.MouseInWorldPoint;
         var x = mousePos.x;
         var i = curve.InsertKeyByX(x);
         selectedPointIndexes.Clear();
@@ -566,7 +566,7 @@ public partial class BadassCurveEditor
             pos.y = point.e.y;
         }
 
-        pos.x = LSHandles.SnapX(pos.x, SnappingStep);
+        pos.x = GUIScene.SnapX(pos.x, SnappingStep);
         
         curve[i] = point.epSet(pos);
         
@@ -725,7 +725,7 @@ public partial class BadassCurveEditor
         return workedPointIndexesArr[..];
     }
     
-    private static bool IsInDistance(BezierPoint point, Vector2 worldMousePos, float distance) => LSHandles.IsInDistance(point.e, worldMousePos, distance);
+    private static bool IsInDistance(BezierPoint point, Vector2 worldMousePos, float distance) => GUIScene.IsInDistance(point.e, worldMousePos, distance);
 
     public void SwapKeys(ref int root1, int root2)
     {
@@ -839,7 +839,7 @@ public partial class BadassCurveEditor
         
         void SetPosByMouseDrag(ref int ind, int copyi, bool isRoot)
         {
-            var delta = LSHandles.MouseInWorldPoint - startMousePosition;
+            var delta = GUIScene.MouseInWorldPoint - startMousePosition;
             var point = copyPoints[copyi].e + delta;
             SetPos(ref ind, point, isRoot);
         }
@@ -876,12 +876,12 @@ public partial class BadassCurveEditor
                 selectedPointIndexes = selectedPointIndexesCopy;
 
                 var bounds = pointsBoundsGetter();
-                var startPos = LSHandles.MouseInWorldPoint;
+                var startPos = GUIScene.MouseInWorldPoint;
 
                 pointsTransformer.applyEventHandler = _ => pointsTransformer.applyEventHandler = null;
                 pointsTransformer.eventHandler = _ =>
                 {
-                    var curPos = LSHandles.MouseInWorldPoint;
+                    var curPos = GUIScene.MouseInWorldPoint;
                     var transformation = pointsTransformer.GetMatrix(bounds, startPos, curPos);
 
                     for (int i = 0; i < selectedPointIndexes.Count; i++)

@@ -9,7 +9,7 @@ namespace LSCore.AnimationsModule
     {
         public Transform transform;
         
-        public override Object Target => transform;
+        public sealed override Object Target => transform;
     }
 
     [Serializable]
@@ -17,30 +17,18 @@ namespace LSCore.AnimationsModule
     {
         [SerializeField] private bool useWorldSpace;
         [SerializeField] private bool add;
-        private Vector3 startPosition;
         
 #if UNITY_EDITOR
         protected override string Label => "Position";
+        protected override string PropertyPath => "m_LocalPosition";
 #endif
 
-        protected override void OnStart()
-        {
-            if (useWorldSpace)
-            {
-                startPosition = transform.position;
-            }
-            else
-            {
-                startPosition = transform.localPosition;
-            }
-
-            value = startPosition;
-        }
+        protected override Vector3 GetStartValue() => useWorldSpace ? transform.position : transform.localPosition;
         
         protected override void OnHandle()
         {
             var target = value;
-            if(add) target += startPosition;
+            if(add) target += StartValue;
             
             if (useWorldSpace)
             {
@@ -58,11 +46,11 @@ namespace LSCore.AnimationsModule
             {
                 if (useWorldSpace)
                 {
-                    transform.position = startPosition;
+                    transform.position = StartValue;
                 }
                 else
                 {
-                    transform.localPosition = startPosition;
+                    transform.localPosition = StartValue;
                 }
             }
         }

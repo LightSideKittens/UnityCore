@@ -36,9 +36,8 @@ public class BiDictionary<TKey, TValue>
 
     public bool RemoveFromKey(TKey key)
     {
-        if (valueByKey.TryGetValue(key, out TValue value))
+        if (valueByKey.Remove(key, out TValue value))
         {
-            valueByKey.Remove(key);
             keyByValue.Remove(value);
             return true;
         }
@@ -47,9 +46,8 @@ public class BiDictionary<TKey, TValue>
 
     public bool RemoveFromValue(TValue value)
     {
-        if (keyByValue.TryGetValue(value, out TKey key))
+        if (keyByValue.Remove(value, out TKey key))
         {
-            keyByValue.Remove(value);
             valueByKey.Remove(key);
             return true;
         }
@@ -61,7 +59,7 @@ public class BiDictionary<TKey, TValue>
         return valueByKey.TryGetValue(key, out value);
     }
 
-    public bool TryGetValueFromValue(TValue value, out TKey key)
+    public bool TryGetKeyFromValue(TValue value, out TKey key)
     {
         return keyByValue.TryGetValue(value, out key);
     }
@@ -79,13 +77,21 @@ public class BiDictionary<TKey, TValue>
     public TValue this[TKey key]
     {
         get => valueByKey[key];
-        set => valueByKey[key] = value;
+        set
+        {
+            valueByKey[key] = value;
+            keyByValue[value] = key;
+        }
     }
 
     public TKey this[TValue val]
     {
         get => keyByValue[val];
-        set => keyByValue[val] = value;
+        set
+        {
+            keyByValue[val] = value;
+            valueByKey[value] = val;
+        }
     }
 
     public IEnumerable<TKey> Keys => valueByKey.Keys;

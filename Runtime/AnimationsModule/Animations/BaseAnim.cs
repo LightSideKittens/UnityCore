@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations
     { 
         [BoxGroup] [LabelText("ID")] public string id;
         [HideIf("IsDurationZero")]
-        [SerializeReference] public List<IOption> mainOptions;
+        [SerializeReference] private List<IOption> mainOptions;
 
         public abstract bool NeedInit { get; set; }
         public abstract float Duration { get; set; }
@@ -112,14 +112,14 @@ namespace LSCore.AnimationsModule.Animations
         public bool useTargetPath;
         public bool useMultiple;
         
-        [HideIf("@IsDurationZero")]
+        [HideIf("@IsDurationZero || !useMultiple")]
         [SerializeReference] public List<IOption> options;
-        [HideIf("useTargetPath")] public TTarget target;
-        [ShowIf("ShowTargets")] public TTarget[] targets;
+        [HideIf("ShowTargets")] public TTarget target;
+        [ShowIf("ShowTargets")] public List<TTarget> targets;
         
         [ShowIf("useTargetPath")] public Transform root;
-        [ShowIf("useTargetPath")] public string targetPath;
-        [ShowIf("ShowTargetsPaths")] public string[] targetsPaths;
+        [HideIf("ShowTargetsPaths")] public string targetPath;
+        [ShowIf("ShowTargetsPaths")] public List<string> targetsPaths;
         
         [ShowIf("useMultiple")] public float timeOffsetPerTarget = 0.1f;
 
@@ -134,32 +134,35 @@ namespace LSCore.AnimationsModule.Animations
         
         protected override void Internal_Init()
         {
-            InitAction(target);
-            if (targets != null)
+            if (useMultiple)
             {
-                for (int i = 0; i < targets.Length; i++)
+                for (int i = 0; i < targets.Count; i++)
                 {
                     InitAction(targets[i]);
                 }
+                
+                return;
             }
+            
+            InitAction(target);
         }
 
         protected override Tween Internal_Animate()
         {
+            Tweens ??= new();
+            Tweens.Clear();
+            
             if (useMultiple)
             {
-                Tweens = new();
                 var sequence = DOTween.Sequence();
                 var pos = 0f;
-                var t = ApplyOptions(AnimAction(target), options);
-                Tweens.Add(t);
-                sequence.Insert(pos, t);
-                for (int i = 0; i < targets.Length; i++)
+                
+                for (int i = 0; i < targets.Count; i++)
                 {
-                    pos += timeOffsetPerTarget;
-                    t = ApplyOptions(AnimAction(targets[i]), options);
+                    var t = ApplyOptions(AnimAction(targets[i]), options);
                     Tweens.Add(t);
                     sequence.Insert(pos, t);
+                    pos += timeOffsetPerTarget;
                 }
 
                 return sequence;
@@ -180,7 +183,7 @@ namespace LSCore.AnimationsModule.Animations
             if(World.IsEditMode) return;
             if (useTargetPath)
             {
-                targets = new TTarget[targetsPaths.Length];
+                targets = new List<TTarget>();
                 if (typeof(Component).IsAssignableFrom(typeof(T)))
                 {
                     if (targetPath[0] == '$')
@@ -192,17 +195,17 @@ namespace LSCore.AnimationsModule.Animations
                         target = root.FindComponent<TTarget>(targetPath);
                     }
 
-                    for (int i = 0; i < targetsPaths.Length; i++)
+                    for (int i = 0; i < targetsPaths.Count; i++)
                     {
                         var path = targetsPaths[i];
                         if (path[0] == '$')
                         {
                             var index = i;
-                            Bind(path, t => targets[index] = t);
+                            Bind(path, t => targets.Add(t));
                         }
                         else
                         {
-                            targets[i] = root.FindComponent<TTarget>(path);
+                            targets.Add(root.FindComponent<TTarget>(path));
                         }
                     }
                 }
@@ -222,7 +225,7 @@ namespace LSCore.AnimationsModule.Animations
                     Bind(targetPath, t => target = t);
                 }
 
-                for (int i = 0; i < targetsPaths.Length; i++)
+                for (int i = 0; i < targetsPaths.Count; i++)
                 {
                     var path = targetsPaths[i];
                     if (path[0] == '$')

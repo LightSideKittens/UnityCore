@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using LSCore;
 using Sirenix.OdinInspector;
+using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -58,9 +59,8 @@ public partial class BadassAnimation
         public IEnumerable<HandlerEvaluateData> Evaluators => evaluators.Values;
 
 #if UNITY_EDITOR
-        protected bool CanUse => IsPreview && Target != null;
+        protected bool CanUse => IsPreview && Target != null && applyEvaluationResult != null;
         public bool IsPreview { get; set; } = true;
-        private HideFlags lastHideFlags = HideFlags.None;
 #endif
 
         public abstract Object Target { get; }
@@ -77,19 +77,15 @@ public partial class BadassAnimation
             if (!isStarted)
             {
                 isStarted = true;
-#if UNITY_EDITOR
-                lastHideFlags = Target.hideFlags;
-                if (IsPreview)
-                {
-                    Target.hideFlags = HideFlags.None;
-                }
-#endif
+                
                 foreach (var evaluator in Evaluators)
                 {
-                    evaluator.isDiff = true;
                     evaluator.Evaluate();
+                    evaluator.isDiff = true;
                 }
+                
                 OnStart();
+                SetStartValue();
                 Handle();
             }
         }
@@ -106,43 +102,38 @@ public partial class BadassAnimation
             if (isStarted)
             {
                 isStarted = false;
-#if UNITY_EDITOR
-                if (IsPreview)
-                {
-                    Target.hideFlags = lastHideFlags;
-                }
-#endif
                 OnStop();
             }
         }
 
         public abstract void Handle();
 
-        protected abstract void OnStart();
-
+        protected virtual void OnStart(){}
+        protected abstract void SetStartValue();
         protected abstract void OnStop();
 
         public bool TryGetEvaluator(string key, out HandlerEvaluateData evaluator) => evaluators.TryGetValue(key, out evaluator);
         public bool RemoveEvaluator(string key)
         {
             applyEvaluationResult -= GetApplyEvaluationResultAction(key, null);
+            var isRemoved = evaluators.Remove(key);
             if (isStarted)
             {
                 Stop();
                 Start();
             }
-            return evaluators.Remove(key);
+            return isRemoved;
         }
 
         public void ClearEvaluators()
         {
             applyEvaluationResult = null;
+            evaluators.Clear();
             if (isStarted)
             {
                 Stop();
                 Start();
             }
-            evaluators.Clear();
         }
 
         public void AddEvaluator(string key, BadassCurve curve)
@@ -177,24 +168,62 @@ public partial class BadassAnimation
         public virtual void OnSceneGUI()
         {
         }
+        
+        public abstract void TrimModifications(List<UndoPropertyModification> modifications);
+        public abstract void StartAnimationMode();
 #endif
     }
 
     [Serializable]
     public abstract class Handler<T> : Handler
     {
-        [ShowInInspector] 
-        [LabelText("$Label")] 
+        [ShowInInspector]
+        [LabelText("$Label")]
         [NonSerialized]
         [GUIColor(1f, 0.54f, 0.16f)]
         [PropertySpace(SpaceBefore = 0, SpaceAfter = 10)]
         public T value;
+        
+        public T StartValue { get; set; }
+        protected abstract T GetStartValue();
         protected bool isDiff;
+
+        protected sealed override void SetStartValue()
+        {
+            var v = GetStartValue();
+            StartValue = v;
+            value = v;
+        }
         
 #if UNITY_EDITOR
         protected virtual string Label => "Value";
         public override Type ValueType => typeof(T);
         public override string HandlerName => GetType().Name;
+        protected abstract string PropertyPath { get; }
+        protected void TrimModifications(List<UndoPropertyModification> modifications, HandlerEvaluateData evaluateData, string propertyName)
+        {
+            for (int i = 0; i < modifications.Count; i++)
+            {
+                var mod = modifications[i];
+                if (evaluateData != null && mod.currentValue.propertyPath == $"{PropertyPath}.{propertyName}")
+                {
+                    modifications.RemoveAt(i);
+                    i--;
+                }
+            }
+        }
+
+        protected void StartAnimationMode(HandlerEvaluateData evaluateData, string propertyName, float value)
+        {
+            if(Target == null || evaluateData == null) return;
+            var binding = EditorCurveBinding.FloatCurve($"{PropertyPath}.{propertyName}", Target.GetType(), "");
+            AnimationMode.AddPropertyModification(binding, new PropertyModification()
+            {
+                target = Target,
+                propertyPath = $"{PropertyPath}.{propertyName}",
+                value = value.ToString("g7"),
+            }, true);
+        }
 #endif
         
         public sealed override void Handle()
@@ -209,7 +238,7 @@ public partial class BadassAnimation
             {
                 Start();
                 applyEvaluationResult();
-                goto handle;
+                return;
             }
 #endif
             
@@ -219,7 +248,6 @@ public partial class BadassAnimation
             
             if (!isDiff) return;
             
-            handle:
             OnHandle();
         }
 
@@ -231,6 +259,19 @@ public partial class BadassAnimation
         private HandlerEvaluateData x;
         private HandlerEvaluateData y;
 
+#if UNITY_EDITOR
+        public override void TrimModifications(List<UndoPropertyModification> modifications)
+        {
+            TrimModifications(modifications, x, "x");
+            TrimModifications(modifications, y, "y");
+        }
+
+        public override void StartAnimationMode()
+        {
+            StartAnimationMode(x, "x", StartValue.x);
+            StartAnimationMode(y, "y", StartValue.y);
+        }
+#endif
         protected override Action GetApplyEvaluationResultAction(string key, HandlerEvaluateData evaluator)
         {
             switch (key)
@@ -247,9 +288,25 @@ public partial class BadassAnimation
 
     public abstract class Vector3Handler : Handler<Vector3>
     {
-        private HandlerEvaluateData x;
-        private HandlerEvaluateData y;
-        private HandlerEvaluateData z;
+        protected HandlerEvaluateData x;
+        protected HandlerEvaluateData y;
+        protected HandlerEvaluateData z;
+        
+#if UNITY_EDITOR
+        public override void TrimModifications(List<UndoPropertyModification> modifications)
+        {
+            TrimModifications(modifications, x, "x");
+            TrimModifications(modifications, y, "y");
+            TrimModifications(modifications, z, "z");
+        }
+        
+        public override void StartAnimationMode()
+        {
+            StartAnimationMode(x, "x", StartValue.x);
+            StartAnimationMode(y, "y", StartValue.y);
+            StartAnimationMode(z, "z", StartValue.z);
+        }
+#endif
         
         protected override Action GetApplyEvaluationResultAction(string key, HandlerEvaluateData evaluator)
         {
@@ -273,6 +330,24 @@ public partial class BadassAnimation
         private HandlerEvaluateData g;
         private HandlerEvaluateData b;
         private HandlerEvaluateData a;
+        
+#if UNITY_EDITOR
+        public override void TrimModifications(List<UndoPropertyModification> modifications)
+        {
+            TrimModifications(modifications, r, "r");
+            TrimModifications(modifications, g, "g");
+            TrimModifications(modifications, b, "b");
+            TrimModifications(modifications, a, "a");
+        }
+        
+        public override void StartAnimationMode()
+        {
+            StartAnimationMode(r, "r", StartValue.r);
+            StartAnimationMode(g, "g", StartValue.g);
+            StartAnimationMode(b, "b", StartValue.b);
+            StartAnimationMode(a, "a", StartValue.a);
+        }
+#endif
         
         protected override Action GetApplyEvaluationResultAction(string key, HandlerEvaluateData evaluator)
         {
@@ -303,5 +378,10 @@ public partial class BadassAnimation
         }
 
         private void Value() {isDiff |= valueEvaluator.isDiff; value = valueEvaluator.y;}
+
+        protected override float GetStartValue()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

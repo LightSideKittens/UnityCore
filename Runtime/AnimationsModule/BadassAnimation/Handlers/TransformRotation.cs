@@ -8,28 +8,17 @@ namespace LSCore.AnimationsModule
     {
         [SerializeField] private bool useWorldSpace;
         [SerializeField] private bool add;
-        private Vector3 startRotation;
         
 #if UNITY_EDITOR
         protected override string Label => "Rotation";
+        protected override string PropertyPath => "m_LocalRotation";
 #endif
-        
-        protected override void OnStart()
-        {
-            if (useWorldSpace)
-            {
-                startRotation = transform.eulerAngles;
-            }
-            else
-            {
-                startRotation = transform.localEulerAngles;
-            }
-        }
-        
+        protected override Vector3 GetStartValue() => useWorldSpace ? transform.eulerAngles : transform.localEulerAngles;
+
         protected override void OnHandle()
         {
             var target = value;
-            if(add) target += startRotation;
+            if(add) target += StartValue;
             
             if (useWorldSpace)
             {
@@ -47,11 +36,11 @@ namespace LSCore.AnimationsModule
             {
                 if (useWorldSpace)
                 {
-                    transform.eulerAngles = startRotation;
+                    transform.eulerAngles = StartValue;
                 }
                 else
                 {
-                    transform.localEulerAngles = startRotation;
+                    transform.localEulerAngles = StartValue;
                 }
             }
         }

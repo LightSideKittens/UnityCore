@@ -7,21 +7,17 @@ namespace LSCore.AnimationsModule
     public class TransformScale : BaseTransformHandler
     {
         [SerializeField] private bool add;
-        private Vector3 startScale;
         
 #if UNITY_EDITOR
         protected override string Label => "Scale";
+        protected override string PropertyPath => "m_LocalScale";
 #endif
-        
-        protected override void OnStart()
-        {
-            startScale = transform.localScale;
-        }
-        
+        protected override Vector3 GetStartValue() => transform.localScale;
+
         protected override void OnHandle()
         {
             var target = value;
-            if(add) target += startScale;
+            if(add) target += StartValue;
             transform.localScale = target;
         }
         
@@ -29,7 +25,7 @@ namespace LSCore.AnimationsModule
         {
             if (!add)
             {
-                transform.localScale = startScale;
+                transform.localScale = StartValue;
             }
         }
     }

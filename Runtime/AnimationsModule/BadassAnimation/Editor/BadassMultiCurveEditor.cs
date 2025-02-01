@@ -24,8 +24,8 @@ public class BadassMultiCurveEditor
     public List<BadassCurveEditor> editors = new();
     private List<BadassCurveEditor> visibleEditors = new();
     public Matrix4x4 matrix = Matrix4x4.identity;
-    public LSHandles.CameraData camData = new();
-    public LSHandles.GridData gridData = new();
+    public GUIScene.CameraData camData = new();
+    public GUIScene.GridData gridData = new();
     public bool snapping = true;
     private int currentSelectionClickCount = 0;
     private bool wasDragging;
@@ -114,12 +114,12 @@ public class BadassMultiCurveEditor
 
     public Rect GetKeyPointsBounds()
     {
-        return LSHandles.CalculateBounds(KeyPoints);
+        return GUIScene.CalculateBounds(KeyPoints);
     }
     
     private Rect GetSelectedPointsBounds()
     {
-        return LSHandles.CalculateBounds(eSelectedPoints);
+        return GUIScene.CalculateBounds(eSelectedPoints);
     }
     
     public void OnGUI(Rect rect, bool draw)
@@ -135,11 +135,11 @@ public class BadassMultiCurveEditor
             }
         }
         
-        LSHandles.StartMatrix(matrix);
-        LSHandles.Begin(rect, camData);
-        LSHandles.DrawGrid(gridData);
+        GUIScene.StartMatrix(matrix);
+        GUIScene.Begin(rect, camData);
+        GUIScene.DrawGrid(gridData);
         BeforeDraw?.Invoke();
-        LSHandles.SelectRect.Draw();
+        GUIScene.SelectRect.Draw();
 
         if (visibleEditors.Count > 0)
         {
@@ -147,8 +147,8 @@ public class BadassMultiCurveEditor
             TryCopyPointsToClipboard();
         }
         
-        LSHandles.End();
-        matrix = LSHandles.EndMatrix();
+        GUIScene.End();
+        matrix = GUIScene.EndMatrix();
         
         BeforeDraw = null;
         OverridePointPosForSelection = null;
@@ -312,7 +312,7 @@ public class BadassMultiCurveEditor
                         if (focusedSelectedEditor.WasClicked)
                         {
                             draggingIndex = focusedSelectedEditor.ClickedPointIndex;
-                            startMousePosition = LSHandles.MouseInWorldPoint;
+                            startMousePosition = GUIScene.MouseInWorldPoint;
                         }
                     }
 
@@ -340,7 +340,7 @@ public class BadassMultiCurveEditor
                     if (!wasClicked)
                     {
                         DeselectAll();
-                        LSHandles.SelectRect.Start();
+                        GUIScene.SelectRect.Start();
                     }
 
                     if (clickedEditors.Count > 0)
@@ -408,7 +408,7 @@ public class BadassMultiCurveEditor
                         }
                     }
 
-                    var selectionRect = LSHandles.SelectRect.End();
+                    var selectionRect = GUIScene.SelectRect.End();
 
                     for (int i = 0; i < visibleEditors.Count; i++)
                     {

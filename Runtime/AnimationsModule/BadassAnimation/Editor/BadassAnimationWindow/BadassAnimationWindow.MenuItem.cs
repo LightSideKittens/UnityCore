@@ -109,7 +109,7 @@ public partial class BadassAnimationWindow
             Style.Height = 20;
             Style.AlignTriangleLeft = true;
             Style.TrianglePadding = 0;
-            Color = LSHandles.Styles.selectionColor.SetAlpha(0.5f);
+            Color = GUIScene.Styles.selectionColor.SetAlpha(0.5f);
             Style.SelectedColorLightSkin = Color;
             Style.SelectedColorDarkSkin = Color;
         }

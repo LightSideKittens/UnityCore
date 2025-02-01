@@ -88,18 +88,10 @@ public static class GameObjectUtils
 
         EditorSceneManager.sceneOpened += OnSceneLoaded;
         EditorSceneManager.sceneClosed += OnSceneUnloaded;
-        
-        Patchers._EditorUtility.SetDirty.Called += OnSetDirty;
-        Patchers._SerializedObject.ApplyModifiedProperties.Called += OnSetDirty;
-    }
 
-    private static void OnSetDirty(SerializedObject obj, bool isDirty)
-    {
-        if (isDirty)
-        {
-            OnSetDirty(obj.targetObject);
-        }
+        Undo.postprocessModifications += OnSetDirty;
     }
+    
 
     private static void SetGraphUpdated()
     {
@@ -113,8 +105,19 @@ public static class GameObjectUtils
         GraphUpdated?.Invoke();
     }
 
-    private static void OnSetDirty(Object obj)
+    private static UndoPropertyModification[] OnSetDirty(UndoPropertyModification[] modifications)
     {
+        for (int i = 0; i < modifications.Length; i++)
+        {
+            OnSetDirty(modifications[i]);
+        }
+        
+        return modifications;
+    }
+
+    private static void OnSetDirty(UndoPropertyModification mod)
+    {
+        var obj = mod.currentValue.target;
         if (!AssetDatabase.Contains(obj))
         {
             HashSet<Object> deps = null;

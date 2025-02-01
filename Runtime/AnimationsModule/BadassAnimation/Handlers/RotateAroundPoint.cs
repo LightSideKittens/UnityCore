@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEditor;
@@ -23,6 +23,8 @@ namespace LSCore.AnimationsModule
         private Vector3 startPosition;
 #if UNITY_EDITOR
         protected override string Label => "Rotation";
+    
+        protected override string PropertyPath { get; }
 #endif
 
         public override Object Target => target;
@@ -71,4 +73,4 @@ namespace LSCore.AnimationsModule
         }
 #endif
     }
-}
+}*/

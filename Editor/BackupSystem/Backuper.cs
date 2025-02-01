@@ -105,8 +105,7 @@ namespace LSCore.Editor.BackupSystem
         [InitializeOnLoadMethod]
         private static void InitializeOnLoadMethod()
         {
-            Patchers._EditorUtility.SetDirty.Called += OnChanged;
-            Patchers._SerializedObject.ApplyModifiedProperties.Called += OnChanged;
+            Undo.postprocessModifications += OnChanged;
             
             delay = TimeSpan.FromMinutes(Config.As("saveInterval", instance.saveInterval));
             
@@ -220,20 +219,19 @@ namespace LSCore.Editor.BackupSystem
             }
         }
 
-        private static void OnChanged(SerializedObject obj, bool res)
+        private static UndoPropertyModification[] OnChanged(UndoPropertyModification[] modifications)
         {
-            if (res)
+            for (int i = 0; i < modifications.Length; i++)
             {
-                try
-                {
-                    OnChanged(obj.targetObject);
-                }
-                catch { }
+                OnChanged(modifications[i]);
             }
+            
+            return modifications;
         }
-        
-        private static void OnChanged(Object obj)
+
+        private static void OnChanged(UndoPropertyModification mod)
         {
+            var obj = mod.currentValue.target;
             if (canSave && !Application.isPlaying)
             {
                 bool isPrefab = false;

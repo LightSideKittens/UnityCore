@@ -77,4 +77,10 @@ public class MenuItemTools : MonoBehaviour
             EditorUtility.SetDirty(t);
         }
     }
+    
+    [MenuItem(LSPaths.MenuItem.Tools + "/Switch Developer Mode")]
+    public static void Switch()
+    {
+        EditorPrefs.SetBool("DeveloperMode", !EditorPrefs.GetBool("DeveloperMode"));
+    }
 }

@@ -26,7 +26,7 @@ public partial class BadassAnimationWindow
         public const float dopesheetKeySize = 0.02f;
         public BadassAnimationWindow window;
         public BadassAnimation animation;
-        public LSHandles.TimePointer pointer;
+        public GUIScene.TimePointer pointer;
         public BadassMultiCurveEditor curvesEditor;
         public float lastXForEvent;
         private List<CurveItem> curveItems;
@@ -49,7 +49,7 @@ public partial class BadassAnimationWindow
         public bool NeedUpdateItemSelection { get; set; }
         public bool IsSelectionInProgress { get; private set; }
 
-        public CurvesEditor(BadassAnimationWindow window, LSHandles.TimePointer pointer,
+        public CurvesEditor(BadassAnimationWindow window, GUIScene.TimePointer pointer,
             BadassMultiCurveEditor curvesEditor)
         {
             this.window = window;
@@ -162,14 +162,14 @@ public partial class BadassAnimationWindow
 
                 foreach (var eevent in data.events)
                 {
-                    var x = LSHandles.Matrix.MultiplyPoint3x4(new Vector3(eevent.x, 0, 0)).x;
+                    var x = GUIScene.Matrix.MultiplyPoint3x4(new Vector3(eevent.x, 0, 0)).x;
                     var y = pointer.mouseClickArea.yMin;
                     var pos = new Vector2(x, y);
-                    var mp = LSHandles.MouseInWorldPoint;
+                    var mp = GUIScene.MouseInWorldPoint;
 
-                    using (LSHandles.SetIdentityMatrix())
+                    using (GUIScene.SetIdentityMatrix())
                     {
-                        LSHandles.DrawCircle(pos, eventPointSize, green);
+                        GUIScene.DrawCircle(pos, eventPointSize, green);
                         if (e.OnMouseDown(1, false))
                         {
                             if (!wasCleared)
@@ -179,7 +179,7 @@ public partial class BadassAnimationWindow
                                 clickedEvents = new List<BadassAnimation.Event>();
                             }
 
-                            if (LSHandles.IsInDistance(pos, LSHandles.MouseInWorldPoint, eventPointSize))
+                            if (GUIScene.IsInDistance(pos, GUIScene.MouseInWorldPoint, eventPointSize))
                             {
                                 clickedEvents.Add(eevent);
                             }
@@ -192,7 +192,7 @@ public partial class BadassAnimationWindow
 
                             foreach (var eventt in clickedEvents)
                             {
-                                var mpx = LSHandles.SnapX(mp.x, SnappingStep);
+                                var mpx = GUIScene.SnapX(mp.x, SnappingStep);
                                 eventt.x = mpx;
                                 needSort = true;
                             }
@@ -268,13 +268,13 @@ public partial class BadassAnimationWindow
                     }
                     else
                     {
-                        var x = LSHandles.Matrix.MultiplyPoint3x4(new Vector3(clickedEvents[0].x, 0, 0)).x;
+                        var x = GUIScene.Matrix.MultiplyPoint3x4(new Vector3(clickedEvents[0].x, 0, 0)).x;
                         var y = pointer.mouseClickArea.yMin;
                         var pos = new Vector2(x + eventPointSize * 2, y - eventPointSize * 2);
 
-                        using (LSHandles.SetIdentityMatrix())
+                        using (GUIScene.SetIdentityMatrix())
                         {
-                            pos = LSHandles.WorldToScreen(pos);
+                            pos = GUIScene.WorldToScreen(pos);
                             treePopup.position.x = pos.x;
                             treePopup.position.y = pos.y;
                         }
@@ -284,12 +284,12 @@ public partial class BadassAnimationWindow
 
             if (e.OnMouseDown(1, false))
             {
-                var mp = LSHandles.MouseInWorldPoint;
-                var mpx = LSHandles.SnapX(mp.x, SnappingStep);
+                var mp = GUIScene.MouseInWorldPoint;
+                var mpx = GUIScene.SnapX(mp.x, SnappingStep);
                 lastXForEvent = mpx;
-                using (LSHandles.SetIdentityMatrix())
+                using (GUIScene.SetIdentityMatrix())
                 {
-                    if (pointer.ContainsClickArea(LSHandles.MouseInWorldPoint))
+                    if (pointer.ContainsClickArea(GUIScene.MouseInWorldPoint))
                     {
                         var popup = new Popup();
 
@@ -324,7 +324,7 @@ public partial class BadassAnimationWindow
                     if (!curveItem.IsShowing) goto skip;
 
                     var p = point.e;
-                    p.y = LSHandles.ScreenToWorld(curveItem.Rect.center).y;
+                    p.y = GUIScene.ScreenToWorld(curveItem.Rect.center).y;
                     point.e = p;
 
                     if (!check()) goto skip;
@@ -363,12 +363,12 @@ public partial class BadassAnimationWindow
                     var worldRect = curveItem.Rect;
                     worldRect.x = position.x;
                     worldRect.width = position.width;
-                    worldRect = LSHandles.ScreenToWorld(worldRect);
+                    worldRect = GUIScene.ScreenToWorld(worldRect);
                     var y = worldRect.center.y;
                     var c = curveItem.IsSelected ? curveItem.Color.SetAlpha(0.15f) : curveItem.Color.SetAlpha(0.05f);
-                    LSHandles.currentDrawLayer -= 10000;
-                    LSHandles.DrawRect(worldRect, c, false);
-                    LSHandles.currentDrawLayer += 10000;
+                    GUIScene.currentDrawLayer -= 10000;
+                    GUIScene.DrawRect(worldRect, c, false);
+                    GUIScene.currentDrawLayer += 10000;
                     Vector2 range = Vector2.negativeInfinity;
                     float lastY = float.NegativeInfinity;
                     bool isCurveItem = curveItem is CurveItem;
@@ -429,12 +429,12 @@ public partial class BadassAnimationWindow
                         var w = range.y - range.x;
                         var r = new Rect(range.x, worldRect.y, w, worldRect.height);
                         r = r.AlignCenter(w, worldRect.height * 0.7f);
-                        LSHandles.currentDrawLayer -= 10000;
+                        GUIScene.currentDrawLayer -= 10000;
                         var c = wasSelected
-                            ? LSHandles.Styles.selectionColor.SetAlpha(0.5f)
+                            ? GUIScene.Styles.selectionColor.SetAlpha(0.5f)
                             : Color.gray.SetAlpha(0.5f);
-                        LSHandles.DrawRect(r, c, false);
-                        LSHandles.currentDrawLayer += 10000;
+                        GUIScene.DrawRect(r, c, false);
+                        GUIScene.currentDrawLayer += 10000;
                     }
                 }
             }

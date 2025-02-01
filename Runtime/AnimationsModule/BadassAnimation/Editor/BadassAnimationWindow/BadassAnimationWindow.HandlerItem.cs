@@ -49,6 +49,7 @@ public partial class BadassAnimationWindow
                         }
                         
                         handler.Stop();
+                        window.TryUpdateAnimationMode();
                     }
                 };
                 popup.Show(e.mousePosition);

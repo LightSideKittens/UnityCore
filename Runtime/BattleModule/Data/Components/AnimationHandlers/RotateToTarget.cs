@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using LSCore.AnimationsModule;
 using Sirenix.OdinInspector;
+using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -28,6 +30,16 @@ namespace LSCore.BattleModule.Animation
         [LabelText("Target for Editor testing")]
         public Transform target;
         protected override string Label => "Normalized value";
+        protected override string PropertyPath { get; }
+        public override void TrimModifications(List<UndoPropertyModification> modifications)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void StartAnimationMode()
+        {
+            throw new NotImplementedException();
+        }
 #endif
 
         public override Object Target => transform;

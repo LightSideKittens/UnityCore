@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace LSCore.Extensions
+namespace LSCore.Extensions.Time
 {
-    public static class TimeExt
+    public static class Ext
     {
         public static DateTime ToDateTime(this long tick) => new (tick);
         public static TimeSpan ToTimeSpan(this long tick)
