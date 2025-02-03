@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 
 namespace LSCore.Extensions
 {
-    public static class JTokenExtensions
+    public static partial class JTokenExtensions
     {
         public static T As<T>(this JToken token, string key, T defaultValue = default)
         {

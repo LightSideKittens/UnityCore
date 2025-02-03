@@ -258,10 +258,10 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     private void Unregister() => BadassAnimationEvaluator.Unregister(this, updateModeAtRegister);
 
 #if UNITY_EDITOR
-    [Button]
+    [Button(DirtyOnClick = false)]
     private void Edit()
     { 
-        
+        NeedShowWindow?.Invoke(this);
     }
 #endif
 

@@ -30,7 +30,10 @@ public class EmojiImage : RawImage
 
         World.Destroyed += () =>
         {
-            Pool.Created -= OnCreate;
+            if (pool != null)
+            {
+                pool.Created -= OnCreate;
+            }
             emojiImagePrefab = null;
             pool = null;
         };

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,8 +16,7 @@ namespace LSCore
         public static event Action FixedUpdated;
         public static event Action Destroyed;
         public static event Action CanvasUpdateCompeted;
-        private static Queue<Action> callInMainThreadQueue = new();
-        private static SynchronizationContext synchronizationContext = SynchronizationContext.Current;
+        private static readonly SynchronizationContext synchronizationContext = SynchronizationContext.Current;
         private static bool isCreated;
         private static World instance;
         
@@ -56,6 +54,7 @@ namespace LSCore
         private void Update()
         {
             Updated?.Invoke();
+            CallActions();
         }
         
         private void FixedUpdate()
@@ -85,9 +84,26 @@ namespace LSCore
             OnApplicationPause(true);
         }
         
+        
+        private static readonly Queue<Action> executionQueue = new();
+        
         public static void CallInMainThread(Action action)
         {
-            synchronizationContext.Post(_ => action(), null);
+            lock (executionQueue)
+            {
+                executionQueue.Enqueue(action);
+            }
+        }
+        
+        private static void CallActions()
+        {
+            lock (executionQueue)
+            {
+                while (executionQueue.Count > 0)
+                {
+                    executionQueue.Dequeue().Invoke();
+                }
+            }
         }
     }
 }
