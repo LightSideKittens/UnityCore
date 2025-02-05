@@ -54,7 +54,7 @@ namespace LSCore
                 go.GetComponents(compsList);
                 for (int i = 0; i < compsArr.Count; i++)
                 {
-                    UnityComponentConverter.Populate(compsList[i], compsArr[i], serializer);
+                    serializer.Populate(compsList[i], compsArr[i]);
                 }
             }
         }

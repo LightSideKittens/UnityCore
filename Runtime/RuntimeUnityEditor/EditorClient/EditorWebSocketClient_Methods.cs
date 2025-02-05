@@ -42,8 +42,7 @@ namespace LSCore
         {
             if(!hashToObject.TryGetKeyFromValue(target, out var hash)) return;
             
-            UnityComponentConverter.rootPath = string.Empty;
-            var compToken = UnityComponentConverter.Serialize(target, serializer, propertyPath);
+            var compToken = serializer.Serialize(target);
             SendMethod(nameof(SendModification), compToken);
         }
     }

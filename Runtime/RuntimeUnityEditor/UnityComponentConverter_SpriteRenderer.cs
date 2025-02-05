@@ -1,12 +1,13 @@
 using System;
 using LSCore.Extensions;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-public partial class UnityComponentConverter
+public class SpriteRendererConverter : BaseUnityObjectConverter
 {
-    private static void WriteSpriteRenderer(JToken jObj, object obj, JsonSerializer serializer)
+    public SpriteRendererConverter(UnityObjectReferenceConverter referenceConverter) : base(referenceConverter) { }
+
+    protected override void OnSerialize(JToken jObj, object obj)
     {
         SpriteRenderer sr = (SpriteRenderer)obj;
         var sprite = sr.sprite;
@@ -19,13 +20,13 @@ public partial class UnityComponentConverter
         jObj["maskInteraction"] = sr.maskInteraction.ToString();
         jObj["drawMode"] = sr.drawMode.ToString();
         jObj["size"] = sr.size.ToJObject();
-        jObj["sprite"] = SerializeUnityReference(sprite);
-        jObj["material"] = SerializeUnityReference(material);
+        jObj["sprite"] = SerializeReference(sprite);
+        jObj["material"] = SerializeReference(material);
     }
 
-    private static object ReadSpriteRenderer(JToken jObj, Type objectType, object existingValue, JsonSerializer serializer)
+    public override void Populate(JToken jObj, object obj)
     {
-        SpriteRenderer sr = (SpriteRenderer)currentComp;
+        SpriteRenderer sr = (SpriteRenderer)obj;
         sr.color = jObj["color"].ToColor();
         sr.flipX = jObj["flipX"].ToObject<bool>();
         sr.flipY = jObj["flipY"].ToObject<bool>();
@@ -34,8 +35,7 @@ public partial class UnityComponentConverter
         sr.maskInteraction = Enum.Parse<SpriteMaskInteraction>(jObj["maskInteraction"].ToString());
         sr.drawMode = Enum.Parse<SpriteDrawMode>(jObj["drawMode"].ToString());
         sr.size = jObj["size"].ToVector2();
-        sr.sprite = DeserializeUnityReference<Sprite>(jObj["sprite"], sr.sprite);
-        sr.material = DeserializeUnityReference<Material>(jObj["material"], sr.material);
-        return sr;
+        sr.sprite = DeserializeReference<Sprite>(jObj["sprite"], sr.sprite);
+        sr.material = DeserializeReference<Material>(jObj["material"], sr.material);
     }
 }

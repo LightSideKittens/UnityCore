@@ -16,15 +16,11 @@ public abstract class BaseWebSocketClient : MonoBehaviour
 #if UNITY_EDITOR
         typeof(EventSystem),
         typeof(StandaloneInputModule),
+        typeof(AudioListener),
 #endif
     };
     
-    protected JsonSerializerSettings settings = new()
-    {
-        Formatting = Formatting.None
-    };
-    
-    protected JsonSerializer serializer;
+    protected UnityComponentSerializer serializer;
         
     private const string DATA = "data";
     private const string METHOD = "method";
@@ -37,8 +33,7 @@ public abstract class BaseWebSocketClient : MonoBehaviour
     private void Awake()
     {
         InitHandlers();
-        settings.Converters.Add(new UnityComponentConverter(hashToObject, IsEditor));
-        serializer = JsonSerializer.Create(settings);
+        serializer = new UnityComponentSerializer(hashToObject, IsEditor);
     }
     
     private void OnEnable()

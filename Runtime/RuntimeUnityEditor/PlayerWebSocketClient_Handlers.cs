@@ -36,7 +36,7 @@ namespace LSCore
             var hash = token["hash"].ToString();
             if (hashToObject.TryGetValueFromKey(hash, out object value))
             {
-                UnityComponentConverter.Populate(value, token, serializer);
+                serializer.Populate(value, token);
             }
         }
     }

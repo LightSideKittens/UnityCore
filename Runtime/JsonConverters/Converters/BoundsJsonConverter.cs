@@ -1,4 +1,5 @@
 using System;
+using LSCore.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -13,8 +14,8 @@ namespace LSCore.ConfigModule.Converters
             Bounds col = new Bounds();
 
             JObject data = JObject.Load(reader);
-            col.center = data["center"]!.ToObject<Vector3>();
-            col.size = data["size"]!.ToObject<Vector3>();
+            col.center = data["center"]!.ToVector3();
+            col.size = data["size"]!.ToVector3();
 
             return col;
         }
@@ -23,23 +24,11 @@ namespace LSCore.ConfigModule.Converters
         {
             JObject col = new JObject()
             {
-                ["center"] = ToJObject(value.center),
-                ["size"] = ToJObject(value.size),
+                ["center"] = value.center.ToJObject(),
+                ["size"] = value.size.ToJObject(),
             };
 
             col.WriteTo(writer);
-        }
-
-        private JObject ToJObject(Vector3 vector)
-        {
-            JObject pos = new JObject()
-            {
-                ["x"] = vector.x,
-                ["y"] = vector.y,
-                ["z"] = vector.z
-            };
-
-            return pos;
         }
     }
 }

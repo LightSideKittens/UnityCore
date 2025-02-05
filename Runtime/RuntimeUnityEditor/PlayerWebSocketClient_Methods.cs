@@ -23,7 +23,6 @@ namespace LSCore
         
         public void SendGameObject(GameObject go)
         {
-            UnityComponentConverter.rootPath = string.Empty;
             var compsArr = new JArray();
             var goData = new JObject()
             {
@@ -34,8 +33,9 @@ namespace LSCore
             go.GetComponents(compsList);
             foreach (var comp in compsList)
             {
+                if(IsIgnoredType(comp.GetType())) continue;
                 hashToObject[comp] = ObjHash(comp);
-                var compToken = UnityComponentConverter.Serialize(comp, serializer);
+                var compToken = serializer.Serialize(comp);
                 compsArr.Add(compToken);
             }
             

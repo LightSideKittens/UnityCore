@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LSCore
@@ -9,6 +10,9 @@ namespace LSCore
         public string testName;
         public int testInt;
         public float testFloat;
+        public Vector2 vector2;
+        public Vector3 vector3;
+        public Color color;
     }
 
     [Serializable]
@@ -17,6 +21,9 @@ namespace LSCore
         public string testName2;
         public int testInt2;
         public float testFloat2;
+        public Vector2 vector22;
+        public Vector3 vector33;
+        public Color color2;
         public SpriteRenderer renderer;
     }
     
@@ -24,8 +31,13 @@ namespace LSCore
     {
         public int a;
         public float c;
+        public Vector2 vector2;
+        public Vector3 vector3;
+        public Color color;
         public GameObject b;
         public TestData testData;
         [SerializeReference] private TestData testData2;
+        [SerializeReference] private TestData[] testData3;
+        [SerializeReference] private List<TestData> testData4;
     }
 }

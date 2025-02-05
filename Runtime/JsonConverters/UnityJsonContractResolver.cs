@@ -36,17 +36,17 @@ namespace LSCore
 	
 	public class UnityJsonContractResolver : DefaultContractResolver
 	{
-		public static readonly UnityJsonContractResolver Instance = new UnityJsonContractResolver();
+		public static UnityJsonContractResolver Instance { get; } = new();
 
-		private static readonly Dictionary<Type, JsonConverter> typeMap = new Dictionary<Type, JsonConverter>()
+		public static Dictionary<Type, JsonConverter> TypeMap { get; } = new()
 		{
-			{typeof(Vector4), new Vector4JsonConverter()},
-			{typeof(Vector3), new Vector3JsonConverter()},
-			{typeof(Vector2), new Vector2JsonConverter()},
-			{typeof(Color), new ColorJsonConverter()},
-			{typeof(Bounds), new BoundsJsonConverter()},
+			{ typeof(Vector4), new Vector4JsonConverter() },
+			{ typeof(Vector3), new Vector3JsonConverter() },
+			{ typeof(Vector2), new Vector2JsonConverter() },
+			{ typeof(Color), new ColorJsonConverter() },
+			{ typeof(Bounds), new BoundsJsonConverter() },
 		};
-		
+
 		protected override JsonProperty CreateProperty(System.Reflection.MemberInfo member, MemberSerialization memberSerialization)
 		{
 			JsonProperty property = base.CreateProperty(member, memberSerialization);
@@ -58,12 +58,14 @@ namespace LSCore
 
 			return property;
 		}
-
+		
+		public static JsonContract GetContract(Type type) => Instance.CreateContract(type);
+		
 		protected override JsonContract CreateContract(Type objectType)
 		{
 			JsonContract contract = base.CreateContract(objectType);
 
-			if (typeMap.TryGetValue(objectType, out var converter))
+			if (TypeMap.TryGetValue(objectType, out var converter))
 			{
 				contract.Converter = converter;
 			}
