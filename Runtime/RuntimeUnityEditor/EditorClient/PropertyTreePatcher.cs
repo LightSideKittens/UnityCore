@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using HarmonyLib;
 using Sirenix.OdinInspector.Editor;
@@ -27,3 +28,4 @@ namespace LSCore
         }
     }
 }
+#endif

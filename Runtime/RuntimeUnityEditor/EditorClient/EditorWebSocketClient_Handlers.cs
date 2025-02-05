@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -13,6 +14,7 @@ namespace LSCore
         {
             AddHandler(OnSendHierarchy);
             AddHandler(OnSendGameObject);
+            AddHandler(OnSendFrameRate);
             scene = SceneManager.CreateScene("EditorClientScene");
             SceneManager.LoadScene(scene.name, LoadSceneMode.Additive);
         }
@@ -58,5 +60,11 @@ namespace LSCore
                 }
             }
         }
+
+        private void OnSendFrameRate(JToken token)
+        {
+            playerFrameRate = token.ToObject<float>();
+        }
     }
 }
+#endif

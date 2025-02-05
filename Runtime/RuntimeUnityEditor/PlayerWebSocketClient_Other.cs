@@ -19,6 +19,7 @@ namespace LSCore
             go.GetComponents(compsList);
             foreach (var comp in compsList)
             {
+                if(comp == null) continue;
                 var type = comp.GetType();
                 if(IsIgnoredType(type)) continue;
                 var hash = ObjHash(comp);

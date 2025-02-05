@@ -41,5 +41,10 @@ namespace LSCore
             
             SendMethod(nameof(SendGameObject), goData);
         }
+
+        public void SendFrameRate()
+        {
+            SendMethod(nameof(SendFrameRate), World.FrameRate);
+        }
     }
 }

@@ -1,3 +1,6 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using Sirenix.OdinInspector;
 using Sirenix.OdinInspector.Editor;
@@ -26,6 +29,8 @@ namespace LSCore
             SendMethod(nameof(FetchGameObject), data);
         }
         
+        private Dictionary<string, Action> modificationActions = new();
+        
         public void SendModification(InspectorProperty property)
         {
             var target = property.SerializationRoot.ValueEntry.WeakSmartValue;
@@ -42,8 +47,12 @@ namespace LSCore
         {
             if(!hashToObject.TryGetKeyFromValue(target, out var hash)) return;
             
-            var compToken = serializer.Serialize(target);
-            SendMethod(nameof(SendModification), compToken);
+            modificationActions[$"{hash}.{propertyPath}"] = () =>
+            {
+                var compToken = serializer.Serialize(target);
+                SendMethod(nameof(SendModification), compToken);
+            };
         }
     }
 }
+#endif

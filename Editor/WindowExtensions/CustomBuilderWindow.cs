@@ -101,6 +101,11 @@ public static class CustomBuilder
             
             Debug.Log("Build result: " + summary.result);
             
+            if (summary.result == BuildResult.Succeeded)
+            {
+                Process.Start(buildPath);
+            }
+            
             var packedAssets = report.packedAssets;
             foreach (var pack in packedAssets)
             {

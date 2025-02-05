@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using LSCore;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -12,8 +11,8 @@ public abstract class BaseWebSocketClient : MonoBehaviour
     private static HashSet<Type> ignoredTypes = new ()
     {
         typeof(PlayerWebSocketClient),
-        typeof(EditorWebSocketClient),
 #if UNITY_EDITOR
+        Type.GetType("LSCore.EditorWebSocketClient, LSCore.RuntimeUnityEditor.Editor"),
         typeof(EventSystem),
         typeof(StandaloneInputModule),
         typeof(AudioListener),
@@ -124,9 +123,9 @@ public abstract class BaseWebSocketClient : MonoBehaviour
         Log($"OnClose:\nCode:{code}\nReason:{reason}");
     }
 
-    private void Log(string message)
+    protected void Log(string message)
     {
-        Burger.Log($"[{GetType().Name}] {message}]");
+        Burger.Log($"[{GetType().Name}] {message}");
     }
     
     protected readonly BiDictionary<string, object> hashToObject = new();

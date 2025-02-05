@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using LSCore.Extensions;
+using LSCore.JsonSerialization;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using UnityEngine;
@@ -106,6 +107,7 @@ public class UnityComponentSerializer
         referenceConverter = new UnityObjectReferenceConverter(hashToObject, isEditor);
         converters.Add(typeof(SpriteRenderer), new SpriteRendererConverter(referenceConverter));
         converters.Add(typeof(Transform), new TransformConverter(referenceConverter));
+        converters.Add(typeof(Camera), new CameraConverter(referenceConverter));
     }
     
     private bool ShouldSerializeField(FieldInfo field, out bool isSerializeReference)
@@ -127,7 +129,7 @@ public class UnityComponentSerializer
         return false;
     }
     
-    private static bool IsPrimitive(Type type) => type.IsPrimitive || type.IsEnum || type == typeof(string) || type == typeof(decimal);
+    private static bool IsPrimitive(Type type) => type.IsPrimitive || type == typeof(string) || type == typeof(decimal);
 
     public JToken Serialize(object value)
     {
@@ -194,6 +196,11 @@ public class UnityComponentSerializer
         if (IsPrimitive(type))
         {
             return new JValue(value);
+        }
+        
+        if(type.IsEnum)
+        {
+            return new JValue((int)value);
         }
 
         if (TypeMap.TryGetValue(type, out var data))
@@ -321,10 +328,15 @@ public class UnityComponentSerializer
         {
             return null;
         }
-                
+        
         if (IsPrimitive(type))
         {
             return Convert.ChangeType(((JValue)token).Value, type, invariantCulture);
+        }
+        
+        if(type.IsEnum)
+        {
+            return Enum.ToObject(type, ((JValue)token).Value);
         }
 
         if (TypeMap.TryGetValue(type, out var data))

@@ -523,7 +523,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc560d3f07c54eb08a2285c74eb9260a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverUrl: ws://localhost:8080/
+  serverUrl: ws://192.168.31.52:8080/
 --- !u!4 &499093087
 Transform:
   m_ObjectHideFlags: 0
@@ -967,13 +967,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   a: 435
   c: 0
+  vector2: {x: 0, y: 0}
+  vector3: {x: 0, y: 0, z: 0}
+  color: {r: 0, g: 0, b: 0, a: 0}
   b: {fileID: 175537529}
   testData:
     testName: ccc
     testInt: 0
     testFloat: 0
+    vector2: {x: 0, y: 0}
+    vector3: {x: 0, y: 0, z: 0}
+    color: {r: 0, g: 0, b: 0, a: 0}
   testData2:
     rid: 888390078109843597
+  testData3: []
+  testData4: []
   references:
     version: 2
     RefIds:
@@ -983,9 +991,15 @@ MonoBehaviour:
         testName: 
         testInt: 0
         testFloat: 0
+        vector2: {x: 0, y: 0}
+        vector3: {x: 0, y: 0, z: 0}
+        color: {r: 0, g: 0, b: 0, a: 0}
         testName2: 
         testInt2: 0
         testFloat2: 0
+        vector22: {x: 0, y: 0}
+        vector33: {x: 0, y: 0, z: 0}
+        color2: {r: 0, g: 0, b: 0, a: 0}
         renderer: {fileID: 1275404416}
 --- !u!212 &1275404416
 SpriteRenderer:
@@ -1515,7 +1529,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fc22aaf0399452c8d4b2fefaf697d0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverUrl: ws://localhost:8080/
+  serverUrl: ws://192.168.31.52:8080/
 --- !u!4 &2107766872
 Transform:
   m_ObjectHideFlags: 0

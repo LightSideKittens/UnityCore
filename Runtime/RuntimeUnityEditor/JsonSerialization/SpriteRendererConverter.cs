@@ -1,4 +1,3 @@
-using System;
 using LSCore.Extensions;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -17,8 +16,8 @@ public class SpriteRendererConverter : BaseUnityObjectConverter
         jObj["flipY"] = sr.flipY;
         jObj["sortingLayerID"] = sr.sortingLayerID;
         jObj["sortingOrder"] = sr.sortingOrder;
-        jObj["maskInteraction"] = sr.maskInteraction.ToString();
-        jObj["drawMode"] = sr.drawMode.ToString();
+        jObj["maskInteraction"] = (int)sr.maskInteraction;
+        jObj["drawMode"] = (int)sr.drawMode;
         jObj["size"] = sr.size.ToJObject();
         jObj["sprite"] = SerializeReference(sprite);
         jObj["material"] = SerializeReference(material);
@@ -28,12 +27,12 @@ public class SpriteRendererConverter : BaseUnityObjectConverter
     {
         SpriteRenderer sr = (SpriteRenderer)obj;
         sr.color = jObj["color"].ToColor();
-        sr.flipX = jObj["flipX"].ToObject<bool>();
-        sr.flipY = jObj["flipY"].ToObject<bool>();
-        sr.sortingLayerID = jObj["sortingLayerID"].ToObject<int>();
-        sr.sortingOrder = jObj["sortingOrder"].ToObject<int>();
-        sr.maskInteraction = Enum.Parse<SpriteMaskInteraction>(jObj["maskInteraction"].ToString());
-        sr.drawMode = Enum.Parse<SpriteDrawMode>(jObj["drawMode"].ToString());
+        sr.flipX = jObj["flipX"].ToBool();
+        sr.flipY = jObj["flipY"].ToBool();
+        sr.sortingLayerID = jObj["sortingLayerID"].ToInt();
+        sr.sortingOrder = jObj["sortingOrder"].ToInt();
+        sr.maskInteraction = (SpriteMaskInteraction)jObj["maskInteraction"].ToInt();
+        sr.drawMode = (SpriteDrawMode)jObj["drawMode"].ToInt();
         sr.size = jObj["size"].ToVector2();
         sr.sprite = DeserializeReference<Sprite>(jObj["sprite"], sr.sprite);
         sr.material = DeserializeReference<Material>(jObj["material"], sr.material);

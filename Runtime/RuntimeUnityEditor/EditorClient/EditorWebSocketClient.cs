@@ -1,4 +1,5 @@
-using Newtonsoft.Json.Linq;
+#if UNITY_EDITOR
+using System;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 
@@ -6,8 +7,28 @@ namespace LSCore
 {
     public partial class EditorWebSocketClient : BaseWebSocketClient
     {
+        private float playerFrameRate = 30f;
+        private float frames;
+        private Action frameSyncedSendMethods;
+        
         protected override bool IsEditor => true;
 
+        private void Update()
+        {
+            frames += playerFrameRate / World.FrameRate;
+
+            if (frames >= 1f)
+            {
+                frames = 0;
+                foreach (var value in modificationActions.Values)
+                {
+                    value();
+                }
+                
+                modificationActions.Clear();
+            }
+        }
+        
         protected override void OnOpen()
         {
             base.OnOpen();
@@ -50,3 +71,4 @@ namespace LSCore
         }
     }
 }
+#endif

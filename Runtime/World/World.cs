@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace LSCore
         public static Camera Camera { get; private set; }
         public static bool IsPlaying { get; private set; }
         public static bool IsEditMode => !IsPlaying;
+        public static float FrameRate => 1f / Time.unscaledDeltaTime;
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
@@ -85,23 +87,20 @@ namespace LSCore
         }
         
         
-        private static readonly Queue<Action> executionQueue = new();
+        private static readonly ConcurrentQueue<Action> executionQueue = new();
         
         public static void CallInMainThread(Action action)
         {
-            lock (executionQueue)
-            {
-                executionQueue.Enqueue(action);
-            }
+            executionQueue.Enqueue(action);
         }
         
         private static void CallActions()
         {
-            lock (executionQueue)
+            while (executionQueue.Count > 0)
             {
-                while (executionQueue.Count > 0)
+                if (executionQueue.TryDequeue(out var action))
                 {
-                    executionQueue.Dequeue().Invoke();
+                    action();
                 }
             }
         }
