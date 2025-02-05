@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Reflection;
 using LSCore.Extensions;
 using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -245,24 +246,50 @@ public class UnityComponentSerializer
                 if (tokenFieldValue is JArray array)
                 {
                     IList list;
-                    if (fieldValue == null)
+                    
+                    if (fieldType.IsArray)
                     {
-                        if (fieldType.IsArray)
+                        elementType = fieldType.GetElementType();
+                        var dst = Array.CreateInstance(elementType, array.Count);
+                        if (fieldValue == null)
                         {
-                            elementType = fieldType.GetElementType();
-                            list = Array.CreateInstance(elementType, array.Count);
+                            list = dst;
+                            goto fillList;
                         }
-                        else
-                        {
-                            elementType = fieldType.GetGenericArguments()[0];
-                            list = (IList)Activator.CreateInstance(fieldType);
-                        }
+                        var src = (Array)fieldValue;
+                        Array.Copy(src, dst, Math.Min(src.Length, dst.Length));
+                        list = dst;
                     }
                     else
                     {
+                        elementType = fieldType.GetGenericArguments()[0];
+                        var dst = (IList)Activator.CreateInstance(fieldType);
+                        if (fieldValue == null)
+                        {
+                            list = dst;
+                            for (int j = 0; j < array.Count; j++)
+                            {
+                                list.Add(null);
+                            }
+                            goto fillList;
+                        }
                         list = (IList)fieldValue;
+                        var count = Math.Min(list.Count, array.Count);
+
+                        for (int j = 0; j < count; j++)
+                        {
+                            dst.Add(list[j]);
+                        }
+                            
+                        for (int j = count; j < array.Count; j++)
+                        {
+                            dst.Add(null);
+                        }
+                            
+                        list = dst;
                     }
-                    
+
+                    fillList:
                     for (int j = 0; j < array.Count; j++)
                     {
                         tokenFieldValue = array[j];
@@ -315,7 +342,11 @@ public class UnityComponentSerializer
             type = Type.GetType(token["type"]!.ToString());
         }
 
-        value ??= Activator.CreateInstance(type);
+        if (value == null || value.GetType() != type)
+        {
+            value = Activator.CreateInstance(type);
+        }
+        
         DeserializeFields(value, token, type);
         return value;
     }
