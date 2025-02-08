@@ -57,6 +57,7 @@ public partial class BadassAnimationWindow
 
         protected override void OnDrawMenuItem(Rect rect, Rect labelRect)
         {
+            EditorGUI.DrawRect(rect, Color.SetAlpha(0.2f));
             base.OnDrawMenuItem(rect, labelRect);
 
             var e = Event.current;

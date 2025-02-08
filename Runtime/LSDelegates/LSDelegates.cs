@@ -1,28 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore.Attributes;
+using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
+using UnityEngine;
 
 [Serializable]
 [HideReferenceObjectPicker]
-[TypeFrom]
 public abstract class LSAction
 {
     public abstract void Invoke();
 }
 
 [Serializable]
-[HideReferenceObjectPicker]
-[TypeFrom]
-public abstract class LSAction<T>
+public class Log : LSAction
 {
-    public abstract void Invoke(T value);
+    public string message;
+    
+    public override void Invoke()
+    {
+        Burger.Log(message);
+    }
 }
 
-public abstract class BoolAction : LSAction<bool> { }
+public struct DataBuffer<T>
+{
+    public static T value;
+}
 
 public static class LSActionExtensions
 {
+    public static void Invoke<T>(this LSAction action, T value)
+    {
+        DataBuffer<T>.value = value;
+        action.Invoke();
+    }
+    
     public static void Invoke(this IEnumerable<LSAction> actions)
     {
         foreach (var action in actions)
@@ -31,11 +43,12 @@ public static class LSActionExtensions
         }
     }
     
-    public static void Invoke<T>(this IEnumerable<LSAction<T>> actions, T value)
+    public static void Invoke<T>(this IEnumerable<LSAction> actions, T value)
     {
         foreach (var action in actions)
         {
-            action.Invoke(value);
+            DataBuffer<T>.value = value;
+            action.Invoke();
         }
     }
     
@@ -47,11 +60,12 @@ public static class LSActionExtensions
         }
     }
     
-    public static void Invoke<T>(this IList<LSAction<T>> actions, T value)
+    public static void Invoke<T>(this IList<LSAction> actions, T value)
     {
         for (int i = 0; i < actions.Count; i++)
         {
-            actions[i].Invoke(value);
+            DataBuffer<T>.value = value;
+            actions[i].Invoke();
         }
     }
 }

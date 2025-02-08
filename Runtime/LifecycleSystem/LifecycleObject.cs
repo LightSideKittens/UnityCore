@@ -12,7 +12,7 @@ namespace LSCore.LifecycleSystem
     public class LifecycleObject : MonoBehaviour
     {
         [Serializable]
-        public abstract class Action : LSAction<LifecycleObject> { }
+        public abstract class Action : LSAction { }
 
         [Serializable]
         [Unwrap]
@@ -20,7 +20,7 @@ namespace LSCore.LifecycleSystem
         {
             [SerializeReference] public LSAction action;
             
-            public override void Invoke(LifecycleObject value)
+            public override void Invoke()
             {
                 action?.Invoke();
             }

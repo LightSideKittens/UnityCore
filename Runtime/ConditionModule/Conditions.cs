@@ -1,13 +1,17 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace LSCore.ConditionModule
 {
     [Serializable]
+    public class Conditions : Conditions<Condition> { }
+
+    [Serializable]
     public class Conditions<T> : Condition, ISerializationCallbackReceiver where T : Condition
     {
+        [OnValueChanged("OnAfterDeserialize", true)]
         [SerializeReference] public List<T> conditions;
         [NonSerialized] public ConditionBuilder conditionBuilder;
 
@@ -17,6 +21,8 @@ namespace LSCore.ConditionModule
 
         public void OnAfterDeserialize()
         {
+            conditionBuilder = ConditionBuilder.Default;
+            
             if(conditions == null) return;
             if (conditions.Count == 0) return;
             

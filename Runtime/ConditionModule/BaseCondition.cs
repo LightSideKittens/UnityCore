@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LSCore.ConditionModule
+﻿namespace LSCore.ConditionModule
 {
     public abstract class BaseCondition
     {
@@ -11,21 +9,8 @@ namespace LSCore.ConditionModule
         }
 
         public bool not;
-        private Func<bool> checker;
 
-        protected BaseCondition()
-        {
-            checker = FirstCheck;
-        }
-
-        public static implicit operator bool(BaseCondition conditions) => conditions.checker();
-
-        private bool FirstCheck()
-        {
-            checker = FullCheck;
-            return checker();
-        }
-
+        public static implicit operator bool(BaseCondition conditions) => conditions.FullCheck();
         private bool FullCheck() => Check() ^ not;
         protected internal abstract bool Check();
     }

@@ -10,7 +10,7 @@ namespace LSCore.BattleModule
     public class CameraCollider2DTrigger : MonoBehaviour
     {
         [Serializable]
-        public abstract class Handler : LSAction<Collider2D> { }
+        public abstract class Handler : LSAction { }
         
         public float cameraRectExpand = 5;
         public ContactFilter2D contactFilter;

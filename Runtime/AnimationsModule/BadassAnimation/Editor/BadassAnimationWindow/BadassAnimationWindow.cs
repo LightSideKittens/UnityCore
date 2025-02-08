@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DG.DemiEditor;
 using LSCore.AnimationsModule;
 using LSCore.Editor;
 using LSCore.Extensions;
@@ -149,7 +148,7 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
     {
         base.OnEnable();
         editor?.OnEnable();
-        Undo.undoRedoPerformed += OnUndoRedoPerformed;
+        Undo.undoRedoEvent += OnUndoRedoPerformed;
     }
 
     protected override void OnDisable()
@@ -157,15 +156,9 @@ public partial class BadassAnimationWindow : OdinMenuEditorWindow
         base.OnDisable();
         editor?.OnDisable();
         animation.Editor_SetClip(null, IsPreview);
-        Undo.undoRedoPerformed -= OnUndoRedoPerformed;
-    }
-
-    private void OnUndoRedoPerformed()
-    {
-        isUndoPerforming = true;
-        ForceMenuTreeRebuild();
-        UpdateAnimationComponent();
-        TryUpdateAnimationMode();
+        Undo.undoRedoEvent -= OnUndoRedoPerformed;
+        Undo.postprocessModifications -= OnPostProcessModifications;
+        AnimationMode.StopAnimationMode();
     }
     
     private bool isUndoPerforming;

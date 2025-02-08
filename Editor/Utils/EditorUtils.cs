@@ -5,6 +5,7 @@ using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 public static class EditorUtils
 {

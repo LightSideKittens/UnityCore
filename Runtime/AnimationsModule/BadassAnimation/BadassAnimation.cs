@@ -199,7 +199,15 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
             time = 0;
             RealTime = 0;
             var d = dataByClip[value.guid];
+            for (int i = 0; i < events.Count; i++)
+            {
+                events[i].End();
+            }
             events = d.events;
+            for (int i = 0; i < events.Count; i++)
+            {
+                events[i].Start();
+            }
             Length = value.length;
             var handlers = d.handlers;
             for (int i = 0; i < handlers.Count; i++)
@@ -308,7 +316,7 @@ public partial class BadassAnimation : MonoBehaviour, IAnimatable
     }
 
     IEnumerable<IEvaluator> IAnimatable.Evaluators => currentEvaluators;
-    public IEnumerable<BadassAnimationClip> Clips => data.Select(x => x.clip);
+    public IEnumerable<BadassAnimationClip> Clips => data != null ? data.Select(x => x.clip) : Array.Empty<BadassAnimationClip>();
 
     void IAnimatable.AfterEvaluate() => AfterEvaluate();
     

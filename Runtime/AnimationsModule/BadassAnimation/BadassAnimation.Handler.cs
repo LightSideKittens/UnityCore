@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
@@ -8,32 +7,6 @@ using Object = UnityEngine.Object;
 
 public partial class BadassAnimation
 {
-    [Serializable]
-    public class Event
-    {
-        [HideInInspector] public float x;
-        [SerializeReference] 
-        [HideLabel]
-        public LSAction action;
-
-        public virtual void Invoke()
-        {
-            action.Invoke();
-        }
-    }
-    
-    [Serializable]
-    public class RuntimeOnlyEvent : Event
-    {
-        public override void Invoke()
-        {
-            if (World.IsPlaying)
-            {
-                base.Invoke();
-            }
-        }
-    }
-
     [Serializable]
     public abstract class Handler
     {
@@ -172,6 +145,25 @@ public partial class BadassAnimation
         public abstract void TrimModifications(List<UndoPropertyModification> modifications);
         public abstract void StartAnimationMode();
 #endif
+    }
+
+    [Serializable]
+    public abstract class EmptyHandler : Handler
+    {
+        public override Object Target { get; }
+
+        protected override void SetStartValue() { }
+
+        protected override void OnStop() { }
+
+        protected override Action GetApplyEvaluationResultAction(string key, HandlerEvaluateData evaluator)
+        {
+            return null;
+        }
+
+        public override Type ValueType => typeof(EmptyHandler);
+        public override void TrimModifications(List<UndoPropertyModification> modifications) { }
+        public override void StartAnimationMode() { }
     }
 
     [Serializable]

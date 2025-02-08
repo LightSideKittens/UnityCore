@@ -60,6 +60,7 @@ public partial class BadassAnimationWindow
         }
     }
     
+    
     private bool isRecording;
     private bool IsRecording
     {
@@ -103,11 +104,12 @@ public partial class BadassAnimationWindow
             if (mod.currentValue.target is Transform transform)
             {
                 TryModifyTransform<TransformPosition>("m_LocalPosition", mod, transform);
-                TryModifyTransform<TransformRotation>("m_LocalRotation", mod, transform);
+                TryModifyTransform<TransformRotation>("m_LocalEulerAnglesHint", mod, transform);
                 TryModifyTransform<TransformScale>("m_LocalScale", mod, transform);
             }
         }
     }
+    
     
     private void TryModifyTransform<T>(string propertyName, UndoPropertyModification mod, Transform transform) where T : BaseTransformHandler, new()
     {

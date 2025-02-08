@@ -6,7 +6,7 @@ using Sirenix.OdinInspector;
 using WebSocketSharp;
 using WebSocketSharp.Server;
 
-public class WebSocketServerWindow : OdinEditorWindow
+public class RuntimeUnityEditorServerWindow : OdinEditorWindow
 {
     [InfoBox("$Title", SdfIconType.CheckCircleFill, "$IsRunning", IconColor = "@green")]
     [InfoBox("$Title", SdfIconType.XCircleFill, "@!IsRunning", IconColor = "@red")]
@@ -29,7 +29,7 @@ public class WebSocketServerWindow : OdinEditorWindow
         }
         
         wsServer = new WebSocketServer(port);
-        wsServer.AddWebSocketService<MyWebSocketBehavior>("/");
+        wsServer.AddWebSocketService<RuntimeUnityEditorServerBehavior>("/");
 
         wsServer.Start();
     }
@@ -44,25 +44,25 @@ public class WebSocketServerWindow : OdinEditorWindow
         }
     }
     
-    [MenuItem("Window/WebSocket Server")]
+    [MenuItem(LSPaths.Windows.Root + "Runtime Unity Editor/Server")]
     private static void OpenWindow()
     {
-        GetWindow<WebSocketServerWindow>().Show();
+        GetWindow<RuntimeUnityEditorServerWindow>().Show();
     }
-}
-
-public class MyWebSocketBehavior : WebSocketBehavior
-{
-    protected override void OnMessage(MessageEventArgs e)
+    
+    
+    public class RuntimeUnityEditorServerBehavior : WebSocketBehavior
     {
-        foreach (var sessionId in Sessions.ActiveIDs)
+        protected override void OnMessage(MessageEventArgs e)
         {
-            if (sessionId != ID)
+            foreach (var sessionId in Sessions.ActiveIDs)
             {
-                Sessions.SendTo(e.Data, sessionId);
+                if (sessionId != ID)
+                {
+                    Sessions.SendTo(e.Data, sessionId);
+                }
             }
         }
     }
 }
-
 #endif

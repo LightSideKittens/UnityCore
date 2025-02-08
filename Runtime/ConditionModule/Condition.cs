@@ -9,4 +9,15 @@ namespace LSCore.ConditionModule
     {
         [HideLabel] [HideCondition] public ConditionType type;
     }
+    
+    [Serializable]
+    public class BoolCondition : Condition
+    {
+        public bool value;
+        
+        protected internal override bool Check()
+        {
+            return value;
+        }
+    }
 }

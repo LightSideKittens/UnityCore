@@ -30,7 +30,8 @@ public partial class BadassAnimationWindow
         public BadassMultiCurveEditor curvesEditor;
         public float lastXForEvent;
         private List<CurveItem> curveItems;
-        private List<BadassAnimation.Event> clickedEvents = new();
+        private List<BadassAnimation.Event> clickedEvents;
+        private List<BadassAnimation.Event> ClickedEvents => clickedEvents ??= new List<BadassAnimation.Event>();
         private float lastMatrixYScale;
         private float lastMatrixY;
         private float lastCamY = float.NegativeInfinity;
@@ -181,7 +182,7 @@ public partial class BadassAnimationWindow
 
                             if (GUIScene.IsInDistance(pos, GUIScene.MouseInWorldPoint, eventPointSize))
                             {
-                                clickedEvents.Add(eevent);
+                                ClickedEvents.Add(eevent);
                             }
                         }
                         else if (e.type == EventType.MouseDrag && e.button == 1)
@@ -190,7 +191,7 @@ public partial class BadassAnimationWindow
                             treePopup?.OnClose();
                             treePopup = null;
 
-                            foreach (var eventt in clickedEvents)
+                            foreach (var eventt in ClickedEvents)
                             {
                                 var mpx = GUIScene.SnapX(mp.x, SnappingStep);
                                 eventt.x = mpx;
@@ -211,14 +212,14 @@ public partial class BadassAnimationWindow
                     EditorUtility.SetDirty(animation);
                 }
 
-                if (clickedEvents.Count > 0 && !isEventDragging)
+                if (ClickedEvents.Count > 0 && !isEventDragging)
                 {
                     if (treePopup == null)
                     {
                         treePopup = new Popup(e.mousePosition, new Vector2(500, 300));
-                        var firstEventX = clickedEvents[0].x;
+                        var firstEventX = ClickedEvents[0].x;
                         e.Use();
-                        var eventsObject = new Events { events = new List<BadassAnimation.Event>(clickedEvents) };
+                        var eventsObject = new Events { events = new List<BadassAnimation.Event>(ClickedEvents) };
                         var tree = PropertyTree.Create(eventsObject);
 
                         treePopup.onClose = () => { tree.Dispose(); };
@@ -232,23 +233,23 @@ public partial class BadassAnimationWindow
                                 EditorUtility.SetDirty(animation);
                             }
 
-                            if (!clickedEvents.SequenceEqual(eventsObject.events))
+                            if (!ClickedEvents.SequenceEqual(eventsObject.events))
                             {
-                                var removed = clickedEvents.Except(eventsObject.events).ToList();
+                                var removed = ClickedEvents.Except(eventsObject.events).ToList();
 
                                 foreach (var ev in removed)
                                 {
                                     data.events.Remove(ev);
-                                    clickedEvents.Remove(ev);
+                                    ClickedEvents.Remove(ev);
                                 }
 
-                                var added = eventsObject.events.Except(clickedEvents).ToList();
+                                var added = eventsObject.events.Except(ClickedEvents).ToList();
 
                                 foreach (var ev in added)
                                 {
                                     ev.x = firstEventX;
                                     data.Add(ev);
-                                    clickedEvents.Add(ev);
+                                    ClickedEvents.Add(ev);
                                 }
                             }
 
@@ -260,7 +261,7 @@ public partial class BadassAnimationWindow
 
                             if (GUILayout.Button("Apply"))
                             {
-                                clickedEvents.Clear();
+                                ClickedEvents.Clear();
                                 treePopup.OnClose();
                                 treePopup = null;
                             }
@@ -268,7 +269,7 @@ public partial class BadassAnimationWindow
                     }
                     else
                     {
-                        var x = GUIScene.Matrix.MultiplyPoint3x4(new Vector3(clickedEvents[0].x, 0, 0)).x;
+                        var x = GUIScene.Matrix.MultiplyPoint3x4(new Vector3(ClickedEvents[0].x, 0, 0)).x;
                         var y = pointer.mouseClickArea.yMin;
                         var pos = new Vector2(x + eventPointSize * 2, y - eventPointSize * 2);
 
@@ -361,6 +362,7 @@ public partial class BadassAnimationWindow
                     }
 
                     var worldRect = curveItem.Rect;
+                    worldRect = worldRect.AlignCenterY(worldRect.height - 1);
                     worldRect.x = position.x;
                     worldRect.width = position.width;
                     worldRect = GUIScene.ScreenToWorld(worldRect);
@@ -459,6 +461,7 @@ public partial class BadassAnimationWindow
 
         public void Clear()
         {
+            CurveItems.Clear();
             curvesEditor.Clear();
         }
 

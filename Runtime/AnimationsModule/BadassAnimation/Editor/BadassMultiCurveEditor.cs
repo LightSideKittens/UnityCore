@@ -6,6 +6,7 @@ using LightSideCore.Editor;
 using LSCore.ConfigModule;
 using LSCore.Editor;
 using LSCore.Extensions;
+using LSCore.Extensions.Unity;
 using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -23,7 +24,7 @@ public class BadassMultiCurveEditor
     public BadassCurveEditor First => visibleEditors[0];
     public List<BadassCurveEditor> editors = new();
     private List<BadassCurveEditor> visibleEditors = new();
-    public Matrix4x4 matrix = Matrix4x4.identity;
+    public Matrix4x4 matrix = Matrix4x4.identity * Matrix4x4.Scale(new Vector3(10, 1, 1));
     public GUIScene.CameraData camData = new();
     public GUIScene.GridData gridData = new();
     public bool snapping = true;
@@ -41,7 +42,7 @@ public class BadassMultiCurveEditor
         }
     }
     
-    public BadassMultiCurveEditor(IEnumerable<BadassCurveEditor> editors)
+    public BadassMultiCurveEditor(IEnumerable<BadassCurveEditor> editors) : this()
     {
         this.editors.AddRange(editors);
         foreach (var editor in this.editors)
@@ -51,14 +52,17 @@ public class BadassMultiCurveEditor
         OnEnable();
     }
     
-    public BadassMultiCurveEditor(BadassCurveEditor editor)
+    public BadassMultiCurveEditor(BadassCurveEditor editor) : this()
     {
         SetupPointsBoundsGetter(editor);
         editors.Add(editor);
         OnEnable();
     }
-    
-    public BadassMultiCurveEditor() { }
+
+    public BadassMultiCurveEditor()
+    {
+        camData.position.X(6.5f);
+    }
     
     public void Add(BadassCurveEditor editor)
     {

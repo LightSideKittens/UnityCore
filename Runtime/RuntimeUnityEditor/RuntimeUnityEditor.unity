@@ -220,10 +220,14 @@ MonoBehaviour:
     handlers:
     - rid: 888390078109843624
     - rid: 888390078109843625
-    events: []
+    events:
+    - rid: 888390122199056767
+    - rid: 888390122199056772
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 888390078109843624
       type: {class: TransformPosition, ns: LSCore.AnimationsModule, asm: LSCore.BadassAnimation}
       data:
@@ -237,6 +241,43 @@ MonoBehaviour:
         guid: 85bcc63980f94dc7b6063872266261a4
         transform: {fileID: 145660859}
         add: 0
+    - rid: 888390122199056767
+      type: {class: BadassAnimation/ActionEvent, ns: , asm: LSCore.BadassAnimation}
+      data:
+        x: 0.27
+        action:
+          rid: 888390122199056771
+    - rid: 888390122199056771
+      type: {class: Log, ns: , asm: LSCore.LSDelegates}
+      data:
+        message: Test
+    - rid: 888390122199056772
+      type: {class: BadassAnimation/ConditionEvent, ns: , asm: LSCore.BadassAnimation}
+      data:
+        x: 0.40000004
+        condition:
+          rid: 888390122199056773
+        eventt:
+          rid: 888390122199056778
+    - rid: 888390122199056773
+      type: {class: Conditions, ns: LSCore.ConditionModule, asm: LSCore.ConditionModule}
+      data:
+        not: 0
+        type: 0
+        conditions:
+        - rid: 888390122199056782
+    - rid: 888390122199056778
+      type: {class: BadassAnimation/ActionEvent, ns: , asm: LSCore.BadassAnimation}
+      data:
+        x: 0
+        action:
+          rid: -2
+    - rid: 888390122199056782
+      type: {class: BoolCondition, ns: LSCore.ConditionModule, asm: LSCore.ConditionModule}
+      data:
+        not: 0
+        type: 0
+        value: 1
 --- !u!212 &145660858
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -494,6 +535,119 @@ Transform:
   - {fileID: 961253475}
   m_Father: {fileID: 1275404414}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &496000192
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2121424196292172920, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121424196292172920, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121424196292172920, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121424196292172920, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121424196292172920, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121424196292172920, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121424196292172920, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121424196292172920, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121424196292172920, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2121424196292172920, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2205544348025492030, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_Name
+      value: Knight_Unit
+      objectReference: {fileID: 0}
+    - target: {fileID: 7846704930867628076, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7846704930867628076, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7846704930867628076, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: -44.4
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2205544348025492030, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 496000195}
+  m_SourcePrefab: {fileID: 100100000, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+--- !u!1 &496000193 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2205544348025492030, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+  m_PrefabInstance: {fileID: 496000192}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &496000194 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7846704930867628076, guid: fd257cc1fb41f914a98e395462b2da7d, type: 3}
+  m_PrefabInstance: {fileID: 496000192}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &496000195
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 496000193}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9bc61ea1cf2f4b91966a9561b35ea50a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultClip: {fileID: 0}
+  loop: 0
+  reverse: 0
+  updateMode: 0
+  data:
+  - clip: {fileID: 11400000, guid: b96f8f12f1759d54dbe0e729215cbac4, type: 2}
+    handlers:
+    - rid: 888390122199056799
+    events: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 888390122199056799
+      type: {class: TransformRotation, ns: LSCore.AnimationsModule, asm: LSCore.BadassAnimation}
+      data:
+        guid: 1dd12dbd694047fd9fb7e657652a7bf6
+        transform: {fileID: 496000194}
+        useWorldSpace: 0
+        add: 0
 --- !u!1 &499093085
 GameObject:
   m_ObjectHideFlags: 0
@@ -1556,3 +1710,4 @@ SceneRoots:
   - {fileID: 987781332}
   - {fileID: 145660859}
   - {fileID: 543138482}
+  - {fileID: 496000192}

@@ -38,7 +38,7 @@ namespace LSCore.Editor
         
         static GUIScene()
         {
-            CompilationPipeline.compilationStarted += x =>
+            CompilationPipeline.compilationFinished += x =>
             {
                 EditorSceneManager.ClosePreviewScene(scene);
             };

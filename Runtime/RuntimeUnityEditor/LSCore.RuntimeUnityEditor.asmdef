@@ -1,4 +1,4 @@
 {
   "name": "LSCore.RuntimeUnityEditor",
-  "references":[ "GUID:e2d262c07fab33347bf583c077610e88", "GUID:9c38c981acbf419b9287676bf57791e2", "GUID:3dd2cb52eff6e5743bdb8fcc64baed91", "GUID:96d4cfcb39a2f6449b14b08c0f026129", "GUID:5bb0561ab59f4090b284fb2dc8ab2482" ]
+  "references":[ "GUID:e2d262c07fab33347bf583c077610e88", "GUID:9c38c981acbf419b9287676bf57791e2", "GUID:3dd2cb52eff6e5743bdb8fcc64baed91", "GUID:96d4cfcb39a2f6449b14b08c0f026129", "GUID:5bb0561ab59f4090b284fb2dc8ab2482", "GUID:e203c3ad7a7046548ca22a43fa4eb0de" ]
 }

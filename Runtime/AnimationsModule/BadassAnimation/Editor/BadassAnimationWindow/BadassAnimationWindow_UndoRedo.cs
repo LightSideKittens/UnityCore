@@ -1,16 +1,38 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
 public partial class BadassAnimationWindow
 {
+    private const string BadassAnimationAddCurve = "Badass Animation Add Curve";
+    private const string BadassAnimationAddHandler = "Badass Animation Add Handler";
+    private const string BadassAnimationDeleteCurve = "Badass Animation Delete Curve";
+    private const string BadassAnimationDeleteHandler = "Badass Animation Delete Handler";
+
+    private static HashSet<string> undoNames = new ()
+    {
+        BadassAnimationAddCurve,
+        BadassAnimationAddHandler,
+        BadassAnimationDeleteCurve,
+        BadassAnimationDeleteHandler,
+    };
     public bool IsRecorded { get; private set; }
     
-    public void RecordAddCurve() => RecordUndo("Badass Animation Add Curve", this, CurrentClip);
-    public void RecordAddHandler() => RecordUndo("Badass Animation Add Handler", this, animation, CurrentClip);
-    public void RecordDeleteCurve() => RecordUndo("Badass Animation Delete Curve", this, CurrentClip);
-    public void RecordDeleteHandler() => RecordUndo("Badass Animation Delete Handler", this, animation, CurrentClip);
+    public void RecordAddCurve() => RecordUndo(BadassAnimationAddCurve, this, CurrentClip);
+    public void RecordAddHandler() => RecordUndo(BadassAnimationAddHandler, this, animation, CurrentClip);
+    public void RecordDeleteCurve() => RecordUndo(BadassAnimationDeleteCurve, this, CurrentClip);
+    public void RecordDeleteHandler() => RecordUndo(BadassAnimationDeleteHandler, this, animation, CurrentClip);
     
+    private void OnUndoRedoPerformed(in UndoRedoInfo undo)
+    {
+        Repaint();
+        if(!undoNames.Contains(undo.undoName)) return;
+        isUndoPerforming = true;
+        ForceMenuTreeRebuild();
+        UpdateAnimationComponent();
+        TryUpdateAnimationMode();
+    }
 
     private void RecordUndo(Object obj, string name)
     {

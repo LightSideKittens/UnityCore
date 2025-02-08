@@ -5,6 +5,7 @@ namespace LSCore.ConditionModule
 {
     public class ConditionBuilder : BaseCondition
     {
+        public static ConditionBuilder Default { get; } = If(() => false);
         private readonly List<Data> data = new();
         
         public struct Data

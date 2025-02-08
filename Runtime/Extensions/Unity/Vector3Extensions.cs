@@ -4,16 +4,14 @@ namespace LSCore.Extensions.Unity
 {
     public static class Vector3Extensions
     {
-        public static Vector3 X(this Vector3 a, float x)
+        public static void X(ref this Vector3 a, float x)
         {
             a.x = x;
-            return a;
         }
         
-        public static Vector3 Y(this Vector3 a, float y)
+        public static void Y(ref this Vector3 a, float y)
         {
             a.y = y;
-            return a;
         }
         
         public static Vector3 SetByIndex(this Vector3 a, float value, int index)
