@@ -22,7 +22,7 @@ public partial class BadassAnimationWindow
             [SerializeReference] public List<BadassAnimation.Event> events;
         }
 
-        public const float eventPointSize = 0.02f;
+        public const float eventPointSize = 0.03f;
         public const float dopesheetKeySize = 0.02f;
         public BadassAnimationWindow window;
         public BadassAnimation animation;
@@ -170,7 +170,7 @@ public partial class BadassAnimationWindow
 
                     using (GUIScene.SetIdentityMatrix())
                     {
-                        GUIScene.DrawCircle(pos, eventPointSize, green);
+                        GUIScene.DrawTriangle(pos, eventPointSize, green);
                         if (e.OnMouseDown(1, false))
                         {
                             if (!wasCleared)
