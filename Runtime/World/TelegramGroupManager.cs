@@ -178,8 +178,31 @@ public class TelegramGroupManager : MonoBehaviour
         return Task.CompletedTask;
     }
 
+    public async void GetMessages()
+    {
+        var message = await GetChatLastMessage(chatId);
+        var messages = await GetChatMessages(chatId, message?.ID ?? 0);
+
+        foreach (var m in messages)
+        {
+            
+        }
+    }
+
+    public async Task<MessageBase> GetChatLastMessage(long chatId)
+    {
+        var inputPeer = new InputPeerChat(chatId);
+        
+        var history = await client.Messages_GetHistory(
+            peer:         inputPeer,
+            limit:        1);
+
+        var messages = history.Messages;
+        return messages.Length > 0 ? history.Messages[0] : null;
+    }
+    
     public async Task<MessageBase[]> GetChatMessages(
-        int chatId,
+        long chatId,
         int offsetId,
         int limit = 100,
         bool needNewest = false)
@@ -190,8 +213,7 @@ public class TelegramGroupManager : MonoBehaviour
             peer:         inputPeer,
             offset_id:    offsetId,
             add_offset:   needNewest ? 100 : -100,
-            limit:        limit,
-            hash:         0);
+            limit:        limit);
 
         return history.Messages;
     }
