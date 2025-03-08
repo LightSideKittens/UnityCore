@@ -1,31 +1,35 @@
+using System.Collections;
 using UnityEngine;
 using WTelegram;
 using TL;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using LSCore;
 using Sirenix.OdinInspector;
 
 public class TelegramGroupManager : MonoBehaviour
 {
     public long chatId = 2301292992;
     Client client;
+    private ChatMessagesManager chatManager;
     private Chat globalChat;
-
+    
     [Button]
     async void Begin()
     {
         client?.Dispose();
         client = new Client(Config);
-
+        
         try
         {
             await client.LoginUserIfNeeded();
             client.OnUpdates += HandleUpdate;
             
-            string[] friendUsernames = { "peng_pororo", "malvis_light" };
+            string[] friendUsernames = { "malvislight", "malvis_light" };
             globalChat = await GetExistingBasicChatById(chatId);
             globalChat ??= await CreateGroup($"{Application.productName}", friendUsernames);
+            chatManager = new ChatMessagesManager(client, chatId);
         }
         catch (System.Exception ex)
         {
@@ -47,9 +51,9 @@ public class TelegramGroupManager : MonoBehaviour
     {
         switch (what)
         {
-            case "api_id": return "22121699"; // Ваш API_ID
-            case "api_hash": return "6b94bc2584e5ca298ed9aecadabafc76"; // Ваш API_HASH
-            case "phone_number": return "+995595153758"; // Ваш номер телефона (с кодом страны)
+            case "api_id": return "29124809"; // Ваш API_ID
+            case "api_hash": return "33553afbccfe2882dcbcc9fe5450fdf2";
+            case "phone_number": return "+19706041152";
             case "session_pathname": return "C:/C-UnityProjects/LightSide/StarSavers/AdditionalResources/telegram.session";
             default: return null;
         }
@@ -170,6 +174,11 @@ public class TelegramGroupManager : MonoBehaviour
                     if (nm.message.Peer is PeerChat || nm.message.Peer is PeerChannel)
                     {
                         Debug.Log("Получено новое сообщение из группы: " + nm.message.ID);
+
+                        if (nm.message is Message message)
+                        {
+                            Debug.Log("Получено новое сообщение из группы: " + message.message);
+                        }
                     }
                 }
             }
@@ -178,6 +187,7 @@ public class TelegramGroupManager : MonoBehaviour
         return Task.CompletedTask;
     }
 
+    [Button]
     public async void GetMessages()
     {
         var message = await GetChatLastMessage(chatId);
@@ -185,21 +195,19 @@ public class TelegramGroupManager : MonoBehaviour
 
         foreach (var m in messages)
         {
-            
+            if (m is Message mm)
+            {
+                Debug.Log(mm.message);
+            }
         }
     }
 
     public async Task<MessageBase> GetChatLastMessage(long chatId)
     {
-        var inputPeer = new InputPeerChat(chatId);
-        
-        var history = await client.Messages_GetHistory(
-            peer:         inputPeer,
-            limit:        1);
-
-        var messages = history.Messages;
-        return messages.Length > 0 ? history.Messages[0] : null;
+        var messages = await GetChatMessages(chatId, 0, 1);
+        return messages.Length > 0 ? messages[0] : null;
     }
+    
     
     public async Task<MessageBase[]> GetChatMessages(
         long chatId,
@@ -209,11 +217,22 @@ public class TelegramGroupManager : MonoBehaviour
     {
         var inputPeer = new InputPeerChat(chatId);
         
-        var history = await client.Messages_GetHistory(
-            peer:         inputPeer,
-            offset_id:    offsetId,
-            add_offset:   needNewest ? 100 : -100,
-            limit:        limit);
+        Messages_MessagesBase history;
+
+        if (needNewest)
+        {
+            history = await client.Messages_GetHistory(
+                peer: inputPeer,
+                limit: limit,
+                min_id: offsetId + 1);
+        }
+        else
+        {
+            history = await client.Messages_GetHistory(
+                peer: inputPeer,
+                offset_id: offsetId,
+                limit: limit);
+        }
 
         return history.Messages;
     }

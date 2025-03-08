@@ -12,7 +12,7 @@ namespace TL
         public virtual string Url => default;
     }
     
-    	/// <summary>No preview is available for the webpage		<para>See <a href="https://corefork.telegram.org/constructor/webPageEmpty"/></para></summary>
+    /// <summary>No preview is available for the webpage		<para>See <a href="https://corefork.telegram.org/constructor/webPageEmpty"/></para></summary>
 	[TLDef(0x211A1788)]
 	public sealed partial class WebPageEmpty : WebPageBase
 	{
