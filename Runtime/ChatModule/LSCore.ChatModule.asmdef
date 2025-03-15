@@ -1,0 +1,4 @@
+{
+  "name": "LSCore.ChatModule",
+  "references":[ "GUID:7536e6534d3f4b199f706b1b950c0062", "GUID:68e9f28a67e647deb8fc94f719c5ea5a", "GUID:d426b638445cc2f428ed8ba7c1325767", "GUID:e2d262c07fab33347bf583c077610e88" ]
+}

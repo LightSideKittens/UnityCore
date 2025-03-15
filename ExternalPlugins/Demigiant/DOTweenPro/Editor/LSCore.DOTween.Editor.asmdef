@@ -1,0 +1,18 @@
+{
+    "name": "LSCore.DOTween.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:c5a4bb4647048364bbcbbe6191a94727"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

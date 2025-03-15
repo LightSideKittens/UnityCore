@@ -1,7 +1,6 @@
 {
     "name": "LSCore.World",
     "rootNamespace": "",
-    "references": ["LSCore.TelegramAPI"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
