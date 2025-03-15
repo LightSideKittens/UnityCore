@@ -1,0 +1,14 @@
+{
+    "name": "LSCore.Lottie",
+    "rootNamespace": "",
+    "references": ["GUID:d426b638445cc2f428ed8ba7c1325767"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

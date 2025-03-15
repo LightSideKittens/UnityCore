@@ -4,8 +4,8 @@ namespace LSCore.Extensions.Unity
 {
     public static class Texture2DExt
     {
-        public static Vector2 Size(this Texture2D texture) => new Vector2(texture.width, texture.height);
-        public static float AspectRatio(this Texture2D texture) => (float)texture.width / texture.height;
+        public static Vector2 Size(this Texture texture) => new Vector2(texture.width, texture.height);
+        public static float AspectRatio(this Texture texture) => (float)texture.width / texture.height;
         
         public static Texture2D LoadAndLimitTexture(byte[] bytes, int maxSideLength)
         {
