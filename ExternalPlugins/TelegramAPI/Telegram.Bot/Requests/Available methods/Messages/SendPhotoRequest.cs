@@ -1,0 +1,81 @@
+// GENERATED FILE - DO NOT MODIFY MANUALLY
+
+using System.Collections.Generic;
+using System.ComponentModel;
+using Telegram.Bot.Requests.Abstractions;
+using Telegram.Bot.Types;
+using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
+
+namespace Telegram.Bot.Requests
+{
+    /// <summary>Use this method to send photos.<para>Returns: The sent <see cref="Message"/> is returned.</para></summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public partial class SendPhotoRequest : FileRequestBase<Message>, IChatTargetable, IBusinessConnectable
+    {
+        /// <summary>Use this method to send photos.<para>Returns: The sent <see cref="Message"/> is returned.</para></summary>
+        public SendPhotoRequest() : base("sendPhoto")
+        {
+        }
+
+        /// <summary>Unique identifier for the target chat or username of the target channel (in the format <c>@channelusername</c>)</summary>
+        [Newtonsoft.Json.JsonProperty("chat_id")]
+        
+        public ChatId ChatId { get; set; }
+
+        /// <summary>Photo to send. Pass a FileId as String to send a photo that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a photo from the Internet, or upload a new photo using <see cref="InputFileStream"/>. The photo must be at most 10 MB in size. The photo's width and height must not exceed 10000 in total. Width and height ratio must be at most 20. <a href="https://core.telegram.org/bots/api#sending-files">More information on Sending Files »</a></summary>
+        
+        public InputFile Photo { get; set; }
+
+        /// <summary>Unique identifier for the target message thread (topic) of the forum; for forum supergroups only</summary>
+        [Newtonsoft.Json.JsonProperty("message_thread_id")]
+        public int? MessageThreadId { get; set; }
+
+        /// <summary>Photo caption (may also be used when resending photos by <em>FileId</em>), 0-1024 characters after entities parsing</summary>
+        public string? Caption { get; set; }
+
+        /// <summary>Mode for parsing entities in the photo caption. See <a href="https://core.telegram.org/bots/api#formatting-options">formatting options</a> for more details.</summary>
+        [Newtonsoft.Json.JsonProperty("parse_mode")]
+        public ParseMode ParseMode { get; set; }
+
+        /// <summary>A list of special entities that appear in the caption, which can be specified instead of <see cref="ParseMode">ParseMode</see></summary>
+        [Newtonsoft.Json.JsonProperty("caption_entities")]
+        public IEnumerable<MessageEntity>? CaptionEntities { get; set; }
+
+        /// <summary>Pass <see langword="true"/>, if the caption must be shown above the message media</summary>
+        [Newtonsoft.Json.JsonProperty("show_caption_above_media")]
+        public bool ShowCaptionAboveMedia { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the photo needs to be covered with a spoiler animation</summary>
+        [Newtonsoft.Json.JsonProperty("has_spoiler")]
+        public bool HasSpoiler { get; set; }
+
+        /// <summary>Sends the message <a href="https://telegram.org/blog/channels-2-0#silent-messages">silently</a>. Users will receive a notification with no sound.</summary>
+        [Newtonsoft.Json.JsonProperty("disable_notification")]
+        public bool DisableNotification { get; set; }
+
+        /// <summary>Protects the contents of the sent message from forwarding and saving</summary>
+        [Newtonsoft.Json.JsonProperty("protect_content")]
+        public bool ProtectContent { get; set; }
+
+        /// <summary>Pass <see langword="true"/> to allow up to 1000 messages per second, ignoring <a href="https://core.telegram.org/bots/faq#how-can-i-message-all-of-my-bot-39s-subscribers-at-once">broadcasting limits</a> for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance</summary>
+        [Newtonsoft.Json.JsonProperty("allow_paid_broadcast")]
+        public bool AllowPaidBroadcast { get; set; }
+
+        /// <summary>Unique identifier of the message effect to be added to the message; for private chats only</summary>
+        [Newtonsoft.Json.JsonProperty("message_effect_id")]
+        public string? MessageEffectId { get; set; }
+
+        /// <summary>Description of the message to reply to</summary>
+        [Newtonsoft.Json.JsonProperty("reply_parameters")]
+        public ReplyParameters? ReplyParameters { get; set; }
+
+        /// <summary>Additional interface options. An object for an <a href="https://core.telegram.org/bots/features#inline-keyboards">inline keyboard</a>, <a href="https://core.telegram.org/bots/features#keyboards">custom reply keyboard</a>, instructions to remove a reply keyboard or to force a reply from the user</summary>
+        [Newtonsoft.Json.JsonProperty("reply_markup")]
+        public ReplyMarkup? ReplyMarkup { get; set; }
+
+        /// <summary>Unique identifier of the business connection on behalf of which the message will be sent</summary>
+        [Newtonsoft.Json.JsonProperty("business_connection_id")]
+        public string? BusinessConnectionId { get; set; }
+    }
+}

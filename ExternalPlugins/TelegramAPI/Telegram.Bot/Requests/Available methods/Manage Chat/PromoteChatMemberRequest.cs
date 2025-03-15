@@ -1,0 +1,88 @@
+// GENERATED FILE - DO NOT MODIFY MANUALLY
+
+using System.ComponentModel;
+using Telegram.Bot.Requests.Abstractions;
+using Telegram.Bot.Types;
+
+namespace Telegram.Bot.Requests
+{
+    /// <summary>Use this method to promote or demote a user in a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Pass <em>False</em> for all boolean parameters to demote a user.<para>Returns: </para></summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public partial class PromoteChatMemberRequest : RequestBase<bool>, IChatTargetable, IUserTargetable
+    {
+        /// <summary>Use this method to promote or demote a user in a supergroup or a channel. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Pass <em>False</em> for all boolean parameters to demote a user.<para>Returns: </para></summary>
+        public PromoteChatMemberRequest() : base("promoteChatMember")
+        {
+        }
+
+        /// <summary>Unique identifier for the target chat or username of the target channel (in the format <c>@channelusername</c>)</summary>
+        [Newtonsoft.Json.JsonProperty("chat_id")]
+        
+        public ChatId ChatId { get; set; }
+
+        /// <summary>Unique identifier of the target user</summary>
+        [Newtonsoft.Json.JsonProperty("user_id")]
+        
+        public long UserId { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator's presence in the chat is hidden</summary>
+        [Newtonsoft.Json.JsonProperty("is_anonymous")]
+        public bool IsAnonymous { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can access the chat event log, get boost list, see hidden supergroup and channel members, report spam messages and ignore slow mode. Implied by any other administrator privilege.</summary>
+        [Newtonsoft.Json.JsonProperty("can_manage_chat")]
+        public bool CanManageChat { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can post messages in the channel, or access channel statistics; for channels only</summary>
+        [Newtonsoft.Json.JsonProperty("can_post_messages")]
+        public bool CanPostMessages { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can edit messages of other users and can pin messages; for channels only</summary>
+        [Newtonsoft.Json.JsonProperty("can_edit_messages")]
+        public bool CanEditMessages { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can delete messages of other users</summary>
+        [Newtonsoft.Json.JsonProperty("can_delete_messages")]
+        public bool CanDeleteMessages { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can post stories to the chat</summary>
+        [Newtonsoft.Json.JsonProperty("can_post_stories")]
+        public bool CanPostStories { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can edit stories posted by other users, post stories to the chat page, pin chat stories, and access the chat's story archive</summary>
+        [Newtonsoft.Json.JsonProperty("can_edit_stories")]
+        public bool CanEditStories { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can delete stories posted by other users</summary>
+        [Newtonsoft.Json.JsonProperty("can_delete_stories")]
+        public bool CanDeleteStories { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can manage video chats</summary>
+        [Newtonsoft.Json.JsonProperty("can_manage_video_chats")]
+        public bool CanManageVideoChats { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can restrict, ban or unban chat members, or access supergroup statistics</summary>
+        [Newtonsoft.Json.JsonProperty("can_restrict_members")]
+        public bool CanRestrictMembers { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can add new administrators with a subset of their own privileges or demote administrators that they have promoted, directly or indirectly (promoted by administrators that were appointed by him)</summary>
+        [Newtonsoft.Json.JsonProperty("can_promote_members")]
+        public bool CanPromoteMembers { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can change chat title, photo and other settings</summary>
+        [Newtonsoft.Json.JsonProperty("can_change_info")]
+        public bool CanChangeInfo { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can invite new users to the chat</summary>
+        [Newtonsoft.Json.JsonProperty("can_invite_users")]
+        public bool CanInviteUsers { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the administrator can pin messages; for supergroups only</summary>
+        [Newtonsoft.Json.JsonProperty("can_pin_messages")]
+        public bool CanPinMessages { get; set; }
+
+        /// <summary>Pass <see langword="true"/> if the user is allowed to create, rename, close, and reopen forum topics; for supergroups only</summary>
+        [Newtonsoft.Json.JsonProperty("can_manage_topics")]
+        public bool CanManageTopics { get; set; }
+    }
+}
