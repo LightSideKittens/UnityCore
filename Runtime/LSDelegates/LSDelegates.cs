@@ -1,14 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
-using LSCore.Extensions.Unity;
-using Sirenix.OdinInspector;
-using UnityEngine;
 
 [Serializable]
-[HideReferenceObjectPicker]
 public abstract class LSAction
 {
     public abstract void Invoke();
+}
+
+[Serializable]
+public class DelegateLSAction : LSAction
+{
+    public Action action;
+
+    public override void Invoke()
+    {
+        action();
+    }
+    
+    public static explicit operator DelegateLSAction(Action action)
+    {
+        return new DelegateLSAction{action=action};
+    }
+    
+    public static explicit operator Action(DelegateLSAction action)
+    {
+        return action.Invoke;
+    }
 }
 
 [Serializable]

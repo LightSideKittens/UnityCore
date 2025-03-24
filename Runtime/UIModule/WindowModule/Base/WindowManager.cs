@@ -73,15 +73,22 @@ namespace LSCore
         private void InternalShow()
         {
             if (showTween != null) return;
+            
             Burger.Log($"{gameObject.name} InternalShow by Id {WindowsData.Id}");
             IsShow = true;
             WindowsData.CallOption(showOption());
             RecordState();
+            
             if (canvas)
             {
                 canvas.sortingOrder = WindowsData.sortingOrder++;
             }
             
+            OnlyShow();
+        }
+
+        public void OnlyShow()
+        {
             Showing?.Invoke();
             AnimateOnShowing(OnCompleteShow);
             gameObject.SetActive(true);
@@ -97,15 +104,23 @@ namespace LSCore
         private void InternalHide()
         {
             if (hideTween != null) return;
+            
             Burger.Log($"{gameObject.name} InternalHide");
             IsShow = false;
+            
             if (canvas)
             {
                 WindowsData.sortingOrder--;
             }
+            
             WindowsData.Current.hideAllPrevious -= InternalHide;
             WindowsData.Record(InternalShow);
             
+            OnlyHide();
+        }
+
+        public void OnlyHide()
+        {
             Hiding?.Invoke();
             AnimateOnHiding(OnCompleteHide);
         }
