@@ -1,3 +1,4 @@
 ﻿{
-  "name": "LSCore.DataStructs"
+  "name": "LSCore.DataStructs",
+  "references":[ "GUID:bb5ab3e5517faff4287376ae8f1fc9fc" ]
 }
