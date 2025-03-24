@@ -27,5 +27,17 @@ namespace LSCore.Extensions
             t.SetTarget(target);
             return t;
         }
+
+        public static Tween DOSize(this SpriteRenderer target, Vector2 endValue, float duration)
+        {
+            var value = target.size;
+            TweenerCore<Vector2, Vector2, VectorOptions> t = DOTween.To(() => value, x =>
+            {
+                value = x;
+                target.size = x;
+            }, endValue, duration);
+            t.SetTarget(target);
+            return t;
+        }
     }
 }

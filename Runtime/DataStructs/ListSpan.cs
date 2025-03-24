@@ -52,6 +52,48 @@ namespace LSCore.DataStructs
         }
     }
     
+    public readonly struct ArraySpan<T>
+    {
+        private readonly T[,] list;
+        private readonly (int start, int count)[] ranges;
+    
+        public ArraySpan(T[,] list, (int start, int count) x, (int start, int count) y)
+        {
+            ranges = new[] { x, y };
+            
+            for (var i = 0; i < ranges.Length; i++)
+            {
+                var r = ranges[i];
+                var count = list.GetLength(i);
+                
+                if (r.start < 0 || r.start > count || r.count < 0 || r.start + r.count > count)
+                {
+                    throw new ArgumentOutOfRangeException();
+                }
+            }
+            
+            this.list = list;
+        }
+
+        public int GetLength(int index) => ranges[index].count;
+        
+        public T this[int x, int y]
+        {
+            get
+            {
+                if (x < 0 || x >= ranges[0].count) throw new ArgumentOutOfRangeException();
+                if (y < 0 || y >= ranges[1].count) throw new ArgumentOutOfRangeException();
+                return list[ranges[0].start + x, ranges[1].start + y];
+            }
+            set
+            {
+                if (x < 0 || x >= ranges[0].count) throw new ArgumentOutOfRangeException();
+                if (y < 0 || y >= ranges[1].count) throw new ArgumentOutOfRangeException();
+                list[ranges[0].start + x, ranges[1].start + y] = value;
+            }
+        }
+    }
+    
     public static class IListExtensions
     {
         public static ListSpan<T> AsSpan<T>(this IList<T> list, Range range)
@@ -62,6 +104,25 @@ namespace LSCore.DataStructs
             count = end - start;
     
             return new ListSpan<T>(list, start, count);
+        }
+        
+        public static ArraySpan<T> ToSpan<T>(this T[,] list, Range x, Range y)
+        {
+            Range[] ranges = {x, y};
+            (int start, int count)[] iranges = new (int start, int count)[2];
+            
+            for (var i = 0; i < ranges.Length; i++)
+            {
+                var r = ranges[i];
+                var count = list.GetLength(i);
+                var start = r.Start.GetOffset(count);
+                var end = r.End.GetOffset(count);
+                count = end - start;
+                
+                iranges[i] = (start, count);
+            }
+            
+            return new ArraySpan<T>(list, iranges[0], iranges[1]);
         }
     }
 }
