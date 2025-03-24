@@ -158,5 +158,10 @@ namespace LSCore.Extensions
                 { "size", bounds.size.ToJObject() },
             };
         }
+        
+        public static T GetOrCreate<T>(this JToken token, string propertyName) where T : JToken, new()
+        {
+            return (T)(token[propertyName] ??= new T());
+        }
     }
 }
