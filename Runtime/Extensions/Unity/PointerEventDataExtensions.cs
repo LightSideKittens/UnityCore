@@ -7,7 +7,7 @@ namespace LSCore
         public static bool IsFirstTouch(this PointerEventData eventData)
         {
 #if UNITY_EDITOR
-            return eventData.pointerId == -1;
+            return eventData.pointerId is -1 or 0;
 #endif
             return eventData.pointerId == 0;
         }
