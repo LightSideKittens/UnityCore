@@ -5,10 +5,24 @@ namespace LSCore.Extensions.Unity
 {
     public static class Physics2DExt
     {
-        private static Collider2D[] hitColliders = new Collider2D[10];
+        private static Collider2D[] hitColliders = new Collider2D[100];
 
         public static void SetHitCollidersSize(int size) => hitColliders = new Collider2D[size];
+        
+        public static Collider2D[] FindAll(in Vector2 position)
+        {
+            var numColliders = Physics2D.OverlapPoint(position, default, hitColliders);
 
+            return hitColliders[..numColliders];
+        }
+        
+        public static Collider2D[] FindAll(in Vector2 position, in ContactFilter2D filter)
+        {
+            var numColliders = Physics2D.OverlapPoint(position, filter, hitColliders);
+
+            return hitColliders[..numColliders];
+        }
+        
         public static Collider2D[] FindAll(in Vector2 position, float radius, in ContactFilter2D filter)
         {
             var numColliders = Physics2D.OverlapCircle(position, radius, filter, hitColliders);
