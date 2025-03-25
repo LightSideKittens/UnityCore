@@ -46,8 +46,8 @@ namespace LSCore
                 action.settings = settings;
                 settings.Clip = SingleAsset<AudioClip>.Get("ButtonClick");
                 settings.Group = SingleAsset<AudioMixerGroup>.Get("AudioMixer[UI]");
-                    
-                actions.Add(action);
+                
+                actions.Insert(0, action);
             }
         }
 

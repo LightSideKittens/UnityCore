@@ -104,6 +104,15 @@ namespace LSCore
         private void InternalHide()
         {
             if (hideTween != null) return;
+            if (gameObject == null)
+            {
+                WindowsData.Current.hideAllPrevious -= InternalHide;
+                if (canvas is not null)
+                {
+                    WindowsData.sortingOrder--;
+                }
+                return;
+            }
             
             Burger.Log($"{gameObject.name} InternalHide");
             IsShow = false;

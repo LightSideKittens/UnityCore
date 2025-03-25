@@ -34,7 +34,7 @@ namespace LSCore
             anim.OnClick();
             Clicked?.Invoke();
         }
-
+        
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
         {
             if (!eventData.IsFirstTouch()) return;
