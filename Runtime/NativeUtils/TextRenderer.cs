@@ -27,7 +27,6 @@ public static class TextRenderer
             return currentActivity;
         }
     }
-#endif
     
     public static void SetCustomFont(string fontName)
     {
@@ -45,23 +44,6 @@ public static class TextRenderer
     {
         Debug.Log($"SetCustomTextColor: {textColor}");
         TextRendererClass.CallStatic("setCustomTextColor", textColor.ToARGB());
-    }
-
-    public static (int width, int height) GetSize(NativeTextMeshPro text)
-    {
-        RectTransform rectTransform = text.rectTransform;
-        float w = rectTransform.rect.width;
-        float h = rectTransform.rect.height;
-        Vector4 m = text.margin;
-        
-        w -= m.x;
-        w -= m.z;
-        h -= m.y;
-        h -= m.w;
-        
-        int width = Mathf.RoundToInt(w);
-        int height = Mathf.RoundToInt(h);
-        return (width, height);
     }
     
     public static void SetRect(NativeTextMeshPro text)
@@ -154,6 +136,24 @@ public static class TextRenderer
     {
         Debug.Log($"SetUnderlay: {(color, offsetX, offsetY, dilate, softness)}");
         TextRendererClass.CallStatic("setUnderlay", color.ToARGB(), offsetX, offsetY, dilate, softness);
+    }
+#endif
+    
+    public static (int width, int height) GetSize(NativeTextMeshPro text)
+    {
+        RectTransform rectTransform = text.rectTransform;
+        float w = rectTransform.rect.width;
+        float h = rectTransform.rect.height;
+        Vector4 m = text.margin;
+        
+        w -= m.x;
+        w -= m.z;
+        h -= m.y;
+        h -= m.w;
+        
+        int width = Mathf.RoundToInt(w);
+        int height = Mathf.RoundToInt(h);
+        return (width, height);
     }
     
     public static bool IsValidString(string text)

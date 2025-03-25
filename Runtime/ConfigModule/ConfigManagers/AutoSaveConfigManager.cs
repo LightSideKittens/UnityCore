@@ -47,7 +47,7 @@ namespace LSCore.ConfigModule
             World.Destroyed += OnWorldDestroy;
         }
         
-        private void OnWorldDestroy()
+        public void OnWorldDestroy()
         {
             LoadOnNextAccess();
             Save();
