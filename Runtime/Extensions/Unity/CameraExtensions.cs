@@ -5,6 +5,14 @@ namespace LSCore.Extensions.Unity
 {
     public static class CameraExtensions
     {
+        public static Vector2 ScreenToWorldDelta(this Camera camera, Vector2 delta)
+        {
+            Vector3 worldPoint0 = camera.ScreenToWorldPoint(new Vector2(0, 0));
+            Vector3 worldPointDelta = camera.ScreenToWorldPoint(new Vector3(delta.x, delta.y));
+            var worldDelta = worldPointDelta - worldPoint0;
+            return worldDelta;
+        }
+        
         public static Bounds GetBounds(this Camera camera)
         {
             return new Bounds(camera.transform.position, camera.GetSize());
@@ -12,8 +20,8 @@ namespace LSCore.Extensions.Unity
 
         public static Vector2 GetSize(this Camera camera)
         {
-            float cameraHeight = camera.orthographicSize * 2;
-            float cameraWidth = cameraHeight * camera.aspect;
+            var cameraHeight = camera.orthographicSize * 2;
+            var cameraWidth = cameraHeight * camera.aspect;
             return new Vector2(cameraWidth, cameraHeight);
         }
         
@@ -27,8 +35,8 @@ namespace LSCore.Extensions.Unity
         
         public static Vector2 GetSize(this Camera camera, float distance)
         {
-           float halfHeight = Mathf.Tan(camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * distance;
-           float halfWidth = halfHeight * camera.aspect;
+           var halfHeight = Mathf.Tan(camera.fieldOfView * 0.5f * Mathf.Deg2Rad) * distance;
+           var halfWidth = halfHeight * camera.aspect;
            return new Vector2(halfWidth * 2, halfHeight * 2);
         }
         
@@ -44,8 +52,8 @@ namespace LSCore.Extensions.Unity
         {
             var tr = camera.transform;
             var forward = tr.forward;
-            Vector3 pointOnPlane = tr.position + forward * distance;
-            Plane plane = new Plane(forward, pointOnPlane);
+            var pointOnPlane = tr.position + forward * distance;
+            var plane = new Plane(forward, pointOnPlane);
             
             return plane;
         }
@@ -54,8 +62,8 @@ namespace LSCore.Extensions.Unity
         {
             var tr = canvas.transform;
             var forward = tr.forward;
-            Vector3 pointOnPlane = tr.position;
-            Plane plane = new Plane(forward, pointOnPlane);
+            var pointOnPlane = tr.position;
+            var plane = new Plane(forward, pointOnPlane);
             
             return plane;
         }
