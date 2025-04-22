@@ -43,12 +43,12 @@ namespace LSCore.BattleModule
     [Serializable]
     public class AnimationUnitAnim : BaseUnitAnim
     {
-        public BadassAnimation badassAnimation;
+        public MoveIt moveIt;
         
         [ValueDropdown("Clips")]
-        public BadassAnimationClip clip;
+        public MoveItClip clip;
 
-        private IEnumerable<BadassAnimationClip> Clips => badassAnimation.Clips;
+        private IEnumerable<MoveItClip> Clips => moveIt.Clips;
         
         public override Tween Animate()
         {
@@ -59,7 +59,7 @@ namespace LSCore.BattleModule
 
         public override void Stop()
         {
-            badassAnimation.Stop(clip);
+            moveIt.Stop(clip);
         }
 
         public override void ResolveBinds<T>(string key, T target)
@@ -69,7 +69,7 @@ namespace LSCore.BattleModule
 
         private void Play()
         {
-            badassAnimation.Play(clip);
+            moveIt.Play(clip);
         }
     }
 }
