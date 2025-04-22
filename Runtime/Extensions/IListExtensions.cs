@@ -1,11 +1,24 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 
 namespace LSCore.Extensions
 {
     public static class IListExtensions
     {
+        public static NativeArray<T> ToNativeArray<T>(this IList<T> list, Allocator allocator) where T : struct
+        {
+            var arr = new NativeArray<T>(list.Count, allocator);
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                arr[i] = list[i];
+            }
+            
+            return arr;
+        }
+        
         public static IEnumerable<T> BySelectEx<T>(this IList<T> list, string expression)
         {
             foreach (var index in SelectEx.GetIndexes(expression, list.Count))

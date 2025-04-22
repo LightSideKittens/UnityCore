@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using LSCore.AnimationsModule;
 using Sirenix.OdinInspector;
@@ -29,16 +29,25 @@ namespace LSCore.BattleModule.Animation
 #if UNITY_EDITOR
         [LabelText("Target for Editor testing")]
         public Transform target;
-        protected override string Label => "Normalized value";
-        protected override string PropertyPath { get; }
-        public override void TrimModifications(List<UndoPropertyModification> modifications)
+
+        protected override float GetStartValue()
         {
-            throw new NotImplementedException();
+            return 0;
+        }
+
+        protected override string Label => "Normalized value";
+        protected override string PropertyPath => "m_LocalEulerAnglesHint";
+        public override void OnTrimModifications(List<UndoPropertyModification> modifications)
+        {
+            if(Target == null) return;
+            TrimModificationsQuaternion(modifications, "m_LocalRotation");
         }
 
         public override void StartAnimationMode()
         {
-            throw new NotImplementedException();
+            if(Target == null) return;
+            var quaternion = ((Transform)Target).localRotation;
+            StartAnimationModeQuaternion("m_LocalRotation", quaternion);
         }
 #endif
 
@@ -102,4 +111,4 @@ namespace LSCore.BattleModule.Animation
 #endif
         }
     }
-}
+}*/

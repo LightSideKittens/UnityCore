@@ -10,6 +10,7 @@ namespace LSCore.Editor
         [Serializable]
         public class TimePointer : ISerializationCallbackReceiver
         {
+            public event Action Looped; 
             public Color color = new(0.09f, 0.67f, 0.96f);
             [SerializeField] private float time;
             public float OldRealTime { get; private set; }
@@ -31,21 +32,29 @@ namespace LSCore.Editor
                     RealTime = value;
                     
                     var max = clampRange.y - clampRange.x;
+                    bool isLooped = false;
                     
                     if (loop)
                     {
                         if (newTime > clampRange.y)
                         {
+                            isLooped = true;
                             newTime = clampRange.x + (newTime - clampRange.y) % max;
                         }
                         else if(newTime < clampRange.x)
                         {
+                            isLooped = true;
                             newTime = clampRange.y + (newTime - clampRange.x) % max;
                         }
                     }
                     else
                     {
                         newTime = Mathf.Clamp(newTime, clampRange.x, clampRange.y);
+                    }
+
+                    if (isLooped)
+                    {
+                        Looped?.Invoke();
                     }
                     
                     newTime = SnapX(newTime, SnappingStep);

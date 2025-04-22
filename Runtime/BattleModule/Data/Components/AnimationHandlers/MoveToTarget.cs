@@ -1,4 +1,4 @@
-#if !UNITY_EDITOR
+/*#if !UNITY_EDITOR
 #define RUNTIME
 #endif
 using System;
@@ -26,20 +26,37 @@ namespace LSCore.BattleModule.Animation
 #if UNITY_EDITOR
         [LabelText("Target for Editor testing")]
         public Collider2D target;
-        protected override string Label => "Normalized value";
-        protected override string PropertyPath { get; }
-        public override void TrimModifications(List<UndoPropertyModification> modifications)
+
+        protected override float GetStartValue()
         {
-            throw new NotImplementedException();
+            return 0;
+        }
+
+        protected override string Label => "Normalized value";
+        protected override string PropertyPath => "m_LocalPosition";
+
+        public override void OnTrimModifications(List<UndoPropertyModification> modifications)
+        {
+            if(Target == null) return;
+            TrimModificationsVector3Empty(modifications, PropertyPath);
         }
 
         public override void StartAnimationMode()
         {
-            throw new NotImplementedException();
+            if(Target == null) return;
+            var pos = ((Transform)Target).localPosition;
+            StartAnimationModeVector3Empty(PropertyPath, pos);
         }
 #endif
 
-        public override Object Target => rigidbody;
+        public override Object Target
+        {
+            get
+            {
+                if(rigidbody == null) return null;
+                return rigidbody.transform;
+            }
+        }
         
         private Collider2D Targett
         {
@@ -117,4 +134,4 @@ namespace LSCore.BattleModule.Animation
 #endif
         }
     }
-}
+}*/
