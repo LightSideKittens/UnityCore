@@ -95,13 +95,13 @@ public partial class MoveIt
             return evaluator != null;
         }
 
-        public bool AddEvaluator(string key, MoveItCurve curve)
+        public bool AddEvaluator(string key, MoveItCurve curve, out HandlerEvaluateData evaluator)
         {
             var result = evaluators.All(x => x.property != key);
-            
+            evaluator = null;
             if (result)
             {
-                var evaluator = new HandlerEvaluateData{curve = curve};
+                evaluator = new HandlerEvaluateData{curve = curve};
                 applyEvaluationResult += GetApplyEvaluationResultAction(key, evaluator);
                 evaluators.Add((key, evaluator));
             }
@@ -124,8 +124,10 @@ public partial class MoveIt
 
         public void ClearEvaluators()
         {
-            applyEvaluationResult = null;
-            evaluators.Clear();
+            for (int i = 0; i < evaluators.Count; i++)
+            {
+                evaluators[i].evaluator.Reset();
+            }
         }
         
         protected Action applyEvaluationResult;

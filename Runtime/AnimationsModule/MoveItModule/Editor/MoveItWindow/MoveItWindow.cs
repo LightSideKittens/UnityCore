@@ -337,8 +337,9 @@ public partial class MoveItWindow : OdinMenuEditorWindow
                     CreateCurve(curveItem);
                     curveItem.TryCreateCurveEditor(this);
                     curvesEditor.SetFocusByCurve(curveItem.curve);
-                    UpdateAnimationComponent();
                 }
+                
+                UpdateAnimationComponent();
             }
             
             return;
@@ -477,8 +478,7 @@ public partial class MoveItWindow : OdinMenuEditorWindow
 
     private void CreateCurve(CurveItem curveItem)
     {
-        curveItem.CreateCurve();
-        UpdateAnimationComponent();
+        curveItem.CreateCurve(out _);
     }
 
     private void UpdateAnimationComponent()

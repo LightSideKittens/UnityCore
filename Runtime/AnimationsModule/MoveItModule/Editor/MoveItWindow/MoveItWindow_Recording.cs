@@ -22,10 +22,10 @@ public partial class MoveItWindow
                 IsRecording = false;
             }
 
-            IsAnimationMode = value;
-            
             isPreview = value;
             UpdateAnimationComponent();
+            IsAnimationMode = value;
+
             if (value)
             {
                 EvaluateAnimation();
@@ -94,12 +94,12 @@ public partial class MoveItWindow
         modifications = modsList.ToArray();
         return modifications;
     }
-    
-    private bool needUpdateAnimationComponent;
+
+    private List<(float prevValue, MoveIt.HandlerEvaluateData evaluator)> needUpdateAnimationComponent = new();
     
     private void ModifyCurves(UndoPropertyModification[] modifications)
     {
-        needUpdateAnimationComponent = false;
+        needUpdateAnimationComponent.Clear();
         
         for (int i = 0; i < modifications.Length; i++)
         {
@@ -121,10 +121,18 @@ public partial class MoveItWindow
             }
         }
 
-        if (needUpdateAnimationComponent)
+        if (needUpdateAnimationComponent.Count > 0)
         {
             UpdateAnimationComponent();
-            needUpdateAnimationComponent = false;
+
+            foreach (var data in needUpdateAnimationComponent)
+            {
+                data.evaluator.startY = data.prevValue;
+            }
+            
+            TryUpdateAnimationMode();
+            
+            needUpdateAnimationComponent.Clear();
         }
     }
     
@@ -157,6 +165,7 @@ public partial class MoveItWindow
         var cur = mod.currentValue;
         var propertyPath = cur.propertyPath;
         var value = float.Parse(cur.value);
+        var prevValue = float.Parse(mod.previousValue.value);
 
         if (!objectByHandlerType.TryGetValue(target, out Dictionary<Type, MoveIt.Handler> handlers))
         {
@@ -165,8 +174,8 @@ public partial class MoveItWindow
 
         var handler = TryAddObjectHandler<T, T1>(handlers, target);
         HandlerItem handlerItem = FindHandlerItem(handler);
-
-        ModifyCurve(handlerItem, propertyPath, value);
+        
+        ModifyCurve(handlerItem, propertyPath, value, prevValue);
     }
 
     private Dictionary<Object, Dictionary<Type, MoveIt.Handler>> objectByHandlerType = new();
@@ -204,7 +213,7 @@ public partial class MoveItWindow
         return handler;
     }
     
-    private void ModifyCurve(HandlerItem handlerItem, string property, float value)
+    private void ModifyCurve(HandlerItem handlerItem, string property, float value, float prevValue = float.NaN)
     {
         var curveItem = handlerItem.ChildMenuItems.OfType<CurveItem>()
             .FirstOrDefault(x => x.property == property);
@@ -217,8 +226,8 @@ public partial class MoveItWindow
         
         if (!curveItem.TryGetCurve(out _))
         {
-            curveItem.CreateCurve();
-            needUpdateAnimationComponent = true;
+            curveItem.CreateCurve(out var evaluator);
+            needUpdateAnimationComponent.Add((prevValue, evaluator));
         }
 
         curveItem.TryCreateCurveEditor(this);

@@ -47,8 +47,8 @@ public partial class MoveItWindow
                                 window.objectByHandlerType.Remove(handler.Target);
                             }
                         }
-                        
-                        handler.Stop();
+
+                        window.UpdateAnimationComponent();
                         window.TryUpdateAnimationMode();
                     }
                 };
