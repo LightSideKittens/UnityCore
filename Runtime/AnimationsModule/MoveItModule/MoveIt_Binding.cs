@@ -29,7 +29,7 @@ public partial class MoveIt
                 
                 for (int j = 0; j < bdpd.Length; j++)
                 {
-                    var pd = bdpd[i];
+                    var pd = bdpd[j];
                     GenericBindingUtility.CreateGenericBinding(bd.obj, pd.propName, bd.go, pd.isRef, out var d);
                     bindings[j] = d;
                 }
