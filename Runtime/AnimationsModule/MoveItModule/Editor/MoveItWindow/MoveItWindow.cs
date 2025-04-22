@@ -464,8 +464,8 @@ public partial class MoveItWindow : OdinMenuEditorWindow
                 for (int i = 0; i < handler.evaluators.Count; i++)
                 {
                     var dt = handler.evaluators[i];
-                    var curveItem = new CurveItem(MenuTree, dt.property, red, CurrentClip, handler, curvesEditor);
-                    MenuTree.AddMenuItemAtPath(path, curveItem);
+                    var curveItem = new CurveItem(tree, dt.property, red, CurrentClip, handler, curvesEditor);
+                    tree.AddMenuItemAtPath(path, curveItem);
                 }
             }
             else

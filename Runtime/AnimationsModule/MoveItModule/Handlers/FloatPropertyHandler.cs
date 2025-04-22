@@ -34,7 +34,11 @@ namespace LSCore.AnimationsModule
         }
 
         protected override Action GetApplyEvaluationResultAction(string key, HandlerEvaluateData evaluator) => X;
-        private void X() => IsDiff |= evaluators[evaluatorIndex++ % evaluators.Count].evaluator.isDiff;
+        private void X()
+        {
+            evaluatorIndex = (evaluatorIndex + 1) % evaluators.Count;
+            IsDiff |= evaluators[evaluatorIndex].evaluator.isDiff;
+        }
 
         public override bool TryGetPropBindingData(out (Object obj, GameObject go, (string propName, bool isRef)[] propData) data)
         {
