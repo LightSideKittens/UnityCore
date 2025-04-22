@@ -206,7 +206,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
                 {
                     foreach (var (propertyName, curve) in curves)
                     {
-                        handler.AddEvaluator(propertyName, curve);
+                        handler.AddEvaluator(propertyName, curve, out _);
                     }
                     
                     currentHandlers.Add(handler);
@@ -557,7 +557,6 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
     {
         var d = data.Find(d => d.handlers.Contains(handler));
         d?.handlers.Remove(handler);
-        currentHandlers.Remove(handler);
     }
     
     public void TrimModifications(List<UndoPropertyModification> modifications)

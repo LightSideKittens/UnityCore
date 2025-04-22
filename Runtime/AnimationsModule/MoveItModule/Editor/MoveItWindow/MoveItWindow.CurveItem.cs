@@ -34,11 +34,11 @@ public partial class MoveItWindow
             return false;
         }
 
-        public void CreateCurve()
+        public void CreateCurve(out MoveIt.HandlerEvaluateData evaluator)
         {
             window.RecordAddCurve();
             curve = new MoveItCurve();
-            clip.Add(handler, property, curve);
+            clip.Add(handler, property, curve, out evaluator);
             EditorUtility.SetDirty(clip);
         }
 
@@ -71,6 +71,8 @@ public partial class MoveItWindow
                     if (popup.DrawButton("Delete Curve"))
                     {
                         DeleteCurve();
+                        window.UpdateAnimationComponent();
+                        window.TryUpdateAnimationMode();
                     }
                 };
                 popup.Show(e.mousePosition);
@@ -95,8 +97,6 @@ public partial class MoveItWindow
             curvesEditor.curvesEditor.Remove(editor);
             curvesEditor.CurveItems.Remove(this);
             clip.Remove(handler, property);
-            handler.RemoveEvaluator(property);
-            window.TryUpdateAnimationMode();
             editor = null;
             curve = null;
         }

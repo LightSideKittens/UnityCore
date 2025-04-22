@@ -14,12 +14,19 @@ public partial class MoveIt
         public MoveItCurve curve;
         [NonSerialized] public float x;
         [NonSerialized] public float y;
-        [NonSerialized] public float startY;
+        [NonSerialized] public float startY = float.NaN;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Evaluate()
         {
             y = curve.Evaluate(x);
+        }
+        
+        public void Reset()
+        {
+            x = 0;
+            y = 0;
+            startY = float.NaN;
         }
     }
 

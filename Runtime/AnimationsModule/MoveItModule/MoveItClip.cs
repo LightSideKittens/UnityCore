@@ -92,9 +92,9 @@ public class MoveItClip : ScriptableObject, ISerializationCallbackReceiver
         }
     }
     
-    public void Add(MoveIt.Handler handler, string propertyName, MoveItCurve curve)
+    public void Add(MoveIt.Handler handler, string propertyName, MoveItCurve curve, out MoveIt.HandlerEvaluateData evaluator)
     {
-        handler.AddEvaluator(propertyName, curve);
+        handler.AddEvaluator(propertyName, curve, out evaluator);
         
         if (!namesToCurvesByHandlerGuids.TryGetValue(handler.guid, out var curves))
         {
