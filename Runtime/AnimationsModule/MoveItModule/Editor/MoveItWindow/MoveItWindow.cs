@@ -379,7 +379,7 @@ public partial class MoveItWindow : OdinMenuEditorWindow
 
         lastTime = EditorApplication.timeSinceStartup;
 
-        EvaluateAnimation(!IsRecording || !Mathf.Approximately(lastTimePointer, timePointer.Time));
+        EvaluateAnimation(IsPreview && !Mathf.Approximately(lastTimePointer, timePointer.Time));
         
         if (treePopup != null)
         {

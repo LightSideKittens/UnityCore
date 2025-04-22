@@ -391,7 +391,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
             var handler = handlersBuffer[i];
                 
             var bindableProps = handler.evaluators;
-            for (int j = 0; j < floatValues.Length; j++)
+            for (int j = 0; j < bindableProps.Count; j++)
             {
                 floatValues[index] = bindableProps[j].evaluator.startY;
                 index++;

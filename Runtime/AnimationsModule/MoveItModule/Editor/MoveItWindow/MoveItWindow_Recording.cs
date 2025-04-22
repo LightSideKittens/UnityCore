@@ -95,8 +95,12 @@ public partial class MoveItWindow
         return modifications;
     }
     
+    private bool needUpdateAnimationComponent;
+    
     private void ModifyCurves(UndoPropertyModification[] modifications)
     {
+        needUpdateAnimationComponent = false;
+        
         for (int i = 0; i < modifications.Length; i++)
         {
             var mod = modifications[i];
@@ -115,6 +119,12 @@ public partial class MoveItWindow
                 TryModifyTransform<TransformRotation>("m_LocalEulerAnglesHint", mod, transform);
                 TryModifyTransform<TransformScale>("m_LocalScale", mod, transform);*/
             }
+        }
+
+        if (needUpdateAnimationComponent)
+        {
+            UpdateAnimationComponent();
+            needUpdateAnimationComponent = false;
         }
     }
     
@@ -207,7 +217,8 @@ public partial class MoveItWindow
         
         if (!curveItem.TryGetCurve(out _))
         {
-            CreateCurve(curveItem);
+            curveItem.CreateCurve();
+            needUpdateAnimationComponent = true;
         }
 
         curveItem.TryCreateCurveEditor(this);
