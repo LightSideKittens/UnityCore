@@ -1,12 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using InternalBindings;
 using LSCore.Attributes;
 using LSCore.DataStructs;
+using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Animations;
+using UnityEngine.Profiling;
 #if UNITY_EDITOR
 using Sirenix.Utilities.Editor;
 using UnityEditor;
@@ -70,6 +76,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
     private List<Handler> currentHandlers = new();
     private List<Event> events = new();
     private List<HandlerEvaluateData> currentEvaluators = new();
+    private List<Event> selectedEvents = new();
     private float startTime;
     private float time;
     private float length;
@@ -151,10 +158,11 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
             
             time = newTime;
             eventsAction = null;
-            
-            foreach (var eevent in SelectEvents(events, oldRealTime, RealTime, new Vector2(startTime, length), reverse))
+            SelectEvents(events, oldRealTime, RealTime, new Vector2(startTime, length), reverse, selectedEvents);
+
+            for (int i = 0; i < selectedEvents.Count; i++)
             {
-                eventsAction += eevent.Invoke;
+                eventsAction += selectedEvents[i].Invoke;
             }
         }
     }
@@ -210,14 +218,19 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
                     }
                     
                     currentHandlers.Add(handler);
-                    currentEvaluators.AddRange(handler.Evaluators);
+                    
+                    var evaluators = handler.evaluators;
+                    for (int j = 0; j < evaluators.Count; j++)
+                    {
+                        currentEvaluators.Add(evaluators[j].evaluator);
+                    }
                 }
             }
 
 #if UNITY_EDITOR
             foreach (var handler in currentHandlers)
             {
-                handler.IsPreview = isPreview;
+                handler.isPreview = isPreview;
             }
 #endif
             
@@ -236,20 +249,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
             OnClipChanged();
         }
     }
-
-    private void OnEnable()
-    {
-        if (currentClip != null)
-        {
-            Register();
-        }
-    }
-
-    private void OnDisable()
-    {
-        Unregister();
-    }
-
+    
     private void Register()
     {
         updateModeAtRegister = updateMode;
@@ -284,6 +284,20 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
         TryInit();
         Clip = defaultClip;
     }
+    
+    private void OnEnable()
+    {
+        if (currentClip != null)
+        {
+            Register();
+        }
+    }
+
+    private void OnDisable()
+    {
+        Unregister();
+    }
+
 
     private void OnDestroy()
     {
@@ -330,11 +344,13 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
     {
         eventsAction?.Invoke();
         handlersBuffer.Clear();
+        
         for (int i = 0; i < currentHandlers.Count; i++)
         {
             var handler = currentHandlers[i];
             handler.Handle();
         }
+        
         UpdateProps();
     }
 
@@ -372,12 +388,21 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
             var bindableProps = handler.evaluators;
             for (int j = 0; j < bindableProps.Count; j++)
             {
-                floatValues[index] = bindableProps[j].evaluator.y;
+                floatValues.Write(index, bindableProps[j].evaluator.y);
                 index++;
             }
         }
         
-        GenericBindingUtility.SetValues(floatProps, floatValues);
+        SetValues(floatProps, floatValues);
+    }
+
+    public static unsafe void SetValues(
+        NativeArray<BoundProperty> boundProperties,
+        NativeArray<float> values)
+    {
+        var unsafePtr = NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(boundProperties);
+        var pointerWithoutChecks = NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(values);
+        GenericBindingUtilityProxy.SetFloatValues(unsafePtr, boundProperties.Length, pointerWithoutChecks, values.Length);
     }
     
     private void ResetProps()
@@ -393,12 +418,12 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
             var bindableProps = handler.evaluators;
             for (int j = 0; j < bindableProps.Count; j++)
             {
-                floatValues[index] = bindableProps[j].evaluator.startY;
+                floatValues.Write(index, bindableProps[j].evaluator.startY);
                 index++;
             }
         }
         
-        GenericBindingUtility.SetValues(floatProps, floatValues);
+        SetValues(floatProps, floatValues);
     }
     
     public void Play(MoveItClip clip)
@@ -411,78 +436,75 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
         Clip = null;
     }
     
-    public static IEnumerable<Event> SelectEvents(List<Event> events, float startTime, float endTime, Vector2 clampRange, bool reverse)
+        public static void SelectEvents(
+        List<Event>      events,
+        float            startTime,
+        float            endTime,
+        Vector2          clampRange,
+        bool             reverse,
+        List<Event>      result)
     {
-        float length = clampRange.y - clampRange.x;
+        result.Clear();
+        if (events == null || events.Count == 0) return;
+
+        /* 1. Предварительно вычисляем нужный "срез" списка ------------- */
+        var length          = clampRange.y - clampRange.x;
+
         float offsetForEvents = startTime;
-        offsetForEvents -= ((offsetForEvents - clampRange.x) % length + length) % length + clampRange.x;
-        
+        offsetForEvents      -= ((offsetForEvents - clampRange.x) % length + length) % length
+                              +  clampRange.x;
+
         int startIndex = 0;
-        int endIndex = events.Count - 1;
-        
+        int endIndex   = events.Count - 1;
+
         while (startIndex < events.Count && events[startIndex].x < clampRange.x)
-        {
             startIndex++;
-        }
 
         while (endIndex >= 0 && events[endIndex].x > clampRange.y)
-        {
             endIndex--;
-        }
-        endIndex++;
-        
-        var eventsSpan = events.AsSpan(startIndex..endIndex);
-        
-        if(eventsSpan.Count == 0) yield break;
-        
+
+        endIndex++;                       // сделать endIndex «не включительно»
+
+        var span = events.AsSpan(startIndex..endIndex);
+        if (span.Count == 0) return;
+
+        /* 2. Основной проход без alloc‑ов ------------------------------ */
         if (reverse)
         {
-            startTime *= -1;
-            endTime *= -1;
-            
+            startTime *= -1f;
+            endTime   *= -1f;
+
             while (true)
             {
-                for (int i = eventsSpan.Count - 1; i >= 0; i--)
+                for (int i = span.Count - 1; i >= 0; --i)
                 {
-                    var eevent = eventsSpan[i];
-                    var x = eevent.x * -1 - offsetForEvents;
-                    bool start = x > startTime;
-                    bool end = x <= endTime;
-                
-                    if (start && end)
-                    {
-                        yield return eevent;
-                    }
-                    else if(!end)
-                    {
-                        yield break;
-                    }
-                }
+                    var e = span[i];
+                    float x =  -e.x - offsetForEvents;     // зеркалим
 
-                offsetForEvents -= length;
+                    if (x > startTime && x <= endTime)
+                        result.Add(e);
+                    else if (x > endTime)                  // ушли дальше интервала
+                        return;
+                }
+                offsetForEvents -= length;                 // прыжок на предыдущий «период»
             }
         }
-
-        while (true)
+        else
         {
-            for (int i = 0; i < eventsSpan.Count; i++)
+            while (true)
             {
-                var eevent = eventsSpan[i];
-                var x = eevent.x + offsetForEvents;
-                bool start = x > startTime;
-                bool end = x <= endTime;
-                
-                if (start && end)
+                for (int i = 0; i < span.Count; ++i)
                 {
-                    yield return eevent;
-                }
-                else if(!end)
-                {
-                    yield break;
-                }
-            }
+                    var e = span[i];
+                    float x =  e.x + offsetForEvents;
 
-            offsetForEvents += length;
+                    if (x > startTime && x <= endTime)
+                        result.Add(e);
+                    else if (x > endTime)
+                        return;
+                }
+                offsetForEvents += length;                 // следующий «период»
+            }
         }
     }
 

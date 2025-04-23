@@ -369,7 +369,8 @@ public partial class MoveItWindow : OdinMenuEditorWindow
             
             if (animation.TryGetData(CurrentClip, out var data))
             {
-                foreach (var selectedEventToCall in SelectEvents(data.events, timePointer, isReversed))
+                SelectEvents(data.events, timePointer, isReversed, selectedEvents);
+                foreach (var selectedEventToCall in selectedEvents)
                 {
                     selectedEventToCall.Invoke();
                 }
@@ -575,16 +576,15 @@ public partial class MoveItWindow : OdinMenuEditorWindow
         OdinObjectSelector.Show(this, toolbar.CurrentClip.GetInstanceID(), null, typeof(T), position: rect);
     }
 
-    public static IEnumerable<MoveIt.Event> SelectEvents(List<MoveIt.Event> events, GUIScene.TimePointer pointer, bool reverse)
+    
+    private static List<MoveIt.Event> selectedEvents = new();
+    public static void SelectEvents(List<MoveIt.Event> events, GUIScene.TimePointer pointer, bool reverse, List<MoveIt.Event> result)
     {
         var oldRealTime = pointer.OldRealTime;
         var realTime = pointer.RealTime;
         pointer.SyncRealTime();
-        
-        foreach (var selectedEventToCall in MoveIt.SelectEvents(events, oldRealTime, realTime, pointer.ClampRange, reverse))
-        {
-            yield return selectedEventToCall;
-        }
+
+        MoveIt.SelectEvents(events, oldRealTime, realTime, pointer.ClampRange, reverse, result);
     }
 }
 #endif

@@ -4,7 +4,7 @@
     "references": ["GUID:abdb412d47da4d7cbd82350f22656ad5"],
     "includePlatforms": [],
     "excludePlatforms": [],
-    "allowUnsafeCode": false,
+    "allowUnsafeCode": true,
     "overrideReferences": false,
     "autoReferenced": false,
     "defineConstraints": [],
