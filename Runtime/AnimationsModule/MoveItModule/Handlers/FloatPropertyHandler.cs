@@ -60,6 +60,7 @@ namespace LSCore.AnimationsModule
             return true;
         }
 
+#if UNITY_EDITOR
         protected override void OnTrimModifications(List<UndoPropertyModification> modifications)
         {
             foreach (var property in evaluators)
@@ -76,6 +77,8 @@ namespace LSCore.AnimationsModule
                 HandlerEvaluateData.StartAnimationMode(Target, evaluator, property.property, evaluator.startY);
             }
         }
+#endif
+
     }
 
     [Serializable]

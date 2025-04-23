@@ -3,11 +3,15 @@ using System.Collections;
 using System.Collections.Generic;
 using LSCore.Attributes;
 using Sirenix.OdinInspector;
-using Sirenix.OdinInspector.Editor;
 using UnityEngine;
+
+#if UNITY_EDITOR
+using Sirenix.OdinInspector.Editor;
+#endif
 
 namespace LSCore.DataStructs
 {
+#if UNITY_EDITOR
     [ResolverPriority(100)]
     public class UniDictResolver : ProcessedMemberPropertyResolver<IUniDict>
     {
@@ -21,7 +25,7 @@ namespace LSCore.DataStructs
             return InspectorPropertyInfoUtility.BuildPropertyGroupsAndFinalize(Property, type, memberProperties, includeSpeciallySerializedMembers);
         }
     }
-    
+#endif
     
     public interface IUniDict{}
     
@@ -65,9 +69,10 @@ namespace LSCore.DataStructs
                 var d = data[i];
                 dict.TryAdd(d.key, d.value);
             }
-
+#if UNITY_EDITOR
             OnValueChanged();
-        }
+#endif
+        } 
 
 #if UNITY_EDITOR
         private void OnValueChanged()
