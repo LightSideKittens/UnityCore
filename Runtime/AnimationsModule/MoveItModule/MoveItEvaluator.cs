@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using LSCore;
 using Sirenix.Utilities;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 public interface IAnimatable
 {
@@ -38,6 +41,15 @@ public class MoveItEvaluator
     {
         threshold = Environment.ProcessorCount * 20;
     }
+    
+    private static readonly Action<IEvaluator> evaluateAction = InvokeEvaluate;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void InvokeEvaluate(IEvaluator ev)
+    {
+        ev.Evaluate();
+    }
+
     
     public MoveItEvaluator(MoveIt.UpdateModeType updateMode)
     {
@@ -104,7 +116,7 @@ public class MoveItEvaluator
         
         if (evaluators.Count > threshold)
         {
-            Parallel.ForEach(evaluators, x => x.Evaluate());
+            Parallel.ForEach(evaluators, evaluateAction);
         }
         else
         {

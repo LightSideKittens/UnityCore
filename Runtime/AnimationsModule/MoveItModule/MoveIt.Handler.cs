@@ -4,6 +4,7 @@ using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Profiling;
 using Object = UnityEngine.Object;
 
 public partial class MoveIt
@@ -21,23 +22,13 @@ public partial class MoveIt
         
         [GenerateGuid(Hide = true)] public string guid;
         [NonSerialized] public List<(string property, HandlerEvaluateData evaluator)> evaluators = new();
-        
+
+        protected int evaluatorsCount;
         protected bool isStarted;
 
-        public IEnumerable<HandlerEvaluateData> Evaluators
-        {
-            get
-            {
-                for (int i = 0; i < evaluators.Count; i++)
-                {
-                    yield return evaluators[i].evaluator;
-                }
-            }
-        }
-
 #if UNITY_EDITOR
-        protected bool CanUse => IsPreview && Target != null && applyEvaluationResult != null;
-        public bool IsPreview { get; set; } = true;
+        protected bool CanUse => isPreview && Target != null && applyEvaluationResult != null;
+        [NonSerialized] public bool isPreview = true;
 #endif
 
         public abstract Object Target { get; }
@@ -55,8 +46,9 @@ public partial class MoveIt
             {
                 isStarted = true;
                 
-                foreach (var evaluator in Evaluators)
+                for (int i = 0; i < evaluators.Count; i++)
                 {
+                    var evaluator = evaluators[i].evaluator;
                     evaluator.Evaluate();
                     evaluator.isDiff = true;
                 }
@@ -82,7 +74,7 @@ public partial class MoveIt
             }
         }
 
-        public bool IsDiff { get; protected set; }
+        [NonSerialized] public bool isDiff;
         public abstract void Handle();
 
         protected virtual void OnStart(){}
@@ -104,6 +96,7 @@ public partial class MoveIt
                 evaluator = new HandlerEvaluateData{curve = curve};
                 applyEvaluationResult += GetApplyEvaluationResultAction(key, evaluator);
                 evaluators.Add((key, evaluator));
+                evaluatorsCount = evaluators.Count;
             }
 
             return result;
@@ -116,6 +109,7 @@ public partial class MoveIt
             if (toRemove.evaluator != null)
             {
                 evaluators.Remove(toRemove);
+                evaluatorsCount = evaluators.Count;
                 return true;
             }
             
@@ -248,11 +242,10 @@ public partial class MoveIt
             }
 #endif
             
-            IsDiff = false;
-            
+            isDiff = false;
             applyEvaluationResult();
             
-            if (!IsDiff) return;
+            if (!isDiff) return;
             
             OnHandle();
         }

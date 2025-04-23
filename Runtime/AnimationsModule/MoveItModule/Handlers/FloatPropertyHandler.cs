@@ -15,12 +15,12 @@ namespace LSCore.AnimationsModule
     [Serializable]
     public abstract class FloatPropertyHandler<T> : Handler<float>, IFloatPropertyHandler where T : Object
     {
-        private int evaluatorIndex;
         public abstract GameObject GO { get; }
         public abstract void SetTarget(T target);
 
         protected override void OnStart()
         {
+            applyEvaluationResult = X;
         }
         
         protected override void OnHandle()
@@ -34,10 +34,15 @@ namespace LSCore.AnimationsModule
         }
 
         protected override Action GetApplyEvaluationResultAction(string key, HandlerEvaluateData evaluator) => X;
+        
         private void X()
         {
-            evaluatorIndex = (evaluatorIndex + 1) % evaluators.Count;
-            IsDiff |= evaluators[evaluatorIndex].evaluator.isDiff;
+            for (int i = 0; i < evaluatorsCount; i++)
+            {
+                if (!evaluators[i].evaluator.isDiff) continue;
+                isDiff = true;
+                break;
+            }
         }
 
         public override bool TryGetPropBindingData(out (Object obj, GameObject go, (string propName, bool isRef)[] propData) data)

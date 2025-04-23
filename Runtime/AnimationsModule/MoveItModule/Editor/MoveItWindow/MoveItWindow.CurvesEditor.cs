@@ -142,7 +142,7 @@ public partial class MoveItWindow
         }
 
         private bool isEventDragging;
-
+        
         private void TimeGUI()
         {
             var e = Event.current;
@@ -152,7 +152,9 @@ public partial class MoveItWindow
             {
                 if (!window.isPlaying)
                 {
-                    foreach (var selectedEventToCall in SelectEvents(data.events, pointer, window.isReversed))
+                    SelectEvents(data.events, pointer, window.isReversed, selectedEvents);
+                    
+                    foreach (var selectedEventToCall in selectedEvents)
                     {
                         selectedEventToCall.Invoke();
                     }
