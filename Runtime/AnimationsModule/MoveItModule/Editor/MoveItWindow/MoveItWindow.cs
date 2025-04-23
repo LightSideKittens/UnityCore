@@ -143,6 +143,7 @@ public partial class MoveItWindow : OdinMenuEditorWindow
         
         objectByHandlerType.Clear();
         animation.TryInit();
+        UpdateAnimationComponent();
         var tree = new OdinMenuTree();
         tree.Selection.SelectionChanged += OnSelectionChanged;
         

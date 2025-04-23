@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using InternalBindings;
@@ -12,9 +11,7 @@ using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Animations;
-using UnityEngine.Profiling;
 #if UNITY_EDITOR
-using Sirenix.Utilities.Editor;
 using UnityEditor;
 #endif
 
