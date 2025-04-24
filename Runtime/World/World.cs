@@ -36,6 +36,7 @@ namespace LSCore
             IsPlaying = true;
 
             Created?.Invoke();
+            Application.targetFrameRate = 120;
             Burger.Log("[World] Created");
         }
         
