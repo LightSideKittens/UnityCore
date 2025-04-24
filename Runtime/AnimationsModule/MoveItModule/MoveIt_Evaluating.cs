@@ -279,7 +279,8 @@ public partial class MoveIt
         public HandlerEvaluateData g;
         public HandlerEvaluateData b;
         public HandlerEvaluateData a;
-        
+
+#if UNITY_EDITOR
         public void TrimModifications(UnityEngine.Object target, List<UndoPropertyModification> modifications, string propPath)
         {
             HandlerEvaluateData.TrimModifications(target, modifications, r, propPath, "r");
@@ -295,5 +296,6 @@ public partial class MoveIt
             HandlerEvaluateData.StartAnimationMode(target, b, propPath, "b", val.b);
             HandlerEvaluateData.StartAnimationMode(target, a, propPath, "a", val.a);
         }
+#endif
     }*/
 }

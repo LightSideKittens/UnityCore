@@ -122,15 +122,15 @@ namespace LSCore
 
         private void OnEnable()
         {
-            LSInput.TouchUp += TouchUp;
+            LSInput.TouchEnded += TouchUp;
         }
 
         private void OnDisable()
         {
-            LSInput.TouchUp -= TouchUp;
+            LSInput.TouchEnded -= TouchUp;
         }
 
-        private void TouchUp()
+        private void TouchUp(LSTouch touch)
         {
             if (!wasDown && !hideManually)
             {
@@ -263,7 +263,7 @@ namespace LSCore
         
         public void Hide()
         {
-            LSInput.TouchUp -= TouchUp;
+            LSInput.TouchEnded -= TouchUp;
             raycaster.enabled = false;
             currentTween?.Kill();
             currentTween = showHideAnim.Hide().OnComplete(Release);
