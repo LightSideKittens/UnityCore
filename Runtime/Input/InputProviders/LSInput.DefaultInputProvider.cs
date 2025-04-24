@@ -22,15 +22,15 @@ namespace LSCore
             for (int i = 0; i < count; i++)
             {
                 var t = Input.GetTouch(i);
-                touches[i] = new LSTouch
+                touchesBuffer[i] = new LSTouch
                 {
-                    FingerId = t.fingerId,
-                    Position = t.position,
-                    DeltaPosition = t.deltaPosition,
-                    Phase = t.phase
+                    fingerId = t.fingerId,
+                    position = t.position,
+                    deltaPosition = t.deltaPosition,
+                    phase = t.phase
                 };
             }
-            return touches[..count];
+            return touchesBuffer[..count];
 #else
                 Vector2 current = Input.mousePosition;
                 LSTouch t = default;
