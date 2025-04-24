@@ -2,13 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using InternalBindings;
+using LSCore.AnimationsModule;
 using LSCore.Attributes;
 using LSCore.DataStructs;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Animations;
 #if UNITY_EDITOR
@@ -207,11 +205,17 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
                 var handler = handlers[i];
                 handler.ClearEvaluators();
                 
-                if (currentClip.namesToCurvesByHandlerGuids.TryGetValue(handler.guid, out var curves))
+                if (currentClip.evaluatorsByHandlerGuids.TryGetValue(handler.guid, out var curves))
                 {
-                    foreach (var (propertyName, curve) in curves)
+                    foreach (var (property, evaluator) in curves)
                     {
-                        handler.AddEvaluator(propertyName, curve, out _);
+                        handler.AddEvaluator(new HandlerEvaluateData
+                        {
+                            property = property,
+                            curve = evaluator.curve,
+                            isRef = evaluator.isRef,
+                            isFloat = evaluator.isFloat,
+                        });
                     }
                     
                     currentHandlers.Add(handler);
@@ -219,7 +223,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
                     var evaluators = handler.evaluators;
                     for (int j = 0; j < evaluators.Count; j++)
                     {
-                        currentEvaluators.Add(evaluators[j].evaluator);
+                        currentEvaluators.Add(evaluators[j]);
                     }
                 }
             }
@@ -353,74 +357,103 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
 
     private void GetProps()
     {
-        if(floatProps.Length == 0 || !wasBinded) return;
+        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !wasBinded) return;
         
         GenericBindingUtility.GetValues(floatProps, floatValues);
+        GenericBindingUtility.GetValues(discreteProps, discreteValues);
         
-        var index = 0;
+        var floatIndex = 0;
+        var intIndex = 0;
             
         for (int i = 0; i < handlersBuffer.Count; i++)
         {
             var handler = handlersBuffer[i];
                 
-            var bindableProps = handler.evaluators;
-            for (int j = 0; j < bindableProps.Count; j++)
+            var evaluators = handler.evaluators;
+            for (int j = 0; j < evaluators.Count; j++)
             {
-                bindableProps[j].evaluator.startY = floatValues[index];
-                index++;
+                var evaluator = evaluators[j];
+                if (evaluator.isFloat)
+                {
+                    evaluator.startY = floatValues[floatIndex++];
+                }
+                else
+                {
+                    evaluator.startY = discreteValues[intIndex++];
+                }
             }
         }
     }
 
     private void UpdateProps()
     {
-        if(floatProps.Length == 0 || !wasBinded) return;
+        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !wasBinded) return;
         
-        var index = 0;
+        var floatIndex = 0;
+        var intIndex = 0;
             
         for (int i = 0; i < handlersBuffer.Count; i++)
         {
             var handler = handlersBuffer[i];
-                
-            var bindableProps = handler.evaluators;
-            for (int j = 0; j < bindableProps.Count; j++)
+            var objects = handler.Objects;
+            
+            var evaluators = handler.evaluators;
+            for (int j = 0; j < evaluators.Count; j++)
             {
-                floatValues.Write(index, bindableProps[j].evaluator.y);
-                index++;
+                var evaluator = evaluators[j];
+                if (evaluator.isFloat)
+                {
+                    floatValues.Write(floatIndex++, evaluator.y);
+                }
+                else
+                {
+                    var y = (int)evaluator.y;
+
+                    if (y != 0 && evaluator.isRef)
+                    {
+                        if (objects.TryGetValue(y, out var value))
+                        {
+                            y = value.GetInstanceID();
+                        }
+                    }
+                    
+                    discreteValues.Write(intIndex++, y);
+                }
             }
         }
         
-        SetValues(floatProps, floatValues);
-    }
-
-    public static unsafe void SetValues(
-        NativeArray<BoundProperty> boundProperties,
-        NativeArray<float> values)
-    {
-        var unsafePtr = NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(boundProperties);
-        var pointerWithoutChecks = NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(values);
-        GenericBindingUtilityProxy.SetFloatValues(unsafePtr, boundProperties.Length, pointerWithoutChecks, values.Length);
+        BindingUtility.SetValues(floatProps, floatValues);
+        BindingUtility.SetValues(discreteProps, discreteValues);
     }
     
     private void ResetProps()
     {
-        if(floatProps.Length == 0 || !wasBinded) return;
+        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !wasBinded) return;
         
-        var index = 0;
+        var floatIndex = 0;
+        var intIndex = 0;
             
         for (int i = 0; i < handlersBuffer.Count; i++)
         {
             var handler = handlersBuffer[i];
                 
-            var bindableProps = handler.evaluators;
-            for (int j = 0; j < bindableProps.Count; j++)
+            var evaluators = handler.evaluators;
+            for (int j = 0; j < evaluators.Count; j++)
             {
-                floatValues.Write(index, bindableProps[j].evaluator.startY);
-                index++;
+                var evaluator = evaluators[j];
+                if (evaluator.isFloat)
+                {
+                    floatValues.Write(floatIndex++, evaluator.startY);
+                }
+                else
+                {
+                    discreteValues.Write(intIndex++, (int)evaluator.startY);
+                }
             }
         }
         
-        SetValues(floatProps, floatValues);
+        BindingUtility.SetValues(floatProps, floatValues);
+        BindingUtility.SetValues(discreteProps, discreteValues);
     }
     
     public void Play(MoveItClip clip)
@@ -432,27 +465,26 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
     {
         Clip = null;
     }
-    
-        public static void SelectEvents(
-        List<Event>      events,
-        float            startTime,
-        float            endTime,
-        Vector2          clampRange,
-        bool             reverse,
-        List<Event>      result)
+
+    public static void SelectEvents(
+        List<Event> events,
+        float startTime,
+        float endTime,
+        Vector2 clampRange,
+        bool reverse,
+        List<Event> result)
     {
         result.Clear();
         if (events == null || events.Count == 0) return;
 
-        /* 1. Предварительно вычисляем нужный "срез" списка ------------- */
-        var length          = clampRange.y - clampRange.x;
+        var length = clampRange.y - clampRange.x;
 
         float offsetForEvents = startTime;
-        offsetForEvents      -= ((offsetForEvents - clampRange.x) % length + length) % length
-                              +  clampRange.x;
+        offsetForEvents -= ((offsetForEvents - clampRange.x) % length + length) % length
+                           + clampRange.x;
 
         int startIndex = 0;
-        int endIndex   = events.Count - 1;
+        int endIndex = events.Count - 1;
 
         while (startIndex < events.Count && events[startIndex].x < clampRange.x)
             startIndex++;
@@ -460,48 +492,47 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
         while (endIndex >= 0 && events[endIndex].x > clampRange.y)
             endIndex--;
 
-        endIndex++;                       // сделать endIndex «не включительно»
+        endIndex++;
 
         var span = events.AsSpan(startIndex..endIndex);
         if (span.Count == 0) return;
 
-        /* 2. Основной проход без alloc‑ов ------------------------------ */
         if (reverse)
         {
             startTime *= -1f;
-            endTime   *= -1f;
+            endTime *= -1f;
 
             while (true)
             {
                 for (int i = span.Count - 1; i >= 0; --i)
                 {
                     var e = span[i];
-                    float x =  -e.x - offsetForEvents;     // зеркалим
-
-                    if (x > startTime && x <= endTime)
-                        result.Add(e);
-                    else if (x > endTime)                  // ушли дальше интервала
-                        return;
-                }
-                offsetForEvents -= length;                 // прыжок на предыдущий «период»
-            }
-        }
-        else
-        {
-            while (true)
-            {
-                for (int i = 0; i < span.Count; ++i)
-                {
-                    var e = span[i];
-                    float x =  e.x + offsetForEvents;
+                    float x = -e.x - offsetForEvents;
 
                     if (x > startTime && x <= endTime)
                         result.Add(e);
                     else if (x > endTime)
                         return;
                 }
-                offsetForEvents += length;                 // следующий «период»
+
+                offsetForEvents -= length;
             }
+        }
+
+        while (true)
+        {
+            for (int i = 0; i < span.Count; ++i)
+            {
+                var e = span[i];
+                float x = e.x + offsetForEvents;
+
+                if (x > startTime && x <= endTime)
+                    result.Add(e);
+                else if (x > endTime)
+                    return;
+            }
+
+            offsetForEvents += length;
         }
     }
 

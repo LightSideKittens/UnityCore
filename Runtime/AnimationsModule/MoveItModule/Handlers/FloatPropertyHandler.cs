@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using LSCore.DataStructs;
 using UnityEditor;
 using UnityEngine;
 using static MoveIt;
@@ -15,12 +16,20 @@ namespace LSCore.AnimationsModule
     [Serializable]
     public abstract class FloatPropertyHandler<T> : Handler<float>, IFloatPropertyHandler where T : Object
     {
+        public UniDict<int, Object> objects = null;
+
+        public override UniDict<int, Object> Objects
+        {
+            get => objects;
+            set => objects = value;
+        }
+        
         public abstract GameObject GO { get; }
         public abstract void SetTarget(T target);
 
         protected override void OnStart()
         {
-            applyEvaluationResult = X;
+            
         }
         
         protected override void OnHandle()
@@ -32,19 +41,7 @@ namespace LSCore.AnimationsModule
         {
             handlersBuffer.Add(this);
         }
-
-        protected override Action GetApplyEvaluationResultAction(string key, HandlerEvaluateData evaluator) => X;
         
-        private void X()
-        {
-            for (int i = 0; i < evaluatorsCount; i++)
-            {
-                if (!evaluators[i].evaluator.isDiff) continue;
-                isDiff = true;
-                break;
-            }
-        }
-
         public override bool TryGetPropBindingData(out (Object obj, GameObject go, (string propName, bool isRef)[] propData) data)
         {
             data = default;
@@ -54,26 +51,26 @@ namespace LSCore.AnimationsModule
 
             for (int i = 0; i < evaluators.Count; i++)
             {
-                data.propData[i] = (evaluators[i].property, false);
+                var evaluator = evaluators[i];
+                data.propData[i] = (evaluator.property, evaluator.isRef);
             }
             
             return true;
         }
 
-        protected override void OnTrimModifications(List<UndoPropertyModification> modifications)
+        public override void TrimModifications(List<UndoPropertyModification> modifications)
         {
-            foreach (var property in evaluators)
+            foreach (var evaluator in evaluators)
             {
-                HandlerEvaluateData.TrimModifications(Target, modifications, property.evaluator, property.property);
+                HandlerEvaluateData.TrimModifications(Target, modifications, evaluator, evaluator.property);
             }
         }
 
         public override void StartAnimationMode()
         {
-            foreach (var property in evaluators)
+            foreach (var evaluator in evaluators)
             {
-                var evaluator = property.evaluator;
-                HandlerEvaluateData.StartAnimationMode(Target, evaluator, property.property, evaluator.startY);
+                HandlerEvaluateData.StartAnimationMode(Target, evaluator, evaluator.property, evaluator.startY);
             }
         }
     }

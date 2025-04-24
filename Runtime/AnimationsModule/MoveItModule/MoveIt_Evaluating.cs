@@ -29,10 +29,14 @@ public partial class MoveIt
             startY = float.NaN;
         }
     }
-
-    public class HandlerEvaluateData : EvaluateData
+    
+    [Serializable]
+    public class HandlerEvaluateData : EvaluateData, IEquatable<HandlerEvaluateData>
     {
-        public bool isDiff;
+        public string property;
+        public bool isRef;
+        public bool isFloat;
+        [NonSerialized] public bool isDiff;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Evaluate()
@@ -40,6 +44,16 @@ public partial class MoveIt
             var last = y;
             base.Evaluate();
             isDiff = Math.Abs(y - last) > 0.0001f;
+        }
+        
+        public bool Equals(HandlerEvaluateData other)
+        {
+            return property == other.property;
+        }
+
+        public override int GetHashCode()
+        {
+            return property.GetHashCode();
         }
 
 #if UNITY_EDITOR
@@ -91,7 +105,7 @@ public partial class MoveIt
 #endif
     }
     
-    public class Vector2HandlerEvaluateData
+    /*public class Vector2HandlerEvaluateData
     {
         public Vector2 value;
         public HandlerEvaluateData x;
@@ -281,5 +295,5 @@ public partial class MoveIt
             HandlerEvaluateData.StartAnimationMode(target, b, propPath, "b", val.b);
             HandlerEvaluateData.StartAnimationMode(target, a, propPath, "a", val.a);
         }
-    }
+    }*/
 }

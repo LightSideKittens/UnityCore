@@ -175,7 +175,7 @@ public partial class MoveItWindow : OdinMenuEditorWindow
         curvesEditor ??= new(this, timePointer, new());
         curvesEditor.pointer = timePointer;
         curvesEditor.Clear();
-        var toRemove = new HashSet<string>(currentClip.namesToCurvesByHandlerGuids.Keys);
+        var toRemove = new HashSet<string>(currentClip.evaluatorsByHandlerGuids.Keys);
         
         if (animation.TryGetData(currentClip, out var d))
         {
@@ -337,7 +337,7 @@ public partial class MoveItWindow : OdinMenuEditorWindow
                 {
                     CreateCurve(curveItem);
                     curveItem.TryCreateCurveEditor(this);
-                    curvesEditor.SetFocusByCurve(curveItem.curve);
+                    curvesEditor.SetFocusByCurve(curveItem.Curve);
                 }
                 
                 UpdateAnimationComponent();
@@ -413,7 +413,7 @@ public partial class MoveItWindow : OdinMenuEditorWindow
                 if (curveItem.editor != null)
                 {
                     curveItem.editor.IsSelected = true;
-                    curvesEditor.SetFocusByCurve(curveItem.curve);
+                    curvesEditor.SetFocusByCurve(curveItem.Curve);
                 }
             }
         }
@@ -435,7 +435,6 @@ public partial class MoveItWindow : OdinMenuEditorWindow
     
     private void AddExistHandler(OdinMenuTree tree, MoveItClip clip, MoveIt.Handler handler)
     {
-        handler.animation = animation;
         if (string.IsNullOrEmpty(handler.guid))
         {
             handler.guid = Guid.NewGuid().ToString("N");

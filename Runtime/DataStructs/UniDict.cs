@@ -70,6 +70,18 @@ namespace LSCore.DataStructs
         }
 
 #if UNITY_EDITOR
+
+        public void Editor_ApplyToData()
+        {
+            data ??= new List<Data>();
+            data.Clear();
+            
+            foreach (var (key, value) in dict)
+            {
+                data.Add(new Data() { key = key, value = value });
+            }
+        }
+        
         private void OnValueChanged()
         {
             var set = new HashSet<TKey>();

@@ -924,6 +924,11 @@ public partial class MoveItCurveEditor
         }
     }
 
+    public float Evaluate(float x)
+    {
+        return curve.Evaluate(x);
+    }
+
     public void SetKeyY(float x, float y)
     {
         var lastYBlocked = isYBlocked;
