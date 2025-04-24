@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LSCore.AnimationsModule;
+using LSCore.DataStructs;
 using LSCore.Editor;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
@@ -162,11 +163,6 @@ public partial class MoveItWindow
     
     private void TryModifyObjectCurve<T, T1>(UndoPropertyModification mod, T1 target) where T : FloatPropertyHandler<T1>, new() where T1 : Object
     {
-        var cur = mod.currentValue;
-        var propertyPath = cur.propertyPath;
-        var value = float.Parse(cur.value);
-        var prevValue = float.Parse(mod.previousValue.value);
-
         if (!objectByHandlerType.TryGetValue(target, out Dictionary<Type, MoveIt.Handler> handlers))
         {
             objectByHandlerType[target] = handlers = new Dictionary<Type, MoveIt.Handler>();
@@ -175,7 +171,47 @@ public partial class MoveItWindow
         var handler = TryAddObjectHandler<T, T1>(handlers, target);
         HandlerItem handlerItem = FindHandlerItem(handler);
         
-        ModifyCurve(handlerItem, propertyPath, value, prevValue);
+        var cur = mod.currentValue;
+        var prev = mod.previousValue;
+        var propertyPath = cur.propertyPath;
+        CurveItem curveItem = null;
+        Action action = null;
+        int lastId = 0;
+        UniDict<int, Object> objects = null;
+        
+        float.TryParse(prev.value, out var prevValue);
+        if (!float.TryParse(cur.value, out var value))
+        {
+            objects = handler.Objects ??= new UniDict<int, Object>();
+            
+            if (cur.objectReference != null)
+            {
+                var valueInt = cur.objectReference.GetInstanceID();
+                value = valueInt;
+
+                action = () =>
+                {
+                    objects[valueInt] = cur.objectReference;
+                };
+            }
+            
+            if (prev.objectReference != null)
+            {
+                var valueInt = prev.objectReference.GetInstanceID();
+                prevValue = valueInt;
+            }
+        }
+        
+        curveItem = GetCurve(handlerItem, propertyPath, prevValue);
+        
+        lastId = (int)curveItem.editor.Evaluate(timePointer.Time);
+        objects = handler.Objects ??= new UniDict<int, Object>();
+        if(curveItem.ContainsInKeys(lastId) == 1) objects.Remove(lastId);
+        
+        ModifyCurve(curveItem, value);
+        
+        action?.Invoke();
+        objects.Editor_ApplyToData();
     }
 
     private Dictionary<Object, Dictionary<Type, MoveIt.Handler>> objectByHandlerType = new();
@@ -213,7 +249,7 @@ public partial class MoveItWindow
         return handler;
     }
     
-    private void ModifyCurve(HandlerItem handlerItem, string property, float value, float prevValue = float.NaN)
+    private CurveItem GetCurve(HandlerItem handlerItem, string property, float prevValue = float.NaN)
     {
         var curveItem = handlerItem.ChildMenuItems.OfType<CurveItem>()
             .FirstOrDefault(x => x.property == property);
@@ -231,6 +267,19 @@ public partial class MoveItWindow
         }
 
         curveItem.TryCreateCurveEditor(this);
+        
+        return curveItem;
+    }
+    
+    private CurveItem ModifyCurve(HandlerItem handlerItem, string property, float value, float prevValue = float.NaN)
+    {
+        var curveItem = GetCurve(handlerItem, property, prevValue);
+        ModifyCurve(curveItem, value);
+        return curveItem;
+    }
+
+    private void ModifyCurve(CurveItem curveItem, float value)
+    {
         GUIScene.StartMatrix(curvesEditor.curvesEditor.matrix);
         curveItem.editor.SetKeyY(timePointer.Time, value);
         GUIScene.EndMatrix();

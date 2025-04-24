@@ -6,7 +6,7 @@ using UnityEngine;
 public static class BurgerHandler
 {
     private static string fileName;
-    private static string logPath => $"{Application.persistentDataPath}/Logs";
+    private static string logPath;
     private static StringBuilder builder;
     private static (string message, string stacktrace, LogType logType) prevMessage;
     private static int lastLength;
@@ -16,6 +16,7 @@ public static class BurgerHandler
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Init()
     {
+        logPath = $"{Application.persistentDataPath}/Logs";
         if (!Directory.Exists(logPath))
         {
             Directory.CreateDirectory(logPath);

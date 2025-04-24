@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LSCore.DataStructs;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
@@ -20,13 +21,14 @@ public partial class MoveIt
         }
         
         [GenerateGuid(Hide = true)] public string guid;
-        [NonSerialized] public List<(string property, HandlerEvaluateData evaluator)> evaluators = new();
-
+        [NonSerialized] public List<HandlerEvaluateData> evaluators = new();
+        public abstract UniDict<int, Object> Objects { get; set; }
+        
         protected int evaluatorsCount;
         protected bool isStarted;
 
 #if UNITY_EDITOR
-        protected bool CanUse => isPreview && Target != null && applyEvaluationResult != null;
+        protected bool CanUse => isPreview && Target != null;
         [NonSerialized] public bool isPreview = true;
 #endif
 
@@ -47,7 +49,7 @@ public partial class MoveIt
                 
                 for (int i = 0; i < evaluators.Count; i++)
                 {
-                    var evaluator = evaluators[i].evaluator;
+                    var evaluator = evaluators[i];
                     evaluator.Evaluate();
                     evaluator.isDiff = true;
                 }
@@ -82,66 +84,35 @@ public partial class MoveIt
         public bool TryGetEvaluator(string key, out HandlerEvaluateData evaluator)
         {
             var toRemove = evaluators.FirstOrDefault(x => x.property == key);
-            evaluator = toRemove.evaluator;
+            evaluator = toRemove;
             return evaluator != null;
         }
-
-        public bool AddEvaluator(string key, MoveItCurve curve, out HandlerEvaluateData evaluator)
-        {
-            var result = evaluators.All(x => x.property != key);
-            evaluator = null;
-            if (result)
-            {
-                evaluator = new HandlerEvaluateData{curve = curve};
-                applyEvaluationResult += GetApplyEvaluationResultAction(key, evaluator);
-                evaluators.Add((key, evaluator));
-                evaluatorsCount = evaluators.Count;
-            }
-
-            return result;
-        }
         
-        public bool RemoveEvaluator(string key)
+        public void AddEvaluator(HandlerEvaluateData evaluator)
         {
-            applyEvaluationResult -= GetApplyEvaluationResultAction(key, null);
-            var toRemove = evaluators.FirstOrDefault(x => x.property == key);
-            if (toRemove.evaluator != null)
-            {
-                evaluators.Remove(toRemove);
-                evaluatorsCount = evaluators.Count;
-                return true;
-            }
-            
-            return false;
+            evaluators.Add(evaluator);
+            evaluatorsCount = evaluators.Count;
         }
 
         public void ClearEvaluators()
         {
-            for (int i = 0; i < evaluators.Count; i++)
-            {
-                evaluators[i].evaluator.Reset();
-            }
+            evaluators.Clear();
+            evaluatorsCount = 0;
         }
-        
-        protected Action applyEvaluationResult;
-        protected abstract Action GetApplyEvaluationResultAction(string key, HandlerEvaluateData evaluator);
-        
+
         public virtual bool TryGetPropBindingData(out (Object obj, GameObject go, (string propName, bool isRef)[] propData) data)
         {
             data = default;
             return false;
         }
-
-        public virtual float GetBindableValue(int index) => 0f;
-
+        
+        
 #if UNITY_EDITOR
         public abstract Type ValueType { get; }
         public abstract string HandlerName { get; }
 
         [GUIColor(1f, 0.54f, 0.16f)]
         [ShowInInspector] private bool gizmos;
-
-        [NonSerialized] public MoveIt animation;
 
         public void DrawGizmos()
         {
@@ -159,57 +130,15 @@ public partial class MoveIt
         {
         }
 
-        public void TrimModifications(List<UndoPropertyModification> modifications)
-        {
-            OnTrimModifications(modifications);
-            StartAnimationMode();
-        }
-        
-        protected abstract void OnTrimModifications(List<UndoPropertyModification> modifications);
+        public abstract void TrimModifications(List<UndoPropertyModification> modifications);
         public abstract void StartAnimationMode();
+        
+        private SerializedObject serializedObject;
 
-        protected SerializedProperty FindProperty(string propertyName)
-        {
-            var clip = animation.Clip;
-            if (animation.TryGetData(clip.guid, out var data))
-            {
-                var so = new SerializedObject(animation);
-                var dataProp = so.FindProperty("data");
-                SerializedProperty targetDataProp = null; 
-                foreach (SerializedProperty prop in dataProp)
-                {
-                    var targetData = (Data)prop.boxedValue;
-                    if (targetData.clip.guid == clip.guid)
-                    {
-                        targetDataProp = prop;
-                        break;
-                    }
-                }
-
-                if (targetDataProp != null)
-                {
-                    var handlers = targetDataProp.FindPropertyRelative("handlers");
-                    SerializedProperty targetHandlerProp = null;
-                     
-                    foreach (SerializedProperty handlerProp in handlers)
-                    {
-                        var targetHandler = (Handler)handlerProp.managedReferenceValue;
-                        if (targetHandler.guid == guid)
-                        { 
-                            targetHandlerProp = handlerProp;
-                            break;   
-                        }
-                    }
-
-                    if (targetHandlerProp != null)
-                    {
-                        var targetProp = targetHandlerProp.FindPropertyRelative(propertyName);
-                        return targetProp;
-                    }
-                }
-            }
-            
-            return null;
+        public SerializedProperty FindProperty(string property)
+        { 
+            serializedObject ??= new SerializedObject(Target);
+            return serializedObject.FindProperty(property);
         }
         
 #endif
@@ -236,15 +165,24 @@ public partial class MoveIt
             if (!isStarted)
             {
                 Start();
-                applyEvaluationResult();
+                for (int i = 0; i < evaluatorsCount; i++)
+                {
+                    if (!evaluators[i].isDiff) continue;
+                    isDiff = true;
+                    break;
+                }
                 return;
             }
 #endif
             
             isDiff = false;
-            applyEvaluationResult();
             
-            if (!isDiff) return;
+            for (int i = 0; i < evaluatorsCount; i++)
+            {
+                if (!evaluators[i].isDiff) continue;
+                isDiff = true;
+                break;
+            }
             
             OnHandle();
         }

@@ -140,10 +140,16 @@ public class MoveItCurve : IList<BezierPoint>
         set => points = value;
     }
 
-    public MoveItCurve() { }
+    public bool stepMode;
 
-    public MoveItCurve(MoveItCurve moveItCurve)
+    public MoveItCurve(bool stepMode = false)
     {
+        this.stepMode = stepMode;
+    }
+
+    public MoveItCurve(MoveItCurve moveItCurve, bool stepMode = false)
+    {
+        this.stepMode = stepMode;
         Points = new BezierPoint[moveItCurve.Points.Length];
         Array.Copy(moveItCurve.Points, Points, Points.Length);
     }
@@ -411,7 +417,7 @@ public class MoveItCurve : IList<BezierPoint>
     public float GetXByNormalized(float t)
     {
         float xMin = points[1].x;
-        float xMax = points[points.Length - 2].x;
+        float xMax = points[^2].x;
         float xTarget = Mathf.Lerp(xMin, xMax, t);
         return xTarget;
     }
@@ -427,20 +433,28 @@ public class MoveItCurve : IList<BezierPoint>
     {
         int count = points.Length;
         if(count < 3) return 0;
-
+        
         fixed (BezierPoint* pPoints = points)
         {
             int i = GetLeftKeyIndexByX(x);
             if (i == -1) return pPoints[1].y;
             if (i == LastKeyIndex) return pPoints[count - 2].y;
 
+            float result;
+            
+            if (stepMode)
+            {
+                result = pPoints[i].y;
+                return result;
+            }
+
             BezierPoint* p0 = &pPoints[i];
             BezierPoint* p1 = &pPoints[i + 1];
             BezierPoint* p2 = &pPoints[i + 2];
             BezierPoint* p3 = &pPoints[i + 3];
 
-            float tForX = FindBezierTForX(p0->x, p1->x, p2->x, p3->x, x);
-            float result = EvaluateCubicBezier(p0->y, p1->y, p2->y, p3->y, tForX);
+            float tForX = FindBezierTForX(p0->x, p1->x, p2->x, p3->x, x); 
+            result = EvaluateCubicBezier(p0->y, p1->y, p2->y, p3->y, tForX);
             return result;
         }
     }
