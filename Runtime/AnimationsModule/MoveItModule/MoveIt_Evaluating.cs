@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using LSCore.Attributes;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 public partial class MoveIt
 {
@@ -79,12 +80,12 @@ public partial class MoveIt
             }
         }
         
-        public static void StartAnimationMode(UnityEngine.Object target, HandlerEvaluateData evaluateData, string propPath, string propertyName, float value)
+        public static void StartAnimationMode(UnityEngine.Object target, HandlerEvaluateData evaluateData, string propPath, string propertyName)
         {
-            StartAnimationMode(target, evaluateData, $"{propPath}.{propertyName}", value);
+            StartAnimationMode(target, evaluateData, $"{propPath}.{propertyName}");
         }
         
-        public static void StartAnimationMode(UnityEngine.Object target, HandlerEvaluateData evaluateData, string property, float value)
+        public static void StartAnimationMode(Object target, HandlerEvaluateData evaluateData, string property)
         {
             if(string.IsNullOrEmpty(property)) return;
             if(evaluateData == null) return;
@@ -98,8 +99,7 @@ public partial class MoveIt
             AnimationMode.AddPropertyModification(binding, new PropertyModification()
             {
                 target = target,
-                propertyPath = property,
-                value = value.ToString("g7"),
+                propertyPath = property
             }, true);
         }
 #endif

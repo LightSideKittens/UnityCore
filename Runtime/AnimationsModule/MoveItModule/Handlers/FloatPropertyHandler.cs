@@ -71,7 +71,7 @@ namespace LSCore.AnimationsModule
         {
             foreach (var evaluator in evaluators)
             {
-                HandlerEvaluateData.StartAnimationMode(Target, evaluator, evaluator.property, evaluator.startY);
+                HandlerEvaluateData.StartAnimationMode(Target, evaluator, evaluator.property);
             }
         }
 #endif
