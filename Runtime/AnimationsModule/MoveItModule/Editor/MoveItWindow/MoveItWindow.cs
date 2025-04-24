@@ -123,11 +123,11 @@ public partial class MoveItWindow : OdinMenuEditorWindow
     protected override void OnDisable()
     {
         base.OnDisable();
+        AnimationMode.StopAnimationMode();
         curvesEditor?.OnDisable();
         animation.Editor_SetClip(null, IsPreview);
         Undo.undoRedoEvent -= OnUndoRedoPerformed;
         Undo.postprocessModifications -= OnPostProcessModifications;
-        AnimationMode.StopAnimationMode();
     }
     
     private bool isUndoPerforming;

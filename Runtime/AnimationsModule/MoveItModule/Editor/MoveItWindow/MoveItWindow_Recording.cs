@@ -24,8 +24,8 @@ public partial class MoveItWindow
             }
 
             isPreview = value;
-            UpdateAnimationComponent();
             IsAnimationMode = value;
+            UpdateAnimationComponent();
 
             if (value)
             {
@@ -96,7 +96,7 @@ public partial class MoveItWindow
         return modifications;
     }
 
-    private List<(float prevValue, MoveIt.HandlerEvaluateData evaluator)> needUpdateAnimationComponent = new();
+    private Dictionary<MoveIt.Handler, List<(float prevValue, string property)>> needUpdateAnimationComponent = new();
     
     private void ModifyCurves(UndoPropertyModification[] modifications)
     {
@@ -126,9 +126,15 @@ public partial class MoveItWindow
         {
             UpdateAnimationComponent();
 
-            foreach (var data in needUpdateAnimationComponent)
+            foreach (var (handler, data) in needUpdateAnimationComponent)
             {
-                data.evaluator.startY = data.prevValue;
+                foreach (var (prevValue, property) in data)
+                {
+                    if (handler.TryGetEvaluator(property, out var evaluator))
+                    {
+                        evaluator.startY = prevValue;
+                    }
+                }
             }
             
             TryUpdateAnimationMode();
@@ -251,19 +257,25 @@ public partial class MoveItWindow
     
     private CurveItem GetCurve(HandlerItem handlerItem, string property, float prevValue = float.NaN)
     {
+        var handler = handlerItem.handler;
         var curveItem = handlerItem.ChildMenuItems.OfType<CurveItem>()
             .FirstOrDefault(x => x.property == property);
 
         if (curveItem == null)
         {
-            curveItem = new CurveItem(MenuTree, property, red, CurrentClip, handlerItem.handler, curvesEditor);
+            curveItem = new CurveItem(MenuTree, property, red, CurrentClip, handler, curvesEditor);
             MenuTree.AddMenuItemAtPath(handlerItem.GetFullPath(), curveItem);
         }
         
         if (!curveItem.TryGetCurve(out _))
         {
             curveItem.CreateCurve(out var evaluator);
-            needUpdateAnimationComponent.Add((prevValue, evaluator));
+            if (!needUpdateAnimationComponent.TryGetValue(handler, out var data))
+            {
+                data = new List<(float prevValue, string property)>();
+                needUpdateAnimationComponent.Add(handler, data);
+            }
+            data.Add((prevValue, evaluator.property));
         }
 
         curveItem.TryCreateCurveEditor(this);
