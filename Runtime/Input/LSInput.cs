@@ -1,14 +1,29 @@
 ﻿using System;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.PlayerLoop;
 
 namespace LSCore
 {
+    public struct LSTouch
+    {
+        public int fingerId;
+        public Vector2 position;
+        public Vector2 deltaPosition;
+        public TouchPhase phase;
+    }
+
     public static partial class LSInput
     {
+        private static readonly LSTouch[] touchesBuffer = new LSTouch[20];
         private static IInputProvider provider = DefaultInputProvider.Instance;
-        private static Vector3 lastPosition;
+        private static LSTouch[] currentTouches = Array.Empty<LSTouch>();
+
+        public static LSTouch[] Touches => currentTouches;
+
+        public static int TouchCount => currentTouches.Length;
+
+        public static LSTouch GetTouch(int index) => currentTouches[index];
 
         public static bool IsManualControl
         {
@@ -18,67 +33,75 @@ namespace LSCore
         static LSInput()
         {
             World.Updated += Update;
+            
+#if UNITY_EDITOR
+            World.Creating += () =>
+            {
+                Simulator.Instance = new Simulator();
+                DefaultInputProvider.Instance = new DefaultInputProvider();
+                IsManualControl = false;
+            };
+#endif
         }
 
         private static void Update()
         {
-            if (TouchDown != null && IsTouchDown)
+            var touches = provider.GetTouches();
+            currentTouches = touches;
+            
+            for (var i = 0; i < touches.Length; i++)
             {
-                TouchDown();
-            }
-            else if(Touching != null && IsTouching)
-            {
-                Touching();
-            }
-            else if(TouchUp != null && IsTouchUp)
-            {
-                TouchUp();
+                ref var touch = ref currentTouches[i];
+                
+                switch (touch.phase)
+                {
+                    case TouchPhase.Moved:
+                        TouchMoved?.Invoke(touch);
+                        break;
+                    case TouchPhase.Stationary:
+                        TouchStaying?.Invoke(touch);
+                        break;
+                    case TouchPhase.Began:
+                        TouchBegan?.Invoke(touch);
+                        break;
+                    case TouchPhase.Ended:
+                        TouchEnded?.Invoke(touch);
+                        break;
+                    case TouchPhase.Canceled:
+                        TouchCanceled?.Invoke(touch);
+                        break;
+                }
             }
         }
 
-        public static event Action TouchDown;
-        public static event Action Touching;
-        public static event Action TouchUp;
-        public static bool IsTouchDown => provider.IsTouchDown;
-        public static bool IsTouching => provider.IsTouching;
-        public static bool IsTouchUp => provider.IsTouchUp;
-        public static Vector3 MousePosition => provider.MousePosition;
-        
-        public static Vector3 MouseDelta
-        {
-            get
-            {
-                var mousePosition = MousePosition;
-                if (IsTouchDown) lastPosition = mousePosition;
-                var delta = mousePosition - lastPosition;
-                lastPosition = mousePosition;
-                return delta;
-            }
-        }
-        
+        public static event Action<LSTouch> TouchBegan;
+        public static event Action<LSTouch> TouchMoved;
+        public static event Action<LSTouch> TouchStaying;
+        public static event Action<LSTouch> TouchEnded;
+        public static event Action<LSTouch> TouchCanceled;
+
         public static class UIExcluded
         {
-            public static bool IsPointerOverUI => EventSystem.current.IsPointerOverGameObject(PointerId);
-
-            private static int PointerId
+            public static bool IsPointerOverUI
             {
                 get
                 {
-                    var pointerId = PointerInputModule.kMouseLeftId;
-#if !UNITY_EDITOR
-                    if (Input.touches.Length > 0)
-                    {
-                        pointerId = Input.touches[0].fingerId;
-                    }
+#if UNITY_EDITOR
+                    int id = PointerInputModule.kMouseLeftId;
+#else
+                    int id = Input.touchCount > 0 ? Input.touches[0].fingerId : PointerInputModule.kMouseLeftId;
 #endif
-                    return pointerId;
+                    return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(id);
                 }
             }
+            
+            public static bool IsTouchDown => TouchDown && !IsPointerOverUI;
+            public static bool IsTouching => Touching && !IsPointerOverUI;
+            public static bool IsTouchUp => TouchUp && !IsPointerOverUI;
 
-
-            public static bool IsTouchDown => LSInput.IsTouchDown && !IsPointerOverUI;
-            public static bool IsTouching => LSInput.IsTouching && !IsPointerOverUI;
-            public static bool IsTouchUp => LSInput.IsTouchUp && !IsPointerOverUI;
+            private static bool TouchDown => Touches.Any(t => t.phase == TouchPhase.Began);
+            private static bool Touching => Touches.Any(t => t.phase == TouchPhase.Moved || t.phase == TouchPhase.Stationary);
+            private static bool TouchUp => Touches.Any(t => t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled);
         }
     }
 }
