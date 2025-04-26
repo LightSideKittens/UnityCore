@@ -50,7 +50,7 @@ public partial class MoveItWindow : OdinMenuEditorWindow
     
     private bool isPlaying;
 
-    private MoveIt animation;
+    [HideInInspector] public MoveIt animation;
     private Toolbar toolbar;
     
     public Rect Rect
@@ -484,9 +484,22 @@ public partial class MoveItWindow : OdinMenuEditorWindow
 
     private void UpdateAnimationComponent()
     {
+        bool needUpdate = false;
+        
+        if (window.IsAnimationMode)
+        {
+            window.IsAnimationMode = false;
+            needUpdate = true;
+        }
+        
         var clip = animation.Clip;
         animation.Editor_SetClip(null, IsPreview);
         animation.Editor_SetClip(clip, IsPreview);
+
+        if (needUpdate)
+        {
+            window.IsAnimationMode = true;
+        }
     }
     
     private void EvaluateAnimation(bool needApply = true) => animation.Editor_Evaluate(timePointer.Time, needApply);

@@ -2,18 +2,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 
 namespace LSCore.Extensions
 {
     public static class IListExtensions
     {
-        public static NativeArray<T> ToNativeArray<T>(this IList<T> list, Allocator allocator) where T : struct
+        public static unsafe NativeArray<T> ToNativeArray<T>(this IList<T> list, Allocator allocator) where T : struct
         {
             var arr = new NativeArray<T>(list.Count, allocator);
+            void* basePtr = NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(arr);
             
             for (int i = 0; i < list.Count; i++)
             {
-                arr[i] = list[i];
+                UnsafeUtility.WriteArrayElement(basePtr, i, list[i]);
             }
             
             return arr;

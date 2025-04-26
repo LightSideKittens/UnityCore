@@ -928,53 +928,69 @@ public partial class MoveItCurveEditor
     {
         return curve.Evaluate(x);
     }
-
-    public void SetKeyY(float x, float y)
+    
+    public BezierPoint GetKey(float x, out int index)
     {
-        var lastYBlocked = isYBlocked;
-        isYBlocked = false;
-        var leftIndex = curve.GetLeftKeyIndexByX(x);
-        if (leftIndex == -1)
+        index = curve.GetLeftKeyIndexByX(x);
+        if (index == -1)
         {
-            leftIndex = 1;
+            index = 1;
         }
 
-        if (curve.Count > leftIndex)
-        {
-            var leftPoint = curve[leftIndex];
+        if (curve.Count > index)
+        { 
+            var leftPoint = curve[index];
             var mp = leftPoint.e;
             mp.x = x;
             
             if (IsInDistance(leftPoint, mp, constWidth))
             {
-                leftPoint.e.y = y;
-                SetKeyPos(leftIndex, leftPoint.e);
-                goto ret;
+                return leftPoint;
             }
         }
         
-        var rightIndex = leftIndex + 3;
-        if(curve.Count > rightIndex)
+        index += 3;
+        if(curve.Count > index)
         {
-            var rightPoint = curve[rightIndex];
+            ref var rightPoint = ref curve[index];
             var mpr = rightPoint.e;
             mpr.x = x;
             
             if (IsInDistance(rightPoint, mpr, constWidth))
             {
-                rightPoint.e.y = y;
-                SetKeyPos(rightIndex, rightPoint.e);
-                goto ret;
+                return rightPoint;
             }
         }
 
-        var index = curve.InsertKeyByX(x);
-        var point = curve[index].e;
-        point.y = y;
-        SetKeyPos(index, point);
+        index = -1;
+        return default;
+    }
+
+    public void SetKeyY(BezierPoint bezier, int index, float x, float y)
+    {
+        var lastYBlocked = isYBlocked;
+        isYBlocked = false;
         
-        ret:
+        if (index == -1)
+        {
+            index = curve.InsertKeyByX(x);
+            var point = curve[index].e;
+            point.y = y;
+            SetKeyPos(index, point);
+        }
+        else
+        {
+            bezier.e.y = y;
+            SetKeyPos(index, bezier.e);
+        }
+        
         isYBlocked = lastYBlocked;
+    }
+
+    public void SetKeyY(float x, float y)
+    {
+        var bezier = GetKey(x, out var index);
+        SetKeyY(bezier, index, x, y);
     }
 }
 

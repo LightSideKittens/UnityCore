@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using LSCore.Attributes;
 using UnityEditor;
-using UnityEngine;
 using Object = UnityEngine.Object;
 
 public partial class MoveIt

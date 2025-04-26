@@ -14,7 +14,7 @@ using UnityEditor;
 #endif
 
 [assembly: InternalsVisibleTo("LSCore.MoveIt.Editor")]
-public partial class MoveIt : MonoBehaviour, IAnimatable
+public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateData>
 {
     public enum UpdateModeType
     {
@@ -53,7 +53,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
         }
     }
     
-    internal static List<Handler> handlersBuffer = new();
+    internal static List<Handler> handlersBuffer = new(1024 * 16);
 
     [ValueDropdown("Clips")]
     public MoveItClip defaultClip;
@@ -161,7 +161,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
             }
         }
     }
-
+    
     public MoveItClip Clip
     {
         get => currentClip;
@@ -173,15 +173,16 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
             currentEvaluators.Clear();
 
             handlersBuffer.Clear();
-            foreach (var handler in currentHandlers)
+
+            for (int i = 0; i < currentHandlers.Count; i++)
             {
-                handler.Stop();
+                currentHandlers[i].Stop();
             }
 
             ResetProps();
             UnBindCurrent();
             
-            currentHandlers = new List<Handler>();
+            currentHandlers.Clear();
             currentClip = value;
             
             if (value == null) return;
@@ -199,54 +200,66 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
                 events[i].Start();
             }
             Length = value.length;
+            
             var handlers = d.handlers;
             for (int i = 0; i < handlers.Count; i++)
             {
                 var handler = handlers[i];
-                handler.ClearEvaluators();
                 
                 if (currentClip.evaluatorsByHandlerGuids.TryGetValue(handler.guid, out var curves))
                 {
-                    foreach (var (property, evaluator) in curves)
+                    var evaluators = handler.evaluators;
+                    if (evaluators.Count == 0)
                     {
-                        handler.AddEvaluator(new HandlerEvaluateData
+                        foreach (var evaluator in curves.Values)
                         {
-                            property = property,
-                            curve = evaluator.curve,
-                            isRef = evaluator.isRef,
-                            isFloat = evaluator.isFloat,
-                        });
+                            var newEvaluator = new HandlerEvaluateData
+                            {
+                                property = evaluator.property,
+                                curve = evaluator.curve,
+                                isRef = evaluator.isRef,
+                                isFloat = evaluator.isFloat,
+                            };
+                            handler.AddEvaluator(newEvaluator);
+                            currentEvaluators.Add(newEvaluator);
+                        }
+                    }
+                    else
+                    {
+                        int index = 0;
+                        foreach (var evaluator in curves.Values)
+                        {
+                            var ev = evaluators[index];
+                            ev.property = evaluator.property;
+                            ev.curve = evaluator.curve;
+                            ev.isRef = evaluator.isRef;
+                            ev.isFloat = evaluator.isFloat;
+                            currentEvaluators.Add(ev);
+                            index++;
+                        }
                     }
                     
                     currentHandlers.Add(handler);
-                    
-                    var evaluators = handler.evaluators;
-                    for (int j = 0; j < evaluators.Count; j++)
-                    {
-                        currentEvaluators.Add(evaluators[j]);
-                    }
                 }
             }
 
 #if UNITY_EDITOR
-            foreach (var handler in currentHandlers)
+            for (int i = 0; i < currentHandlers.Count; i++)
             {
-                handler.isPreview = isPreview;
+                currentHandlers[i].isPreview = isPreview;
             }
 #endif
-            
             BindCurrent();
-            
+
             handlersBuffer.Clear();
-            foreach (var handler in currentHandlers)
+            for (int i = 0; i < currentHandlers.Count; i++)
             {
-                handler.Start();
+                currentHandlers[i].Start();
             }
 
-            GetProps();
-            UpdateProps();
+            GetAndUpdateProps();
             
-            MoveItEvaluator.Register(this, updateMode);
+            MoveItEvaluator<HandlerEvaluateData>.Register(this, updateMode);
             OnClipChanged();
         }
     }
@@ -254,10 +267,10 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
     private void Register()
     {
         updateModeAtRegister = updateMode;
-        MoveItEvaluator.Register(this, updateMode);
+        MoveItEvaluator<HandlerEvaluateData>.Register(this, updateMode);
     }
 
-    private void Unregister() => MoveItEvaluator.Unregister(this, updateModeAtRegister);
+    private void Unregister() => MoveItEvaluator<HandlerEvaluateData>.Unregister(this, updateModeAtRegister);
 
 #if UNITY_EDITOR
     [Button(DirtyOnClick = false)]
@@ -325,7 +338,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
         }
     }
 
-    void IAnimatable.BeforeEvaluate(float deltaTime)
+    void IAnimatable<HandlerEvaluateData>.BeforeEvaluate(float deltaTime)
     {
         if (reverse) deltaTime *= -1;
         Time += deltaTime;
@@ -336,10 +349,10 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
         }
     }
 
-    IEnumerable<IEvaluator> IAnimatable.Evaluators => currentEvaluators;
+    IList<HandlerEvaluateData> IAnimatable<HandlerEvaluateData>.Evaluators => currentEvaluators;
     public IEnumerable<MoveItClip> Clips => data != null ? data.Select(x => x.clip) : Array.Empty<MoveItClip>();
 
-    void IAnimatable.AfterEvaluate() => AfterEvaluate();
+    void IAnimatable<HandlerEvaluateData>.AfterEvaluate() => AfterEvaluate();
     
     private void AfterEvaluate()
     {
@@ -355,7 +368,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
         UpdateProps();
     }
 
-    private void GetProps()
+    private void GetAndUpdateProps()
     {
         if((floatProps.Length == 0 && discreteProps.Length == 0)|| !wasBinded) return;
         
@@ -368,21 +381,39 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
         for (int i = 0; i < handlersBuffer.Count; i++)
         {
             var handler = handlersBuffer[i];
-                
+            var objects = handler.Objects;
+            
             var evaluators = handler.evaluators;
             for (int j = 0; j < evaluators.Count; j++)
             {
                 var evaluator = evaluators[j];
                 if (evaluator.isFloat)
                 {
-                    evaluator.startY = floatValues[floatIndex++];
+                    evaluator.startY = floatValues.Read(floatIndex);
+                    floatValues.Write(floatIndex, evaluator.y);
+                    floatIndex++;
                 }
                 else
                 {
-                    evaluator.startY = discreteValues[intIndex++];
+                    evaluator.startY = discreteValues.Read(intIndex);
+                    var y = (int)evaluator.y;
+
+                    if (y != 0 && evaluator.isRef)
+                    {
+                        if (objects.TryGetValue(y, out var value))
+                        {
+                            y = value.GetInstanceID();
+                        }
+                    }
+                    
+                    discreteValues.Write(intIndex, y);
+                    intIndex++;
                 }
             }
         }
+        
+        BindingUtility.SetValues(floatProps, floatValues);
+        BindingUtility.SetValues(discreteProps, discreteValues);
     }
 
     private void UpdateProps()
@@ -545,6 +576,17 @@ public partial class MoveIt : MonoBehaviour, IAnimatable
     
     internal void Editor_SetClip(MoveItClip clip, bool isPreview)
     {
+        if (clip != null)
+        {
+            var d = dataByClip[clip.guid];
+            
+            var handlers = d.handlers;
+            for (int i = 0; i < handlers.Count; i++)
+            {
+                handlers[i].ClearEvaluators();
+            }
+        }
+        
         this.isPreview = isPreview;
         Clip = clip;
         this.isPreview = true;

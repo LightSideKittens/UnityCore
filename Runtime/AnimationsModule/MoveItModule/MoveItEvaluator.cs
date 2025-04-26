@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using LSCore;
-using Sirenix.Utilities;
 using UnityEngine;
 
-public interface IAnimatable
+public interface IAnimatable<T> where T : IEvaluator
 {
     void BeforeEvaluate(float deltaTime);
-    IEnumerable<IEvaluator> Evaluators { get; }
+    IList<T> Evaluators { get; }
     void AfterEvaluate();
 }
 
@@ -18,21 +17,21 @@ public interface IEvaluator
     void Evaluate();
 }
 
-public class MoveItEvaluator
+public class MoveItEvaluator<T> where T : IEvaluator
 {
-    private static MoveItEvaluator updateEvaluator = new(MoveIt.UpdateModeType.Update);
-    private static MoveItEvaluator fixedUpdateEvaluator = new(MoveIt.UpdateModeType.FixedUpdate);
-    private static MoveItEvaluator manualUpdateEvaluator = new(MoveIt.UpdateModeType.Manual);
+    private static MoveItEvaluator<T> updateEvaluator = new(MoveIt.UpdateModeType.Update);
+    private static MoveItEvaluator<T> fixedUpdateEvaluator = new(MoveIt.UpdateModeType.FixedUpdate);
+    private static MoveItEvaluator<T> manualUpdateEvaluator = new(MoveIt.UpdateModeType.Manual);
 
-    private static Dictionary<MoveIt.UpdateModeType, MoveItEvaluator> updateEvaluators = new()
+    private static Dictionary<MoveIt.UpdateModeType, MoveItEvaluator<T>> updateEvaluators = new()
     {
         { MoveIt.UpdateModeType.Update, updateEvaluator },
         { MoveIt.UpdateModeType.FixedUpdate, fixedUpdateEvaluator },
         { MoveIt.UpdateModeType.Manual, manualUpdateEvaluator }
     };
     
-    private HashSet<IEvaluator> evaluators = new (1024);
-    private HashSet<IAnimatable> animatables = new();
+    private HashSet<IEvaluator> evaluators = new (1024 * 32);
+    private HashSet<IAnimatable<T>> animatables = new (1024 * 16);
     private static readonly int threshold;
 
     static MoveItEvaluator()
@@ -40,7 +39,6 @@ public class MoveItEvaluator
         threshold = Environment.ProcessorCount * 20;
     }
     
-    private static readonly Action<IEvaluator> evaluateAction = InvokeEvaluate;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void InvokeEvaluate(IEvaluator ev)
@@ -71,34 +69,42 @@ public class MoveItEvaluator
         }
     }
     
-    public static void Register(IAnimatable animatable, MoveIt.UpdateModeType updateMode)
+    public static void Register(IAnimatable<T> animatable, MoveIt.UpdateModeType updateMode)
     {
         updateEvaluators[updateMode].Register(animatable);
     }
 
-    public static void Unregister(IAnimatable animatable, MoveIt.UpdateModeType updateMode)
+    public static void Unregister(IAnimatable<T> animatable, MoveIt.UpdateModeType updateMode)
     {
         updateEvaluators[updateMode].Unregister(animatable);
     }
 
-    public void Register(IAnimatable animatable)
+    public void Register(IAnimatable<T> animatable)
     {
 #if UNITY_EDITOR
         if(World.IsEditMode) return;
 #endif
         animatables.Add(animatable);
-        evaluators.AddRange(animatable.Evaluators);
+        var evs = animatable.Evaluators;
+        var count = evs.Count;
+        for (int i = 0; i < count; i++)
+        {
+            evaluators.Add(evs[i]);
+        }
     }
 
-    public void Unregister(IAnimatable animatable)
+    public void Unregister(IAnimatable<T> animatable)
     {
 #if UNITY_EDITOR
         if(World.IsEditMode) return;
 #endif
         animatables.Remove(animatable);
-        foreach (var evaluator in animatable.Evaluators)
+        
+        var evs = animatable.Evaluators;
+        var count = evs.Count;
+        for (int i = 0; i < count; i++)
         {
-            evaluators.Remove(evaluator);
+            evaluators.Remove(evs[i]);
         }
     }
 
@@ -114,7 +120,7 @@ public class MoveItEvaluator
         
         if (evaluators.Count > threshold)
         {
-            Parallel.ForEach(evaluators, evaluateAction);
+            Parallel.ForEach(evaluators, InvokeEvaluate);
         }
         else
         {

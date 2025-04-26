@@ -3,9 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using LSCore.Attributes;
-#if UNITY_EDITOR
-using Sirenix.OdinInspector.Editor;
-#endif
 using UnityEngine;
 using static LSCore.Currencies;
 

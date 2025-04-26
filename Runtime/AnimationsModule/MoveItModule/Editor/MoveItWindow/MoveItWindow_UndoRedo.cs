@@ -31,7 +31,6 @@ public partial class MoveItWindow
         isUndoPerforming = true;
         ForceMenuTreeRebuild();
         UpdateAnimationComponent();
-        TryUpdateAnimationMode();
     }
 
     private void RecordUndo(Object obj, string name)

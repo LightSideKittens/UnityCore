@@ -34,15 +34,6 @@ public partial class MoveItWindow
         }
     }
 
-    private void TryUpdateAnimationMode()
-    {
-        if (window.IsAnimationMode)
-        {
-            window.IsAnimationMode = false;
-            window.IsAnimationMode = true;
-        }
-    }
-
     private bool IsAnimationMode
     {
         get => AnimationMode.InAnimationMode();
@@ -137,8 +128,6 @@ public partial class MoveItWindow
                 }
             }
             
-            TryUpdateAnimationMode();
-            
             needUpdateAnimationComponent.Clear();
         }
     }
@@ -210,9 +199,9 @@ public partial class MoveItWindow
         
         curveItem = GetCurve(handlerItem, propertyPath, prevValue);
         
-        lastId = (int)curveItem.editor.Evaluate(timePointer.Time);
+        lastId = (int)curveItem.editor.GetKey(timePointer.Time, out var index).y;
         objects = handler.Objects ??= new UniDict<int, Object>();
-        if(curveItem.ContainsInKeys(lastId) == 1) objects.Remove(lastId);
+        if(index != -1 && curveItem.ContainsInKeys(lastId) == 1) objects.Remove(lastId);
         
         ModifyCurve(curveItem, value);
         

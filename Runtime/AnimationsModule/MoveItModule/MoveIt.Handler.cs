@@ -24,7 +24,6 @@ public partial class MoveIt
         [NonSerialized] public List<HandlerEvaluateData> evaluators = new();
         public abstract UniDict<int, Object> Objects { get; set; }
         
-        protected int evaluatorsCount;
         protected bool isStarted;
 
 #if UNITY_EDITOR
@@ -32,6 +31,7 @@ public partial class MoveIt
         [NonSerialized] public bool isPreview = true;
 #endif
 
+        [HideInInspector] public string fullTypeName;
         public abstract Object Target { get; }
         
         
@@ -91,18 +91,17 @@ public partial class MoveIt
         public void AddEvaluator(HandlerEvaluateData evaluator)
         {
             evaluators.Add(evaluator);
-            evaluatorsCount = evaluators.Count;
         }
 
         public void ClearEvaluators()
         {
             evaluators.Clear();
-            evaluatorsCount = 0;
         }
 
-        public virtual bool TryGetPropBindingData(out (Object obj, GameObject go, (string propName, bool isRef)[] propData) data)
+        public virtual bool TryGetPropBindingData(out Object obj, out GameObject go)
         {
-            data = default;
+            obj = default;
+            go = default;
             return false;
         }
         
@@ -165,7 +164,7 @@ public partial class MoveIt
             if (!isStarted)
             {
                 Start();
-                for (int i = 0; i < evaluatorsCount; i++)
+                for (int i = 0; i < evaluators.Count; i++)
                 {
                     if (!evaluators[i].isDiff) continue;
                     isDiff = true;
@@ -177,7 +176,7 @@ public partial class MoveIt
             
             isDiff = false;
             
-            for (int i = 0; i < evaluatorsCount; i++)
+            for (int i = 0; i < evaluators.Count; i++)
             {
                 if (!evaluators[i].isDiff) continue;
                 isDiff = true;

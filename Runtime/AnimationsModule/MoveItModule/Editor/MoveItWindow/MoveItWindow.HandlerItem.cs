@@ -48,8 +48,9 @@ public partial class MoveItWindow
                             }
                         }
 
+                        window.IsAnimationMode = false;
                         window.UpdateAnimationComponent();
-                        window.TryUpdateAnimationMode();
+                        window.IsAnimationMode = true;
                     }
                 };
                 popup.Show(e.mousePosition);
