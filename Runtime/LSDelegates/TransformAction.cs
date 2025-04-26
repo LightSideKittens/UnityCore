@@ -7,7 +7,7 @@ using UnityEngine;
 public abstract class TransformAction : LSAction { }
 
 [Serializable]
-public class SetParentAction : LSAction
+public class SetParentAction : TransformAction
 {
     public bool usePath = true;
         

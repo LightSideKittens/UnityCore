@@ -85,7 +85,7 @@ namespace LSCore.Editor
             GUIScene.rect = rect;
             GUIScene.camData = camData;
             
-            if (cam is null)
+            if (cam == null)
             {
                 scene = EditorSceneManager.NewPreviewScene();
                 
@@ -119,7 +119,6 @@ namespace LSCore.Editor
         }
 
         private static Action releasePools;
-        
         
         public static void End()
         {

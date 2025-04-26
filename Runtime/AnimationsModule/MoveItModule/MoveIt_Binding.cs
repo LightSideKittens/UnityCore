@@ -1,10 +1,15 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using LSCore.Extensions;
+using LSCore.Extensions.Unity;
 using Unity.Collections;
+using UnityEngine;
 using UnityEngine.Animations;
+using Debug = UnityEngine.Debug;
 
 public partial class MoveIt
 {
+    private static Dictionary<string, GenericBinding> cachedBindings = new();
     private static List<BoundProperty> floatPropsList = new();
     private static List<BoundProperty> discretePropsList = new();
     
@@ -22,27 +27,39 @@ public partial class MoveIt
         {
             var handler = currentHandlers[i];
 
-            if (handler.TryGetPropBindingData(out var bd))
+            if (handler.TryGetPropBindingData(out var obj, out var go))
             {
-                var bdpd = bd.propData;
-                NativeArray<GenericBinding> bindings = new(bdpd.Length, Allocator.Temp);
+                var bdpd = handler.evaluators;
+                NativeArray<GenericBinding> bindings = new(bdpd.Count, Allocator.Temp);
                 
-                for (int j = 0; j < bdpd.Length; j++)
+                for (int j = 0; j < bdpd.Count; j++)
                 {
                     var pd = bdpd[j];
-                    GenericBindingUtility.CreateGenericBinding(bd.obj, pd.propName, bd.go, pd.isRef, out var d);
-                    bindings[j] = d;
+                    var fullPropPath = string.Concat(handler.fullTypeName, pd.property);
+                    if (!cachedBindings.TryGetValue(fullPropPath, out var binding))
+                    {
+                        GenericBindingUtility.CreateGenericBinding(obj, pd.property, go, pd.isRef, out binding);
+                        cachedBindings[fullPropPath] = binding;
+                    }
+                    bindings[j] = binding;
                 }
                 
                 GenericBindingUtility.BindProperties(
-                    bd.go,
+                    go,
                     bindings,
                     out var floatPs,
                     out var discretePs,
                     Allocator.Temp);
-            
-                floatPropsList.AddRange(floatPs);
-                discretePropsList.AddRange(discretePs);
+                
+                for (int j = 0; j < floatPs.Length; j++)
+                {
+                    floatPropsList.Add(floatPs.Read(j));
+                }
+
+                for (int j = 0; j < discretePs.Length; j++)
+                {
+                    discretePropsList.Add(discretePs.Read(j));
+                }
             }
         }
         

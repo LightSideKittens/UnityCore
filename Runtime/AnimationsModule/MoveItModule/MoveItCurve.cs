@@ -226,8 +226,13 @@ public class MoveItCurve : IList<BezierPoint>
         }
         Array.Resize(ref points, length - 1);
     }
+    
+    public ref BezierPoint this[int index]
+    {
+        get => ref points[index];
+    }
 
-    public BezierPoint this[int index]
+    BezierPoint IList<BezierPoint>.this[int index]
     {
         get => points[index];
         set => points[index] = value;

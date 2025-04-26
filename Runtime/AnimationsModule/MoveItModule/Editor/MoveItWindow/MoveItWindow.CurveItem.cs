@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using DG.DemiEditor;
+using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
 using Sirenix.Utilities.Editor;
@@ -98,7 +99,6 @@ public partial class MoveItWindow
                     {
                         DeleteCurve();
                         window.UpdateAnimationComponent();
-                        window.TryUpdateAnimationMode();
                     }
                 };
                 popup.Show(e.mousePosition);
@@ -108,11 +108,37 @@ public partial class MoveItWindow
             {
                 rect.TakeFromRight(5);
                 rect.TakeFromRight(40);
+                
+                float value;
+                var handlerItem = (HandlerItem)Parent;
+                var prop = handlerItem.handler.FindProperty(property);
+                var prevValue = prop.propertyType switch
+                {
+                    SerializedPropertyType.Boolean => prop.boolValue ? 1 : 0,
+                    SerializedPropertyType.Integer => prop.intValue,
+                    SerializedPropertyType.Float => prop.floatValue,
+                    SerializedPropertyType.Enum => prop.enumValueFlag,
+                    SerializedPropertyType.ObjectReference => prop.objectReferenceInstanceIDValue,
+                    _ => 0f
+                };
+                
                 EditorGUI.BeginChangeCheck();
-                var value = EditorGUI.FloatField(rect.TakeFromRight(40), evaluator.y);
+
+                if (evaluator.isRef)
+                {
+                    editor.isYBlocked = true;
+                    var obj = EditorUtility.InstanceIDToObject((int)evaluator.y);
+                    obj = EditorGUI.ObjectField(rect.TakeFromRight(140), obj, prop.GetFieldType(), true);
+                    value = obj != null ? obj.GetInstanceID() : 0;
+                }
+                else
+                {
+                    value = EditorGUI.FloatField(rect.TakeFromRight(40), evaluator.y);
+                }
+                
                 if (EditorGUI.EndChangeCheck())
                 {
-                    window.ModifyCurve((HandlerItem)Parent, property, value);
+                    window.ModifyCurve(handlerItem, property, value, prevValue);
                 }
             }
         }
@@ -145,7 +171,6 @@ public partial class MoveItWindow
                 editor = bce;
                 curvesEditor.Add(bce);
                 curvesEditor.CurveItems.Add(this);
-                window.TryUpdateAnimationMode();
             }
         }
     }

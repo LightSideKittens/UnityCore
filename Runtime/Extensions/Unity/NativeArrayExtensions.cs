@@ -7,6 +7,14 @@ namespace LSCore.Extensions.Unity
     public static class NativeArrayExtensions
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe T Read<T>(ref this NativeArray<T> arr, int index)
+            where T : unmanaged
+        {
+            void* basePtr = NativeArrayUnsafeUtility.GetUnsafeBufferPointerWithoutChecks(arr);
+            return UnsafeUtility.ReadArrayElement<T>(basePtr, index);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void Write<T>(ref this NativeArray<T> arr, int index, in T value)
             where T : unmanaged
         {

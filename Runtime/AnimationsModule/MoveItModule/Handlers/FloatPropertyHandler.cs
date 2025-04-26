@@ -16,7 +16,7 @@ namespace LSCore.AnimationsModule
     [Serializable]
     public abstract class FloatPropertyHandler<T> : Handler<float>, IFloatPropertyHandler where T : Object
     {
-        public UniDict<int, Object> objects = null;
+        [HideInInspector] public UniDict<int, Object> objects = null;
 
         public override UniDict<int, Object> Objects
         {
@@ -42,19 +42,10 @@ namespace LSCore.AnimationsModule
             handlersBuffer.Add(this);
         }
         
-        public override bool TryGetPropBindingData(out (Object obj, GameObject go, (string propName, bool isRef)[] propData) data)
+        public override bool TryGetPropBindingData(out Object obj, out GameObject go)
         {
-            data = default;
-            data.obj = Target;
-            data.go = GO;
-            data.propData = new ValueTuple<string, bool>[evaluators.Count];
-
-            for (int i = 0; i < evaluators.Count; i++)
-            {
-                var evaluator = evaluators[i];
-                data.propData[i] = (evaluator.property, evaluator.isRef);
-            }
-            
+            obj = Target;
+            go = GO;
             return true;
         }
 
@@ -87,6 +78,7 @@ namespace LSCore.AnimationsModule
         
         public override void SetTarget(GameObject target)
         {
+            fullTypeName = target.GetType().FullName;
             go = target;
         }
     }
@@ -100,6 +92,7 @@ namespace LSCore.AnimationsModule
         
         public override void SetTarget(Component target)
         {
+            fullTypeName = target.GetType().FullName;
             comp = target;
         }
     }

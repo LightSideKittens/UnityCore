@@ -1,9 +1,11 @@
 
+using LSCore.LevelSystem;
 using UnityEngine;
 
-namespace LSCore.AnimationsModule
+namespace LSCore.BattleModule
 {
     public class TestCurve : MonoBehaviour
     {
+
     }
 }
