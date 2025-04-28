@@ -54,7 +54,7 @@ namespace LSCore.AnimationsModule
         {
             foreach (var evaluator in evaluators)
             {
-                HandlerEvaluateData.TrimModifications(Target, modifications, evaluator, evaluator.property);
+                HandlerEvaluator.TrimModifications(Target, modifications, evaluator, evaluator.property);
             }
         }
 
@@ -62,7 +62,7 @@ namespace LSCore.AnimationsModule
         {
             foreach (var evaluator in evaluators)
             {
-                HandlerEvaluateData.StartAnimationMode(Target, evaluator, evaluator.property);
+                HandlerEvaluator.StartAnimationMode(Target, evaluator, evaluator.property);
             }
         }
 #endif

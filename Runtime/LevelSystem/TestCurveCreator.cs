@@ -35,8 +35,20 @@ namespace LSCore.BattleModule
             [Serializable]
             public abstract class TestClass2
             {
+                public enum TestEnum
+                {
+                    None,
+                    Done,
+                    Fone,
+                    Sone
+                }
+                
                 [SerializeField] private Id[] id;
                 [SerializeField] private Sprite[] sprites;
+                public float speed;
+                public int count;
+                public TestEnum type;
+                public bool testBool;
             }
             
             [Serializable]

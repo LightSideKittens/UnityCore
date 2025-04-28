@@ -13,7 +13,7 @@ public class MoveItClip : ScriptableObject, ISerializationCallbackReceiver
     public struct Data : IEquatable<Data>
     {
         public string handlerGuid;
-        public List<HandlerEvaluateData> evaluators;
+        public List<HandlerEvaluator> evaluators;
 
         public bool Equals(Data other)
         {
@@ -33,7 +33,7 @@ public class MoveItClip : ScriptableObject, ISerializationCallbackReceiver
     [HideInInspector]
     [SerializeField] public float length;
     
-    public Dictionary<string, Dictionary<string, HandlerEvaluateData>> evaluatorsByHandlerGuids = new();
+    public Dictionary<string, Dictionary<string, HandlerEvaluator>> evaluatorsByHandlerGuids = new();
 
     public void OnBeforeSerialize()
     {
@@ -64,7 +64,7 @@ public class MoveItClip : ScriptableObject, ISerializationCallbackReceiver
             var guid = d.handlerGuid;
             if (!evaluatorsByHandlerGuids.TryGetValue(guid, out var curves))
             {
-                curves = new Dictionary<string, HandlerEvaluateData>();
+                curves = new Dictionary<string, HandlerEvaluator>();
                 evaluatorsByHandlerGuids.Add(guid, curves);
             }
 
@@ -76,11 +76,11 @@ public class MoveItClip : ScriptableObject, ISerializationCallbackReceiver
         }
     }
     
-    public void Add(Handler handler, HandlerEvaluateData evaluator)
+    public void Add(Handler handler, HandlerEvaluator evaluator)
     {
         if (!evaluatorsByHandlerGuids.TryGetValue(handler.guid, out var curves))
         {
-            curves = new Dictionary<string, HandlerEvaluateData>();
+            curves = new Dictionary<string, HandlerEvaluator>();
             evaluatorsByHandlerGuids.Add(handler.guid, curves);
         }
 
@@ -91,7 +91,7 @@ public class MoveItClip : ScriptableObject, ISerializationCallbackReceiver
         if (needToAdd)
         {
             d.handlerGuid = handler.guid;
-            d.evaluators = new List<HandlerEvaluateData>();
+            d.evaluators = new List<HandlerEvaluator>();
         }
 
         var index = d.evaluators.IndexOf(evaluator);
@@ -125,7 +125,7 @@ public class MoveItClip : ScriptableObject, ISerializationCallbackReceiver
         var d = data.FirstOrDefault(x => x.handlerGuid == handler.guid);
         if (d.evaluators != null)
         {
-            d.evaluators.Remove(new HandlerEvaluateData {property = propertyName});
+            d.evaluators.Remove(new HandlerEvaluator {property = propertyName});
             if (evaluatorsByHandlerGuids.TryGetValue(handler.guid, out var curves))
             {
                 curves.Remove(propertyName);

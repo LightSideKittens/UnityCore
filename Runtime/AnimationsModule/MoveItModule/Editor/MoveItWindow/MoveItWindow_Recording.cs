@@ -211,15 +211,15 @@ public partial class MoveItWindow
         return handler;
     }
     
-    private CurveItem ModifyCurve(HandlerItem handlerItem, string property, float value, float prevValue = float.NaN)
+    private CurveItem ModifyCurve(HandlerItem handlerItem, string rawProperty, float value, float prevValue = float.NaN)
     {
         var handler = handlerItem.handler;
         var curveItem = handlerItem.GetChildMenuItemsRecursive(false).OfType<CurveItem>()
-            .FirstOrDefault(x => x.property == property);
+            .FirstOrDefault(x => x.rawProperty == rawProperty);
         
         if (curveItem == null)
         {
-            curveItem = new CurveItem(MenuTree, property, red, CurrentClip, handler, curvesEditor);
+            curveItem = new CurveItem(MenuTree, rawProperty, red, CurrentClip, handler, curvesEditor);
             
             var split = curveItem.property.Split('.');
             OdinMenuItem item = handlerItem;

@@ -22,7 +22,7 @@ public partial class MoveIt
         }
         
         [GenerateGuid(Hide = true)] public string guid;
-        [NonSerialized] public List<HandlerEvaluateData> evaluators = new();
+        [NonSerialized] public List<HandlerEvaluator> evaluators = new();
         public abstract UniDict<int, Object> Objects { get; set; }
         
         protected bool isStarted;
@@ -82,14 +82,14 @@ public partial class MoveIt
         protected virtual void OnStart(){}
         protected abstract void OnStop();
 
-        public bool TryGetEvaluator(string key, out HandlerEvaluateData evaluator)
+        public bool TryGetEvaluator(string key, out HandlerEvaluator evaluator)
         {
             var toRemove = evaluators.FirstOrDefault(x => x.property == key);
             evaluator = toRemove;
             return evaluator != null;
         }
         
-        public void AddEvaluator(HandlerEvaluateData evaluator)
+        public void AddEvaluator(HandlerEvaluator evaluator)
         {
             evaluators.Add(evaluator);
         }
