@@ -18,7 +18,7 @@ public partial class MoveIt
     
     [Serializable]
     [Unwrap]
-    public class EvaluateData : IEvaluator
+    public class Evaluator : IEvaluator
     {
         public MoveItCurve curve;
         [NonSerialized] public float x;
@@ -30,25 +30,15 @@ public partial class MoveIt
         {
             y = curve.Evaluate(x);
         }
-        
-        public void Reset()
-        {
-            x = 0;
-            y = 0;
-            startY = float.NaN;
-        }
     }
     
     [Serializable]
-    public class HandlerEvaluateData : EvaluateData, IEquatable<HandlerEvaluateData>
+    public class HandlerEvaluator : Evaluator, IEquatable<HandlerEvaluator>
     {
-#if UNITY_EDITOR
-        public string rawProperty;
-#endif
-        
         public Func<Object, Object> get;
         public Action<Object, Object> set;
-        
+
+        public string rawProperty;
         public string property;
         public PropertyType propertyType;
         [NonSerialized] public bool isDiff;
@@ -63,7 +53,7 @@ public partial class MoveIt
             isDiff = Math.Abs(y - last) > 0.0001f;
         }
         
-        public bool Equals(HandlerEvaluateData other)
+        public bool Equals(HandlerEvaluator other)
         {
             return property == other.property;
         }
@@ -74,15 +64,15 @@ public partial class MoveIt
         }
 
 #if UNITY_EDITOR
-        public static void TrimModifications(UnityEngine.Object target, List<UndoPropertyModification> modifications, HandlerEvaluateData evaluateData, string propPath, string propertyName)
+        public static void TrimModifications(UnityEngine.Object target, List<UndoPropertyModification> modifications, HandlerEvaluator evaluator, string propPath, string propertyName)
         {
-            TrimModifications(target, modifications, evaluateData, $"{propPath}.{propertyName}");
+            TrimModifications(target, modifications, evaluator, $"{propPath}.{propertyName}");
         }
         
-        public static void TrimModifications(UnityEngine.Object target, List<UndoPropertyModification> modifications, HandlerEvaluateData evaluateData, string propPath)
+        public static void TrimModifications(UnityEngine.Object target, List<UndoPropertyModification> modifications, HandlerEvaluator evaluator, string propPath)
         {
             if(string.IsNullOrEmpty(propPath)) return;
-            if(evaluateData == null) return;
+            if(evaluator == null) return;
             if(target == null) return;
             
             for (int i = 0; i < modifications.Count; i++)
@@ -96,15 +86,15 @@ public partial class MoveIt
             }
         }
         
-        public static void StartAnimationMode(UnityEngine.Object target, HandlerEvaluateData evaluateData, string propPath, string propertyName)
+        public static void StartAnimationMode(UnityEngine.Object target, HandlerEvaluator evaluator, string propPath, string propertyName)
         {
-            StartAnimationMode(target, evaluateData, $"{propPath}.{propertyName}");
+            StartAnimationMode(target, evaluator, $"{propPath}.{propertyName}");
         }
         
-        public static void StartAnimationMode(Object target, HandlerEvaluateData evaluateData, string property)
+        public static void StartAnimationMode(Object target, HandlerEvaluator evaluator, string property)
         {
             if(string.IsNullOrEmpty(property)) return;
-            if(evaluateData == null) return;
+            if(evaluator == null) return;
             if(target == null) return;
             
             if (AnimationMode.IsPropertyAnimated(target, property))

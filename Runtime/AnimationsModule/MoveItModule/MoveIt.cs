@@ -14,7 +14,7 @@ using UnityEditor;
 #endif
 
 [assembly: InternalsVisibleTo("LSCore.MoveIt.Editor")]
-public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateData>
+public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator>
 {
     public enum UpdateModeType
     {
@@ -70,7 +70,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
     private MoveItClip currentClip;
     private List<Handler> currentHandlers = new();
     private List<Event> events = new();
-    private List<HandlerEvaluateData> currentEvaluators = new();
+    private List<HandlerEvaluator> currentEvaluators = new();
     private List<Event> selectedEvents = new();
     private float startTime;
     private float time;
@@ -213,11 +213,9 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
                     {
                         foreach (var evaluator in curves.Values)
                         {
-                            var newEvaluator = new HandlerEvaluateData
+                            var newEvaluator = new HandlerEvaluator
                             {
-#if UNITY_EDITOR
                                 rawProperty = evaluator.rawProperty,
-#endif
                                 property = evaluator.property,
                                 curve = evaluator.curve,
                                 propertyType = evaluator.propertyType,
@@ -232,9 +230,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
                         foreach (var evaluator in curves.Values)
                         {
                             var ev = evaluators[index];
-#if UNITY_EDITOR
                             ev.rawProperty = evaluator.rawProperty;
-#endif
                             ev.property = evaluator.property;
                             ev.curve = evaluator.curve;
                             ev.propertyType = evaluator.propertyType;
@@ -263,7 +259,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
 
             GetAndUpdateProps();
             
-            MoveItEvaluator<HandlerEvaluateData>.Register(this, updateMode);
+            MoveItEvaluator<HandlerEvaluator>.Register(this, updateMode);
             OnClipChanged();
         }
     }
@@ -271,10 +267,10 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
     private void Register()
     {
         updateModeAtRegister = updateMode;
-        MoveItEvaluator<HandlerEvaluateData>.Register(this, updateMode);
+        MoveItEvaluator<HandlerEvaluator>.Register(this, updateMode);
     }
 
-    private void Unregister() => MoveItEvaluator<HandlerEvaluateData>.Unregister(this, updateModeAtRegister);
+    private void Unregister() => MoveItEvaluator<HandlerEvaluator>.Unregister(this, updateModeAtRegister);
 
 #if UNITY_EDITOR
     [Button(DirtyOnClick = false)]
@@ -342,7 +338,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
         }
     }
 
-    void IAnimatable<HandlerEvaluateData>.BeforeEvaluate(float deltaTime)
+    void IAnimatable<HandlerEvaluator>.BeforeEvaluate(float deltaTime)
     {
         if (reverse) deltaTime *= -1;
         Time += deltaTime;
@@ -353,10 +349,10 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
         }
     }
 
-    IList<HandlerEvaluateData> IAnimatable<HandlerEvaluateData>.Evaluators => currentEvaluators;
+    IList<HandlerEvaluator> IAnimatable<HandlerEvaluator>.Evaluators => currentEvaluators;
     public IEnumerable<MoveItClip> Clips => data != null ? data.Select(x => x.clip) : Array.Empty<MoveItClip>();
 
-    void IAnimatable<HandlerEvaluateData>.AfterEvaluate() => AfterEvaluate();
+    void IAnimatable<HandlerEvaluator>.AfterEvaluate() => AfterEvaluate();
     
     private void AfterEvaluate()
     {
@@ -400,18 +396,43 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
                 }
                 else
                 {
-                    evaluator.startY = discreteValues.Read(intIndex);
                     var y = (int)evaluator.y;
 
                     if (y != 0 && evaluator.propertyType == PropertyType.Ref)
                     {
-                        objects.TryGetValue(y, out var value);
+                        if (evaluator.get != null)
+                        {
+                            var startObj = evaluator.get(obj);
+                            if (startObj != null)
+                            {
+                                var startY = startObj.GetInstanceID();
+                                evaluator.startY = startY;
+                                objects.TryAdd(startY, startObj);
+                            }
+                            else
+                            {
+                                evaluator.startY = 0;
+                            }
+                        }
+                        else
+                        {
+                            evaluator.startY = discreteValues.Read(intIndex);
+                        }
+                        
+                        if (!objects.TryGetValue(y, out var value))
+                        {
+                            objects.Remove(y);
+                        }
                         if (evaluator.set != null)
                         {
                             evaluator.set(obj, value);
                             goto skip;
                         }
                         y = value != null ? value.GetInstanceID() : 0;
+                    }
+                    else
+                    {
+                        evaluator.startY = discreteValues.Read(intIndex);
                     }
                     
                     discreteValues.Write(intIndex, y);
@@ -452,7 +473,10 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
 
                     if (y != 0 && evaluator.propertyType == PropertyType.Ref)
                     {
-                        objects.TryGetValue(y, out var value);
+                        if (!objects.TryGetValue(y, out var value))
+                        {
+                            objects.Remove(y);
+                        }
                         if (evaluator.set != null)
                         {
                             evaluator.set(obj, value);
@@ -483,6 +507,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
         {
             var handler = handlersBuffer[i];
             var obj = handler.Target;
+            var propertyHandler = obj as IPropertyHandler;
             var objects = handler.Objects;
             
             var evaluators = handler.evaluators;
@@ -496,10 +521,18 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
                 else
                 {
                     var y = (int)evaluator.startY;
-                    if (evaluator.set != null)
+                    if (evaluator.propertyType == PropertyType.Ref)
                     {
-                        objects.TryGetValue(y, out var value);
-                        evaluator.set(obj, value);
+                        if (!objects.TryGetValue(y, out var value))
+                        {
+                            objects.Remove(y);
+                        }
+
+                        if (evaluator.set != null)
+                        {
+                            evaluator.set(obj, value);
+                            propertyHandler?.HandleAnimatedProperty(handler, evaluator);
+                        }
                     }
                     else
                     {
@@ -514,6 +547,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
         BindingUtility.SetValues(floatProps, floatValues);
         BindingUtility.SetValues(discreteProps, discreteValues);
     }
+    
     
     public void Play(MoveItClip clip)
     {

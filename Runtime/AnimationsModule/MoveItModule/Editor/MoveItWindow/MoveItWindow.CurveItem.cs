@@ -21,7 +21,7 @@ public partial class MoveItWindow
         private Handler handler;
         private MoveItClip clip;
         public Color color;
-        private HandlerEvaluateData evaluator;
+        private HandlerEvaluator evaluator;
 
         public MoveItCurve Curve => evaluator.curve;
         public string property;
@@ -42,7 +42,7 @@ public partial class MoveItWindow
             return cur;
         }
 
-        public bool TryGetCurve(out HandlerEvaluateData evaluator)
+        public bool TryGetCurve(out HandlerEvaluator evaluator)
         {
             if (clip.evaluatorsByHandlerGuids.TryGetValue(handler.guid, out var curves))
             {
@@ -58,12 +58,12 @@ public partial class MoveItWindow
             return false;
         }
 
-        public void CreateCurve(out HandlerEvaluateData evaluator)
+        public void CreateCurve(out HandlerEvaluator evaluator)
         {
             window.RecordAddCurve();
             var propType = sProperty.propertyType;
             var curve = new MoveItCurve(propType is SerializedPropertyType.Boolean or SerializedPropertyType.Enum or SerializedPropertyType.ObjectReference);
-            evaluator = new HandlerEvaluateData
+            evaluator = new HandlerEvaluator
             {
                 rawProperty = rawProperty,
                 property = property,

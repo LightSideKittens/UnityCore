@@ -6,8 +6,13 @@ using UnityEngine.Animations;
 
 public partial class MoveIt
 {
+    public interface IPropertyHandler
+    {
+        void HandleAnimatedProperty(Handler handler, HandlerEvaluator evaluator);
+    }
+    
     private static Dictionary<string, GenericBinding> cachedBindings = new();
-    private static HandlerEvaluateData[] refEvaluatorsArr = new HandlerEvaluateData[1000];
+    private static HandlerEvaluator[] refEvaluatorsArr = new HandlerEvaluator[1000];
     private static List<(Object obj, GameObject go, Handler handler)> buffer = new();
     private NativeArray<BoundProperty> floatProps;
     private NativeArray<BoundProperty> discreteProps;
@@ -76,9 +81,10 @@ public partial class MoveIt
                 var fullPropPath = string.Concat(handler.fullTypeName, pd.property);
                 if (!cachedBindings.TryGetValue(fullPropPath, out var binding))
                 {
-                    GenericBindingUtility.CreateGenericBinding(obj, pd.property, go, isRef, out binding);
+                    GenericBindingUtility.CreateGenericBinding(obj, pd.rawProperty, go, isRef, out binding);
                     cachedBindings[fullPropPath] = binding;
                 }
+                
                 bindings[j] = binding;
 
                 if (isRef || pd.propertyType is PropertyType.Enum)
