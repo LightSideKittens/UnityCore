@@ -220,8 +220,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
 #endif
                                 property = evaluator.property,
                                 curve = evaluator.curve,
-                                isRef = evaluator.isRef,
-                                isFloat = evaluator.isFloat,
+                                propertyType = evaluator.propertyType,
                             };
                             handler.AddEvaluator(newEvaluator);
                             currentEvaluators.Add(newEvaluator);
@@ -238,8 +237,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
 #endif
                             ev.property = evaluator.property;
                             ev.curve = evaluator.curve;
-                            ev.isRef = evaluator.isRef;
-                            ev.isFloat = evaluator.isFloat;
+                            ev.propertyType = evaluator.propertyType;
                             currentEvaluators.Add(ev);
                             index++;
                         }
@@ -376,7 +374,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
 
     private void GetAndUpdateProps()
     {
-        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !wasBinded) return;
+        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !isBound) return;
         
         GenericBindingUtility.GetValues(floatProps, floatValues);
         GenericBindingUtility.GetValues(discreteProps, discreteValues);
@@ -393,7 +391,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
             for (int j = 0; j < evaluators.Count; j++)
             {
                 var evaluator = evaluators[j];
-                if (evaluator.isFloat)
+                if (evaluator.IsFloat)
                 {
                     evaluator.startY = floatValues.Read(floatIndex);
                     floatValues.Write(floatIndex, evaluator.y);
@@ -404,7 +402,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
                     evaluator.startY = discreteValues.Read(intIndex);
                     var y = (int)evaluator.y;
 
-                    if (y != 0 && evaluator.isRef)
+                    if (y != 0 && evaluator.propertyType == PropertyType.Ref)
                     {
                         if (objects.TryGetValue(y, out var value))
                         {
@@ -424,7 +422,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
 
     private void UpdateProps()
     {
-        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !wasBinded) return;
+        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !isBound) return;
         
         var floatIndex = 0;
         var intIndex = 0;
@@ -438,7 +436,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
             for (int j = 0; j < evaluators.Count; j++)
             {
                 var evaluator = evaluators[j];
-                if (evaluator.isFloat)
+                if (evaluator.IsFloat)
                 {
                     floatValues.Write(floatIndex++, evaluator.y);
                 }
@@ -446,7 +444,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
                 {
                     var y = (int)evaluator.y;
 
-                    if (y != 0 && evaluator.isRef)
+                    if (y != 0 && evaluator.propertyType == PropertyType.Ref)
                     {
                         objects.TryGetValue(y, out var value);
                         y = value != null ? value.GetInstanceID() : 0;
@@ -463,7 +461,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
     
     private void ResetProps()
     {
-        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !wasBinded) return;
+        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !isBound) return;
         
         var floatIndex = 0;
         var intIndex = 0;
@@ -476,7 +474,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
             for (int j = 0; j < evaluators.Count; j++)
             {
                 var evaluator = evaluators[j];
-                if (evaluator.isFloat)
+                if (evaluator.IsFloat)
                 {
                     floatValues.Write(floatIndex++, evaluator.startY);
                 }

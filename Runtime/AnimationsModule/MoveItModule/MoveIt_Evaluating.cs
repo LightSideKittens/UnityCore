@@ -7,6 +7,15 @@ using Object = UnityEngine.Object;
 
 public partial class MoveIt
 {
+    public enum PropertyType : byte
+    {
+        Float,
+        Int,
+        Bool,
+        Enum,
+        Ref,
+    }
+    
     [Serializable]
     [Unwrap]
     public class EvaluateData : IEvaluator
@@ -37,9 +46,10 @@ public partial class MoveIt
         public string rawProperty;
 #endif
         public string property;
-        public bool isRef;
-        public bool isFloat;
+        public PropertyType propertyType;
         [NonSerialized] public bool isDiff;
+
+        public bool IsFloat => propertyType is PropertyType.Float or PropertyType.Int or PropertyType.Bool;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Evaluate()

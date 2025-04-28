@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System;
 using System.Text.RegularExpressions;
 using DG.DemiEditor;
 using LSCore.Extensions.Unity;
@@ -9,6 +10,7 @@ using UnityEditor;
 using UnityEngine;
 using static MoveIt;
 using Event = UnityEngine.Event;
+using Object = UnityEngine.Object;
 
 public partial class MoveItWindow
 {
@@ -66,8 +68,14 @@ public partial class MoveItWindow
                 rawProperty = rawProperty,
                 property = property,
                 curve = curve,
-                isRef = propType == SerializedPropertyType.ObjectReference,
-                isFloat = propType is SerializedPropertyType.Boolean or SerializedPropertyType.Float or SerializedPropertyType.Integer,
+                propertyType = propType switch
+                {
+                    SerializedPropertyType.Float => MoveIt.PropertyType.Float,
+                    SerializedPropertyType.Integer => MoveIt.PropertyType.Int,
+                    SerializedPropertyType.Boolean => MoveIt.PropertyType.Bool,
+                    SerializedPropertyType.Enum => MoveIt.PropertyType.Enum,
+                    SerializedPropertyType.ObjectReference => MoveIt.PropertyType.Ref,
+                },
             };
             clip.Add(handler, evaluator);
             EditorUtility.SetDirty(clip);
@@ -136,13 +144,13 @@ public partial class MoveItWindow
                 
                 EditorGUI.BeginChangeCheck();
 
-                if (evaluator.isRef)
+                if (evaluator.propertyType == MoveIt.PropertyType.Ref)
                 {
                     editor.isYBlocked = true;
                     var id = (int)evaluator.y;
                     Object obj = null;
                     
-                    if (id != 0 && evaluator.isRef)
+                    if (id != 0)
                     {
                         handler.Objects.TryGetValue(id, out obj);
                     }
