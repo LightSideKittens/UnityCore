@@ -169,25 +169,14 @@ public partial class MoveItWindow
         var cur = mod.currentValue;
         var prev = mod.previousValue;
         var propertyPath = cur.propertyPath;
-        CurveItem curveItem = null;
-        Action action = null;
-        int lastId = 0;
-        UniDict<int, Object> objects = null;
         
         float.TryParse(prev.value, out var prevValue);
         if (!float.TryParse(cur.value, out var value))
         {
-            objects = handler.Objects ??= new UniDict<int, Object>();
-            
             if (cur.objectReference != null)
             {
                 var valueInt = cur.objectReference.GetInstanceID();
                 value = valueInt;
-
-                action = () =>
-                {
-                    objects[valueInt] = cur.objectReference;
-                };
             }
             
             if (prev.objectReference != null)
@@ -197,16 +186,7 @@ public partial class MoveItWindow
             }
         }
         
-        curveItem = GetCurve(handlerItem, propertyPath, prevValue);
-        
-        lastId = (int)curveItem.editor.GetKey(timePointer.Time, out var index).y;
-        objects = handler.Objects ??= new UniDict<int, Object>();
-        if(index != -1 && curveItem.ContainsInKeys(lastId) == 1) objects.Remove(lastId);
-        
-        ModifyCurve(curveItem, value);
-        
-        action?.Invoke();
-        objects.Editor_ApplyToData();
+        ModifyCurve(handlerItem, propertyPath, value, prevValue);
     }
 
     private Dictionary<Object, Dictionary<Type, MoveIt.Handler>> objectByHandlerType = new();
@@ -217,19 +197,6 @@ public partial class MoveItWindow
             .OfType<HandlerItem>().FirstOrDefault(x => x.handler == handler);
         return handlerItem;
     }
-    
-    /*private MoveIt.Handler TryAddTransformHandler<T>(Dictionary<Type, MoveIt.Handler> handlers, Transform transform) where T : ITransformHandler, new()
-    {
-        if (!handlers.TryGetValue(typeof(T), out var handler))
-        {
-            var h = new T();
-            handlers[typeof(T)] = handler = h.Handler;
-            h.Transform = transform;
-            AddHandler(handler);
-        }
-
-        return handler;
-    }*/
     
     private MoveIt.Handler TryAddObjectHandler<T, T1>(Dictionary<Type, MoveIt.Handler> handlers, T1 target) where T : FloatPropertyHandler<T1>, new() where T1 : Object
     {
@@ -244,18 +211,36 @@ public partial class MoveItWindow
         return handler;
     }
     
-    private CurveItem GetCurve(HandlerItem handlerItem, string property, float prevValue = float.NaN)
+    private CurveItem ModifyCurve(HandlerItem handlerItem, string property, float value, float prevValue = float.NaN)
     {
         var handler = handlerItem.handler;
-        var curveItem = handlerItem.ChildMenuItems.OfType<CurveItem>()
+        var curveItem = handlerItem.GetChildMenuItemsRecursive(false).OfType<CurveItem>()
             .FirstOrDefault(x => x.property == property);
-
+        
         if (curveItem == null)
         {
             curveItem = new CurveItem(MenuTree, property, red, CurrentClip, handler, curvesEditor);
-            MenuTree.AddMenuItemAtPath(handlerItem.GetFullPath(), curveItem);
+            
+            var split = curveItem.property.Split('.');
+            OdinMenuItem item = handlerItem;
+            
+            for (var i = 0; i < split.Length - 1; i++)
+            {
+                var part = split[i];
+                var newItem = new MenuItem(MenuTree, part, null);
+                MenuTree.AddMenuItemAtPath(item.GetFullPath(), newItem);
+                item = newItem;
+            }
+            
+            MenuTree.AddMenuItemAtPath(item.GetFullPath(), curveItem);
+            curveItem.SetColor(colors[curveItem.Parent.ChildMenuItems.OfType<CurveItem>().Count() - 1]);
         }
-        
+
+        return ModifyCurve(curveItem, handler, value, prevValue);
+    }
+
+    private CurveItem ModifyCurve(CurveItem curveItem, MoveIt.Handler handler, float value, float prevValue = float.NaN)
+    {
         if (!curveItem.TryGetCurve(out _))
         {
             curveItem.CreateCurve(out var evaluator);
@@ -269,21 +254,20 @@ public partial class MoveItWindow
 
         curveItem.TryCreateCurveEditor(this);
         
-        return curveItem;
-    }
-    
-    private CurveItem ModifyCurve(HandlerItem handlerItem, string property, float value, float prevValue = float.NaN)
-    {
-        var curveItem = GetCurve(handlerItem, property, prevValue);
-        ModifyCurve(curveItem, value);
-        return curveItem;
-    }
-
-    private void ModifyCurve(CurveItem curveItem, float value)
-    {
         GUIScene.StartMatrix(curvesEditor.curvesEditor.matrix);
+        
+        int lastId = (int)curveItem.editor.GetKey(timePointer.Time, out var index).y;
+        UniDict<int, Object> objects = handler.Objects ??= new UniDict<int, Object>();
+        if(index != -1 && curveItem.ContainsInKeys(lastId) == 1) objects.Remove(lastId);
+        var id = (int)value;
+        var obj = EditorUtility.InstanceIDToObject(id);
+        if (obj != null) objects[id] = obj;
+        objects.Editor_ApplyToData();
+        
         curveItem.editor.SetKeyY(timePointer.Time, value);
         GUIScene.EndMatrix();
+        
+        return curveItem;
     }
 }
 #endif

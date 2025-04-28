@@ -215,6 +215,9 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
                         {
                             var newEvaluator = new HandlerEvaluateData
                             {
+#if UNITY_EDITOR
+                                rawProperty = evaluator.rawProperty,
+#endif
                                 property = evaluator.property,
                                 curve = evaluator.curve,
                                 isRef = evaluator.isRef,
@@ -230,6 +233,9 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
                         foreach (var evaluator in curves.Values)
                         {
                             var ev = evaluators[index];
+#if UNITY_EDITOR
+                            ev.rawProperty = evaluator.rawProperty;
+#endif
                             ev.property = evaluator.property;
                             ev.curve = evaluator.curve;
                             ev.isRef = evaluator.isRef;
@@ -442,10 +448,8 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
 
                     if (y != 0 && evaluator.isRef)
                     {
-                        if (objects.TryGetValue(y, out var value))
-                        {
-                            y = value.GetInstanceID();
-                        }
+                        objects.TryGetValue(y, out var value);
+                        y = value != null ? value.GetInstanceID() : 0;
                     }
                     
                     discreteValues.Write(intIndex++, y);

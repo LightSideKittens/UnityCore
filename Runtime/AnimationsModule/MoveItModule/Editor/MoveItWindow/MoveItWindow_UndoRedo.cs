@@ -26,6 +26,7 @@ public partial class MoveItWindow
     
     private void OnUndoRedoPerformed(in UndoRedoInfo undo)
     {
+        if(this == null) Undo.undoRedoEvent -= OnUndoRedoPerformed;
         Repaint();
         if(!undoNames.Contains(undo.undoName)) return;
         isUndoPerforming = true;

@@ -90,6 +90,10 @@ public partial class MoveItWindow : OdinMenuEditorWindow
     private static Color green = new(0.55f, 0.86f, 0f);
     private static Color blue = new(0.16f, 0.56f, 1f);
     private static Color alpha = new(0.87f, 0.87f, 0.87f);
+    private static Color[] colors =
+    {
+        red, green, blue, alpha
+    };
 
     private static Func<string, OdinMenuTree, MoveIt.Handler, string> GetTransformHandlerMenuItemAction()
     {
@@ -455,19 +459,30 @@ public partial class MoveItWindow : OdinMenuEditorWindow
             handlerNamesCounter[handler.HandlerName] = ++counter;
             
             var handlerName = $"{handler.HandlerName}({counter})";
-            tree.AddMenuItemAtPath(startPath, new HandlerItem(tree, handlerName, animation, handler));
+            var handlerItem = new HandlerItem(tree, handlerName, animation, handler);
+            tree.AddMenuItemAtPath(startPath, handlerItem);
             
             var path = $"{startPath}/{handlerName}";
-            
-            tree.AddMenuItemAtPath(path, new HandlerNoItem(tree, handler.HandlerName, null, animation, handler));
             
             if (handler is IFloatPropertyHandler _)
             {
                 for (int i = 0; i < handler.evaluators.Count; i++)
                 {
                     var dt = handler.evaluators[i];
-                    var curveItem = new CurveItem(tree, dt.property, red, CurrentClip, handler, curvesEditor);
-                    tree.AddMenuItemAtPath(path, curveItem);
+                    var curveItem = new CurveItem(tree, dt.rawProperty, colors[i % colors.Length], CurrentClip, handler, curvesEditor);
+                    
+                    var split = curveItem.property.Split('.');
+                    OdinMenuItem item = handlerItem;
+            
+                    for (var j = 0; j < split.Length - 1; j++)
+                    {
+                        var part = split[j];
+                        var newItem = new MenuItem(tree, part, null);
+                        tree.AddMenuItemAtPath(item.GetFullPath(), newItem);
+                        item = newItem;
+                    }
+                    
+                    tree.AddMenuItemAtPath(item.GetFullPath(), curveItem);
                 }
             }
             else
