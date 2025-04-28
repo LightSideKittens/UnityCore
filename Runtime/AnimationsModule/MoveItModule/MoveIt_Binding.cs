@@ -108,10 +108,11 @@ public partial class MoveIt
                 var p = discretePs.Read(j);
                 if (p.version == 0)
                 {
+                    var evaluator = refEvaluatorsArr[j];
                     var type = obj.GetType();
-                    var access = PathAccessorCache.Get(type, refEvaluatorsArr[j].property);
-                    var test = access.Get(obj);
-                    access.Set(obj, default);
+                    var access = PathAccessorCache.Get(type, evaluator.property);
+                    evaluator.get = access.Get;
+                    evaluator.set = access.Set;
                 }
 
                 discreteProps.Write(discretePropsIndex, p);

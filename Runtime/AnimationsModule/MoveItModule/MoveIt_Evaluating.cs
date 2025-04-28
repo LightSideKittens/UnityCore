@@ -45,6 +45,10 @@ public partial class MoveIt
 #if UNITY_EDITOR
         public string rawProperty;
 #endif
+        
+        public Func<Object, Object> get;
+        public Action<Object, Object> set;
+        
         public string property;
         public PropertyType propertyType;
         [NonSerialized] public bool isDiff;

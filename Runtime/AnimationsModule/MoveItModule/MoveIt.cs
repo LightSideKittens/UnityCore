@@ -386,6 +386,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
         {
             var handler = handlersBuffer[i];
             var objects = handler.Objects;
+            var obj = handler.Target;
             
             var evaluators = handler.evaluators;
             for (int j = 0; j < evaluators.Count; j++)
@@ -404,13 +405,17 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
 
                     if (y != 0 && evaluator.propertyType == PropertyType.Ref)
                     {
-                        if (objects.TryGetValue(y, out var value))
+                        objects.TryGetValue(y, out var value);
+                        if (evaluator.set != null)
                         {
-                            y = value.GetInstanceID();
+                            evaluator.set(obj, value);
+                            goto skip;
                         }
+                        y = value != null ? value.GetInstanceID() : 0;
                     }
                     
                     discreteValues.Write(intIndex, y);
+                    skip:
                     intIndex++;
                 }
             }
@@ -431,6 +436,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
         {
             var handler = handlersBuffer[i];
             var objects = handler.Objects;
+            var obj = handler.Target;
             
             var evaluators = handler.evaluators;
             for (int j = 0; j < evaluators.Count; j++)
@@ -447,10 +453,17 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
                     if (y != 0 && evaluator.propertyType == PropertyType.Ref)
                     {
                         objects.TryGetValue(y, out var value);
+                        if (evaluator.set != null)
+                        {
+                            evaluator.set(obj, value);
+                            goto skip;
+                        }
                         y = value != null ? value.GetInstanceID() : 0;
                     }
                     
-                    discreteValues.Write(intIndex++, y);
+                    discreteValues.Write(intIndex, y);
+                    skip:
+                    intIndex++;
                 }
             }
         }
@@ -469,7 +482,9 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
         for (int i = 0; i < handlersBuffer.Count; i++)
         {
             var handler = handlersBuffer[i];
-                
+            var obj = handler.Target;
+            var objects = handler.Objects;
+            
             var evaluators = handler.evaluators;
             for (int j = 0; j < evaluators.Count; j++)
             {
@@ -480,7 +495,18 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluateD
                 }
                 else
                 {
-                    discreteValues.Write(intIndex++, (int)evaluator.startY);
+                    var y = (int)evaluator.startY;
+                    if (evaluator.set != null)
+                    {
+                        objects.TryGetValue(y, out var value);
+                        evaluator.set(obj, value);
+                    }
+                    else
+                    {
+                        discreteValues.Write(intIndex, y);
+                    }
+
+                    intIndex++;
                 }
             }
         }

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
 using LSCore.Extensions.Unity;
 using Sirenix.Utilities;
@@ -18,17 +20,46 @@ namespace LSCore
         public string pathToObject;
         private Vector3 position;
         private ChildrenTracker tracker;
-        
-        private List<RectMask2D> clippers;
-        private FieldInfo shouldRecalculateClipRects;
-        
-        private List<RectMask2D> Clippers => clippers = (List<RectMask2D>)typeof(RectMask2D).GetField("m_Clippers", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(this);
-        private FieldInfo ShouldRecalculateClipRectsInfo => shouldRecalculateClipRects ??= typeof(RectMask2D).GetField("m_ShouldRecalculateClipRects", BindingFlags.Instance | BindingFlags.NonPublic);
-        
+
+
+        private static readonly Func<RectMask2D, List<RectMask2D>> s_getClippers =
+            CreateFieldGetter<List<RectMask2D>>("m_Clippers");
+
+        private static readonly Func<RectMask2D, bool> getShouldRecalc =
+            CreateFieldGetter<bool>("m_ShouldRecalculateClipRects");
+
+        private static readonly Action<RectMask2D, bool> setShouldRecalc =
+            CreateFieldSetter<bool>("m_ShouldRecalculateClipRects");
+
+        private List<RectMask2D> Clippers => s_getClippers(this);
+
         private bool ShouldRecalculateClipRects
         {
-            get => (bool)ShouldRecalculateClipRectsInfo.GetValue(this);
-            set => ShouldRecalculateClipRectsInfo.SetValue(this, value);
+            get => getShouldRecalc(this);
+            set => setShouldRecalc(this, value);
+        }
+
+        private static Func<RectMask2D, T> CreateFieldGetter<T>(string fieldName)
+        {
+            var field = typeof(RectMask2D).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field == null) throw new MissingFieldException(typeof(RectMask2D).FullName, fieldName);
+
+            var target = Expression.Parameter(typeof(RectMask2D), "target");
+            var fieldAcc = Expression.Field(target, field);
+            var cast = Expression.Convert(fieldAcc, typeof(T));
+            return Expression.Lambda<Func<RectMask2D, T>>(cast, target).Compile();
+        }
+
+        private static Action<RectMask2D, T> CreateFieldSetter<T>(string fieldName)
+        {
+            var field = typeof(RectMask2D).GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            if (field == null) throw new MissingFieldException(typeof(RectMask2D).FullName, fieldName);
+
+            var target = Expression.Parameter(typeof(RectMask2D), "target");
+            var value = Expression.Parameter(typeof(T), "value");
+            var assign = Expression.Assign(Expression.Field(target, field), Expression.Convert(value, field.FieldType));
+            var lambda = Expression.Lambda<Action<RectMask2D, T>>(assign, target, value);
+            return lambda.Compile();
         }
 
         protected override void Start()
@@ -40,7 +71,7 @@ namespace LSCore
                 {
                     t.GetComponentsInChildren<ExternalRectMask2D>().ForEach(x => x.externalMasks.Add(this));
                 };
-            
+
                 tracker.Removed += t =>
                 {
                     t.GetComponentsInChildren<ExternalRectMask2D>().ForEach(x => x.externalMasks.Remove(this));
@@ -58,7 +89,7 @@ namespace LSCore
 
             base.PerformClipping();
         }
-        
+
         private void GetRectMasksForClip(RectMask2D clipper, List<RectMask2D> masks)
         {
             masks.Clear();
@@ -77,12 +108,14 @@ namespace LSCore
                     bool shouldAdd = true;
                     for (int j = canvasComponents.Count - 1; j >= 0; j--)
                     {
-                        if (!IsDescendantOrSelf(canvasComponents[j].transform, rectMaskComponents[i].transform) && canvasComponents[j].overrideSorting)
+                        if (!IsDescendantOrSelf(canvasComponents[j].transform, rectMaskComponents[i].transform) &&
+                            canvasComponents[j].overrideSorting)
                         {
                             shouldAdd = false;
                             break;
                         }
                     }
+
                     if (shouldAdd)
                         masks.Add(rectMaskComponents[i]);
                 }
@@ -91,7 +124,7 @@ namespace LSCore
             ListPool<RectMask2D>.Release(rectMaskComponents);
             ListPool<Canvas>.Release(canvasComponents);
         }
-        
+
         private bool IsDescendantOrSelf(Transform father, Transform child)
         {
             if (father == null || child == null)
@@ -111,7 +144,7 @@ namespace LSCore
             return false;
         }
     }
-    
+
 #if UNITY_EDITOR
     [CustomEditor(typeof(ExternalRectMask2D), true)]
     [CanEditMultipleObjects]
