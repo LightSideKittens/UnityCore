@@ -1,10 +1,8 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using LSCore.Extensions.Unity;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Animations;
-using Debug = UnityEngine.Debug;
 
 public partial class MoveIt
 {
@@ -20,8 +18,6 @@ public partial class MoveIt
     
     private void BindCurrent()
     {
-        var sw = new Stopwatch();
-        sw.Start();
         isBound = true;
         int floatPropsIndex = 0;
         int discretePropsIndex = 0;
@@ -122,9 +118,6 @@ public partial class MoveIt
                 discretePropsIndex++;
             }
         }
-        
-        sw.Stop();
-        Debug.Log(sw.ElapsedTicks);
     }
 
     private void UnBindCurrent()
