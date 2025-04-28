@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using LSCore.DataStructs;
+using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
@@ -137,7 +138,7 @@ public partial class MoveIt
         public SerializedProperty FindProperty(string property)
         { 
             serializedObject ??= new SerializedObject(Target);
-            return serializedObject.FindProperty(property);
+            return serializedObject.FindAnyProperty(property);
         }
         
 #endif

@@ -1036,7 +1036,12 @@ public class Popup : PopupWindowContent
 
     public bool DrawButton(string name)
     {
-        if (GUILayout.Button(name, GUILayout.MaxWidth(200)))
+        return DrawButton(name, GUILayout.MaxWidth(200f));
+    }
+    
+    public bool DrawButton(string name, params GUILayoutOption[] options)
+    {
+        if (GUILayout.Button(name, options))
         {
             editorWindow.Close();
             return true;

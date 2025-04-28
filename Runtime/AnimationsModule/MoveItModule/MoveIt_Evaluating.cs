@@ -33,6 +33,9 @@ public partial class MoveIt
     [Serializable]
     public class HandlerEvaluateData : EvaluateData, IEquatable<HandlerEvaluateData>
     {
+#if UNITY_EDITOR
+        public string rawProperty;
+#endif
         public string property;
         public bool isRef;
         public bool isFloat;

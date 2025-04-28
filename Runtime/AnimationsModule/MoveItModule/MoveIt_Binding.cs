@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using Unity.Collections;
@@ -12,6 +13,7 @@ public partial class MoveIt
     private static Dictionary<string, GenericBinding> cachedBindings = new();
     private static List<BoundProperty> floatPropsList = new();
     private static List<BoundProperty> discretePropsList = new();
+    private static List<HandlerEvaluateData> discreteEvaluators = new();
     
     private NativeArray<BoundProperty> floatProps;
     private NativeArray<BoundProperty> discreteProps;
@@ -19,7 +21,7 @@ public partial class MoveIt
     private NativeArray<float> floatValues;
     private NativeArray<int> discreteValues;
     private bool wasBinded = false;
-
+    
     private void BindCurrent()
     {
         wasBinded = true;
@@ -42,8 +44,13 @@ public partial class MoveIt
                         cachedBindings[fullPropPath] = binding;
                     }
                     bindings[j] = binding;
+
+                    if (pd.isRef)
+                    {
+                        discreteEvaluators.Add(pd);
+                    }
                 }
-                
+                    
                 GenericBindingUtility.BindProperties(
                     go,
                     bindings,
@@ -55,10 +62,32 @@ public partial class MoveIt
                 {
                     floatPropsList.Add(floatPs.Read(j));
                 }
-
+                
                 for (int j = 0; j < discretePs.Length; j++)
                 {
-                    discretePropsList.Add(discretePs.Read(j));
+                    var p = discretePs.Read(j);
+                    if (p.version == 0)
+                    {
+                        
+var sw = new Stopwatch();
+sw.Start();
+                        
+                        var type = obj.GetType();
+                        var access = PathAccessorCache.Get(type, discreteEvaluators[j].property);
+sw.Stop();
+Debug.Log(sw.ElapsedTicks);
+sw.Restart(); 
+
+                        var test = access.Get(obj);
+                        access.Set(obj, default);
+                        
+sw.Stop();
+Debug.Log(sw.ElapsedTicks);
+
+                        Debug.Log(test);
+
+                    }
+                    discretePropsList.Add(p);
                 }
             }
         }
@@ -70,6 +99,7 @@ public partial class MoveIt
         
         floatPropsList.Clear();
         discretePropsList.Clear();
+        discreteEvaluators.Clear();
     }
 
     private void UnBindCurrent()

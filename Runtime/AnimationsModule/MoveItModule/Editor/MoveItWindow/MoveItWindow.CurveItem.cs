@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Text.RegularExpressions;
 using DG.DemiEditor;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector.Editor;
@@ -22,6 +23,8 @@ public partial class MoveItWindow
 
         public MoveItCurve Curve => evaluator.curve;
         public string property;
+        public string rawProperty;
+        public SerializedProperty sProperty;
 
         public int ContainsInKeys(float y)
         {
@@ -36,7 +39,7 @@ public partial class MoveItWindow
         
             return cur;
         }
-        
+
         public bool TryGetCurve(out HandlerEvaluateData evaluator)
         {
             if (clip.evaluatorsByHandlerGuids.TryGetValue(handler.guid, out var curves))
@@ -56,10 +59,11 @@ public partial class MoveItWindow
         public void CreateCurve(out HandlerEvaluateData evaluator)
         {
             window.RecordAddCurve();
-            var propType = handler.FindProperty(property).propertyType;
+            var propType = sProperty.propertyType;
             var curve = new MoveItCurve(propType is SerializedPropertyType.Boolean or SerializedPropertyType.Enum or SerializedPropertyType.ObjectReference);
             evaluator = new HandlerEvaluateData
             {
+                rawProperty = rawProperty,
                 property = property,
                 curve = curve,
                 isRef = propType == SerializedPropertyType.ObjectReference,
@@ -69,18 +73,27 @@ public partial class MoveItWindow
             EditorUtility.SetDirty(clip);
         }
 
+        private static readonly Regex kUnityArray = new(@"\.Array\.data\[(\d+)\]");
+        private static string Canonicalize(string propPath) => kUnityArray.Replace(propPath, "[$1]");
+        
         public CurveItem(OdinMenuTree tree, string property, Color color, MoveItClip clip,
             Handler handler, CurvesEditor editor) : base(tree, property, null)
         {
+            this.rawProperty = property;
             this.property = property;
             curvesEditor = editor;
-            this.color = color;
             this.clip = clip;
             this.handler = handler;
+            this.color = color;
             Color = color.SetAlpha(0.5f);
             Style = Style.Clone();
             Style.SelectedColorDarkSkin = Color;
             Style.SelectedColorLightSkin = Color;
+            
+            sProperty = handler.FindProperty(rawProperty);
+            this.property = Canonicalize(sProperty.propertyPath);
+            Name = this.property.Split('.')[^1];
+            
             TryGetCurve(out _);
         }
 
@@ -110,8 +123,7 @@ public partial class MoveItWindow
                 rect.TakeFromRight(40);
                 
                 float value;
-                var handlerItem = (HandlerItem)Parent;
-                var prop = handlerItem.handler.FindProperty(property);
+                var prop = handler.FindProperty(rawProperty);
                 var prevValue = prop.propertyType switch
                 {
                     SerializedPropertyType.Boolean => prop.boolValue ? 1 : 0,
@@ -127,18 +139,28 @@ public partial class MoveItWindow
                 if (evaluator.isRef)
                 {
                     editor.isYBlocked = true;
-                    var obj = EditorUtility.InstanceIDToObject((int)evaluator.y);
-                    obj = EditorGUI.ObjectField(rect.TakeFromRight(140), obj, prop.GetFieldType(), true);
+                    var id = (int)evaluator.y;
+                    Object obj = null;
+                    
+                    if (id != 0 && evaluator.isRef)
+                    {
+                        handler.Objects.TryGetValue(id, out obj);
+                    }
+                    
+                    obj = SirenixEditorFields.UnityObjectField(rect.TakeFromRight(labelRect.width / 2), obj, prop.GetFieldType(), true);
                     value = obj != null ? obj.GetInstanceID() : 0;
                 }
                 else
                 {
-                    value = EditorGUI.FloatField(rect.TakeFromRight(40), evaluator.y);
+                    var last = EditorGUIUtility.labelWidth;
+                    EditorGUIUtility.labelWidth = 40;
+                    value = EditorGUI.FloatField(rect.TakeFromRight(labelRect.width / 2), " ", evaluator.y);
+                    EditorGUIUtility.labelWidth = last;
                 }
                 
                 if (EditorGUI.EndChangeCheck())
                 {
-                    window.ModifyCurve(handlerItem, property, value, prevValue);
+                    window.ModifyCurve(this, handler, value, prevValue);
                 }
             }
         }
@@ -151,6 +173,17 @@ public partial class MoveItWindow
             clip.Remove(handler, property);
             editor = null;
             evaluator = null;
+        }
+
+        public void SetColor(Color color)
+        {
+            this.color = color;
+            Color = color.SetAlpha(0.5f);
+            if (editor != null)
+            {
+                editor.curveColor = color;
+                editor.tangentLineColor = color;
+            }
         }
 
         public void TryCreateCurveEditor(Object context)
