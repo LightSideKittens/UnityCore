@@ -236,7 +236,7 @@ public partial class MoveItWindow
             }
             
             MenuTree.AddMenuItemAtPath(item.GetFullPath(), curveItem);
-            curveItem.SetColor(colors[curveItem.Parent.ChildMenuItems.OfType<CurveItem>().Count() - 1]);
+            curveItem.SetColor(colors[(curveItem.Parent.ChildMenuItems.OfType<CurveItem>().Count() - 1) % colors.Length]);
         }
 
         return ModifyCurve(curveItem, handler, value, prevValue);
