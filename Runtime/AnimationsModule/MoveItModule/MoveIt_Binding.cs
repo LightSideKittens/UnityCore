@@ -81,7 +81,7 @@ public partial class MoveIt
                 var fullPropPath = string.Concat(handler.fullTypeName, pd.property);
                 if (!cachedBindings.TryGetValue(fullPropPath, out var binding))
                 {
-                    GenericBindingUtility.CreateGenericBinding(obj, pd.rawProperty, go, isRef, out binding);
+                    var result = GenericBindingUtility.CreateGenericBinding(obj, pd.rawProperty, go, isRef, out binding);
                     cachedBindings[fullPropPath] = binding;
                 }
                 
@@ -93,7 +93,7 @@ public partial class MoveIt
                     discreteEvaluatorsIndex++;
                 }
             }
-                
+            
             GenericBindingUtility.BindProperties(
                 go,
                 bindings,

@@ -24,8 +24,11 @@ public partial class MoveItWindow
             }
 
             isPreview = value;
+            
+            var clip = animation.Clip;
+            animation.Editor_SetClip(null, IsPreview);
+            animation.Editor_SetClip(clip, IsPreview);
             IsAnimationMode = value;
-            UpdateAnimationComponent();
 
             if (value)
             {
