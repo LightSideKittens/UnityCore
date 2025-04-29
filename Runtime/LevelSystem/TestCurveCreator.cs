@@ -1,11 +1,13 @@
 using System;
 using LSCore.LevelSystem;
+using UnityEditor;
 using UnityEngine;
 
 namespace LSCore.BattleModule
 {
     public class TestCurveCreator : MonoBehaviour
     {
+        /*
         public Sprite sprite;
         public Sprite[] sprites;
         public SpriteRenderer spriteRenderer;
@@ -14,6 +16,7 @@ namespace LSCore.BattleModule
         
         public LevelsManager manager;
         public bool useParallel; 
+        */
         
         public TestStruct testStruct;
         

@@ -140,7 +140,6 @@ public partial class MoveIt
             serializedObject ??= new SerializedObject(Target);
             return serializedObject.FindAnyProperty(property);
         }
-        
 #endif
         public virtual void OnLooped() { }
     }
