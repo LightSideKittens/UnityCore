@@ -72,23 +72,12 @@ namespace LSCore
         public string window;
         public ShowWindowOption option;
 
-        public Assembly rootObjectAssembly;
-
 #if UNITY_EDITOR
-        [GetInspectorProperty]
-        private void GetRootObject(InspectorProperty property)
-        {
-            rootObjectAssembly = property.SerializationRoot.Info.TypeOfValue.Assembly;
-        }
-#endif
-        
         private IEnumerable<string> GetKeys()
         {
-            if (rootObjectAssembly == null) return null;
-            var set = rootObjectAssembly.GetVisibleTypes().Select(x => x.FullName).ToHashSet();
-            set.IntersectWith(actions.Keys);
-            return set;
+            return actions.Keys;
         }
+#endif
 
         public override void Invoke()
         {
