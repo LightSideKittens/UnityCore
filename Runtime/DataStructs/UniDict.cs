@@ -6,6 +6,7 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 
 #if UNITY_EDITOR
+using System.Reflection;
 using Sirenix.OdinInspector.Editor;
 #endif
 
@@ -113,6 +114,36 @@ namespace LSCore.DataStructs
                 }
 
                 data[i] = d;
+            }
+        }
+        
+        protected static UniDict<TKey, TValue> currentInspected;
+
+        [OnInspectorInit] private void OnInit() => OnGui();
+        [OnInspectorGUI] private void OnGui() => currentInspected = this;
+
+        private void ProcessChildMemberAttributes(MemberInfo member, List<Attribute> attributes)
+        {
+            switch (member.Name)
+            {
+                case "key":
+                    OnKeyProcessAttributes(attributes);
+                    break;
+                case "value":
+                    OnValueProcessAttributes(attributes);
+                    break;
+            }
+        }
+
+        protected virtual void OnKeyProcessAttributes(List<Attribute> attributes) { }
+        
+        protected virtual void OnValueProcessAttributes(List<Attribute> attributes) { }
+        
+        private class EntryAttributeProcessor : OdinAttributeProcessor<Data>
+        {
+            public override void ProcessChildMemberAttributes(InspectorProperty parentProperty, MemberInfo member, List<Attribute> attributes)
+            {
+                currentInspected.ProcessChildMemberAttributes(member, attributes);
             }
         }
 #endif
