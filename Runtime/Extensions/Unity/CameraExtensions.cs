@@ -20,9 +20,24 @@ namespace LSCore.Extensions.Unity
 
         public static Vector2 GetSize(this Camera camera)
         {
-            var cameraHeight = camera.orthographicSize * 2;
-            var cameraWidth = cameraHeight * camera.aspect;
+            return GetSize(camera.orthographicSize, camera.aspect);
+        }
+        
+        public static Vector2 GetSize(float size, float aspect)
+        {
+            var cameraHeight = size * 2;
+            var cameraWidth = cameraHeight * aspect;
             return new Vector2(cameraWidth, cameraHeight);
+        }
+        
+        public static void SetSizeByWidth(this Camera camera, float width)
+        {
+            camera.orthographicSize = (width / camera.aspect) / 2;
+        }
+        
+        public static void SetSizeByHeight(this Camera camera, float height)
+        {
+            camera.orthographicSize = height / 2;
         }
         
         public static Rect GetRect(this Camera camera)
