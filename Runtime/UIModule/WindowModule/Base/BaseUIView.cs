@@ -69,7 +69,7 @@ namespace LSCore
         protected virtual Tween ShowAnim => showHideAnim?.Show();
         protected virtual Tween HideAnim => showHideAnim?.Hide();
 
-        public void AsHome() => WindowsData.SetHome(Manager);
+        public void AsHome() => UIViewBoss.SetHome(Manager);
 
         private static string logTag = $"[{typeof(T).Name}]".ToTag(new Color(0.38f, 1f, 0.33f));
         
@@ -77,14 +77,14 @@ namespace LSCore
         {
             Burger.Log($"{logTag} {gameObject.name} Show." +
                        $"\nOption: {option.ToString().ToTag(new Color(0.49f, 0.64f, 1f))}" +
-                       $"\nId: {WindowsData.Id.ToTag(new Color(0.6f, 0.85f, 0.18f))}");
+                       $"\nId: {UIViewBoss.Id.ToTag(new Color(0.6f, 0.85f, 0.18f))}");
             ShowOption = option;
             Manager.Show();
         }
 
         public void Show()
         {
-            Burger.Log($"{logTag} {gameObject.name} Show by Id {WindowsData.Id}");
+            Burger.Log($"{logTag} {gameObject.name} Show by Id {UIViewBoss.Id}");
             Manager.Show();
         }
     }

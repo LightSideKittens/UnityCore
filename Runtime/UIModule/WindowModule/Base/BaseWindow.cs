@@ -31,7 +31,7 @@ namespace LSCore
         }
         
         private static string logTag = $"[{typeof(T).Name}]".ToTag(new Color(0f, 0.79f, 0.22f));
-        public new static void AsHome() => WindowsData.SetHome(Instance.Manager);
+        public new static void AsHome() => UIViewBoss.SetHome(Instance.Manager);
         
         [Preserve]
         public new static void Show(ShowWindowOption option)

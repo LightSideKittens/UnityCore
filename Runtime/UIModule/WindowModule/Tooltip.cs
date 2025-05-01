@@ -114,7 +114,7 @@ namespace LSCore
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.planeDistance = 10;
             canvas.worldCamera = mainCamera;
-            canvas.sortingOrder = WindowsData.DefaultSortingOrder + 100;
+            canvas.sortingOrder = UIViewBoss.DefaultSortingOrder + 100;
             transform.SetParent(canvas.transform);
             transform.localScale = Vector3.one;
             transform.localRotation = Quaternion.identity;

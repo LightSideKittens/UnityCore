@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Core.Server;
-using UnityEngine;
+using LSCore.Extensions;
 
 namespace LSCore
 {
@@ -11,10 +10,8 @@ namespace LSCore
         HidePrevious,
         HideAllPrevious,
     }
-
-
-
-    public struct WindowsData
+    
+    public struct UIViewBoss
     {
         public readonly struct UseId : IDisposable
         {
@@ -43,8 +40,8 @@ namespace LSCore
 
         internal static int sortingOrder = DefaultSortingOrder;
         internal static Dictionary<string, WindowsDataInstance> instances = new();
-        public static string Id { get; private set; } = DefaultId;
-        public static WindowsDataInstance Current
+        internal static string Id { get; private set; } = DefaultId;
+        internal static WindowsDataInstance Current
         {
             get
             {
@@ -57,11 +54,11 @@ namespace LSCore
             }
         }
 
-        internal static bool IsGoBack { get; private set; }
-        internal static bool IsHidePrevious { get; private set; }
-        internal static bool IsHideAllPrevious { get; private set; }
+        public static bool IsGoBack { get; private set; }
+        public static bool IsHidePrevious { get; private set; }
+        public static bool IsHideAllPrevious { get; private set; }
 
-        static WindowsData()
+        static UIViewBoss()
         {
             World.Destroyed += Clear;
         }
@@ -89,19 +86,19 @@ namespace LSCore
             }
         }
 
-        internal static void GoBack()
+        public static void GoBack()
         {
             IsGoBack = true;
             Current.GoBack();
             IsGoBack = false;
         }
 
-        internal static void OnGoBacksEmpty(WindowsDataInstance instance)
+        private static void OnGoBacksEmpty(WindowsDataInstance instance)
         {
             instances.Remove(instance.Id);
         }
-        
-        internal static void HidePrevious()
+
+        private static void HidePrevious()
         {
             IsHidePrevious = true;
             Current.HidePrevious();
@@ -130,7 +127,7 @@ namespace LSCore
             Current.StopRecording();
         }
 
-        internal static void GoHome() =>  Current.GoHome();
+        public static void GoHome() =>  Current.GoHome();
 
         internal static void SetHome(WindowManager manager) => Current.SetHome(manager);
         internal static bool IsAt(WindowManager manager, Index index) => Current.IsAt(manager, index);

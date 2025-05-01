@@ -66,7 +66,7 @@ namespace LSCore
             }
             else
             {
-                using (new WindowsData.UseId(id))
+                using (new UIViewBoss.UseId(id))
                 {
                     obj.Show(option);
                 }
