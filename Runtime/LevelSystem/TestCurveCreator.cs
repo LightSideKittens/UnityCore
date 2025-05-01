@@ -1,13 +1,11 @@
 using System;
 using LSCore.LevelSystem;
-using UnityEditor;
 using UnityEngine;
 
 namespace LSCore.BattleModule
 {
     public class TestCurveCreator : MonoBehaviour
     {
-        /*
         public Sprite sprite;
         public Sprite[] sprites;
         public SpriteRenderer spriteRenderer;
@@ -16,18 +14,20 @@ namespace LSCore.BattleModule
         
         public LevelsManager manager;
         public bool useParallel; 
-        */
         
         public TestStruct testStruct;
         
         [Serializable]
-        public struct TestStruct
+        public class TestStruct
         {
-            [SerializeField] private TestClass testClass;
+            public float a;
+            public float[] ass;
+            public TestClass testClass;
             
             [Serializable]
-            private class TestClass
+            public struct TestClass
             {
+                public float a;
                 [SerializeReference] private TestStruct2.TestClass2[] testClasses;
             }
         }

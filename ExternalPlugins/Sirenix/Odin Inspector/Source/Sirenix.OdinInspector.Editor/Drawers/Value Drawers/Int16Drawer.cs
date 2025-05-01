@@ -1,0 +1,53 @@
+//-----------------------------------------------------------------------
+// <copyright file="Int16Drawer.cs" company="Sirenix ApS">
+// Copyright (c) Sirenix ApS. All rights reserved.
+// </copyright>
+//-----------------------------------------------------------------------
+#if UNITY_EDITOR
+#define ODIN_INSPECTOR
+#define ODIN_INSPECTOR_3
+#define ODIN_INSPECTOR_3_1
+#define ODIN_INSPECTOR_3_2
+#define ODIN_INSPECTOR_3_3
+namespace Sirenix.OdinInspector.Editor.Drawers
+{
+#pragma warning disable
+
+    using Sirenix.Utilities.Editor;
+    using UnityEngine;
+
+    /// <summary>
+    /// Short property drawer.
+    /// </summary>
+    public sealed class Int16Drawer : OdinValueDrawer<short>
+    {
+        /// <summary>
+        /// Draws the property.
+        /// </summary>
+        protected override void DrawPropertyLayout(GUIContent label)
+        {
+            int value;
+            
+            if (GeneralDrawerConfig.Instance.EnableSmartNumberFields)
+            {
+                value = SirenixEditorFields.SmartIntField(this.Property.ToFieldExpressionContext(), label, this.ValueEntry.SmartValue);
+            }
+            else
+            {
+                value = SirenixEditorFields.IntField(label, this.ValueEntry.SmartValue);
+            }
+
+            if (value < short.MinValue)
+            {
+                value = short.MinValue;
+            }
+            else if (value > short.MaxValue)
+            {
+                value = short.MaxValue;
+            }
+
+            this.ValueEntry.SmartValue = (short)value;
+        }
+    }
+}
+#endif

@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using LSCore.Attributes;
 using LSCore.ConfigModule;
 using LSCore.Extensions;
 using Sirenix.OdinInspector;
 #if UNITY_EDITOR
-using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 #endif
 

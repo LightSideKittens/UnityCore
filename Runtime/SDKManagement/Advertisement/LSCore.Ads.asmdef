@@ -1,7 +1,7 @@
 {
     "name": "LSCore.Ads",
     "rootNamespace": "",
-    "references": ["GUID:bcc75752368a72b4aba4043ea13b2a1a"],
+    "references": ["GUID:bcc75752368a72b4aba4043ea13b2a1a","GUID:1b6b29427dc85403c316475c7068fc50"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

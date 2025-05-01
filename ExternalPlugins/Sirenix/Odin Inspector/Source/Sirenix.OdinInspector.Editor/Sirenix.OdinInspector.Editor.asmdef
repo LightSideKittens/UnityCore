@@ -1,0 +1,24 @@
+{
+    "name": "Sirenix.OdinInspector.Editor",
+    "rootNamespace": "",
+    "references": [
+        "Sirenix.OdinInspector.Attributes",
+        "Sirenix.Serialization",
+        "Sirenix.Serialization.Config",
+        "Sirenix.Utilities",
+        "Sirenix.Utilities.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Sirenix.Reflection.Editor.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
