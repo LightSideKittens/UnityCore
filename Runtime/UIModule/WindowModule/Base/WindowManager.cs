@@ -53,20 +53,20 @@ namespace LSCore
         public void Show()
         {
             if (showTween != null) return;
-            if (WindowsData.IsAt(this, 0))
+            if (UIViewBoss.IsAt(this, 0))
             {
                 Burger.Log($"{gameObject.name} Show WindowsData.IsAt");
-                WindowsData.GoBack();
+                UIViewBoss.GoBack();
                 return;
             }
-            WindowsData.StartRecording();
+            UIViewBoss.StartRecording();
             InternalShow();
-            WindowsData.StopRecording();
+            UIViewBoss.StopRecording();
         }
 
         internal void HideAllPreviousAndShow()
         {
-            WindowsData.HideAllPrevious();
+            UIViewBoss.HideAllPrevious();
             Show();
         }
         
@@ -74,14 +74,14 @@ namespace LSCore
         {
             if (showTween != null) return;
             
-            Burger.Log($"{gameObject.name} InternalShow by Id {WindowsData.Id}");
+            Burger.Log($"{gameObject.name} InternalShow by Id {UIViewBoss.Id}");
             IsShow = true;
-            WindowsData.CallOption(showOption());
+            UIViewBoss.CallOption(showOption());
             RecordState();
             
             if (canvas)
             {
-                canvas.sortingOrder = WindowsData.sortingOrder++;
+                canvas.sortingOrder = UIViewBoss.sortingOrder++;
             }
             
             OnlyShow();
@@ -96,9 +96,9 @@ namespace LSCore
 
         protected virtual void RecordState()
         {
-            WindowsData.Current.hidePrevious = InternalHide;
-            WindowsData.Current.hideAllPrevious += InternalHide;
-            WindowsData.Record(InternalHide);
+            UIViewBoss.Current.hidePrevious = InternalHide;
+            UIViewBoss.Current.hideAllPrevious += InternalHide;
+            UIViewBoss.Record(InternalHide);
         }
 
         private void InternalHide()
@@ -106,10 +106,10 @@ namespace LSCore
             if (hideTween != null) return;
             if (gameObject == null)
             {
-                WindowsData.Current.hideAllPrevious -= InternalHide;
+                UIViewBoss.Current.hideAllPrevious -= InternalHide;
                 if (canvas is not null)
                 {
-                    WindowsData.sortingOrder--;
+                    UIViewBoss.sortingOrder--;
                 }
                 return;
             }
@@ -119,11 +119,11 @@ namespace LSCore
             
             if (canvas)
             {
-                WindowsData.sortingOrder--;
+                UIViewBoss.sortingOrder--;
             }
             
-            WindowsData.Current.hideAllPrevious -= InternalHide;
-            WindowsData.Record(InternalShow);
+            UIViewBoss.Current.hideAllPrevious -= InternalHide;
+            UIViewBoss.Record(InternalShow);
             
             OnlyHide();
         }

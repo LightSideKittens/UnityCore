@@ -15,9 +15,9 @@ namespace LSCore
         protected override bool Check() => Ref == value;
     }
     
-    public class IsGoBack : WindowDataCondition { protected override bool Ref => WindowsData.IsGoBack; }
-    public class IsHideAllPrevious : WindowDataCondition { protected override bool Ref => WindowsData.IsHideAllPrevious; }
-    public class IsHidePrevious : WindowDataCondition { protected override bool Ref => WindowsData.IsHidePrevious; }
+    public class IsGoBack : WindowDataCondition { protected override bool Ref => UIViewBoss.IsGoBack; }
+    public class IsHideAllPrevious : WindowDataCondition { protected override bool Ref => UIViewBoss.IsHideAllPrevious; }
+    public class IsHidePrevious : WindowDataCondition { protected override bool Ref => UIViewBoss.IsHidePrevious; }
     [Serializable]
     public class WindowDataConditions : Conditions<WindowDataCondition> { }
 }

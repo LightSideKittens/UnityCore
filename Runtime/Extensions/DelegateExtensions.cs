@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 #pragma warning disable CS0162
-namespace Core.Server
+namespace LSCore.Extensions
 {
     public static class DelegateExtensions
     {

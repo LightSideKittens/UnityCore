@@ -11,13 +11,13 @@ namespace LSCore
         {
             if (string.IsNullOrEmpty(id))
             {
-                WindowsData.GoBack();
+                UIViewBoss.GoBack();
             }
             else
             {
-                using (new WindowsData.UseId(id))
+                using (new UIViewBoss.UseId(id))
                 {
-                    WindowsData.GoBack();
+                    UIViewBoss.GoBack();
                 }
             }
         }
