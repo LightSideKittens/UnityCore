@@ -30,7 +30,10 @@
         "GUID:1bc6eecb763177148a383c0cb9ad9369",
         "GUID:f9b5e4fe8e9391940b21fbba55cf7c75",
         "GUID:247942eb90ec48b696028c8e4c1f8e20",
-        "LSCore.MoveIt"
+        "LSCore.MoveIt",
+        "GUID:1b6b29427dc85403c316475c7068fc50",
+        "GUID:60589634cd8c5134c4f50388f1b1595b",
+        "GUID:ffb700c0d477e7cecb82a655db56ffbd"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

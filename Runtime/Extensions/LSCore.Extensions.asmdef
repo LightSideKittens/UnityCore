@@ -1,13 +1,17 @@
 {
-    "name": "LSCore.Extensions",
-    "rootNamespace": "LSCore.Extensions",
-    "references": [],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": true,
-    "overrideReferences": false,
-    "autoReferenced": false,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "LSCore.Extensions",
+  "rootNamespace": "LSCore.Extensions",
+  "references": [
+    "GUID:60589634cd8c5134c4f50388f1b1595b",
+    "GUID:2fb5cf31e708b65c6cd386829ff94feb",
+    "GUID:b2621ed9809523852c40dfbc7bd87a56"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": true,
+  "overrideReferences": false,
+  "autoReferenced": false,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 }

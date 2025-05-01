@@ -57,12 +57,12 @@ namespace LSCore.Extensions.Unity
             
             if(type != null) return type;
             
-            if (SerializedPropertyUtilities.GetUnityTypeWithName(target.GetType().Name) != null)
+            /*if (SerializedPropertyUtilities.GetUnityTypeWithName(target.GetType().Name) != null)
             {
                 string properTypeName = property.GetProperTypeName();
                 if (properTypeName == "Prefab") return typeof(GameObject); 
                 return SerializedPropertyUtilities.GetUnityTypeWithName(properTypeName);
-            }
+            }*/
 
             return null;
 
