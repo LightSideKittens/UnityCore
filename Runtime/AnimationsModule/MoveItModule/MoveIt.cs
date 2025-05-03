@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using LSCore.AnimationsModule;
@@ -9,6 +10,7 @@ using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Animations;
+using Debug = UnityEngine.Debug;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -383,62 +385,12 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
             var handler = handlersBuffer[i];
             var objects = handler.Objects;
             var obj = handler.Target;
+            var propertyHandler = obj as IPropertyHandler;
             
             var evaluators = handler.evaluators;
             for (int j = 0; j < evaluators.Count; j++)
             {
-                var evaluator = evaluators[j];
-                if (evaluator.IsFloat)
-                {
-                    evaluator.startY = floatValues.Read(floatIndex);
-                    floatValues.Write(floatIndex, evaluator.y);
-                    floatIndex++;
-                }
-                else
-                {
-                    var y = (int)evaluator.y;
-
-                    if (y != 0 && evaluator.propertyType == PropertyType.Ref)
-                    {
-                        if (evaluator.get != null)
-                        {
-                            var startObj = evaluator.get(obj);
-                            if (startObj != null)
-                            {
-                                var startY = startObj.GetInstanceID();
-                                evaluator.startY = startY;
-                                objects.TryAdd(startY, startObj);
-                            }
-                            else
-                            {
-                                evaluator.startY = 0;
-                            }
-                        }
-                        else
-                        {
-                            evaluator.startY = discreteValues.Read(intIndex);
-                        }
-                        
-                        if (!objects.TryGetValue(y, out var value))
-                        {
-                            objects.Remove(y);
-                        }
-                        if (evaluator.set != null)
-                        {
-                            evaluator.set(obj, value);
-                            goto skip;
-                        }
-                        y = value != null ? value.GetInstanceID() : 0;
-                    }
-                    else
-                    {
-                        evaluator.startY = discreteValues.Read(intIndex);
-                    }
-                    
-                    discreteValues.Write(intIndex, y);
-                    skip:
-                    intIndex++;
-                }
+                evaluators[j].getUpdate(ref floatIndex, ref intIndex, objects, handler, obj, propertyHandler);
             }
         }
         
@@ -458,37 +410,16 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
             var handler = handlersBuffer[i];
             var objects = handler.Objects;
             var obj = handler.Target;
-            
+            var propertyHandler = obj as IPropertyHandler;
+
             var evaluators = handler.evaluators;
             for (int j = 0; j < evaluators.Count; j++)
             {
-                var evaluator = evaluators[j];
-                if (evaluator.IsFloat)
-                {
-                    floatValues.Write(floatIndex++, evaluator.y);
-                }
-                else
-                {
-                    var y = (int)evaluator.y;
-
-                    if (y != 0 && evaluator.propertyType == PropertyType.Ref)
-                    {
-                        if (!objects.TryGetValue(y, out var value))
-                        {
-                            objects.Remove(y);
-                        }
-                        if (evaluator.set != null)
-                        {
-                            evaluator.set(obj, value);
-                            goto skip;
-                        }
-                        y = value != null ? value.GetInstanceID() : 0;
-                    }
-                    
-                    discreteValues.Write(intIndex, y);
-                    skip:
-                    intIndex++;
-                }
+                var sw = new Stopwatch();
+                sw.Start();
+                evaluators[j].update(ref floatIndex, ref intIndex, objects, handler, obj, propertyHandler);
+                sw.Stop();
+                Debug.Log(sw.ElapsedTicks);
             }
         }
         
@@ -513,34 +444,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
             var evaluators = handler.evaluators;
             for (int j = 0; j < evaluators.Count; j++)
             {
-                var evaluator = evaluators[j];
-                if (evaluator.IsFloat)
-                {
-                    floatValues.Write(floatIndex++, evaluator.startY);
-                }
-                else
-                {
-                    var y = (int)evaluator.startY;
-                    if (evaluator.propertyType == PropertyType.Ref)
-                    {
-                        if (!objects.TryGetValue(y, out var value))
-                        {
-                            objects.Remove(y);
-                        }
-
-                        if (evaluator.set != null)
-                        {
-                            evaluator.set(obj, value);
-                            propertyHandler?.HandleAnimatedProperty(handler, evaluator);
-                        }
-                    }
-                    else
-                    {
-                        discreteValues.Write(intIndex, y);
-                    }
-
-                    intIndex++;
-                }
+                evaluators[j].reset(ref floatIndex, ref intIndex, objects, handler, obj, propertyHandler);
             }
         }
         

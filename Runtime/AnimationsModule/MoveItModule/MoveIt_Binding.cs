@@ -12,6 +12,7 @@ public partial class MoveIt
     }
     
     private static Dictionary<string, GenericBinding> cachedBindings = new();
+    private static HandlerEvaluator[] valEvaluatorsArr = new HandlerEvaluator[1000];
     private static HandlerEvaluator[] refEvaluatorsArr = new HandlerEvaluator[1000];
     private static List<(Object obj, GameObject go, Handler handler)> buffer = new();
     private NativeArray<BoundProperty> floatProps;
@@ -41,7 +42,7 @@ public partial class MoveIt
                 {
                     var pd = bdpd[j];
                     var isRef = pd.propertyType is PropertyType.Ref;
-                    var isFloat = pd.IsFloat;
+                    var isFloat = pd.IsNumber;
                     var isDiscrete = isRef || !isFloat;
 
                     if (isFloat)
@@ -68,30 +69,36 @@ public partial class MoveIt
         for (int i = 0; i < buffer.Count; i++)
         {
             var (obj, go, handler) = buffer[i];
-            
+            var type = obj.GetType();
             var bdpd = handler.evaluators;
             NativeArray<GenericBinding> bindings = new(bdpd.Count, Allocator.Temp);
-            int discreteEvaluatorsIndex = 0;
+            int refEvaluatorsIndex = 0;
+            int valEvaluatorsIndex = 0;
             
             for (int j = 0; j < bdpd.Count; j++)
             {
                 var pd = bdpd[j];
-                var isRef = pd.propertyType is PropertyType.Ref;
                 
                 var fullPropPath = string.Concat(handler.fullTypeName, pd.property);
                 if (!cachedBindings.TryGetValue(fullPropPath, out var binding))
                 {
+                    var isRef = pd.propertyType is PropertyType.Ref;
                     var result = GenericBindingUtility.CreateGenericBinding(obj, pd.rawProperty, go, isRef, out binding);
                     cachedBindings[fullPropPath] = binding;
                 }
+
+                if (binding.isDiscrete)
+                {
+                    refEvaluatorsArr[refEvaluatorsIndex] = pd;
+                    refEvaluatorsIndex++;
+                }
+                else
+                {
+                    valEvaluatorsArr[valEvaluatorsIndex] = pd;
+                    valEvaluatorsIndex++;
+                }
                 
                 bindings[j] = binding;
-
-                if (isRef || pd.propertyType is PropertyType.Enum)
-                {
-                    refEvaluatorsArr[discreteEvaluatorsIndex] = pd;
-                    discreteEvaluatorsIndex++;
-                }
             }
             
             GenericBindingUtility.BindProperties(
@@ -105,23 +112,37 @@ public partial class MoveIt
             
             for (int j = 0; j < floatPs.Length; j++)
             {
-                floatProps.Write(floatPropsIndex, floatPs.Read(j));
+                var evaluator = valEvaluatorsArr[j];
+                var p = floatPs.Read(j);
+                if (p.version == 0)
+                {
+                    evaluator.InitAccessor(type);
+                }
+                else
+                {
+                    floatProps.Write(floatPropsIndex, p);
+                }
+
+                evaluator.floatValues = floatValues;
+                evaluator.InitDelegates();
                 floatPropsIndex++;
             }
             
             for (int j = 0; j < discretePs.Length; j++)
             {
+                var evaluator = refEvaluatorsArr[j];
                 var p = discretePs.Read(j);
                 if (p.version == 0)
                 {
-                    var evaluator = refEvaluatorsArr[j];
-                    var type = obj.GetType();
-                    var access = PathAccessorCache.Get(type, evaluator.property);
-                    evaluator.get = access.Get;
-                    evaluator.set = access.Set;
+                    evaluator.InitAccessor(type);
                 }
-
-                discreteProps.Write(discretePropsIndex, p);
+                else
+                {
+                    discreteProps.Write(discretePropsIndex, p);
+                }
+                
+                evaluator.discreteValues = discreteValues;
+                evaluator.InitDelegates();
                 discretePropsIndex++;
             }
         }
