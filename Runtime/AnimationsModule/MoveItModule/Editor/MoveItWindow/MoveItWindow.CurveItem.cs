@@ -62,6 +62,7 @@ public partial class MoveItWindow
         {
             window.RecordAddCurve();
             var propType = sProperty.propertyType;
+            var numPropType = sProperty.numericType;
             var curve = new MoveItCurve(propType is SerializedPropertyType.Boolean or SerializedPropertyType.Enum or SerializedPropertyType.ObjectReference);
             evaluator = new HandlerEvaluator
             {
@@ -70,12 +71,10 @@ public partial class MoveItWindow
                 curve = curve,
                 propertyType = propType switch
                 {
-                    SerializedPropertyType.Float => MoveIt.PropertyType.Float,
-                    SerializedPropertyType.Integer => MoveIt.PropertyType.Int,
-                    SerializedPropertyType.Boolean => MoveIt.PropertyType.Bool,
                     SerializedPropertyType.Enum => MoveIt.PropertyType.Enum,
                     SerializedPropertyType.ObjectReference => MoveIt.PropertyType.Ref,
-                },
+                    _ => (MoveIt.PropertyType)numPropType
+                }
             };
             clip.Add(handler, evaluator);
             EditorUtility.SetDirty(clip);
