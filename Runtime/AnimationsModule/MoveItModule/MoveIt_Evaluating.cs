@@ -25,6 +25,7 @@ public partial class MoveIt
         Double = 101,
         Enum = 200,
         Ref = 201,
+        Bool = 202
     }
     
     [Serializable]
@@ -54,8 +55,11 @@ public partial class MoveIt
         
         public Func<Object, object> enumGet;
         public Action<Object, object> enumSet;
-
+        
+#if UNITY_EDITOR
         public string rawProperty;
+#endif
+        
         public string property;
         public PropertyType propertyType;
         [NonSerialized] public bool isDiff;
@@ -70,9 +74,7 @@ public partial class MoveIt
         private TypedPathAccessor<long> longAccessor;
         private TypedPathAccessor<ulong> ulongAccessor;
         private TypedPathAccessor<double> doubleAccessor;
-        
-        public NativeArray<float> floatValues;
-        public NativeArray<int> discreteValues;
+        private TypedPathAccessor<bool> boolAccessor;
         
         public bool IsNumber => propertyType != PropertyType.Ref && propertyType != PropertyType.Enum;
 
@@ -103,12 +105,6 @@ public partial class MoveIt
         private void Reset(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
         {
             numSet(obj, startY);
-            floatIndex++;
-        }
-
-        private void Reset2(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
-        {
-            floatValues.Write(floatIndex++, startY);
         }
         
         private void Reset3(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
@@ -121,30 +117,16 @@ public partial class MoveIt
                         
             set(obj, value);
             propertyHandler?.HandleAnimatedProperty(handler, this);
-            discreteIndex++;
-        }
-        
-        private void Reset4(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
-        {
-            discreteValues.Write(discreteIndex, (int)startY);
-            discreteIndex++;
         }
         
         private void Reset5(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
         {
             enumSet(obj, (int)startY);
-            discreteIndex++;
         }
         
         private void Update(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
         {
             numSet(obj, y);
-            floatIndex++;
-        }
-
-        private void Update2(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
-        {
-            floatValues.Write(floatIndex++, y);
         }
         
         private void Update3(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
@@ -157,38 +139,17 @@ public partial class MoveIt
                         
             set(obj, value);
             propertyHandler?.HandleAnimatedProperty(handler, this);
-            discreteIndex++;
-        }
-        
-        private void Update4(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
-        {
-            var intY = (int)y;
-            if (!objects.TryGetValue(intY, out var value))
-            {
-                objects.Remove(intY);
-            }
-            
-            discreteValues.Write(discreteIndex, value != null ? value.GetHashCode() : 0);
-            discreteIndex++;
         }
         
         private void Update5(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
         {
             enumSet(obj, (int)y);
-            discreteIndex++;
         }
         
         private void GetUpdate(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
         {
             startY = numGet(obj);
             numSet(obj, y);
-            floatIndex++;
-        }
-
-        private void GetUpdate2(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
-        {
-            startY = floatValues.Read(floatIndex);
-            floatValues.Write(floatIndex++, y);
         }
         
         private void GetUpdate3(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
@@ -204,27 +165,12 @@ public partial class MoveIt
                         
             set(obj, value);
             propertyHandler?.HandleAnimatedProperty(handler, this);
-            discreteIndex++;
-        }
-        
-        private void GetUpdate4(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
-        {
-            startY = discreteValues.Read(discreteIndex);
-            var intY = (int)y;
-            if (!objects.TryGetValue(intY, out var value))
-            {
-                objects.Remove(intY);
-            }
-            
-            discreteValues.Write(discreteIndex, value != null ? value.GetHashCode() : 0);
-            discreteIndex++;
         }
         
         private void GetUpdate5(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
         {
             startY = Convert.ToInt32(enumGet(obj));
             enumSet(obj, (int)y);
-            discreteIndex++;
         }
         
         public void InitAccessor(Type type)
@@ -281,6 +227,11 @@ public partial class MoveIt
                     numGet = GetDouble;
                     numSet = SetDouble;
                     break;
+                case PropertyType.Bool:
+                    boolAccessor = PathAccessorCache.Get<bool>(type, property);
+                    numGet = GetBool;
+                    numSet = SetBool;
+                    break;
                 case PropertyType.Enum:
                     var accessor = PathAccessorCache.GetEnum(type, property);
                     enumGet = accessor.GetRaw;
@@ -304,12 +255,6 @@ public partial class MoveIt
                     update = Update;
                     getUpdate = GetUpdate;
                 }
-                else
-                {
-                    reset = Reset2;
-                    update = Update2;
-                    getUpdate = GetUpdate2;
-                }
             }
             else
             {
@@ -321,24 +266,15 @@ public partial class MoveIt
                         update = Update3;
                         getUpdate = GetUpdate3;
                     }
-                    else
-                    {
-                        reset = Reset4;
-                        update = Update4;
-                        getUpdate = GetUpdate4;
-                    }
                 }
                 else if(propertyType == PropertyType.Enum)
                 {
-                    reset = Reset5;
-                    update = Update5;
-                    getUpdate = GetUpdate5;
-                }
-                else
-                {
-                    reset = Reset4;
-                    update = Update4;
-                    getUpdate = GetUpdate4;
+                    if (enumSet != null)
+                    {
+                        reset = Reset5;
+                        update = Update5;
+                        getUpdate = GetUpdate5;
+                    }
                 }
             }
         }
@@ -372,6 +308,9 @@ public partial class MoveIt
         
         private float GetDouble(Object target) => (float)doubleAccessor.Get(target);
         private void SetDouble(Object target, float value) => doubleAccessor.Set(target, value);
+        
+        private float GetBool(Object target) => boolAccessor.Get(target) ? 1 : 0;
+        private void SetBool(Object target, float value) => boolAccessor.Set(target, value >= 1);
         
         
 #if UNITY_EDITOR

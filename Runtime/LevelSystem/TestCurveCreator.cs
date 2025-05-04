@@ -14,7 +14,7 @@ namespace LSCore.BattleModule
         
         public LevelsManager manager;
         public bool useParallel; 
-        
+        public TestStruct2.TestClass2.TestEnum testEnum;
         public TestStruct testStruct;
         
         [Serializable]

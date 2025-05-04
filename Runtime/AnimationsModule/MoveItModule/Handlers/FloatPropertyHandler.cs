@@ -54,7 +54,7 @@ namespace LSCore.AnimationsModule
         {
             foreach (var evaluator in evaluators)
             {
-                HandlerEvaluator.TrimModifications(Target, modifications, evaluator, evaluator.property);
+                HandlerEvaluator.TrimModifications(Target, modifications, evaluator, evaluator.rawProperty);
             }
         }
 

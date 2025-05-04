@@ -73,6 +73,7 @@ public partial class MoveItWindow
                 {
                     SerializedPropertyType.Enum => MoveIt.PropertyType.Enum,
                     SerializedPropertyType.ObjectReference => MoveIt.PropertyType.Ref,
+                    SerializedPropertyType.Boolean => MoveIt.PropertyType.Bool,
                     _ => (MoveIt.PropertyType)numPropType
                 }
             };

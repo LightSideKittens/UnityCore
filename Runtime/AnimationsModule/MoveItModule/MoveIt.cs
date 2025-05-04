@@ -217,7 +217,9 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
                         {
                             var newEvaluator = new HandlerEvaluator
                             {
+#if UNITY_EDITOR
                                 rawProperty = evaluator.rawProperty,
+#endif
                                 property = evaluator.property,
                                 curve = evaluator.curve,
                                 propertyType = evaluator.propertyType,
@@ -232,7 +234,9 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
                         foreach (var evaluator in curves.Values)
                         {
                             var ev = evaluators[index];
+#if UNITY_EDITOR
                             ev.rawProperty = evaluator.rawProperty;
+#endif
                             ev.property = evaluator.property;
                             ev.curve = evaluator.curve;
                             ev.propertyType = evaluator.propertyType;
@@ -372,10 +376,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
 
     private void GetAndUpdateProps()
     {
-        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !isBound) return;
-        
-        GenericBindingUtility.GetValues(floatProps, floatValues);
-        GenericBindingUtility.GetValues(discreteProps, discreteValues);
+        if(!isBound) return;
         
         var floatIndex = 0;
         var intIndex = 0;
@@ -393,14 +394,11 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
                 evaluators[j].getUpdate(ref floatIndex, ref intIndex, objects, handler, obj, propertyHandler);
             }
         }
-        
-        BindingUtility.SetValues(floatProps, floatValues);
-        BindingUtility.SetValues(discreteProps, discreteValues);
     }
 
     private void UpdateProps()
     {
-        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !isBound) return;
+        if(!isBound) return;
         
         var floatIndex = 0;
         var intIndex = 0;
@@ -415,21 +413,14 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
             var evaluators = handler.evaluators;
             for (int j = 0; j < evaluators.Count; j++)
             {
-                var sw = new Stopwatch();
-                sw.Start();
                 evaluators[j].update(ref floatIndex, ref intIndex, objects, handler, obj, propertyHandler);
-                sw.Stop();
-                Debug.Log(sw.ElapsedTicks);
             }
         }
-        
-        BindingUtility.SetValues(floatProps, floatValues);
-        BindingUtility.SetValues(discreteProps, discreteValues);
     }
     
     private void ResetProps()
     {
-        if((floatProps.Length == 0 && discreteProps.Length == 0)|| !isBound) return;
+        if(!isBound) return;
         
         var floatIndex = 0;
         var intIndex = 0;
@@ -447,9 +438,6 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
                 evaluators[j].reset(ref floatIndex, ref intIndex, objects, handler, obj, propertyHandler);
             }
         }
-        
-        BindingUtility.SetValues(floatProps, floatValues);
-        BindingUtility.SetValues(discreteProps, discreteValues);
     }
     
     
