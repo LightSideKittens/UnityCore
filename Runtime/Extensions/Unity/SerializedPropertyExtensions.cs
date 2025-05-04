@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Object = UnityEngine.Object;
 
 namespace LSCore.Extensions.Unity
@@ -14,7 +15,7 @@ namespace LSCore.Extensions.Unity
     {
         private static readonly Dictionary<Object, PropertyTree> treeByObject = new();
 
-        static readonly Func<SerializedObject, string, SerializedProperty> k_FindRefPath =
+        static readonly Func<SerializedObject, string, SerializedProperty> findRefPath =
             (Func<SerializedObject, string, SerializedProperty>)
             typeof(SerializedObject).GetMethod(
                 "FindFirstPropertyFromManagedReferencePath",
@@ -27,8 +28,7 @@ namespace LSCore.Extensions.Unity
             if (sp != null || !path.StartsWith("managedReferences[")) 
                 return sp;
 
-            sp = k_FindRefPath(so, path);
-            
+            sp = findRefPath(so, path);
             if (sp == null)
             {
                 var it = so.GetIterator();

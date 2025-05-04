@@ -37,13 +37,8 @@ public readonly struct ObjectPathAccessor
 
 public readonly struct EnumPathAccessor
 {
-    /// <summary>Читает поле enum -> отдаёт базовое целое (int, long …) в object.</summary>
     public readonly Func<UnityEngine.Object, object> GetRaw;
-
-    /// <summary>Пишет базовое целое (object, ожидается совместимый тип) в enum‑поле.</summary>
     public readonly Action<UnityEngine.Object, object> SetRaw;
-
-    /// <summary>Фактический enum‑тип, к которому относится поле.</summary>
     public readonly Type EnumType;
 
     internal EnumPathAccessor(
@@ -74,50 +69,51 @@ public static class PathAccessorCache
         => EnumCache.Get(rootType, path);
 
     private static class EnumCache
-{
-    private static readonly Dictionary<(Type, string), EnumPathAccessor> dic = new();
-
-    public static EnumPathAccessor Get(Type rootType, string path)
     {
-        if (dic.TryGetValue((rootType, path), out var acc))
+        private static readonly Dictionary<(Type, string), EnumPathAccessor> dic = new();
+
+        public static EnumPathAccessor Get(Type rootType, string path)
+        {
+            if (dic.TryGetValue((rootType, path), out var acc))
+                return acc;
+
+            acc = Build(rootType, path);
+            dic[(rootType, path)] = acc;
             return acc;
+        }
 
-        acc = Build(rootType, path);
-        dic[(rootType, path)] = acc;
-        return acc;
+        private static EnumPathAccessor Build(Type rootType, string path)
+        {
+            var (expr, valueType, rootPar) = BuildExpression(rootType, path);
+
+            if (!valueType.IsEnum)
+                throw new InvalidOperationException(
+                    $"Path '{path}' в '{rootType.Name}' ведёт к '{valueType.Name}', " +
+                    $"который не является enum. Для value/ref‑типов используйте " +
+                    $"Get<TValue>() или GetRef().");
+
+            Type baseType = Enum.GetUnderlyingType(valueType);
+
+            var getter = Expression.Lambda<Func<UnityEngine.Object, object>>(
+                    Expression.Convert(expr, typeof(object)), rootPar)
+                .Compile();
+
+            var rootP = rootPar;
+            var valObj = Expression.Parameter(typeof(object), "val");
+
+            var assign = Expression.Assign(
+                expr,
+                Expression.Convert(
+                    Expression.Convert(valObj, baseType),
+                    valueType));
+
+            var setter = Expression.Lambda<Action<UnityEngine.Object, object>>(
+                assign, rootP, valObj).Compile();
+
+            return new EnumPathAccessor(getter, setter, baseType);
+        }
     }
 
-    private static EnumPathAccessor Build(Type rootType, string path)
-    {
-        var (expr, valueType, rootPar) = BuildExpression(rootType, path);
-
-        if (!valueType.IsEnum)
-            throw new InvalidOperationException(
-                $"Path '{path}' в '{rootType.Name}' ведёт к '{valueType.Name}', " +
-                $"который не является enum. Для value/ref‑типов используйте " +
-                $"Get<TValue>() или GetRef().");
-
-        Type baseType = Enum.GetUnderlyingType(valueType);
-
-        var getter = Expression.Lambda<Func<UnityEngine.Object, object>>(
-                         Expression.Convert(expr, typeof(object)), rootPar)
-                     .Compile();
-
-        var rootP  = rootPar;
-        var valObj = Expression.Parameter(typeof(object), "val");
-
-        var assign = Expression.Assign(
-            expr,
-            Expression.Convert(
-                Expression.Convert(valObj, baseType),
-                valueType));
-
-        var setter = Expression.Lambda<Action<UnityEngine.Object, object>>(
-                         assign, rootP, valObj).Compile();
-
-        return new EnumPathAccessor(getter, setter, baseType);
-    }
-}
     private static class Cache<TValue>
     {
         private static readonly Dictionary<(Type, string), TypedPathAccessor<TValue>> dic = new();
@@ -145,20 +141,21 @@ public static class PathAccessorCache
             }
 
             var getter = Expression.Lambda<Func<UnityEngine.Object, TValue>>(
-                             Expression.Convert(expr, typeof(TValue)),
-                             rootPar).Compile();
+                Expression.Convert(expr, typeof(TValue)),
+                rootPar).Compile();
 
             var valPar = Expression.Parameter(typeof(TValue), "val");
             var assign = Expression.Assign(
-                             expr,
-                             Expression.Convert(valPar, valueType));
+                expr, 
+                Expression.Convert(valPar, valueType));
 
             var setter = Expression.Lambda<Action<UnityEngine.Object, TValue>>(
-                             assign, rootPar, valPar).Compile();
+                assign, rootPar, valPar).Compile();
 
             return new TypedPathAccessor<TValue>(getter, setter);
         }
     }
+
     private static class RefCache
     {
         private static readonly Dictionary<(Type, string), ObjectPathAccessor> dic = new();
@@ -183,28 +180,29 @@ public static class PathAccessorCache
                     $"Для значимых/произвольных типов используйте generic‑метод Get<TValue>().");
 
             var getter = Expression.Lambda<Func<UnityEngine.Object, UnityEngine.Object?>>(
-                             Expression.TypeAs(expr, typeof(UnityEngine.Object)),
-                             rootPar).Compile();
+                Expression.TypeAs(expr, typeof(UnityEngine.Object)),
+                rootPar).Compile();
 
             var valPar = Expression.Parameter(typeof(UnityEngine.Object), "val");
             var assign = Expression.Assign(
-                             expr,
-                             Expression.TypeAs(valPar, valueType));
+                expr,
+                Expression.TypeAs(valPar, valueType));
 
             var setter = Expression.Lambda<Action<UnityEngine.Object, UnityEngine.Object?>>(
-                             assign, rootPar, valPar).Compile();
+                assign, rootPar, valPar).Compile();
 
             return new ObjectPathAccessor(getter, setter, valueType);
         }
     }
 
-    private static (Expression expr, Type valueType, ParameterExpression rootPar) BuildExpression(Type rootType, string path)
+    private static (Expression expr, Type valueType, ParameterExpression rootPar) BuildExpression(Type rootType,
+        string path)
     {
-        var tokens  = Tokenize(path);
+        var tokens = Tokenize(path);
         var rootPar = Expression.Parameter(typeof(UnityEngine.Object), "root");
 
         Expression cur = Expression.Convert(rootPar, rootType);
-        Type       type = rootType;
+        Type type = rootType;
 
         foreach (var t in tokens)
         {
@@ -212,16 +210,16 @@ public static class PathAccessorCache
             {
                 case MemberToken m:
                     var member = (MemberInfo?)type.GetField(m.name, BF)
-                              ??  type.GetProperty(m.name, BF);
+                                 ?? type.GetProperty(m.name, BF);
                     cur = member switch
                     {
-                        FieldInfo    fi => Expression.Field   (cur, fi),
+                        FieldInfo fi => Expression.Field(cur, fi),
                         PropertyInfo pi => Expression.Property(cur, pi),
                         _ => throw new MissingMemberException(type.Name, m.name)
                     };
                     type = member switch
                     {
-                        FieldInfo    fi => fi.FieldType,
+                        FieldInfo fi => fi.FieldType,
                         PropertyInfo pi => pi.PropertyType,
                         _ => type
                     };
@@ -231,18 +229,19 @@ public static class PathAccessorCache
                     var idxC = Expression.Constant(idx.index);
                     if (type.IsArray)
                     {
-                        cur  = Expression.ArrayAccess(cur, idxC);
+                        cur = Expression.ArrayAccess(cur, idxC);
                         type = type.GetElementType()!;
                     }
                     else
                     {
                         var itemProp = type.GetProperty(
-                            "Item", BF, null, null, new[] { typeof(int) }, null)
-                            ?? throw new MissingMemberException(type.Name, "Item[int]");
+                                           "Item", BF, null, null, new[] { typeof(int) }, null)
+                                       ?? throw new MissingMemberException(type.Name, "Item[int]");
 
-                        cur  = Expression.MakeIndex(cur, itemProp, new[] { idxC });
+                        cur = Expression.MakeIndex(cur, itemProp, new[] { idxC });
                         type = itemProp.PropertyType;
                     }
+
                     break;
             }
         }
@@ -277,7 +276,11 @@ public static class PathAccessorCache
         int i = 0;
         while (i < path.Length)
         {
-            if (path[i] == '.')                { i++; continue; }
+            if (path[i] == '.')
+            {
+                i++;
+                continue;
+            }
 
             if (path[i] == '[')
             {
