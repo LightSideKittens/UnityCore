@@ -120,15 +120,15 @@ public class MoveItClip : ScriptableObject, ISerializationCallbackReceiver
 
     public void Remove(Handler handler) => Remove(handler.guid);
     
-    public void Remove(Handler handler, string propertyName)
+    public void Remove(Handler handler, string property)
     {
         var d = data.FirstOrDefault(x => x.handlerGuid == handler.guid);
         if (d.evaluators != null)
         {
-            d.evaluators.Remove(new HandlerEvaluator {property = propertyName});
+            d.evaluators.Remove(new HandlerEvaluator {property = property});
             if (evaluatorsByHandlerGuids.TryGetValue(handler.guid, out var curves))
             {
-                curves.Remove(propertyName);
+                curves.Remove(property);
             }
             if (d.evaluators.Count == 0)
             {
