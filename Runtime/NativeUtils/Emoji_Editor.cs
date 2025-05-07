@@ -98,12 +98,19 @@ namespace LSCore.NativeUtils
             return emojiClusters;
         }
 
+        private static readonly string EmojiPattern =
+            // однобайтовые эмодзи и символы-маркировки
+            @"[\u203C\u2049\u2122\u2139\u24C2\u2600-\u26FF\u2700-\u27BF\uFE0E\uFE0F]" +
+            // суррогатные пары для основных категорий эмодзи
+            @"|(\uD83C[\uDDE6-\uDDFF])" +   // региональные флажки
+            @"|(\uD83C[\uDF00-\uDFFF])" +   // Misc Symbols & Pictographs
+            @"|(\uD83D[\uDC00-\uDE4F])" +   // Emoticons
+            @"|(\uD83D[\uDE80-\uDEF6])";    // Transport & Map
+
         public static bool IsEmoji(string input)
         {
             if (string.IsNullOrEmpty(input)) return false;
-
-            string emojiPattern = @"(\p{Cs})|([\u203C-\u3299]|\uD83C[\uDC04-\uDFFF]|\uD83D[\uDC00-\uDE4F]|\uD83D[\uDE80-\uDEF6])";
-            return Regex.IsMatch(input, emojiPattern);
+            return Regex.IsMatch(input, EmojiPattern);
         }
         
         private static Texture2D RenderEmojiToTexture(string emoji)
