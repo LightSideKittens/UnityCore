@@ -42,7 +42,7 @@ public class EmojiImage : RawImage
 
     private static void OnCreate(EmojiImage rawImage)
     {
-        rawImage.gameObject.hideFlags = HideFlags.HideAndDontSave;
+        rawImage.gameObject.hideFlags = HideFlags.DontSave;
     }
 
     public static void InitPool()
