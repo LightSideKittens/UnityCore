@@ -8,6 +8,7 @@ using UnityEngine;
 #if UNITY_EDITOR
 using System.Reflection;
 using Sirenix.OdinInspector.Editor;
+using UnityEditor;
 #endif
 
 namespace LSCore.DataStructs
@@ -71,7 +72,13 @@ namespace LSCore.DataStructs
                 dict.TryAdd(d.key, d.value);
             }
 #if UNITY_EDITOR
-            OnValueChanged();
+            EditorApplication.update += OnUpdate;
+
+            void OnUpdate()
+            {
+                OnValueChanged();
+                EditorApplication.update -= OnUpdate;
+            }
 #endif
         } 
 
