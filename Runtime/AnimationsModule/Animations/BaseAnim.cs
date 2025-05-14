@@ -54,78 +54,32 @@ namespace LSCore.AnimationsModule.Animations
 
             return tween;
         }
-        
-        protected virtual void Bind(){}
-        protected virtual void UnbindAll(){}
-
-        public void ResolveBinds<T>(string key, T target)
-        {
-            Bind();
-            Binder<T>.Resolve(GetBindKey($"${key}"), target);
-            UnbindAll();
-        }
-
-        protected string GetBindKey(string key) => $"{key}_{GetHashCode()}";
-    }
-
-    public static class Binder<TTarget>
-    {
-        private static readonly Dictionary<string, Action<TTarget>> binds = new();
-
-        public static void Bind(string key, Action<TTarget> action)
-        {
-            binds.TryGetValue(key, out var existAction);
-            existAction += action;
-            binds[key] = existAction;
-        }
-        
-        public static void Unbind(string key, Action<TTarget> action)
-        {
-            binds.TryGetValue(key, out var existAction);
-            existAction -= action;
-            binds[key] = existAction;
-        }
-
-        public static void Resolve(string key, TTarget target)
-        {
-            if (binds.TryGetValue(key, out var action))
-            {
-                action(target);
-            }
-        }
     }
     
     [Serializable]
-    public abstract class BaseAnim<T, TTarget> : BaseAnim, ISerializationCallbackReceiver where TTarget : Object
+    public abstract class BaseAnim<T, TTarget> : BaseAnim where TTarget : Object
     {
         [field: SerializeField] public override bool NeedInit { get; set; }
+        [field: HideIf("HideDuration"), SerializeField] public override float Duration { get; set; }
+        
+        [ShowIf("ShowStartValue")] public T startValue;
+        [ShowIf("ShowEndValue")] public T endValue;
 
-        [field: HideIf("HideDuration")]
-        [field: SerializeField] public override float Duration { get; set; }
-        
-        [ShowIf("ShowStartValue")]
-        public T startValue;
-        
-        [ShowIf("ShowEndValue")]
-        public T endValue;
-        
-        public bool useTargetPath;
-        public bool useMultiple;
-        
-        [HideIf("@IsDurationZero || !useMultiple")]
+        [HideIf("@IsDurationZero || !UseMultiple")]
         [SerializeReference] public List<IOption> options;
-        [HideIf("ShowTargets")] public TTarget target;
-        [ShowIf("ShowTargets")] public List<TTarget> targets;
-        
-        [ShowIf("useTargetPath")] public Transform root;
-        [HideIf("ShowTargetsPaths")] public string targetPath;
-        [ShowIf("ShowTargetsPaths")] public List<string> targetsPaths;
-        
-        [ShowIf("useMultiple")] public float timeOffsetPerTarget = 0.1f;
+
+        [SerializeReference] public List<DataProvider<TTarget>> targets;
+
+        [ShowIf("UseMultiple")] public AnimationCurve timeOffsetPerTarget = AnimationCurve.Constant(0, 0, 0.1f);
+
+        public bool UseMultiple => targets.Count > 1;
+        public TTarget FirstTarget
+        {
+            get => targets[0];
+            set => targets[0] = new RefDataProvider<TTarget> { data = value };
+        }
 
         public List<Tween> Tweens { get; private set; }
-        private bool ShowTargets => useMultiple && !useTargetPath;
-        private bool ShowTargetsPaths => useMultiple && useTargetPath;
         protected virtual bool ShowStartValue => NeedInit;
         protected virtual bool ShowEndValue => !IsDurationZero;
         
@@ -134,7 +88,7 @@ namespace LSCore.AnimationsModule.Animations
         
         protected override void Internal_Init()
         {
-            if (useMultiple)
+            if (UseMultiple)
             {
                 for (int i = 0; i < targets.Count; i++)
                 {
@@ -144,7 +98,7 @@ namespace LSCore.AnimationsModule.Animations
                 return;
             }
             
-            InitAction(target);
+            InitAction(targets[0]);
         }
 
         protected override Tween Internal_Animate()
@@ -152,109 +106,28 @@ namespace LSCore.AnimationsModule.Animations
             Tweens ??= new();
             Tweens.Clear();
             
-            if (useMultiple)
+            if (UseMultiple)
             {
                 var sequence = DOTween.Sequence();
                 var pos = 0f;
-                
+                var timeOffset = timeOffsetPerTarget[timeOffsetPerTarget.length - 1].time / (targets.Count - 1);
                 for (int i = 0; i < targets.Count; i++)
                 {
                     var t = ApplyOptions(AnimAction(targets[i]), options);
                     Tweens.Add(t);
                     sequence.Insert(pos, t);
-                    pos += timeOffsetPerTarget;
+                    pos += timeOffsetPerTarget.Evaluate((i + 1) * timeOffset);
                 }
 
                 return sequence;
             }
             
-            return ApplyOptions(AnimAction(target), options);
+            return ApplyOptions(AnimAction(targets[0]), options);
         }
 
         public void Reverse()
         {
             (startValue, endValue) = (endValue, startValue);
-        }
-
-        public virtual void OnBeforeSerialize() { }
-
-        public virtual void OnAfterDeserialize()
-        {
-            if(World.IsEditMode) return;
-            if (useTargetPath)
-            {
-                targets = new List<TTarget>();
-                if (typeof(Component).IsAssignableFrom(typeof(T)))
-                {
-                    if (targetPath[0] == '$')
-                    {
-                        Bind(targetPath, t => target = t);
-                    }
-                    else
-                    {
-                        target = root.FindComponent<TTarget>(targetPath);
-                    }
-
-                    for (int i = 0; i < targetsPaths.Count; i++)
-                    {
-                        var path = targetsPaths[i];
-                        if (path[0] == '$')
-                        {
-                            var index = i;
-                            Bind(path, t => targets.Add(t));
-                        }
-                        else
-                        {
-                            targets.Add(root.FindComponent<TTarget>(path));
-                        }
-                    }
-                }
-                else
-                {
-                    Bind();
-                }
-            }
-        }
-
-        protected sealed override void Bind()
-        {
-            if (useTargetPath)
-            {
-                if (targetPath[0] == '$')
-                {
-                    Bind(targetPath, t => target = t);
-                }
-
-                for (int i = 0; i < targetsPaths.Count; i++)
-                {
-                    var path = targetsPaths[i];
-                    if (path[0] == '$')
-                    {
-                        var index = i;
-                        Bind(path, t => targets[index] = t);
-                    }
-                }
-            }
-        }
-        
-        private List<(string key, Action<TTarget> action)> binds;
-        
-        protected sealed override void UnbindAll()
-        {
-            foreach (var (key, action) in binds)
-            {
-                Binder<TTarget>.Unbind(key, action);
-            }
-            
-            binds.Clear();
-        }
-        
-        private void Bind(string key, Action<TTarget> action)
-        {
-            key = GetBindKey(key);
-            binds ??= new List<(string, Action<TTarget>)>();
-            binds.Add((key, action));
-            Binder<TTarget>.Bind(key, action);
         }
     }
 }

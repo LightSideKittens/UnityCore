@@ -13,12 +13,12 @@ namespace LSCore
     {
         public T prefab;
         [NonSerialized] public T obj;
-        [SerializeReference] public List<TransformAction> transformActions;
+        [SerializeReference] public List<LSAction> transformActions;
         
         public override void Invoke()
         {
             obj = Object.Instantiate(prefab);
-            transformActions?.Invoke(obj.transform);
+            transformActions?.Invoke(obj);
         }
     }
     

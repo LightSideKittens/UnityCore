@@ -33,7 +33,8 @@
         "LSCore.MoveIt",
         "GUID:1b6b29427dc85403c316475c7068fc50",
         "GUID:60589634cd8c5134c4f50388f1b1595b",
-        "GUID:ffb700c0d477e7cecb82a655db56ffbd"
+        "GUID:ffb700c0d477e7cecb82a655db56ffbd",
+        "GUID:9c38c981acbf419b9287676bf57791e2"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
