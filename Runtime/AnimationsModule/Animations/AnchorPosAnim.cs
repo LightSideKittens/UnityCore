@@ -37,13 +37,6 @@ namespace LSCore.AnimationsModule.Animations
     [Serializable]
     public class LocalPosByTransformAnim : BaseAnim<Transform, Transform>
     {
-        public bool useValuePath;
-        [HideIf("ShowStartValue")]public string startValuePath;
-        [HideIf("ShowEndValue")]public string endValuePath;
-
-        protected override bool ShowStartValue => !useValuePath;
-        protected override bool ShowEndValue => base.ShowEndValue && !useValuePath;
-
         protected override void InitAction(Transform target)
         {
             target.localPosition = startValue.localPosition;
@@ -52,17 +45,6 @@ namespace LSCore.AnimationsModule.Animations
         protected override Tween AnimAction(Transform target)
         {
             return target.DOLocalMove(endValue.localPosition, Duration);
-        }
-
-        public override void OnAfterDeserialize()
-        {
-            base.OnAfterDeserialize();
-            if(World.IsEditMode) return;
-            if (useValuePath)
-            {
-                startValue = root.FindComponent<Transform>(startValuePath);
-                endValue = root.FindComponent<Transform>(endValuePath);
-            }
         }
     }
 }

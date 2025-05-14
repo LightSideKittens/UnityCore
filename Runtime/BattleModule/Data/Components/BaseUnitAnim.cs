@@ -17,7 +17,6 @@ namespace LSCore.BattleModule
     {
         public abstract Tween Animate();
         public abstract void Stop();
-        public abstract void ResolveBinds<T>(string key, T target);
     }
 
     [Serializable]
@@ -36,8 +35,6 @@ namespace LSCore.BattleModule
         {
             tween?.Kill();
         }
-
-        public override void ResolveBinds<T>(string key, T target) => anim.ResolveBinds(key, target);
     }
     
     [Serializable]
@@ -60,11 +57,6 @@ namespace LSCore.BattleModule
         public override void Stop()
         {
             moveIt.Stop(clip);
-        }
-
-        public override void ResolveBinds<T>(string key, T target)
-        {
-            
         }
 
         private void Play()

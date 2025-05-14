@@ -23,7 +23,7 @@ namespace LSCore
         private Tween currentTween;
         private Vector2 previousContentSize;
         
-        private int TotalPages => (int)(pivotPosXAnim.target.sizeDelta.x / rectTransform.sizeDelta.x);
+        private int TotalPages => (int)(pivotPosXAnim.FirstTarget.sizeDelta.x / rectTransform.sizeDelta.x);
         
         private void OnEnable()
         {
@@ -77,9 +77,9 @@ namespace LSCore
             }
             else
             {
-                var pivot = pivotPosXAnim.target.pivot;
+                var pivot = pivotPosXAnim.FirstTarget.pivot;
                 pivot.x = (float) page / TotalPages;
-                pivotPosXAnim.target.pivot = pivot;
+                pivotPosXAnim.FirstTarget.pivot = pivot;
             }
             
             pagesCounter.text = $"{page + 1}/{TotalPages}";
@@ -97,7 +97,7 @@ namespace LSCore
             
             if (!anim.Contains<PivotPosXAnim>())
             {
-                pivotPosXAnim = new PivotPosXAnim {Duration = 0.3f, target = content.rectTransform, options = new List<IOption> {new SetEase {ease = Ease.OutBack}}};
+                pivotPosXAnim = new PivotPosXAnim {Duration = 0.3f, FirstTarget = content.rectTransform, options = new List<IOption> {new SetEase {ease = Ease.OutBack}}};
                 anim.Add(new AnimSequencer.AnimData { timeOffset = 0, anim = pivotPosXAnim });
             }
             else

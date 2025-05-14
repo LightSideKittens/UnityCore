@@ -1,7 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Sirenix.OdinInspector;
+using UnityEditor;
+using UnityEngine;
 
 [Serializable]
+[TypeFilter("@LSActionExtensions.Types")]
 public abstract class LSAction
 {
     public abstract void Invoke();
@@ -38,6 +43,7 @@ public class Log : LSAction
         Burger.Log(message);
     }
 }
+
 
 public struct DataBuffer<T>
 {
@@ -85,4 +91,23 @@ public static class LSActionExtensions
             actions[i].Invoke();
         }
     }
+    
+#if UNITY_EDITOR
+    private static List<Type> types;
+    public static List<Type> Types => types ??= GetAllLSActionTypes();
+    public static List<Type> GetAllLSActionTypes()
+    {
+        var list = TypeCache.GetTypesDerivedFrom<LSAction>()
+            .Where(x => !x.IsAbstract && !x.IsGenericTypeDefinition)
+            .ToList();
+
+        foreach (var genericArg in DataProviderUtility.GetAllProviderGenericArgs())
+        { 
+            list.Add(genericArg);
+        }
+        
+        return list;
+    }
+#endif
 }
+

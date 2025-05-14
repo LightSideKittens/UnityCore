@@ -49,7 +49,7 @@ namespace LSCore
 
         protected override Tween Attack()
         {
-            anim.ResolveBinds("target", target);
+            //anim.ResolveBinds("target", target);//TODO: Resolve
             return anim.Animate();
         }
 

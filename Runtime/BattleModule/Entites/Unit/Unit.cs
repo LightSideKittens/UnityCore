@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static LSCore.BattleModule.StaticDict<UnityEngine.Transform,LSCore.BattleModule.Unit>;
+using static StaticDict<UnityEngine.Transform,LSCore.BattleModule.Unit>;
 
 namespace LSCore.BattleModule
 {

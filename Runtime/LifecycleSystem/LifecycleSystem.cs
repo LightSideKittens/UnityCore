@@ -10,7 +10,7 @@ namespace LSCore.LifecycleSystem
         public class CreateLifecycleObjects : LSAction
         {
             public string placementId;
-            [SerializeReference] public List<TransformAction> transformActions;
+            [SerializeReference] public List<LSAction> transformActions;
             private bool isCreated;
 
             public override void Invoke()
@@ -20,7 +20,7 @@ namespace LSCore.LifecycleSystem
                 
                 foreach (var obj in Create(placementId))
                 {
-                    transformActions.Invoke(obj.transform);
+                    transformActions.Invoke(obj);
                 }
             }
         }

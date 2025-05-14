@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using LSCore.LevelSystem;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using static LSCore.BattleModule.StaticDict<UnityEngine.Transform,LSCore.BattleModule.BaseUnit>;
+using static StaticDict<UnityEngine.Transform,LSCore.BattleModule.BaseUnit>;
 
 namespace LSCore.BattleModule
 {
