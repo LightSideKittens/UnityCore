@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEditor;
-using UnityEngine;
 
 [Serializable]
 [TypeFilter("@LSActionExtensions.Types")]
@@ -44,6 +43,10 @@ public class Log : LSAction
     }
 }
 
+public struct DataBuffer
+{
+    public static object value;
+}
 
 public struct DataBuffer<T>
 {
@@ -87,6 +90,7 @@ public static class LSActionExtensions
     {
         for (int i = 0; i < actions.Count; i++)
         {
+            DataBuffer<object>.value = value;
             DataBuffer<T>.value = value;
             actions[i].Invoke();
         }

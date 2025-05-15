@@ -5,12 +5,12 @@ using System.Reflection;
 
 public readonly struct TypedPathAccessor<TValue>
 {
-    public readonly Func<UnityEngine.Object, TValue>   Get;
-    public readonly Action<UnityEngine.Object, TValue> Set;
+    public readonly Func<object, TValue>   Get;
+    public readonly Action<object, TValue> Set;
 
     internal TypedPathAccessor(
-        Func<UnityEngine.Object, TValue> get,
-        Action<UnityEngine.Object, TValue> set)
+        Func<object, TValue> get,
+        Action<object, TValue> set)
     {
         Get = get;
         Set = set;
@@ -20,13 +20,13 @@ public readonly struct TypedPathAccessor<TValue>
 
 public readonly struct ObjectPathAccessor
 {
-    public readonly Func<UnityEngine.Object, UnityEngine.Object?> Get;
-    public readonly Action<UnityEngine.Object, UnityEngine.Object?> Set;
+    public readonly Func<object, object?> Get;
+    public readonly Action<object, object?> Set;
     public readonly Type ValueType;
 
     internal ObjectPathAccessor(
-        Func<UnityEngine.Object, UnityEngine.Object?> get,
-        Action<UnityEngine.Object, UnityEngine.Object?> set,
+        Func<object, object?> get,
+        Action<object, object?> set,
         Type valueType)
     {
         Get = get;
@@ -37,13 +37,13 @@ public readonly struct ObjectPathAccessor
 
 public readonly struct EnumPathAccessor
 {
-    public readonly Func<UnityEngine.Object, object> GetRaw;
-    public readonly Action<UnityEngine.Object, object> SetRaw;
+    public readonly Func<object, object> GetRaw;
+    public readonly Action<object, object> SetRaw;
     public readonly Type EnumType;
 
     internal EnumPathAccessor(
-        Func<UnityEngine.Object, object> get,
-        Action<UnityEngine.Object, object> set,
+        Func<object, object> get,
+        Action<object, object> set,
         Type enumType)
     {
         GetRaw   = get;
@@ -51,8 +51,8 @@ public readonly struct EnumPathAccessor
         EnumType = enumType;
     }
 
-    public int GetInt(UnityEngine.Object root)  => Convert.ToInt32(GetRaw(root));
-    public void SetInt(UnityEngine.Object root, int value)
+    public int GetInt(object root)  => Convert.ToInt32(GetRaw(root));
+    public void SetInt(object root, int value)
         => SetRaw(root, Enum.ToObject(EnumType, value));
 }
 
@@ -94,7 +94,7 @@ public static class PathAccessorCache
 
             Type baseType = Enum.GetUnderlyingType(valueType);
 
-            var getter = Expression.Lambda<Func<UnityEngine.Object, object>>(
+            var getter = Expression.Lambda<Func<object, object>>(
                     Expression.Convert(expr, typeof(object)), rootPar)
                 .Compile();
 
@@ -107,7 +107,7 @@ public static class PathAccessorCache
                     Expression.Convert(valObj, baseType),
                     valueType));
 
-            var setter = Expression.Lambda<Action<UnityEngine.Object, object>>(
+            var setter = Expression.Lambda<Action<object, object>>(
                 assign, rootP, valObj).Compile();
 
             return new EnumPathAccessor(getter, setter, baseType);
@@ -140,7 +140,7 @@ public static class PathAccessorCache
                     $"не совместимый с '{typeof(TValue).Name}'.");
             }
 
-            var getter = Expression.Lambda<Func<UnityEngine.Object, TValue>>(
+            var getter = Expression.Lambda<Func<object, TValue>>(
                 Expression.Convert(expr, typeof(TValue)),
                 rootPar).Compile();
 
@@ -149,7 +149,7 @@ public static class PathAccessorCache
                 expr, 
                 Expression.Convert(valPar, valueType));
 
-            var setter = Expression.Lambda<Action<UnityEngine.Object, TValue>>(
+            var setter = Expression.Lambda<Action<object, TValue>>(
                 assign, rootPar, valPar).Compile();
 
             return new TypedPathAccessor<TValue>(getter, setter);
@@ -174,21 +174,21 @@ public static class PathAccessorCache
         {
             var (expr, valueType, rootPar) = BuildExpression(rootType, path);
 
-            if (!typeof(UnityEngine.Object).IsAssignableFrom(valueType))
+            if (!typeof(object).IsAssignableFrom(valueType))
                 throw new InvalidOperationException(
                     $"Path '{path}' в '{rootType.Name}' приводит к нессылочному типу '{valueType.Name}'. " +
                     $"Для значимых/произвольных типов используйте generic‑метод Get<TValue>().");
 
-            var getter = Expression.Lambda<Func<UnityEngine.Object, UnityEngine.Object?>>(
-                Expression.TypeAs(expr, typeof(UnityEngine.Object)),
+            var getter = Expression.Lambda<Func<object, object?>>(
+                Expression.TypeAs(expr, typeof(object)),
                 rootPar).Compile();
 
-            var valPar = Expression.Parameter(typeof(UnityEngine.Object), "val");
+            var valPar = Expression.Parameter(typeof(object), "val");
             var assign = Expression.Assign(
                 expr,
                 Expression.TypeAs(valPar, valueType));
 
-            var setter = Expression.Lambda<Action<UnityEngine.Object, UnityEngine.Object?>>(
+            var setter = Expression.Lambda<Action<object, object?>>(
                 assign, rootPar, valPar).Compile();
 
             return new ObjectPathAccessor(getter, setter, valueType);
@@ -199,7 +199,7 @@ public static class PathAccessorCache
         string path)
     {
         var tokens = Tokenize(path);
-        var rootPar = Expression.Parameter(typeof(UnityEngine.Object), "root");
+        var rootPar = Expression.Parameter(typeof(object), "root");
 
         Expression cur = Expression.Convert(rootPar, rootType);
         Type type = rootType;

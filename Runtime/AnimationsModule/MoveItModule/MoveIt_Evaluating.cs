@@ -47,14 +47,14 @@ public partial class MoveIt
     [Serializable]
     public class HandlerEvaluator : Evaluator, IEquatable<HandlerEvaluator>
     {
-        public Func<Object, Object> get;
-        public Action<Object, Object> set;
+        public Func<object, object> get;
+        public Action<object, object> set;
         
-        public Func<Object, float> numGet;
-        public Action<Object, float> numSet;
+        public Func<object, float> numGet;
+        public Action<object, float> numSet;
         
-        public Func<Object, object> enumGet;
-        public Action<Object, object> enumSet;
+        public Func<object, object> enumGet;
+        public Action<object, object> enumSet;
         
 #if UNITY_EDITOR
         public string rawProperty;
@@ -155,15 +155,15 @@ public partial class MoveIt
         private void GetUpdate3(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
         {
             var value = get(obj);
-            startY = value != null ? value.GetHashCode() : 0;
+            startY = !value.Equals(null) ? value.GetHashCode() : 0;
             
             var intY = (int)y;
-            if (!objects.TryGetValue(intY, out value))
+            if (!objects.TryGetValue(intY, out var value1))
             {
                 objects.Remove(intY);
             }
                         
-            set(obj, value);
+            set(obj, value1);
             propertyHandler?.HandleAnimatedProperty(handler, this);
         }
         
@@ -279,38 +279,38 @@ public partial class MoveIt
             }
         }
 
-        private float GetFloat(Object target) => floatAccessor.Get(target);
-        private void SetFloat(Object target, float value) => floatAccessor.Set(target, value);
+        private float GetFloat(object target) => floatAccessor.Get(target);
+        private void SetFloat(object target, float value) => floatAccessor.Set(target, value);
         
-        private float GetInt8(Object target) => sbyteAccessor.Get(target);
-        private void SetInt8(Object target, float value) => sbyteAccessor.Set(target, (sbyte)value);
+        private float GetInt8(object target) => sbyteAccessor.Get(target);
+        private void SetInt8(object target, float value) => sbyteAccessor.Set(target, (sbyte)value);
         
-        private float GetUInt8(Object target) => byteAccessor.Get(target);
-        private void SetUInt8(Object target, float value) => byteAccessor.Set(target, (byte)value);
+        private float GetUInt8(object target) => byteAccessor.Get(target);
+        private void SetUInt8(object target, float value) => byteAccessor.Set(target, (byte)value);
         
-        private float GetInt16(Object target) => shortAccessor.Get(target);
-        private void SetInt16(Object target, float value) => shortAccessor.Set(target, (short)value);
+        private float GetInt16(object target) => shortAccessor.Get(target);
+        private void SetInt16(object target, float value) => shortAccessor.Set(target, (short)value);
         
-        private float GetUInt16(Object target) => ushortAccessor.Get(target);
-        private void SetUInt16(Object target, float value) => ushortAccessor.Set(target, (ushort)value);
+        private float GetUInt16(object target) => ushortAccessor.Get(target);
+        private void SetUInt16(object target, float value) => ushortAccessor.Set(target, (ushort)value);
         
-        private float GetInt32(Object target) => intAccessor.Get(target);
-        private void SetInt32(Object target, float value) => intAccessor.Set(target, (int)value);
+        private float GetInt32(object target) => intAccessor.Get(target);
+        private void SetInt32(object target, float value) => intAccessor.Set(target, (int)value);
         
-        private float GetUInt32(Object target) => uintAccessor.Get(target);
-        private void SetUInt32(Object target, float value) => uintAccessor.Set(target, (uint)value);
+        private float GetUInt32(object target) => uintAccessor.Get(target);
+        private void SetUInt32(object target, float value) => uintAccessor.Set(target, (uint)value);
         
-        private float GetInt64(Object target) => longAccessor.Get(target);
-        private void SetInt64(Object target, float value) => longAccessor.Set(target, (long)value);
+        private float GetInt64(object target) => longAccessor.Get(target);
+        private void SetInt64(object target, float value) => longAccessor.Set(target, (long)value);
         
-        private float GetUInt64(Object target) => ulongAccessor.Get(target);
-        private void SetUInt64(Object target, float value) => ulongAccessor.Set(target, (ulong)value);
+        private float GetUInt64(object target) => ulongAccessor.Get(target);
+        private void SetUInt64(object target, float value) => ulongAccessor.Set(target, (ulong)value);
         
-        private float GetDouble(Object target) => (float)doubleAccessor.Get(target);
-        private void SetDouble(Object target, float value) => doubleAccessor.Set(target, value);
+        private float GetDouble(object target) => (float)doubleAccessor.Get(target);
+        private void SetDouble(object target, float value) => doubleAccessor.Set(target, value);
         
-        private float GetBool(Object target) => boolAccessor.Get(target) ? 1 : 0;
-        private void SetBool(Object target, float value) => boolAccessor.Set(target, value >= 1);
+        private float GetBool(object target) => boolAccessor.Get(target) ? 1 : 0;
+        private void SetBool(object target, float value) => boolAccessor.Set(target, value >= 1);
         
         
 #if UNITY_EDITOR
