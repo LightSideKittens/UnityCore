@@ -12,13 +12,13 @@ namespace LSCore.LifecycleSystem
     public class LifecycleObject : MonoBehaviour
     {
         [Serializable]
-        public abstract class Action : LSAction { }
+        public abstract class Action : DoIt { }
 
         [Serializable]
         [Unwrap]
         public class ActionWrapper : Action
         {
-            [SerializeReference] public LSAction action;
+            [SerializeReference] public DoIt action;
             
             public override void Invoke()
             {

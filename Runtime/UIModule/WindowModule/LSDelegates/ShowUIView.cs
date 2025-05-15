@@ -1,6 +1,6 @@
 ﻿namespace LSCore
 {
-    public class ShowUIView : LSAction
+    public class ShowUIView : DoIt
     {
         public UIView view;
         public ShowWindowOption option;

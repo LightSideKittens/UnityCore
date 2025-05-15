@@ -75,7 +75,7 @@ namespace LSCore
 
     public abstract class ServiceManager<T> : ServiceManager where T : ServiceManager<T>
     {
-        [SerializeReference] public List<LSAction> onAwake;
+        [SerializeReference] public List<DoIt> onAwake;
         public static event Action Destroyed;
         protected static T Instance { get; private set; }
 

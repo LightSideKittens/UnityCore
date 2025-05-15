@@ -15,7 +15,7 @@ namespace LSCore
     [Unwrap]
     public class ClickActions : ISerializationCallbackReceiver
     {
-        [SerializeReference] public List<LSAction> actions = new();
+        [SerializeReference] public List<DoIt> actions = new();
         [HideInInspector] [SerializeField] private bool isClickSoundOverride;
         
         
@@ -40,7 +40,7 @@ namespace LSCore
 #endif
             if (!isClickSoundOverride)
             {
-                actions ??= new List<LSAction>();
+                actions ??= new List<DoIt>();
                 var action = new PlayOneShotSound();
                 var settings = new LaLaLa.Settings();
                 action.settings = settings;

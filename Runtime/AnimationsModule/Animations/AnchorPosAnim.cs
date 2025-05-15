@@ -33,18 +33,4 @@ namespace LSCore.AnimationsModule.Animations
             return target.DOLocalMove(endValue, Duration);
         }
     }
-    
-    [Serializable]
-    public class LocalPosByTransformAnim : BaseAnim<Transform, Transform>
-    {
-        protected override void InitAction(Transform target)
-        {
-            target.localPosition = startValue.localPosition;
-        }
-
-        protected override Tween AnimAction(Transform target)
-        {
-            return target.DOLocalMove(endValue.localPosition, Duration);
-        }
-    }
 }

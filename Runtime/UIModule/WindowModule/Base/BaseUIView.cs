@@ -21,10 +21,10 @@ namespace LSCore
         public RectTransform RectTransform { get; private set; }
         public virtual WindowManager Manager { get; } = new();
         
-        [SerializeReference, FoldoutGroup("Optional")] protected List<LSAction> onShowing;
-        [SerializeReference, FoldoutGroup("Optional")] protected List<LSAction> onHiding;
-        [SerializeReference, FoldoutGroup("Optional")] protected List<LSAction> onShowed;
-        [SerializeReference, FoldoutGroup("Optional")] protected List<LSAction> onHidden;
+        [SerializeReference, FoldoutGroup("Optional")] protected List<DoIt> onShowing;
+        [SerializeReference, FoldoutGroup("Optional")] protected List<DoIt> onHiding;
+        [SerializeReference, FoldoutGroup("Optional")] protected List<DoIt> onShowed;
+        [SerializeReference, FoldoutGroup("Optional")] protected List<DoIt> onHidden;
         
 
         protected virtual ShowWindowOption ShowOption { get; set; }

@@ -15,7 +15,7 @@ using UnityEditor;
 namespace LSCore
 {
     [Serializable]
-    public class ChangeLocale : LSAction
+    public class ChangeLocale : DoIt
     {
         public Locale locale;
 

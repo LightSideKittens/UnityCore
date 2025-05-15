@@ -7,10 +7,10 @@ namespace LSCore.LifecycleSystem
     public abstract class LifecycleSystem<T> : SingleService<T> where T : LifecycleSystem<T>
     {
         [Serializable]
-        public class CreateLifecycleObjects : LSAction
+        public class CreateLifecycleObjects : DoIt
         {
             public string placementId;
-            [SerializeReference] public List<LSAction> transformActions;
+            [SerializeReference] public List<DoIt> transformActions;
             private bool isCreated;
 
             public override void Invoke()

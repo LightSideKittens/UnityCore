@@ -3,7 +3,7 @@
 namespace LSCore
 {
     [Serializable]
-    public class GoHome : LSAction
+    public class GoHome : DoIt
     {
         public override void Invoke() => UIViewBoss.GoHome();
     }

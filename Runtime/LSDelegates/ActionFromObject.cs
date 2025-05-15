@@ -5,7 +5,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 [Serializable]
-public class ActionFromObject<T> : LSAction
+public class ActionFromObject<T> : DoIt
 {
     public Object obj;
     [SerializeReference] public T value;

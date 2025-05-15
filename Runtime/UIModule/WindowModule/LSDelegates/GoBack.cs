@@ -3,7 +3,7 @@
 namespace LSCore
 {
     [Serializable]
-    public class GoBack : LSAction
+    public class GoBack : DoIt
     {
         public string id;
         

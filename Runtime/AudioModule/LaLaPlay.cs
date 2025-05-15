@@ -1,7 +1,7 @@
 ﻿using System;
 
 [Serializable]
-public class PlaySound : LSAction
+public class PlaySound : DoIt
 {
     public LaLaLa.Settings settings;
     public override void Invoke()

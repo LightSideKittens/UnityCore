@@ -8,7 +8,7 @@ namespace LSCore.AnimationsModule.Animations.Options
     [Serializable]
     public struct OnComplete : IOption
     {
-        [SerializeReference] private List<LSAction> actions;
+        [SerializeReference] private List<DoIt> actions;
         
         public void ApplyTo(Tween tween)
         {

@@ -1,4 +1,4 @@
-public class PlayOneShotSound : LSAction
+public class PlayOneShotSound : DoIt
 {
     public LaLaLa.Settings settings;
     public override void Invoke()

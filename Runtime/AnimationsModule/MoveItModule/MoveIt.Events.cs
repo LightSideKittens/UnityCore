@@ -26,7 +26,7 @@ public partial class MoveIt
     [Serializable]
     public abstract class BaseActionEvent : Event
     {
-        public abstract LSAction Action { get; }
+        public abstract DoIt Action { get; }
 
         public override void Invoke()
         {
@@ -38,9 +38,9 @@ public partial class MoveIt
     public class ActionEvent : BaseActionEvent
     {
         [SerializeReference] [HideLabel]
-        public LSAction action;
+        public DoIt action;
 
-        public override LSAction Action => action;
+        public override DoIt Action => action;
     }
 
     [Serializable]

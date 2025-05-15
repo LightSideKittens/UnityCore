@@ -5,7 +5,7 @@ namespace LSCore.AnimationsModule
 {
     public class AnimationEvents : MonoBehaviour
     {
-        [SerializeReference] public List<LSAction> actions;
+        [SerializeReference] public List<DoIt> actions;
 
         public void Invoke(int index)
         {
