@@ -12,10 +12,10 @@ using UnityEditor;
 namespace LSCore
 {
     [Serializable]
-    public class LootBoxAction : LSAction
+    public class LootBoxAction : DoIt
     {
         [GenerateGuid] public string id;
-        [SerializeReference] public List<LSAction> actions;
+        [SerializeReference] public List<DoIt> actions;
         
         public int guaranteedAt = -1;
         [CustomValueDrawer("ChanceDrawer")] 
@@ -41,7 +41,7 @@ namespace LSCore
     
     
     [Serializable]
-    public class LootBox : LSAction
+    public class LootBox : DoIt
     {
         [GenerateGuid] public string id;
         [SerializeReference]

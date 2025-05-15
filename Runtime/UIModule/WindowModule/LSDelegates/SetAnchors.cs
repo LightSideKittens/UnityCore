@@ -2,7 +2,7 @@
 
 namespace LSCore
 {
-    public class SetAnchors : LSAction
+    public class SetAnchors : DoIt
     {
         public RectTransform rectTransform;
         public Vector2 min;

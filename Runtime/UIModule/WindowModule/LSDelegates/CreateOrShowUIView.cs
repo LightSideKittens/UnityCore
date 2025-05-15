@@ -9,11 +9,11 @@ namespace LSCore
 {
     
     [Serializable]
-    public class Create<T> : LSAction where T : Component
+    public class Create<T> : DoIt where T : Component
     {
         public T prefab;
         [NonSerialized] public T obj;
-        [SerializeReference] public List<LSAction> transformActions;
+        [SerializeReference] public List<DoIt> transformActions;
         
         public override void Invoke()
         {

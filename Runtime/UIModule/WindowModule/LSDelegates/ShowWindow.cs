@@ -15,7 +15,7 @@ namespace LSCore
     [InitializeOnLoad]
 #endif
     [Serializable]
-    public class ShowWindow : LSAction
+    public class ShowWindow : DoIt
     {
         public class WindowTypes : LocalDynamicConfig
         {

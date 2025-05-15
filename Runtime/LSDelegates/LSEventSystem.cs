@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public class LSInvoker : LSAction
+public class LSInvoker : DoIt
 {
     public string key;
     
@@ -11,10 +11,10 @@ public class LSInvoker : LSAction
     }
 }
 
-public class LSSubscriber : LSAction
+public class LSSubscriber : DoIt
 {
     public string key;
-    public List<LSAction> actions;
+    public List<DoIt> actions;
     
     public override void Invoke()
     {

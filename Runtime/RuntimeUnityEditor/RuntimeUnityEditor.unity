@@ -232,7 +232,7 @@ MonoBehaviour:
         action:
           rid: 888390122199056771
     - rid: 888390122199056771
-      type: {class: Log, ns: , asm: LSCore.LSDelegates}
+      type: {class: Log, ns: , asm: LSCore.DoIt}
       data:
         message: Test
     - rid: 888390122199056819

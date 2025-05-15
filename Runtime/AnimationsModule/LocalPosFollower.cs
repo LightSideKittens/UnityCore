@@ -30,7 +30,7 @@ namespace LSCore.AnimationsModule
     }
 
     [Serializable]
-    public class SetTargetToFollower : LSAction
+    public class SetTargetToFollower : DoIt
     {
         public bool useValuePath;
         [ShowIf("useValuePath")] public Transform root;

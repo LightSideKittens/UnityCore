@@ -7,7 +7,7 @@ namespace LSCore
     {
         public List<ShapeTrigger> triggers;
         [SerializeReference] public List<ShapeImpact> impacts;
-        [SerializeReference] public List<LSAction> onImpactsApplied;
+        [SerializeReference] public List<DoIt> onImpactsApplied;
         
         private void Awake()
         {

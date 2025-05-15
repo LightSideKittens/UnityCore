@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace LSCore
 {
-    public class SetPivot : LSAction
+    public class SetPivot : DoIt
     {
         public RectTransform rectTransform;
         public Vector2 pivot;

@@ -3,7 +3,7 @@
 namespace LSCore.AnimationsModule
 {
     [Serializable]
-    public class AnimAction : LSAction
+    public class AnimAction : DoIt
     {
         public AnimSequencer anim;
         

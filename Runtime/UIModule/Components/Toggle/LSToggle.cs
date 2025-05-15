@@ -15,8 +15,8 @@ namespace LSCore
     {
         [SerializeReference] public ShowHideAnim onOffAnim = new InOutShowHideAnim();
         [SerializeField] private ClickActions clickActions;
-        [SerializeReference] public List<LSAction> on = new();
-        [SerializeReference] public List<LSAction> off = new();
+        [SerializeReference] public List<DoIt> on = new();
+        [SerializeReference] public List<DoIt> off = new();
         [SerializeField] private bool isOn;
         private bool lastIsOn;
 

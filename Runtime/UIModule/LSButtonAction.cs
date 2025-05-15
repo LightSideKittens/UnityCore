@@ -4,11 +4,11 @@ using LSCore.Attributes;
 using UnityEngine;
 
 [Serializable]
-public abstract class LSClickAction : LSAction
+public abstract class LSClickAction : DoIt
 {
     public abstract IClickable Clickable { get; }
 
-    [SerializeReference] public LSAction action;
+    [SerializeReference] public DoIt action;
         
     public override void Invoke()
     {

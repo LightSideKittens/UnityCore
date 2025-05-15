@@ -12,7 +12,7 @@ using Vector3 = UnityEngine.Vector3;
 namespace LSCore
 {
     [Serializable]
-    public class ShowTooltip : LSAction
+    public class ShowTooltip : DoIt
     {
         public Tooltip prefab;
         public Transform target;

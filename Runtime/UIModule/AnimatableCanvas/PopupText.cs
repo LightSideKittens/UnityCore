@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 namespace Animatable
 {
     [Serializable]
-    public class PopupTextAction : LSAction
+    public class PopupTextAction : DoIt
     {
         public TMP_Text messagePrefab;
             

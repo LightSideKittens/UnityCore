@@ -4,7 +4,7 @@ using UnityEngine;
 namespace LSCore
 {
     [Serializable]
-    public abstract class FundAction : LSAction
+    public abstract class FundAction : DoIt
     { 
         public Funds funds;
     }
@@ -21,7 +21,7 @@ namespace LSCore
     [Serializable]
     public class Spend : FundAction
     {
-        [SerializeReference] public LSAction onSpent;
+        [SerializeReference] public DoIt onSpent;
         
         public override void Invoke()
         {

@@ -5,14 +5,14 @@ using Sirenix.OdinInspector;
 using UnityEditor;
 
 [Serializable]
-[TypeFilter("@LSActionExtensions.Types")]
-public abstract class LSAction
+[TypeFilter("@DoItExtensions.Types")]
+public abstract class DoIt
 {
     public abstract void Invoke();
 }
 
 [Serializable]
-public class DelegateLSAction : LSAction
+public class DelegateDoIt : DoIt
 {
     public Action action;
 
@@ -21,19 +21,19 @@ public class DelegateLSAction : LSAction
         action();
     }
     
-    public static explicit operator DelegateLSAction(Action action)
+    public static explicit operator DelegateDoIt(Action action)
     {
-        return new DelegateLSAction{action=action};
+        return new DelegateDoIt{action=action};
     }
     
-    public static explicit operator Action(DelegateLSAction action)
+    public static explicit operator Action(DelegateDoIt action)
     {
         return action.Invoke;
     }
 }
 
 [Serializable]
-public class Log : LSAction
+public class Log : DoIt
 {
     public string message;
     
@@ -48,15 +48,15 @@ public struct DataBuffer<T>
     public static T value;
 }
 
-public static class LSActionExtensions
+public static class DoItExtensions
 {
-    public static void Invoke<T>(this LSAction action, T value)
+    public static void Invoke<T>(this DoIt action, T value)
     {
         DataBuffer<T>.value = value;
         action.Invoke();
     }
     
-    public static void Invoke(this IEnumerable<LSAction> actions)
+    public static void Invoke(this IEnumerable<DoIt> actions)
     {
         foreach (var action in actions)
         {
@@ -64,7 +64,7 @@ public static class LSActionExtensions
         }
     }
     
-    public static void Invoke<T>(this IEnumerable<LSAction> actions, T value)
+    public static void Invoke<T>(this IEnumerable<DoIt> actions, T value)
     {
         foreach (var action in actions)
         {
@@ -73,7 +73,7 @@ public static class LSActionExtensions
         }
     }
     
-    public static void Invoke(this IList<LSAction> actions)
+    public static void Invoke(this IList<DoIt> actions)
     {
         for (int i = 0; i < actions.Count; i++)
         {
@@ -81,7 +81,7 @@ public static class LSActionExtensions
         }
     }
     
-    public static void Invoke<T>(this IList<LSAction> actions, T value)
+    public static void Invoke<T>(this IList<DoIt> actions, T value)
     {
         for (int i = 0; i < actions.Count; i++)
         {
@@ -93,10 +93,10 @@ public static class LSActionExtensions
     
 #if UNITY_EDITOR
     private static List<Type> types;
-    public static List<Type> Types => types ??= GetAllLSActionTypes();
-    public static List<Type> GetAllLSActionTypes()
+    public static List<Type> Types => types ??= GetAllDoItTypes();
+    public static List<Type> GetAllDoItTypes()
     {
-        var list = TypeCache.GetTypesDerivedFrom<LSAction>()
+        var list = TypeCache.GetTypesDerivedFrom<DoIt>()
             .Where(x => !x.IsAbstract && !x.IsGenericTypeDefinition)
             .ToList();
 

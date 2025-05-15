@@ -3,7 +3,7 @@ using LSCore.ConditionModule;
 using UnityEngine;
 
 [Serializable]
-public abstract class ActionsIfCondition<TAction, TCondition> : LSAction where TAction : LSAction where TCondition : BaseCondition
+public abstract class ActionsIfCondition<TAction, TCondition> : DoIt where TAction : DoIt where TCondition : BaseCondition
 {
     [SerializeReference] public TCondition conditions;
     [SerializeReference] public TAction[] ifActions;
@@ -23,4 +23,4 @@ public abstract class ActionsIfCondition<TAction, TCondition> : LSAction where T
 }
 
 [Serializable]
-public class ActionsIfCondition : ActionsIfCondition<LSAction, BaseCondition> { }
+public class ActionsIfCondition : ActionsIfCondition<DoIt, BaseCondition> { }

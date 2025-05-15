@@ -68,7 +68,7 @@ namespace LSCore.AnimationsModule.Animations
         [HideIf("@IsDurationZero || !UseMultiple")]
         [SerializeReference] public List<IOption> options;
 
-        [SerializeReference] public List<DataProvider<TTarget>> targets;
+        [SerializeReference] public List<DataProvider<TTarget>> targets = new();
 
         [ShowIf("UseMultiple")] public AnimationCurve timeOffsetPerTarget = AnimationCurve.Constant(0, 0, 0.1f);
 

@@ -6,7 +6,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 
 [Serializable]
-public class LoadScene : LSAction
+public class LoadScene : DoIt
 {
     [ValueDropdown("GetSceneNames")]
     public string sceneToLoad;
