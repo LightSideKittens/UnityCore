@@ -43,11 +43,6 @@ public class Log : LSAction
     }
 }
 
-public struct DataBuffer
-{
-    public static object value;
-}
-
 public struct DataBuffer<T>
 {
     public static T value;
