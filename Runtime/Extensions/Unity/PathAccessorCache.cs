@@ -179,18 +179,25 @@ public static class PathAccessorCache
                     $"Path '{path}' в '{rootType.Name}' приводит к нессылочному типу '{valueType.Name}'. " +
                     $"Для значимых/произвольных типов используйте generic‑метод Get<TValue>().");
 
-            var getter = Expression.Lambda<Func<object, object?>>(
-                Expression.TypeAs(expr, typeof(object)),
-                rootPar).Compile();
+            Func<object, object> getter = null;
+            Action<object, object> setter = null;
+            
+            try
+            {
+                getter = Expression.Lambda<Func<object, object?>>(
+                    Expression.TypeAs(expr, typeof(object)),
+                    rootPar).Compile();
 
-            var valPar = Expression.Parameter(typeof(object), "val");
-            var assign = Expression.Assign(
-                expr,
-                Expression.TypeAs(valPar, valueType));
+                var valPar = Expression.Parameter(typeof(object), "val");
+                var assign = Expression.Assign(
+                    expr,
+                    Expression.TypeAs(valPar, valueType));
 
-            var setter = Expression.Lambda<Action<object, object?>>(
-                assign, rootPar, valPar).Compile();
-
+                setter = Expression.Lambda<Action<object, object?>>(
+                    assign, rootPar, valPar).Compile();
+            }
+            catch { }
+            
             return new ObjectPathAccessor(getter, setter, valueType);
         }
     }

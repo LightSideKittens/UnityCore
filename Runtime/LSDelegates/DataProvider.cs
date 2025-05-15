@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using LSCore.Extensions.Unity;
 using UnityEngine;
 
@@ -13,7 +14,7 @@ public abstract class DataProvider<T>
     }
 }
 
-public interface IBufferDataProvider
+public interface IRawBufferDataProvider<[UsedImplicitly]T>
 {
     public object Data { get; }
 }
@@ -29,7 +30,7 @@ public class RefDataProvider<T> : DataProvider<T>
 public abstract class BaseRawBufferDataProvider<T> : DataProvider<T>
 {
     public string propertyPath;
-    [SerializeReference] public IBufferDataProvider provider;
+    [SerializeReference] public IRawBufferDataProvider<T> provider;
 }
 
 [Serializable]
@@ -96,18 +97,18 @@ public class RawEnumBufferDataProvider<T> : BaseRawBufferDataProvider<T>
 }
 
 [Serializable]
-public class BufferDataProvider<T> : DataProvider<T>, IBufferDataProvider
+public class BufferDataProvider<T> : DataProvider<T>, IRawBufferDataProvider<T>
 {
-    object IBufferDataProvider.Data => DataBuffer.value;
+    object IRawBufferDataProvider<T>.Data => DataBuffer<object>.value;
     public override T Data => DataBuffer<T>.value;
 }
 
 [Serializable]
-public class KeyBufferDataProvider<T> : DataProvider<T>, IBufferDataProvider
+public class KeyBufferDataProvider<T> : DataProvider<T>, IRawBufferDataProvider<T>
 {
     public string key;
     
-    object IBufferDataProvider.Data => StringDict<object>.Get(key);
+    object IRawBufferDataProvider<T>.Data => StringDict<object>.Get(key);
     public override T Data => StringDict<T>.Get(key);
 }
 
@@ -122,7 +123,7 @@ public class PathDataProvider<T> : DataProvider<T>
     {
         get
         {
-            if (result.Equals(null))
+            if (result == null || result.Equals(null))
             {
                 result = root.Data.FindComponent<T>(path);
             }
