@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
-public readonly struct TypedPathAccessor<TValue>
+public class TypedPathAccessor<TValue>
 {
     public readonly Func<object, TValue>   Get;
     public readonly Action<object, TValue> Set;
@@ -17,141 +19,71 @@ public readonly struct TypedPathAccessor<TValue>
     }
 }
 
-
-public readonly struct ObjectPathAccessor
+public class ObjectPathAccessor
 {
     public readonly Func<object, object?> Get;
     public readonly Action<object, object?> Set;
-    public readonly Type ValueType;
 
     internal ObjectPathAccessor(
         Func<object, object?> get,
-        Action<object, object?> set,
-        Type valueType)
+        Action<object, object?> set)
     {
         Get = get;
         Set = set;
-        ValueType = valueType;
     }
 }
-
-public readonly struct EnumPathAccessor
-{
-    public readonly Func<object, object> GetRaw;
-    public readonly Action<object, object> SetRaw;
-    public readonly Type EnumType;
-
-    internal EnumPathAccessor(
-        Func<object, object> get,
-        Action<object, object> set,
-        Type enumType)
-    {
-        GetRaw   = get;
-        SetRaw   = set;
-        EnumType = enumType;
-    }
-
-    public int GetInt(object root)  => Convert.ToInt32(GetRaw(root));
-    public void SetInt(object root, int value)
-        => SetRaw(root, Enum.ToObject(EnumType, value));
-}
-
 
 public static class PathAccessorCache
 {
-    public static TypedPathAccessor<TValue> Get<TValue>(Type rootType, string path)
-        => Cache<TValue>.Get(rootType, path);
+    public static TypedPathAccessor<TValue> Get<TValue>(object rootObj, string path)
+        => Cache<TValue>.Get(rootObj, path);
 
-    public static ObjectPathAccessor GetRef(Type rootType, string path)
-        => RefCache.Get(rootType, path);
+    public static ObjectPathAccessor GetRef(object rootObj, string path)
+        => RefCache.Get(rootObj, path);
 
-    public static EnumPathAccessor GetEnum(Type rootType, string path)
-        => EnumCache.Get(rootType, path);
-
-    private static class EnumCache
-    {
-        private static readonly Dictionary<(Type, string), EnumPathAccessor> dic = new();
-
-        public static EnumPathAccessor Get(Type rootType, string path)
-        {
-            if (dic.TryGetValue((rootType, path), out var acc))
-                return acc;
-
-            acc = Build(rootType, path);
-            dic[(rootType, path)] = acc;
-            return acc;
-        }
-
-        private static EnumPathAccessor Build(Type rootType, string path)
-        {
-            var (expr, valueType, rootPar) = BuildExpression(rootType, path);
-
-            if (!valueType.IsEnum)
-                throw new InvalidOperationException(
-                    $"Path '{path}' в '{rootType.Name}' ведёт к '{valueType.Name}', " +
-                    $"который не является enum. Для value/ref‑типов используйте " +
-                    $"Get<TValue>() или GetRef().");
-
-            Type baseType = Enum.GetUnderlyingType(valueType);
-
-            var getter = Expression.Lambda<Func<object, object>>(
-                    Expression.Convert(expr, typeof(object)), rootPar)
-                .Compile();
-
-            var rootP = rootPar;
-            var valObj = Expression.Parameter(typeof(object), "val");
-
-            var assign = Expression.Assign(
-                expr,
-                Expression.Convert(
-                    Expression.Convert(valObj, baseType),
-                    valueType));
-
-            var setter = Expression.Lambda<Action<object, object>>(
-                assign, rootP, valObj).Compile();
-
-            return new EnumPathAccessor(getter, setter, baseType);
-        }
-    }
 
     private static class Cache<TValue>
     {
         private static readonly Dictionary<(Type, string), TypedPathAccessor<TValue>> dic = new();
 
-        public static TypedPathAccessor<TValue> Get(Type rootType, string path)
+        public static TypedPathAccessor<TValue> Get(object rootObj, string path)
         {
+            var rootType = rootObj.GetType();
             if (dic.TryGetValue((rootType, path), out var acc))
                 return acc;
 
-            acc = Build(rootType, path);
+            acc = Build(rootObj, path);
             dic[(rootType, path)] = acc;
             return acc;
         }
 
-        private static TypedPathAccessor<TValue> Build(Type rootType, string path)
+        private static TypedPathAccessor<TValue> Build(object rootObj, string path)
         {
-            var (expr, valueType, rootPar) = BuildExpression(rootType, path);
+            var (expr, valueType, rootPar, canRead, canWrite) = BuildExpression(rootObj, path);
 
-            if (!typeof(TValue).IsAssignableFrom(valueType) &&
-                !valueType.IsAssignableFrom(typeof(TValue)))
+            Func<object, TValue> getter = null;
+
+            if (canRead)
             {
-                throw new InvalidOperationException(
-                    $"Path '{path}' в '{rootType.Name}' даёт тип '{valueType.Name}', " +
-                    $"не совместимый с '{typeof(TValue).Name}'.");
+                getter = Expression.Lambda<Func<object, TValue>>(
+                    Expression.Convert(expr, typeof(TValue)),
+                    rootPar).Compile();
             }
+            
+            Action<object, TValue> setter = null;
 
-            var getter = Expression.Lambda<Func<object, TValue>>(
-                Expression.Convert(expr, typeof(TValue)),
-                rootPar).Compile();
+            if (canWrite)
+            {
+                var valPar = Expression.Parameter(typeof(TValue), "val");
+                var assign = Expression.Assign(
+                    expr,
+                    Expression.Convert(valPar, valueType));
 
-            var valPar = Expression.Parameter(typeof(TValue), "val");
-            var assign = Expression.Assign(
-                expr, 
-                Expression.Convert(valPar, valueType));
+                setter = Expression.Lambda<Action<object, TValue>>(
+                    assign, rootPar, valPar).Compile();
 
-            var setter = Expression.Lambda<Action<object, TValue>>(
-                assign, rootPar, valPar).Compile();
-
+            }
+            
             return new TypedPathAccessor<TValue>(getter, setter);
         }
     }
@@ -160,149 +92,212 @@ public static class PathAccessorCache
     {
         private static readonly Dictionary<(Type, string), ObjectPathAccessor> dic = new();
 
-        public static ObjectPathAccessor Get(Type rootType, string path)
+        public static ObjectPathAccessor Get(object rootObj, string path)
         {
+            var rootType = rootObj.GetType();
             if (dic.TryGetValue((rootType, path), out var acc))
                 return acc;
 
-            acc = Build(rootType, path);
+            acc = Build(rootObj, path);
             dic[(rootType, path)] = acc;
             return acc;
         }
 
-        private static ObjectPathAccessor Build(Type rootType, string path)
+        private static ObjectPathAccessor Build(object rootObj, string path)
         {
-            var (expr, valueType, rootPar) = BuildExpression(rootType, path);
-
-            if (!typeof(object).IsAssignableFrom(valueType))
-                throw new InvalidOperationException(
-                    $"Path '{path}' в '{rootType.Name}' приводит к нессылочному типу '{valueType.Name}'. " +
-                    $"Для значимых/произвольных типов используйте generic‑метод Get<TValue>().");
-
-            Func<object, object> getter = null;
-            Action<object, object> setter = null;
+            var (expr, valueType, rootPar, canRead, canWrite) = BuildExpression(rootObj, path);
             
-            try
+            Func<object, object> getter = null;
+            
+            if (canRead)
             {
-                getter = Expression.Lambda<Func<object, object?>>(
+                getter = Expression.Lambda<Func<object, object>>(
                     Expression.TypeAs(expr, typeof(object)),
                     rootPar).Compile();
+            }
 
+            Action<object, object> setter = null;
+
+            if (canWrite)
+            {
                 var valPar = Expression.Parameter(typeof(object), "val");
-                var assign = Expression.Assign(
+                var assign  = Expression.Assign(
                     expr,
-                    Expression.TypeAs(valPar, valueType));
-
-                setter = Expression.Lambda<Action<object, object?>>(
-                    assign, rootPar, valPar).Compile();
+                    Expression.Convert(valPar, valueType));
+                setter = Expression.Lambda<Action<object, object>>(assign, rootPar, valPar).Compile();
             }
-            catch { }
             
-            return new ObjectPathAccessor(getter, setter, valueType);
+            return new ObjectPathAccessor(getter, setter);
         }
     }
 
-    private static (Expression expr, Type valueType, ParameterExpression rootPar) BuildExpression(Type rootType,
-        string path)
+    private static (Expression expr, Type valueType, ParameterExpression rootPar, bool canRead, bool canWrite) BuildExpression(object rootInstance, string path)
     {
-        var tokens = Tokenize(path);
+        ReadOnlySpan<char> input = path.AsSpan();
+        var tokens = ArrayPool<Token>.Shared.Rent(32);
+        var length = Tokenize(input, tokens);
         var rootPar = Expression.Parameter(typeof(object), "root");
+        Expression curExpr = Expression.Convert(rootPar, rootInstance.GetType());
 
-        Expression cur = Expression.Convert(rootPar, rootType);
-        Type type = rootType;
-
-        foreach (var t in tokens)
+        object curObj = rootInstance;
+        Type curTyp = curObj.GetType();
+        
+        for (int i = 0; i < length; i++)
         {
-            switch (t)
+            var t = tokens[i];
+
+            if (!t.IsIndex)
             {
-                case MemberToken m:
-                    var member = (MemberInfo?)type.GetField(m.name, BF)
-                                 ?? type.GetProperty(m.name, BF);
-                    cur = member switch
-                    {
-                        FieldInfo fi => Expression.Field(cur, fi),
-                        PropertyInfo pi => Expression.Property(cur, pi),
-                        _ => throw new MissingMemberException(type.Name, m.name)
-                    };
-                    type = member switch
-                    {
-                        FieldInfo fi => fi.FieldType,
-                        PropertyInfo pi => pi.PropertyType,
-                        _ => type
-                    };
-                    break;
+                var name = t.GetName(input);
+                var member =
+                    (MemberInfo)curTyp.GetField(name, BF) ??
+                    (MemberInfo)curTyp.GetProperty(name, BF)
+                    ?? throw new MissingMemberException(curTyp.Name, name);
 
-                case IndexToken idx:
-                    var idxC = Expression.Constant(idx.index);
-                    if (type.IsArray)
-                    {
-                        cur = Expression.ArrayAccess(cur, idxC);
-                        type = type.GetElementType()!;
-                    }
-                    else
-                    {
-                        var itemProp = type.GetProperty(
-                                           "Item", BF, null, null, new[] { typeof(int) }, null)
-                                       ?? throw new MissingMemberException(type.Name, "Item[int]");
+                Expression memberExpr = Expression.PropertyOrField(curExpr, name);
 
-                        cur = Expression.MakeIndex(cur, itemProp, new[] { idxC });
-                        type = itemProp.PropertyType;
-                    }
+                curObj = member switch
+                {
+                    FieldInfo fi1 => fi1.GetValue(curObj),
+                    PropertyInfo pi1 => pi1.GetValue(curObj),
+                    _ => null
+                };
 
-                    break;
+                curTyp = curObj?.GetType() ??
+                         (member is FieldInfo fi ? fi.FieldType : ((PropertyInfo)member).PropertyType);
+                curExpr = i == length - 1 ? memberExpr : Expression.Convert(memberExpr, curTyp);
+            }
+            else
+            {
+                var index = t.Index;
+                var idxC = Expression.Constant(index);
+
+                Expression itemExpr;
+                object itemObj;
+                Type itemTyp;
+
+                if (curTyp.IsArray)
+                {
+                    itemExpr = Expression.ArrayAccess(curExpr, idxC);
+                    itemObj = ((Array)curObj)?.GetValue(index);
+                    itemTyp = itemObj?.GetType() ?? curTyp.GetElementType()!;
+                }
+                else
+                {
+                    var itemProp = curTyp.GetProperty(
+                                       "Item", BF, null, null,
+                                       new[] { typeof(int) }, null)
+                                   ?? throw new MissingMemberException(curTyp.Name, "Item[int]");
+
+                    itemExpr = Expression.MakeIndex(curExpr, itemProp, new[] { idxC });
+                    itemObj = itemProp.GetValue(curObj, new object[] { index });
+                    itemTyp = itemObj?.GetType() ?? itemProp.PropertyType;
+                }
+
+                curObj = itemObj;
+                curTyp = itemTyp;
+                curExpr = i == length - 1 ? itemExpr : Expression.Convert(itemExpr, itemTyp);
             }
         }
 
-        return (cur, type, rootPar);
+        bool canRead  = false;
+        bool canWrite = false;
+
+        switch (curExpr)
+        {
+            case MemberExpression me:
+                switch (me.Member)
+                {
+                    case PropertyInfo prop:
+                        canRead  = prop.CanRead  && prop.GetMethod != null;
+                        canWrite = prop.CanWrite && prop.SetMethod != null;
+                        break;
+
+                    case FieldInfo field:
+                        canWrite = !field.IsInitOnly && !field.IsLiteral;
+                        break;
+                }
+                break;
+            
+            case IndexExpression ie:
+                if (ie.Indexer == null)
+                {
+                    canRead = true;
+                    canWrite = true;
+                }
+                else
+                {
+                    canRead  = ie.Indexer.CanRead  && ie.Indexer.GetMethod != null;
+                    canWrite = ie.Indexer.CanWrite && ie.Indexer.SetMethod != null;
+                }
+                break;
+        }
+        
+        ArrayPool<Token>.Shared.Return(tokens);
+        return (curExpr, curTyp, rootPar, canRead, canWrite);
     }
 
-    private abstract record Token;
-
-    private record MemberToken : Token
+    private readonly struct Token
     {
-        public MemberToken(string Name)
+        private readonly int Start;
+        private readonly short Length;
+        public readonly int Index;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Token(int idx)
         {
-            name = Name;
+            Start = 0; Length = 0;
+            Index = idx;
         }
 
-        public string name;
-    }
-
-    private record IndexToken : Token
-    {
-        public IndexToken(int Index)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Token(int start, int length)
         {
-            this.index = Index;
+            Start = start;
+            Length = (short)length;
+            Index = -1;
         }
+        
+        public bool IsIndex => Index >= 0;
 
-        public int index;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string GetName(ReadOnlySpan<char> src) => new(src.Slice(Start, Length));
     }
 
-    private static IEnumerable<Token> Tokenize(string path)
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int Tokenize(ReadOnlySpan<char> input, Span<Token> dst)
     {
-        int i = 0;
-        while (i < path.Length)
+        int len   = input.Length;
+        int i     = 0;
+        int count = 0;
+
+        while (i < len)
         {
-            if (path[i] == '.')
+            switch (input[i])
             {
-                i++;
-                continue;
+                case '.':
+                    i++;
+                    continue;
+
+                case '[':
+                    int val = 0;
+                    for (i++; i < len && input[i] != ']'; i++)
+                        val = val * 10 + (input[i] - '0');
+                    i++;
+
+                    dst[count++] = new Token(val);
+                    continue;
             }
 
-            if (path[i] == '[')
-            {
-                int close = path.IndexOf(']', i);
-                yield return new IndexToken(
-                    int.Parse(path.Substring(i + 1, close - i - 1)));
-                i = close + 1;
-                continue;
-            }
+            int start = i;
+            int rel   = input[i..].IndexOfAny('.', '[');
+            i         = rel >= 0 ? i + rel : len;
 
-            int j = i;
-            while (j < path.Length && path[j] != '.' && path[j] != '[') j++;
-            yield return new MemberToken(path.Substring(i, j - i));
-            i = j;
+            dst[count++] = new Token(start, i - start);
         }
+
+        return count;
     }
 
     private const BindingFlags BF =

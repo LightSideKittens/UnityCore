@@ -4,8 +4,8 @@ using UnityEngine;
 [Serializable]
 public class SetParentAction : DoIt
 {
-    [SerializeReference] public DataProvider<Transform> parent;
-    [SerializeReference] public DataProvider<Transform> child;
+    [SerializeReference] public Get<Transform> parent;
+    [SerializeReference] public Get<Transform> child;
     public bool worldPositionStays = true;
     
     public override void Invoke()

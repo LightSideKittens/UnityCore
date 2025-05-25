@@ -68,7 +68,7 @@ namespace LSCore.AnimationsModule.Animations
         [HideIf("@IsDurationZero || !UseMultiple")]
         [SerializeReference] public List<IOption> options;
 
-        [SerializeReference] public List<DataProvider<TTarget>> targets = new();
+        [SerializeReference] public List<Get<TTarget>> targets = new();
 
         [ShowIf("UseMultiple")] public AnimationCurve timeOffsetPerTarget = AnimationCurve.Constant(0, 0, 0.1f);
 
@@ -76,7 +76,7 @@ namespace LSCore.AnimationsModule.Animations
         public TTarget FirstTarget
         {
             get => targets[0];
-            set => targets[0] = new RefDataProvider<TTarget> { data = value };
+            set => targets[0] = new SerializeField<TTarget> { data = value };
         }
 
         public List<Tween> Tweens { get; private set; }

@@ -255,7 +255,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
                 currentHandlers[i].isPreview = isPreview;
             }
 #endif
-            BindCurrent();
+            BindCurrent(); //TODO: Parallel.For
 
             handlersBuffer.Clear();
             for (int i = 0; i < currentHandlers.Count; i++)
@@ -302,7 +302,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
     private void Awake()
     {
         TryInit();
-        Clip = defaultClip;
+        Clip = defaultClip; //TODO: Parallel.For
     }
     
     private void OnEnable()

@@ -1,0 +1,1262 @@
+[
+  {
+    "description": "'Texture2D.Resize(int, int)' is obsolete: 'Texture2D.Resize(int, int) has been deprecated because it actually reinitializes the texture. Use Texture2D.Reinitialize(int, int) instead (UnityUpgradable) -> Reinitialize([*] System.Int32, [*] System.Int32)'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-108598133",
+    "severity": "minor",
+    "location": {
+      "path": "Packages/com.unity.textmeshpro/Scripts/Runtime/TMP_FontAsset.cs",
+      "lines": {
+        "begin": 1508
+      }
+    }
+  },
+  {
+    "description": "'Texture2D.Resize(int, int)' is obsolete: 'Texture2D.Resize(int, int) has been deprecated because it actually reinitializes the texture. Use Texture2D.Reinitialize(int, int) instead (UnityUpgradable) -> Reinitialize([*] System.Int32, [*] System.Int32)'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-108598133",
+    "severity": "minor",
+    "location": {
+      "path": "Packages/com.unity.textmeshpro/Scripts/Runtime/TMP_FontAsset.cs",
+      "lines": {
+        "begin": 1730
+      }
+    }
+  },
+  {
+    "description": "'Texture2D.Resize(int, int)' is obsolete: 'Texture2D.Resize(int, int) has been deprecated because it actually reinitializes the texture. Use Texture2D.Reinitialize(int, int) instead (UnityUpgradable) -> Reinitialize([*] System.Int32, [*] System.Int32)'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-108598133",
+    "severity": "minor",
+    "location": {
+      "path": "Packages/com.unity.textmeshpro/Scripts/Runtime/TMP_FontAsset.cs",
+      "lines": {
+        "begin": 2074
+      }
+    }
+  },
+  {
+    "description": "'Texture2D.Resize(int, int)' is obsolete: 'Texture2D.Resize(int, int) has been deprecated because it actually reinitializes the texture. Use Texture2D.Reinitialize(int, int) instead (UnityUpgradable) -> Reinitialize([*] System.Int32, [*] System.Int32)'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-108598133",
+    "severity": "minor",
+    "location": {
+      "path": "Packages/com.unity.textmeshpro/Scripts/Runtime/TMP_FontAsset.cs",
+      "lines": {
+        "begin": 2444
+      }
+    }
+  },
+  {
+    "description": "'Texture2D.Resize(int, int, TextureFormat, bool)' is obsolete: 'Texture2D.Resize(int, int, TextureFormat, bool) has been deprecated because it actually reinitializes the texture. Use Texture2D.Reinitialize(int, int, TextureFormat, bool) instead (UnityUpgradable) -> Reinitialize([*] System.Int32, [*] System.Int32, UnityEngine.TextureFormat, [*] System.Boolean)'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-108598133",
+    "severity": "minor",
+    "location": {
+      "path": "Packages/com.unity.textmeshpro/Scripts/Runtime/TMP_FontAsset.cs",
+      "lines": {
+        "begin": 2846
+      }
+    }
+  },
+  {
+    "description": "'Texture2D.Resize(int, int, TextureFormat, bool)' is obsolete: 'Texture2D.Resize(int, int, TextureFormat, bool) has been deprecated because it actually reinitializes the texture. Use Texture2D.Reinitialize(int, int, TextureFormat, bool) instead (UnityUpgradable) -> Reinitialize([*] System.Int32, [*] System.Int32, UnityEngine.TextureFormat, [*] System.Boolean)'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-108598133",
+    "severity": "minor",
+    "location": {
+      "path": "Packages/com.unity.textmeshpro/Scripts/Runtime/TMP_FontAsset.cs",
+      "lines": {
+        "begin": 2850
+      }
+    }
+  },
+  {
+    "description": "Unreachable code detected",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-645944838",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Scripts/Utils/RequestSender.cs",
+      "lines": {
+        "begin": 721
+      }
+    }
+  },
+  {
+    "description": "'ParticleSystem.TextureSheetAnimationModule.useRandomRow' is obsolete: 'useRandomRow property is deprecated. Use rowMode instead.'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "1114765572",
+    "severity": "minor",
+    "location": {
+      "path": "Packages/com.unity.uiextensions/Runtime/Scripts/Effects/UIParticleSystem.cs",
+      "lines": {
+        "begin": 229
+      }
+    }
+  },
+  {
+    "description": "'MainMenuData.CurrentPopup' is obsolete: 'Use OpenSequence ReactiveCommand'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-336427207",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Scripts/Main/Systems/Screens/ScreensSwitcherSystem.cs",
+      "lines": {
+        "begin": 429
+      }
+    }
+  },
+  {
+    "description": "'MainMenuData.CurrentPopup' is obsolete: 'Use OpenSequence ReactiveCommand'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-336427207",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Scripts/Main/Systems/Screens/ScreensSwitcherSystem.cs",
+      "lines": {
+        "begin": 431
+      }
+    }
+  },
+  {
+    "description": "'MainMenuData.CurrentPopup' is obsolete: 'Use OpenSequence ReactiveCommand'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-336427207",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Scripts/Main/Systems/Screens/ScreensSwitcherSystem.cs",
+      "lines": {
+        "begin": 448
+      }
+    }
+  },
+  {
+    "description": "'MainMenuData.CurrentPopupSequence' is obsolete: 'Use OpenSequence ReactiveCommand'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-336427207",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Scripts/Main/Systems/Screens/ScreensSwitcherSystem.cs",
+      "lines": {
+        "begin": 524
+      }
+    }
+  },
+  {
+    "description": "'MainMenuData.CurrentPopupSequence' is obsolete: 'Use OpenSequence ReactiveCommand'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-336427207",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Scripts/Main/Systems/Screens/ScreensSwitcherSystem.cs",
+      "lines": {
+        "begin": 526
+      }
+    }
+  },
+  {
+    "description": "'MainMenuData.CurrentPopup' is obsolete: 'Use OpenSequence ReactiveCommand'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-336427207",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Scripts/Main/Systems/Screens/ScreensSwitcherSystem.cs",
+      "lines": {
+        "begin": 532
+      }
+    }
+  },
+  {
+    "description": "'MainMenuData.CurrentPopup' is obsolete: 'Use OpenSequence ReactiveCommand'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-336427207",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Scripts/Main/Systems/Screens/ScreensSwitcherSystem.cs",
+      "lines": {
+        "begin": 554
+      }
+    }
+  },
+  {
+    "description": "'MainMenuData.CurrentPopupSequence' is obsolete: 'Use OpenSequence ReactiveCommand'",
+    "check_name": "CodeCompilerMessage",
+    "fingerprint": "-336427207",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Scripts/Main/Systems/Screens/ScreensSwitcherSystem.cs",
+      "lines": {
+        "begin": 607
+      }
+    }
+  },
+  {
+    "description": "<b>Show Splash Screen</b> is enabled in the Player Settings. Displaying a splash screen will increase the time it takes to load into the first scene.",
+    "check_name": "ProjectSetting",
+    "fingerprint": "-1495573462",
+    "severity": "minor",
+    "location": {
+      "path": "Project/Player",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "The <b>Resources folder</b> is a common source of many problems in Unity projects. Improper use of the Resources folder can bloat the size of a project’s build, lead to uncontrollable excessive memory utilization, and significantly increase application startup times.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1092056267",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Fonts/Main/Inter-SemiBold SDF.asset",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "The <b>Resources folder</b> is a common source of many problems in Unity projects. Improper use of the Resources folder can bloat the size of a project’s build, lead to uncontrollable excessive memory utilization, and significantly increase application startup times.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1009253234",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Fonts/Main/InterMedium.asset",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "The <b>Resources folder</b> is a common source of many problems in Unity projects. Improper use of the Resources folder can bloat the size of a project’s build, lead to uncontrollable excessive memory utilization, and significantly increase application startup times.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1311872925",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Fonts/Main/Inter-Bold SDF.asset",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "The <b>Resources folder</b> is a common source of many problems in Unity projects. Improper use of the Resources folder can bloat the size of a project’s build, lead to uncontrollable excessive memory utilization, and significantly increase application startup times.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-633117226",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Fonts/Main/InterBlackGlow.asset",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "The <b>Resources folder</b> is a common source of many problems in Unity projects. Improper use of the Resources folder can bloat the size of a project’s build, lead to uncontrollable excessive memory utilization, and significantly increase application startup times.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1391431610",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Fonts/Main/Nunito-Bold SDF.asset",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "The <b>Resources folder</b> is a common source of many problems in Unity projects. Improper use of the Resources folder can bloat the size of a project’s build, lead to uncontrollable excessive memory utilization, and significantly increase application startup times.",
+    "check_name": "AssetIssue",
+    "fingerprint": "329046033",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Fonts/Main/Currencies.asset",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1352400127",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/AppleFortune/BackGround/bg/background.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1026483384",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Crystal/Crystal_png/pop_up/coefficient/flag.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-471024421",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Crystal/Crystal_png/pop_up/coefficient/number of crystals копия.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "675784837",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Cyber2077/Cyber_2077_png/base_ui/back_lines_in_dark.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-532543696",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Cyber2077/Cyber_2077_png/base_ui/game_iteams/coefficient_scale/coefficient_scale.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-621385511",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Cyber2077/Cyber_2077_png/base_ui/game_iteams/coefficient_scale/coefficient_scale_2%.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "969085667",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Cyber2077/Cyber_2077_png/base_ui/game_iteams/coefficient_scale/coefficient_scale_50%.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1527443724",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Cyber2077/Cyber_2077_png/base_ui/game_iteams/coefficient_scale/coefficient_scale_80%.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-838253363",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Cyber2077/Cyber_2077_png/base_ui/game_iteams/coefficient_scale/coefficient_scale_active.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "733167229",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Dice/Dice animation/Background/background.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1670189334",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Dice/Dice animation/Girl/girl.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1211750810",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Dice/Dice animation/Lights/rules_lights.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1178780371",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/FruitBlast/Elements/juice/Fruits/7.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1789301955",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/FruitBlast/Elements/juice/ProgressBar/bar_coin.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1488334867",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/FruitBlast/Elements/popup/rate setting substrate.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "763174801",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/FruitBlast/Elements/popup/rule underlay.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1751217101",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/GamesBanners/MafiaRiches/Mafia_riches_banners/character_girl.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1477188047",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/GamesBanners/MafiaRiches/Mafia_riches_banners/character_girl_for_bunners.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-108303885",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/GemsAndMines/UI/RulesPopup/gems_and_mines_popup_rules_background.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-648748296",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/GemsBonanza/Gems_Bonanza_PNG/game_ui/playing_field/playing_field.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1887243309",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/GemsBonanza/Gems_Bonanza_PNG/pop_up/pop up.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1178883362",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/GemsOdyssey/Background/Girl/character.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1373430340",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/GemsOdyssey/Background/Girl/character_2.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-572743853",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/HigherVsLower/Higher_vs_Lower_animation/BG/bg.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1116355224",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/HigherVsLower/OldAnimation/game_field/pole.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-387430859",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/IndianPoker/Indian_Poker_PNG/PopUp/popup_place.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1291177277",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/JackpotWheel/Animations/wheel/wheel.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "970719485",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/JackpotWheel/Background/rock_right.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-2137490385",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/KillerClubs/Killer_Clubs_animation/cards_main/cards_main.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1766771610",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/KillerClubs/Killer_Clubs_PNG/Killer_Clubs_PopUp/pop_up_shad.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1712157475",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/KillerClubs/Killer_Clubs_PNG/Killer_Clubs_PopUp/PopUp_bet/popup_bet.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1915864687",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/KillerClubs/Killer_Clubs_PNG/Killer_Clubs_PopUp/PopUp_rules/popup_rules.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1875239473",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LasVegas/LasVegas_animation/bg/bg.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-2028988497",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LasVegas/LasVegas_animation/game_field/game_field.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1551707207",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LasVegas/LasVegas_PNG/bg/back_lights.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1191314681",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LasVegas/LasVegas_PNG/bg/ui_lights.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1191231593",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LasVegas/LasVegas_PNG/GameUi/ui_game/bullets_lights.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1621288615",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LasVegas/LasVegas_PNG/PopUp/back_lights.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1538529385",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LasVegas/LasVegas_PNG/PopUp/bg_dark_layer.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "237993920",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LasVegas/LasVegas_PNG/PopUp/PopUp_Bet/popup_bet.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1340555612",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LasVegas/LasVegas_PNG/PopUp/PopUp_Coef/popup_coef.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1025256205",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LasVegas/LasVegas_PNG/PopUp/PopUp_Rules/popup_rules.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1149733143",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LuckySlot/LuckySlot_animation/BG/bg.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1155909816",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/LuckySlot/LuckySlot_PNG/LuckySlot_BG_UI/ui_bag/ui_bag.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1683341823",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_bingo_game/bg/bingo_base.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1781010950",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_main_game/bg/bg.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-2140582946",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_main_game/bg/bg_smoke_2.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1025730150",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_main_game/bonus_field.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "119817012",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_main_game/characters/character_girl.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1451621502",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_main_game/main_field.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "742544489",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_pop_up/popup_start_rule.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1713321445",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_pop_up/rule/popup_rule.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1813854999",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_pop_up/rule/screenshots/rule_1.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1748082953",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_pop_up/rule/screenshots/rule_2.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1402021614",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_pop_up/rule/screenshots/rule_3.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-984023969",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_pop_up/rule/screenshots/rule_4.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "526675676",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_pop_up/rule/screenshots/rule_6.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "876849906",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MafiaRiches/UI/Mafia_riches_pop_up/rule/screenshots/rule_7.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1993028824",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MayanTomb/PNG/PopUp/MayanTombPopUpField.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-683717203",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MoneyWheel/Animation/blink/blink.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-84851006",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MoneyWheel/Animation/blink/stars.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1517009795",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MoneyWheel/Animation/blink/stars4.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1162886548",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MoneyWheel/Animation/blink/stars5.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "23314677",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MoneyWheel/Animation/playing_field/playing_field.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1072911674",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MoneyWheel/PNG/basis 2.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1606148394",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/MoneyWheel/PNG/numbers 1.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1603167766",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/OlympusSlot/Olympus_Slot_animation/modes/modes.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1425289071",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/OneXVibe/vibe_popup/popup_glow.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1120547947",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/OneXVibe/vibe_popup/ссссс 3.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1096758908",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/PharaohKingdom/BackGround/Girl/girl.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-694766173",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/PharaohKingdom/Elements/PopUp/popup_rules.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-142318274",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/PharaohKingdom/Elements/WinEffect/win.atlas.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1394163009",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Plinko/Plinko/Plinko_files/Plinko_PNG/Plinko_PopUp/popup_honestcheck/honest_check_field.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "290562303",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/RoyalFeast/King/king.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "992193386",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Solitaire/solitaire_png/playing_field.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-1516686118",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/SpinAndWin/Animations/Dragon/dragon.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "357011471",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/SpinAndWin/PNG/Background/SpinAndWinBG1.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-89044020",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/SpinAndWin/PNG/Background/SpinAndWinBG2.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1234357225",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/SpinAndWin/PNG/PopUp/SpinAndWinFade.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-154758650",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/Thimbles/Animations/Light/light.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "1140543272",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Games/WesternSlot/WesternSlot_PNG/Game_UI/Ui/bullets_lights.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  },
+  {
+    "description": "Texture size is more than 2MB.",
+    "check_name": "AssetIssue",
+    "fingerprint": "-647144909",
+    "severity": "minor",
+    "location": {
+      "path": "Assets/Sprites/Main/Menu/SecureSettings/Security Settings.png",
+      "lines": {
+        "begin": 0
+      }
+    }
+  }
+]
