@@ -53,9 +53,6 @@ public partial class MoveIt
         public Func<object, float> numGet;
         public Action<object, float> numSet;
         
-        public Func<object, object> enumGet;
-        public Action<object, object> enumSet;
-        
 #if UNITY_EDITOR
         public string rawProperty;
 #endif
@@ -119,11 +116,6 @@ public partial class MoveIt
             propertyHandler?.HandleAnimatedProperty(handler, this);
         }
         
-        private void Reset5(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
-        {
-            enumSet(obj, (int)startY);
-        }
-        
         private void Update(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
         {
             numSet(obj, y);
@@ -139,11 +131,6 @@ public partial class MoveIt
                         
             set(obj, value);
             propertyHandler?.HandleAnimatedProperty(handler, this);
-        }
-        
-        private void Update5(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
-        {
-            enumSet(obj, (int)y);
         }
         
         private void GetUpdate(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
@@ -167,78 +154,72 @@ public partial class MoveIt
             propertyHandler?.HandleAnimatedProperty(handler, this);
         }
         
-        private void GetUpdate5(ref int floatIndex, ref int discreteIndex, UniDict<int, Object> objects, Handler handler, Object obj, IPropertyHandler propertyHandler)
-        {
-            startY = Convert.ToInt32(enumGet(obj));
-            enumSet(obj, (int)y);
-        }
-        
-        public void InitAccessor(Type type)
+        public void InitAccessor(object obj)
         {
             switch (propertyType)
             {
                 case PropertyType.Float:
-                    floatAccessor = PathAccessorCache.Get<float>(type, property);
+                    floatAccessor = PathAccessorCache.Get<float>(obj, property);
                     numGet = GetFloat;
                     numSet = SetFloat;
                     break;
                 case PropertyType.Int8:
-                    sbyteAccessor = PathAccessorCache.Get<sbyte>(type, property);
+                    sbyteAccessor = PathAccessorCache.Get<sbyte>(obj, property);
                     numGet = GetInt8;
                     numSet = SetInt8;
                     break;
                 case PropertyType.UInt8:
-                    byteAccessor = PathAccessorCache.Get<byte>(type, property);
+                    byteAccessor = PathAccessorCache.Get<byte>(obj, property);
                     numGet = GetUInt8;
                     numSet = SetUInt8;
                     break;
                 case PropertyType.Int16:
-                    shortAccessor = PathAccessorCache.Get<short>(type, property);
+                    shortAccessor = PathAccessorCache.Get<short>(obj, property);
                     numGet = GetInt16;
                     numSet = SetInt16;
                     break;
                 case PropertyType.UInt16:
-                    ushortAccessor = PathAccessorCache.Get<ushort>(type, property);
+                    ushortAccessor = PathAccessorCache.Get<ushort>(obj, property);
                     numGet = GetUInt16;
                     numSet = SetUInt16;
                     break;
                 case PropertyType.Int32:
-                    intAccessor = PathAccessorCache.Get<int>(type, property);
+                    intAccessor = PathAccessorCache.Get<int>(obj, property);
                     numGet = GetInt32;
                     numSet = SetInt32;
                     break;
                 case PropertyType.UInt32:
-                    uintAccessor = PathAccessorCache.Get<uint>(type, property);
+                    uintAccessor = PathAccessorCache.Get<uint>(obj, property);
                     numGet = GetUInt32;
                     numSet = SetUInt32;
                     break;
                 case PropertyType.Int64:
-                    longAccessor = PathAccessorCache.Get<long>(type, property);
+                    longAccessor = PathAccessorCache.Get<long>(obj, property);
                     numGet = GetInt64;
                     numSet = SetInt64;
                     break;
                 case PropertyType.UInt64:
-                    ulongAccessor = PathAccessorCache.Get<ulong>(type, property);
+                    ulongAccessor = PathAccessorCache.Get<ulong>(obj, property);
                     numGet = GetUInt64;
                     numSet = SetUInt64;
                     break;
                 case PropertyType.Double:
-                    doubleAccessor = PathAccessorCache.Get<double>(type, property);
+                    doubleAccessor = PathAccessorCache.Get<double>(obj, property);
                     numGet = GetDouble;
                     numSet = SetDouble;
                     break;
                 case PropertyType.Bool:
-                    boolAccessor = PathAccessorCache.Get<bool>(type, property);
+                    boolAccessor = PathAccessorCache.Get<bool>(obj, property);
                     numGet = GetBool;
                     numSet = SetBool;
                     break;
                 case PropertyType.Enum:
-                    var accessor = PathAccessorCache.GetEnum(type, property);
-                    enumGet = accessor.GetRaw;
-                    enumSet = accessor.SetRaw;
+                    var accessor = PathAccessorCache.GetRef(obj, property);
+                    get = accessor.Get;
+                    set = accessor.Set;
                     break;
                 case PropertyType.Ref:
-                    var refAccessor = PathAccessorCache.GetRef(type, property);
+                    var refAccessor = PathAccessorCache.GetRef(obj, property);
                     get = refAccessor.Get;
                     set = refAccessor.Set;
                     break;
@@ -258,22 +239,13 @@ public partial class MoveIt
             }
             else
             {
-                if (propertyType == PropertyType.Ref)
+                if (propertyType is PropertyType.Ref or PropertyType.Enum)
                 {
                     if (set != null)
                     {
                         reset = Reset3;
                         update = Update3;
                         getUpdate = GetUpdate3;
-                    }
-                }
-                else if(propertyType == PropertyType.Enum)
-                {
-                    if (enumSet != null)
-                    {
-                        reset = Reset5;
-                        update = Update5;
-                        getUpdate = GetUpdate5;
                     }
                 }
             }

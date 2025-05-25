@@ -24,7 +24,7 @@ public static class DataProviderUtility
             .Select(f => f.FieldType)
             .Where(ft =>
                 ft.IsGenericType &&
-                ft.GetGenericTypeDefinition() == typeof(DataProvider<>) &&
+                ft.GetGenericTypeDefinition() == typeof(Get<>) &&
                 !ft.ContainsGenericParameters)
             .SelectMany(ft =>
             {
@@ -32,8 +32,8 @@ public static class DataProviderUtility
                 
                 return new[]
                 {
-                    typeof(BufferDataSetter<>).MakeGenericType(t),
-                    typeof(KeyBufferDataSetter<>).MakeGenericType(t)
+                    typeof(SetBuffer<>).MakeGenericType(t),
+                    typeof(SetKeyBuffer<>).MakeGenericType(t)
                 };
             })
             .Distinct()

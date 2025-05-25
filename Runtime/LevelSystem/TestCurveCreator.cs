@@ -14,8 +14,10 @@ namespace LSCore.BattleModule
         
         public LevelsManager manager;
         public bool useParallel; 
-        public TestStruct2.TestClass2.TestEnum testEnum;
         public TestStruct testStruct;
+
+        [SerializeReference] private TestStruct2.TestClass2 testClass;
+        public TestClass4 testClass4;
         
         [Serializable]
         public class TestStruct
@@ -38,26 +40,12 @@ namespace LSCore.BattleModule
             [Serializable]
             public abstract class TestClass2
             {
-                public enum TestEnum
-                {
-                    None,
-                    Done,
-                    Fone,
-                    Sone
-                }
-                
-                [SerializeField] private Id[] id;
-                [SerializeField] private Sprite[] sprites;
-                public float speed;
-                public int count;
-                public TestEnum type;
-                public bool testBool;
             }
             
             [Serializable]
             private class TestClass3 : TestClass2
             {
-                
+                public int count;
             }
         }
     }
@@ -65,7 +53,7 @@ namespace LSCore.BattleModule
     [Serializable]
     public class TestClass4 : TestCurveCreator.TestStruct2.TestClass2
     {
-                
+        public int count;
     }
 
     /*[CustomEditor(typeof(TestCurveCreator))]

@@ -17,13 +17,12 @@ public partial class MoveIt
 
             if (handler.TryGetPropBindingData(out var obj, out var go))
             {
-
-                var type = obj.GetType();
+                ;
                 var evaluators = handler.evaluators;
                 for (var j = 0; j < evaluators.Count; j++)
                 {
                     var evaluator = evaluators[j];
-                    evaluator.InitAccessor(type);
+                    evaluator.InitAccessor(obj);
                     evaluator.InitDelegates();
                 }
             }

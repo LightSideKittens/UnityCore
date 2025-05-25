@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace LSCore
@@ -60,15 +61,20 @@ namespace LSCore
                 return;
             }
             
-            if (string.IsNullOrEmpty(id))
+
+
+            void Show()
             {
-                obj.Show(option);
-            }
-            else
-            {
-                using (new UIViewBoss.UseId(id))
+                if (string.IsNullOrEmpty(id))
                 {
                     obj.Show(option);
+                }
+                else
+                {
+                    using (new UIViewBoss.UseId(id))
+                    {
+                        obj.Show(option);
+                    }
                 }
             }
         }
