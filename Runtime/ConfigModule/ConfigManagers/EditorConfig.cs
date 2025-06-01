@@ -6,7 +6,12 @@ namespace LSCore.ConfigModule
     public class EditorConfig : LocalDynamicConfig
     {
         public JToken data = new JObject();
-        public static EditorConfigManager GetManager(string path) => ConfigMaster<EditorConfigManager>.Get(path);
+        public static EditorConfigManager GetManager(string path, bool enableLog = false)
+        {
+            var configManager = ConfigMaster<EditorConfigManager>.Get(path);
+            configManager.isLogEnabled = enableLog;
+            return configManager;
+        }
     }
 }
 #endif

@@ -19,6 +19,20 @@ MonoBehaviour:
   addedIllegalTypes:
     serializedCollection: []
   typeSettings:
-    serializedDictionary: []
+    serializedDictionary:
+    - typeBound: SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]],
+        LSCore.DoIt
+      displayName: SerializeField.Transform
+      category: 
+      sdfIconType: 529
+      lightColor: {r: 1, g: 0, b: 0, a: 1}
+      darkColor: {r: 0.24721974, g: 0.8301887, b: 0.1527234, a: 1}
+    - typeBound: SerializeField`1[[UnityEngine.Object, UnityEngine.CoreModule]],
+        LSCore.DoIt
+      displayName: SerializeField`1
+      category: 
+      sdfIconType: 0
+      lightColor: {r: 0, g: 0, b: 0, a: 0}
+      darkColor: {r: 0, g: 0, b: 0, a: 0}
   typePriorities:
     serializedDictionary: []

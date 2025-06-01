@@ -540,18 +540,6 @@ namespace LSCore
 #endif
         }
 
-        /// <summary>
-        /// See ICanvasElement.LayoutComplete
-        /// </summary>
-        public virtual void LayoutComplete()
-        {}
-
-        /// <summary>
-        /// See ICanvasElement.GraphicUpdateComplete
-        /// </summary>
-        public virtual void GraphicUpdateComplete()
-        {}
-
         protected override void OnDisable()
         {
             m_Tracker.Clear();
