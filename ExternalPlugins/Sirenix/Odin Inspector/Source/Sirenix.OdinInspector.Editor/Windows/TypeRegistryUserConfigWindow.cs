@@ -127,7 +127,7 @@ namespace Sirenix.OdinInspector.Editor
 			public bool IsModified => TypeRegistryUserConfig.Instance.IsModified(this.Type);
 
 			[ShowInInspector]
-			[DisableIf("@$property.ValueEntry.ValueCount > 1 || this.Type.IsGenericType")]
+			[DisableIf("@$property.ValueEntry.ValueCount > 1")]
 			public string DisplayName
 			{
 				get
@@ -376,6 +376,7 @@ namespace Sirenix.OdinInspector.Editor
 
 #endregion
 
+		public static HashSet<Type> additionalTypes = new HashSet<Type>();
 		public Type TypeToScrollTo = null;
 		
 		private OdinMenuItem selectedNamespaceItem;
@@ -571,9 +572,9 @@ namespace Sirenix.OdinInspector.Editor
 			bool validateNamespace = !string.IsNullOrEmpty(this.selectedNamespace);
 
 			// TODO ensure when you right-click && customize type it checks for this whether to use a disabled button or not
-			foreach (Type type in AssemblyUtilities.GetTypes(AssemblyCategory.All)) //TypeRegistry.ValidTypes)
+			foreach (Type type in AssemblyUtilities.GetTypes(AssemblyCategory.All).Concat(additionalTypes)) //TypeRegistry.ValidTypes)
 			{
-				if (!TypeRegistry.IsModifiableType(type))
+				if (!TypeRegistry.IsModifiableType(type) && !additionalTypes.Contains(type))
 				{
 					continue;
 				}

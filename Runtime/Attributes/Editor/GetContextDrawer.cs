@@ -17,7 +17,14 @@ public class GetContextDrawer : OdinDrawer
     protected override void Initialize()
     {
         context = Property.SerializationRoot.ValueEntry.WeakSmartValue;
-        Property.Info.GetMemberInfo().SetMemberValue(Property.Parent.BaseValueEntry.WeakSmartValue, context);
+        var parentValue = Property.Parent.BaseValueEntry.WeakSmartValue;
+        var info = Property.Info.GetMemberInfo();
+        if (info.GetMemberValue(parentValue) == context) return;
+        info.SetMemberValue(parentValue, context);
+        if (context is Object obj)
+        {
+            EditorUtility.SetDirty(obj);
+        }
     }
 
     protected override void DrawPropertyLayout(GUIContent label)

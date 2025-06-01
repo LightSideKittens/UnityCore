@@ -39,6 +39,7 @@ namespace LSCore.ConfigModule
         [JsonIgnore] protected virtual ConfigSerializationSettings Settings { get; } = new();
 
         protected virtual string Tag => $"[{typeof(T).Name}]".ToTag(new Color(0.15f, 0.82f, 0.42f));
+        public bool isLogEnabled;
 
         private string meta;
         
@@ -56,7 +57,10 @@ namespace LSCore.ConfigModule
         [Conditional("DEBUG")]
         protected void Log(string message)
         {
-            Burger.Log($"{GetLogTag(Tag)} {message} {meta}");
+            if (isLogEnabled)
+            {
+                Burger.Log($"{GetLogTag(Tag)} {message} {meta}");
+            }
         }
         
         protected virtual void Deserialize(string json)

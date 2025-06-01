@@ -1,6 +1,9 @@
 ﻿using System;
 using JetBrains.Annotations;
 using LSCore.Extensions.Unity;
+using Sirenix.Config;
+using Sirenix.OdinInspector.Editor;
+using UnityEditor;
 using UnityEngine;
 
 [Serializable]
@@ -22,6 +25,20 @@ public interface IGetRaw<[UsedImplicitly]T>
 [Serializable]
 public class SerializeField<T> : Get<T>, IGetRaw<T>
 {
+#if UNITY_EDITOR
+    static SerializeField()
+    {
+        EditorApplication.update += Update;
+    }
+
+    private static void Update()
+    {
+        EditorApplication.update -= Update;
+        var type = typeof(SerializeField<T>);
+        TypeRegistryUserConfigWindow.additionalTypes.Add(type);
+    }
+    
+#endif
     [SerializeField] public T data;
     object IGetRaw<T>.Data => data;
     public override T Data => data;
@@ -102,18 +119,5 @@ public class FromHierarchyPath<T> : Get<T>
 {
     [SerializeReference] public Get<Transform> root;
     public string path;
-    private T result;
-    
-    public override T Data
-    {
-        get
-        {
-            if (result == null || result.Equals(null))
-            {
-                result = root.Data.FindComponent<T>(path);
-            }
-            
-            return result;
-        }
-    }
+    public override T Data => root.Data.FindComponent<T>(path);
 }

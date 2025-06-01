@@ -21,8 +21,15 @@ namespace LSCore
         {
             public List<Type> types;
             public static WindowTypes Config => Manager.Config;
-            public static ResourcesConfigManager<WindowTypes> Manager =>
-                ConfigMaster<ResourcesConfigManager<WindowTypes>>.Default;
+            public static ResourcesConfigManager<WindowTypes> Manager
+            {
+                get
+                {
+                    var manager = ConfigMaster<ResourcesConfigManager<WindowTypes>>.Default;
+                    manager.isLogEnabled = false;
+                    return ConfigMaster<ResourcesConfigManager<WindowTypes>>.Default;
+                }
+            }
         }
         
 

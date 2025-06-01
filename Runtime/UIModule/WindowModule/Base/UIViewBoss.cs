@@ -20,7 +20,11 @@ namespace LSCore
             public UseId(string id)
             {
                 prevId = Id;
-                Id = id;
+                
+                if (!string.IsNullOrEmpty(id))
+                {
+                    Id = id;
+                }
             }
             
             public void Dispose()

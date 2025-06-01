@@ -8,7 +8,6 @@ using Object = UnityEngine.Object;
 
 namespace LSCore
 {
-    
     [Serializable]
     public class Create<T> : DoIt where T : Component
     {
@@ -61,20 +60,14 @@ namespace LSCore
                 return;
             }
             
-
+            CanvasUpdateRegistry.Updated += Show;
 
             void Show()
             {
-                if (string.IsNullOrEmpty(id))
+                CanvasUpdateRegistry.Updated -= Show;
+                using (new UIViewBoss.UseId(id))
                 {
                     obj.Show(option);
-                }
-                else
-                {
-                    using (new UIViewBoss.UseId(id))
-                    {
-                        obj.Show(option);
-                    }
                 }
             }
         }

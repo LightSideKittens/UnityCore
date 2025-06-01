@@ -11,7 +11,7 @@ public static partial class Patchers
         harmony.PatchAll();
     }
     
-    [HarmonyPatch]//TODO: Refactor OdinInspector SourceCode
+    /*[HarmonyPatch]//TODO: Refactor OdinInspector SourceCode
     public static class GUIHelper
     {
         public static float IndentWidth { get; set; } = 15;
@@ -25,5 +25,5 @@ public static partial class Patchers
         {
             __result = UnityEditor.EditorGUI.indentLevel * IndentWidth;
         }
-    }
+    }*/
 }
