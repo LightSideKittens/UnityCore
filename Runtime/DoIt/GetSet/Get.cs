@@ -1,8 +1,10 @@
 ﻿using System;
 using JetBrains.Annotations;
 using LSCore.Extensions.Unity;
-using Sirenix.Config;
+
+#if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
+#endif
 using UnityEditor;
 using UnityEngine;
 

@@ -4,9 +4,9 @@ namespace LSCore.ConfigModule
 {
     public class GameConfigManager<T> : AutoSaveConfigManager<T> where T : LocalDynamicConfig, new()
     {
-        protected override string GetPath(string path)
+        protected override string GetFullPath(string relativePath)
         {
-            return ConfigPaths.Game.Dynamic(path);
+            return ConfigPaths.Game.Player(relativePath);
         }
     }
     
@@ -18,7 +18,7 @@ namespace LSCore.ConfigModule
     
     public abstract class GameSingleConfig<T> : LocalDynamicConfig where T : GameSingleConfig<T>, new()
     {
-        private static GameConfigManager<T> Manager => ConfigMaster<GameConfigManager<T>>.Default;
+        public static GameConfigManager<T> Manager => ConfigMaster<GameConfigManager<T>>.Default;
         public static T Config => Manager.Config;
     }
     

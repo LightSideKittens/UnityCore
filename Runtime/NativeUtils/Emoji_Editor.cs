@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using LSCore.Extensions;
 using UnityEditor;
 using UnityEngine;
@@ -25,12 +24,35 @@ namespace LSCore.NativeUtils
         private static FieldInfo ignoreGuiDepth;
         private static string EmojiCachePath => Path.Combine(Application.persistentDataPath, "EmojiCache");
 
-        private static EmojiRange[] ProcessEmojis(string text)
+        private static byte[] GetRawBytes(string emoji)
         {
-            if (string.IsNullOrEmpty(text)) return Array.Empty<EmojiRange>();
+            ignoreGuiDepth ??= typeof(Event).GetField("ignoreGuiDepth", BindingFlags.Static | BindingFlags.NonPublic);
+            var prev =  ignoreGuiDepth.GetValue(null);
+            ignoreGuiDepth.SetValue(null, true);
+            var previousEvent = Event.current;
+            repaintEvent = new Event { type = EventType.Repaint };
+
+            try
+            {
+                Event.current = repaintEvent;
+                var texture = RenderEmojiToTexture(emoji);
+                var bytes = texture.GetRawTextureData();
+                Object.DestroyImmediate(texture);
+                return bytes;
+            }
+            finally
+            {
+                ignoreGuiDepth.SetValue(null, prev);
+                Event.current = previousEvent;
+            }
+        }
+        
+        private static Range[] ProcessEmojis(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return Array.Empty<Range>();
             
             var emojiClusters = GetEmojiClusters(text);
-            var result = new EmojiRange[emojiClusters.Count];
+            var result = new Range[emojiClusters.Count];
 
             for (var i = 0; i < emojiClusters.Count; i++)
             {
@@ -38,37 +60,14 @@ namespace LSCore.NativeUtils
                 var emoji = cluster.Emoji;
                 var startIndex = cluster.StartIndex;
                 var length = cluster.Length;
-                var cachedPath = Path.Combine(EmojiCachePath, $"{ToValidFileName(emoji)}.png");
 
-                var range = new EmojiRange
+                var range = new Range
                 {
                     index = startIndex,
                     length = length,
-                    imagePath = cachedPath
+                    emoji = emoji
                 };
                 result[i] = range;
-                
-                if (!File.Exists(cachedPath))
-                {
-                    ignoreGuiDepth ??= typeof(Event).GetField("ignoreGuiDepth", BindingFlags.Static | BindingFlags.NonPublic);
-                    var prev =  ignoreGuiDepth.GetValue(null);
-                    ignoreGuiDepth.SetValue(null, true);
-                    Event previousEvent = Event.current;
-                    repaintEvent = new Event { type = EventType.Repaint };
-
-                    try
-                    {
-                        Event.current = repaintEvent;
-                        var texture = RenderEmojiToTexture(emoji);
-                        SaveTextureAsPNG(texture, cachedPath);
-                        Object.DestroyImmediate(texture);
-                    }
-                    finally
-                    {
-                        ignoreGuiDepth.SetValue(null, prev);
-                        Event.current = previousEvent;
-                    }
-                }
             }
 
             return result;
@@ -98,24 +97,45 @@ namespace LSCore.NativeUtils
             return emojiClusters;
         }
 
-        private static readonly string EmojiPattern =
-            // однобайтовые эмодзи и символы-маркировки
-            @"[\u203C\u2049\u2122\u2139\u24C2\u2600-\u26FF\u2700-\u27BF\uFE0E\uFE0F]" +
-            // суррогатные пары для основных категорий эмодзи
-            @"|(\uD83C[\uDDE6-\uDDFF])" +   // региональные флажки
-            @"|(\uD83C[\uDF00-\uDFFF])" +   // Misc Symbols & Pictographs
-            @"|(\uD83D[\uDC00-\uDE4F])" +   // Emoticons
-            @"|(\uD83D[\uDE80-\uDEF6])";    // Transport & Map
-
-        public static bool IsEmoji(string input)
+        private static bool IsEmoji(string cluster)
         {
-            if (string.IsNullOrEmpty(input)) return false;
-            return Regex.IsMatch(input, EmojiPattern);
+            if (string.IsNullOrEmpty(cluster)) return false;
+
+            var offset = 0;
+            var length = cluster.Length;
+
+            while (offset < length)
+            {
+                var codePoint = char.ConvertToUtf32(cluster, offset);
+                offset += char.IsSurrogatePair(cluster, offset) ? 2 : 1;
+
+                if (IsEmojiCodepoint(codePoint))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        
+        private static bool IsEmojiCodepoint(int codePoint)
+        {
+            return
+                codePoint is >= 0x1F600 and <= 0x1F64F ||   // Emoticons
+                codePoint is >= 0x1F300 and <= 0x1F5FF ||   // Misc Symbols and Pictographs
+                codePoint is >= 0x1F680 and <= 0x1F6FF ||   // Transport and Map Symbols
+                codePoint is >= 0x1F900 and <= 0x1F9FF ||   // Supplemental Symbols and Pictographs
+                codePoint is >= 0x2600 and <= 0x26FF  ||   // Misc symbols
+                codePoint is >= 0x2700 and <= 0x27BF  ||   // Dingbats
+                codePoint is >= 0x2B00 and <= 0x2BFF  ||   // Misc symbols and arrows
+                codePoint is >= 0x1F100 and <= 0x1F1FF ||   // Enclosed Alphanumeric Supplement
+                codePoint is >= 0x1F200 and <= 0x1F2FF ||   // Enclosed Ideographic Supplement
+                codePoint is >= 0x1FA70 and <= 0x1FAFF;      // Symbols and Pictographs Extended-A
         }
         
         private static Texture2D RenderEmojiToTexture(string emoji)
         {
-            float dpiScaling = typeof(GUIUtility).Eval<float>("pixelsPerPoint");
+            var dpiScaling = typeof(GUIUtility).Eval<float>("pixelsPerPoint");
             if (dpiScaling <= 0) dpiScaling = 1;
             
             var textureSize = 256;
@@ -154,31 +174,6 @@ namespace LSCore.NativeUtils
             RenderTexture.active = null;
 
             return texture;
-        }
-
-        private static void SaveTextureAsPNG(Texture2D texture, string filePath)
-        {
-            var pngData = texture.EncodeToPNG();
-            if (pngData != null)
-            {
-                if (!Directory.Exists(EmojiCachePath))
-                {
-                    Directory.CreateDirectory(EmojiCachePath);
-                }
-
-                File.WriteAllBytes(filePath, pngData);
-                AssetDatabase.Refresh();
-            }
-        }
-
-        private static string ToValidFileName(string input)
-        {
-            foreach (var c in Path.GetInvalidFileNameChars())
-            {
-                input = input.Replace(c, '_');
-            }
-
-            return input;
         }
 
         private class EmojiCluster

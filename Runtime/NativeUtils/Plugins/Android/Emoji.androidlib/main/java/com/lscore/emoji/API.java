@@ -1,229 +1,182 @@
 package com.lscore.emoji;
 
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.graphics.Paint;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.text.Spannable;
-import android.text.style.ReplacementSpan;
+import android.graphics.Color;
 
-import androidx.emoji2.text.EmojiCompat;
-import androidx.emoji2.text.EmojiSpan;
+import java.text.BreakIterator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import android.icu.lang.UCharacter;
+import android.icu.lang.UProperty;
+import android.os.Build;
 
 public class API {
-    private static final int MAX_CACHE_SIZE = 100;
 
-    // LRU-кэш. accessOrder=true означает, что каждое обращение к элементу переносит его в конец,
-    // поддерживая порядок по времени последнего доступа.
-    private static LinkedHashMap<String, String> emojiCache = new LinkedHashMap<String, String>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, String> eldest) {
-            return false; // Удаляем вручную, когда превышаем лимит
-        }
-    };
+    private static final int TARGET_SIZE = 256;
+    private static final Paint paint;
+    private static final Bitmap bitmap;
+    private static final Canvas canvas;
+    private static final int[] pixelBuffer = new int[TARGET_SIZE * TARGET_SIZE];
+    private static final byte[] rgbaBuffer = new byte[TARGET_SIZE * TARGET_SIZE * 4];
 
-    private static Context appContext;
+    static {
+        paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG | Paint.DITHER_FLAG);
+        paint.setTextAlign(Paint.Align.LEFT);
+        paint.setTextSize(TARGET_SIZE);
 
-    public static void initCache(Context context) {
-        appContext = context.getApplicationContext();
-        loadCacheFromDisk();
-        // Дополнительно можно проверить, что все файлы в кэше существуют,
-        // и удалить записи для несуществующих файлов.
-        cleanupNonExistingFiles();
+        bitmap = Bitmap.createBitmap(TARGET_SIZE, TARGET_SIZE, Bitmap.Config.ARGB_8888);
+        canvas = new Canvas(bitmap);
     }
 
-    public static EmojiRange[] parseEmojis(String text, String saveDirPath) {
-        if (!isEmojiCompatInitialized()) {
-            return new EmojiRange[0];
+    public static byte[] emojiToRGBA32(String emoji) {
+        if (emoji == null || emoji.isEmpty()) {
+            return new byte[0];
         }
 
-        CharSequence processed = EmojiCompat.get().process(text, 0, text.length());
-        if (!(processed instanceof Spannable)) {
-            return new EmojiRange[0];
+        Paint.FontMetricsInt fmTemp = paint.getFontMetricsInt();
+        float rawHeight = fmTemp.descent - fmTemp.ascent;
+        float rawWidth  = paint.measureText(emoji);
+        if (rawWidth <= 0 || rawHeight <= 0) {
+            return new byte[0];
         }
+        
+        float scaleX = TARGET_SIZE / rawWidth;
+        float scaleY = TARGET_SIZE / rawHeight;
+        float scaleFactor = Math.min(scaleX, scaleY);
+        float newTextSize = TARGET_SIZE * scaleFactor;
 
-        Spannable spannable = (Spannable) processed;
-        ReplacementSpan[] spans = spannable.getSpans(0, spannable.length(), ReplacementSpan.class);
-        if (spans == null || spans.length == 0) {
-            return new EmojiRange[0];
-        }
+        paint.setTextSize(newTextSize);
 
-        EmojiRange[] result = new EmojiRange[spans.length];
-        int counter = 0;
+        Paint.FontMetricsInt fm = paint.getFontMetricsInt();
+        float textWidth  = paint.measureText(emoji);
+        float textHeight = fm.descent - fm.ascent;
 
-        for (ReplacementSpan span : spans) {
-            if (span instanceof EmojiSpan) {
-                int start = spannable.getSpanStart(span);
-                int end = spannable.getSpanEnd(span);
-                int length = end - start;
+        bitmap.eraseColor(Color.TRANSPARENT);
 
-                String emojiKey = spannable.subSequence(start, end).toString();
+        float x = (TARGET_SIZE - textWidth) / 2f;
+        float y = (TARGET_SIZE - textHeight) / 2f - fm.ascent;
+        canvas.drawText(emoji, x, y, paint);
+        bitmap.getPixels(pixelBuffer, 0, TARGET_SIZE, 0, 0, TARGET_SIZE, TARGET_SIZE);
 
-                String imagePath = getCachedEmojiPath(emojiKey);
-                if (imagePath == null || imagePath.isEmpty() || !(new File(imagePath).exists())) {
-                    // Эмодзи нет в кэше или файл пропал - создаём заново
-                    Bitmap bitmap = createEmojiBitmap((EmojiSpan) span, spannable, start, end);
-                    if (bitmap != null) {
-                        String fileName = "emoji_" + System.nanoTime() + ".png";
-                        imagePath = saveBitmapToPNG(bitmap, saveDirPath, fileName);
-
-                        if (!imagePath.isEmpty()) {
-                            addEmojiToCache(emojiKey, imagePath);
-                        }
-                    }
-                }
-                result[counter] = new EmojiRange(start, length, imagePath);
-                counter++;
+        final int width  = TARGET_SIZE;
+        final int height = TARGET_SIZE;
+        for (int dstY = 0, srcY = height - 1; dstY < height; dstY++, srcY--) {
+            int srcRowOffset = srcY * width;
+            int dstRowOffset = dstY * width;
+            int pixelIndexSrc = srcRowOffset;
+            int byteIndexDst = dstRowOffset * 4;
+            
+            for (int xCur = 0; xCur < width; xCur++, pixelIndexSrc++, byteIndexDst += 4) {
+                int argb = pixelBuffer[pixelIndexSrc];
+                byte r = (byte) ((argb >>> 16) & 0xFF);
+                byte g = (byte) ((argb >>>  8) & 0xFF);
+                byte b = (byte) ( argb         & 0xFF);
+                byte a = (byte) ((argb >>> 24) & 0xFF);
+                rgbaBuffer[byteIndexDst    ] = r;
+                rgbaBuffer[byteIndexDst + 1] = g;
+                rgbaBuffer[byteIndexDst + 2] = b;
+                rgbaBuffer[byteIndexDst + 3] = a;
             }
         }
 
-        return result;
+        return rgbaBuffer;
     }
 
-    private static boolean isEmojiCompatInitialized() {
-        try {
-            EmojiCompat.get();
-            return true;
-        } catch (IllegalStateException e) {
+    public static EmojiRange[] parseEmojis(String text) {
+        if (text == null || text.isEmpty()) {
+            return new EmojiRange[0];
+        }
+        
+        List<EmojiRange> result = new ArrayList<>();
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setTextSize(64);
+    
+        BreakIterator bi = BreakIterator.getCharacterInstance(Locale.getDefault());
+        bi.setText(text);
+    
+        int start = bi.first();
+        for (int end = bi.next(); end != BreakIterator.DONE; start = end, end = bi.next()) {
+            int length = end - start;
+            String cluster = text.substring(start, end);
+    
+            if (isEmojiCluster(cluster)) {
+                if (!paint.hasGlyph(cluster)) {
+                    String zwj = "\u200D";
+                    int localOffset = start;
+                    String[] parts = cluster.split(zwj);
+    
+                    for (String part : parts) {
+                        int partLen = part.length();
+                        if (paint.hasGlyph(part)) {
+                            result.add(new EmojiRange(localOffset, partLen, part));
+                        } else {
+                            int local = 0;
+                            while (local < partLen) {
+                                int cp = part.codePointAt(local);
+                                int cpLen = Character.charCount(cp);
+                                String cpStr = new String(Character.toChars(cp));
+                                result.add(new EmojiRange(localOffset + local, cpLen, cpStr));
+                                local += cpLen;
+                            }
+                        }
+                        localOffset += partLen + zwj.length();
+                    }
+                } else {
+                    result.add(new EmojiRange(start, length, cluster));
+                }
+            }
+        }
+    
+        return result.toArray(new EmojiRange[result.size()]);
+    }
+
+
+    private static boolean isEmojiCluster(String cluster) {
+        if (cluster == null || cluster.isEmpty()) {
             return false;
         }
-    }
-
-    private static Bitmap createEmojiBitmap(EmojiSpan emojiSpan, CharSequence text, int start, int end) {
-        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setFilterBitmap(true);
-        paint.setDither(true);
-        paint.setTextSize(256);
-
-        Paint.FontMetricsInt fm = new Paint.FontMetricsInt();
-        int width = emojiSpan.getSize(paint, text, start, end, fm);
-        int lineHeight = fm.descent - fm.ascent;
-
-        Bitmap bitmap = Bitmap.createBitmap(width, lineHeight, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-
-        int baseline = -fm.ascent;
-        int top = 0;
-        int bottom = lineHeight;
-        float x = 0f;
-
-        emojiSpan.draw(canvas, text, start, end, x, top, baseline, bottom, paint);
-
-        return bitmap;
-    }
-
-    private static String saveBitmapToPNG(Bitmap bitmap, String dirPath, String fileName) {
-        File directory = new File(dirPath);
-        if (!directory.exists()) {
-            directory.mkdirs();
-        }
-
-        File file = new File(directory, fileName);
-        try (FileOutputStream out = new FileOutputStream(file)) {
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-            return file.getAbsolutePath();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
-
-    private static synchronized String getCachedEmojiPath(String emoji) {
-        return emojiCache.get(emoji);
-    }
-
-    private static synchronized void addEmojiToCache(String emoji, String path) {
-        emojiCache.put(emoji, path);
-        if (emojiCache.size() > MAX_CACHE_SIZE) {
-            // Удаляем самый старый элемент
-            Map.Entry<String, String> eldest = emojiCache.entrySet().iterator().next();
-            String eldestKey = eldest.getKey();
-            String eldestPath = eldest.getValue();
-            emojiCache.remove(eldestKey);
-            // Удаляем файл
-            File oldFile = new File(eldestPath);
-            if (oldFile.exists()) {
-                oldFile.delete();
+        int offset = 0;
+        int length = cluster.length();
+        while (offset < length) {
+            int cp = cluster.codePointAt(offset);
+            offset += Character.charCount(cp);
+            if (isEmojiCodepoint(cp)) {
+                return true;
             }
         }
-        saveCacheToDisk();
+        return false;
     }
 
-    // Загрузка кэша из SharedPreferences (JSON)
-    private static synchronized void loadCacheFromDisk() {
-        if (appContext == null) return;
-        SharedPreferences prefs = appContext.getSharedPreferences("emoji_cache_prefs", Context.MODE_PRIVATE);
-        String jsonStr = prefs.getString("emoji_cache", null);
-        if (jsonStr != null) {
-            try {
-                JSONObject json = new JSONObject(jsonStr);
-                JSONArray keys = json.names();
-                // Восстанавливаем кэш
-                LinkedHashMap<String, String> restored = new LinkedHashMap<String, String>(16, 0.75f, true);
-                for (int i = 0; i < keys.length(); i++) {
-                    String key = keys.getString(i);
-                    String val = json.getString(key);
-                    restored.put(key, val);
-                }
-                emojiCache = restored;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    // Сохранение кэша в SharedPreferences (JSON)
-    private static synchronized void saveCacheToDisk() {
-        if (appContext == null) return;
-        try {
-            JSONObject json = new JSONObject();
-            for (Map.Entry<String, String> entry : emojiCache.entrySet()) {
-                json.put(entry.getKey(), entry.getValue());
-            }
-            SharedPreferences prefs = appContext.getSharedPreferences("emoji_cache_prefs", Context.MODE_PRIVATE);
-            prefs.edit().putString("emoji_cache", json.toString()).apply();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Проверяем файлы в кэше, удаляем из кэша записи для которых файлы отсутствуют
-    private static synchronized void cleanupNonExistingFiles() {
-        Iterator<Map.Entry<String, String>> iter = emojiCache.entrySet().iterator();
-        boolean changed = false;
-        while (iter.hasNext()) {
-            Map.Entry<String, String> entry = iter.next();
-            File f = new File(entry.getValue());
-            if (!f.exists()) {
-                iter.remove();
-                changed = true;
-            }
-        }
-        if (changed) {
-            saveCacheToDisk();
+    private static boolean isEmojiCodepoint(int codePoint) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            return UCharacter.hasBinaryProperty(codePoint, UProperty.EMOJI);
+        } else {
+            return (codePoint >= 0x1F600 && codePoint <= 0x1F64F)
+                || (codePoint >= 0x1F300 && codePoint <= 0x1F5FF)
+                || (codePoint >= 0x1F680 && codePoint <= 0x1F6FF)
+                || (codePoint >= 0x1F900 && codePoint <= 0x1F9FF)
+                || (codePoint >= 0x2600  && codePoint <= 0x26FF)
+                || (codePoint >= 0x2700  && codePoint <= 0x27BF)
+                || (codePoint >= 0x2B00  && codePoint <= 0x2BFF)
+                || (codePoint >= 0x1F100 && codePoint <= 0x1F1FF)
+                || (codePoint >= 0x1F200 && codePoint <= 0x1F2FF)
+                || (codePoint >= 0x1FA70 && codePoint <= 0x1FAFF);
         }
     }
 
     public static class EmojiRange {
         public int index;
         public int length;
-        public String imagePath;
+        public String emoji;
 
-        public EmojiRange(int index, int length, String imagePath) {
+        public EmojiRange(int index, int length, String emoji) {
             this.index = index;
             this.length = length;
-            this.imagePath = imagePath;
+            this.emoji = emoji;
         }
     }
 }

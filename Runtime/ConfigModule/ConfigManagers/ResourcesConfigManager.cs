@@ -7,7 +7,7 @@ namespace LSCore.ConfigModule
     {
         public string DefaultPath => typeof(T).Name;
 
-        void ILocalConfigManager.SetPath(string path)
+        void ILocalConfigManager.SetFullPath(string path)
         {
             this.path = path;
         }

@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using LSCore;
+using LSCore.NativeUtils;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,6 +16,7 @@ public class EmojiImage : RawImage
 
     static EmojiImage()
     {
+        vertexHelper.Init();
         updateClipParent = typeof(MaskableGraphic).GetMethod("UpdateClipParent",
             BindingFlags.NonPublic | BindingFlags.Instance);
 #if UNITY_EDITOR
@@ -42,7 +44,7 @@ public class EmojiImage : RawImage
 
     private static void OnCreate(EmojiImage rawImage)
     {
-        rawImage.gameObject.hideFlags = HideFlags.DontSave;
+        rawImage.gameObject.hideFlags = HideFlags.HideAndDontSave;
     }
 
     public static void InitPool()
@@ -61,6 +63,16 @@ public class EmojiImage : RawImage
 
     public static EmojiImage Get() => Pool.Get();
     public static void Release(EmojiImage image) => Pool.Release(image);
+
+    private Emoji.Sprite sprite;
+    public Emoji.Sprite Sprite
+    {
+        set
+        {
+            sprite = value;
+            texture = value.Atlas.Texture;
+        }
+    }
 
     protected override void OnEnable()
     {
@@ -162,5 +174,39 @@ public class EmojiImage : RawImage
             UpdateMaterial();
             materialDirty = false;
         }
+    }
+
+    protected override void UpdateGeometry()
+    {
+        DoMeshGeneration();
+    }
+    
+    private static readonly LSVertexHelper vertexHelper = new();
+    
+    private void DoMeshGeneration()
+    {
+        if (rectTransform != null && rectTransform.rect.width >= 0 && rectTransform.rect.height >= 0)
+            DoMesh(vertexHelper, sprite.uvMin, sprite.uvMax);
+        else
+            vertexHelper.Clear(); // clear the vertex helper so invalid graphics dont draw.
+
+        vertexHelper.FillMesh(workerMesh);
+        canvasRenderer.SetMesh(workerMesh);
+    }
+    
+    private void DoMesh(LSVertexHelper vh, Vector2 uvMin, Vector2 uvMax)
+    {
+        var r = GetPixelAdjustedRect();
+        var v = new Vector4(r.x, r.y, r.x + r.width, r.y + r.height);
+
+        Color32 c = color;
+        vh.Clear();
+        vh.AddVert(new Vector3(v.x, v.y), c, new Vector2(uvMin.x, uvMin.y));
+        vh.AddVert(new Vector3(v.x, v.w), c, new Vector2(uvMin.x, uvMax.y));
+        vh.AddVert(new Vector3(v.z, v.w), c, new Vector2(uvMax.x, uvMax.y));
+        vh.AddVert(new Vector3(v.z, v.y), c, new Vector2(uvMax.x, uvMin.y));
+
+        vh.AddTriangle(0, 1, 2);
+        vh.AddTriangle(2, 3, 0);
     }
 }

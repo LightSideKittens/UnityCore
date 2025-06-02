@@ -5,7 +5,7 @@ using System.Diagnostics;
 
 namespace LSCore.ConfigModule
 {
-    public class AutoSaveConfigManager<T> : LocalDynamicConfigManager<T> where T : LocalDynamicConfig, new()
+    public abstract class AutoSaveConfigManager<T> : LocalDynamicConfigManager<T> where T : LocalDynamicConfig, new()
     {
         public override void Load()
         {

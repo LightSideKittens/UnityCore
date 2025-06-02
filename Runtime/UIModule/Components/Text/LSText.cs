@@ -16,17 +16,16 @@ namespace LSCore
 {
     public class LSText : TextMeshProUGUI
     {
-        private ListSpan<EmojiRange> emojis;
-        private ListSpan<Texture2D> textures;
+        private ListSpan<Emoji.Range> emojis;
+        private ListSpan<Emoji.Sprite> sprites;
         private Action releaseEmojiImages;
-
-        private static string emojisPath;
-        private static string EmojiPath => emojisPath ??= Path.Combine(Application.persistentDataPath, "Emojis");
+        public bool IsTextEmpty => string.IsNullOrEmpty(m_text);
         
         public override float preferredWidth
         {
             get
             {
+                if(IsTextEmpty) return 0f;
                 if (!m_isPreferredWidthDirty)
                 {
                     return base.preferredWidth;
@@ -36,9 +35,7 @@ namespace LSCore
                 {
                     string lastText = m_text;
                     ModifyText();
-                    Debug.unityLogger.logEnabled = false;
                     float width = base.preferredWidth;
-                    Debug.unityLogger.logEnabled = true;
                     m_text = lastText;
                     return width;
                 }
@@ -51,6 +48,7 @@ namespace LSCore
         {
             get
             {
+                if(IsTextEmpty) return 0f;
                 if (!m_isPreferredHeightDirty)
                 {
                     return base.preferredHeight;
@@ -60,9 +58,7 @@ namespace LSCore
                 {
                     string lastText = m_text;
                     ModifyText();
-                    Debug.unityLogger.logEnabled = false;
                     float height = base.preferredHeight;
-                    Debug.unityLogger.logEnabled = true;
                     m_text = lastText;
                     return height;
                 }
@@ -123,9 +119,7 @@ namespace LSCore
                 ModifyText();
             }
             
-            Debug.unityLogger.logEnabled = false;
             base.Rebuild(update);
-            Debug.unityLogger.logEnabled = true;
             
             m_text = t;
         }
@@ -134,9 +128,7 @@ namespace LSCore
         {
             string t = m_text;
             ModifyText();
-            Debug.unityLogger.logEnabled = false;
             base.ForceMeshUpdate(ignoreActiveState, forceTextReparsing);
-            Debug.unityLogger.logEnabled = true;
             m_text = t;
         }
 
@@ -148,19 +140,20 @@ namespace LSCore
 
         private void ModifyText()
         {
-            emojis = Emoji.ParseEmojis(m_text, EmojiPath, out textures);
-            m_text = Emoji.ReplaceWithEmojiRanges(m_text, emojis, "\ue000\u200b", textures);
+            if(IsTextEmpty) return;
+            emojis = Emoji.ParseEmojis(m_text, out sprites);
+            m_text = Emoji.ReplaceWithEmojiRanges(m_text, emojis, "\ue000\u200b", sprites);
         }
 
         private void HandleOnPreRenderText(TMP_TextInfo textInfo)
         {
             ReleaseAllEmojiImages();
             Color32 clear = new Color32(0, 0, 0, 0);
-            int count = Mathf.Min(emojis.Count, textures.Count);
+            int count = Mathf.Min(emojis.Count, sprites.Count);
             
             for (int i = 0; i < count; i++)
             {
-                EmojiRange emoji = emojis[i];
+                Emoji.Range emoji = emojis[i];
                 int charIndexToHide = emoji.adjustedIndex;
                 
                 if (charIndexToHide < 0 || charIndexToHide >= textInfo.characterCount) return;
@@ -189,7 +182,7 @@ namespace LSCore
             rawImage.transform.SetParent(transform);
             releaseEmojiImages += () => EmojiImage.Release(rawImage);
             
-            rawImage.texture = textures[i];
+            rawImage.Sprite = sprites[i];
             Vector3 bottomLeft = charInfo.bottomLeft;
             Vector3 topRight = charInfo.topRight;
             

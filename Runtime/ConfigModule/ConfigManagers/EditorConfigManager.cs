@@ -7,9 +7,9 @@ namespace LSCore.ConfigModule
         public static EditorConfigManager<T> Get(string path) =>
             ConfigMaster<EditorConfigManager<T>>.Get(path); 
         
-        protected override string GetPath(string path)
+        protected override string GetFullPath(string relativePath)
         {
-            return ConfigPaths.Editor.Library(path);
+            return ConfigPaths.Editor.Library(relativePath);
         }
     }
 

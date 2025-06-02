@@ -56,12 +56,12 @@ public static class TextRenderer
     public static Vector3 GetLossyScaleRelativeToRoot(Transform transform)
     {
         Transform current = transform;
-        Vector3 relativeScale = transform.localScale; // начальный масштаб (локальный)
+        Vector3 relativeScale = transform.localScale;
 
-        while (current.parent != null) // пока не дойдем до корневого родителя
+        while (current.parent != null)
         {
             current = current.parent;
-            relativeScale = Vector3.Scale(relativeScale, current.localScale); // масштабируем на каждый родительский scale
+            relativeScale = Vector3.Scale(relativeScale, current.localScale);
         }
 
         return relativeScale;
@@ -82,7 +82,6 @@ public static class TextRenderer
             case TextAlignmentOptions.Center:
                 alignment = 2;
                 break;
-            // Добавьте другие опции выравнивания, если это необходимо
         }
         TextRendererClass.CallStatic("setAlignment", alignment);
     }
@@ -115,7 +114,6 @@ public static class TextRenderer
             case TextOverflowModes.ScrollRect:
                 overflow = 4;
                 break;
-            // Добавьте другие опции переполнения, если это необходимо
         }
         TextRendererClass.CallStatic("setOverflow", overflow);
     }
@@ -274,7 +272,6 @@ public static class TextRenderer
         float fontSize = textComp.fontSize;
         Color color = textComp.color;
 
-        // Установка шрифта, размера текста и цвета текста
         SetCustomFont(fontName);
         SetCustomTextSize(fontSize);
         SetCustomTextColor(color);

@@ -22,12 +22,18 @@ namespace LSCore.ConfigModule
         public static class Game
         {
             public static string DynamicRoot { get; } = Combine(Root, "DynamicData");
+            public static string PlayerRoot { get; } = Combine(Root, "DynamicData");
             public static string StaticRoot { get; } = Combine(Root, "StaticData");
             public static string DebugRoot { get; } = Combine(Root, "DebugData");
             
             public static string Dynamic(string path, params string[] paths)
             {
                 return Combine(DynamicRoot, path, Combine(paths));
+            }
+            
+            public static string Player(string path, params string[] paths)
+            {
+                return Combine(PlayerRoot, path, Combine(paths));
             }
             
             public static string Static(string path, params string[] paths)
