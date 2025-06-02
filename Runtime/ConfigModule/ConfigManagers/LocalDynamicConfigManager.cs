@@ -9,7 +9,7 @@ namespace LSCore.ConfigModule
     public interface ILocalConfigManager
     {
         string DefaultPath { get; }
-        void SetPath(string fullPath);
+        void SetFullPath(string fullPath);
     }
 
     public static class ConfigMaster<TManager> where TManager : ILocalConfigManager, new()
@@ -24,7 +24,7 @@ namespace LSCore.ConfigModule
                 if (meowfault == null)
                 {
                     meowfault = new TManager();
-                    meowfault.SetPath(meowfault.DefaultPath);
+                    meowfault.SetFullPath(meowfault.DefaultPath);
                 }
                 
                 return meowfault;
@@ -41,7 +41,7 @@ namespace LSCore.ConfigModule
             if (!configs.TryGetValue(path, out var manager))
             {
                 manager = new TManager();
-                manager.SetPath(path);
+                manager.SetFullPath(path);
                 configs.Add(path, manager);
             }
 
@@ -49,22 +49,22 @@ namespace LSCore.ConfigModule
         }
     }
 
-    public class LocalDynamicConfigManager<T> : BaseConfigManager<T>, ILocalConfigManager where T : LocalDynamicConfig, new()
+    public abstract class LocalDynamicConfigManager<T> : BaseConfigManager<T>, ILocalConfigManager where T : LocalDynamicConfig, new()
     {
         protected override string Tag => $"{base.Tag} {FileNameTag}";
-        private string FileNameTag => $"({Path.GetFileNameWithoutExtension(GetFullFileName(fullPath))})".ToTag(new Color(1f, 0.8f, 0.05f));
+        private string FileNameTag => $"({Path.GetFileNameWithoutExtension(FullFileName)})".ToTag(new Color(1f, 0.8f, 0.05f));
 
-        protected virtual string GetPath(string path)
+        protected virtual string GetFullPath(string relativePath)
         {
-            return path;
+            return ConfigPaths.Game.Dynamic(relativePath);
         }
 
         protected virtual string DefaultPath => typeof(T).Name;
         string ILocalConfigManager.DefaultPath => DefaultPath;
 
-        void ILocalConfigManager.SetPath(string path)
+        void ILocalConfigManager.SetFullPath(string relativePath)
         {
-            fullPath = GetPath(path);
+            fullPath = GetFullPath(relativePath);
         }
         
         protected string fullPath;
@@ -83,15 +83,12 @@ namespace LSCore.ConfigModule
 
         public void LoadOnNextAccess() => wasLoaded = false;
 
-        protected string GetFullFileName(string path)
-        {
-            return $"{path}.json";
-        }
+        protected string FullFileName => string.Concat(fullPath, ".json");
 
-        private string FullFileNameMeta => $"Full file name: {GetFullFileName(fullPath)}";
+        private string FullFileNameMeta => $"Full file name: {FullFileName}";
         public virtual void Load()
         {
-            var fullFileName = GetFullFileName(fullPath);
+            var fullFileName = FullFileName;
             string json = string.Empty;
             
             if (File.Exists(fullFileName))
@@ -174,7 +171,7 @@ namespace LSCore.ConfigModule
 
         public virtual void Save()
         {
-            string fullFileName = GetFullFileName(fullPath);
+            string fullFileName = FullFileName;
             string json;
             
             if (token != null)
@@ -208,13 +205,13 @@ namespace LSCore.ConfigModule
         
         protected virtual void OnDelete()
         {
-            string fullFileName = GetFullFileName(fullPath);
+            string fullFileName = FullFileName;
             File.Delete(fullFileName);
         }
         
         public bool Exists()
         {
-            string fullFileName = GetFullFileName(fullPath);
+            string fullFileName = FullFileName;
             return File.Exists(fullFileName);
         }
         

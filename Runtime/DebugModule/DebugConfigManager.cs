@@ -5,9 +5,9 @@
         public new static DebugConfigManager<T> Get(string path) =>
             ConfigMaster<DebugConfigManager<T>>.Get(path); 
         
-        protected override string GetPath(string path)
+        protected override string GetFullPath(string relativePath)
         {
-            return ConfigPaths.Game.Debug(path);
+            return ConfigPaths.Game.Debug(relativePath);
         }
     }
 }
