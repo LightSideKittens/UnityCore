@@ -33,7 +33,7 @@ namespace LSCore
         }
 #endif
 
-        public override void Invoke()
+        public override void Do()
         {
             actions.Invoke();
         }
@@ -48,7 +48,7 @@ namespace LSCore
         public List<LootBoxAction> actions;
         
         [Button]
-        public override void Invoke()
+        public override void Do()
         {
             var totalOpenings = LootBoxConfig.OnOpen(id);
 
@@ -56,7 +56,7 @@ namespace LSCore
             
             if (guaranteed != null)
             {
-                guaranteed.Invoke();
+                guaranteed.Do();
                 LootBoxConfig.OnActionPick(id, guaranteed.id);
                 return;
             }
@@ -69,7 +69,7 @@ namespace LSCore
             });
 
             var picked = GetRandomItem(filteredActions.ToList());
-            picked.Invoke();
+            picked.Do();
             LootBoxConfig.OnActionPick(id, picked.id);
         }
         

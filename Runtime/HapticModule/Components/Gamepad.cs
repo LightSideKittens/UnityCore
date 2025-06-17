@@ -196,7 +196,7 @@ namespace Lofelt.NiceVibrations
         ///
         /// <param name="gamepadID">The ID of the gamepad to be returned.</c> </param>
         /// <returns> A <c> InputSystem.Gamepad</c> </returns>
-        static UnityEngine.InputSystem.Gamepad GetGamepad(int gamepadID)
+        static Gamepad GetGamepad(int gamepadID)
         {
             if (gamepadID >= 0)
             {

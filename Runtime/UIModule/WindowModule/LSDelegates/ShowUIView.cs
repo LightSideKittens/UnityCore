@@ -4,7 +4,7 @@
     {
         public UIView view;
         public ShowWindowOption option;
-        public override void Invoke()
+        public override void Do()
         {
             view.Show(option);
         }

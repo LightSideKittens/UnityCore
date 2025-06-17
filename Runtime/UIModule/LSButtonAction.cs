@@ -10,9 +10,9 @@ public abstract class LSClickAction : DoIt
 
     [SerializeReference] public DoIt action;
         
-    public override void Invoke()
+    public override void Do()
     {
-        Clickable.Clicked += action.Invoke;
+        Clickable.Clicked += action.Do;
     }
 }
 

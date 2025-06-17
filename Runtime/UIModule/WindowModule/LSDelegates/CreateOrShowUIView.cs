@@ -15,7 +15,7 @@ namespace LSCore
         [NonSerialized] public T obj;
         [SerializeReference] public List<DoIt> transformActions;
         
-        public override void Invoke()
+        public override void Do()
         {
             obj = Object.Instantiate(prefab);
             transformActions?.Invoke(obj);
@@ -27,11 +27,11 @@ namespace LSCore
     {
         private static readonly Dictionary<T, T> objectByPrefab = new();
         
-        public override void Invoke()
+        public override void Do()
         {
             if (!objectByPrefab.TryGetValue(prefab, out obj))
             {
-                base.Invoke();
+                base.Do();
                 var destroyEvent = obj.gameObject.AddComponent<DestroyEvent>();
                 destroyEvent.Destroyed += () =>
                 {
@@ -49,10 +49,10 @@ namespace LSCore
         public string id;
         public bool showOnlyWhenCreated;
         
-        public override void Invoke()
+        public override void Do()
         {
             var last = obj;
-            base.Invoke();
+            base.Do();
             var isCreated = obj != last;
 
             if (!isCreated && showOnlyWhenCreated)

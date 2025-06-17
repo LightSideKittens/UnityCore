@@ -42,19 +42,19 @@ namespace LSCore.AnimationsModule.Animations
             {
                 var sequence = DOTween.Sequence();
                 var pos = 0f;
-                tweenGetter.Invoke();
+                tweenGetter.Do();
                 sequence.Insert(pos, tweenGetter.value);
                 for (int i = 0; i < tweenGetters.Length; i++)
                 {
                     pos += timeOffsetPerTarget;
-                    tweenGetters[i].Invoke();
+                    tweenGetters[i].Do();
                     sequence.Insert(pos, tweenGetters[i].value);
                 }
 
                 return sequence;
             }
             
-            tweenGetter.Invoke();
+            tweenGetter.Do();
             return tweenGetter.value;
         }
     }

@@ -8,7 +8,7 @@ public class SetParentAction : DoIt
     [SerializeReference] public Get<Transform> child;
     public bool worldPositionStays = true;
     
-    public override void Invoke()
+    public override void Do()
     {
         ((Transform)child).SetParent(parent, worldPositionStays);
     }

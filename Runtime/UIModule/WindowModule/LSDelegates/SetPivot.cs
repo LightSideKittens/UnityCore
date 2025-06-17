@@ -9,7 +9,7 @@ namespace LSCore
         public Vector2 pivot;
         public bool savePosition = true;
     
-        public override void Invoke()
+        public override void Do()
         {
             if (savePosition)
             {

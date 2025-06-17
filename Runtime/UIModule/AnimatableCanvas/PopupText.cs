@@ -13,7 +13,7 @@ namespace Animatable
     {
         public TMP_Text messagePrefab;
             
-        public override void Invoke()
+        public override void Do()
         {
             PopupText.Create(messagePrefab);
         }

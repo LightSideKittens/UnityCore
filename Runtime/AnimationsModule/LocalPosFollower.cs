@@ -41,7 +41,7 @@ namespace LSCore.AnimationsModule
         [HideIf("useValuePath")] public Transform target;
         
         
-        public override void Invoke()
+        public override void Do()
         {
             var comp = this.comp;
             var target = this.target;

@@ -6,6 +6,18 @@ namespace LSCore.Extensions
 {
     public static partial class JTokenExtensions
     {
+        public static bool TryGetValue(this JToken token, string key, out JToken value)
+        {
+            value = token[key];
+            return value != null;
+        }
+        
+        public static bool TryGetValue<T>(this JToken token, string key, out T value) where T : JToken
+        {
+            value = token[key] as T;
+            return value != null;
+        }
+        
         public static T As<T>(this JToken token, string key, T defaultValue = default)
         {
             if (token[key] != null)
@@ -15,6 +27,22 @@ namespace LSCore.Extensions
             
             token[key] = JToken.FromObject(defaultValue);
             return defaultValue;
+        }
+        
+        public static T AsJ<T>(this JToken token, string key, T defaultValue) where T : JToken
+        {
+            if (token[key] != null)
+            {
+                return token[key] as T;
+            }
+
+            token[key] = defaultValue;
+            return defaultValue;
+        }
+
+        public static T AsJ<T>(this JToken token, string key) where T : JToken, new()
+        {
+            return (T)(token[key] ??= new T());
         }
         
         public static T As<T>(this JToken token, T defaultValue = default)
@@ -27,9 +55,20 @@ namespace LSCore.Extensions
             target[key]?.Parent?.Remove();
         }
         
+        
+        public static string ToStr(this JToken token)
+        {
+            return Convert.ToString(((JValue)token).Value, invariantCulture);
+        }
+        
+        public static JValue ToJValue(this string value)
+        {
+            return new JValue(value);
+        }
+        
         public static int Increase(this JToken target, object key, int value)
         {
-            var count = target[key]?.ToObject<int>() ?? 0;
+            var count = target[key]?.ToInt() ?? 0;
             count += value;
             target[key] = count;
             return count;

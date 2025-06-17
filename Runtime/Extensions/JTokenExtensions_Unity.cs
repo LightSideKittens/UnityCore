@@ -14,36 +14,15 @@ namespace LSCore.Extensions
             return Convert.ToBoolean(((JValue)token).Value, invariantCulture);
         }
         
-        public static JValue ToJValue(this bool value)
-        {
-            return new JValue(value);
-        }
-        
-        
-        
         public static int ToInt(this JToken token)
         {
             return Convert.ToInt32(((JValue)token).Value, invariantCulture);
         }
         
-        public static JValue ToJValue(this int value)
-        {
-            return new JValue(value);
-        }
-        
-        
-        
         public static float ToFloat(this JToken token)
         {
             return Convert.ToSingle(((JValue)token).Value, invariantCulture);
         }
-        
-        public static JValue ToJValue(this float value)
-        {
-            return new JValue(value);
-        }
-        
-        
         
         public static Vector2 ToVector2(this JToken token)
         {
@@ -157,11 +136,6 @@ namespace LSCore.Extensions
                 { "center", bounds.center.ToJObject() },
                 { "size", bounds.size.ToJObject() },
             };
-        }
-        
-        public static T GetOrCreate<T>(this JToken token, string propertyName) where T : JToken, new()
-        {
-            return (T)(token[propertyName] ??= new T());
         }
     }
 }

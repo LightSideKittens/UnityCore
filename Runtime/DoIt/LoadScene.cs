@@ -26,7 +26,7 @@ public class LoadScene : DoIt
         }
     }
 
-    public override void Invoke()
+    public override void Do()
     {
         if (!string.IsNullOrEmpty(sceneToLoad))
         {

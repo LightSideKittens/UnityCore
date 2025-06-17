@@ -5,7 +5,7 @@ public class LSInvoker : DoIt
 {
     public string key;
     
-    public override void Invoke()
+    public override void Do()
     {
         StringDict<Action>.Get(key)?.Invoke();
     }
@@ -16,7 +16,7 @@ public class LSSubscriber : DoIt
     public string key;
     public List<DoIt> actions;
     
-    public override void Invoke()
+    public override void Do()
     {
         var action = StringDict<Action>.Get(key);
         action += actions.Invoke;

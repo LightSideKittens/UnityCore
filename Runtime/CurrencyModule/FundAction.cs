@@ -12,7 +12,7 @@ namespace LSCore
     [Serializable]
     public class Earn : FundAction
     {
-        public override void Invoke()
+        public override void Do()
         {
             funds.Earn();
         }
@@ -23,11 +23,11 @@ namespace LSCore
     {
         [SerializeReference] public DoIt onSpent;
         
-        public override void Invoke()
+        public override void Do()
         {
             if (funds.Spend(out var action))
             {
-                onSpent.Invoke();
+                onSpent.Do();
                 action();
             }
         }

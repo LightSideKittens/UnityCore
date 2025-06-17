@@ -9,7 +9,7 @@ namespace LSCore.AnimationsModule
 
         public void Invoke(int index)
         {
-            actions[index].Invoke();
+            actions[index].Do();
         }
     }
 }

@@ -7,6 +7,7 @@ namespace LSCore.ConfigModule
 {
     public class ConfigSerializationSettings
     {
+        public static ConfigSerializationSettings Default { get; } = new();
         public JsonSerializerSettings settings;
         public JsonSerializer serializer;
 
@@ -18,7 +19,13 @@ namespace LSCore.ConfigModule
         
         public ConfigSerializationSettings()
         {
-            settings = new()
+            settings = CreateDefault();
+            serializer = JsonSerializer.Create(settings);
+        }
+
+        public static JsonSerializerSettings CreateDefault()
+        {
+            return new()
             {
                 ContractResolver = UnityJsonContractResolver.Instance,
                 Error = (_, args) =>
@@ -26,8 +33,6 @@ namespace LSCore.ConfigModule
                     args.ErrorContext.Handled = true;
                 }
             };
-
-            serializer = JsonSerializer.Create(settings);
         }
     }
     
@@ -36,7 +41,7 @@ namespace LSCore.ConfigModule
         private static string GetLogTag(string tag) => $"{BaseConfig.ConfigTag} {tag}";
         protected T cached;
 
-        [JsonIgnore] protected virtual ConfigSerializationSettings Settings { get; } = new();
+        [JsonIgnore] protected virtual ConfigSerializationSettings Settings => ConfigSerializationSettings.Default;
 
         protected virtual string Tag => $"[{typeof(T).Name}]".ToTag(new Color(0.15f, 0.82f, 0.42f));
         public bool isLogEnabled;

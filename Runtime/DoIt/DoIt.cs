@@ -5,10 +5,9 @@ using Sirenix.OdinInspector;
 using UnityEditor;
 
 [Serializable]
-[TypeFilter("@DoItExtensions.Types")]
 public abstract class DoIt
 {
-    public abstract void Invoke();
+    public abstract void Do();
 }
 
 [Serializable]
@@ -16,7 +15,7 @@ public class DelegateDoIt : DoIt
 {
     public Action action;
 
-    public override void Invoke()
+    public override void Do()
     {
         action();
     }
@@ -28,7 +27,7 @@ public class DelegateDoIt : DoIt
     
     public static explicit operator Action(DelegateDoIt action)
     {
-        return action.Invoke;
+        return action.Do;
     }
 }
 
@@ -37,7 +36,7 @@ public class Log : DoIt
 {
     public string message;
     
-    public override void Invoke()
+    public override void Do()
     {
         Burger.Log(message);
     }
@@ -53,14 +52,14 @@ public static class DoItExtensions
     public static void Invoke<T>(this DoIt action, T value)
     {
         DataBuffer<T>.value = value;
-        action.Invoke();
+        action.Do();
     }
     
     public static void Invoke(this IEnumerable<DoIt> actions)
     {
         foreach (var action in actions)
         {
-            action.Invoke();
+            action.Do();
         }
     }
     
@@ -69,7 +68,7 @@ public static class DoItExtensions
         foreach (var action in actions)
         {
             DataBuffer<T>.value = value;
-            action.Invoke();
+            action.Do();
         }
     }
     
@@ -77,7 +76,7 @@ public static class DoItExtensions
     {
         for (int i = 0; i < actions.Count; i++)
         {
-            actions[i].Invoke();
+            actions[i].Do();
         }
     }
     
@@ -87,26 +86,8 @@ public static class DoItExtensions
         {
             DataBuffer<object>.value = value;
             DataBuffer<T>.value = value;
-            actions[i].Invoke();
+            actions[i].Do();
         }
     }
-    
-#if UNITY_EDITOR
-    private static List<Type> types;
-    public static List<Type> Types => types ??= GetAllDoItTypes();
-    public static List<Type> GetAllDoItTypes()
-    {
-        var list = TypeCache.GetTypesDerivedFrom<DoIt>()
-            .Where(x => !x.IsAbstract && !x.IsGenericTypeDefinition)
-            .ToList();
-
-        foreach (var genericArg in DataProviderUtility.GetAllProviderGenericArgs())
-        { 
-            list.Add(genericArg);
-        }
-        
-        return list;
-    }
-#endif
 }
 

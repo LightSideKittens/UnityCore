@@ -1,7 +1,7 @@
 public class PlayOneShotSound : DoIt
 {
     public LaLaLa.Settings settings;
-    public override void Invoke()
+    public override void Do()
     {
         LaLaLa.playOneShotSettings.Copy(settings);
         LaLaLa.PlayOneShot(settings.Clip);

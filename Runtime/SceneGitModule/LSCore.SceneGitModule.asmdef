@@ -1,0 +1,30 @@
+{
+    "name": "LSCore.SceneGitModule",
+    "rootNamespace": "",
+    "references": [
+        "GUID:247942eb90ec48b696028c8e4c1f8e20",
+        "GUID:d426b638445cc2f428ed8ba7c1325767",
+        "GUID:a6b7f487c8a89734f91e6aeb16bba6ca",
+        "GUID:75992adb30bf51f40a7a0f3283432aa2",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:9e24947de15b9834991c9d8411ea37cf",
+        "GUID:84651a3751eca9349aac36a66bba901b",
+        "GUID:e2d262c07fab33347bf583c077610e88",
+        "GUID:9c38c981acbf419b9287676bf57791e2",
+        "GUID:874b5c2f5d24c904483a76df58f4f289",
+        "GUID:488fbb5f4bad8a94daedd0c8d1239e93",
+        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
+        "GUID:bb5ab3e5517faff4287376ae8f1fc9fc",
+        "GUID:1b6b29427dc85403c316475c7068fc50",
+        "GUID:2fb5cf31e708b65c6cd386829ff94feb"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

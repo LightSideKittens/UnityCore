@@ -9,7 +9,7 @@ public abstract class ActionsIfCondition<TAction, TCondition> : DoIt where TActi
     [SerializeReference] public TAction[] ifActions;
     [SerializeReference] public TAction[] elseActions;
 
-    public override void Invoke()
+    public override void Do()
     {
         if (conditions)
         {

@@ -22,7 +22,7 @@ public class FuncFromObject<T> : DoIt
         targetMethod = SerializedMethodFromObjectUtils.DeserializeMethodInfo(obj, method);
     }
 
-    public override void Invoke()
+    public override void Do()
     {
         value = targetMethod != null ? (T)targetMethod.Invoke(obj, null) : default;
     }
