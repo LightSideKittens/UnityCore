@@ -5,6 +5,6 @@ namespace LSCore
     [Serializable]
     public class GoHome : DoIt
     {
-        public override void Invoke() => UIViewBoss.GoHome();
+        public override void Do() => UIViewBoss.GoHome();
     }
 }

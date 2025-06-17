@@ -7,7 +7,7 @@ namespace LSCore.AnimationsModule
     {
         public AnimSequencer anim;
         
-        public override void Invoke()
+        public override void Do()
         {
             anim.Animate();
         }

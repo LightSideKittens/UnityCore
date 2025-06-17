@@ -449,8 +449,7 @@ namespace Sirenix.OdinInspector.Editor
 				Type currentInheritor = result[i];
 
 				bool isExcluded = currentInheritor.IsAbstract || 
-										currentInheritor.IsInterface || 
-										currentInheritor.IsGenericTypeDefinition;
+										currentInheritor.IsInterface;
 
 				isExcluded = isExcluded || (!includeUnityTypes && typeof(UnityEngine.Object).IsAssignableFrom(currentInheritor));
 

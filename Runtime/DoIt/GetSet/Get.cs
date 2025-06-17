@@ -4,8 +4,8 @@ using LSCore.Extensions.Unity;
 
 #if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
-#endif
 using UnityEditor;
+#endif
 using UnityEngine;
 
 [Serializable]
@@ -22,6 +22,12 @@ public abstract class Get<T>
 public interface IGetRaw<[UsedImplicitly]T>
 {
     public object Data { get; }
+}
+
+public interface IKeyGet<T>
+{
+    public T Data { get; }
+    public string Key { get; }
 }
 
 [Serializable]
@@ -62,10 +68,11 @@ public class CastBuffer<T> : Get<T>
 }
 
 [Serializable]
-public abstract class BaseGetRaw<T> : Get<T>
+public abstract class BaseGetRaw<T> : Get<T>, IKeyGet<T>
 {
     public string propertyPath;
     [SerializeReference] public IGetRaw<T> data;
+    public string Key => propertyPath;
 }
 
 [Serializable]
@@ -85,7 +92,7 @@ public class Property<T> : BaseGetRaw<T>
 }
 
 [Serializable]
-public class StructProperty<T> : BaseGetRaw<T>
+public class StructProperty<T> : BaseGetRaw<T> where T : struct
 {
     private TypedPathAccessor<T> accessor;
     
@@ -108,12 +115,13 @@ public class FromBuffer<T> : Get<T>, IGetRaw<T>
 }
 
 [Serializable]
-public class FromKeyBuffer<T> : Get<T>, IGetRaw<T>
+public class FromKeyBuffer<T> : Get<T>, IGetRaw<T>, IKeyGet<T>
 {
     public string key;
     
     object IGetRaw<T>.Data => StringDict<object>.Get(key);
     public override T Data => StringDict<T>.Get(key);
+    public string Key => key;
 }
 
 [Serializable]

@@ -81,8 +81,15 @@ namespace LSCore.ConfigModule
             }
         }
 
-        public void LoadOnNextAccess() => wasLoaded = false;
+        public void LoadOnNextAccess()
+        {
+            wasLoaded = false;
+            token = null;
+            cached = null;
+        }
 
+        public bool IsFileExists => File.Exists(FullFileName);
+        
         protected string FullFileName => string.Concat(fullPath, ".json");
 
         private string FullFileNameMeta => $"Full file name: {FullFileName}";

@@ -75,6 +75,7 @@ namespace Sirenix.OdinInspector.Editor
 		internal static bool IsUnityObjectSelector { get; private set; }
 
 		public static bool IsOpen { get; private set; }
+		public static bool GenericTypeBuilded { get; private set; }
 		internal static bool IsSelectorReadyToClaim { get; private set; }
 
 		// ====== Context required for handling Components in the Unity Object Selector.
@@ -357,7 +358,116 @@ namespace Sirenix.OdinInspector.Editor
 				  property);
 		}
 #endif
+		
+		[Serializable]
+		public class GenericTypeBuilder
+		{
+			[Serializable]
+			public struct TypeData
+			{
+				[OdinSerialize]
+				[TypeDrawerSettings(FilterFunc = "Filter")]
+				public Type type;
+				
+				[NonSerialized] public Type arg;
 
+				public bool Filter(Type candidate)
+				{
+					var special = arg.GenericParameterAttributes &
+					              GenericParameterAttributes.SpecialConstraintMask;
+					if (special.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint) &&
+					    candidate.IsValueType)
+						return false;
+					if (special.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint) &&
+					    !candidate.IsValueType)
+						return false;
+					if (special.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint)
+					    && candidate.GetConstructor(Type.EmptyTypes) == null)
+						return false;
+							
+					bool violatesTypeConstraint = false;
+					foreach (var ctr in arg.GetGenericParameterConstraints())
+					{
+						if (!ctr.IsAssignableFrom(candidate))
+						{
+							violatesTypeConstraint = true;
+							break;
+						}
+					}
+
+					if (violatesTypeConstraint)
+					{
+						return false;
+					}
+					
+					return true;
+				}
+			}
+
+			private Type baseType;
+			[OdinSerialize] 
+			[NonSerialized]
+			public TypeData[] types;
+			public event Action<Type> Builded;
+			public event Action NeedClose;
+			
+			public GenericTypeBuilder(Type baseType)
+			{
+				this.baseType = baseType;
+				var args = baseType.GetGenericArguments();
+				types = new TypeData[args.Length];
+				for (var i = 0; i < args.Length; i++)
+				{
+					var typeData = new TypeData();
+					typeData.arg = args[i];
+					types[i] = typeData;
+				}
+			}
+
+			[Button]
+			public void Build()
+			{
+				NeedClose();
+				Builded(baseType.MakeGenericType(types.Select(x => x.type).ToArray()));
+			}
+		}
+
+		public class GenericTypeBuilderPopup : PopupWindowContent
+		{
+			public GenericTypeBuilder builder;
+			private PropertyTree tree;
+			private Rect position;
+			
+			public GenericTypeBuilderPopup(Rect position, GenericTypeBuilder builder)
+			{
+				builder.NeedClose += () =>
+				{
+					editorWindow.Close();
+				};
+				this.position = position;
+				this.builder = builder;
+				tree = PropertyTree.Create(builder, SerializationBackend.Odin);
+			}
+
+			public override Vector2 GetWindowSize()
+			{
+				var size = position.size;
+				size.y = 500;
+				return size;
+			}
+
+			public override void OnGUI(Rect rect)
+			{
+				tree.Draw(false);
+			}
+
+			public override void OnClose()
+			{
+				tree.Dispose();
+				base.OnClose();
+			}
+		}
+		
 		/// <summary>
 		/// Shows a selector.
 		/// </summary>
@@ -574,6 +684,33 @@ namespace Sirenix.OdinInspector.Editor
 
 						for (var i = 0; i < types.Length; i++)
 						{
+							if (types[i].IsGenericTypeDefinition)
+							{
+								var scrollPos = selector.SelectionTree.ScrollView.CurrentPosition;
+								var builder = new GenericTypeBuilder(types[i]);
+		
+								builder.Builded += type =>
+								{
+									TypeRegistry.CheckedInstance instanceResult = TypeRegistry.CreateCheckedInstance(type, property);
+
+									if (instanceResult.Result == TypeRegistry.CheckedInstanceResult.Success)
+									{
+										GenericTypeBuilded = true;
+										SelectorObject = instanceResult.Instance;
+										IsSelectorReadyToClaim = true;
+									}
+								};
+								
+								var popup = new GenericTypeBuilderPopup(position, builder);
+								var p = position.position;
+								p.y = scrollPos.y;
+								position.position = p;
+								PopupWindow.Show(position, popup);
+								
+								
+								return;
+							}
+							
 							if (types[i] == typeof(TypeSelectorV2.TypeSelectorAllUnityTypes) || typeof(UnityEngine.Object).IsAssignableFrom(types[i]))
 							{
 								reopenInfo = new ReopenInfo(types[i], baseType, allowSceneObjects);
@@ -652,6 +789,11 @@ namespace Sirenix.OdinInspector.Editor
 		/// <returns><c>true</c> if the selector's object (<see cref="SelectorObject"/>) is ready to be claimed; otherwise, <c>false</c>.</returns>
 		public static bool IsReadyToClaim(object key, int id)
 		{
+			if (GenericTypeBuilded)
+			{
+				return true;
+			}
+			
 			if (!IsOpen)
 			{
 				return false;
@@ -1133,6 +1275,7 @@ namespace Sirenix.OdinInspector.Editor
 			SelectorId = 0;
 			SelectorObject = null;
 			IsOpen = false;
+			GenericTypeBuilded = false;
 			IsSelectorReadyToClaim = false;
 			IsUnityObjectSelector = false;
 			reopenInfo = ReopenInfo.None;

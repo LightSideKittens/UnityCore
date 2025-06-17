@@ -30,7 +30,7 @@ public partial class MoveIt
 
         public override void Invoke()
         {
-            Action.Invoke();
+            Action.Do();
         }
     }
 

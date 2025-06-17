@@ -19,7 +19,7 @@ namespace LSCore
     {
         public Locale locale;
 
-        public override void Invoke()
+        public override void Do()
         {
             LocalizationSettings.SelectedLocale = locale;
         }

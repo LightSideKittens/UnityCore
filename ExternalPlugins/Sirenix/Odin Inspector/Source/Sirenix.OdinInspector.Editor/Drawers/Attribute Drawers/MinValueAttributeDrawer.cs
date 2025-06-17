@@ -48,18 +48,10 @@ namespace Sirenix.OdinInspector.Editor.Drawers
             }
             else
             {
-                EditorGUI.BeginChangeCheck();
                 this.CallNextDrawer(label);
-                if (EditorGUI.EndChangeCheck())
-                {
-                    T value = this.ValueEntry.SmartValue;
-                    var min = this.minValueGetter.GetValue();
-
-                    if (!GenericNumberUtility.NumberIsInRange(value, min, double.MaxValue))
-                    {
-                        this.ValueEntry.SmartValue = GenericNumberUtility.Clamp(value, min, double.MaxValue);
-                    }
-                }
+                T value = this.ValueEntry.SmartValue;
+                var min = this.minValueGetter.GetValue();
+                this.ValueEntry.SmartValue = GenericNumberUtility.Clamp(value, min, double.MaxValue);
             }
         }
     }

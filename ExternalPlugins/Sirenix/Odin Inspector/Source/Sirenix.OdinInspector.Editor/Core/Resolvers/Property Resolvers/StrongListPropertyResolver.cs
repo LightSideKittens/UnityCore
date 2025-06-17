@@ -9,6 +9,8 @@
 #define ODIN_INSPECTOR_3_1
 #define ODIN_INSPECTOR_3_2
 #define ODIN_INSPECTOR_3_3
+using UnityEngine;
+
 namespace Sirenix.OdinInspector.Editor
 {
 #pragma warning disable
@@ -98,8 +100,15 @@ namespace Sirenix.OdinInspector.Editor
         {
             if (IsArray)
             {
-                TList newArray = (TList)(object)ArrayUtilities.CreateNewArrayWithAddedElement((TElement[])(object)collection, (TElement)value);
-                this.ReplaceArray(collection, newArray);
+                try
+                {
+                    TList newArray = (TList)(object)ArrayUtilities.CreateNewArrayWithAddedElement((TElement[])(object)collection, (TElement)value);
+                    this.ReplaceArray(collection, newArray);
+                }
+                catch (Exception e)
+                {
+
+                }
             }
             else
             {

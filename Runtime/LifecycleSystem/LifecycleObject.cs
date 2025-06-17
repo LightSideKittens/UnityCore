@@ -20,9 +20,9 @@ namespace LSCore.LifecycleSystem
         {
             [SerializeReference] public DoIt action;
             
-            public override void Invoke()
+            public override void Do()
             {
-                action?.Invoke();
+                action?.Do();
             }
         }
         

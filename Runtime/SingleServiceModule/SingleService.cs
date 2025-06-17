@@ -87,6 +87,7 @@ namespace LSCore
 
         private static void ResetStatic()
         {
+            instance = null;
             onInitializing = null;
             staticConstructor = StaticConstructor;
         }

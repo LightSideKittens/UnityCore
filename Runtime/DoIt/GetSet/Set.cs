@@ -8,26 +8,11 @@ public class SetBuffer<T> : DoIt
 {
     [SerializeReference] public Get<T> data;
 
-    public override void Invoke()
+    public override void Do()
     {
         var d = data.Data;
         DataBuffer<object>.value = d;
         DataBuffer<T>.value = d;
-    }
-}
-
-public class DestroyEvent : MonoBehaviour, DestroyEvent.I
-{
-    public interface I
-    {
-        event Action Destroyed;
-    }
-    
-    public event Action Destroyed;
-
-    private void OnDestroy()
-    {
-        Destroyed?.Invoke();
     }
 }
 
@@ -41,7 +26,7 @@ public class SetKeyBuffer<T> : DoIt
     public string key;
     [SerializeReference] public Get<T> data;
     
-    public override void Invoke()
+    public override void Do()
     {
         var d = data.Data;
         
@@ -80,7 +65,7 @@ public class UnmanagedSetKeyBuffer<T> : DoIt
     public string key;
     [SerializeReference] public Get<T> data;
 
-    public override void Invoke()
+    public override void Do()
     {
         var d = data.Data;
         StringDict<object>.Set(string.Concat(key, typeof(T)), d);
@@ -93,7 +78,7 @@ public class RemoveKeyBuffer<T> : DoIt
 {
     public string key;
 
-    public override void Invoke()
+    public override void Do()
     {
         StringDict<object>.Remove(string.Concat(key, typeof(T)));
         StringDict<T>.Remove(key);
@@ -113,7 +98,7 @@ public class SetUnityObject : Set<Object, Object>
 {
     private ObjectPathAccessor accessor;
 
-    public override void Invoke()
+    public override void Do()
     {
         var t = target.Data;
         var v = value.Data;
@@ -132,7 +117,7 @@ public class SetClass : Set
 {
     private ObjectPathAccessor accessor;
 
-    public override void Invoke()
+    public override void Do()
     {
         var t = target.Data;
         var v = value.Data;
@@ -142,14 +127,14 @@ public class SetClass : Set
 }
 
 [Serializable]
-public class SetStruct<TValue> : DoIt
+public class SetStruct<TValue> : DoIt where TValue : struct
 {
     public string propertyPath;
     [SerializeReference] public IGetRaw<object> target;
     [SerializeReference] public Get<TValue> value;
     private TypedPathAccessor<TValue> accessor;
     
-    public override void Invoke()
+    public override void Do()
     {
         var t = target.Data;
         var v = value.Data;

@@ -23,7 +23,7 @@ public class Playlist : SingleService<Playlist>
         get
         {
             var data = musicsData[Instance.GetNextMusicIndex()];
-            AudioClip clip = data.audioClip;
+            AudioClip clip = data.AudioClip;
             var endTime = Mathf.Min(data.endTime, clip.length);
 
             if (!cachedMusic.TryGetValue(data, out var musicData))
@@ -100,7 +100,7 @@ public class Playlist : SingleService<Playlist>
         startTime = data.startTime;
         endTime = data.endTime;
         configName = data.configName;
-        source.clip = data.audioClip;
+        source.clip = data.AudioClip;
 
         var startTimeOffseted = startTime + StartTimeOffset;
         var endTimeClipped = Mathf.Min(endTime, source.clip.length);

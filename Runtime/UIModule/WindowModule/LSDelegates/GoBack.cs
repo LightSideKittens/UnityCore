@@ -7,7 +7,7 @@ namespace LSCore
     {
         public string id;
         
-        public override void Invoke()
+        public override void Do()
         {
             if (string.IsNullOrEmpty(id))
             {

@@ -64,6 +64,7 @@ namespace Sirenix.OdinInspector.Editor.Drawers
             this.UniqueControlName = Guid.NewGuid().ToString();
 
             this.settings = this.Property.GetAttribute<TypeDrawerSettingsAttribute>();
+
         }
 
         /// <summary>
@@ -73,6 +74,15 @@ namespace Sirenix.OdinInspector.Editor.Drawers
         {
             var entry = this.ValueEntry;
 
+            var val = this.Property.Parent.ValueEntry.WeakSmartValue;
+            
+            if (val != null)
+            {
+	            settings.FilterMethod ??= (Func<Type, bool>)val.GetType()
+		            .GetMethod(settings.FilterFunc)!
+		            .CreateDelegate(typeof(Func<Type, bool>), val);
+            }
+            
             if (!this.IsValid)
             {
                 GUIHelper.PushColor(Color.red);
@@ -182,20 +192,35 @@ namespace Sirenix.OdinInspector.Editor.Drawers
 			  }
 			  else
 			  {
-				  if (this.settings.BaseType != null)
+				  var fileter = settings.FilterMethod;
+				  if (fileter != null)
 				  {
-					  types = TypeRegistry.GetInheritors(this.settings.BaseType);
+					  types = TypeRegistry.GetValidTypesInCategory(AssemblyCategory.All);
+					  for (int i = types.Count - 1; i >= 0; i--)
+					  {
+						  if (!fileter(types[i]))
+						  {
+							  types.RemoveAt(i);
+						  }
+					  }
 				  }
 				  else
 				  {
-					  types = TypeRegistry.GetValidTypesInCategory(AssemblyCategory.All);
-				  }
-
-				  for (int i = types.Count - 1; i >= 0; i--)
-				  {
-					  if (!this.settings.Filter.IsValidType(types[i]))
+					  if (this.settings.BaseType != null)
 					  {
-						  types.RemoveAt(i);
+						  types = TypeRegistry.GetInheritors(this.settings.BaseType);
+					  }
+					  else
+					  {
+						  types = TypeRegistry.GetValidTypesInCategory(AssemblyCategory.All);
+					  }
+
+					  for (int i = types.Count - 1; i >= 0; i--)
+					  {
+						  if (!this.settings.Filter.IsValidType(types[i]))
+						  {
+							  types.RemoveAt(i);
+						  }
 					  }
 				  }
 			  }

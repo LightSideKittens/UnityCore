@@ -26,7 +26,7 @@ namespace LSCore
 
         public bool hideManually;
 
-        public override void Invoke()
+        public override void Do()
         {
             Tooltip obj;
             if (useLocalization)

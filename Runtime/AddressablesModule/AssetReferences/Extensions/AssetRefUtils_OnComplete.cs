@@ -23,6 +23,18 @@ namespace LSCore
             return task;
         }
         
+        public static AsyncOperationHandle OnSuccess(this in AsyncOperationHandle task, Action onSuccess)
+        {
+            task.Completed += result  =>
+            {
+                if (result.Status == AsyncOperationStatus.Succeeded)
+                {
+                    onSuccess();
+                }
+            };
+            return task;
+        }
+        
         public static AsyncOperationHandle<T> OnSuccess<T>(this in AsyncOperationHandle<T> task, Action onSuccess)
         {
             task.Completed += result  =>
@@ -48,6 +60,18 @@ namespace LSCore
         }
 
         public static AsyncOperationHandle<T> OnError<T>(this in AsyncOperationHandle<T> task, Action onError)
+        {
+            task.Completed += result =>
+            {
+                if (result.Status == AsyncOperationStatus.Failed)
+                {
+                    onError();
+                }
+            };
+            return task;
+        }
+        
+        public static AsyncOperationHandle OnError(this in AsyncOperationHandle task, Action onError)
         {
             task.Completed += result =>
             {

@@ -21,6 +21,8 @@ namespace Sirenix.OdinInspector
 		/// Specifies whether a base type should be used instead of all types.
 		/// </summary>
 		public Type BaseType = null;
+		public string FilterFunc;
+		public Func<Type, bool> FilterMethod;
 
 		/// <summary>
 		/// Filters the result.

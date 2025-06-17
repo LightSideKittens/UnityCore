@@ -84,7 +84,7 @@ namespace LSCore
         }
 #endif
 
-        public override void Invoke()
+        public override void Do()
         {
             actions[window](option);
         }

@@ -13,7 +13,7 @@ namespace LSCore.LifecycleSystem
             [SerializeReference] public List<DoIt> transformActions;
             private bool isCreated;
 
-            public override void Invoke()
+            public override void Do()
             {
                 if(isCreated) return;
                 isCreated = true;
