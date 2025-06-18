@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using Newtonsoft.Json;
 
@@ -120,7 +121,7 @@ public class FromKeyBuffer<T> : Get<T>, IGetRaw<T>, IKeyGet<T>
 {
     public string key;
     
-    object IGetRaw<T>.Data => StringDict<object>.Get(key);
+    object IGetRaw<T>.Data => StringDict<object>.Get(string.Concat(key, typeof(T).GetSimpleFullName()));
     public override T Data => StringDict<T>.Get(key);
     [JsonIgnore] public string Key => key;
 }

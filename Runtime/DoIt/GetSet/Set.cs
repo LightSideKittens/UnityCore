@@ -1,4 +1,5 @@
 ﻿using System;
+using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -20,10 +21,6 @@ public class SetBuffer<T> : DoIt
 [Serializable]
 public class SetKeyBuffer<T> : DoIt
 {
-    [HideInInspector]
-    [GetContext]
-    public Object root;
-    
     public string key;
     [SerializeReference] public Get<T> data;
     
@@ -31,7 +28,7 @@ public class SetKeyBuffer<T> : DoIt
     {
         var d = data.Data;
         
-        switch (root)
+        switch (d)
         {
             case DestroyEvent.I e:
                 e.Destroyed += Remove;
@@ -40,22 +37,21 @@ public class SetKeyBuffer<T> : DoIt
             {
                 var de = component.GetOrAddComponent<DestroyEvent>();
                 de.Destroyed += Remove;
-                root = de;
                 break;
             }
-            default:
-                throw new InvalidOperationException(
-                    $"Cannot get {typeof(DestroyEvent.I)}: {(root == null ? "root is null. Open scene or prefab and find SetKeyBuffer in Inspector to auto-apply root" : root.GetType().Name)}"
-                );
+            case GameObject gameObject:
+                var dee = gameObject.GetOrAddComponent<DestroyEvent>();
+                dee.Destroyed += Remove;
+                break;
         }
         
-        StringDict<object>.Set(string.Concat(key, typeof(T)), d);
+        StringDict<object>.Set(string.Concat(key, typeof(T).GetSimpleFullName()), d);
         StringDict<T>.Set(key, d);
     }
     
     private void Remove()
     {
-        StringDict<object>.Remove(string.Concat(key, typeof(T)));
+        StringDict<object>.Remove(string.Concat(key, typeof(T).GetSimpleFullName()));
         StringDict<T>.Remove(key);
     }
 }
