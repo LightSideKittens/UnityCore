@@ -43,5 +43,15 @@ namespace LSCore.Extensions.Unity
         {
             return gameObject.transform.GetAllChildWithCurrent();
         }
+        
+        public static T GetOrAddComponent<T>(this GameObject gameObject) where T : Component
+        {
+            if (gameObject.TryGetComponent(out T component))
+            {
+                return component;
+            }
+
+            return gameObject.AddComponent<T>();
+        }
     }
 }

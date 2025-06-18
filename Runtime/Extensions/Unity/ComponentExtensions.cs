@@ -66,5 +66,16 @@ namespace LSCore.Extensions.Unity
                 }
             }
         }
+        
+        public static T GetOrAddComponent<T>(this Component component) where T : Component
+        {
+            var go = component.gameObject;
+            if (go.TryGetComponent(out T result))
+            {
+                return result;
+            }
+
+            return go.AddComponent<T>();
+        }
     }
 }

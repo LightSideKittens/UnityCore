@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using LSCore.Extensions.Unity;
+using Newtonsoft.Json;
 
 #if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
@@ -72,7 +73,7 @@ public abstract class BaseGetRaw<T> : Get<T>, IKeyGet<T>
 {
     public string propertyPath;
     [SerializeReference] public IGetRaw<T> data;
-    public string Key => propertyPath;
+    [JsonIgnore] public string Key => propertyPath;
 }
 
 [Serializable]
@@ -121,7 +122,7 @@ public class FromKeyBuffer<T> : Get<T>, IGetRaw<T>, IKeyGet<T>
     
     object IGetRaw<T>.Data => StringDict<object>.Get(key);
     public override T Data => StringDict<T>.Get(key);
-    public string Key => key;
+    [JsonIgnore] public string Key => key;
 }
 
 [Serializable]
