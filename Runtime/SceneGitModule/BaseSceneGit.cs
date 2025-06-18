@@ -40,7 +40,7 @@ public class BaseSceneGit<T> : SingleService<T> where T : BaseSceneGit<T>
 
     public static void SaveBranchToConfig(Branch branch)
     {
-        Instantiate(branch);
+        branch = Instantiate(branch);
         var config = GetBranchConfig(branch.name);
         config[Commits] = JArray.FromObject(branch.commits, Serializer);
         GetBranchManager(branch.name).Save();
@@ -97,6 +97,7 @@ public class BaseSceneGit<T> : SingleService<T> where T : BaseSceneGit<T>
         
         if (!rootBranch.HasBranch)
         {
+            GetBranch(rootBranch.branch);
             rootBranch.Do();
             rootBranch.onSuccess.Add((DelegateDoIt)(() =>
             {
@@ -180,7 +181,7 @@ public class BaseSceneGit<T> : SingleService<T> where T : BaseSceneGit<T>
         var changes = Config.AsJ<JObject>(Changes);
         var hash = change.Key;
         changes.Remove(hash);
-        changes[hash] = JObject.FromObject(change, Serializer);
+        changes[hash] = change.FromObject(Serializer);
     }
     
     public static JToken GetChange(string key)

@@ -36,7 +36,7 @@ public class Branch : MonoBehaviour
             var lastBranch = SceneGit.CurrentBranch;
             var lastCommit = SceneGit.CurrentCommit;
             var branchName = branch;
-
+            
             AsyncOperationHandle handle = default;
 
             if (lastCommit != -1 && lastBranch != branchName)
@@ -95,15 +95,15 @@ public class Branch : MonoBehaviour
 
             if (handle.IsValid())
             {
-                handle.OnSuccess(SaveHead);
+                handle.OnSuccess(OnCheckout);
                 Load(handle);
             }
             else
             {
-                SaveHead();
+                OnCheckout();
             }
 
-            void SaveHead()
+            void OnCheckout()
             {
                 SceneGit.CurrentBranch = branchName;
                 SceneGit.CurrentCommit = commit;
@@ -167,6 +167,7 @@ public class Branch : MonoBehaviour
     
     private void Awake()
     {
+        name = name.Replace("(Clone)", string.Empty);
         var branchName = name;
         
         for (var i = 0; i < commits.Count; i++)

@@ -1,4 +1,5 @@
 ﻿using System;
+using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -37,7 +38,7 @@ public class SetKeyBuffer<T> : DoIt
                 break;
             case Component component:
             {
-                var de = component.gameObject.AddComponent<DestroyEvent>();
+                var de = component.GetOrAddComponent<DestroyEvent>();
                 de.Destroyed += Remove;
                 root = de;
                 break;

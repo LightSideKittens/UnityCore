@@ -49,8 +49,8 @@ namespace LSCore.ConfigModule
         
         public void OnWorldDestroy()
         {
-            LoadOnNextAccess();
             Save();
+            LoadOnNextAccess();
             UnsubOnWorldDestroy();
         }
         

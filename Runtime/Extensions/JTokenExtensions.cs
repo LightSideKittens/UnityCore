@@ -1,11 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LSCore.Extensions
 {
     public static partial class JTokenExtensions
     {
+        public static JObject FromObject(this object o, JsonSerializer serializer)
+        {
+            var tokenWriter = new JTokenWriter();
+            serializer.Serialize(tokenWriter, o, typeof(object));
+            return (JObject)tokenWriter.Token;
+        }
+        
         public static bool TryGetValue(this JToken token, string key, out JToken value)
         {
             value = token[key];
