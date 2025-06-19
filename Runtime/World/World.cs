@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -29,6 +30,7 @@ namespace LSCore
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
         {
+            DOTween.SetTweensCapacity(1000, 1000);
             Creating?.Invoke();
             var go = new GameObject(nameof(World));
             instance = go.AddComponent<World>();
