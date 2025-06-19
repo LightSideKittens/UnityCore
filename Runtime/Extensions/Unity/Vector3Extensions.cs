@@ -124,5 +124,17 @@ namespace LSCore.Extensions.Unity
         }
 
         public static float Dot(this in Vector3 a, in Vector3 b) => a.x * b.x + a.y * b.y + a.z * b.z;
+        
+        public static Vector3 Snap(this Vector3 pos, float gridStep)
+        {
+            pos.x = Mathf.Round(pos.x / gridStep) * gridStep;
+            pos.y = Mathf.Round(pos.y / gridStep) * gridStep;
+            pos.z = Mathf.Round(pos.z / gridStep) * gridStep;
+            return pos;
+        }
+        
+        public static void SnapX(this ref Vector3 pos, float step) => pos.x = Mathf.Round(pos.x / step) * step;
+        public static void SnapY(this ref Vector3 pos, float step) => pos.y = Mathf.Round(pos.y / step) * step;
+        public static void SnapZ(this ref Vector3 pos, float step) => pos.z = Mathf.Round(pos.z / step) * step;
     }
 }

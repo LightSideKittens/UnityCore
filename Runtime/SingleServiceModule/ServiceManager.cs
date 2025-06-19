@@ -6,6 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace LSCore
 {
+    [DefaultExecutionOrder(-1)]
     public abstract class ServiceManager : MonoBehaviour
     {
         [SerializeField] private List<BaseSingleService> services;
@@ -76,8 +77,18 @@ namespace LSCore
     public abstract class ServiceManager<T> : ServiceManager where T : ServiceManager<T>
     {
         [SerializeReference] public List<DoIt> onAwake;
+        private static T instance;
         public static event Action Destroyed;
-        protected static T Instance { get; private set; }
+
+        protected static T Instance
+        {
+            get
+            {
+                if(World.IsEditMode) return FindAnyObjectByType<T>(FindObjectsInactive.Include);
+                return instance;
+            }
+            private set => instance = value;
+        }
 
 
         protected override void Awake()

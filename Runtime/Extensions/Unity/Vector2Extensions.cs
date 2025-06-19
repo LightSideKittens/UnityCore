@@ -156,5 +156,15 @@ namespace LSCore.Extensions.Unity
             
             return target.y / target.x;
         }
+        
+        public static Vector2 Snap(this Vector2 pos, float gridStep)
+        {
+            pos.x = Mathf.Round(pos.x / gridStep) * gridStep;
+            pos.y = Mathf.Round(pos.y / gridStep) * gridStep;
+            return pos;
+        }
+        
+        public static void SnapX(this ref Vector2 pos, float step) => pos.x = Mathf.Round(pos.x / step) * step;
+        public static void SnapY(this ref Vector2 pos, float step) => pos.y = Mathf.Round(pos.y / step) * step;
     }
 }
