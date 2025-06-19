@@ -93,11 +93,13 @@ namespace LSCore
         private void OnDestroy()
         {
             World.Created -= OnCreated;
+            World.Destroyed -= OnCreated;
         }
         
         private void OnCreated()
         {
             World.Created -= OnCreated;
+            World.Destroyed -= OnCreated;
             isInited = false;
         }
 
@@ -105,6 +107,7 @@ namespace LSCore
         {
             if (isInited) return;
             World.Created += OnCreated;
+            World.Destroyed += OnCreated;
             
             byKeyDict.Clear();
 
