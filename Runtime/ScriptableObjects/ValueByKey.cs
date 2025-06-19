@@ -60,12 +60,51 @@ namespace LSCore
                 return byKeyDict;
             }
         }
+
+        public IEnumerable<TKey> Keys
+        {
+            get
+            {
+                Init();
+                return byKeyDict.Keys;
+            }
+        }
+        
+        public IEnumerable<TValue> Values
+        {
+            get
+            {
+                Init();
+                return byKeyDict.Values;
+            }
+        }
+        
+        public TValue this[TKey key]
+        {
+            get
+            {
+                Init();
+                return byKeyDict[key];
+            }
+        }
         
         [NonSerialized] private bool isInited;
+
+        private void OnDestroy()
+        {
+            World.Created -= OnCreated;
+        }
+        
+        private void OnCreated()
+        {
+            World.Created -= OnCreated;
+            isInited = false;
+        }
 
         public void Init()
         {
             if (isInited) return;
+            World.Created += OnCreated;
             
             byKeyDict.Clear();
 
