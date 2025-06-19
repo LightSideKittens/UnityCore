@@ -8,6 +8,11 @@ namespace LSCore.Extensions.Unity
         public static readonly Vector2 half = Vector2.one / 2;
         public static readonly Vector2 one = Vector2.one;
         public static readonly Vector2 oneDir = Vector2.one.normalized;
+        
+        public static Vector2 Get(float f)
+        {
+            return new Vector2(f, f);
+        }
     }
     
     public static class LSVector3
@@ -15,6 +20,11 @@ namespace LSCore.Extensions.Unity
         public static readonly Vector3 one = Vector3.one;
         public static readonly Vector3 oneDir = Vector3.one.normalized;
         public static readonly Vector3 half = Vector3.one / 2;
+
+        public static Vector3 Get(float f)
+        {
+            return new Vector3(f, f, f);
+        }
     }
     
     public static class Vector2Extensions
