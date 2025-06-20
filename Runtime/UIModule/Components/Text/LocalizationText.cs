@@ -27,18 +27,11 @@ namespace LSCore
     
     [Serializable]
     [Unwrap]
-    public class Int : ILocalizationArgument
+    [HideReferenceObjectPicker]
+    public class LocalizationArgument<T> : ILocalizationArgument
     {
-        public int value;
+        public T value;
         public override string ToString() => value.ToString();
-    }
-
-    [Serializable]
-    [Unwrap]
-    public class String : ILocalizationArgument
-    {
-        public string value;
-        public override string ToString() => value;
     }
 
     public interface ILocalizationArgument { }
@@ -70,7 +63,9 @@ namespace LSCore
         [ReadOnly] [ShowInInspector] [HideLabel] [MultiLineProperty] internal string text;
 #endif
         
+        [ReadOnly]
         [ShowInInspector]
+        [ShowIf("@rawArguments != null")]
         public object[] rawArguments;
         
         public object[] Arguments => rawArguments ?? arguments;
@@ -97,6 +92,7 @@ namespace LSCore
     {
         [OnValueChanged("OnLocalizationKeyChanged", true)]
         [SerializeField]
+        [FoldoutGroup("Localization Data")]
         internal LocalizationData localizationData;
         
         public void SetLocalizationData(LocalizationData localizationData)

@@ -16,6 +16,19 @@ namespace LSCore.Async
         public static Tween Delay(in float time) => DOTween.Sequence().AppendInterval(time);
         public static Tween Cycles(in float delay, int cycles, TweenCallback onLoop) => DOTween.Sequence().AppendInterval(delay).SetLoops(cycles).OnStepComplete(onLoop);
         public static Tween InfinityLoop(in float delay, TweenCallback onLoop) => Cycles(delay, -1, onLoop);
+        public static Tween Seconder(this TimeSpan time, Action<TimeSpan> onLoop, bool callImmediately = true)
+        {
+            if (callImmediately)
+            {
+                onLoop(time);
+            }
+            
+            return Cycles(1, -1, () =>
+            {
+                time -= TimeSpan.FromSeconds(1);
+                onLoop(time);
+            });
+        }
 
         public static Tween Frames(uint count, Action onComplete)
         {

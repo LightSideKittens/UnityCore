@@ -123,14 +123,19 @@ namespace LSCore.Extensions
         }
     }
     
-    public class RJToken
+    public class BaseRJToken<T> where T : JToken
     {
-        public Dictionary<object, Action<JToken>> setActions = new();
+        private Dictionary<object, Action<JToken>> tempSetActions = new();
+        private Dictionary<object, Action<JToken>> setActions = new();
         
-        private JToken token;
-        public JToken Token => token;
+        public void Listen(object key, Action<JToken> action) => setActions[key] = action;
+        public void ListenTemp(object key, Action<JToken> action) => tempSetActions[key] = action;
+        public bool UnListenTemp(object key, Action<JToken> action) => tempSetActions.Remove(key);
+        
+        private T token;
+        public T Token => token;
 
-        public RJToken(JToken token) => this.token = token;
+        public BaseRJToken(T token) => this.token = token;
         
         public virtual JToken? this[object key]
         {
@@ -139,16 +144,46 @@ namespace LSCore.Extensions
             {
                 token[key] = value;
 
-                if (setActions.Remove(key, out var action))
+                if (tempSetActions.Remove(key, out var action))
+                {
+                    action(value);
+                }
+
+                if (tempSetActions.TryGetValue(key, out action))
                 {
                     action(value);
                 }
             }
         }
 
-        public void Replace(RJToken value)
+        public void Replace(BaseRJToken<T> value)
         {
             token.Replace(value.token);
         }
+        
+        public int Increase(object key, int value)
+        {
+            var count = this[key]?.ToInt() ?? 0;
+            count += value;
+            this[key] = count;
+            return count;
+        }
+    }
+    
+    public class RJToken : BaseRJToken<JToken>
+    {
+        public RJToken(JToken token) : base(token)
+        {
+        }
+    }
+    
+    public class RJObject : BaseRJToken<JObject>
+    {
+        public RJObject(JObject token) : base(token)
+        {
+        }
+        public static implicit operator RJObject(JObject token) => new(token);
+
+        public bool ContainsKey(string key) => Token.ContainsKey(key);
     }
 }

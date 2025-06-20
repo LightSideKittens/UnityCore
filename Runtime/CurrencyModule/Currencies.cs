@@ -15,7 +15,7 @@ namespace LSCore
             World.Destroyed += onChangedActions.Clear;
         }
         
-        internal static int GetValue(string name)
+        internal static int GetAmount(string name)
         {
             var currencies = Config.currencies;
             if (!currencies.TryGetValue(name, out var value))
@@ -33,12 +33,12 @@ namespace LSCore
 
         internal static void Earn(string name, int value)
         {
-            SetValue(name, value + GetValue(name));
+            SetValue(name, value + GetAmount(name));
         }
 
         internal static bool Spend(string name, int value, out Action spend)
         {
-            var currentValue = GetValue(name);
+            var currentValue = GetAmount(name);
             if (currentValue >= value)
             {
                 spend = () => SetValue(name, currentValue - value);

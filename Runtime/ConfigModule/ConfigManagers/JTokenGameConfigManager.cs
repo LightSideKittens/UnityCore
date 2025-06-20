@@ -26,8 +26,8 @@ namespace LSCore.ConfigModule
 
     public class JTokenGameConfig : LocalDynamicConfig
     {
-        public JToken data = new JObject();
-        public static JToken Get(string path) => GetManager(path).Config.data;
+        public JObject data = new JObject();
+        public static JObject Get(string path) => GetManager(path).Config.data;
         public static JTokenGameConfigManager GetManager(string path) => ConfigMaster<JTokenGameConfigManager>.Get(path);
     }
 }

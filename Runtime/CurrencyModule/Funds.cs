@@ -67,7 +67,7 @@ namespace LSCore
             
             if (callImmediate)
             {
-                onChanged(GetValue(id));
+                onChanged(GetAmount(id));
             }
         }
         
@@ -85,7 +85,7 @@ namespace LSCore
             onChangedActions.Remove(id);
         }
 
-        public static int GetValue(Id id) => Currencies.GetValue(id);
+        public static int GetAmount(Id id) => Currencies.GetAmount(id);
         public static void Earn(Id id, int value) => Currencies.Earn(id, value);
         public static bool Spend(Id id, int value, out Action action) => Currencies.Spend(id, value, out action);
         public static void Remove(Id id) => Currencies.Remove(id);
