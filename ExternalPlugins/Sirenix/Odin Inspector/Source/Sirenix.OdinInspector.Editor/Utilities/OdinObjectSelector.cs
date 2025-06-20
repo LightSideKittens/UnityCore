@@ -75,7 +75,6 @@ namespace Sirenix.OdinInspector.Editor
 		internal static bool IsUnityObjectSelector { get; private set; }
 
 		public static bool IsOpen { get; private set; }
-		public static bool GenericTypeBuilded { get; private set; }
 		internal static bool IsSelectorReadyToClaim { get; private set; }
 
 		// ====== Context required for handling Components in the Unity Object Selector.
@@ -695,7 +694,6 @@ namespace Sirenix.OdinInspector.Editor
 
 									if (instanceResult.Result == TypeRegistry.CheckedInstanceResult.Success)
 									{
-										GenericTypeBuilded = true;
 										SelectorObject = instanceResult.Instance;
 										IsSelectorReadyToClaim = true;
 									}
@@ -789,11 +787,6 @@ namespace Sirenix.OdinInspector.Editor
 		/// <returns><c>true</c> if the selector's object (<see cref="SelectorObject"/>) is ready to be claimed; otherwise, <c>false</c>.</returns>
 		public static bool IsReadyToClaim(object key, int id)
 		{
-			if (GenericTypeBuilded)
-			{
-				return true;
-			}
-			
 			if (!IsOpen)
 			{
 				return false;
@@ -1275,7 +1268,6 @@ namespace Sirenix.OdinInspector.Editor
 			SelectorId = 0;
 			SelectorObject = null;
 			IsOpen = false;
-			GenericTypeBuilded = false;
 			IsSelectorReadyToClaim = false;
 			IsUnityObjectSelector = false;
 			reopenInfo = ReopenInfo.None;

@@ -58,7 +58,7 @@ namespace LSCore.LifecycleSystem
                 
                 if (timeMark == null)
                 {
-                    objToken.setActions.Add(timeMarkKey, Do);
+                    objToken.Listen(timeMarkKey, Do);
                     return;
                 }
 
