@@ -28,7 +28,7 @@ namespace LSCore
     [Serializable]
     [Unwrap]
     [HideReferenceObjectPicker]
-    public class LocalizationArgument<T> : ILocalizationArgument
+    public class ToStringer<T> : ILocalizationArgument
     {
         public T value;
         public override string ToString() => value.ToString();
@@ -95,10 +95,10 @@ namespace LSCore
         [BoxGroup]
         internal LocalizationData localizationData;
         
-        public void SetLocalizationData(LocalizationData localizationData)
+        public void SetLocalizationData(LocalizationData data)
         {
-            TableData = localizationData.tableData;
-            Localize(localizationData.key, localizationData.Arguments);
+            TableData = data.tableData;
+            Localize(data.key, data.Arguments);
             if (!isTableLoading && table == null) UpdateTable();
         }
         

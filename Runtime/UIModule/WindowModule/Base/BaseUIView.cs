@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -10,6 +11,11 @@ namespace LSCore
     {
         RectTransform RectTransform { get; }
         WindowManager Manager { get; }
+        
+        static Action<IUIView> Showing; 
+        static Action<IUIView> Showed; 
+        static Action<IUIView> Hiding;
+        static Action<IUIView> Hidden;
     }
     
     [RequireComponent(typeof(CanvasGroup))]
@@ -52,10 +58,10 @@ namespace LSCore
         protected virtual void InitManager()
         {
             Manager.Init(GetComponent<CanvasGroup>());
-            Manager.Showing += OnShowing;
-            Manager.Showed += OnShowed;
-            Manager.Hiding += OnHiding;
-            Manager.Hidden += OnHidden;
+            Manager.Showing += () => { OnShowing(); IUIView.Showing?.Invoke(this); };
+            Manager.Showed += () => { OnShowed(); IUIView.Showed?.Invoke(this); };
+            Manager.Hiding += () => { OnHiding(); IUIView.Hiding?.Invoke(this); };
+            Manager.Hidden += () => { OnHidden(); IUIView.Hidden?.Invoke(this); };
             Manager.showOption = () => ShowOption;
             Manager.showAnim = () => ShowAnim;
             Manager.hideAnim = () => HideAnim;
