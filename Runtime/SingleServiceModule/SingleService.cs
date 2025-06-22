@@ -10,8 +10,16 @@ namespace LSCore
         private static Func<T> staticConstructor;
         private static Action onInitializing;
         public override Type Type => typeof(T);
-
-        protected static T Instance => staticConstructor();
+        
+        protected static T Instance
+        {
+            get
+            {
+                if(World.IsEditMode) return FindAnyObjectByType<T>(FindObjectsInactive.Include);
+                return staticConstructor();
+            }
+        }
+        
         public static bool IsNull => instance == null;
         public static bool IsExistsInManager => ServiceManager.IsExists<T>();
 

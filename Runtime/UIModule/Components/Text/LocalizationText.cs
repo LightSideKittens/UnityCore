@@ -92,7 +92,7 @@ namespace LSCore
     {
         [OnValueChanged("OnLocalizationKeyChanged", true)]
         [SerializeField]
-        [FoldoutGroup("Localization Data")]
+        [BoxGroup]
         internal LocalizationData localizationData;
         
         public void SetLocalizationData(LocalizationData localizationData)
@@ -307,7 +307,7 @@ namespace LSCore
         {
             base.OnEnable();
             localizationText = (LocalizationText)target;
-            localizationData = propertyTree.RootProperty.Children["localizationData"];
+            localizationData = propertyTree.RootProperty.Children["#_DefaultBoxGroup"];
         }
         
         public override void OnInspectorGUI()
