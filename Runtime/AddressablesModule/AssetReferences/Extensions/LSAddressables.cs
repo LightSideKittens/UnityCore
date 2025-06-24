@@ -7,6 +7,7 @@ namespace LSCore
 {
     public static partial class LSAddressables
     {
+        public static AsyncOperationHandle InitializationTask => Addressables.InitializeAsync();
         public static T Load<T>(object key) where T : Object => Addressables.LoadAssetAsync<T>(key).WaitForCompletion();
         
         public static T Load<T>(this AssetReference reference) => reference.LoadAsync<T>().WaitForCompletion();
