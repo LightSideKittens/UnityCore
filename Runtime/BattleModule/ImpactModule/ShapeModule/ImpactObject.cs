@@ -27,7 +27,7 @@ namespace LSCore
                 impacts[i].Apply(initiator, collider);
             }
             
-            onImpactsApplied.Invoke();
+            onImpactsApplied.Do();
         }
 
 #if UNITY_EDITOR

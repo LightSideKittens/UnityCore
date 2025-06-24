@@ -84,12 +84,12 @@ namespace LSCore
             if (isOn)
             {
                 onOffAnim.Show().SetId(this);
-                on.Invoke();
+                on.Do();
             }
             else
             {
                 onOffAnim.Hide().SetId(this);
-                off.Invoke();
+                off.Do();
             }
         }
         

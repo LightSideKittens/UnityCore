@@ -35,7 +35,7 @@ namespace LSCore
 
         public override void Do()
         {
-            actions.Invoke();
+            actions.Do();
         }
     }
     

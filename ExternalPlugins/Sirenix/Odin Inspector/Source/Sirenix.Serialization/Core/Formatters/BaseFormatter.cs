@@ -8,10 +8,12 @@
 #define ODIN_INSPECTOR_3_1
 #define ODIN_INSPECTOR_3_2
 #define ODIN_INSPECTOR_3_3
+
 #if (UNITY_EDITOR || UNITY_STANDALONE) && !ENABLE_IL2CPP
 #define CAN_EMIT
 #endif
 
+using UnityEngine.Scripting;
 namespace Sirenix.Serialization
 {
 #pragma warning disable
@@ -416,6 +418,7 @@ namespace Sirenix.Serialization
     /// <see cref="IObjectReference"/>, <see cref="ISerializationCallbackReceiver"/>, <see cref="OnSerializingAttribute"/>, <see cref="OnSerializedAttribute"/>, <see cref="OnDeserializingAttribute"/> and <see cref="OnDeserializedAttribute"/>.
     /// </summary>
     /// <seealso cref="IFormatter" />
+    [Preserve]
     public abstract class WeakBaseFormatter : IFormatter
     {
         protected delegate void SerializationCallback(object value, StreamingContext context);

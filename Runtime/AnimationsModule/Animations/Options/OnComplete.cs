@@ -12,7 +12,7 @@ namespace LSCore.AnimationsModule.Animations.Options
         
         public void ApplyTo(Tween tween)
         {
-            tween.OnComplete(actions.Invoke);
+            tween.OnComplete(actions.Do);
         }
     }
 }

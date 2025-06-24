@@ -49,13 +49,13 @@ namespace LSCore.BattleModule
                 var result = results[i];
                 if (registeredColliders.Contains(result))
                 {
-                    onIn.Invoke(result);
+                    onIn.Do(result);
                 }
             }
             
             foreach (var result in registeredColliders.Except(currentColliders))
             {
-                onOut.Invoke(result);
+                onOut.Do(result);
             }
         }
     }

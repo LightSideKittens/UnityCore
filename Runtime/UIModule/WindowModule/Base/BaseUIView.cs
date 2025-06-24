@@ -67,10 +67,10 @@ namespace LSCore
             Manager.hideAnim = () => HideAnim;
         }
 
-        protected virtual void OnShowing() => onShowing.Invoke();
-        protected virtual void OnHiding() => onHiding.Invoke();
-        protected virtual void OnShowed() => onShowed.Invoke();
-        protected virtual void OnHidden() => onHidden.Invoke();
+        protected virtual void OnShowing() => onShowing.Do();
+        protected virtual void OnHiding() => onHiding.Do();
+        protected virtual void OnShowed() => onShowed.Do();
+        protected virtual void OnHidden() => onHidden.Do();
 
         protected virtual Tween ShowAnim => showHideAnim?.Show();
         protected virtual Tween HideAnim => showHideAnim?.Hide();

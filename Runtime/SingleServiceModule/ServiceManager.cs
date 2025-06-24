@@ -97,7 +97,7 @@ namespace LSCore
             Type = typeof(T);
             Burger.Log($"[{GetType().Name}] Awake. Scene: {SceneManager.GetActiveScene().name}");
             base.Awake();
-            onAwake.Invoke();
+            onAwake.Do();
         }
 
         protected override void OnDestroy()

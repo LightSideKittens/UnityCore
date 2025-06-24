@@ -148,8 +148,8 @@ public class Branch : MonoBehaviour
             Load();
             void Load()
             {
-                handle.OnSuccess(onSuccess.Invoke);
-                handle.OnError(onError.Invoke);
+                handle.OnSuccess(onSuccess.Do);
+                handle.OnError(onError.Do);
                 loader.Show(handle, Load);
             }
         }

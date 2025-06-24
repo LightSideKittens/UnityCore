@@ -22,7 +22,17 @@ namespace LSCore.ConfigModule
         private void SetupAutoSave()
         {
 #if UNITY_EDITOR
-            if(!World.IsPlaying) return;
+            if (World.IsEditMode)
+            {
+                World.Creating += OnCreating;
+
+                void OnCreating()
+                {
+                    World.Creating -= OnCreating;
+                    LoadOnNextAccess();
+                }
+                return;
+            }
 #endif
             
             UnSetupAutoSave();

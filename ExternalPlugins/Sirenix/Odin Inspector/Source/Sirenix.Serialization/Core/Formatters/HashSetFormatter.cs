@@ -9,6 +9,7 @@
 #define ODIN_INSPECTOR_3_2
 #define ODIN_INSPECTOR_3_3
 using Sirenix.Serialization;
+using UnityEngine.Scripting;
 
 [assembly: RegisterFormatter(typeof(HashSetFormatter<>), weakFallback: typeof(WeakHashSetFormatter))]
 
@@ -136,12 +137,13 @@ namespace Sirenix.Serialization
         }
     }
 
+    [Preserve]
     public class WeakHashSetFormatter : WeakBaseFormatter
     {
         private readonly Serializer ElementSerializer;
         private readonly MethodInfo AddMethod;
         private readonly PropertyInfo CountProperty;
-
+        
         public WeakHashSetFormatter(Type serializedType) : base(serializedType)
         {
             var args = serializedType.GetArgumentsOfInheritedOpenGenericClass(typeof(HashSet<>));

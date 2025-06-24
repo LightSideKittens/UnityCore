@@ -105,7 +105,15 @@ namespace LSCore
 
         public void Init()
         {
-            if (isInited) return;
+            if (isInited)
+            {
+#if UNITY_EDITOR
+                if(World.IsPlaying) return;
+#else
+                return;
+#endif
+            }
+            
             World.Created += OnCreated;
             World.Destroyed += OnCreated;
             

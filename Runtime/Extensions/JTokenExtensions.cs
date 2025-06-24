@@ -14,19 +14,19 @@ namespace LSCore.Extensions
             return (JObject)tokenWriter.Token;
         }
         
-        public static bool TryGetValue(this JToken token, string key, out JToken value)
+        public static bool TryGetValue(this JToken token, object key, out JToken value)
         {
             value = token[key];
             return value != null;
         }
         
-        public static bool TryGetValue<T>(this JToken token, string key, out T value) where T : JToken
+        public static bool TryGetValue<T>(this JToken token, object key, out T value) where T : JToken
         {
             value = token[key] as T;
             return value != null;
         }
         
-        public static T As<T>(this JToken token, string key, T defaultValue = default)
+        public static T As<T>(this JToken token, object key, T defaultValue = default)
         {
             if (token[key] != null)
             {
@@ -37,7 +37,7 @@ namespace LSCore.Extensions
             return defaultValue;
         }
         
-        public static T AsJ<T>(this JToken token, string key, T defaultValue) where T : JToken
+        public static T AsJ<T>(this JToken token, object key, T defaultValue) where T : JToken
         {
             if (token[key] != null)
             {
@@ -48,7 +48,7 @@ namespace LSCore.Extensions
             return defaultValue;
         }
 
-        public static T AsJ<T>(this JToken token, string key) where T : JToken, new()
+        public static T AsJ<T>(this JToken token, object key) where T : JToken, new()
         {
             return (T)(token[key] ??= new T());
         }
@@ -101,12 +101,12 @@ namespace LSCore.Extensions
     
     public static class RJTokenExtensions
     {
-        public static void Remove(this RJToken target, object key)
+        public static void Remove(this IRJToken target, object key)
         {
             target[key]?.Parent?.Remove();
         }
 
-        public static bool CheckDiffAndSync<T>(this RJToken lastData, object key, JToken currentValue, Action<(T lastValue, T currentValue)> onSync = null) 
+        public static bool CheckDiffAndSync<T>(this IRJToken lastData, object key, JToken currentValue, Action<(T lastValue, T currentValue)> onSync = null) 
         {
             var lastValue = lastData[key];
                 
@@ -121,9 +121,25 @@ namespace LSCore.Extensions
                 
             return false;
         }
+        
+        public static T As<T>(this IRJToken token, object key, T defaultValue = default)
+        {
+            if (token[key] != null)
+            {
+                return token[key].ToObject<T>();
+            }
+            
+            token[key] = JToken.FromObject(defaultValue);
+            return defaultValue;
+        }
+    }
+
+    public interface IRJToken
+    {
+        public JToken? this[object key] { get; set; }
     }
     
-    public class BaseRJToken<T> where T : JToken
+    public class BaseRJToken<T> : IRJToken where T : JToken
     {
         private Dictionary<object, Action<JToken>> tempSetActions = new();
         private Dictionary<object, Action<JToken>> setActions = new();
@@ -144,7 +160,7 @@ namespace LSCore.Extensions
             {
                 token[key] = value;
 
-                if (tempSetActions.Remove(key, out var action))
+                if (setActions.Remove(key, out var action))
                 {
                     action(value);
                 }
@@ -182,6 +198,7 @@ namespace LSCore.Extensions
         public RJObject(JObject token) : base(token)
         {
         }
+        
         public static implicit operator RJObject(JObject token) => new(token);
 
         public bool ContainsKey(string key) => Token.ContainsKey(key);

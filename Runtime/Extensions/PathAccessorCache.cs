@@ -214,6 +214,7 @@ public static class PathAccessorCache
                         break;
 
                     case FieldInfo field:
+                        canRead = true;
                         canWrite = !field.IsInitOnly && !field.IsLiteral;
                         break;
                 }

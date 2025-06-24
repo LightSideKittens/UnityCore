@@ -3,5 +3,5 @@
 public class DoIter : MonoBehaviour
 {
     [SerializeReference] public DoIt[] doIts;
-    private void Awake() => doIts.Invoke();
+    private void Awake() => doIts.Do();
 }

@@ -141,6 +141,10 @@ public class API {
         }
         int offset = 0;
         int length = cluster.length();
+        if(length == 1 && Character.isDigit(cluster.charAt(0)))
+        {
+            return false;
+        }
         while (offset < length) {
             int cp = cluster.codePointAt(offset);
             offset += Character.charCount(cp);

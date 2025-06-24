@@ -19,7 +19,7 @@ public class LSSubscriber : DoIt
     public override void Do()
     {
         var action = StringDict<Action>.Get(key);
-        action += actions.Invoke;
+        action += actions.Do;
         StringDict<Action>.Set(key, action);
     }
 }

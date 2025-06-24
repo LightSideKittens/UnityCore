@@ -15,21 +15,17 @@ namespace LSCore
         
         public static void FitInSafeArea(RectTransform target)
         {
-            var parent = (RectTransform)target.root;
             var zero = Vector2.zero;
             var one = Vector2.one;
 
             Rect safeArea = Screen.safeArea;
-            float xFactor = parent.rect.width / LSScreen.Width;
-            float yFactor = parent.rect.height / LSScreen.Height;
-
             target.anchorMin = zero;
             target.anchorMax = one;
             target.anchoredPosition = zero;
             target.localScale = Vector3.one;
 
-            target.offsetMin = safeArea.min * xFactor;
-            target.offsetMax = (safeArea.max - new Vector2(LSScreen.Width, LSScreen.Height)) * yFactor;
+            target.offsetMin = safeArea.min;
+            target.offsetMax = (safeArea.max - new Vector2(LSScreen.Width, LSScreen.Height));
         }
 
         private Tween showTween;
@@ -89,8 +85,8 @@ namespace LSCore
 
         public void OnlyShow()
         {
-            Showing?.Invoke();
             AnimateOnShowing(OnCompleteShow);
+            Showing?.Invoke();
             gameObject.SetActive(true);
         }
 

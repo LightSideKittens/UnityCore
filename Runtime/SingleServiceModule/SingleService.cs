@@ -8,7 +8,6 @@ namespace LSCore
     {
         private static T instance;
         private static Func<T> staticConstructor;
-        private static Action onInitializing;
         public override Type Type => typeof(T);
         
         protected static T Instance
@@ -38,7 +37,6 @@ namespace LSCore
 
         private static T StaticConstructor()
         {
-            onInitializing?.Invoke();
             staticConstructor = TrowException;
             var obj = Instantiate(ServiceManager.GetService<T>());
             obj.Awake();
@@ -50,27 +48,7 @@ namespace LSCore
         private static T TrowException() => throw new Exception(
             $"You try get {nameof(Instance)} before initializing." +
             $" Use {nameof(Init)} method by override in {typeof(T)} class.");
-
-        public static void AddChild(Transform child, bool worldPositionStays = false)
-        {
-            child.SetParent(Instance.transform, worldPositionStays);
-        }
         
-        public static void SetParent<TParent>(bool worldPositionStays = false) where TParent : SingleService<TParent>
-        {
-            SingleService<TParent>.AddChild(Instance.transform, worldPositionStays);
-        }
-        
-        protected static void OnInitializing(Action action)
-        {
-            onInitializing = action;
-        }
-    
-        protected static void AddOnInitializing(Action action)
-        {
-            onInitializing += action;
-        }
-
         private bool isInited;
         private string logTag => $"[{GetType().Name}]".ToTag(new Color(0.64f, 0.35f, 1f));
         
@@ -96,7 +74,6 @@ namespace LSCore
         private static void ResetStatic()
         {
             instance = null;
-            onInitializing = null;
             staticConstructor = StaticConstructor;
         }
     }

@@ -7,6 +7,19 @@ namespace LSCore.Extensions
 {
     public static class DOTweenExt
     {
+        public static void KillVoid(this Tween tween)
+        {
+            var sequenceParent = PathAccessorCache.GetRef(tween, "sequenceParent");
+            
+            if (sequenceParent.Get(tween) is Sequence sequence)
+            {
+                sequence.Kill();
+                return;
+            }
+            
+            tween.Kill();
+        }
+
         public static void Complete(object id) => DOTween.TweensById(id)?.ForEach(x => x.Goto(x.isBackwards ? 0 : 1));
 
         public static Tween DOFloat(this MaterialPropertyBlock target, float duration, int propId, float endValue)
@@ -61,7 +74,7 @@ namespace LSCore.Extensions
                 Vector3 offset = new Vector3(offsetX, offsetY, offsetZ) * amplitude;
 
                 target.localPosition = startPos + offset;
-            }).SetEase(Ease.Linear).SetLoops(-1);
+            }).SetEase(Ease.Linear).SetLoops(-1).SetLink(target.gameObject);
             
             return wobble;
         }
