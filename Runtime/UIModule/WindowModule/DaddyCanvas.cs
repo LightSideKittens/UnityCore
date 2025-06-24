@@ -7,7 +7,7 @@ namespace LSCore
         protected override void RecordState() { }
     }
     
-    [DefaultExecutionOrder(-3)]
+    [DefaultExecutionOrder(-11)]
     public class DaddyCanvas : BaseWindow<DaddyCanvas>
     {
         protected override bool ActiveByDefault => true;
