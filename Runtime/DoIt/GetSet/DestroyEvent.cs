@@ -1,4 +1,5 @@
 ﻿using System;
+using LSCore;
 using LSCore.Extensions.Unity;
 using UnityEngine;
 
@@ -6,6 +7,7 @@ public class DestroyEvent : MonoBehaviour, DestroyEvent.I
 {
     public static void AddOnDestroy(object obj, Action onDestroy)
     {
+        DestroyEvent de = null;
         switch (obj)
         {
             case I e:
@@ -13,15 +15,22 @@ public class DestroyEvent : MonoBehaviour, DestroyEvent.I
                 break;
             case Component component:
             {
-                var de = component.GetOrAddComponent<DestroyEvent>();
+                de = component.GetOrAddComponent<DestroyEvent>();
                 de.Destroyed += onDestroy;
                 break;
             }
             case GameObject gameObject:
-                var dee = gameObject.GetOrAddComponent<DestroyEvent>();
-                dee.Destroyed += onDestroy;
+                de = gameObject.GetOrAddComponent<DestroyEvent>();
+                de.Destroyed += onDestroy;
                 break;
         }
+        
+#if UNITY_EDITOR
+        if (de != null && World.IsEditMode)
+        {
+            de.hideFlags = HideFlags.HideAndDontSave;
+        }
+#endif
     }
     
     public interface I
