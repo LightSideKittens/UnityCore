@@ -18,7 +18,7 @@ namespace LSCore
         public override void Do()
         {
             obj = Object.Instantiate(prefab);
-            transformActions?.Invoke(obj);
+            transformActions?.Do(obj);
         }
     }
     

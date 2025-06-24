@@ -6,7 +6,7 @@ namespace LSCore
     [RequireComponent(typeof(Canvas))]
     public abstract class BaseCanvasView<T> : BaseUIView<T> where T : BaseCanvasView<T>
     {
-        protected virtual RectTransform Daddy => DaddyCanvas.IsExistsInManager ? DaddyCanvas.Instance.RectTransform : null;
+        protected virtual RectTransform Daddy => (DaddyCanvas.IsExistsInManager || !DaddyCanvas.IsNull) ? DaddyCanvas.Instance.RectTransform : null;
         public Canvas Canvas { get; private set; }
 
         protected override void Init()

@@ -11,6 +11,19 @@ namespace LSCore
         public Vector2 position;
         public Vector2 deltaPosition;
         public TouchPhase phase;
+        
+        public bool IsPointerOverUI
+        {
+            get
+            {
+#if UNITY_EDITOR
+                int id = PointerInputModule.kMouseLeftId;
+#else
+                int id = fingerId;
+#endif
+                return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(id);
+            }
+        }
     }
 
     public static partial class LSInput

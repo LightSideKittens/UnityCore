@@ -99,7 +99,7 @@ namespace LSCore.LifecycleSystem
             if (handlers)
             {
                 targetObjData[LifecycleManager.completedAt] = DateTime.UtcNow.Ticks;
-                onComplete.Invoke(this);
+                onComplete.Do(this);
             }
         }
         

@@ -53,7 +53,7 @@ namespace LSCore
 
         public void OnClick()
         {
-            actions?.Invoke();
+            actions?.Do();
         }
     }
 }

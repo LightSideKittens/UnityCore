@@ -49,13 +49,13 @@ public struct DataBuffer<T>
 
 public static class DoItExtensions
 {
-    public static void Invoke<T>(this DoIt action, T value)
+    public static void Do<T>(this DoIt action, T value)
     {
         DataBuffer<T>.value = value;
         action.Do();
     }
     
-    public static void Invoke(this IEnumerable<DoIt> actions)
+    public static void Do(this IEnumerable<DoIt> actions)
     {
         foreach (var action in actions)
         {
@@ -63,7 +63,7 @@ public static class DoItExtensions
         }
     }
     
-    public static void Invoke<T>(this IEnumerable<DoIt> actions, T value)
+    public static void Do<T>(this IEnumerable<DoIt> actions, T value)
     {
         foreach (var action in actions)
         {
@@ -72,7 +72,7 @@ public static class DoItExtensions
         }
     }
     
-    public static void Invoke(this IList<DoIt> actions)
+    public static void Do(this IList<DoIt> actions)
     {
         for (int i = 0; i < actions.Count; i++)
         {
@@ -80,7 +80,7 @@ public static class DoItExtensions
         }
     }
     
-    public static void Invoke<T>(this IList<DoIt> actions, T value)
+    public static void Do<T>(this IList<DoIt> actions, T value)
     {
         for (int i = 0; i < actions.Count; i++)
         {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using DG.Tweening;
 using LSCore.AnimationsModule.Animations.Options;
+using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -110,10 +111,11 @@ namespace LSCore.AnimationsModule.Animations
             {
                 var sequence = DOTween.Sequence();
                 var pos = 0f;
-                var timeOffset = timeOffsetPerTarget[timeOffsetPerTarget.length - 1].time / (targets.Count - 1);
+                var timeOffset = timeOffsetPerTarget.length == 0 ? 0 : timeOffsetPerTarget[timeOffsetPerTarget.length - 1].time / (targets.Count - 1);
                 for (int i = 0; i < targets.Count; i++)
                 {
                     var t = ApplyOptions(AnimAction(targets[i]), options);
+                    t.KillOnDestroy();
                     Tweens.Add(t);
                     sequence.Insert(pos, t);
                     pos += timeOffsetPerTarget.Evaluate((i + 1) * timeOffset);
@@ -122,7 +124,7 @@ namespace LSCore.AnimationsModule.Animations
                 return sequence;
             }
             
-            return ApplyOptions(AnimAction(targets[0]), options);
+            return ApplyOptions(AnimAction(targets[0]).KillOnDestroy(), options);
         }
 
         public void Reverse()

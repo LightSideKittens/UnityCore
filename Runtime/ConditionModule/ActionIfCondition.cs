@@ -13,11 +13,11 @@ public abstract class ActionsIfCondition<TAction, TCondition> : DoIt where TActi
     {
         if (conditions)
         {
-            ifActions?.Invoke();
+            ifActions?.Do();
         }
         else
         {
-            elseActions?.Invoke();
+            elseActions?.Do();
         }
     }
 }

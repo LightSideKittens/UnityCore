@@ -20,7 +20,7 @@ namespace LSCore.LifecycleSystem
                 
                 foreach (var obj in Create(placementId))
                 {
-                    transformActions.Invoke(obj);
+                    transformActions.Do(obj);
                 }
             }
         }
