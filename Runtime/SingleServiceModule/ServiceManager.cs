@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace LSCore
 {
-    [DefaultExecutionOrder(-1)]
+    [DefaultExecutionOrder(-9)]
     public abstract class ServiceManager : MonoBehaviour
     {
         [SerializeField] private List<BaseSingleService> services;

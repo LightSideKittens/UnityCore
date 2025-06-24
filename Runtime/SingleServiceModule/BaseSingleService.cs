@@ -4,7 +4,7 @@ using UnityEngine;
 namespace LSCore
 {
     [DisallowMultipleComponent]
-    [DefaultExecutionOrder(-2)]
+    [DefaultExecutionOrder(-10)]
     public abstract class BaseSingleService : MonoBehaviour
     {
         public abstract Type Type { get; }
