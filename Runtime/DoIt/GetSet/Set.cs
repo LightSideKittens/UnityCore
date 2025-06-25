@@ -27,24 +27,7 @@ public class SetKeyBuffer<T> : DoIt
     public override void Do()
     {
         var d = data.Data;
-        
-        switch (d)
-        {
-            case DestroyEvent.I e:
-                e.Destroyed += Remove;
-                break;
-            case Component component:
-            {
-                var de = component.GetOrAddComponent<DestroyEvent>();
-                de.Destroyed += Remove;
-                break;
-            }
-            case GameObject gameObject:
-                var dee = gameObject.GetOrAddComponent<DestroyEvent>();
-                dee.Destroyed += Remove;
-                break;
-        }
-        
+        DestroyEvent.AddOnDestroy(d, Remove);
         StringDict<object>.Set(string.Concat(key, typeof(T).GetSimpleFullName()), d);
         StringDict<T>.Set(key, d);
     }

@@ -8,6 +8,8 @@ using Object = UnityEngine.Object;
 
 public static partial class AssetDatabaseUtils
 {
+    public static bool IsAssetPath(string path) => !AssetDatabase.IsValidFolder(path);
+    
     public static void ForceSave(this Object target)
     {
         EditorUtility.SetDirty(target);
