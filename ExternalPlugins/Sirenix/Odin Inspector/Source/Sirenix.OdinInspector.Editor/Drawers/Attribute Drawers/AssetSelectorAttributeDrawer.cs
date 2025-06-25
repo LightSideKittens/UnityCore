@@ -3,12 +3,16 @@
 // Copyright (c) Sirenix ApS. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
+
+
+
 #if UNITY_EDITOR
 #define ODIN_INSPECTOR
 #define ODIN_INSPECTOR_3
 #define ODIN_INSPECTOR_3_1
 #define ODIN_INSPECTOR_3_2
 #define ODIN_INSPECTOR_3_3
+using Sirenix.OdinInspector.Editor.ValueResolvers;
 namespace Sirenix.OdinInspector.Editor.Drawers
 {
 #pragma warning disable
@@ -52,6 +56,11 @@ namespace Sirenix.OdinInspector.Editor.Drawers
             {
                 var filter = this.Attribute.Filter ?? "";
 
+                if (!filter.StartsWith("t:"))
+                {
+                    filter = ValueResolver.Get<string>(Property, filter).GetValue();
+                }
+                
                 if (string.IsNullOrEmpty(filter) && !typeof(Component).IsAssignableFrom(this.elementOrBaseType) && !this.elementOrBaseType.IsInterface)
                 {
                     filter = "t:" + this.elementOrBaseType.Name;
