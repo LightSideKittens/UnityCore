@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using LSCore;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 
 [Serializable]
@@ -12,7 +12,7 @@ public class LoadScene : DoIt
     public string sceneToLoad;
 
     public bool useAddressables;
-    public bool async;
+    [SerializeReference] public DefaultLoader loader;
 
     private IEnumerable<string> GetSceneNames()
     {
@@ -32,20 +32,22 @@ public class LoadScene : DoIt
         {
             if (useAddressables)
             {
-                if (async)
+                if (loader != null)
                 {
-                    Addressables.LoadSceneAsync(sceneToLoad);
+                    var handle = LSAddressables.LoadScene(sceneToLoad);
+                    loader.Show(handle, Do);
                 }
                 else
                 {
-                    Addressables.LoadSceneAsync(sceneToLoad).WaitForCompletion();
+                    LSAddressables.LoadScene(sceneToLoad).WaitForCompletion();
                 }
             }
             else
             {
-                if (async)
+                if (loader != null)
                 {
-                    SceneManager.LoadSceneAsync(sceneToLoad);
+                    var handle = SceneManager.LoadSceneAsync(sceneToLoad);
+                    loader.Show(handle);
                 }
                 else
                 {

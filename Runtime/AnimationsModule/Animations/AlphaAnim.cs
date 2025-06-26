@@ -12,6 +12,8 @@ namespace LSCore.AnimationsModule.Animations
         [SerializeReference] public CanvasGroupAlphaAnim canvasGroupAnim;
         [SerializeReference] public GraphicAlphaAnim graphicAnim;
 
+        protected override bool HideDuration => true;
+
         public override bool NeedInit
         {
             get

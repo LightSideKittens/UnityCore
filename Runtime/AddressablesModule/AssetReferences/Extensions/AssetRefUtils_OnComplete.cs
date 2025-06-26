@@ -82,5 +82,37 @@ namespace LSCore
             };
             return task;
         }
+        
+        public static AsyncOperationHandle<T> OnResult<T>(this in AsyncOperationHandle<T> task, Action<bool> onResult)
+        {
+            task.Completed += result =>
+            {
+                if (result.Status == AsyncOperationStatus.Failed)
+                {
+                    onResult(false);
+                }
+                else if(result.Status == AsyncOperationStatus.Succeeded)
+                {
+                    onResult(true);
+                }
+            };
+            return task;
+        }
+        
+        public static AsyncOperationHandle OnResult(this in AsyncOperationHandle task, Action<bool> onResult)
+        {
+            task.Completed += result =>
+            {
+                if (result.Status == AsyncOperationStatus.Failed)
+                {
+                    onResult(false);
+                }
+                else if(result.Status == AsyncOperationStatus.Succeeded)
+                {
+                    onResult(true);
+                }
+            };
+            return task;
+        }
     }
 }

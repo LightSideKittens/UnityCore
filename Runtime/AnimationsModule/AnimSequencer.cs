@@ -119,7 +119,7 @@ namespace LSCore.AnimationsModule
                 var data = animsData[i];
                 var anim = data.anim;
                 currentTime += data.timeOffset;
-                    sequence.Insert(currentTime, anim.Animate());
+                sequence.Insert(currentTime, anim.Animate());
             }
 
             if (options != null)

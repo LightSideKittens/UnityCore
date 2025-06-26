@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using DG.Tweening;
 using LSCore.AnimationsModule.Animations.Options;
-using LSCore.Extensions;
-using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -22,7 +20,7 @@ namespace LSCore.AnimationsModule.Animations
         
         public Tween Anim { get; private set; }
         public bool IsDurationZero => Duration == 0;
-        private bool HideDuration => GetType() == typeof(AlphaAnim);
+        protected virtual bool HideDuration => false;
 
         public void TryInit()
         {
@@ -43,7 +41,7 @@ namespace LSCore.AnimationsModule.Animations
             return Anim;
         }
 
-        protected static Tween ApplyOptions(Tween tween, List<IOption> options)
+        public static Tween ApplyOptions(Tween tween, List<IOption> options)
         {
             if (options is {Count: > 0})
             {
@@ -130,6 +128,67 @@ namespace LSCore.AnimationsModule.Animations
         public void Reverse()
         {
             (startValue, endValue) = (endValue, startValue);
+        }
+    }
+
+    [Serializable]
+    public abstract class SingleAnim
+    {
+        public abstract Tween Animate();
+    }
+
+    [Serializable]
+    public abstract class SingleAnim<TTarget> : SingleAnim
+    {
+        [SerializeReference] public List<IOption> options;
+        [SerializeReference] public List<Get<TTarget>> targets = new();
+        [ShowIf("UseMultiple")] public AnimationCurve timeOffsetPerTarget = AnimationCurve.Constant(0, 0, 0.1f);
+
+        public bool UseMultiple => targets.Count > 1;
+        public TTarget FirstTarget
+        {
+            get => targets[0];
+            set => targets[0] = new SerializeField<TTarget> { data = value };
+        }
+
+        public List<Tween> Tweens { get; private set; }
+        
+        protected abstract Tween AnimAction(TTarget target);
+        
+        public sealed override Tween Animate()
+        {
+            Tweens ??= new();
+            Tweens.Clear();
+            
+            if (UseMultiple)
+            {
+                var sequence = DOTween.Sequence();
+                var pos = 0f;
+                var timeOffset = timeOffsetPerTarget.length == 0 ? 0 : timeOffsetPerTarget[timeOffsetPerTarget.length - 1].time / (targets.Count - 1);
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    var t = BaseAnim.ApplyOptions(AnimAction(targets[i]), options);
+                    t.KillOnDestroy();
+                    Tweens.Add(t);
+                    float interval = timeOffsetPerTarget.Evaluate((i + 1) * timeOffset);
+                    
+                    if (t.Loops() == -1)
+                    {
+                        sequence.AppendInterval(interval);
+                        t.SetDelay(interval);
+                    }
+                    else
+                    { 
+                        sequence.Insert(pos, t);
+                    }
+                    
+                    pos += interval;
+                }
+
+                return sequence;
+            }
+            
+            return BaseAnim.ApplyOptions(AnimAction(targets[0]).KillOnDestroy(), options);
         }
     }
 }
