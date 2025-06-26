@@ -11,7 +11,7 @@ namespace LSCore
     public class LSButton : LSImage,  IPointerDownHandler, IPointerUpHandler, IPointerClickHandler, IClickable
     {
         [SerializeField] private ClickAnim anim;
-        [SerializeField] private ClickActions clickActions;
+        [SerializeField] public ClickActions clickActions;
         
         public ref ClickAnim Anim => ref anim;
 
