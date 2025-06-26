@@ -1,7 +1,7 @@
 {
     "name": "LSCore.Extensions.Unity",
     "rootNamespace": "",
-    "references": ["GUID:2fb5cf31e708b65c6cd386829ff94feb"],
+    "references": ["GUID:2fb5cf31e708b65c6cd386829ff94feb","GUID:3dd2cb52eff6e5743bdb8fcc64baed91"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": true,

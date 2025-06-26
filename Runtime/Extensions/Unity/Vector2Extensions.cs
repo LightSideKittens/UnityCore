@@ -1,9 +1,18 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace LSCore.Extensions.Unity
 {
     public static class LSVector2
     {
+        [Flags]
+        public enum Axis
+        {
+            None,
+            X = 1,
+            Y = 1 << 1,
+        }
+        
         public static readonly float oneMagnitude = Vector2.one.magnitude;
         public static readonly Vector2 half = Vector2.one / 2;
         public static readonly Vector2 one = Vector2.one;
@@ -13,10 +22,28 @@ namespace LSCore.Extensions.Unity
         {
             return new Vector2(f, f);
         }
+        
+        public static Vector2 ToVector(this Axis axis)
+        {
+            var result = new Vector2();
+            if (axis.HasFlag(Axis.X)) result.x = 1;
+            if (axis.HasFlag(Axis.Y)) result.y = 1;
+            return result;
+        }
     }
     
     public static class LSVector3
     {
+        [Flags]
+        public enum Axis
+        {
+            None,
+            X = 1,
+            Y = 1 << 1,
+            Z = 1 << 2,
+            All = X | Y | Z,
+        }
+        
         public static readonly Vector3 one = Vector3.one;
         public static readonly Vector3 oneDir = Vector3.one.normalized;
         public static readonly Vector3 half = Vector3.one / 2;
@@ -24,6 +51,15 @@ namespace LSCore.Extensions.Unity
         public static Vector3 Get(float f)
         {
             return new Vector3(f, f, f);
+        }
+
+        public static Vector3 ToVector(this Axis axis)
+        {
+            var result = new Vector3();
+            if (axis.HasFlag(Axis.X)) result.x = 1;
+            if (axis.HasFlag(Axis.Y)) result.y = 1;
+            if (axis.HasFlag(Axis.Z)) result.z = 1;
+            return result;
         }
     }
     

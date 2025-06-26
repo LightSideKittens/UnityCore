@@ -1,6 +1,7 @@
 ﻿using DG.Tweening;
 using DG.Tweening.Core;
 using DG.Tweening.Plugins.Options;
+using LSCore.Extensions.Unity;
 using UnityEngine;
 
 namespace LSCore.Extensions
@@ -55,7 +56,8 @@ namespace LSCore.Extensions
 
         public static Tween DOWobble(this Transform target,
             float amplitude = 0.5f,
-            float frequency = 1f)
+            float frequency = 1f,
+            LSVector3.Axis axis = LSVector3.Axis.All)
         {
             Vector3 seed = new Vector3(
                 Random.value * 10f,
@@ -63,18 +65,21 @@ namespace LSCore.Extensions
                 Random.value * 10f);
             
             var startPos = target.localPosition;
+            var ax = axis.ToVector();
+            
             var wobble = DOTween.Sequence().AppendInterval(1).OnUpdate(() =>
             {
                 float time = UnityEngine.Time.time * frequency;
 
-                float offsetX = (Mathf.PerlinNoise(seed.x, time) - 0.5f) * 2f;
-                float offsetY = (Mathf.PerlinNoise(seed.y, time) - 0.5f) * 2f;
-                float offsetZ = (Mathf.PerlinNoise(seed.z, time) - 0.5f) * 2f;
-
+                float offsetX = ax.x * (Mathf.PerlinNoise(seed.x, time) - 0.5f) * 2f;
+                float offsetY = ax.y * (Mathf.PerlinNoise(seed.y, time) - 0.5f) * 2f;
+                float offsetZ = ax.z * (Mathf.PerlinNoise(seed.z, time) - 0.5f) * 2f;
+                
                 Vector3 offset = new Vector3(offsetX, offsetY, offsetZ) * amplitude;
 
                 target.localPosition = startPos + offset;
-            }).SetEase(Ease.Linear).SetLoops(-1).SetLink(target.gameObject);
+            }).SetEase(Ease.Linear).SetLoops(-1);
+            wobble.target = target;
             
             return wobble;
         }

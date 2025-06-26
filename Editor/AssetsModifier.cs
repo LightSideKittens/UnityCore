@@ -41,6 +41,12 @@ namespace LSCore.Editor
         {
             public override string Filter => "t:Scene t:Prefab";
 
+            protected virtual bool OnEnter(List<GameObject> roots, out bool needBreak)
+            {
+                needBreak = false;
+                return false;
+            }
+            
             protected sealed override void OnModify()
             {
                 foreach (string path in assetPaths)
@@ -53,7 +59,8 @@ namespace LSCore.Editor
                     List<GameObject> roots = new();
                     var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     Scene scene = default;
-                    
+                    bool sceneDirty = false;
+
                     if (prefab != null)
                     {
                         roots.Add(prefab);
@@ -63,16 +70,20 @@ namespace LSCore.Editor
                         scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
                         roots.AddRange(scene.GetRootGameObjects());
                     }
-                    
-                    bool sceneDirty = false;
-                    var gos = roots.SelectMany(x => x.GetComponentsInChildren<Transform>(true).Select(t => t.gameObject)).ToList();
-                    foreach (var go in gos)
+
+                    sceneDirty |= OnEnter(roots, out var needBreak);
+
+                    if (!needBreak)
                     {
-                        if(go == null) continue;
-                        sceneDirty |= Modify(go, out var needBreak);
-                        if (needBreak)
+                        var gos = roots.SelectMany(x => x.GetComponentsInChildren<Transform>(true).Select(t => t.gameObject)).ToList();
+                        foreach (var go in gos)
                         {
-                            break;
+                            if(go == null) continue;
+                            sceneDirty |= Modify(go, out needBreak);
+                            if (needBreak)
+                            {
+                                break;
+                            }
                         }
                     }
 

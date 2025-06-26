@@ -35,20 +35,6 @@ public interface IKeyGet<T>
 [Serializable]
 public class SerializeField<T> : Get<T>, IGetRaw<T>
 {
-#if UNITY_EDITOR
-    static SerializeField()
-    {
-        EditorApplication.update += Update;
-    }
-
-    private static void Update()
-    {
-        EditorApplication.update -= Update;
-        var type = typeof(SerializeField<T>);
-        TypeRegistryUserConfigWindow.additionalTypes.Add(type);
-    }
-    
-#endif
     [SerializeField] public T data;
     object IGetRaw<T>.Data => data;
     public override T Data => data;

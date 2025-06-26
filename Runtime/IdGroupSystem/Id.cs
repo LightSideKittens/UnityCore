@@ -44,6 +44,11 @@ namespace LSCore
                     return id == name;
                 }
 
+                if (other is string str)
+                {
+                    return str == name;
+                }
+
                 return false;
             }
             

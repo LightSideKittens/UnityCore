@@ -23,11 +23,8 @@ namespace LSCore
         public void Show(AsyncOperationHandle handle, Action retry)
         {
             var downloadStatus = handle.GetDownloadStatus();
-            handle.OnError(() =>
-            {
-                loader.Hide();
-                error?.Show(retry);
-            });
+            handle.OnSuccess(loader.Hide);
+            handle.OnError(() => error?.Show(retry));
             
             switch (loadType)
             {
@@ -68,6 +65,44 @@ namespace LSCore
                     else
                     {
                         loader.ShowLoop();
+                    }
+                    break;
+            }   
+        }
+        
+        public void Show(AsyncOperation handle)
+        {
+            handle.completed += x => loader.Hide();
+            
+            switch (loadType)
+            {
+                case LoadType.Loop:
+                    loader.ShowLoop();
+                    break;
+                case LoadType.Percent:
+                    if (!handle.isDone)
+                    {
+                        loader.ShowPercentProgress(out var progress);
+                        World.Updated += OnProgress;
+                        handle.completed += x => World.Updated -= OnProgress;
+                        
+                        void OnProgress()
+                        {
+                            progress(handle.progress);
+                        }
+                    }
+                    break;
+                case LoadType.Value:
+                    if (!handle.isDone)
+                    {
+                        loader.ShowValueProgress(1, out var progress);
+                        World.Updated += OnProgress;
+                        handle.completed += x=> World.Updated -= OnProgress;
+                        
+                        void OnProgress()
+                        {
+                            progress(handle.progress);
+                        }
                     }
                     break;
             }   
