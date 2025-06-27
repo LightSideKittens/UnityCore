@@ -13,7 +13,6 @@ using Debug = UnityEngine.Debug;
 public static class CustomBuilder
 {
     public static event Action<BuildMode> Building;
-
     static CustomBuilder()
     {
         ToolbarExtender.RightToolbarGUI.Add(OnGUI);
@@ -37,6 +36,9 @@ public static class CustomBuilder
     {
         public override void OnGUI(Rect rect)
         {
+            EditorUserBuildSettings.buildAppBundle = GUILayout.Toggle(EditorUserBuildSettings.buildAppBundle, "Build App Bundle (Google Play)");
+            GUILayout.Space(5);
+            
             DrawButton(BuildMode.Release);
             DrawButton(BuildMode.Debug);
         }
@@ -57,12 +59,12 @@ public static class CustomBuilder
             BuildOptions buildOptions = BuildOptions.None;
             var stacktraceInfo = Il2CppStacktraceInformation.MethodOnly;
 
-            if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android)
+            if (buildTarget == BuildTarget.Android)
             {
                 if (mode == BuildMode.Debug)
                 {
                     Defines.Enable("DEBUG");
-                    buildOptions |= BuildOptions.CompressWithLz4;
+                    buildOptions |= BuildOptions.CompressWithLz4HC;
                     stacktraceInfo = Il2CppStacktraceInformation.MethodFileLineNumber;
                 }
                 else
@@ -82,7 +84,17 @@ public static class CustomBuilder
 
             var productName = PlayerSettings.productName.Replace(" ", string.Empty);
             string buildName = $"{productName}_{date.Day:00}-{date.Month:00}_({mode}_{PlayerSettings.bundleVersion})";
-            string extension = buildTarget == BuildTarget.Android ? ".apk" : "";
+
+            string extension = string.Empty;
+            if (buildTarget == BuildTarget.Android)
+            {
+                extension = EditorUserBuildSettings.buildAppBundle ? ".aab" : ".apk";
+                if (EditorUserBuildSettings.buildAppBundle)
+                {
+                    PlayerSettings.Android.bundleVersionCode++;
+                }
+            }
+
             string buildFilePath = $"{buildPath}/{buildName}{extension}";
             
             Defines.Apply();
@@ -95,7 +107,9 @@ public static class CustomBuilder
                 target = buildTarget,
                 options = buildOptions
             };
-
+            
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
             BuildReport report = BuildPipeline.BuildPlayer(buildPlayerOptions);
             BuildSummary summary = report.summary;
             

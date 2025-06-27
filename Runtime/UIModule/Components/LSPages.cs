@@ -97,7 +97,7 @@ namespace LSCore
             
             if (!anim.Contains<PivotPosXAnim>())
             {
-                pivotPosXAnim = new PivotPosXAnim {Duration = 0.3f, FirstTarget = content.rectTransform, options = new List<IOption> {new SetEase {ease = Ease.OutBack}}};
+                pivotPosXAnim = new PivotPosXAnim {duration = 0.3f, FirstTarget = content.rectTransform, options = new List<IOption> {new SetEase {ease = Ease.OutBack}}};
                 anim.Add(new AnimSequencer.AnimData { timeOffset = 0, anim = pivotPosXAnim });
             }
             else

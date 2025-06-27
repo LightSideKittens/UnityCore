@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations.Text
 
         protected override Tween AnimAction(TMP_Text target)
         {
-            return DOVirtual.Int(startValue, endValue,Duration, value => target.text = $"{value}");
+            return DOVirtual.Int(startValue, endValue,duration, value => target.text = $"{value}");
         }
     }
 }

@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(RectTransform target)
         {
-            return target.DOPivot(endValue,Duration);
+            return target.DOPivot(endValue,duration);
         }
     }
     
@@ -30,7 +30,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(RectTransform target)
         {
-            return target.DOPivotX(endValue,Duration);
+            return target.DOPivotX(endValue,duration);
         }
     }
     
@@ -46,7 +46,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(RectTransform target)
         {
-            return target.DOPivotY(endValue,Duration);
+            return target.DOPivotY(endValue,duration);
         }
     }
 }

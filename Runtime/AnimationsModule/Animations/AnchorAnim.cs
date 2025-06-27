@@ -22,8 +22,8 @@ namespace LSCore.AnimationsModule.Animations
         protected override Tween AnimAction(RectTransform target)
         {
             var sequence = DOTween.Sequence();
-            sequence.Insert(0, target.DOAnchorMin(endValue.min, Duration));
-            sequence.Insert(0, target.DOAnchorMax(endValue.max, Duration));
+            sequence.Insert(0, target.DOAnchorMin(endValue.min, duration));
+            sequence.Insert(0, target.DOAnchorMax(endValue.max, duration));
             return sequence;
         }
     }

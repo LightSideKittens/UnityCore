@@ -16,7 +16,7 @@ namespace LSCore.AnimationsModule.Animations.Audio.MixerGroup
 
         protected override Tween AnimAction(AudioMixerGroup target)
         {
-            return target.audioMixer.DOSetFloat(key, endValue,Duration);
+            return target.audioMixer.DOSetFloat(key, endValue,duration);
         }
     }
 }
