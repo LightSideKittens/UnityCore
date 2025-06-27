@@ -296,8 +296,8 @@ namespace Sirenix.Utilities.Editor
 
                     object obj = null;
 
-                    if (obj == null) obj = draggingObjects.Where(x => x != null && x.GetType().InheritsFrom(type)).FirstOrDefault();
-                    if (obj == null) obj = DragAndDrop.objectReferences.Where(x => x != null && x.GetType().InheritsFrom(type)).FirstOrDefault();
+                    if (obj == null) obj = draggingObjects.FirstOrDefault(x => x != null && x.GetType().InheritsFrom(type));
+                    if (obj == null) obj = DragAndDrop.objectReferences.FirstOrDefault(x => x != null && x.GetType().InheritsFrom(type));
 
                     if (obj == null)
                     {
@@ -309,7 +309,32 @@ namespace Sirenix.Utilities.Editor
                             }
 
                             return null;
-                        }).Where(x => x != null).FirstOrDefault();
+                        }).FirstOrDefault(x => x != null);
+                    }
+
+                    if (obj == null)
+                    {
+                        obj = draggingObjects.Concat(DragAndDrop.objectReferences).Select(x =>
+                        {
+                            Func<object, object> cast = null;
+                            if (x is GameObject go)
+                            {
+                                foreach (var component in go.GetComponents<Component>())
+                                {
+                                    cast = component.GetType().GetCastMethodDelegate(type);
+                                    if (cast != null)
+                                    {
+                                        return cast(component);
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                cast = x.GetType().GetCastMethodDelegate(type);
+                            }
+
+                            return cast?.Invoke(x);
+                        }).FirstOrDefault(x => x != null);
                     }
 
                     if (obj == null)

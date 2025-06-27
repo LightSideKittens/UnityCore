@@ -755,7 +755,9 @@ namespace Sirenix.OdinInspector.Editor.Drawers
             return dropZone;
         }
 
-        private static UnityEngine.Object[] HandleUnityObjectsDrop(ListDrawerConfigInfo info)
+        
+        
+        private static object[] HandleUnityObjectsDrop(ListDrawerConfigInfo info)
         {
             if (info.IsReadOnly) return null;
 
@@ -766,7 +768,7 @@ namespace Sirenix.OdinInspector.Editor.Drawers
             }
             if ((eventType == EventType.DragUpdated || eventType == EventType.DragPerform) && info.DropZone.Rect.Contains(Event.current.mousePosition))
             {
-                UnityEngine.Object[] objReferences = null;
+                object[] objReferences = null;
 
                 if (DragAndDrop.objectReferences.Any(n => n != null && info.CollectionResolver.ElementType.IsAssignableFrom(n.GetType())))
                 {
@@ -784,8 +786,31 @@ namespace Sirenix.OdinInspector.Editor.Drawers
                         return AssetDatabase.LoadAssetAtPath<Sprite>(path);
                     }).Where(x => x != null).Reverse().ToArray();
                 }
+                else
+                {
+                    objReferences = DragAndDrop.objectReferences.Select(x =>
+                    {
+                        Func<object, object> cast = null;
+                        if (x is GameObject go)
+                        {
+                            foreach (var component in go.GetComponents<Component>())
+                            {
+                                cast = component.GetType().GetCastMethodDelegate(info.CollectionResolver.ElementType);
+                                if (cast != null)
+                                {
+                                    return cast(component);
+                                }
+                            }
+                        }
+                        else
+                        { 
+                            cast = x.GetType().GetCastMethodDelegate(info.CollectionResolver.ElementType);
+                        }
+                        return cast?.Invoke(x);
+                    }).Where(x => x != null).Reverse().ToArray();
+                }
 
-                bool acceptsDrag = objReferences != null && objReferences.Length > 0;
+                bool acceptsDrag = objReferences.Length > 0;
 
                 if (acceptsDrag)
                 {
@@ -845,7 +870,7 @@ namespace Sirenix.OdinInspector.Editor.Drawers
             }
             else if (this.info.IsReadOnly == false)
             {
-                UnityEngine.Object[] droppedObjects = HandleUnityObjectsDrop(this.info);
+                object[] droppedObjects = HandleUnityObjectsDrop(this.info);
                 if (droppedObjects != null)
                 {
                     if (info.InsertAt == -1)

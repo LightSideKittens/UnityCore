@@ -12,67 +12,23 @@ namespace LSCore.AnimationsModule.Animations
         [SerializeReference] public CanvasGroupAlphaAnim canvasGroupAnim;
         [SerializeReference] public GraphicAlphaAnim graphicAnim;
 
-        protected override bool HideDuration => true;
-
         public override bool NeedInit
         {
             get
             {
                 if (canvasGroupAnim != null)
                 {
-                    return canvasGroupAnim.NeedInit;
+                    return canvasGroupAnim.needInit;
                 }
 
                 if (graphicAnim != null)
                 {
-                    return graphicAnim.NeedInit;
+                    return graphicAnim.needInit;
                 }
 
                 return false;
             }
-            set
-            {
-                if (canvasGroupAnim != null)
-                {
-                    canvasGroupAnim.NeedInit = value;
-                }
-
-                if (graphicAnim != null)
-                {
-                    graphicAnim.NeedInit = value;
-                }
-            }
-        } 
-
-        public override float Duration
-        {
-            get
-            {
-                if (canvasGroupAnim != null)
-                {
-                    return canvasGroupAnim.Duration;
-                }
-
-                if (graphicAnim != null)
-                {
-                    return graphicAnim.Duration;
-                }
-
-                return 0;
-            }
-            set
-            {
-                if (canvasGroupAnim != null)
-                {
-                    canvasGroupAnim.Duration = value;
-                }
-
-                if (graphicAnim != null)
-                {
-                    graphicAnim.Duration = value;
-                }
-            }
-        } 
+        }
 
         protected override void Internal_Init()
         {
@@ -112,7 +68,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(CanvasGroup target)
         {
-            return target.DOFade(endValue,Duration);
+            return target.DOFade(endValue,duration);
         }
     }
     
@@ -126,7 +82,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(Graphic target)
         {
-            return target.DOFade(endValue,Duration);
+            return target.DOFade(endValue,duration);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(Slider target)
         {
-            return target.DOValue(endValue, Duration);
+            return target.DOValue(endValue, duration);
         }
     }
 }

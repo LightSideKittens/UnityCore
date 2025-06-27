@@ -16,9 +16,9 @@ namespace LSCore.AnimationsModule
     }
     
     [Serializable]
-    public class SingleAnimAction : DoIt
+    public class BaseAnimAction : DoIt
     {
-        [SerializeReference] public SingleAnim anim;
+        [SerializeReference] public BaseAnim anim;
         
         public override void Do()
         {

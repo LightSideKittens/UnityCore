@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations
         
         protected override Tween AnimAction(Transform target)
         {
-            return target.DOScale(endValue,Duration);
+            return target.DOScale(endValue,duration);
         }
     }
 }

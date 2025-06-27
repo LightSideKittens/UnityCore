@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(Transform target)
         {
-            return target.DOLocalMove(endValue.localPosition, Duration);
+            return target.DOLocalMove(endValue.localPosition, duration);
         }
     }
 }

@@ -3,12 +3,9 @@ using JetBrains.Annotations;
 using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using Newtonsoft.Json;
-
-#if UNITY_EDITOR
-using Sirenix.OdinInspector.Editor;
-using UnityEditor;
-#endif
+using Sirenix.OdinInspector;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 [Serializable]
 public abstract class Get<T>
@@ -18,6 +15,16 @@ public abstract class Get<T>
     public static implicit operator T(Get<T> provider)
     {
         return provider.Data;
+    }
+
+    public static implicit operator Get<T>(T data)
+    {
+        if (typeof(Object).IsAssignableFrom(typeof(T)))
+        {
+            return new SerializeField<T>{data = data};
+        }
+        
+        return new SerializeReference<T>{data = data};
     }
 }
 
@@ -33,17 +40,23 @@ public interface IKeyGet<T>
 }
 
 [Serializable]
+[HideReferenceObjectPicker]
 public class SerializeField<T> : Get<T>, IGetRaw<T>
 {
-    [SerializeField] public T data;
+    [SerializeField] 
+    [HideLabel] public T data;
+    
     object IGetRaw<T>.Data => data;
     public override T Data => data;
 }
 
 [Serializable]
+[HideReferenceObjectPicker]
 public class SerializeReference<T> : Get<T>, IGetRaw<T>
 {
-    [SerializeReference] public T data;
+    [SerializeReference] 
+    [HideLabel] public T data;
+    
     object IGetRaw<T>.Data => data;
     public override T Data => data;
 }

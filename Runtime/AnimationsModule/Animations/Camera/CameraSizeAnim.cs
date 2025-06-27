@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations.Text
 
         protected override Tween AnimAction(Camera target)
         {
-            return target.DOOrthoSize(endValue,Duration);
+            return target.DOOrthoSize(endValue,duration);
         }
     }
 }

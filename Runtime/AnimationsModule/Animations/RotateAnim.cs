@@ -22,7 +22,7 @@ namespace LSCore.AnimationsModule.Animations
         
         protected override Tween AnimAction(Transform target)
         {
-            return useLocalSpace ? target.DOLocalRotate(endValue,Duration) : target.DORotate(endValue,Duration);
+            return useLocalSpace ? target.DOLocalRotate(endValue,duration) : target.DORotate(endValue,duration);
         }
     }
 }

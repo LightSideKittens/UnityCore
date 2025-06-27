@@ -16,7 +16,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(RectTransform target)
         {
-            return target.DOAnchorPos(endValue, Duration);
+            return target.DOAnchorPos(endValue, duration);
         }
     }
     
@@ -30,7 +30,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(Transform target)
         {
-            return target.DOLocalMove(endValue, Duration);
+            return target.DOLocalMove(endValue, duration);
         }
     }
 }

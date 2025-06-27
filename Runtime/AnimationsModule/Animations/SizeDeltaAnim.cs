@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(RectTransform target)
         {
-            return target.DOSizeDelta(endValue,Duration);
+            return target.DOSizeDelta(endValue,duration);
         }
     }
 }

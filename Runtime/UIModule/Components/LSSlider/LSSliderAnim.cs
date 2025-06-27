@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(LSSlider target)
         {
-            return Wait.FromTo(startValue, endValue, Duration, time =>
+            return Wait.FromTo(startValue, endValue, duration, time =>
             {
                 target.value = time;
             });

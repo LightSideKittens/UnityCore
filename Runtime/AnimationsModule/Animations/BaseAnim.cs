@@ -12,19 +12,12 @@ namespace LSCore.AnimationsModule.Animations
     public abstract class BaseAnim
     { 
         [BoxGroup] [LabelText("ID")] public string id;
-        [HideIf("IsDurationZero")]
-        [SerializeReference] private List<IOption> mainOptions;
-
-        public abstract bool NeedInit { get; set; }
-        public abstract float Duration { get; set; }
-        
+        public abstract bool NeedInit { get; }
         public Tween Anim { get; private set; }
-        public bool IsDurationZero => Duration == 0;
-        protected virtual bool HideDuration => false;
 
         public void TryInit()
         {
-            if (NeedInit || IsDurationZero)
+            if (NeedInit)
             {
                 Internal_Init();
             }
@@ -37,7 +30,7 @@ namespace LSCore.AnimationsModule.Animations
         public Tween Animate()
         {
             TryInit();
-            Anim = IsDurationZero ? DOTween.Sequence() : ApplyOptions(Internal_Animate(), mainOptions);
+            Anim = Internal_Animate();
             return Anim;
         }
 
@@ -54,23 +47,15 @@ namespace LSCore.AnimationsModule.Animations
             return tween;
         }
     }
-    
-    [Serializable]
-    public abstract class BaseAnim<T, TTarget> : BaseAnim where TTarget : Object
-    {
-        [field: SerializeField] public override bool NeedInit { get; set; }
-        [field: HideIf("HideDuration"), SerializeField] public override float Duration { get; set; }
         
-        [ShowIf("ShowStartValue")] public T startValue;
-        [ShowIf("ShowEndValue")] public T endValue;
-
-        [HideIf("@IsDurationZero || !UseMultiple")]
+    [Serializable]
+    public abstract class SingleAnim<TTarget> : BaseAnim where TTarget : Object
+    {
         [SerializeReference] public List<IOption> options;
-
         [SerializeReference] public List<Get<TTarget>> targets = new();
-
         [ShowIf("UseMultiple")] public AnimationCurve timeOffsetPerTarget = AnimationCurve.Constant(0, 0, 0.1f);
 
+        public override bool NeedInit => false;
         public bool UseMultiple => targets.Count > 1;
         public TTarget FirstTarget
         {
@@ -78,27 +63,11 @@ namespace LSCore.AnimationsModule.Animations
             set => targets[0] = new SerializeField<TTarget> { data = value };
         }
 
-        public List<Tween> Tweens { get; private set; }
-        protected virtual bool ShowStartValue => NeedInit;
-        protected virtual bool ShowEndValue => !IsDurationZero;
+        public List<Tween> Tweens { get; protected set; }
         
-        protected abstract void InitAction(TTarget target);
         protected abstract Tween AnimAction(TTarget target);
-        
-        protected override void Internal_Init()
-        {
-            if (UseMultiple)
-            {
-                for (int i = 0; i < targets.Count; i++)
-                {
-                    InitAction(targets[i]);
-                }
-                
-                return;
-            }
-            
-            InitAction(targets[0]);
-        }
+
+        protected override void Internal_Init() { }
 
         protected override Tween Internal_Animate()
         {
@@ -113,61 +82,6 @@ namespace LSCore.AnimationsModule.Animations
                 for (int i = 0; i < targets.Count; i++)
                 {
                     var t = ApplyOptions(AnimAction(targets[i]), options);
-                    t.KillOnDestroy();
-                    Tweens.Add(t);
-                    sequence.Insert(pos, t);
-                    pos += timeOffsetPerTarget.Evaluate((i + 1) * timeOffset);
-                }
-
-                return sequence;
-            }
-            
-            return ApplyOptions(AnimAction(targets[0]).KillOnDestroy(), options);
-        }
-
-        public void Reverse()
-        {
-            (startValue, endValue) = (endValue, startValue);
-        }
-    }
-
-    [Serializable]
-    public abstract class SingleAnim
-    {
-        public abstract Tween Animate();
-    }
-
-    [Serializable]
-    public abstract class SingleAnim<TTarget> : SingleAnim
-    {
-        [SerializeReference] public List<IOption> options;
-        [SerializeReference] public List<Get<TTarget>> targets = new();
-        [ShowIf("UseMultiple")] public AnimationCurve timeOffsetPerTarget = AnimationCurve.Constant(0, 0, 0.1f);
-
-        public bool UseMultiple => targets.Count > 1;
-        public TTarget FirstTarget
-        {
-            get => targets[0];
-            set => targets[0] = new SerializeField<TTarget> { data = value };
-        }
-
-        public List<Tween> Tweens { get; private set; }
-        
-        protected abstract Tween AnimAction(TTarget target);
-        
-        public sealed override Tween Animate()
-        {
-            Tweens ??= new();
-            Tweens.Clear();
-            
-            if (UseMultiple)
-            {
-                var sequence = DOTween.Sequence();
-                var pos = 0f;
-                var timeOffset = timeOffsetPerTarget.length == 0 ? 0 : timeOffsetPerTarget[timeOffsetPerTarget.length - 1].time / (targets.Count - 1);
-                for (int i = 0; i < targets.Count; i++)
-                {
-                    var t = BaseAnim.ApplyOptions(AnimAction(targets[i]), options);
                     t.KillOnDestroy();
                     Tweens.Add(t);
                     float interval = timeOffsetPerTarget.Evaluate((i + 1) * timeOffset);
@@ -188,7 +102,36 @@ namespace LSCore.AnimationsModule.Animations
                 return sequence;
             }
             
-            return BaseAnim.ApplyOptions(AnimAction(targets[0]).KillOnDestroy(), options);
+            return ApplyOptions(AnimAction(targets[0]).KillOnDestroy(), options);
+        }
+    }
+    
+    [Serializable]
+    public abstract class BaseAnim<T, TTarget> : SingleAnim<TTarget> where TTarget : Object
+    {
+        public bool needInit;
+        public float duration;
+        public override bool NeedInit => needInit;
+        
+        [ShowIf("ShowStartValue")] public T startValue;
+        [ShowIf("ShowEndValue")] public T endValue;
+        
+        protected virtual bool ShowStartValue => NeedInit;
+        protected virtual bool ShowEndValue => duration != 0;
+        
+        protected abstract void InitAction(TTarget target);
+        
+        protected override void Internal_Init()
+        {
+            for (int i = 0; i < targets.Count; i++)
+            {
+                InitAction(targets[i]);
+            }
+        }
+
+        public void Reverse()
+        {
+            (startValue, endValue) = (endValue, startValue);
         }
     }
 }

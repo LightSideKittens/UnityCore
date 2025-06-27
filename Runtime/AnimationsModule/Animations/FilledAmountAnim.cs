@@ -14,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(Image target)
         {
-            return target.DOFillAmount(endValue, Duration);
+            return target.DOFillAmount(endValue, duration);
         }
     }
 }
