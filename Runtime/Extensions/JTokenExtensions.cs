@@ -132,6 +132,23 @@ namespace LSCore.Extensions
             token[key] = JToken.FromObject(defaultValue);
             return defaultValue;
         }
+        
+        public static T AsJ<T>(this IRJToken token, object key) where T : JToken, new()
+        {
+            return (T)(token[key] ??= new T());
+        }
+    }
+        
+    public struct Wrapper : IRJToken
+    {
+        public static Wrapper wrapper = new();
+        public JToken token;
+
+        public JToken this[object key]
+        {
+            get => token[key];
+            set => token[key] = value;
+        }
     }
 
     public interface IRJToken
