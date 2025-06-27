@@ -1,11 +1,11 @@
 {
-    "name": "LSCore.Burger",
+    "name": "LSCore.Burger1",
     "rootNamespace": "",
     "references": [
         "GUID:e203c3ad7a7046548ca22a43fa4eb0de"
     ],
     "includePlatforms": [
-        "GameCoreScarlett"
+        "tvOS"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

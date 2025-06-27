@@ -48,6 +48,12 @@ namespace LSCore
             spend = null;
             return false;
         }
+        
+        internal static void ForceSpend(string name, int value)
+        {
+            var currentValue = GetAmount(name);
+            SetValue(name, currentValue - value);
+        }
 
         internal static void Remove(string name)
         {
