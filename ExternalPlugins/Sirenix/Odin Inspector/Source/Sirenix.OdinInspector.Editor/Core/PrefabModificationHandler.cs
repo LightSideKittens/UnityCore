@@ -709,7 +709,7 @@ namespace Sirenix.OdinInspector.Editor
                     return PrefabModificationType.Value;
                 }
                 
-                var instanceParentAsset = OdinPrefabSerializationEditorUtility.GetCorrespondingObjectFromSource(instanceValue);
+                var instanceParentAsset = PrefabUtility.GetCorrespondingObjectFromSource(instanceValue);
 
                 if (instanceParentAsset != prefabValue)
                 {

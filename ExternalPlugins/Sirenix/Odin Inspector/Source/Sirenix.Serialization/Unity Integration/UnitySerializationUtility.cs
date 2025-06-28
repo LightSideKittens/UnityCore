@@ -8,6 +8,8 @@
 #define ODIN_INSPECTOR_3_1
 #define ODIN_INSPECTOR_3_2
 #define ODIN_INSPECTOR_3_3
+using UnityEditor;
+
 //#define PREFAB_DEBUG
 
 namespace Sirenix.Serialization
@@ -653,7 +655,7 @@ namespace Sirenix.Serialization
 
                     if (OdinPrefabSerializationEditorUtility.ObjectIsPrefabInstance(unityObject))
                     {
-                        prefab = OdinPrefabSerializationEditorUtility.GetCorrespondingObjectFromSource(unityObject);
+                        prefab = PrefabUtility.GetCorrespondingObjectFromSource(unityObject);
 
                         if (prefab.SafeIsUnityNull() && !object.ReferenceEquals(data.Prefab, null))
                         {

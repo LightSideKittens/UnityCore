@@ -18,10 +18,16 @@ namespace LSCore
     [Serializable]
     public class InOutShowHideAnim : OneShowHideAnim
     {
+        private Tween tween;
+
+        public override Tween Show()
+        {
+            tween = base.Show().SetAutoKill(false);
+            return tween;
+        }
+
         public override Tween Hide()
         {
-            var tween = base.Hide();
-            tween.Goto(tween.Duration(), true);
             tween.PlayBackwards();
             return tween;
         }
