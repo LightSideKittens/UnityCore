@@ -8,7 +8,7 @@ namespace LSCore.AnimationsModule.Animations
     public class ShakeRotation : SingleAnim<Transform>
     {
         public float duration;
-        public float strength = 90f;
+        public Vector3 strength = Vector3.one * 90;
         public int vibrato = 10;
         public float randomness = 90f;
         public bool fadeOut = true;

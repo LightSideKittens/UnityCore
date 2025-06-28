@@ -4,6 +4,7 @@ using DG.Tweening;
 using LSCore.AnimationsModule.Animations;
 using LSCore.AnimationsModule.Animations.Options;
 using Sirenix.OdinInspector;
+using UnityEditor;
 using UnityEngine;
 
 namespace LSCore.AnimationsModule
@@ -86,13 +87,35 @@ namespace LSCore.AnimationsModule
             }
         }
 
-        [Button("Animate")]
-        public void Editor_Animate()
+        private bool isPlaying;
+        private double lastTime;
+        private Sequence editor_sequence;
+        
+        [Button("Play")]
+        [HideIf("isPlaying")]
+        public void Editor_Play()
         {
-            if (Application.isPlaying)
-            {
-                Animate();
-            }
+            editor_sequence = Animate().SetUpdate(UpdateType.Manual).SetAutoKill(false);
+            isPlaying = true;
+            lastTime = EditorApplication.timeSinceStartup;
+            EditorApplication.update += Editor_Update;
+        }
+        
+        [Button("Stop")]
+        [ShowIf("isPlaying")]
+        public void Editor_Stop()
+        {
+            isPlaying = false;
+            EditorApplication.update -= Editor_Update;
+            editor_sequence.Rewind(); 
+        }
+
+        private void Editor_Update()
+        {
+            var time = EditorApplication.timeSinceStartup;
+            var dt = (float)(time - lastTime);
+            editor_sequence.ManualUpdate(dt, dt);
+            lastTime = time;
         }
 #endif
 

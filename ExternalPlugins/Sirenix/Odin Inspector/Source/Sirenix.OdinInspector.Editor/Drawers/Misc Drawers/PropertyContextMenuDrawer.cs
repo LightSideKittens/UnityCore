@@ -259,17 +259,25 @@ namespace Sirenix.OdinInspector.Editor.Drawers
 
                         Undo.RecordObjects(undoObjs, applyText);
 
-                        if (OdinPrefabSerializationEditorUtility.HasApplyPropertyOverride && property.ValueEntry.SerializationBackend.IsUnity && property.Tree.UnitySerializedObject != null)
+                        if (property.ValueEntry.SerializationBackend.IsUnity && property.Tree.UnitySerializedObject != null)
                         {
                             SerializedProperty instanceProp = property.Tree.GetUnitySerializedObjectNoUpdate().FindProperty(property.UnityPropertyPath);
-
+                            
                             if (instanceProp != null)
                             {
                                 var handler = property.Tree.PrefabModificationHandler;
                                 for (int i = 0; i < handler.TargetPrefabs.Count; i++)
                                 {
                                     var prefabPath = AssetDatabase.GetAssetPath(handler.TargetPrefabs[i]);
-                                    OdinPrefabSerializationEditorUtility.ApplyPropertyOverride(instanceProp, prefabPath);
+                                    try
+                                    {
+                                        PrefabUtility.ApplyPropertyOverride(instanceProp, prefabPath,
+                                            InteractionMode.UserAction);
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        return;
+                                    }
                                 }
                                 overrideApplied = true;
                             }
