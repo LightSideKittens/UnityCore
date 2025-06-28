@@ -3,6 +3,7 @@
 // Copyright (c) Sirenix ApS. All rights reserved.
 // </copyright>
 //-----------------------------------------------------------------------
+
 #if UNITY_EDITOR
 #define ODIN_INSPECTOR
 #define ODIN_INSPECTOR_3
@@ -10,7 +11,7 @@
 #define ODIN_INSPECTOR_3_2
 #define ODIN_INSPECTOR_3_3
 //#define PREFAB_DEBUG
-
+using System.Reflection;
 namespace Sirenix.OdinInspector.Editor
 {
 #pragma warning disable
@@ -273,7 +274,27 @@ namespace Sirenix.OdinInspector.Editor
             this.immutableTargetPrefabs = new ImmutableList<UnityEngine.Object>(prefabs.Cast<UnityEngine.Object>().ToArray());
             this.needsToRebuildPropertyModificationLookup = true;
         }
+        
+        private static readonly Func<SerializedObject, string, SerializedProperty> findRefPath =
+            (Func<SerializedObject, string, SerializedProperty>)
+            typeof(SerializedObject).GetMethod(
+                    "FindFirstPropertyFromManagedReferencePath",
+                    BindingFlags.Instance | BindingFlags.NonPublic)
+                .CreateDelegate(typeof(Func<SerializedObject, string, SerializedProperty>));
 
+        private static void TryConvertManagedReferencesPath(SerializedObject so, ref string path)
+        {
+            const string managedReferencePrefix = "managedReferences[";
+            if (path.StartsWith(managedReferencePrefix))
+            {
+                var serializedProperty = findRefPath(so, path);
+                if (serializedProperty != null)
+                { 
+                    path = findRefPath(so, path).propertyPath;
+                }
+            }
+        }
+        
         private void RebuildUnityPropertyModificationsLookup()
         {
             if (this.HasPrefabs && !Application.isPlaying)
@@ -285,9 +306,8 @@ namespace Sirenix.OdinInspector.Editor
                     if (targetPrefab != null)
                     {
                         var target = (UnityEngine.Object)this.Tree.WeakTargets[i];
-
-                        var targetIsPrefab = PrefabUtility.GetCorrespondingObjectFromSource(target) != null;
-
+                        
+                        var so = new SerializedObject(target);
                         PropertyModification[] mods = PrefabUtility.GetPropertyModifications(target);
 
                         if (mods != null && mods.Length > 0)
@@ -313,7 +333,10 @@ namespace Sirenix.OdinInspector.Editor
                                         continue;
                                     }
 
-                                    lookup.AddValue(mod.propertyPath, mod);
+                                    const string managedReferencePrefix = "managedReferences[";
+                                    var path = mod.propertyPath;
+                                    TryConvertManagedReferencesPath(so, ref path);
+                                    lookup.AddValue(path, mod);
 
                                     //string path = mod.propertyPath;
                                     //bool isArraySize = false;
@@ -1407,6 +1430,7 @@ namespace Sirenix.OdinInspector.Editor
                 {
                     var target = (UnityEngine.Object)this.Tree.WeakTargets[targetIndex];
                     var prefab = this.TargetPrefabs[targetIndex];
+                    var so = new SerializedObject(target);
                     var unityMods = PrefabUtility.GetPropertyModifications(target).ToList();
 
                     if (modificationType == PrefabModificationType.Value)
@@ -1414,8 +1438,9 @@ namespace Sirenix.OdinInspector.Editor
                         for (int i = 0; i < unityMods.Count; i++)
                         {
                             var mod = unityMods[i];
-
-                            if (mod.target == prefab && mod.propertyPath.StartsWith(property.UnityPropertyPath, StringComparison.InvariantCulture))
+                            var path = mod.propertyPath;
+                            TryConvertManagedReferencesPath(so, ref path);
+                            if (mod.target == prefab && path.StartsWith(property.UnityPropertyPath, StringComparison.InvariantCulture))
                             {
                                 // Remove modifications on both the path, and the children of the path
                                 unityMods.RemoveAt(i);
