@@ -78,7 +78,7 @@ namespace LSCore.Extensions
                 Vector3 offset = new Vector3(offsetX, offsetY, offsetZ) * amplitude;
 
                 target.localPosition = startPos + offset;
-            }).SetEase(Ease.Linear).SetLoops(-1);
+            }).SetEase(Ease.Linear).SetLoops(-1).OnKill(() => target.localPosition = startPos);
             wobble.target = target;
             
             return wobble;

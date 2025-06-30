@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using LSCore.DataStructs;
+using UnityEngine;
 using static UnityEngine.ParticleSystem;
 
 namespace LSCore.Extensions.Unity
@@ -9,10 +10,15 @@ namespace LSCore.Extensions.Unity
 
         public static void SetParticlesSize(int size) => particles = new Particle[size];
 
-        public static Particle[] GetParticles(this ParticleSystem ps)
+        public static ArraySpan<Particle> GetParticles(this ParticleSystem ps)
         {
             var num = ps.GetParticles(particles);
-            return particles[..num];
+            return particles.AsSpan(..num);
+        }
+        
+        public static void SetParticles(this ParticleSystem ps, ArraySpan<Particle> particles)
+        {
+            ps.SetParticles(particles.array, particles.Length);
         }
     }
 }

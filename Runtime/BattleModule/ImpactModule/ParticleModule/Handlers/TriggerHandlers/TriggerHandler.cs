@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LSCore.Attributes;
+using LSCore.DataStructs;
 using LSCore.Extensions.Unity;
 using UnityEngine;
 using static UnityEngine.ParticleSystem;
@@ -36,7 +37,7 @@ namespace LSCore
             InitTriggerAction();
         }
         
-        public override void Handle(Particle[] particles)
+        public override void Handle(ArraySpan<Particle> particles)
         {
             var radiusScale = ps.trigger.radiusScale;
             Vector2 point = default;

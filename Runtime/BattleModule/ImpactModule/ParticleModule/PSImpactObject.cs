@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Attributes;
 using LSCore.Async;
 using LSCore.Attributes;
+using LSCore.DataStructs;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -139,7 +140,7 @@ namespace LSCore
 #if UNITY_EDITOR
         private HashSet<int> aliveParticlesIds = new();
 #endif
-        private void TryHandleDeath(Particle[] particles)
+        private void TryHandleDeath(ArraySpan<Particle> particles)
         {
             for (int i = 0; i < particles.Length; i++)
             {
@@ -161,7 +162,7 @@ namespace LSCore
             }
         }
 
-        private void TryInitParticles(Particle[] particles)
+        private void TryInitParticles(ArraySpan<Particle> particles)
         {
             ps.GetCustomParticleData(customData, ParticleSystemCustomData.Custom2);
             for (int i = 0; i < customData.Count; i++)

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using LSCore.Attributes;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -32,7 +31,6 @@ namespace LSCore.DataStructs
     public interface IUniDict{}
     
     [Serializable]
-    [Unwrap]
     public class UniDict<TKey, TValue> : ISerializationCallbackReceiver, IDictionary<TKey, TValue>, IUniDict
     {
         [Serializable]

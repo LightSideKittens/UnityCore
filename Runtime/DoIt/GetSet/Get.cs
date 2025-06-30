@@ -65,7 +65,32 @@ public class SerializeReference<T> : Get<T>, IGetRaw<T>
 public class CastBuffer<T> : Get<T>
 {
     [SerializeReference] public IGetRaw<T> provider;
-    public override T Data => (T)provider.Data;
+    public override T Data
+    {
+        get
+        {
+            var obj = provider.Data;
+
+            if (obj is not T val)
+            {
+                if (obj is Component comp)
+                {
+                    return comp.GetComponent<T>();
+                }
+                
+                if(obj is GameObject go)
+                {
+                    return go.GetComponent<T>();
+                }
+            }
+            else
+            {
+                return val;
+            }
+            
+            return (T)obj; 
+        }
+    }
 }
 
 [Serializable]

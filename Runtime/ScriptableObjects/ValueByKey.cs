@@ -103,7 +103,7 @@ namespace LSCore
             isInited = false;
         }
 
-        public void Init()
+        private void Init()
         {
             if (isInited)
             {
