@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using LSCore.Attributes;
+using LSCore.DataStructs;
 using LSCore.Extensions.Unity;
 using UnityEngine;
 using static UnityEngine.ParticleSystem;
@@ -112,7 +113,7 @@ namespace LSCore
             SimulateParticles(simulateTime);
         }
         
-        private void TryInitParticles(Particle[] particles)
+        private void TryInitParticles(ArraySpan<Particle> particles)
         {
             ps.GetCustomParticleData(customData, ParticleSystemCustomData.Custom2);
             for (int i = 0; i < customData.Count; i++)

@@ -1,4 +1,5 @@
 ﻿using System;
+using LSCore.DataStructs;
 using UnityEngine;
 
 namespace LSCore
@@ -7,7 +8,7 @@ namespace LSCore
     {
         [SerializeField] private Vector3 force;
         
-        public override void Handle(ParticleSystem.Particle[] particles)
+        public override void Handle(ArraySpan<ParticleSystem.Particle> particles)
         {
             var dt = Time.deltaTime;
 #if UNITY_EDITOR

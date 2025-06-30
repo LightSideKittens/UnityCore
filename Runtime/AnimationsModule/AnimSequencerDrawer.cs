@@ -1,8 +1,9 @@
 ﻿#if UNITY_EDITOR
-using Sirenix.OdinInspector;
+using System;
 using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
 using UnityEditor;
+using UnityEditor.Compilation;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -44,20 +45,26 @@ namespace LSCore.AnimationsModule
         public string path;
         public PropertyTree tree;
         public InspectorProperty prop;
-
+        
         protected override void OnGUI() { }
-
+        
         protected override void OnImGUI()
         {
             EditorGUILayout.ObjectField(rootObject, typeof(Object), true);
-            
-            tree ??= PropertyTree.Create(rootObject);
-            prop ??= tree.GetPropertyAtPath(path);
-            tree.BeginDraw(true);
-            AnimSequencerDrawer.drawDefault = true;
-            foreach (var child in prop.Children)
+            if (tree == null)
             {
-                child.Draw();
+                tree = PropertyTree.Create(rootObject);
+                prop = tree.GetPropertyAtPath(path);
+                CompilationPipeline.compilationFinished += Dispose;
+            }
+            
+            AnimSequencerDrawer.drawDefault = true;
+            tree.BeginDraw(true);
+            {
+                foreach (var child in prop.Children)
+                {
+                    child.Draw();
+                }
             }
             tree.EndDraw();
         }
@@ -65,9 +72,18 @@ namespace LSCore.AnimationsModule
         protected override void OnDestroy()
         {
             base.OnDestroy();
+            Dispose(null);
+        }
+        
+
+        private void Dispose(object c)
+        {
+            CompilationPipeline.compilationFinished -= Dispose;
             tree?.Dispose();
+            tree = null;
+            prop = null;
         }
     }
-
+    
 }
 #endif

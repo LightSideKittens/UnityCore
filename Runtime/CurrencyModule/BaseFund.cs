@@ -1,6 +1,7 @@
 ﻿using System;
 using LSCore;
 using Sirenix.Utilities;
+using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -41,10 +42,16 @@ public abstract class BaseFund
     {
         SetIcon(ref icon);
         var rect = EditorGUILayout.GetControlRect(GUILayout.Height(30));
-        var boxRect = rect;
-        boxRect = boxRect.TakeFromLeft(30);
-        boxRect = boxRect.AddX(EditorGUI.indentLevel * 15);
+        rect.TakeFromLeft(EditorGUI.indentLevel * 15);
+        var boxRect = rect.TakeFromLeft(30);
         GUI.DrawTexture(boxRect, icon, ScaleMode.ScaleToFit);
+        var style = SirenixGUIStyles.BoldLabel;
+        var fs = style.fontSize;
+        style.fontSize = 25;
+        rect.TakeFromLeft(10);
+        GUI.Label(rect, Value.ToString(), style); 
+        style.fontSize = fs;
+        rect.TakeFromLeft(80);
         return rect;
     }
 

@@ -266,14 +266,14 @@ namespace LSCore.NativeUtils
 #if UNITY_EDITOR
             if (Application.isEditor)
             {
-                return IListExtensions.AsSpan(ProcessEmojis(text), ..);
+                return ((IList<Range>)ProcessEmojis(text)).AsSpan(..);
             }
 #endif
             var emojiRangesJavaArray = API.CallStatic<AndroidJavaObject[]>("parseEmojis", text);
 
             if (emojiRangesJavaArray == null || emojiRangesJavaArray.Length == 0)
             {
-                return IListExtensions.AsSpan(Array.Empty<Range>(), ..);
+                return ((IList<Range>)Array.Empty<Range>()).AsSpan(..);
             }
             
             var i = 0;

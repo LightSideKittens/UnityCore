@@ -90,26 +90,28 @@ namespace LSCore.AnimationsModule
         private bool isPlaying;
         private double lastTime;
         private Sequence editor_sequence;
+        [SerializeReference] private List<IOption> editor_options = new();
         
-        [Button("Play")]
+        [Button("Play", DirtyOnClick = false)]
         [HideIf("isPlaying")]
         public void Editor_Play()
         {
-            editor_sequence = Animate().SetUpdate(UpdateType.Manual).SetAutoKill(false);
+            editor_sequence = Animate().SetUpdate(UpdateType.Manual).SetAutoKill(false).OnComplete(Editor_Stop);
+            BaseAnim.ApplyOptions(editor_sequence, editor_options);
             isPlaying = true;
             lastTime = EditorApplication.timeSinceStartup;
-            EditorApplication.update += Editor_Update;
+            EditorApplication.update += Editor_Update;  
         }
         
-        [Button("Stop")]
+        [Button("Stop", DirtyOnClick = false)]
         [ShowIf("isPlaying")]
         public void Editor_Stop()
         {
             isPlaying = false;
             EditorApplication.update -= Editor_Update;
-            editor_sequence.Rewind(); 
+            editor_sequence.Rewind();
         }
-
+        
         private void Editor_Update()
         {
             var time = EditorApplication.timeSinceStartup;

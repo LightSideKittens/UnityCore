@@ -1,4 +1,5 @@
 ﻿using System;
+using LSCore.DataStructs;
 using static UnityEngine.ParticleSystem;
 
 namespace LSCore
@@ -6,7 +7,7 @@ namespace LSCore
     [Serializable]
     public abstract class ParticlesHandler
     {
-        public abstract void Handle(Particle[] particles);
+        public abstract void Handle(ArraySpan<Particle> particles);
     }
         
     [Serializable]

@@ -4,13 +4,57 @@ using System.Collections.Generic;
 
 namespace LSCore.DataStructs
 {
+    public readonly struct ArraySpan<T> : IEnumerable<T>
+    {
+        public readonly T[] array;
+        public readonly int start;
+        public readonly int length;
+    
+        public ArraySpan(T[] array, int start, int length)
+        {
+            if (start < 0 || start > array.Length || length < 0 || start + length > array.Length)
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+    
+            this.array = array;
+            this.start = start;
+            this.length = length;
+        }
+    
+        public ref T this[int index]
+        {
+            get
+            {
+                if (index < 0 || index >= length) throw new ArgumentOutOfRangeException();
+                
+                return ref array[start + index];
+            }
+        }
+    
+        public int Length => length;
+    
+        public IEnumerator<T> GetEnumerator()
+        {
+            for (var i = 0; i < length; i++)
+            {
+                yield return array[start + i];
+            }
+        }
+    
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+    
     public readonly struct ListSpan<T> : IEnumerable<T>
     {
         private readonly IList<T> list;
         private readonly int start;
         private readonly int count;
     
-        public ListSpan(IList<T> list, int start, int count)
+        public ListSpan(IList<T>  list, int start, int count)
         {
             if (start < 0 || start > list.Count || count < 0 || start + count > list.Count)
             {
@@ -52,12 +96,12 @@ namespace LSCore.DataStructs
         }
     }
     
-    public readonly struct ArraySpan<T>
+    public readonly struct Array2DSpan<T>
     {
         private readonly T[,] list;
         private readonly (int start, int count)[] ranges;
     
-        public ArraySpan(T[,] list, (int start, int count) x, (int start, int count) y)
+        public Array2DSpan(T[,] list, (int start, int count) x, (int start, int count) y)
         {
             ranges = new[] { x, y };
             
@@ -96,6 +140,16 @@ namespace LSCore.DataStructs
     
     public static class IListExtensions
     {
+        public static ArraySpan<T> AsSpan<T>(this T[] list, Range range)
+        {
+            var count = list.Length;
+            var start = range.Start.GetOffset(count);
+            var end = range.End.GetOffset(count);
+            count = end - start;
+    
+            return new ArraySpan<T>(list, start, count);
+        }
+        
         public static ListSpan<T> AsSpan<T>(this IList<T> list, Range range)
         {
             var count = list.Count;
@@ -106,7 +160,7 @@ namespace LSCore.DataStructs
             return new ListSpan<T>(list, start, count);
         }
         
-        public static ArraySpan<T> ToSpan<T>(this T[,] list, Range x, Range y)
+        public static Array2DSpan<T> ToSpan<T>(this T[,] list, Range x, Range y)
         {
             Range[] ranges = {x, y};
             (int start, int count)[] iranges = new (int start, int count)[2];
@@ -122,7 +176,7 @@ namespace LSCore.DataStructs
                 iranges[i] = (start, count);
             }
             
-            return new ArraySpan<T>(list, iranges[0], iranges[1]);
+            return new Array2DSpan<T>(list, iranges[0], iranges[1]);
         }
     }
 }

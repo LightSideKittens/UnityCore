@@ -10,23 +10,26 @@ namespace LSCore
     {
         [CustomValueDrawer("Editor_Draw")]
         [SerializeField] private FundText fundText;
-
-        private Id id;
-        public override Id Id => id ??= fundText == null ? null : fundText.Id;
+        
+        public override Id Id => fundText == null ? null : fundText.Id;
 
         public override int Value
         {
-            get => fundText;
-            set => fundText.text = value.ToString();
+            get => fundText == null ? 0 : fundText;
+            set
+            {
+                if(fundText == null) return;
+                fundText.text = value.ToString();
+            }
         }
-        
+
 
 #if UNITY_EDITOR
         private FundText Editor_Draw(FundText value, GUIContent content)
         {
             EditorGUILayout.BeginHorizontal();
             var rect = DrawIcon();
-            value = (FundText)EditorGUI.ObjectField(rect, " ", value, typeof(FundText), true);
+            value = (FundText)EditorGUI.ObjectField(rect, GUIContent.none, value, typeof(FundText), true);
             EditorGUILayout.EndHorizontal();
             return value;
         }

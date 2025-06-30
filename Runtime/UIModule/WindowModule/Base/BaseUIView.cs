@@ -28,8 +28,8 @@ namespace LSCore
         public virtual WindowManager Manager { get; } = new();
         
         [SerializeReference, FoldoutGroup("Optional")] protected List<DoIt> onShowing;
-        [SerializeReference, FoldoutGroup("Optional")] protected List<DoIt> onHiding;
         [SerializeReference, FoldoutGroup("Optional")] protected List<DoIt> onShowed;
+        [SerializeReference, FoldoutGroup("Optional")] protected List<DoIt> onHiding;
         [SerializeReference, FoldoutGroup("Optional")] protected List<DoIt> onHidden;
         
 
@@ -68,8 +68,8 @@ namespace LSCore
         }
 
         protected virtual void OnShowing() => onShowing.Do();
-        protected virtual void OnHiding() => onHiding.Do();
         protected virtual void OnShowed() => onShowed.Do();
+        protected virtual void OnHiding() => onHiding.Do();
         protected virtual void OnHidden() => onHidden.Do();
 
         protected virtual Tween ShowAnim => showHideAnim?.Show();

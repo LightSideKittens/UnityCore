@@ -1,8 +1,33 @@
 ﻿using System;
+using DG.Tweening;
 using LSCore;
+using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using UnityEngine;
 
+public static class Extensions
+{
+    public static Tween KillOnDestroy(this Tween tween)
+    {
+        DestroyEvent.AddOnDestroy(tween.target, tween.KillVoid);
+        return tween;
+    }
+        
+    public static Tween KillOnDestroy(this Tween tween, object obj)
+    {
+        tween.target = obj;
+        return tween.KillOnDestroy();
+    }
+    
+    public static void KillImmediate(this Tween tween)
+    {
+        tween.onKill?.Invoke();
+        tween.onKill = null;
+        tween.Kill();
+    }
+}
+
+[DisallowMultipleComponent]
 public class DestroyEvent : MonoBehaviour, DestroyEvent.I
 {
     public static void AddOnDestroy(object obj, Action onDestroy)
@@ -43,5 +68,6 @@ public class DestroyEvent : MonoBehaviour, DestroyEvent.I
     private void OnDestroy()
     {
         Destroyed?.Invoke();
+        Destroyed = null;
     }
 }
