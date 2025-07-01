@@ -24,6 +24,11 @@ namespace LSCore
         {
             return AssetDatabaseUtils.LoadAllAssets<T>().SelectMany(x => x);
         }
+        
+        protected IEnumerable<Id> AllIdsByGroupType<T>(string filter) where T : IdGroup
+        {
+            return AssetDatabaseUtils.LoadAllAssets<T>(filter).SelectMany(x => x);
+        }
 #endif
 
     }
