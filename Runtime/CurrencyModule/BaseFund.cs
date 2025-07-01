@@ -1,8 +1,11 @@
 ﻿using System;
 using LSCore;
 using Sirenix.Utilities;
+
+#if UNITY_EDITOR
 using Sirenix.Utilities.Editor;
 using UnityEditor;
+#endif
 using UnityEngine;
 
 [Serializable]
