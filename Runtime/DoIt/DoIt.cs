@@ -1,13 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LSCore.Attributes;
 using Sirenix.OdinInspector;
 using UnityEditor;
+using UnityEngine;
 
 [Serializable]
 public abstract class DoIt
 {
     public abstract void Do();
+}
+
+[Serializable]
+[Unwrap]
+public class DoIts : DoIt
+{
+    [SerializeReference] public DoIt[] doIts;
+    public override void Do() => doIts.Do();
 }
 
 [Serializable]
