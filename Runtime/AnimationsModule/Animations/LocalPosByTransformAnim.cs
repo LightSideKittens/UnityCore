@@ -17,7 +17,7 @@ namespace LSCore.AnimationsModule.Animations
         {
             return Wait.Delay(duration).OnStart(() =>
             {
-                target.DOLocalMove(endValue.localPosition, duration);
+                target.DOLocalMove(endValue.localPosition, duration).KillOnDestroy();
             }).SetTarget(endValue);
         }
     }
