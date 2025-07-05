@@ -1,87 +1,106 @@
 ﻿using System;
 using DG.Tweening;
-using LSCore.Attributes;
-using LSCore.Extensions;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace LSCore
 {
-    [Unwrap]
     [Serializable]
-    public abstract class BaseClickableHandler
+    public abstract class BaseSubmittableHandler
     {
-        [field: SerializeField] public ClickableStates States { get; private set; } = new();
-        public abstract void Init();
-        public abstract void OnDown();
-        public abstract void OnClick();
-        public abstract void OnUp();
+        public ISubmittable Submittable { get; private set; }
+
+        public void Init(ISubmittable submittable)
+        {
+            Submittable = submittable;
+            Init();
+        }
+        
+        protected abstract void Init();
         public abstract void OnDisable();
     }
     
-    [Unwrap]
     [Serializable]
-    public abstract class BaseClickAnim : BaseClickableHandler
+    public abstract class BaseSubmittableAnim : BaseSubmittableHandler{}
+    [Serializable]
+    public abstract class BaseSubmittableDoIter : BaseSubmittableHandler{}
+
+    [Serializable]
+    public class DefaultSubmittableDoIter : BaseSubmittableDoIter
     {
-        [GetContext] public Object root;
-        private Transform transform;
-        public Transform Transform => transform ??= root.Cast<Transform>();
-        protected Tween current;
+        [SerializeReference] public DoIt[] onSubmit;
         
-        public abstract Tween DownTween { get; }
-        public abstract Tween UpTween { get; }
-        public abstract Tween ClickTween { get; }
-        
-        public sealed override void OnDown()
+        protected override void Init()
         {
-            current.Complete();
-            current = DownTween;
+            Submittable.Submitted += onSubmit.Do;
         }
 
-        public sealed override void OnClick()
-        {
-            current.Kill();
-            current = ClickTween;
-        }
-        
-        public sealed override void OnUp()
-        {
-            current.Kill();
-            current = UpTween;
-        }
-
-        public sealed override void OnDisable()
-        {
-            current.Kill();
-            if (current == null) return;
-            Reset();
-            current = null;
-        }
-
-        public abstract void Reset();
+        public override void OnDisable() { }
     }
 
     [Serializable]
-    public class DefaultScaleClickAnim : BaseClickAnim
+    public class DefaultSubmittableAnim : BaseSubmittableAnim
     {
-        protected Vector3 defaultScale;
-
-        public override Tween DownTween
+        private Transform transform;
+        private Tween current;
+        private Vector3 defaultScale;
+        
+        protected override void Init()
         {
-            get
-            {
-                defaultScale = Transform.localScale;
-                return Transform.DOScale(defaultScale * 0.8f, 0.3f);
-            }
+            transform = Submittable.Transform;
+            Submittable.States.PressChanged += OnPress;
+            Submittable.States.HoverChanged += OnHover;
+            Submittable.Submitted += OnSubmit;
+        }
+
+        private void OnHover(bool isHovering)
+        {
+            if(isHovering) OnEnter();
+            else OnExit();
+        }
+
+        private void OnPress(bool isPressing)
+        {
+            if(isPressing) OnDown();
+            else OnUp();
+        }
+
+        private void OnDown()
+        {
+            current.Kill();
+            current = transform.DOScale(defaultScale * 0.8f, 0.3f);
         }
         
-        public override Tween UpTween => Transform.DOScale(defaultScale, 0.15f);
-
-        public override Tween ClickTween => Transform.DOScale(defaultScale, 0.5f).SetEase(Ease.OutElastic);
-
-        public override void Reset()
+        private void OnSubmit()
         {
-            Transform.localScale = defaultScale;
+            current.Kill();
+            current = transform.DOScale(defaultScale, 0.5f).SetEase(Ease.OutElastic);
+        }
+        
+        private void OnUp()
+        {
+            current.Kill();
+            current = transform.DOScale(defaultScale, 0.15f);
+        }
+
+        private void OnEnter()
+        {
+            current.Complete();
+            defaultScale = transform.localScale;
+            current = transform.DOScale(defaultScale * 1.1f, 0.15f);
+        }
+        
+        private void OnExit()
+        {
+            current.Kill();
+            current = transform.DOScale(defaultScale, 0.15f);
+        }
+
+        public override void OnDisable()
+        {
+            current.Kill();
+            if (current == null) return;
+            transform.localScale = defaultScale;
+            current = null;
         }
     }
 }

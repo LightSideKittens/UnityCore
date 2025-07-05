@@ -14,18 +14,6 @@ namespace LSCore
         public Action<bool> action;
 
         public static implicit operator bool(ReactBool reactBool) => reactBool.value;
-
-        public static ReactBool operator +(ReactBool a, bool b)
-        {
-            a.Value = b;
-            return a;
-        }
-        
-        public static ReactBool operator -(ReactBool a, bool b)
-        {
-            a.Value = b;
-            return a;
-        }
         
         public static ReactBool operator +(ReactBool a, Action<bool> b)
         {
@@ -97,38 +85,34 @@ namespace LSCore
         }
     }
     
-    public class LSButton : LSImage, IClickable
+    public class LSButton : LSImage, ISubmittable
     {
-        [SerializeReference] public BaseClickableHandler anim;
+        [SerializeReference] public BaseSubmittableAnim anim;
+        [SerializeReference] public BaseSubmittableDoIter doIter;
         [SerializeField] public ClickActions clickActions;
 
         public Transform Transform => transform;
-        public Action Submitted { get; set; }
-        public ClickableStates States => anim.States;
+        public event Action Submitted;
+        [field: SerializeField] public ClickableStates States { get; private set; } = new();
 
         protected override void Awake()
         {
             base.Awake();
-            anim.Init();
-        }
-
-        protected override void Start()
-        {
-            base.Start();
-            clickActions?.Init();
+            anim.Init(this);
+            doIter.Init(this);
         }
         
         protected override void OnDisable()
         {
             base.OnDisable();
             anim.OnDisable();
+            doIter.OnDisable();
         }
 
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
         {
-            clickActions?.OnClick();
-            anim.OnClick();
             Submitted?.Invoke();
+            Debug.Log("OnPointerClick");
         }
         
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
@@ -136,14 +120,12 @@ namespace LSCore
             States.Press = true;
             Debug.Log("OnPointerDown");
             EventSystem.current.SetSelectedGameObject(gameObject, eventData);
-            anim.OnDown();
         }
 
         void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
         {
             States.Press = false;
             Debug.Log("OnPointerUp");
-            anim.OnUp();
         }
         
         void ISelectHandler.OnSelect(BaseEventData eventData)
@@ -186,6 +168,7 @@ namespace LSCore
         private PropertyTree propertyTree;
         private InspectorProperty clickActions;
         private InspectorProperty anim;
+        private InspectorProperty doIter;
         
         protected override void OnEnable()
         {
@@ -193,6 +176,7 @@ namespace LSCore
             button = (LSButton)target;
             propertyTree = PropertyTree.Create(serializedObject);
             anim = propertyTree.RootProperty.Children["anim"];
+            doIter = propertyTree.RootProperty.Children["doIter"];
             clickActions = propertyTree.RootProperty.Children["clickActions"];
         }
 
@@ -208,6 +192,7 @@ namespace LSCore
             propertyTree.BeginDraw(true);
             clickActions.Draw();
             anim.Draw();
+            doIter.Draw();
             propertyTree.EndDraw();
             serializedObject.ApplyModifiedProperties();
         }

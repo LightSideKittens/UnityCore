@@ -11,16 +11,20 @@ using UnityEditor;
 
 namespace LSCore
 {
-    public class LSToggle : LSImage, IPointerClickHandler, IToggle
+    public class LSToggle : LSImage, IToggle
     {
         [SerializeReference] public ShowHideAnim onOffAnim = new InOutShowHideAnim();
-        [SerializeField] private ClickActions clickActions;
+        [SerializeReference] public BaseSubmittableAnim anim;
+        [SerializeReference] public BaseSubmittableDoIter doIter;
+        [SerializeField] public ClickActions clickActions;
         [SerializeReference] public List<DoIt> on = new();
         [SerializeReference] public List<DoIt> off = new();
         [SerializeReference] private BaseToggleData isOn;
 
         public Transform Transform => transform;
-        public Action Clicked { get; set; }
+        public event Action Submitted;
+        [field: SerializeField] public ClickableStates States { get; private set; } = new();
+
         public Action<bool> ValueChanged { get; set; }
         
         /// <summary>
@@ -97,7 +101,7 @@ namespace LSCore
             clickActions.OnClick();
             ForceSetState(!isOn);
             Notify();
-            Clicked?.Invoke();
+            Submitted?.Invoke();
         }
 
         protected override void Awake()
@@ -119,6 +123,41 @@ namespace LSCore
         {
             base.Start();
             clickActions.Init();
+        }
+
+        void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
+        {
+            
+        }
+
+        void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
+        {
+            
+        }
+
+        void ISelectHandler.OnSelect(BaseEventData eventData)
+        {
+            
+        }
+
+        void IDeselectHandler.OnDeselect(BaseEventData eventData)
+        {
+            
+        }
+
+        void ISubmitHandler.OnSubmit(BaseEventData eventData)
+        {
+            
+        }
+
+        void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData)
+        {
+            
+        }
+
+        void IPointerExitHandler.OnPointerExit(PointerEventData eventData)
+        {
+            
         }
     }
     
