@@ -3,10 +3,9 @@
 [Serializable]
 public class PlaySound : DoIt
 {
-    public LaLaLa.Settings settings;
+    public LaLa.Settings settings;
     public override void Do()
     {
-        LaLaLa.playSettings.Copy(settings);
-        LaLaLa.Play(settings.Clip);
+        settings.Play();
     }
 }

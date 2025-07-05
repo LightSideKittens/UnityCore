@@ -2,7 +2,10 @@
     "name": "LSCore.HapticModule",
     "rootNamespace": "",
     "references": [
-        "Unity.InputSystem"
+        "Unity.InputSystem",
+        "LSCore.DoIt",
+        "LSCore.ConfigModule",
+        "LSCore.Extensions"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

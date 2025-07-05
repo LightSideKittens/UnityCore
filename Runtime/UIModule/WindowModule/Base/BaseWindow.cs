@@ -29,7 +29,16 @@ namespace LSCore
             base.DeInit();
             isCalledFromStatic = false;
         }
-        
+
+        protected override void InitManager()
+        {
+            base.InitManager();
+            Manager.Showing += () => { Showing?.Invoke(); };
+            Manager.Showed += () => { Showed?.Invoke(); };
+            Manager.Hiding += () => { Hiding?.Invoke(); };
+            Manager.Hidden += () => { Hidden?.Invoke(); };
+        }
+
         private static string logTag = $"[{typeof(T).Name}]".ToTag(new Color(0f, 0.79f, 0.22f));
         public new static void AsHome() => UIViewBoss.SetHome(Instance.Manager);
         

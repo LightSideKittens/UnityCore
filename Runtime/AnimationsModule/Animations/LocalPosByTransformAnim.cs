@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using LSCore.Async;
 using UnityEngine;
 
 namespace LSCore.AnimationsModule.Animations
@@ -14,7 +15,10 @@ namespace LSCore.AnimationsModule.Animations
 
         protected override Tween AnimAction(Transform target)
         {
-            return target.DOLocalMove(endValue.localPosition, duration);
+            return Wait.Delay(duration).OnStart(() =>
+            {
+                target.DOLocalMove(endValue.localPosition, duration);
+            }).SetTarget(endValue);
         }
     }
 }
