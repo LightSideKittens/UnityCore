@@ -1,12 +1,7 @@
 ﻿using System;
 using DG.Tweening;
 using LSCore.Attributes;
-using Sirenix.OdinInspector;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
+using LSCore.Extensions;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -14,69 +9,79 @@ namespace LSCore
 {
     [Unwrap]
     [Serializable]
-    public struct ClickAnim
+    public abstract class BaseClickableHandler
     {
-        [CustomValueDrawer("DrawClickAnim")]
-        [SerializeField] private bool isDisabled;
+        [field: SerializeField] public ClickableStates States { get; private set; } = new();
+        public abstract void Init();
+        public abstract void OnDown();
+        public abstract void OnClick();
+        public abstract void OnUp();
+        public abstract void OnDisable();
+    }
+    
+    [Unwrap]
+    [Serializable]
+    public abstract class BaseClickAnim : BaseClickableHandler
+    {
+        [GetContext] public Object root;
         private Transform transform;
-        private Tween current;
-        private Vector3 defaultScale;
+        public Transform Transform => transform ??= root.Cast<Transform>();
+        protected Tween current;
         
-        public bool IsDisabled => isDisabled;
-
-        public void Init(Transform transform)
-        {
-            this.transform = transform;
-        }
-
-#if UNITY_EDITOR
+        public abstract Tween DownTween { get; }
+        public abstract Tween UpTween { get; }
+        public abstract Tween ClickTween { get; }
         
-        public bool DrawClickAnim(bool value, GUIContent _)
+        public sealed override void OnDown()
         {
-            return !EditorGUILayout.Toggle("Is Animatable", !value);
-        }
-        
-        public void Editor_Draw(Object target)
-        {
-            EditorGUI.BeginChangeCheck();
-            isDisabled = !EditorGUILayout.Toggle("Is Animatable", !isDisabled);
-            if (EditorGUI.EndChangeCheck())
-            {
-                EditorUtility.SetDirty(target);
-            }
-        }
-#endif
-       
-        public void SetActive(bool active) => isDisabled = active;
-        
-        public void OnPointerDown()
-        {
-            if(isDisabled) return;
             current.Complete();
-            defaultScale = transform.localScale;
-            current = transform.DOScale(defaultScale * 0.8f, 0.3f);
-        }
-        
-        public void OnClick()
-        {
-            if(isDisabled) return;
-            current.Kill();
-            current = transform.DOScale(defaultScale, 0.5f).SetEase(Ease.OutElastic);
-        }
-        
-        public void OnPointerUp()
-        {
-            if(isDisabled) return;
-            current.Kill();
-            current = transform.DOScale(defaultScale, 0.15f);
+            current = DownTween;
         }
 
-        public void OnDisable()
+        public sealed override void OnClick()
+        {
+            current.Kill();
+            current = ClickTween;
+        }
+        
+        public sealed override void OnUp()
+        {
+            current.Kill();
+            current = UpTween;
+        }
+
+        public sealed override void OnDisable()
         {
             current.Kill();
             if (current == null) return;
-            transform.localScale = defaultScale;
+            Reset();
             current = null;
+        }
+
+        public abstract void Reset();
+    }
+
+    [Serializable]
+    public class DefaultScaleClickAnim : BaseClickAnim
+    {
+        protected Vector3 defaultScale;
+
+        public override Tween DownTween
+        {
+            get
+            {
+                defaultScale = Transform.localScale;
+                return Transform.DOScale(defaultScale * 0.8f, 0.3f);
+            }
+        }
+        
+        public override Tween UpTween => Transform.DOScale(defaultScale, 0.15f);
+
+        public override Tween ClickTween => Transform.DOScale(defaultScale, 0.5f).SetEase(Ease.OutElastic);
+
+        public override void Reset()
+        {
+            Transform.localScale = defaultScale;
         }
     }
 }

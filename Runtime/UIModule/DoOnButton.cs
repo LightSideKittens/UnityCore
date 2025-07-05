@@ -1,23 +1,22 @@
 ﻿using System;
 using LSCore;
-using LSCore.Attributes;
 using UnityEngine;
 
 [Serializable]
-public abstract class LSClickAction : DoIt
+public abstract class DoOnClick : DoIt
 {
     public abstract IClickable Clickable { get; }
 
-    [SerializeReference] public DoIt action;
+    [SerializeReference] public DoIt[] doIts;
         
     public override void Do()
     {
-        Clickable.Clicked += action.Do;
+        Clickable.Submitted += doIts.Do;
     }
 }
 
 [Serializable]
-public class LSButtonAction : LSClickAction
+public class DoOnButton : DoOnClick
 {
     public LSButton button;
     public override IClickable Clickable => button;

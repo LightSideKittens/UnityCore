@@ -1,12 +1,19 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace LSCore
 {
-    public interface IClickable
+    public interface IClickable : 
+        IPointerDownHandler, IPointerUpHandler,
+        IPointerClickHandler,
+        ISelectHandler, IDeselectHandler,
+        ISubmitHandler,
+        IPointerEnterHandler, IPointerExitHandler
     {
         Transform Transform { get; }
-        Action Clicked { get; set; }
+        Action Submitted { get; set; }
+        ClickableStates States { get; }
     }
     
     public interface IToggle : IClickable
