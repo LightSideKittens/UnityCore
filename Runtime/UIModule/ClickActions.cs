@@ -42,10 +42,10 @@ namespace LSCore
             {
                 actions ??= new List<DoIt>();
                 var action = new PlayOneShotSound();
-                var settings = new LaLaLa.Settings();
+                var settings = new LaLa.Settings();
                 action.settings = settings;
-                settings.Clip = SingleAsset<AudioClip>.Get("ButtonClick");
-                settings.Group = SingleAsset<AudioMixerGroup>.Get("AudioMixer[UI]");
+                settings.Clip = SingleAssets.Get<AudioClip>("ButtonClick");
+                settings.Group = SingleAssets.Get<AudioMixerGroup>("AudioMixer[UI]");
                 
                 actions.Insert(0, action);
             }

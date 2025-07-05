@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using DG.Tweening;
+using LSCore.Extensions;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -31,13 +32,13 @@ namespace LSCore
         private static void Init()
         {
             DOTween.SetTweensCapacity(1000, 1000);
-            Creating?.Invoke();
+            Creating.SafeInvoke();
             var go = new GameObject(nameof(World));
             instance = go.AddComponent<World>();
             DontDestroyOnLoad(go);
             IsPlaying = true;
 
-            Created?.Invoke();
+            Created.SafeInvoke();
             Application.targetFrameRate = 120;
             Burger.Log("[World] Created");
         }
@@ -70,14 +71,14 @@ namespace LSCore
             IsPlaying = false;
             Burger.logToFile = false;
             Canvas.willRenderCanvases -= OnCanvasUpdateCompeted;
-            Destroyed?.Invoke();
+            Destroyed.SafeInvoke();
         }
 
         private void OnApplicationPause(bool pauseStatus)
         {
             if (pauseStatus)
             {
-                ApplicationPaused?.Invoke();
+                ApplicationPaused.SafeInvoke();
             }
         }
 

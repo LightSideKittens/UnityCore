@@ -17,8 +17,7 @@ namespace LSCore
         [SerializeField] private ClickActions clickActions;
         [SerializeReference] public List<DoIt> on = new();
         [SerializeReference] public List<DoIt> off = new();
-        [SerializeField] private bool isOn;
-        private bool lastIsOn;
+        [SerializeReference] private BaseToggleData isOn;
 
         public Transform Transform => transform;
         public Action Clicked { get; set; }
@@ -63,8 +62,7 @@ namespace LSCore
 
         protected void ForceSetState(bool value)
         {
-            lastIsOn = isOn;
-            isOn = value;
+            isOn.IsOn = value;
             OnValueChanged();
         }
         
@@ -121,16 +119,6 @@ namespace LSCore
         {
             base.Start();
             clickActions.Init();
-        }
-
-        protected override void OnDidApplyAnimationProperties()
-        {
-            base.OnDidApplyAnimationProperties();
-            if (lastIsOn != isOn)
-            {
-                ForceSetState(isOn);
-                Notify();
-            }
         }
     }
     
