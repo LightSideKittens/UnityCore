@@ -34,9 +34,9 @@ namespace LSCore
             {
                 if (this.value != value)
                 { 
+                    this.value = value;
                     action?.Invoke(value);
                 }
-                this.value = value;
             }
         }
     }
