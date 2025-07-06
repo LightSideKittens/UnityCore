@@ -1,6 +1,7 @@
 ﻿using System;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace LSCore
 {
@@ -23,6 +24,8 @@ namespace LSCore
     public abstract class BaseSubmittableAnim : BaseSubmittableHandler{}
     [Serializable]
     public abstract class BaseSubmittableDoIter : BaseSubmittableHandler{}
+    [Serializable]
+    public abstract class BaseSubmittableSelectBehaviour : BaseSubmittableHandler{}
 
     [Serializable]
     public class DefaultSubmittableDoIter : BaseSubmittableDoIter
@@ -43,56 +46,91 @@ namespace LSCore
         private Transform transform;
         private Tween current;
         private Vector3 defaultScale;
+        private Vector3 targetScale;
+        private Vector3 scaleModification;
+        private bool isJustSubmitted;
         
         protected override void Init()
         {
             transform = Submittable.Transform;
+            defaultScale = transform.localScale;
+            targetScale = defaultScale;
             Submittable.States.PressChanged += OnPress;
             Submittable.States.HoverChanged += OnHover;
+            Submittable.States.SelectChanged += OnSelect;
             Submittable.Submitted += OnSubmit;
+        }
+
+        private void OnSelect(bool isSelected)
+        {
+            if (isSelected)
+            {
+                scaleModification = defaultScale * 0.1f;
+            }
+            else
+            {
+                scaleModification = Vector3.zero;
+            }
+
+            AnimScale(0.15f);
         }
 
         private void OnHover(bool isHovering)
         {
-            if(isHovering) OnEnter();
-            else OnExit();
+            if(isHovering)
+            {
+                if (Submittable.States.Press)
+                {
+                    OnPress(true);
+                    return;
+                }
+                
+                targetScale = defaultScale * 1.1f;
+            }
+            else
+            {
+                targetScale = defaultScale;
+                
+                if (isJustSubmitted)
+                {
+                    return;
+                }
+            }
+            
+            AnimScale(0.15f);
         }
 
         private void OnPress(bool isPressing)
         {
-            if(isPressing) OnDown();
-            else OnUp();
-        }
-
-        private void OnDown()
-        {
             current.Kill();
-            current = transform.DOScale(defaultScale * 0.8f, 0.3f);
+            float duration;
+            if (isPressing)
+            {
+                duration = 0.3f;
+                targetScale = defaultScale * 0.8f;
+            }
+            else
+            {
+                duration = 0.15f;
+                targetScale = defaultScale;
+            }
+
+            AnimScale(duration);
         }
         
         private void OnSubmit()
         {
-            current.Kill();
-            current = transform.DOScale(defaultScale, 0.5f).SetEase(Ease.OutElastic);
-        }
-        
-        private void OnUp()
-        {
-            current.Kill();
-            current = transform.DOScale(defaultScale, 0.15f);
-        }
+            targetScale = Submittable.States.Hover ? defaultScale * 1.1f : defaultScale;
+            AnimScale(0.5f).SetEase(Ease.OutElastic);
+            isJustSubmitted = true;
+            EventSystem.Updated += OnUpdate;
 
-        private void OnEnter()
-        {
-            current.Complete();
-            defaultScale = transform.localScale;
-            current = transform.DOScale(defaultScale * 1.1f, 0.15f);
-        }
-        
-        private void OnExit()
-        {
-            current.Kill();
-            current = transform.DOScale(defaultScale, 0.15f);
+
+            void OnUpdate()
+            {
+                EventSystem.Updated -= OnUpdate;
+                isJustSubmitted = false;
+            }
         }
 
         public override void OnDisable()
@@ -101,6 +139,13 @@ namespace LSCore
             if (current == null) return;
             transform.localScale = defaultScale;
             current = null;
+        }
+        
+        private Tween AnimScale(float duration)
+        {
+            current.Kill();
+            current = transform.DOScale(targetScale + scaleModification, duration);
+            return current;
         }
     }
 }
