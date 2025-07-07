@@ -19,5 +19,5 @@ public abstract class DoOnClick : DoIt
 public class DoOnButton : DoOnClick
 {
     public LSButton button;
-    public override ISubmittable Submittable => button;
+    public override ISubmittable Submittable => button.submittable;
 }

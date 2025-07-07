@@ -14,9 +14,11 @@ namespace LSCore
         Transform Transform { get; }
         event Action Submitted;
         ClickableStates States { get; }
+        void Init(Transform transform);
+        void OnDisable();
     }
     
-    public interface IToggle : ISubmittable
+    public interface IToggle : ISubmittableElement
     {
         bool IsOn { get; set; }
         void Set(bool value);

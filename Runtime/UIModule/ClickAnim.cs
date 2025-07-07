@@ -28,6 +28,86 @@ namespace LSCore
     public abstract class BaseSubmittableSelectBehaviour : BaseSubmittableHandler{}
 
     [Serializable]
+    public class DefaultSubmittableSelectBehaviour : BaseSubmittableSelectBehaviour
+    {
+        private Transform transform;
+        protected override void Init()
+        {
+            transform = Submittable.Transform;
+        }
+
+        public override void OnDisable()
+        {
+            throw new NotImplementedException();
+        }
+        
+        /*public Selectable FindSelectable(Vector3 dir)
+        {
+            dir = dir.normalized;
+            Vector3 localDir = Quaternion.Inverse(transform.rotation) * dir;
+            Vector3 pos = transform.TransformPoint(GetPointOnRectEdge(transform as RectTransform, localDir));
+            float maxScore = Mathf.NegativeInfinity;
+            float maxFurthestScore = Mathf.NegativeInfinity;
+            float score = 0;
+
+            bool wantsWrapAround = navigation.wrapAround && (m_Navigation.mode == Navigation.Mode.Vertical || m_Navigation.mode == Navigation.Mode.Horizontal);
+
+            Selectable bestPick = null;
+            Selectable bestFurthestPick = null;
+
+            for (int i = 0; i < s_SelectableCount; ++i)
+            {
+                Selectable sel = s_Selectables[i];
+
+                if (sel == this)
+                    continue;
+
+                if (!sel.IsInteractable() || sel.navigation.mode == Navigation.Mode.None)
+                    continue;
+
+#if UNITY_EDITOR
+                if (Camera.current != null && !UnityEditor.SceneManagement.StageUtility.IsGameObjectRenderedByCamera(sel.gameObject, Camera.current))
+                    continue;
+#endif
+                
+                var selRect = sel.transform as RectTransform;
+                Vector3 selCenter = selRect != null ? (Vector3)selRect.rect.center : Vector3.zero;
+                Vector3 myVector = sel.transform.TransformPoint(selCenter) - pos;
+
+                float dot = Vector3.Dot(dir, myVector);
+
+                if (wantsWrapAround && dot < 0)
+                {
+                    score = -dot * myVector.sqrMagnitude;
+
+                    if (score > maxFurthestScore)
+                    {
+                        maxFurthestScore = score;
+                        bestFurthestPick = sel;
+                    }
+
+                    continue;
+                }
+
+                if (dot <= 0)
+                    continue;
+
+                score = dot / myVector.sqrMagnitude;
+
+                if (score > maxScore)
+                {
+                    maxScore = score;
+                    bestPick = sel;
+                }
+            }
+
+            if (wantsWrapAround && null == bestPick) return bestFurthestPick;
+
+            return bestPick;
+        }*/
+    }
+
+    [Serializable]
     public class DefaultSubmittableDoIter : BaseSubmittableDoIter
     {
         [SerializeReference] public DoIt[] onSubmit;

@@ -14,16 +14,18 @@ namespace LSCore
     public class LSToggle : LSImage, IToggle
     {
         [SerializeReference] public ShowHideAnim onOffAnim = new InOutShowHideAnim();
-        [SerializeReference] public BaseSubmittableAnim anim;
-        [SerializeReference] public BaseSubmittableDoIter doIter;
-        [SerializeField] public ClickActions clickActions;
         [SerializeReference] public List<DoIt> on = new();
         [SerializeReference] public List<DoIt> off = new();
         [SerializeReference] private BaseToggleData isOn;
-
-        public Transform Transform => transform;
-        public event Action Submitted;
-        [field: SerializeField] public ClickableStates States { get; private set; } = new();
+        
+        [SerializeReference] public ISubmittable submittable = new DefaultSubmittable();
+        [SerializeField] public ClickActions clickActions;
+        public object Submittable => submittable;
+        public event Action Submitted
+        {
+            add => submittable.Submitted += value;
+            remove => submittable.Submitted -= value;
+        }
 
         public Action<bool> ValueChanged { get; set; }
         
@@ -95,15 +97,6 @@ namespace LSCore
             }
         }
         
-        void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
-        {
-            if(!eventData.IsFirstTouch()) return;
-            clickActions.OnClick();
-            ForceSetState(!isOn);
-            Notify();
-            Submitted?.Invoke();
-        }
-
         protected override void Awake()
         {
             base.Awake();
@@ -114,6 +107,13 @@ namespace LSCore
             }
 #endif
             
+            submittable.Init(transform);
+            submittable.Submitted += () =>
+            {
+                clickActions.OnClick();
+                ForceSetState(!isOn);
+                Notify();
+            };
             onOffAnim.Init();
             ForceSetState(isOn);
             DOTweenExt.Complete(this);
@@ -125,39 +125,10 @@ namespace LSCore
             clickActions.Init();
         }
 
-        void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
+        protected override void OnDisable()
         {
-            
-        }
-
-        void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
-        {
-            
-        }
-
-        void ISelectHandler.OnSelect(BaseEventData eventData)
-        {
-            
-        }
-
-        void IDeselectHandler.OnDeselect(BaseEventData eventData)
-        {
-            
-        }
-
-        void ISubmitHandler.OnSubmit(BaseEventData eventData)
-        {
-            
-        }
-
-        void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData)
-        {
-            
-        }
-
-        void IPointerExitHandler.OnPointerExit(PointerEventData eventData)
-        {
-            
+            base.OnDisable();
+            submittable.OnDisable();
         }
     }
     
