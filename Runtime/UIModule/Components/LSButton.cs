@@ -84,27 +84,26 @@ namespace LSCore
             set => hover.Value = value;
         }
     }
-    
-    public class LSButton : LSImage, ISubmittable
+
+    [Serializable]
+    public class DefaultSubmittable : ISubmittable
     {
         [SerializeReference] public BaseSubmittableAnim anim;
         [SerializeReference] public BaseSubmittableDoIter doIter;
-        [SerializeField] public ClickActions clickActions;
-
-        public Transform Transform => transform;
+        
+        public Transform Transform { get; private set; }
         public event Action Submitted;
         [field: SerializeField] public ClickableStates States { get; private set; } = new();
 
-        protected override void Awake()
+        void ISubmittable.Init(Transform transform)
         {
-            base.Awake();
+            Transform = transform;
             anim.Init(this);
             doIter.Init(this);
         }
-        
-        protected override void OnDisable()
+
+        public void OnDisable()
         {
-            base.OnDisable();
             anim.OnDisable();
             doIter.OnDisable();
         }
@@ -119,7 +118,7 @@ namespace LSCore
         {
             States.Press = true;
             Debug.Log("OnPointerDown");
-            EventSystem.current.SetSelectedGameObject(gameObject, eventData);
+            EventSystem.current.SetSelectedGameObject(Transform.gameObject, eventData);
         }
 
         void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
@@ -159,6 +158,30 @@ namespace LSCore
         }
     }
     
+    public class LSButton : LSImage, ISubmittableElement
+    {
+        [SerializeReference] public ISubmittable submittable = new DefaultSubmittable();
+        [SerializeField] public ClickActions clickActions;
+        public object Submittable => submittable;
+        public event Action Submitted
+        {
+            add => submittable.Submitted += value;
+            remove => submittable.Submitted -= value;
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            submittable.Init(transform);
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            submittable.OnDisable();
+        }
+    }
+    
 #if UNITY_EDITOR
     [CustomEditor(typeof(LSButton), true)]
     [CanEditMultipleObjects]
@@ -167,16 +190,14 @@ namespace LSCore
         private LSButton button;
         private PropertyTree propertyTree;
         private InspectorProperty clickActions;
-        private InspectorProperty anim;
-        private InspectorProperty doIter;
+        private InspectorProperty submittable;
         
         protected override void OnEnable()
         {
             base.OnEnable();
             button = (LSButton)target;
             propertyTree = PropertyTree.Create(serializedObject);
-            anim = propertyTree.RootProperty.Children["anim"];
-            doIter = propertyTree.RootProperty.Children["doIter"];
+            submittable = propertyTree.RootProperty.Children["submittable"];
             clickActions = propertyTree.RootProperty.Children["clickActions"];
         }
 
@@ -191,8 +212,7 @@ namespace LSCore
             DrawImagePropertiesAsFoldout();
             propertyTree.BeginDraw(true);
             clickActions.Draw();
-            anim.Draw();
-            doIter.Draw();
+            submittable.Draw();
             propertyTree.EndDraw();
             serializedObject.ApplyModifiedProperties();
         }
