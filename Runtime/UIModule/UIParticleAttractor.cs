@@ -61,8 +61,6 @@ public class UIParticleAttractor : MonoBehaviour
         int count = ps.particleCount;
         ArraySpan<Particle> arr = ps.GetParticles();
         TryInitParticles(ps);
-        var scale = ps.transform.lossyScale;
-        var pos = ps.transform.position;
         var tweens = new Tween[count];
             
         int i = 0;
