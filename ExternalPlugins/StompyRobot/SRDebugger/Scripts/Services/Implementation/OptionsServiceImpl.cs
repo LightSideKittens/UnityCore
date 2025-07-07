@@ -36,7 +36,7 @@
         {
             if (_optionContainerLookup.ContainsKey(obj))
             {
-                throw new Exception("An object should only be added once.");
+                return;
             }
 
             var options = SRDebuggerUtil.ScanForOptions(obj);
