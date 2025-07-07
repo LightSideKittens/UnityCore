@@ -17,7 +17,6 @@ namespace LSCore
         public static event Action Updated;
         public static event Action FixedUpdated;
         public static event Action Destroyed;
-        public static event Action CanvasUpdateCompeted;
         private static readonly SynchronizationContext synchronizationContext = SynchronizationContext.Current;
         private static bool isCreated;
         private static World instance;
@@ -42,17 +41,32 @@ namespace LSCore
             Application.targetFrameRate = 120;
             Burger.Log("[World] Created");
         }
+
+        public static void CallOnCreated(Action action)
+        {
+            if (IsPlaying)
+            {
+                action();
+            }
+            else
+            {
+                Created += action;
+            }
+        }
+        
+        public static void CallOnCreatedOnce(Action action)
+        {
+            CallOnCreated(Call);
+            void Call()
+            {
+                action();
+                Created -= Call;
+            }
+        }
         
         private void Awake()
         {
-            var i = CanvasUpdateRegistry.instance;
-            Canvas.willRenderCanvases += OnCanvasUpdateCompeted;
             Camera = Camera.main;
-        }
-
-        private void OnCanvasUpdateCompeted()
-        {
-            CanvasUpdateCompeted?.Invoke();
         }
 
         private void Update()
@@ -70,7 +84,6 @@ namespace LSCore
         {
             IsPlaying = false;
             Burger.logToFile = false;
-            Canvas.willRenderCanvases -= OnCanvasUpdateCompeted;
             Destroyed.SafeInvoke();
         }
 

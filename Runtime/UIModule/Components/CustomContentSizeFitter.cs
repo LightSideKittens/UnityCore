@@ -57,12 +57,12 @@ public class CustomContentSizeFitter : ContentSizeFitter
             rectTransform.SetSizeWithCurrentAnchors((RectTransform.Axis)axis, size);
         }
 
-        World.CanvasUpdateCompeted += CallSizeChanged;
+        CanvasUpdateRegistry.Updated += CallSizeChanged;
     }
 
     private void CallSizeChanged()
     {
-        World.CanvasUpdateCompeted -= CallSizeChanged;
+        CanvasUpdateRegistry.Updated -= CallSizeChanged;
         SizeChanged?.Invoke(rectTransform.rect.size);
     }
     
