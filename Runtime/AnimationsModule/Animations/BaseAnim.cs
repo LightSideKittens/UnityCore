@@ -52,9 +52,11 @@ namespace LSCore.AnimationsModule.Animations
     public abstract class SingleAnim<TTarget> : BaseAnim where TTarget : Object
     {
         [SerializeReference] public List<IOption> options;
-        [SerializeReference] public List<Get<TTarget>> targets = new();
+        [SerializeReference] [LabelText("$TargetsLabel")] public List<Get<TTarget>> targets = new();
         [ShowIf("UseMultiple")] public AnimationCurve timeOffsetPerTarget = AnimationCurve.Constant(0, 0, 0.1f);
 
+        private string TargetsLabel => $"{typeof(TTarget).Name}s";
+        
         public override bool NeedInit => false;
         public bool UseMultiple => targets.Count > 1;
         public TTarget FirstTarget
@@ -107,14 +109,14 @@ namespace LSCore.AnimationsModule.Animations
     }
     
     [Serializable]
-    public abstract class BaseAnim<T, TTarget> : SingleAnim<TTarget> where TTarget : Object
+    public abstract class BaseAnim<TValue, TTarget> : SingleAnim<TTarget> where TTarget : Object
     {
         public bool needInit;
         public float duration;
         public override bool NeedInit => needInit;
         
-        [ShowIf("ShowStartValue")] public T startValue;
-        [ShowIf("ShowEndValue")] public T endValue;
+        [ShowIf("ShowStartValue")] public TValue startValue;
+        [ShowIf("ShowEndValue")] public TValue endValue;
         
         protected virtual bool ShowStartValue => NeedInit;
         protected virtual bool ShowEndValue => duration != 0;

@@ -9,12 +9,14 @@ namespace LSCore
         IPointerClickHandler,
         ISelectHandler, IDeselectHandler,
         ISubmitHandler,
-        IPointerEnterHandler, IPointerExitHandler
+        IPointerEnterHandler, IPointerExitHandler,
+        IMoveHandler
     {
         Transform Transform { get; }
         event Action Submitted;
-        ClickableStates States { get; }
+        SubmittableStates States { get; }
         void Init(Transform transform);
+        void OnEnable();
         void OnDisable();
     }
     
