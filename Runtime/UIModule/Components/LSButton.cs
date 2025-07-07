@@ -42,7 +42,7 @@ namespace LSCore
     }
 
     [Serializable]
-    public class ClickableStates
+    public class SubmittableStates
     {
         private ReactBool select;
         private ReactBool press;
@@ -90,22 +90,32 @@ namespace LSCore
     {
         [SerializeReference] public BaseSubmittableAnim anim;
         [SerializeReference] public BaseSubmittableDoIter doIter;
+        [SerializeReference] public BaseSubmittableSelectBehaviour selectBehaviour;
         
         public Transform Transform { get; private set; }
         public event Action Submitted;
-        [field: SerializeField] public ClickableStates States { get; private set; } = new();
+        [field: SerializeField] public SubmittableStates States { get; private set; } = new();
 
         void ISubmittable.Init(Transform transform)
         {
             Transform = transform;
             anim.Init(this);
             doIter.Init(this);
+            selectBehaviour.Init(this);
+        }
+
+        public void OnEnable()
+        {
+            anim.OnEnable();
+            doIter.OnEnable();
+            selectBehaviour.OnEnable();
         }
 
         public void OnDisable()
         {
             anim.OnDisable();
             doIter.OnDisable();
+            selectBehaviour.OnDisable();
         }
 
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
@@ -156,6 +166,11 @@ namespace LSCore
             States.Hover = false;
             Debug.Log("OnPointerExit");
         }
+
+        void IMoveHandler.OnMove(AxisEventData eventData)
+        {
+            selectBehaviour.OnMove(eventData);
+        }
     }
     
     public class LSButton : LSImage, ISubmittableElement
@@ -173,6 +188,12 @@ namespace LSCore
         {
             base.Awake();
             submittable.Init(transform);
+        }
+
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            submittable.OnEnable();
         }
 
         protected override void OnDisable()

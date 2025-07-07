@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace LSCore
 {
@@ -16,32 +18,85 @@ namespace LSCore
             Init();
         }
         
-        protected abstract void Init();
-        public abstract void OnDisable();
+        protected virtual void Init(){}
+        public virtual void OnEnable(){}
+        public virtual void OnDisable(){}
     }
     
     [Serializable]
     public abstract class BaseSubmittableAnim : BaseSubmittableHandler{}
     [Serializable]
     public abstract class BaseSubmittableDoIter : BaseSubmittableHandler{}
+
     [Serializable]
-    public abstract class BaseSubmittableSelectBehaviour : BaseSubmittableHandler{}
+    public abstract class BaseSubmittableSelectBehaviour : BaseSubmittableHandler
+    {
+        public abstract void OnMove(AxisEventData eventData);
+    }
 
     [Serializable]
     public class DefaultSubmittableSelectBehaviour : BaseSubmittableSelectBehaviour
     {
         private Transform transform;
+        private static HashSet<ISubmittable> selectables = new();
+        
         protected override void Init()
         {
             transform = Submittable.Transform;
+            Submittable.States.SelectChanged += OnSelect;
+        }
+
+        private void OnSelect(bool isSelected)
+        {
+            if (isSelected)
+            {
+                var scrollRect = transform.GetComponentInParent<ScrollRect>();
+                if (scrollRect)
+                {
+                    scrollRect.GoTo(transform as RectTransform);
+                }
+            }
+        }
+
+        public override void OnEnable()
+        {
+            selectables.Add(Submittable);
         }
 
         public override void OnDisable()
         {
-            throw new NotImplementedException();
+            selectables.Remove(Submittable);
+        }
+
+        public override void OnMove(AxisEventData eventData)
+        {
+            var rotation = transform.rotation;
+            switch (eventData.moveDir)
+            {
+                case MoveDirection.Right:
+                    Navigate(eventData, FindSelectable(rotation * Vector3.right));
+                    break;
+
+                case MoveDirection.Up:
+                    Navigate(eventData, FindSelectable(rotation * Vector3.up));
+                    break;
+
+                case MoveDirection.Left:
+                    Navigate(eventData, FindSelectable(rotation * Vector3.left));
+                    break;
+
+                case MoveDirection.Down:
+                    Navigate(eventData, FindSelectable(rotation * Vector3.down));
+                    break;
+            }
         }
         
-        /*public Selectable FindSelectable(Vector3 dir)
+        void Navigate(AxisEventData eventData, ISubmittable sel)
+        {
+            eventData.selectedObject = sel.Transform.gameObject;
+        }
+
+        public ISubmittable FindSelectable(Vector3 dir)
         {
             dir = dir.normalized;
             Vector3 localDir = Quaternion.Inverse(transform.rotation) * dir;
@@ -50,33 +105,21 @@ namespace LSCore
             float maxFurthestScore = Mathf.NegativeInfinity;
             float score = 0;
 
-            bool wantsWrapAround = navigation.wrapAround && (m_Navigation.mode == Navigation.Mode.Vertical || m_Navigation.mode == Navigation.Mode.Horizontal);
+            ISubmittable bestPick = null;
+            ISubmittable bestFurthestPick = null;
 
-            Selectable bestPick = null;
-            Selectable bestFurthestPick = null;
-
-            for (int i = 0; i < s_SelectableCount; ++i)
+            foreach (var sel in selectables)
             {
-                Selectable sel = s_Selectables[i];
-
-                if (sel == this)
+                if (sel == Submittable)
                     continue;
-
-                if (!sel.IsInteractable() || sel.navigation.mode == Navigation.Mode.None)
-                    continue;
-
-#if UNITY_EDITOR
-                if (Camera.current != null && !UnityEditor.SceneManagement.StageUtility.IsGameObjectRenderedByCamera(sel.gameObject, Camera.current))
-                    continue;
-#endif
                 
-                var selRect = sel.transform as RectTransform;
-                Vector3 selCenter = selRect != null ? (Vector3)selRect.rect.center : Vector3.zero;
-                Vector3 myVector = sel.transform.TransformPoint(selCenter) - pos;
+                var selRect = sel.Transform as RectTransform;
+                Vector3 selCenter = selRect != null ? selRect.rect.center : Vector3.zero;
+                Vector3 myVector = sel.Transform.TransformPoint(selCenter) - pos;
 
                 float dot = Vector3.Dot(dir, myVector);
 
-                if (wantsWrapAround && dot < 0)
+                if (dot < 0)
                 {
                     score = -dot * myVector.sqrMagnitude;
 
@@ -101,10 +144,20 @@ namespace LSCore
                 }
             }
 
-            if (wantsWrapAround && null == bestPick) return bestFurthestPick;
+            if (null == bestPick) return bestFurthestPick;
 
             return bestPick;
-        }*/
+        }
+        
+        private static Vector3 GetPointOnRectEdge(RectTransform rect, Vector2 dir)
+        {
+            if (rect == null)
+                return Vector3.zero;
+            if (dir != Vector2.zero)
+                dir /= Mathf.Max(Mathf.Abs(dir.x), Mathf.Abs(dir.y));
+            dir = rect.rect.center + Vector2.Scale(rect.rect.size, dir * 0.5f);
+            return dir;
+        }
     }
 
     [Serializable]
