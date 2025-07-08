@@ -6,7 +6,7 @@ namespace LSCore.Extensions.Unity
 {
     public static class ParticleSystemExtensions
     {
-        private static Particle[] particles = new Particle[100];
+        private static Particle[] particles = new Particle[1000];
 
         public static void SetParticlesSize(int size) => particles = new Particle[size];
 
