@@ -139,6 +139,7 @@ namespace LSCore
     {
         private LSToggle toggle;
         private PropertyTree propertyTree;
+        private InspectorProperty submittable;
         private InspectorProperty clickActions;
         private InspectorProperty on;
         private InspectorProperty off;
@@ -151,6 +152,7 @@ namespace LSCore
             toggle = (LSToggle)target;
             propertyTree = PropertyTree.Create(serializedObject);
             clickActions = propertyTree.RootProperty.Children["clickActions"];
+            submittable = propertyTree.RootProperty.Children["submittable"];
             on = propertyTree.RootProperty.Children["on"];
             off = propertyTree.RootProperty.Children["off"];
             isOn = propertyTree.RootProperty.Children["isOn"];
@@ -172,6 +174,7 @@ namespace LSCore
             on.Draw();
             off.Draw();
             clickActions.Draw();
+            submittable.Draw();
             propertyTree.EndDraw();
             serializedObject.ApplyModifiedProperties();
         }

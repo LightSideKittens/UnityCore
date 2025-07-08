@@ -1,11 +1,14 @@
 ﻿using System;
 using DG.Tweening;
 using LSCore.AnimationsModule.Animations;
+using UnityEngine;
+using UnityEngine.UI;
+
+#if UNITY_EDITOR
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEditor.UI;
-using UnityEngine;
-using UnityEngine.UI;
+#endif
 
 namespace LSCore
 {
