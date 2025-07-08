@@ -79,6 +79,18 @@ namespace LSCore
             }
         }
         
+        public IEnumerable<KeyValuePair<TKey, TValue>> Pairs
+        {
+            get
+            {
+                Init();
+                foreach (var x1 in byKeyDict)
+                {
+                    yield return x1;
+                }
+            }
+        }
+        
         public TValue this[TKey key]
         {
             get
