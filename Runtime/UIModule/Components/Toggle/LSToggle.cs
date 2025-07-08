@@ -11,16 +11,22 @@ using UnityEditor;
 
 namespace LSCore
 {
-    public class LSToggle : LSImage, IPointerClickHandler, IToggle
+    public class LSToggle : LSImage, IToggle
     {
         [SerializeReference] public ShowHideAnim onOffAnim = new InOutShowHideAnim();
-        [SerializeField] private ClickActions clickActions;
         [SerializeReference] public List<DoIt> on = new();
         [SerializeReference] public List<DoIt> off = new();
         [SerializeReference] private BaseToggleData isOn;
+        
+        [SerializeReference] public ISubmittable submittable = new DefaultSubmittable();
+        [SerializeField] public ClickActions clickActions;
+        public object Submittable => submittable;
+        public event Action Submitted
+        {
+            add => submittable.Submitted += value;
+            remove => submittable.Submitted -= value;
+        }
 
-        public Transform Transform => transform;
-        public Action Clicked { get; set; }
         public Action<bool> ValueChanged { get; set; }
         
         /// <summary>
@@ -91,15 +97,6 @@ namespace LSCore
             }
         }
         
-        void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
-        {
-            if(!eventData.IsFirstTouch()) return;
-            clickActions.OnClick();
-            ForceSetState(!isOn);
-            Notify();
-            Clicked?.Invoke();
-        }
-
         protected override void Awake()
         {
             base.Awake();
@@ -110,6 +107,13 @@ namespace LSCore
             }
 #endif
             
+            submittable.Init(transform);
+            submittable.Submitted += () =>
+            {
+                clickActions.OnClick();
+                ForceSetState(!isOn);
+                Notify();
+            };
             onOffAnim.Init();
             ForceSetState(isOn);
             DOTweenExt.Complete(this);
@@ -119,6 +123,12 @@ namespace LSCore
         {
             base.Start();
             clickActions.Init();
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            submittable.OnDisable();
         }
     }
     
