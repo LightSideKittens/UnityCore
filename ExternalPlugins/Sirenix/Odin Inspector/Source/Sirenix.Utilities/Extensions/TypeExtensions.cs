@@ -468,7 +468,7 @@ namespace Sirenix.Utilities
 
                     if (method != null)
                     {
-                        result = (obj) => method.Invoke(null, new object[] { obj });
+                        result = method.CreateDelegate(typeof(Func<object, object>), null) as Func<object, object>;
                     }
 
                     WeaklyTypedTypeCastDelegates.AddInner(from, to, result);

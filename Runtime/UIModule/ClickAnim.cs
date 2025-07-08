@@ -1,82 +1,284 @@
 ﻿using System;
+using System.Collections.Generic;
 using DG.Tweening;
-using LSCore.Attributes;
-using Sirenix.OdinInspector;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 using UnityEngine;
-using Object = UnityEngine.Object;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace LSCore
 {
-    [Unwrap]
     [Serializable]
-    public struct ClickAnim
+    public abstract class BaseSubmittableHandler
     {
-        [CustomValueDrawer("DrawClickAnim")]
-        [SerializeField] private bool isDisabled;
+        public ISubmittable Submittable { get; private set; }
+
+        public void Init(ISubmittable submittable)
+        {
+            Submittable = submittable;
+            Init();
+        }
+        
+        protected virtual void Init(){}
+        public virtual void OnEnable(){}
+        public virtual void OnDisable(){}
+    }
+    
+    [Serializable]
+    public abstract class BaseSubmittableAnim : BaseSubmittableHandler{}
+    [Serializable]
+    public abstract class BaseSubmittableDoIter : BaseSubmittableHandler{}
+
+    [Serializable]
+    public abstract class BaseSubmittableSelectBehaviour : BaseSubmittableHandler
+    {
+        public abstract void OnMove(AxisEventData eventData);
+    }
+
+    [Serializable]
+    public class DefaultSubmittableSelectBehaviour : BaseSubmittableSelectBehaviour
+    {
+        private Transform transform;
+        private static HashSet<ISubmittable> selectables = new();
+        
+        protected override void Init()
+        {
+            transform = Submittable.Transform;
+            Submittable.States.SelectChanged += OnSelect;
+        }
+
+        private void OnSelect(bool isSelected)
+        {
+            if (isSelected)
+            {
+                var scrollRect = transform.GetComponentInParent<ScrollRect>();
+                if (scrollRect)
+                {
+                    scrollRect.GoTo(transform as RectTransform);
+                }
+            }
+        }
+
+        public override void OnEnable()
+        {
+            selectables.Add(Submittable);
+        }
+
+        public override void OnDisable()
+        {
+            selectables.Remove(Submittable);
+        }
+
+        public override void OnMove(AxisEventData eventData)
+        {
+            var rotation = transform.rotation;
+            switch (eventData.moveDir)
+            {
+                case MoveDirection.Right:
+                    Navigate(eventData, FindSelectable(rotation * Vector3.right));
+                    break;
+
+                case MoveDirection.Up:
+                    Navigate(eventData, FindSelectable(rotation * Vector3.up));
+                    break;
+
+                case MoveDirection.Left:
+                    Navigate(eventData, FindSelectable(rotation * Vector3.left));
+                    break;
+
+                case MoveDirection.Down:
+                    Navigate(eventData, FindSelectable(rotation * Vector3.down));
+                    break;
+            }
+        }
+        
+        void Navigate(AxisEventData eventData, ISubmittable sel)
+        {
+            eventData.selectedObject = sel.Transform.gameObject;
+        }
+
+        public ISubmittable FindSelectable(Vector3 dir)
+        {
+            dir = dir.normalized;
+            Vector3 localDir = Quaternion.Inverse(transform.rotation) * dir;
+            Vector3 pos = transform.TransformPoint(GetPointOnRectEdge(transform as RectTransform, localDir));
+            float maxScore = Mathf.NegativeInfinity;
+            float maxFurthestScore = Mathf.NegativeInfinity;
+            float score = 0;
+
+            ISubmittable bestPick = null;
+            ISubmittable bestFurthestPick = null;
+
+            foreach (var sel in selectables)
+            {
+                if (sel == Submittable)
+                    continue;
+                
+                var selRect = sel.Transform as RectTransform;
+                Vector3 selCenter = selRect != null ? selRect.rect.center : Vector3.zero;
+                Vector3 myVector = sel.Transform.TransformPoint(selCenter) - pos;
+
+                float dot = Vector3.Dot(dir, myVector);
+
+                if (dot < 0)
+                {
+                    score = -dot * myVector.sqrMagnitude;
+
+                    if (score > maxFurthestScore)
+                    {
+                        maxFurthestScore = score;
+                        bestFurthestPick = sel;
+                    }
+
+                    continue;
+                }
+
+                if (dot <= 0)
+                    continue;
+
+                score = dot / myVector.sqrMagnitude;
+
+                if (score > maxScore)
+                {
+                    maxScore = score;
+                    bestPick = sel;
+                }
+            }
+
+            if (null == bestPick) return bestFurthestPick;
+
+            return bestPick;
+        }
+        
+        private static Vector3 GetPointOnRectEdge(RectTransform rect, Vector2 dir)
+        {
+            if (rect == null)
+                return Vector3.zero;
+            if (dir != Vector2.zero)
+                dir /= Mathf.Max(Mathf.Abs(dir.x), Mathf.Abs(dir.y));
+            dir = rect.rect.center + Vector2.Scale(rect.rect.size, dir * 0.5f);
+            return dir;
+        }
+    }
+
+    [Serializable]
+    public class DefaultSubmittableDoIter : BaseSubmittableDoIter
+    {
+        [SerializeReference] public DoIt[] onSubmit;
+        
+        protected override void Init()
+        {
+            Submittable.Submitted += onSubmit.Do;
+        }
+
+        public override void OnDisable() { }
+    }
+
+    [Serializable]
+    public class DefaultSubmittableAnim : BaseSubmittableAnim
+    {
         private Transform transform;
         private Tween current;
         private Vector3 defaultScale;
+        private Vector3 targetScale;
+        private Vector3 scaleModification;
+        private bool isJustSubmitted;
         
-        public bool IsDisabled => isDisabled;
-
-        public void Init(Transform transform)
+        protected override void Init()
         {
-            this.transform = transform;
+            transform = Submittable.Transform;
+            defaultScale = transform.localScale;
+            targetScale = defaultScale;
+            Submittable.States.PressChanged += OnPress;
+            Submittable.States.HoverChanged += OnHover;
+            Submittable.States.SelectChanged += OnSelect;
+            Submittable.Submitted += OnSubmit;
         }
 
-#if UNITY_EDITOR
-        
-        public bool DrawClickAnim(bool value, GUIContent _)
+        private void OnSelect(bool isSelected)
         {
-            return !EditorGUILayout.Toggle("Is Animatable", !value);
-        }
-        
-        public void Editor_Draw(Object target)
-        {
-            EditorGUI.BeginChangeCheck();
-            isDisabled = !EditorGUILayout.Toggle("Is Animatable", !isDisabled);
-            if (EditorGUI.EndChangeCheck())
+            if (isSelected)
             {
-                EditorUtility.SetDirty(target);
+                scaleModification = defaultScale * 0.1f;
+            }
+            else
+            {
+                scaleModification = Vector3.zero;
+            }
+
+            AnimScale(0.15f);
+        }
+
+        private void OnHover(bool isHovering)
+        {
+            if(isHovering)
+            {
+                if (Submittable.States.Press)
+                {
+                    OnPress(true);
+                    return;
+                }
+                
+                targetScale = defaultScale * 1.1f;
+            }
+            else
+            {
+                targetScale = defaultScale;
+                
+                if (isJustSubmitted)
+                {
+                    return;
+                }
+            }
+            
+            AnimScale(0.15f);
+        }
+
+        private void OnPress(bool isPressing)
+        {
+            current.Kill();
+            float duration;
+            if (isPressing)
+            {
+                duration = 0.3f;
+                targetScale = defaultScale * 0.8f;
+            }
+            else
+            {
+                duration = 0.15f;
+                targetScale = defaultScale;
+            }
+
+            AnimScale(duration);
+        }
+        
+        private void OnSubmit()
+        {
+            targetScale = Submittable.States.Hover ? defaultScale * 1.1f : defaultScale;
+            AnimScale(0.5f).SetEase(Ease.OutElastic);
+            isJustSubmitted = true;
+            EventSystem.Updated += OnUpdate;
+
+
+            void OnUpdate()
+            {
+                EventSystem.Updated -= OnUpdate;
+                isJustSubmitted = false;
             }
         }
-#endif
-       
-        public void SetActive(bool active) => isDisabled = active;
-        
-        public void OnPointerDown()
-        {
-            if(isDisabled) return;
-            current.Complete();
-            defaultScale = transform.localScale;
-            current = transform.DOScale(defaultScale * 0.8f, 0.3f);
-        }
-        
-        public void OnClick()
-        {
-            if(isDisabled) return;
-            current.Kill();
-            current = transform.DOScale(defaultScale, 0.5f).SetEase(Ease.OutElastic);
-        }
-        
-        public void OnPointerUp()
-        {
-            if(isDisabled) return;
-            current.Kill();
-            current = transform.DOScale(defaultScale, 0.15f);
-        }
 
-        public void OnDisable()
+        public override void OnDisable()
         {
             current.Kill();
             if (current == null) return;
             transform.localScale = defaultScale;
             current = null;
+        }
+        
+        private Tween AnimScale(float duration)
+        {
+            current.Kill();
+            current = transform.DOScale(targetScale + scaleModification, duration);
+            return current;
         }
     }
 }
