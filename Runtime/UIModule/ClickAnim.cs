@@ -39,11 +39,40 @@ namespace LSCore
     {
         private Transform transform;
         private static HashSet<ISubmittable> selectables = new();
+        public bool selectOnPress = true;
+        public bool selectOnHover;
         
         protected override void Init()
         {
             transform = Submittable.Transform;
+            if (selectOnPress)
+            {
+                Submittable.States.PressChanged += OnPress;
+            }
+
+            if (selectOnHover)
+            {
+                Submittable.States.PressChanged += OnPress;
+            }
+            
             Submittable.States.SelectChanged += OnSelect;
+        }
+        
+
+        private void OnPress(bool isPressing)
+        {
+            if (isPressing)
+            {
+                EventSystem.current.SetSelectedGameObject(transform.gameObject, Submittable.States.currentEventData);
+            }
+        }
+        
+        private void OnHover(bool isHovering)
+        {
+            if (isHovering)
+            {
+                EventSystem.current.SetSelectedGameObject(transform.gameObject, Submittable.States.currentEventData);
+            }
         }
 
         private void OnSelect(bool isSelected)
@@ -181,7 +210,6 @@ namespace LSCore
         private Vector3 defaultScale;
         private Vector3 targetScale;
         private Vector3 scaleModification;
-        private bool isJustSubmitted;
         
         protected override void Init()
         {
@@ -189,48 +217,7 @@ namespace LSCore
             defaultScale = transform.localScale;
             targetScale = defaultScale;
             Submittable.States.PressChanged += OnPress;
-            Submittable.States.HoverChanged += OnHover;
-            Submittable.States.SelectChanged += OnSelect;
             Submittable.Submitted += OnSubmit;
-        }
-
-        private void OnSelect(bool isSelected)
-        {
-            if (isSelected)
-            {
-                scaleModification = defaultScale * 0.1f;
-            }
-            else
-            {
-                scaleModification = Vector3.zero;
-            }
-
-            AnimScale(0.15f);
-        }
-
-        private void OnHover(bool isHovering)
-        {
-            if(isHovering)
-            {
-                if (Submittable.States.Press)
-                {
-                    OnPress(true);
-                    return;
-                }
-                
-                targetScale = defaultScale * 1.1f;
-            }
-            else
-            {
-                targetScale = defaultScale;
-                
-                if (isJustSubmitted)
-                {
-                    return;
-                }
-            }
-            
-            AnimScale(0.15f);
         }
 
         private void OnPress(bool isPressing)
@@ -255,15 +242,6 @@ namespace LSCore
         {
             targetScale = Submittable.States.Hover ? defaultScale * 1.1f : defaultScale;
             AnimScale(0.5f).SetEase(Ease.OutElastic);
-            isJustSubmitted = true;
-            EventSystem.Updated += OnUpdate;
-
-
-            void OnUpdate()
-            {
-                EventSystem.Updated -= OnUpdate;
-                isJustSubmitted = false;
-            }
         }
 
         public override void OnDisable()

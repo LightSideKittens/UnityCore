@@ -40,13 +40,13 @@ namespace LSCore
             }
         }
     }
-
-    [Serializable]
+    
     public class SubmittableStates
     {
         private ReactBool select;
         private ReactBool press;
         private ReactBool hover;
+        public BaseEventData currentEventData;
         
         public event Action<bool> SelectChanged
         {
@@ -94,81 +94,81 @@ namespace LSCore
         
         public Transform Transform { get; private set; }
         public event Action Submitted;
-        [field: SerializeField] public SubmittableStates States { get; private set; } = new();
+        public SubmittableStates States { get; private set; } = new();
 
         void ISubmittable.Init(Transform transform)
         {
             Transform = transform;
-            anim.Init(this);
-            doIter.Init(this);
-            selectBehaviour.Init(this);
+            anim?.Init(this);
+            doIter?.Init(this);
+            selectBehaviour?.Init(this);
         }
 
         public void OnEnable()
         {
-            anim.OnEnable();
-            doIter.OnEnable();
-            selectBehaviour.OnEnable();
+            anim?.OnEnable();
+            doIter?.OnEnable();
+            selectBehaviour?.OnEnable();
         }
 
         public void OnDisable()
         {
-            anim.OnDisable();
-            doIter.OnDisable();
-            selectBehaviour.OnDisable();
+            anim?.OnDisable();
+            doIter?.OnDisable();
+            selectBehaviour?.OnDisable();
         }
 
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
         {
+            States.currentEventData = eventData;
             Submitted?.Invoke();
-            Debug.Log("OnPointerClick");
         }
         
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
         {
+            States.currentEventData = eventData;
             States.Press = true;
-            Debug.Log("OnPointerDown");
-            EventSystem.current.SetSelectedGameObject(Transform.gameObject, eventData);
         }
 
         void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
         {
+            States.currentEventData = eventData;
             States.Press = false;
-            Debug.Log("OnPointerUp");
         }
         
         void ISelectHandler.OnSelect(BaseEventData eventData)
         {
+            States.currentEventData = eventData;
             States.Select = true;
-            Debug.Log("OnSelect");
         }
 
         void IDeselectHandler.OnDeselect(BaseEventData eventData)
         {
+            States.currentEventData = eventData;
             States.Select = false;
-            Debug.Log("OnDeselect");
         }
 
         void ISubmitHandler.OnSubmit(BaseEventData eventData)
         {
+            States.currentEventData = eventData;
             Submitted?.Invoke();
-            Debug.Log("OnSubmit");
         }
 
         void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData)
         {
+            States.currentEventData = eventData;
             States.Hover = true;
-            Debug.Log("OnPointerEnter");
         }
 
         void IPointerExitHandler.OnPointerExit(PointerEventData eventData)
         {
+            States.currentEventData = eventData;
             States.Hover = false;
-            Debug.Log("OnPointerExit");
         }
 
         void IMoveHandler.OnMove(AxisEventData eventData)
         {
+            States.currentEventData = eventData;
             selectBehaviour.OnMove(eventData);
         }
     }

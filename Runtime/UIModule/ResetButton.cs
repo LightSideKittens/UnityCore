@@ -10,7 +10,6 @@ namespace LightSideCore.Runtime.UIModule
         
         public override void Do()
         {
-            button.Clicked = null;
             button.clickActions.actions.Clear();
         }
     }
