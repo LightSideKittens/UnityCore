@@ -37,7 +37,7 @@ namespace LSCore
             InitTriggerAction();
         }
         
-        public override void Handle(ArraySpan<Particle> particles)
+        public override void Handle(ArraySlice<Particle> particles)
         {
             var radiusScale = ps.trigger.radiusScale;
             Vector2 point = default;

@@ -140,7 +140,7 @@ namespace LSCore
 #if UNITY_EDITOR
         private HashSet<int> aliveParticlesIds = new();
 #endif
-        private void TryHandleDeath(ArraySpan<Particle> particles)
+        private void TryHandleDeath(ArraySlice<Particle> particles)
         {
             for (int i = 0; i < particles.Length; i++)
             {
@@ -162,7 +162,7 @@ namespace LSCore
             }
         }
 
-        private void TryInitParticles(ArraySpan<Particle> particles)
+        private void TryInitParticles(ArraySlice<Particle> particles)
         {
             ps.GetCustomParticleData(customData, ParticleSystemCustomData.Custom2);
             for (int i = 0; i < customData.Count; i++)

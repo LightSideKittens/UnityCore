@@ -16,8 +16,8 @@ namespace LSCore
 {
     public class LSText : TextMeshProUGUI
     {
-        private ListSpan<Emoji.Range> emojis;
-        private ListSpan<Emoji.Sprite> sprites;
+        private ListSlice<Emoji.Range> emojis;
+        private ListSlice<Emoji.Sprite> sprites;
         private Action releaseEmojiImages;
         public bool IsTextEmpty => string.IsNullOrEmpty(m_text);
         

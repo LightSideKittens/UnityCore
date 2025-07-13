@@ -217,7 +217,7 @@ namespace LSCore.NativeUtils
         private static List<Sprite> spritesArr = new (4096);
         private static List<Range> emojiRanges = new (4096);
         
-        public static ListSpan<Range> ParseEmojis(string text, out ListSpan<Sprite> sprites)
+        public static ListSlice<Range> ParseEmojis(string text, out ListSlice<Sprite> sprites)
         {
             var spritesDict = Config.Instance.sprites;
             var result = GetArray(text);
@@ -245,7 +245,7 @@ namespace LSCore.NativeUtils
                 }
             }
             
-            sprites = spritesArr.AsSpan(..i);
+            sprites = spritesArr.Slice(..i);
             return result;
         }
 
@@ -261,19 +261,19 @@ namespace LSCore.NativeUtils
             return API.CallStatic<byte[]>("emojiToRGBA32", emoji); 
         }
         
-        public static ListSpan<Range> GetArray(string text)
+        public static ListSlice<Range> GetArray(string text)
         {
 #if UNITY_EDITOR
             if (Application.isEditor)
             {
-                return ((IList<Range>)ProcessEmojis(text)).AsSpan(..);
+                return ((IList<Range>)ProcessEmojis(text)).Slice(..);
             }
 #endif
             var emojiRangesJavaArray = API.CallStatic<AndroidJavaObject[]>("parseEmojis", text);
 
             if (emojiRangesJavaArray == null || emojiRangesJavaArray.Length == 0)
             {
-                return ((IList<Range>)Array.Empty<Range>()).AsSpan(..);
+                return ((IList<Range>)Array.Empty<Range>()).Slice(..);
             }
             
             var i = 0;
@@ -300,10 +300,10 @@ namespace LSCore.NativeUtils
                 }
             }
             
-            return emojiRanges.AsSpan(..i);
+            return emojiRanges.Slice(..i);
         }
         
-        public static string ReplaceWithEmojiRanges(string input, ListSpan<Range> ranges, string replacement, ListSpan<Sprite> textures)
+        public static string ReplaceWithEmojiRanges(string input, ListSlice<Range> ranges, string replacement, ListSlice<Sprite> textures)
         {
             var result = new StringBuilder(input);
             var offset = 0; 

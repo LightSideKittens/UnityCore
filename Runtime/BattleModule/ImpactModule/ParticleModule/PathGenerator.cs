@@ -113,7 +113,7 @@ namespace LSCore
             SimulateParticles(simulateTime);
         }
         
-        private void TryInitParticles(ArraySpan<Particle> particles)
+        private void TryInitParticles(ArraySlice<Particle> particles)
         {
             ps.GetCustomParticleData(customData, ParticleSystemCustomData.Custom2);
             for (int i = 0; i < customData.Count; i++)

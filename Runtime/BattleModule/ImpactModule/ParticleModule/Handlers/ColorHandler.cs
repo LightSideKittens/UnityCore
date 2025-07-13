@@ -9,7 +9,7 @@ namespace LSCore
         [SerializeField] private Color32 secondColor;
         [SerializeField] private AnimationCurve curve;
         
-        public override void Handle(ArraySpan<ParticleSystem.Particle> particles)
+        public override void Handle(ArraySlice<ParticleSystem.Particle> particles)
         {
             for (int i = 0; i < particles.Length; i++)
             {

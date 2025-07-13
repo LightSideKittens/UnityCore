@@ -479,7 +479,7 @@ public partial class MoveIt : MonoBehaviour, IAnimatable<MoveIt.HandlerEvaluator
 
         endIndex++;
 
-        var span = events.AsSpan(startIndex..endIndex);
+        var span = events.Slice(startIndex..endIndex);
         if (span.Count == 0) return;
 
         if (reverse)
