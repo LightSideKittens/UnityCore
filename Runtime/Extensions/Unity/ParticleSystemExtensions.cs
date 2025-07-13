@@ -10,13 +10,13 @@ namespace LSCore.Extensions.Unity
 
         public static void SetParticlesSize(int size) => particles = new Particle[size];
 
-        public static ArraySpan<Particle> GetParticles(this ParticleSystem ps)
+        public static ArraySlice<Particle> GetParticles(this ParticleSystem ps)
         {
             var num = ps.GetParticles(particles);
-            return particles.AsSpan(..num);
+            return particles.Slice(..num);
         }
         
-        public static void SetParticles(this ParticleSystem ps, ArraySpan<Particle> particles)
+        public static void SetParticles(this ParticleSystem ps, ArraySlice<Particle> particles)
         {
             ps.SetParticles(particles.array, particles.Length);
         }

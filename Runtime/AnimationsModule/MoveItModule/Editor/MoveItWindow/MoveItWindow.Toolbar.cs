@@ -90,7 +90,7 @@ public partial class MoveItWindow
         {
             moveItClips.Insert(moveItClips.Count - 1, clip);
             CreateClipSelector(moveItClips);
-            CreateDeleteClipSelector(moveItClips.AsSpan(..^2));
+            CreateDeleteClipSelector(moveItClips.Slice(..^2));
         }
 
         private void CreateClipSelector(IEnumerable<MoveItClip> clips)

@@ -8,7 +8,7 @@ namespace LSCore
     {
         [SerializeField] private Vector3 force;
         
-        public override void Handle(ArraySpan<ParticleSystem.Particle> particles)
+        public override void Handle(ArraySlice<ParticleSystem.Particle> particles)
         {
             var dt = Time.deltaTime;
 #if UNITY_EDITOR

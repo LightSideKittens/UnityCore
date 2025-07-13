@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using LSCore.DataStructs;
 using UnityEngine;
 
 namespace LSCore
@@ -61,9 +62,9 @@ namespace LSCore
 
             private readonly Touch[] dataBuffer = new Touch[20];
             
-            public LSTouch[] GetTouches()
+            public ArraySlice<LSTouch> GetTouches()
             {
-                if(touches.Count == 0) return Array.Empty<LSTouch>();
+                if(touches.Count == 0) return ArraySlice<LSTouch>.empty;
                 
                 int count = 0;
                 int endedCount = 0;
@@ -120,8 +121,8 @@ namespace LSCore
                         touches.Remove(dataBuffer[i]);
                     }
                 }
-                
-                return touchesBuffer[..count];
+
+                return touchesBuffer.Slice(..count);
             }
         }
     }

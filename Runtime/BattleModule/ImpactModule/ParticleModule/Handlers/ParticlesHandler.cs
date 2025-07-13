@@ -7,7 +7,7 @@ namespace LSCore
     [Serializable]
     public abstract class ParticlesHandler
     {
-        public abstract void Handle(ArraySpan<Particle> particles);
+        public abstract void Handle(ArraySlice<Particle> particles);
     }
         
     [Serializable]

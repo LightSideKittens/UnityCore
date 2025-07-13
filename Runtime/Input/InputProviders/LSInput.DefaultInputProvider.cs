@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using LSCore.DataStructs;
+using UnityEngine;
 
 namespace LSCore
 {
@@ -15,25 +16,25 @@ namespace LSCore
             {
             }
 
-            public LSTouch[] GetTouches()
+            public ArraySlice<LSTouch> GetTouches()
             {
 #if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
-            var count = Input.touchCount;
-            for (int i = 0; i < count; i++)
-            {
-                var t = Input.GetTouch(i);
-                touchesBuffer[i] = new LSTouch
+                var count = Input.touchCount;
+                for (int i = 0; i < count; i++)
                 {
-                    fingerId = t.fingerId,
-                    position = t.position,
-                    deltaPosition = t.deltaPosition,
-                    phase = t.phase
-                };
-            }
-            return touchesBuffer[..count];
+                    var t = Input.GetTouch(i);
+                    touchesBuffer[i] = new LSTouch
+                    {
+                        fingerId = t.fingerId,
+                        position = t.position,
+                        deltaPosition = t.deltaPosition,
+                        phase = t.phase
+                    };
+                }
+                return touchesBuffer.Slice(..count);
 #else
                 Vector2 current = Input.mousePosition;
-                LSTouch t = default;
+                LSTouch? t = null;
 
                 if (Input.GetMouseButtonDown(0))
                 {
@@ -56,8 +57,13 @@ namespace LSCore
                         { fingerId = 0, position = current, deltaPosition = Vector2.zero, phase = TouchPhase.Ended };
                 }
 
-                touchesBuffer[0] = t;
-                return touchesBuffer[..1];
+                if (t != null)
+                {
+                    touchesBuffer[0] = t.Value;
+                    return touchesBuffer.Slice(..1);
+                }
+
+                return ArraySlice<LSTouch>.empty;
 #endif
             }
         }

@@ -1,7 +1,9 @@
-﻿namespace LSCore
+﻿using LSCore.DataStructs;
+
+namespace LSCore
 {
     internal interface IInputProvider
     {
-        LSTouch[] GetTouches();
+        ArraySlice<LSTouch> GetTouches();
     }
 }

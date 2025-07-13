@@ -59,7 +59,7 @@ public class UIParticleAttractor : MonoBehaviour
         currentId = Vector4.zero;
         
         int count = ps.particleCount;
-        ArraySpan<Particle> arr = ps.GetParticles();
+        ArraySlice<Particle> arr = ps.GetParticles();
         TryInitParticles(ps);
         var tweens = new Tween[count];
             

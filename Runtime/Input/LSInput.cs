@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using LSCore.DataStructs;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -30,9 +31,9 @@ namespace LSCore
     {
         private static readonly LSTouch[] touchesBuffer = new LSTouch[20];
         private static IInputProvider provider = DefaultInputProvider.Instance;
-        private static LSTouch[] currentTouches = Array.Empty<LSTouch>();
+        private static ArraySlice<LSTouch> currentTouches = ArraySlice<LSTouch>.empty;
 
-        public static LSTouch[] Touches => currentTouches;
+        public static ArraySlice<LSTouch> Touches => currentTouches;
 
         public static int TouchCount => currentTouches.Length;
 
