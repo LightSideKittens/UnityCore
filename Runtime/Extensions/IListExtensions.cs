@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEngine;
 
 namespace LSCore.Extensions
 {
@@ -83,6 +84,18 @@ namespace LSCore.Extensions
             index = UnityEngine.Random.Range(0, list.Count);
             return list[index];
         }
+
+        public static bool HasIndex<T>(this T[,] array, int x, int y)
+        {
+            var width = array.GetLength(0);
+            var height = array.GetLength(1);
+            return x >= 0 && x < width && y >= 0 && y < height;
+        }
+
+        public static bool HasIndex<T>(this T[,] array, Vector2Int index) => array.HasIndex(index.x, index.y);
+
+        public static T Get<T>(this T[,] array, Vector2Int index) => array[index.x, index.y];
+        public static T Set<T>(this T[,] array, Vector2Int index, T value) => array[index.x, index.y] = value;
 
         public static T ClosestBinarySearch<T>(this IList<T> list, Func<T, float> arr, float target, float tolerance = 0.0001f) => list.ClosestBinarySearch(arr, target, out _, tolerance);
         
