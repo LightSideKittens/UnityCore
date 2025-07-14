@@ -98,6 +98,10 @@ namespace LSCore
                 Released += RemoveActive;
                 activeSet.Clear();
             }
+            else
+            {
+                Burger.Warning($"{GetType().Name} shouldStoreActive is false, but you are trying to ReleaseAll. Set shouldStoreActive as true");
+            }
         }
 
         
