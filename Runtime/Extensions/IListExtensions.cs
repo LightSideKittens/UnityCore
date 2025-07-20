@@ -94,6 +94,7 @@ namespace LSCore.Extensions
 
         public static bool HasIndex<T>(this T[,] array, Vector2Int index) => array.HasIndex(index.x, index.y);
 
+        public static Vector2Int GetSize<T>(this T[,] array) => new(array.GetLength(0), array.GetLength(1));
         public static T Get<T>(this T[,] array, Vector2Int index) => array[index.x, index.y];
         public static T Set<T>(this T[,] array, Vector2Int index, T value) => array[index.x, index.y] = value;
 
