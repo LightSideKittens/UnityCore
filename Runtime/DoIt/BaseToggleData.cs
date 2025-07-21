@@ -1,4 +1,6 @@
 ﻿using System;
+using LSCore.Attributes;
+using Sirenix.OdinInspector;
 
 [Serializable]
 public abstract class BaseToggleData
@@ -27,4 +29,18 @@ public abstract class BaseToggleData
     public Action<bool> valueChanged;
         
     public static implicit operator bool(BaseToggleData data) => data.IsOn;
+}
+
+[Serializable]
+[HideReferenceObjectPicker]
+[Unwrap]
+public class DefaultToggleData : BaseToggleData
+{
+    public bool isOn;
+    protected override bool Get => isOn;
+
+    protected override bool Set
+    {
+        set => isOn = value;
+    }
 }
