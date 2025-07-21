@@ -26,7 +26,14 @@ namespace LSCore
         {
             if(cam) Fit();
         }
-        private void Update() => Fit();
+        
+        private void Update()
+        {
+            if (World.IsEditMode)
+            {
+                Fit();
+            }
+        }
 #else
         void OnEnable() => Fit();
 #endif
