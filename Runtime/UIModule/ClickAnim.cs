@@ -25,8 +25,23 @@ namespace LSCore
     
     [Serializable]
     public abstract class BaseSubmittableAnim : BaseSubmittableHandler{}
+
     [Serializable]
-    public abstract class BaseSubmittableDoIter : BaseSubmittableHandler{}
+    public abstract class BaseSubmittableDoIter : BaseSubmittableHandler
+    {
+        
+        [SerializeReference] public List<DoIt> onSubmit;
+
+        public void Subscribe()
+        {
+            Submittable.Submitted += onSubmit.Do;
+        }
+
+        public void Unsubscribe()
+        {
+            Submittable.Submitted -= onSubmit.Do;
+        }
+    }
 
     [Serializable]
     public abstract class BaseSubmittableSelectBehaviour : BaseSubmittableHandler
@@ -192,11 +207,10 @@ namespace LSCore
     [Serializable]
     public class DefaultSubmittableDoIter : BaseSubmittableDoIter
     {
-        [SerializeReference] public DoIt[] onSubmit;
         
         protected override void Init()
         {
-            Submittable.Submitted += onSubmit.Do;
+            Subscribe();
         }
 
         public override void OnDisable() { }

@@ -6,7 +6,6 @@ namespace LSCore
     public class SubmittableRect : MonoBehaviour, ISubmittableElement
     {
         [SerializeReference] public ISubmittable submittable = new DefaultSubmittable();
-        [SerializeField] public ClickActions clickActions;
         public object Submittable => submittable;
         public event Action Submitted
         {

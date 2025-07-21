@@ -19,7 +19,6 @@ namespace LSCore
         [SerializeReference] private BaseToggleData isOn;
         
         [SerializeReference] public ISubmittable submittable = new DefaultSubmittable();
-        [SerializeField] public ClickActions clickActions;
         public object Submittable => submittable;
         public event Action Submitted
         {
@@ -110,7 +109,6 @@ namespace LSCore
             submittable.Init(transform);
             submittable.Submitted += () =>
             {
-                clickActions.OnClick();
                 ForceSetState(!isOn);
                 Notify();
             };
@@ -122,7 +120,6 @@ namespace LSCore
         protected override void Start()
         {
             base.Start();
-            clickActions.Init();
         }
 
         protected override void OnDisable()
@@ -140,7 +137,6 @@ namespace LSCore
         private LSToggle toggle;
         private PropertyTree propertyTree;
         private InspectorProperty submittable;
-        private InspectorProperty clickActions;
         private InspectorProperty on;
         private InspectorProperty off;
         private InspectorProperty isOn;
@@ -151,7 +147,6 @@ namespace LSCore
             base.OnEnable();
             toggle = (LSToggle)target;
             propertyTree = PropertyTree.Create(serializedObject);
-            clickActions = propertyTree.RootProperty.Children["clickActions"];
             submittable = propertyTree.RootProperty.Children["submittable"];
             on = propertyTree.RootProperty.Children["on"];
             off = propertyTree.RootProperty.Children["off"];
@@ -173,7 +168,6 @@ namespace LSCore
             isOn.Draw();
             on.Draw();
             off.Draw();
-            clickActions.Draw();
             submittable.Draw();
             propertyTree.EndDraw();
             serializedObject.ApplyModifiedProperties();

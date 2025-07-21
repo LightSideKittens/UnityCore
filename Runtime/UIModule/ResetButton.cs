@@ -10,7 +10,7 @@ namespace LightSideCore.Runtime.UIModule
         
         public override void Do()
         {
-            button.clickActions.actions.Clear();
+            button.submittable.doIter.Unsubscribe();
         }
     }
 }
