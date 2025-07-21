@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using LSCore.Extensions.Unity;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace LSCore
@@ -12,7 +13,9 @@ namespace LSCore
 
         private RectTransform source;
         private DrivenRectTransformTracker tracker;
-        private Vector2 lastPosition;
+        private Vector3 lastPosition;
+        private Quaternion lastRotation;
+        private Vector3 lastScale;
         
         protected override void Awake()
         {
@@ -36,11 +39,11 @@ namespace LSCore
             
             tracker.Clear();
             tracker.Add(this, target, 
-                DrivenTransformProperties.AnchoredPosition |
                 DrivenTransformProperties.SizeDelta |
                 DrivenTransformProperties.AnchorMin |
                 DrivenTransformProperties.AnchorMax |
                 DrivenTransformProperties.Pivot |
+                DrivenTransformProperties.AnchoredPosition3D |
                 DrivenTransformProperties.Rotation |
                 DrivenTransformProperties.Scale);
             
@@ -54,17 +57,20 @@ namespace LSCore
 
         private void SyncTransforms()
         {
-            if (target == null || source == null)
-                return;
-
+#if UNITY_EDITOR
+            if (World.IsEditMode)
+            {
+                if(target == null || source == null) return;
+            }
+#endif
             target.gameObject.SetActive(gameObject.activeSelf);
-            target.anchoredPosition = source.anchoredPosition + anchoredPosOffset;
-            target.sizeDelta = source.sizeDelta;
-            target.anchorMin = source.anchorMin;
-            target.anchorMax = source.anchorMax;
             target.pivot = source.pivot;
+            target.anchorMin = LSVector2.half;
+            target.anchorMax = LSVector2.half;
+            target.sizeDelta = source.rect.size;
             target.rotation = source.rotation;
-            target.localScale = source.localScale;
+            target.position = source.position;
+            target.SetLossyScale(source.lossyScale);
         }
 
 #if UNITY_EDITOR
@@ -76,17 +82,25 @@ namespace LSCore
         
         private void Update()
         {
-#if UNITY_EDITOR
-            if (World.IsEditMode)
+            var pos = source.position;
+            if (lastPosition != pos)
             {
-                if(target == null) return;
+                target.position = pos;
+                lastPosition = pos;
             }
-#endif
-            var srcPos = source.anchoredPosition;
-            if (srcPos != lastPosition)
+
+            var rot = source.rotation;
+            if (lastRotation != rot)
             {
-                target.anchoredPosition = srcPos + anchoredPosOffset;
-                lastPosition = srcPos;
+                target.rotation = rot;
+                lastRotation = rot;
+            }
+            
+            var scale = source.lossyScale;
+            if (lastScale != scale)
+            {
+                target.SetLossyScale(scale);
+                lastScale = scale;
             }
         }
         

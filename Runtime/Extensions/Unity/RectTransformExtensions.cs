@@ -40,5 +40,40 @@ namespace LSCore.Extensions.Unity
             size.x = x;
             target.sizeDelta = size;
         }
+        
+        public static void FitToWorldRect(this RectTransform uiRect,
+            Bounds worldBounds,
+            Camera cam,
+            Canvas canvas)
+        {
+            Vector3[] worldCorners = new Vector3[4]
+            {
+                new(worldBounds.min.x, worldBounds.min.y, worldBounds.center.z),
+                new(worldBounds.min.x, worldBounds.max.y, worldBounds.center.z),
+                new(worldBounds.max.x, worldBounds.max.y, worldBounds.center.z),
+                new(worldBounds.max.x, worldBounds.min.y, worldBounds.center.z) 
+            };
+
+            Vector2 min = Vector2.positiveInfinity;
+            Vector2 max = Vector2.negativeInfinity;
+            
+            bool overlay = canvas.renderMode == RenderMode.ScreenSpaceOverlay;
+
+            foreach (Vector3 w in worldCorners)
+            {
+                Vector2 screen = RectTransformUtility.WorldToScreenPoint(cam, w);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    (RectTransform)uiRect.parent, screen, overlay ? null : cam, out Vector2 local);
+
+                min = Vector2.Min(min, local);
+                max = Vector2.Max(max, local);
+            }
+            
+            var lastPivot = uiRect.pivot;
+            uiRect.pivot = new Vector2(0, 0);
+            uiRect.localPosition = min;
+            uiRect.sizeDelta = max - min;
+            uiRect.SetPivot(lastPivot);
+        }
     }
 }

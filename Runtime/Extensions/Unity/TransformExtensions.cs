@@ -25,5 +25,14 @@ namespace LSCore.Extensions.Unity
             pos.y = y;
             transform.position = pos;
         }
+        public static void SetLossyScale(this Transform tr, Vector3 worldScale)
+        {
+            Vector3 parentScale = tr.parent ? tr.parent.lossyScale : Vector3.one;
+            
+            tr.localScale = new Vector3(
+                parentScale.x == 0 ? 0 : worldScale.x / parentScale.x,
+                parentScale.y == 0 ? 0 : worldScale.y / parentScale.y,
+                parentScale.z == 0 ? 0 : worldScale.z / parentScale.z);
+        }
     }
 }

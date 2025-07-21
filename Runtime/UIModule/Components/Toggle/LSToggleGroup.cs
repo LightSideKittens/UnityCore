@@ -49,11 +49,17 @@ namespace LSCore
 
             public void Clear()
             {
+                if (eventHandlers.Count == 0)
+                {
+                    goto ret;
+                }
+                
                 for (int i = 0; i < toggles.Count; i++)
                 {
                     toggles[i].ValueChanged -= eventHandlers[i];
                 }
-                
+
+                ret:
                 eventHandlers.Clear();
                 toggles.Clear();
             }
@@ -64,16 +70,23 @@ namespace LSCore
 
             void ISerializationCallbackReceiver.OnAfterDeserialize()
             {
-                var list = new List<LSToggle>(toggles);
-                Clear();
-                AddRange(list);
+                if(World.IsEditMode) return;
+                World.Updated += OnUpdated;
+
+                void OnUpdated()
+                {
+                    World.Updated -= OnUpdated;
+                    var list = new List<LSToggle>(toggles);
+                    Clear();
+                    AddRange(list);
+                }
             }
         }
 
         [Serializable]
         public class OnlyOne : Handler
         {
-            [MinMaxSlider(0, "MaxRange")] public Vector2Int countCanBeActive;
+            [PropertyRange(0, "MaxRange")] public int countCanBeActive;
             
             private int CurrentActive => toggles.Count(x => x.IsOn);
             private int lastActive = -1;
@@ -83,12 +96,21 @@ namespace LSCore
             {
                 if (value)
                 {
-                    if (CurrentActive > countCanBeActive.y)
+                    if (CurrentActive > countCanBeActive)
                     {
-                        if (lastActive > 0 && lastActive < toggles.Count)
+                        if (lastActive >= 0 && lastActive < toggles.Count)
                         {
                             toggles[lastActive].IsOn = false;
                         }
+                    }
+
+                    lastActive = index;
+                }
+                else
+                {
+                    if (CurrentActive == 0)
+                    {
+                        lastActive = -1;
                     }
                 }
             }
