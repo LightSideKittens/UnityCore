@@ -96,7 +96,7 @@ namespace LSCore
         public event Action Submitted;
         public SubmittableStates States { get; private set; } = new();
 
-        void ISubmittable.Init(Transform transform)
+        public void Init(Transform transform)
         {
             Transform = transform;
             anim?.Init(this);
@@ -175,8 +175,7 @@ namespace LSCore
     
     public class LSButton : LSImage, ISubmittableElement
     {
-        [SerializeReference] public ISubmittable submittable = new DefaultSubmittable();
-        [SerializeField] public ClickActions clickActions;
+        [SerializeReference] public DefaultSubmittable submittable = new ();
         public object Submittable => submittable;
         public event Action Submitted
         {
@@ -210,7 +209,6 @@ namespace LSCore
     {
         private LSButton button;
         private PropertyTree propertyTree;
-        private InspectorProperty clickActions;
         private InspectorProperty submittable;
         
         protected override void OnEnable()
@@ -219,7 +217,6 @@ namespace LSCore
             button = (LSButton)target;
             propertyTree = PropertyTree.Create(serializedObject);
             submittable = propertyTree.RootProperty.Children["submittable"];
-            clickActions = propertyTree.RootProperty.Children["clickActions"];
         }
 
         protected override void OnDisable()
@@ -232,7 +229,6 @@ namespace LSCore
         {
             DrawImagePropertiesAsFoldout();
             propertyTree.BeginDraw(true);
-            clickActions.Draw();
             submittable.Draw();
             propertyTree.EndDraw();
             serializedObject.ApplyModifiedProperties();
