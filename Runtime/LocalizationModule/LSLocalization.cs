@@ -10,6 +10,14 @@ namespace LSCore
 {
     public static class LSLocalization
     {
+        [Serializable]
+        public struct Key
+        {
+            public string key;
+            public long id;
+            public bool IsValid => !string.IsNullOrEmpty(key) || id > 0;
+        }
+        
         public static string MissedText = "Oops...";
         private static Locale locale;
 
@@ -50,12 +58,22 @@ namespace LSCore
         
         public static string Translate(this string key, StringTable table, params object[] args)
         {
+            return new Key{key = key}.Translate(table, MissedText, args);
+        }
+        
+        public static string Translate(this long id, StringTable table, params object[] args)
+        {
+            return new Key{id = id}.Translate(table, MissedText, args);
+        }
+        
+        public static string Translate(this Key key, StringTable table, params object[] args)
+        {
             return key.Translate(table, MissedText, args);
         }
         
-        public static string Translate(this string key, StringTable table, string missedText, params object[] args)
+        public static string Translate(this Key key, StringTable table, string missedText, params object[] args)
         {
-            if (key == null)
+            if (!key.IsValid)
             {
 #if UNITY_EDITOR
                 if (World.IsEditMode) return "Key is null";
@@ -71,7 +89,7 @@ namespace LSCore
                 return missedText;
             }
             
-            var text = table.GetEntry(key)?.Value;
+            var text = string.IsNullOrEmpty(key.key) ? table.GetEntry(key.id)?.Value : table.GetEntry(key.key)?.Value;
             if (text != null)
             {
                 if (args is { Length: > 0 })
