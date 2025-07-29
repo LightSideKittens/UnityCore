@@ -8,9 +8,10 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 [Serializable]
-public abstract class Get<T>
+public abstract class Get<T> : IGetRaw<T>
 {
     public abstract T Data { get; }
+    object IGetRaw.Data => Data;
 
     public static implicit operator T(Get<T> provider)
     {
@@ -28,9 +29,13 @@ public abstract class Get<T>
     }
 }
 
-public interface IGetRaw<[UsedImplicitly]T>
+public interface IGetRaw
 {
-    public object Data { get; }
+    object Data { get; }
+}
+
+public interface IGetRaw<[UsedImplicitly]T> : IGetRaw
+{
 }
 
 public interface IKeyGet<T>
@@ -41,30 +46,28 @@ public interface IKeyGet<T>
 
 [Serializable]
 [HideReferenceObjectPicker]
-public class SerializeField<T> : Get<T>, IGetRaw<T>
+public class SerializeField<T> : Get<T>
 {
     [SerializeField] 
     [HideLabel] public T data;
-    
-    object IGetRaw<T>.Data => data;
     public override T Data => data;
 }
 
 [Serializable]
 [HideReferenceObjectPicker]
-public class SerializeReference<T> : Get<T>, IGetRaw<T>
+public class SerializeReference<T> : Get<T>
 {
     [SerializeReference] 
     [HideLabel] public T data;
-    
-    object IGetRaw<T>.Data => data;
     public override T Data => data;
 }
 
 [Serializable]
-public class CastBuffer<T> : Get<T>
+[HideReferenceObjectPicker]
+public class Cast<T> : Get<T>
 {
-    [SerializeReference] public IGetRaw<T> provider;
+    [SerializeReference] public IGetRaw provider;
+    
     public override T Data
     {
         get
@@ -136,7 +139,7 @@ public class StructProperty<T> : BaseGetRaw<T> where T : struct
 [Serializable]
 public class FromBuffer<T> : Get<T>, IGetRaw<T>
 {
-    object IGetRaw<T>.Data => DataBuffer<object>.value;
+    object IGetRaw.Data => DataBuffer<object>.value;
     public override T Data => DataBuffer<T>.value;
 }
 
@@ -145,7 +148,7 @@ public class FromKeyBuffer<T> : Get<T>, IGetRaw<T>, IKeyGet<T>
 {
     public string key;
     
-    object IGetRaw<T>.Data => StringDict<object>.Get(string.Concat(key, typeof(T).GetSimpleFullName()));
+    object IGetRaw.Data => StringDict<object>.Get(string.Concat(key, typeof(T).GetSimpleFullName()));
     public override T Data => StringDict<T>.Get(key);
     [JsonIgnore] public string Key => key;
 }

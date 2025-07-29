@@ -11,6 +11,7 @@ namespace LSCore.AnimationsModule.Animations
     {
         protected override void InitAction(RectTransform target)
         {
+            //SetSatrtValue(() => target.anchoredPosition, x => target.anchoredPosition = x, (a, b) => a + b);
             target.anchoredPosition = startValue;
         }
 
