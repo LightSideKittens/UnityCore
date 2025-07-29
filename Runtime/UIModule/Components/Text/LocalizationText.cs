@@ -53,10 +53,16 @@ namespace LSCore
     [Serializable]
     public struct LocalizationData
     {
+        public bool IsValid => id > 0;
         public SharedTableData tableData;
-
-        [ValueDropdown("LocalizationKeys")]
-        public string key;
+        
+        public string Key
+        {
+            get => tableData.GetKey(id);
+            set => id = tableData.GetId(value);
+        }
+        
+        [ValueDropdown("LocalizationKeys")] public long id;
 
         [SerializeReference] private ILocalizationArgument[] arguments;
 #if UNITY_EDITOR
@@ -71,16 +77,16 @@ namespace LSCore
         public object[] Arguments => rawArguments ?? arguments;
         
 #if UNITY_EDITOR
-        public IEnumerable<string> LocalizationKeys
+        public IEnumerable<ValueDropdownItem<long>> LocalizationKeys
         {
             get
             {
-                yield return "";
+                yield return new ValueDropdownItem<long>("", 0);
                 if (tableData != null)
                 {
                     foreach (var entry in tableData.Entries)
                     {
-                        yield return entry.Key;
+                        yield return new ValueDropdownItem<long>(entry.Key, entry.Id);
                     }
                 }
             }
@@ -98,7 +104,7 @@ namespace LSCore
         public void SetLocalizationData(LocalizationData data)
         {
             TableData = data.tableData;
-            Localize(data.key, data.Arguments);
+            Localize(data.id, data.Arguments);
             if (!isTableLoading && table == null) UpdateTable();
         }
         
@@ -153,11 +159,11 @@ namespace LSCore
             }
         }
 
-        public void Localize(string key, params object[] args)
+        public void Localize(long id, params object[] args)
         {
             m_text = string.Empty;
             localizationData.rawArguments = args;
-            localizationData.key = key;
+            localizationData.id = id;
             UpdateLocalizedText();
         }
         
@@ -175,19 +181,19 @@ namespace LSCore
             if(!IsLocalized) return;
             
             var lastText = m_text;
-            localizedText = localizationData.key.Translate(Table, localizationData.Arguments);
+            localizedText = localizationData.id.Translate(Table, localizationData.Arguments);
             base.text = localizedText;
             m_text = lastText;
         }
-        
-        public bool IsLocalized => !string.IsNullOrEmpty(localizationData.key);
+
+        public bool IsLocalized => localizationData.IsValid;
         
         public override string text
         {
             get => IsLocalized ? localizedText : base.text;
             set
             {
-                localizationData.key = string.Empty;
+                localizationData.id = 0;
                 base.text = value;
             }
         }
