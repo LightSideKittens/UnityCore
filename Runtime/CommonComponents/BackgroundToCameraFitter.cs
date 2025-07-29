@@ -7,6 +7,7 @@ namespace LSCore
     [ExecuteAlways]
     public class BackgroundToCameraFitter : MonoBehaviour
     {
+        public Vector3 scaleOffset;
         public SpriteRenderer backgroundRenderer;
         private Camera cam;
 
@@ -47,7 +48,7 @@ namespace LSCore
             
             float k = Mathf.Max(camSize.x / spriteSize.x, camSize.y / spriteSize.y);
             var newScale = Vector3.one * k;
-            
+            newScale += scaleOffset;
             backgroundRenderer.transform.localScale = newScale;
             
             Vector3 pos = cam.transform.position;
