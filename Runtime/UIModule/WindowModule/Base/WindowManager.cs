@@ -150,7 +150,10 @@ namespace LSCore
                 onComplete();
                 return;
             }
-            hideTween?.Kill();
+            if (tween != hideTween)
+            {
+                hideTween?.Kill();
+            }
             hideTween = null;
             tween.OnComplete(onComplete).OnRewind(onComplete);
             if (tween.Duration() == 0)
@@ -176,7 +179,11 @@ namespace LSCore
                 onComplete();
                 return;
             }
-            showTween?.Kill();
+
+            if (tween != showTween)
+            {
+                showTween?.Kill();
+            }
             showTween = null;
             tween.OnComplete(onComplete).OnRewind(onComplete);
             if (tween.Duration() == 0)

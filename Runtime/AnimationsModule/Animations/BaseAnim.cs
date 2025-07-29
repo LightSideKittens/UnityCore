@@ -135,5 +135,20 @@ namespace LSCore.AnimationsModule.Animations
         {
             (startValue, endValue) = (endValue, startValue);
         }
+
+        public void SetSatrtValue(Func<TValue> getter, Action<TValue> setter, Func<TValue, TValue, TValue> modificator)
+        {
+            for (var i = 0; i < options.Count; i++)
+            {
+                var option = options[i];
+                if (option is SetRelative)
+                {
+                    setter(modificator(startValue, getter()));
+                    return;
+                }
+            }
+            
+            setter(getter());
+        }
     }
 }
