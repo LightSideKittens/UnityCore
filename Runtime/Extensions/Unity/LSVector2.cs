@@ -18,11 +18,6 @@ namespace LSCore.Extensions.Unity
         public static readonly Vector2 one = Vector2.one;
         public static readonly Vector2 oneDir = Vector2.one.normalized;
         
-        public static Vector2 Get(float f)
-        {
-            return new Vector2(f, f);
-        }
-        
         public static Vector2 ToVector(this Axis axis)
         {
             var result = new Vector2();
@@ -30,41 +25,9 @@ namespace LSCore.Extensions.Unity
             if (axis.HasFlag(Axis.Y)) result.y = 1;
             return result;
         }
-    }
-    
-    public static class LSVector3
-    {
-        [Flags]
-        public enum Axis
-        {
-            None,
-            X = 1,
-            Y = 1 << 1,
-            Z = 1 << 2,
-            All = X | Y | Z,
-        }
         
-        public static readonly Vector3 one = Vector3.one;
-        public static readonly Vector3 oneDir = Vector3.one.normalized;
-        public static readonly Vector3 half = Vector3.one / 2;
-
-        public static Vector3 Get(float f)
-        {
-            return new Vector3(f, f, f);
-        }
-
-        public static Vector3 ToVector(this Axis axis)
-        {
-            var result = new Vector3();
-            if (axis.HasFlag(Axis.X)) result.x = 1;
-            if (axis.HasFlag(Axis.Y)) result.y = 1;
-            if (axis.HasFlag(Axis.Z)) result.z = 1;
-            return result;
-        }
-    }
-    
-    public static class Vector2Extensions
-    {
+        public static Vector2 ToVector2(this float f) => new(f, f);
+        
         public static int DetermineQuadrant(this in Vector2 vector)
         {
             int signX = vector.x < 0 ? 1 : 0;
