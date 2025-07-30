@@ -1,19 +1,39 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace LSCore.Extensions.Unity
 {
-    public static class Vector3Extensions
+    public static class LSVector3
     {
-        public static void X(ref this Vector3 a, float x)
+        [Flags]
+        public enum Axis
         {
-            a.x = x;
+            None,
+            X = 1,
+            Y = 1 << 1,
+            Z = 1 << 2,
+            All = X | Y | Z,
         }
         
-        public static void Y(ref this Vector3 a, float y)
+        public static readonly Vector3 one = Vector3.one;
+        public static readonly Vector3 oneDir = Vector3.one.normalized;
+        public static readonly Vector3 half = Vector3.one / 2;
+
+        public static Vector3 ToVector(this Axis axis)
         {
-            a.y = y;
+            var result = new Vector3();
+            if (axis.HasFlag(Axis.X)) result.x = 1;
+            if (axis.HasFlag(Axis.Y)) result.y = 1;
+            if (axis.HasFlag(Axis.Z)) result.z = 1;
+            return result;
         }
         
+        public static Vector3 ToVector3(this float f) => new(f, f, f);
+
+        public static void X(ref this Vector3 a, float x) => a.x = x;
+
+        public static void Y(ref this Vector3 a, float y) => a.y = y;
+
         public static Vector3 SetByIndex(this Vector3 a, float value, int index)
         {
             a[index] = value;
@@ -22,6 +42,14 @@ namespace LSCore.Extensions.Unity
         
         public static Vector3 Divide(this Vector3 a, Vector3 b)
         {
+            a.x = b.x == 0 ? 0 : a.x / b.x;
+            a.y = b.y == 0 ? 0 : a.y / b.y;
+            a.z = b.z == 0 ? 0 : a.z / b.z;
+            return a;
+        }
+        
+        public static Vector3 DivideUnSafe(this Vector3 a, Vector3 b)
+        {
             a.x /= b.x;
             a.y /= b.y;
             a.z /= b.z;
@@ -29,6 +57,13 @@ namespace LSCore.Extensions.Unity
         }
         
         public static Vector2 Divide(this Vector2 a, Vector2 b)
+        {
+            a.x = b.x == 0 ? 0 : a.x / b.x;
+            a.y = b.y == 0 ? 0 : a.y / b.y;
+            return a;
+        }
+        
+        public static Vector2 DivideUnsafe(this Vector2 a, Vector2 b)
         {
             a.x /= b.x;
             a.y /= b.y;
