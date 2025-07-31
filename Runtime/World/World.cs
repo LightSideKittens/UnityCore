@@ -4,7 +4,10 @@ using System.Threading;
 using DG.Tweening;
 using LSCore.Extensions;
 using UnityEngine;
-using UnityEngine.UI;
+
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace LSCore
 {
@@ -26,6 +29,24 @@ namespace LSCore
         public static bool IsPlaying { get; private set; }
         public static bool IsEditMode => !IsPlaying;
         public static float FrameRate => 1f / Time.unscaledDeltaTime;
+
+#if UNITY_EDITOR
+        public static bool IsPlayModeDisabling { get; private set; }
+        static World()
+        {
+            EditorApplication.playModeStateChanged += change =>
+            {
+                if (change == PlayModeStateChange.ExitingPlayMode)
+                {
+                    IsPlayModeDisabling = true;
+                }
+                else if (change == PlayModeStateChange.EnteredPlayMode)
+                {
+                    IsPlayModeDisabling = false;
+                }
+            };
+        }
+#endif
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
@@ -82,6 +103,7 @@ namespace LSCore
         
         private void OnDestroy()
         {
+            Burger.Log("[World] OnDestroy");
             IsPlaying = false;
             Burger.logToFile = false;
             Destroyed.SafeInvoke();
