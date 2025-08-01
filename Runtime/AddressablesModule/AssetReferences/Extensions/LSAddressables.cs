@@ -2,6 +2,7 @@
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceProviders;
+using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
 namespace LSCore
@@ -23,6 +24,6 @@ namespace LSCore
         public static AsyncOperationHandle<T> LoadAsync<T>(this AssRef<T> reference) where T : Object => reference.LoadAssetAsync<T>();
         public static AsyncOperationHandle<T> LoadAsync<T>(this ComponentAssRef<T> reference) where T : Component => reference.LoadAssetAsync<T>();
         
-        public static AsyncOperationHandle<SceneInstance> LoadScene(object key) => Addressables.LoadSceneAsync(key);
+        public static AsyncOperationHandle<SceneInstance> LoadScene(object key, LoadSceneMode mode = LoadSceneMode.Single) => Addressables.LoadSceneAsync(key, mode);
     }
 }
