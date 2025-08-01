@@ -10,7 +10,7 @@ public class LoadScene : DoIt
 {
     [ValueDropdown("GetSceneNames")]
     public string sceneToLoad;
-
+    public LoadSceneMode mode;
     public bool useAddressables;
     [SerializeReference] public DefaultLoader loader;
 
@@ -34,24 +34,24 @@ public class LoadScene : DoIt
             {
                 if (loader != null)
                 {
-                    var handle = LSAddressables.LoadScene(sceneToLoad);
+                    var handle = LSAddressables.LoadScene(sceneToLoad, mode);
                     loader.Show(handle, Do);
                 }
                 else
                 {
-                    LSAddressables.LoadScene(sceneToLoad).WaitForCompletion();
+                    LSAddressables.LoadScene(sceneToLoad, mode).WaitForCompletion();
                 }
             }
             else
             {
                 if (loader != null)
                 {
-                    var handle = SceneManager.LoadSceneAsync(sceneToLoad);
+                    var handle = SceneManager.LoadSceneAsync(sceneToLoad, mode);
                     loader.Show(handle);
                 }
                 else
                 {
-                    SceneManager.LoadScene(sceneToLoad);
+                    SceneManager.LoadScene(sceneToLoad, mode);
                 }
             }
         }
