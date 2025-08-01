@@ -1,7 +1,6 @@
 ﻿using System;
-using LSCore;
 
-namespace LightSideCore.Runtime.UIModule
+namespace LSCore.UIModule
 {
     [Serializable]
     public class ResetButton : DoIt
