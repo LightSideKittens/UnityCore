@@ -11,7 +11,7 @@ using UnityEditor;
 
 namespace LSCore
 {
-    [DefaultExecutionOrder(-1000)]
+    [DefaultExecutionOrder(-999)]
     public class World : MonoBehaviour
     {
         public static event Action ApplicationPaused;
