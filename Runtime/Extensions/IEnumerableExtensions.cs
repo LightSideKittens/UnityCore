@@ -30,7 +30,7 @@ namespace LSCore.Extensions
             return (T)selectedElement;
         }
         
-        public static T RandomElement<T>(this IEnumerable<T> source, Func<T, bool> predicate = null, bool invertPredicate = false)
+        public static T RandomElement<T>(this IEnumerable<T> source)
         {
             int count = 0;
             using var enumerator = source.GetEnumerator();
@@ -42,18 +42,13 @@ namespace LSCore.Extensions
                 
                 count++;
                 
-                if (Random.Range(0, count) == 0 && (predicate == null || predicate(element) ^ invertPredicate ))
+                if (Random.Range(0, count) == 0)
                 {
                     selectedElement = element;
                 }
             }
 
             return selectedElement;
-        }
-
-        public static T RandomElement<T>(this IEnumerable<T> source, HashSet<T> exclude)
-        {
-            return source.RandomElement(exclude.Contains, true);
         }
     }
 }

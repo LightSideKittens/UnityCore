@@ -76,6 +76,7 @@ namespace LSCore
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
+            if(World.IsPlaying) return;
             SyncTransforms();
         }
 #endif

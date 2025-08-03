@@ -15,7 +15,7 @@ namespace LSCore
 
         public override int Value
         {
-            get => fundText == null ? 0 : fundText;
+            get => fundText == null ? 0 : (int)fundText;
             set
             {
                 if(fundText == null) return;

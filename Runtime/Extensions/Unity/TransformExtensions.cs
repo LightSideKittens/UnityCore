@@ -25,6 +25,7 @@ namespace LSCore.Extensions.Unity
             pos.y = y;
             transform.position = pos;
         }
+        
         public static void SetLossyScale(this Transform tr, Vector3 worldScale)
         {
             Vector3 parentScale = tr.parent ? tr.parent.lossyScale : Vector3.one;
@@ -33,6 +34,26 @@ namespace LSCore.Extensions.Unity
                 parentScale.x == 0 ? 0 : worldScale.x / parentScale.x,
                 parentScale.y == 0 ? 0 : worldScale.y / parentScale.y,
                 parentScale.z == 0 ? 0 : worldScale.z / parentScale.z);
+        }
+        
+        public static void SetLossyScaleUnsafe(this Transform tr, Vector3 worldScale)
+        {
+            Vector3 parentScale = tr.parent ? tr.parent.lossyScale : Vector3.one;
+            
+            tr.localScale = new Vector3(
+                worldScale.x / parentScale.x,
+                worldScale.y / parentScale.y,
+                worldScale.z / parentScale.z);
+        }
+        
+        public static void SetScale(this Transform tr, Vector3 localScale)
+        {
+            tr.localScale = localScale;
+        }
+
+        public static void SetScale(this Transform tr, float f)
+        {
+            tr.localScale = new Vector3(f, f, f);
         }
     }
 }

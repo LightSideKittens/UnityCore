@@ -17,18 +17,18 @@ namespace LSCore
         [ShowIf("changeTextColorIfNotEnough")]
         [Id(typeof(PaletteIdGroup))] [SerializeField] private Id enoughColorId;
         
-        public bool CanSpend => Currencies.Spend(Id, Number, out _);
+        public bool CanSpend => Currencies.Spend(Id, (int)Number, out _);
 
         public override string text
         {
             get => base.text;
             set
             {
-                var oldNumber = Number;
+                var oldNumber = (int)Number;
                 base.text = value;
-                if (oldNumber != Number && changeTextColorIfNotEnough)
+                if (oldNumber != (int)Number && changeTextColorIfNotEnough)
                 {
-                    UpdateColor(Number);
+                    UpdateColor((int)Number);
                 }
             }
         }
