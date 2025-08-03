@@ -85,6 +85,19 @@ namespace LSCore.Extensions
         }
         
         public static T Random<T>(this IList<T> list) => list[UnityEngine.Random.Range(0, list.Count)];
+        public static T Random<T>(this IList<T> list, int min, int max) => list[UnityEngine.Random.Range(min, max)];
+        public static T Random<T>(this IList<T> list, int min, int max, out int index)
+        {
+            index = UnityEngine.Random.Range(min, max);
+            return list[index];
+        }
+
+        public static T RandomSafe<T>(this IList<T> list, int min, int max, out int index)
+        {
+            index = UnityEngine.Random.Range(min, Math.Min(max, list.Count));
+            return list[index];
+        }
+
         public static T Random<T>(this IList<T> list, out int index)
         {
             index = UnityEngine.Random.Range(0, list.Count);
