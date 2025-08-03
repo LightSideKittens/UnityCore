@@ -15,17 +15,21 @@ namespace LSCore
         
         public static void FitInSafeArea(RectTransform target)
         {
-            var zero = Vector2.zero;
-            var one = Vector2.one;
+            Rect safe = Screen.safeArea;
+            
+            Vector2 anchorMin = safe.position;
+            Vector2 anchorMax = safe.position + safe.size;
 
-            Rect safeArea = Screen.safeArea;
-            target.anchorMin = zero;
-            target.anchorMax = one;
-            target.anchoredPosition = zero;
+            anchorMin.x /= LSScreen.Width;
+            anchorMin.y /= LSScreen.Height;
+            anchorMax.x /= LSScreen.Width;
+            anchorMax.y /= LSScreen.Height;
+            
+            target.anchorMin = anchorMin;
+            target.anchorMax = anchorMax;
+            target.offsetMin = Vector2.zero;
+            target.offsetMax = Vector2.zero;
             target.localScale = Vector3.one;
-
-            target.offsetMin = safeArea.min;
-            target.offsetMax = (safeArea.max - new Vector2(LSScreen.Width, LSScreen.Height));
         }
 
         private Tween showTween;
