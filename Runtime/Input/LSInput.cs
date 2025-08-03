@@ -106,5 +106,7 @@ namespace LSCore
             private static bool Touching => Touches.Any(t => t.phase == TouchPhase.Moved || t.phase == TouchPhase.Stationary);
             private static bool TouchUp => Touches.Any(t => t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled);
         }
+        
+        // Задаём массивы «-» и «+» клавиш для X и Y
     }
 }
