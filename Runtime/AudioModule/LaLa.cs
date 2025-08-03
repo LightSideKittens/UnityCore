@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Policy;
 using DG.Tweening;
 using LSCore;
 using LSCore.Async;
@@ -23,7 +22,7 @@ public static class LaLa
         [SerializeField] private AudioClip clip;
         [SerializeField] private AudioMixerGroup group;
 
-        public AudioSource LastSource { get; private set; }
+        public AudioSource CurrentSource { get; private set; }
 
         public bool WasChanged { get; private set; }
         
@@ -80,9 +79,10 @@ public static class LaLa
         public AudioSource Play()
         {
             var source = sources.Get();
+            DOTween.Kill(source);
             Apply(source);
             source.Play();
-            LastSource = source;
+            CurrentSource = source;
             return source;
         }
     
@@ -96,7 +96,7 @@ public static class LaLa
             Apply(source);
             source.PlayOneShot(source.clip);
             lastPlayOneShotSource = source;
-            LastSource = source;
+            CurrentSource = source;
             return source;
         }
     }
