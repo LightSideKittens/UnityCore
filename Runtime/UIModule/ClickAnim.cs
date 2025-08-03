@@ -30,7 +30,6 @@ namespace LSCore
     [Serializable]
     public abstract class BaseSubmittableDoIter : BaseSubmittableHandler
     {
-        
         [SerializeReference] public List<DoIt> onSubmit;
 
         public void Subscribe()

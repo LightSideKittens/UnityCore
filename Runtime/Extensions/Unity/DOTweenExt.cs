@@ -10,6 +10,10 @@ namespace LSCore.Extensions
     {
         public static void KillVoid(this Tween tween)
         {
+#if UNITY_EDITOR
+            if(World.IsPlayModeDisabling) return;
+#endif
+            
             var sequenceParent = PathAccessorCache.GetRef(tween, "sequenceParent");
             
             if (sequenceParent.Get(tween) is Sequence sequence)
