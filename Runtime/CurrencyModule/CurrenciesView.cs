@@ -56,14 +56,22 @@ namespace LSCore
             {
                 var la = lastAmount;
                 Action anim = () => DOVirtual.Int(la, value, 0.5f, v => text.text = $"{v}");
-                
-                if (!anims.TryGetValue(id, out var queue))
+
+                if (la > value)
                 {
-                    queue = new Queue<Action>();
-                    anims[id] = queue;
+                    anim();
+                }
+                else
+                {
+                    if (!anims.TryGetValue(id, out var queue))
+                    {
+                        queue = new Queue<Action>();
+                        anims[id] = queue;
+                    }
+                    
+                    queue.Enqueue(anim);
                 }
                 
-                queue.Enqueue(anim);
                 lastAmount = value;
             }
         }
