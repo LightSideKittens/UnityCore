@@ -58,10 +58,7 @@ namespace LSCore
         protected void OnValueChanged(bool value)
         {
 #if UNITY_EDITOR
-            if (World.IsEditMode)
-            {
-                return;
-            }
+            if (World.IsEditMode) return;
 #endif
             if (value)
             {
@@ -77,10 +74,7 @@ namespace LSCore
         {
             base.Awake();
 #if UNITY_EDITOR
-            if (!World.IsPlaying)
-            {
-                return;
-            }
+            if (World.IsEditMode) return;
 #endif
             
             submittable.Init(transform);
@@ -93,6 +87,9 @@ namespace LSCore
         protected override void OnEnable()
         {
             base.OnEnable();
+#if UNITY_EDITOR
+            if (World.IsEditMode) return;
+#endif
             submittable.OnEnable();
             CallAndSub(OnValueChanged);
             DOTweenExt.Complete(this);
@@ -101,6 +98,9 @@ namespace LSCore
         protected override void OnDisable()
         {
             base.OnDisable();
+#if UNITY_EDITOR
+            if (World.IsEditMode) return;
+#endif
             ValueChanged -= OnValueChanged;
             submittable.OnDisable();
         }
