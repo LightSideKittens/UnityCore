@@ -22,7 +22,6 @@ namespace LSCore
     [RequireComponent(typeof(RectTransform))]
     public abstract class BaseUIView<T> : SingleService<T>, IUIView where T : BaseUIView<T>
     {
-        [SerializeReference] public bool initShowHideAnim;
         [SerializeReference] public ShowHideAnim showHideAnim = new DefaultUIViewAnimation();
         public RectTransform RectTransform { get; private set; }
         public virtual WindowManager Manager { get; } = new();
@@ -45,12 +44,6 @@ namespace LSCore
         {
             base.Init();
             InitManager();
-            
-            if (initShowHideAnim)
-            {
-                showHideAnim?.Init();
-            }
-
             var rectTransform = (RectTransform)transform;
             RectTransform = rectTransform;
         }

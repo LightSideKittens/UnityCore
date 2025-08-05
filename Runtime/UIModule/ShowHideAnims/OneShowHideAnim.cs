@@ -9,8 +9,6 @@ namespace LSCore
     {
         public AnimSequencer animation;
 
-        public override void Init() => animation.Init();
-
         public override Tween Show() => animation.Animate();
         public override Tween Hide() => animation.Animate();
     }
@@ -22,12 +20,14 @@ namespace LSCore
 
         public override Tween Show()
         {
-            tween = base.Show().SetAutoKill(false);
+            tween ??= base.Show().SetAutoKill(false);
+            tween.PlayForward();
             return tween;
         }
 
         public override Tween Hide()
         {
+            tween ??= Show();
             tween.PlayBackwards();
             return tween;
         }

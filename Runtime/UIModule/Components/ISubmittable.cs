@@ -24,7 +24,6 @@ namespace LSCore
     {
         bool IsOn { get; set; }
         void Set(bool value);
-        void SetSilently(bool value);
         Action<bool> ValueChanged { get; set; }
     }
 }

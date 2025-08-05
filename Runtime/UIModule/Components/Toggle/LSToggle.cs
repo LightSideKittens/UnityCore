@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using DG.Tweening;
 using LSCore.Extensions;
 using UnityEngine;
@@ -14,19 +13,22 @@ namespace LSCore
     public class LSToggle : LSImage, IToggle
     {
         [SerializeReference] public ShowHideAnim onOffAnim = new InOutShowHideAnim();
-        [SerializeReference] public List<DoIt> on = new();
-        [SerializeReference] public List<DoIt> off = new();
         [SerializeReference] private BaseToggleData isOn;
         
-        [SerializeReference] public ISubmittable submittable = new DefaultSubmittable();
-        public object Submittable => submittable;
+        [SerializeReference] public DefaultSubmittable submittable = new ();
+        object ISubmittableElement.Submittable => submittable;
+        
         public event Action Submitted
         {
             add => submittable.Submitted += value;
             remove => submittable.Submitted -= value;
         }
-
-        public Action<bool> ValueChanged { get; set; }
+        
+        public Action<bool> ValueChanged
+        {
+            get => isOn.valueChanged;
+            set => isOn.valueChanged = value;
+        }
         
         /// <summary>
         /// Same as <code>Set(value);</code>
@@ -44,19 +46,7 @@ namespace LSCore
         /// <param name="value"></param>
         public void Set(bool value)
         {
-            if (value != isOn)
-            {
-                ForceSetState(value);
-                Notify();
-            }
-        }
-        
-        public void SetSilently(bool value)
-        {
-            if (isOn != value)
-            {
-                ForceSetState(value);
-            }
+            isOn.IsOn = value;
         }
 
         public void CallAndSub(Action<bool> action)
@@ -65,18 +55,7 @@ namespace LSCore
             ValueChanged += action;
         }
 
-        protected void ForceSetState(bool value)
-        {
-            isOn.IsOn = value;
-            OnValueChanged();
-        }
-        
-        protected void Notify()
-        {
-            ValueChanged?.Invoke(isOn);
-        }
-
-        protected void OnValueChanged()
+        protected void OnValueChanged(bool value)
         {
 #if UNITY_EDITOR
             if (World.IsEditMode)
@@ -84,15 +63,13 @@ namespace LSCore
                 return;
             }
 #endif
-            if (isOn)
+            if (value)
             {
                 onOffAnim.Show().SetId(this);
-                on.Do();
             }
             else
             {
                 onOffAnim.Hide().SetId(this);
-                off.Do();
             }
         }
         
@@ -109,22 +86,22 @@ namespace LSCore
             submittable.Init(transform);
             submittable.Submitted += () =>
             {
-                ForceSetState(!isOn);
-                Notify();
+                isOn.IsOn = !isOn;
             };
-            onOffAnim.Init();
-            ForceSetState(isOn);
-            DOTweenExt.Complete(this);
         }
 
-        protected override void Start()
+        protected override void OnEnable()
         {
-            base.Start();
+            base.OnEnable();
+            submittable.OnEnable();
+            CallAndSub(OnValueChanged);
+            DOTweenExt.Complete(this);
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
+            ValueChanged -= OnValueChanged;
             submittable.OnDisable();
         }
     }
@@ -137,8 +114,6 @@ namespace LSCore
         private LSToggle toggle;
         private PropertyTree propertyTree;
         private InspectorProperty submittable;
-        private InspectorProperty on;
-        private InspectorProperty off;
         private InspectorProperty isOn;
         private InspectorProperty onOffAnim;
 
@@ -148,8 +123,6 @@ namespace LSCore
             toggle = (LSToggle)target;
             propertyTree = PropertyTree.Create(serializedObject);
             submittable = propertyTree.RootProperty.Children["submittable"];
-            on = propertyTree.RootProperty.Children["on"];
-            off = propertyTree.RootProperty.Children["off"];
             isOn = propertyTree.RootProperty.Children["isOn"];
             onOffAnim = propertyTree.RootProperty.Children["onOffAnim"];
         }
@@ -166,8 +139,6 @@ namespace LSCore
             propertyTree.BeginDraw(true);
             onOffAnim.Draw();
             isOn.Draw();
-            on.Draw();
-            off.Draw();
             submittable.Draw();
             propertyTree.EndDraw();
             serializedObject.ApplyModifiedProperties();

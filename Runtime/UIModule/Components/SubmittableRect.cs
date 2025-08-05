@@ -1,18 +1,12 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 namespace LSCore
 {
     public class SubmittableRect : MonoBehaviour, ISubmittableElement
     {
-        [SerializeReference] public ISubmittable submittable = new DefaultSubmittable();
-        public object Submittable => submittable;
-        public event Action Submitted
-        {
-            add => submittable.Submitted += value;
-            remove => submittable.Submitted -= value;
-        }
-
+        [SerializeReference] public DefaultSubmittable submittable = new();
+        object ISubmittableElement.Submittable => submittable;
+        
         protected void Awake()
         {
             submittable.Init(transform);

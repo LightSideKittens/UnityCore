@@ -7,7 +7,7 @@ namespace LSCore
     {
         public static bool TryGet(Id id, out Color color)
         {
-            var palette = SingleAssets.Get<Palette>("Palette");
+            var palette = SingleAssets.Get<Palette>();
             return palette.ByKey.TryGetValue(id, out color);
         }
         

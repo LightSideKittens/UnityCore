@@ -121,14 +121,6 @@ namespace LSCore.AnimationsModule
         }
 #endif
 
-        public void Init()
-        {
-            for (int i = 0; i < animsData.Count; i++)
-            {
-                animsData[i].anim.TryInit();
-            }
-        }
-
         public Sequence Animate()
         {
             var currentTime = 0f;
