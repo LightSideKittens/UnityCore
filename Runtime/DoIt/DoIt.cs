@@ -39,6 +39,16 @@ public class DelegateDoIt : DoIt
     {
         return action.Do;
     }
+
+    public override int GetHashCode() => action.GetHashCode();
+    public override bool Equals(object obj) => action.Equals(obj);
+    public override string ToString() => action.ToString();
+    public static bool operator ==(DelegateDoIt a, DelegateDoIt b) => a.action == b.action;
+    public static bool operator !=(DelegateDoIt a, DelegateDoIt b) => a.action != b.action;
+    public static bool operator ==(DelegateDoIt a, Action b) => a.action == b;
+    public static bool operator !=(DelegateDoIt a, Action b) => a.action != b;
+    public static bool operator ==(Action a, DelegateDoIt b) => a == b.action;
+    public static bool operator !=(Action a, DelegateDoIt b) => a != b.action;
 }
 
 [Serializable]

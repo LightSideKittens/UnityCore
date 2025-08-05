@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using DG.Tweening;
-using LSCore.Extensions.Unity;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -30,16 +29,23 @@ namespace LSCore
     [Serializable]
     public abstract class BaseSubmittableDoIter : BaseSubmittableHandler
     {
-        [SerializeReference] public List<DoIt> onSubmit;
-
+        [SerializeReference] public List<DoIt> onSubmit = new();
+        public Action onSubmitAction;
+        
         public void Subscribe()
         {
-            Submittable.Submitted += onSubmit.Do;
+            Submittable.Submitted += OnSubmit;
         }
 
         public void Unsubscribe()
         {
-            Submittable.Submitted -= onSubmit.Do;
+            Submittable.Submitted -= OnSubmit;
+        }
+
+        private void OnSubmit()
+        {
+            onSubmit.Do();
+            onSubmitAction?.Invoke();
         }
     }
 

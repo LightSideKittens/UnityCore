@@ -107,6 +107,7 @@ namespace LSCore
         
         protected override void OnRectTransformDimensionsChange()
         {
+            source ??= GetComponent<RectTransform>();
             SyncTransforms();
         }
     }

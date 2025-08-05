@@ -141,5 +141,12 @@ namespace LSCore
                 }
             }
         }
+
+        public static bool IsDiff(ref int id)
+        {
+            bool diff = id != InstanceId;
+            id = InstanceId;
+            return diff;
+        }
     }
 }

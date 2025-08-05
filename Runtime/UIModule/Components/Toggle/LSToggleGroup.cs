@@ -13,6 +13,8 @@ namespace LSCore
         {
             [SerializeField] protected List<LSToggle> toggles;
             protected List<Action<bool>> eventHandlers = new();
+            protected List<bool> toggleStates = new();
+            protected int CurrentActive => toggleStates.Count(value => value);
             
             public void AddRange(IEnumerable<LSToggle> collection)
             {
@@ -25,7 +27,13 @@ namespace LSCore
             public void Add(LSToggle toggle)
             {
                 var index = toggles.Count;
-                Action<bool> eventHandler = value => OnValueChanged(index, value);
+                toggleStates.Add(false);
+                
+                Action<bool> eventHandler = value =>
+                {
+                    toggleStates[index] = value;
+                    OnValueChanged(index, value);
+                };
                 
                 toggle.CallAndSub(eventHandler);
                 eventHandlers.Add(eventHandler);
@@ -45,6 +53,7 @@ namespace LSCore
                 toggles[index].ValueChanged -= eventHandlers[index];
                 eventHandlers.RemoveAt(index);
                 toggles.RemoveAt(index);
+                toggleStates.RemoveAt(index);
             }
 
             public void Clear()
@@ -62,6 +71,7 @@ namespace LSCore
                 ret:
                 eventHandlers.Clear();
                 toggles.Clear();
+                toggleStates.Clear();
             }
             
             public abstract void OnValueChanged(int index, bool value);
@@ -87,8 +97,6 @@ namespace LSCore
         public class OnlyOne : Handler
         {
             [PropertyRange(0, "MaxRange")] public int countCanBeActive;
-            
-            private int CurrentActive => toggles.Count(x => x.IsOn);
             private int lastActive = -1;
             private int MaxRange => toggles.Count;
             

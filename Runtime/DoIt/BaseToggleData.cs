@@ -11,15 +11,19 @@ public abstract class BaseToggleData
     {
         get
         {
+            if (lastIsOn == null) Init();
             lastIsOn = Get;
             return lastIsOn.Value;
         }
         set
         {
             if (lastIsOn == value) return;
-            lastIsOn = value;
             Set = value;
-            valueChanged?.Invoke(value);
+            lastIsOn = Get;
+            if (lastIsOn == value)
+            { 
+                valueChanged?.Invoke(value);
+            }
         }
     }
 
@@ -27,8 +31,9 @@ public abstract class BaseToggleData
     protected abstract bool Set { set; }
 
     public Action<bool> valueChanged;
-        
+    
     public static implicit operator bool(BaseToggleData data) => data.IsOn;
+    protected virtual void Init() {}
 }
 
 [Serializable]

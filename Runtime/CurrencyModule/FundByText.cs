@@ -9,7 +9,7 @@ namespace LSCore
     public class FundByText : BaseIntFund
     {
         [CustomValueDrawer("Editor_Draw")]
-        [SerializeField] private FundText fundText;
+        public FundText fundText;
         
         public override Id Id => fundText == null ? null : fundText.Id;
 

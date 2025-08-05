@@ -5,6 +5,43 @@ using Newtonsoft.Json.Linq;
 
 namespace LSCore.Extensions
 {
+    public class JHashSet<T>
+    {
+        private HashSet<T> set;
+        private JArray array;
+
+        public JHashSet(JArray array)
+        {
+            this.array = array;
+            set = array.ToObject<HashSet<T>>();
+        }
+
+        public bool Add(T value)
+        {
+            if (set.Add(value))
+            {
+                array.Add(value);
+                return true;
+            }
+            return false;
+        }
+
+        public bool Remove(T value)
+        {
+            if (set.Remove(value))
+            {
+                array.Remove(JToken.FromObject(value));
+                return true;
+            }
+            return false;
+        }
+
+        public bool Contains(T value)
+        {
+            return set.Contains(value);
+        }
+    }
+    
     public static partial class JTokenExtensions
     {
         public static JObject FromObject(this object o, JsonSerializer serializer)

@@ -89,11 +89,24 @@ namespace LSCore
     public class DefaultSubmittable : ISubmittable
     {
         [SerializeReference] public BaseSubmittableAnim anim;
-        [SerializeReference] public BaseSubmittableDoIter doIter;
+        [SerializeReference] public BaseSubmittableDoIter doIter = new DefaultSubmittableDoIter();
         [SerializeReference] public BaseSubmittableSelectBehaviour selectBehaviour;
         
         public Transform Transform { get; private set; }
-        public event Action Submitted;
+        
+        public event Action Submitted
+        {
+            add => doIter.onSubmitAction += value;
+            remove => doIter.onSubmitAction -= value;
+        }
+        
+        event Action ISubmittable.Submitted
+        {
+            add => submitted += value;
+            remove => submitted -= value;
+        }
+        
+        private Action submitted;
         public SubmittableStates States { get; private set; } = new();
 
         public void Init(Transform transform)
@@ -121,7 +134,7 @@ namespace LSCore
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
         {
             States.currentEventData = eventData;
-            Submitted?.Invoke();
+            submitted?.Invoke();
         }
         
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
@@ -151,7 +164,7 @@ namespace LSCore
         void ISubmitHandler.OnSubmit(BaseEventData eventData)
         {
             States.currentEventData = eventData;
-            Submitted?.Invoke();
+            submitted?.Invoke();
         }
 
         void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData)
@@ -176,7 +189,7 @@ namespace LSCore
     public class LSButton : LSImage, ISubmittableElement
     {
         [SerializeReference] public DefaultSubmittable submittable = new ();
-        public object Submittable => submittable;
+        object ISubmittableElement.Submittable => submittable;
         public event Action Submitted
         {
             add => submittable.Submitted += value;
