@@ -136,6 +136,7 @@ namespace LSCore
                 }
             }
             
+            activeSet?.Clear();
             releasedSet.Clear();
             CountAll = 0;
         }
