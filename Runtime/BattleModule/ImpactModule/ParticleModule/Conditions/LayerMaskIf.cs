@@ -5,7 +5,7 @@ using UnityEngine;
 namespace LSCore
 {
     [Serializable]
-    public class LayerMaskCondition : TriggerCondition
+    public class LayerMaskIf : TriggerIf
     {
         public LayerMask mask;
         private Collider2D collider;

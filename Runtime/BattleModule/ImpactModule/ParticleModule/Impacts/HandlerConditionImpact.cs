@@ -17,13 +17,13 @@ namespace LSCore
     [Serializable]
     public class ConditionImpact : ParticleImpact
     {
-        [SerializeReference] public TriggerCondition condition;
+        [SerializeReference] public TriggerIf @if;
 
         public sealed override void Apply(Transform initiator, ref ParticleSystem.Particle particle, Collider2D collider)
         {
-            condition.Prepare(ref particle, collider);
+            @if.Prepare(ref particle, collider);
             
-            if (condition)
+            if (@if)
             {
                 base.Apply(initiator, ref particle, collider);
                 OnApply(ref particle, collider);

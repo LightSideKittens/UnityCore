@@ -1,6 +1,6 @@
 ﻿namespace LSCore.ConditionModule
 {
-    public abstract class BaseCondition
+    public abstract class BaseIf
     {
         public enum ConditionType
         {
@@ -10,7 +10,7 @@
 
         public bool not;
 
-        public static implicit operator bool(BaseCondition conditions) => conditions.FullCheck();
+        public static implicit operator bool(BaseIf ifs) => ifs.FullCheck();
         private bool FullCheck() => Check() ^ not;
         protected internal abstract bool Check();
     }

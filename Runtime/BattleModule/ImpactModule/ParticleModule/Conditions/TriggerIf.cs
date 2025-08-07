@@ -9,7 +9,7 @@ namespace LSCore
     [Serializable]
     [TypeFrom]
     [HideReferenceObjectPicker]
-    public abstract class TriggerCondition : Condition
+    public abstract class TriggerIf : If
     {
         public abstract void Prepare(ref ParticleSystem.Particle particle, Collider2D collider);
     }

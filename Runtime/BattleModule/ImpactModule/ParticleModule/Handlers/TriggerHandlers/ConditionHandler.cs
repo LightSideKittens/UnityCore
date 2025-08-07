@@ -7,7 +7,7 @@ namespace LSCore
     [Serializable]
     public class ConditionHandler : OnTriggerHandler
     {
-        [SerializeReference] public TriggerCondition condition;
+        [SerializeReference] public TriggerIf @if;
         
         [SerializeReference] 
         [ExcludeType(typeof(ConditionHandler))] 
@@ -15,9 +15,9 @@ namespace LSCore
         
         public override void Handle(ref ParticleSystem.Particle particle, Collider2D collider)
         {
-            condition.Prepare(ref particle, collider);
+            @if.Prepare(ref particle, collider);
             
-            if (condition)
+            if (@if)
             {
                 handler.Handle(ref particle, collider);
             }

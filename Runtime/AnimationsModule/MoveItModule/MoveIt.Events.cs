@@ -46,14 +46,14 @@ public partial class MoveIt
     [Serializable]
     public class ConditionEvent : Event
     {
-        [SerializeReference] public Conditions condition;
+        [SerializeReference] public Ifs @if;
 
         [SerializeReference] [HideLabel] [ExcludeType(typeof(ConditionEvent))]
         public Event eventt;
 
         public override void Start()
         {
-            if (condition)
+            if (@if)
             {
                 eventt.Start();
             }
@@ -61,7 +61,7 @@ public partial class MoveIt
 
         public override void Invoke()
         {
-            if (condition)
+            if (@if)
             {
                 eventt.Invoke();
             }
@@ -69,7 +69,7 @@ public partial class MoveIt
 
         public override void End()
         {
-            if (condition)
+            if (@if)
             {
                 eventt.End();
             }

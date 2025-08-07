@@ -6,33 +6,33 @@ using UnityEngine;
 namespace LSCore.ConditionModule
 {
     [Serializable]
-    public class Conditions : Conditions<Condition> { }
+    public class Ifs : Ifs<If> { }
 
     [Serializable]
-    public class Conditions<T> : Condition, ISerializationCallbackReceiver where T : Condition
+    public class Ifs<T> : If, ISerializationCallbackReceiver where T : If
     {
         [OnValueChanged("OnAfterDeserialize", true)]
         [SerializeReference] public List<T> conditions;
-        [NonSerialized] public ConditionBuilder conditionBuilder;
+        [NonSerialized] public IfBuilder ifBuilder;
 
-        protected internal override bool Check() => conditionBuilder;
+        protected internal override bool Check() => ifBuilder;
 
         public void OnBeforeSerialize() { }
 
         public void OnAfterDeserialize()
         {
-            conditionBuilder = ConditionBuilder.Default;
+            ifBuilder = IfBuilder.Default;
             
             if(conditions == null) return;
             if (conditions.Count == 0) return;
             
-            conditionBuilder = ConditionBuilder.If(conditions[0]);
+            ifBuilder = IfBuilder.If(conditions[0]);
             
             for (int i = 0; i < conditions.Count; i++)
             {
                 if (conditions[i] != null)
                 {
-                    conditionBuilder.Add(conditions[i]);
+                    ifBuilder.Add(conditions[i]);
                 }
             }
         }
