@@ -120,6 +120,14 @@ namespace LSCore.AnimationsModule
             lastTime = time;
         }
 #endif
+        
+        public void Init()
+        {
+            for (int i = 0; i < animsData.Count; i++)
+            {
+                animsData[i].anim.TryInit();
+            }
+        }
 
         public Sequence Animate()
         {

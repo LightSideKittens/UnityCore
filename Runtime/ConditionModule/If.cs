@@ -5,13 +5,13 @@ using Sirenix.OdinInspector;
 namespace LSCore.ConditionModule
 {
     [Serializable]
-    public abstract class Condition : BaseCondition
+    public abstract class If : BaseIf
     {
         [HideLabel] [HideCondition] public ConditionType type;
     }
     
     [Serializable]
-    public class BoolCondition : Condition
+    public class BoolIf : If
     {
         public bool value;
         

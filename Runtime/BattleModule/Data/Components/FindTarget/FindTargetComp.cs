@@ -16,14 +16,14 @@ namespace LSCore.BattleModule
 
         [SerializeReference] private TargetChecker checker;
         [NonSerialized] public Transform transform;
-        private ConditionBuilder conditions;
+        private IfBuilder ifs;
         public ContactFilter2D contactFilter;
 
         public void Init(Transform transform)
         {
             this.transform = transform;
             unit = transform.Get<Unit>();
-            conditions = ConditionBuilder.If(checker);
+            ifs = IfBuilder.If(checker);
         }
         
         public IEnumerable<Transform> FindAll(float radius) => FindAll(transform.position, radius);
@@ -36,7 +36,7 @@ namespace LSCore.BattleModule
             {
                 targetUnit = targetTransform.Get<Unit>();
                 
-                if (conditions)
+                if (ifs)
                 {
                     yield return targetTransform;
                 }
@@ -53,7 +53,7 @@ namespace LSCore.BattleModule
             {
                 targetUnit = collider.transform.Get<Unit>();
                 
-                if (conditions)
+                if (ifs)
                 {
                     yield return collider;
                 }
@@ -67,7 +67,7 @@ namespace LSCore.BattleModule
             if (collider.transform.TryGet(out Unit target))
             {
                 targetUnit = target;
-                return conditions;
+                return ifs;
             }
            
             return false;
@@ -77,13 +77,13 @@ namespace LSCore.BattleModule
         {
             target = null;
 
-            conditions.And(() => excepted.Contains(targetUnit.transform));
+            ifs.And(() => excepted.Contains(targetUnit.transform));
             if(Physics2DExt.TryFindNearestCollider(position, FindAllColliders(position, radius), out var col))
             {
                 target = col.transform;
             }
 
-            conditions.Clear().Add(checker);
+            ifs.Clear().Add(checker);
             return target != null;
         }
 

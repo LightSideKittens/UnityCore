@@ -27,10 +27,10 @@ namespace LSCore.LifecycleSystem
         }
         
         [Serializable]
-        public class Handlers : Conditions<Handler> { }
+        public class Handlers : Ifs<Handler> { }
         
         [Serializable]
-        public abstract class Handler : Condition
+        public abstract class Handler : If
         {
             public RJToken lastObjData;
             public RJToken targetObjData;

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace LSCore
 {
     [Serializable]
-    public class GroupCondition : TriggerCondition
+    public class GroupIf : TriggerIf
     {
         [IdGroup] public IdGroup group;
         private Id id;

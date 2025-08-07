@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace LSCore.ConditionModule
 {
-    public class ConditionBuilder : BaseCondition
+    public class IfBuilder : BaseIf
     {
-        public static ConditionBuilder Default { get; } = If(() => false);
+        public static IfBuilder Default { get; } = If(() => false);
         private readonly List<Data> data = new();
         
         public struct Data
@@ -14,53 +14,53 @@ namespace LSCore.ConditionModule
             public Func<bool> condition;
         }
         
-        private ConditionBuilder(){}
+        private IfBuilder(){}
         
-        public static ConditionBuilder If(Func<bool> condition)
+        public static IfBuilder If(Func<bool> condition)
         {
-            var builder = new ConditionBuilder();
+            var builder = new IfBuilder();
             builder.data.Add(new Data {type = default, condition = condition});
             return builder;
         }
 
-        public ConditionBuilder And(Func<bool> condition)
+        public IfBuilder And(Func<bool> condition)
         {
             data.Add(new Data {type = ConditionType.And, condition = condition});
             return this;
         }
 
-        public ConditionBuilder Or(Func<bool> condition)
+        public IfBuilder Or(Func<bool> condition)
         {
             data.Add(new Data {type = ConditionType.Or, condition = condition});
             return this;
         }
         
-        public static ConditionBuilder If(BaseCondition condition)
+        public static IfBuilder If(BaseIf @if)
         {
-            var builder = new ConditionBuilder();
-            builder.data.Add(new Data {type = default, condition = condition.Check});
+            var builder = new IfBuilder();
+            builder.data.Add(new Data {type = default, condition = @if.Check});
             return builder;
         }
 
-        public ConditionBuilder And(BaseCondition condition)
+        public IfBuilder And(BaseIf @if)
         {
-            data.Add(new Data {type = ConditionType.And, condition = condition.Check});
+            data.Add(new Data {type = ConditionType.And, condition = @if.Check});
             return this;
         }
 
-        public ConditionBuilder Or(BaseCondition condition)
+        public IfBuilder Or(BaseIf @if)
         {
-            data.Add(new Data {type = ConditionType.Or, condition = condition.Check});
+            data.Add(new Data {type = ConditionType.Or, condition = @if.Check});
             return this;
         }
         
-        public ConditionBuilder Add<T>(T condition) where T : Condition
+        public IfBuilder Add<T>(T condition) where T : If
         {
             data.Add(new Data {type = condition.type, condition = condition.Check});
             return this;
         }
 
-        public ConditionBuilder Clear()
+        public IfBuilder Clear()
         {
             data.Clear();
             return this;

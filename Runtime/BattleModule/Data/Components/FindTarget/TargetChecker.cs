@@ -8,12 +8,12 @@ namespace LSCore.BattleModule
     [Serializable]
     [HideReferenceObjectPicker]
     [TypeFrom]
-    public abstract class TargetChecker : Condition { }
+    public abstract class TargetChecker : If { }
 
     [Serializable]
     public class TargetCheckers : TargetChecker
     {
-        [InlineProperty] [HideLabel] public Conditions<TargetChecker> conditions;
-        protected override bool Check() => conditions;
+        [InlineProperty] [HideLabel] public Ifs<TargetChecker> ifs;
+        protected override bool Check() => ifs;
     }
 }

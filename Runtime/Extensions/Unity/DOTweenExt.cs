@@ -18,7 +18,7 @@ namespace LSCore.Extensions
             
             if (sequenceParent.Get(tween) is Sequence sequence)
             {
-                sequence.Kill();
+                sequence.KillVoid();
                 return;
             }
             
