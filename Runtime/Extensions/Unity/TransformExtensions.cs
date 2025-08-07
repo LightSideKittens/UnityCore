@@ -77,5 +77,16 @@ namespace LSCore.Extensions.Unity
         {
             tr.localScale = new Vector3(f, f, f);
         }
+        
+        public static T FindComponentInChildren<T>(this Transform transform)
+        {
+            T result = default;
+            foreach (Transform child in transform)
+            {
+                result = child.GetComponentInChildren<T>(true);
+                if (result != null) break;
+            }
+            return result;
+        }
     }
 }
