@@ -51,6 +51,7 @@ public static class LaLa
 
         protected override void OnCreated()
         {
+            base.OnCreated();
             Object.DontDestroyOnLoad(obj.gameObject);
         }
     }
