@@ -11,12 +11,10 @@ namespace LSCore
     {
         public T prefab;
         [NonSerialized] public T obj;
-        [SerializeReference] public List<DoIt> transformActions;
         
         public override void Do()
         {
             obj = Object.Instantiate(prefab);
-            transformActions?.Do(obj);
         }
     }
     
@@ -43,20 +41,14 @@ namespace LSCore
     [Serializable]
     public class CreateOrShowUIView<T> : CreateSinglePrefab<T> where T : BaseUIView<T>
     {
+        [SerializeReference] public List<DoIt> transformActions;
         public ShowWindowOption option;
         public string id;
-        public bool showOnlyWhenCreated;
         
         public override void Do()
         {
-            var last = obj;
             base.Do();
-            var isCreated = obj != last;
-
-            if (!isCreated && showOnlyWhenCreated)
-            {
-                return;
-            }
+            transformActions?.Do(obj);
             
             CanvasUpdateRegistry.Updated += Show;
 

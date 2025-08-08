@@ -18,6 +18,7 @@ public class SingleAssets : ScriptableObject
 {
     public UniDict<string, Object> assets;
     [OnValueChanged("OnTypeAssetsChanged")] public List<Object> typedAssets;
+    [OnValueChanged("OnTypeAssetsChanged")] public List<Object> baseTypedAssets;
     private static SingleAssets instance;
     private Dictionary<Type, Object> typedAssetsDict = new();
     private static SingleAssets Instance
@@ -45,7 +46,12 @@ public class SingleAssets : ScriptableObject
         {
             typedAssetsDict.Add(typedAssets[i].GetType(), typedAssets[i]);
         }
-
+        
+        for (var i = 0; i < baseTypedAssets.Count; i++)
+        {
+            typedAssetsDict.Add(baseTypedAssets[i].GetType().BaseType, baseTypedAssets[i]);
+        }
+        
         World.Destroyed += OnDestroy;
 
         void OnDestroy()
@@ -63,6 +69,11 @@ public class SingleAssets : ScriptableObject
         {
             if (typedAssetsDict.TryAdd(typedAssets[i].GetType(), typedAssets[i])) continue;
             typedAssets.RemoveAt(i--);
+        }
+        for (var i = 0; i < baseTypedAssets.Count; i++)
+        {
+            if (typedAssetsDict.TryAdd(baseTypedAssets[i].GetType().BaseType, baseTypedAssets[i])) continue;
+            baseTypedAssets.RemoveAt(i--);
         }
     }
 }

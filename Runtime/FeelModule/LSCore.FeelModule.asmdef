@@ -1,0 +1,4 @@
+﻿{
+  "name": "LSCore.FeelModule",
+  "references":[ "GUID:57a0b9bc628ab4740af4b6f1f0b2e134", "GUID:872f44748d3749808afa269f99c77e49", "GUID:247942eb90ec48b696028c8e4c1f8e20" ]
+}
