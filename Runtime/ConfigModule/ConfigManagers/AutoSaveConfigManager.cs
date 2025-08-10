@@ -48,8 +48,10 @@ namespace LSCore.ConfigModule
             UnsubOnWorldDestroy();
             UnsubOnApplicationPaused();
         }
+        
+        
 
-        #region EDITOR
+#region EDITOR
 
         [Conditional("UNITY_EDITOR")]
         private void Editor_Init()
@@ -57,7 +59,7 @@ namespace LSCore.ConfigModule
             World.Destroyed += OnWorldDestroy;
         }
         
-        public void OnWorldDestroy()
+        private void OnWorldDestroy()
         {
             Save();
             LoadOnNextAccess();
@@ -67,24 +69,33 @@ namespace LSCore.ConfigModule
         [Conditional("UNITY_EDITOR")]
         private void UnsubOnWorldDestroy() => World.Destroyed -= OnWorldDestroy;
 
-        #endregion
-        #region RUNTIME
+#endregion
         
+        
+#region RUNTIME
+
+        private bool isSaveListening;
         [Conditional("RUNTIME")]
         private void Runtime_Init()
         {
+            if (isSaveListening) return;
+            isSaveListening = true;
             World.ApplicationPaused += OnApplicationPaused;
         }
         
         private void OnApplicationPaused()
         {
-            UnsubOnApplicationPaused();
             Save();
         }
         
         [Conditional("RUNTIME")]
-        private void UnsubOnApplicationPaused() => World.ApplicationPaused -= OnApplicationPaused;
-        
+        private void UnsubOnApplicationPaused()
+        {
+            if (!isSaveListening) return;
+            isSaveListening = false;
+            World.ApplicationPaused -= OnApplicationPaused;
+        }
+
         #endregion
     }
 }
