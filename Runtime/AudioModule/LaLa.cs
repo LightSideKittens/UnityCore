@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DG.Tweening;
+using LSCore;
 using LSCore.ConfigModule;
 using LSCore.Extensions;
 using Newtonsoft.Json.Linq;
@@ -59,6 +60,14 @@ public static class LaLa
     [Serializable]
     public class MixerMuter : BaseToggleData
     {
+#if UNITY_EDITOR
+        static MixerMuter()
+        {
+            World.Destroyed += () => Changed = null;
+        }
+#endif
+        public static event Action<string, bool> Changed;
+        
         [ValueDropdown("Parameters")] public string parameter;
 
 #if UNITY_EDITOR
@@ -77,6 +86,7 @@ public static class LaLa
                 DOTween.Kill(id);
                 mixer.DOSetFloat(parameter, volume, 0.3f).SetId(id);
                 Unmutes[parameter] = value;
+                Changed?.Invoke(parameter, value);
             }
         }
     }

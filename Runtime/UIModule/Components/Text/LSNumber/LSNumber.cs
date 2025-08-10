@@ -14,21 +14,18 @@ namespace LSCore
         [SerializeField] private string numberFormat;
         [SerializeField] private float number;
         
-        [ShowInInspector]
         public string TextFormat
         {
             get => textFormat;
             set { textFormat = value; UpdateText(); }
         }
         
-        [ShowInInspector]
         public string NumberFormat
         {
             get => numberFormat;
             set { numberFormat = value; UpdateText(); }
         }
         
-        [ShowInInspector]
         public float Number
         {
             get => number;
@@ -81,16 +78,9 @@ namespace LSCore
         protected override void OnEnable()
         {
             base.OnEnable();
-            tree = PropertyTree.Create(serializedObject);
-            Number = tree.RootProperty.Children["Number"];
-            TextFormat = tree.RootProperty.Children["TextFormat"];
-            NumberFormat = tree.RootProperty.Children["NumberFormat"];
-        }
-
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            tree?.Dispose();
+            Number = propertyTree.RootProperty.Children["number"];
+            TextFormat = propertyTree.RootProperty.Children["textFormat"];
+            NumberFormat = propertyTree.RootProperty.Children["numberFormat"];
         }
 
         public override void OnInspectorGUI()
@@ -99,8 +89,10 @@ namespace LSCore
 
             serializedObject.Update();
 
+            propertyTree.BeginDraw(true);
             Draw();
-
+            propertyTree.EndDraw();
+            
             if (serializedObject.ApplyModifiedProperties() || m_HavePropertiesChanged)
             {
                 m_TextComponent.havePropertiesChanged = true;
@@ -111,11 +103,9 @@ namespace LSCore
 
         protected virtual void Draw()
         {
-            tree.BeginDraw(true);
             Number.Draw();
             TextFormat.Draw();
             NumberFormat.Draw();
-            tree.EndDraw();
 
             DrawMainSettings();
 

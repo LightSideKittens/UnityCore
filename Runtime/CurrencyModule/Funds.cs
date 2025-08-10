@@ -86,9 +86,9 @@ namespace LSCore
         }
 
         public static int GetAmount(Id id) => Currencies.GetAmount(id);
-        public static void Earn(Id id, int value) => Currencies.Earn(id, value);
-        public static bool Spend(Id id, int value, out Action action) => Currencies.Spend(id, value, out action);
-        public static void ForceSpend(Id id, int value) => Currencies.ForceSpend(id, value);
+        public static void Earn(Id id, uint value) => Currencies.Earn(id, (int)value);
+        public static bool Spend(Id id, uint value, out Action action) => Currencies.Spend(id, (int)value, out action);
+        public static void ForceSpend(Id id, uint value) => Currencies.ForceSpend(id, (int)value);
         public static void Remove(Id id) => Currencies.Remove(id);
         
         public IEnumerator<BaseFund> GetEnumerator() => funds.GetEnumerator();

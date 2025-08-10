@@ -26,25 +26,25 @@ namespace LSCore.SDKManagement
             public static void LogEvent(string eventName)
             {
                 Burger.Log($"[FirebaseAnalytics] {eventName}");
-                FirebaseAnalytics.LogEvent(eventName);
+                Analytic.LogEvent(eventName);
             }
             
             public static void LogEvent(string eventName, string paramName, long value)
             {
                 Burger.Log($"[FirebaseAnalytics] {eventName} {paramName}: {value}");
-                FirebaseAnalytics.LogEvent(eventName, paramName, value);
+                Analytic.LogEvent(eventName, paramName, value);
             }
             
             public static void LogEvent(string eventName, string paramName, string value)
             {
                 Burger.Log($"[FirebaseAnalytics] {eventName} {paramName}: {value}");
-                FirebaseAnalytics.LogEvent(eventName, paramName, value);
+                Analytic.LogEvent(eventName, paramName, value);
             }
             
             public static void LogEvent(string eventName, string paramName, double value)
             {
                 Burger.Log($"[FirebaseAnalytics] {eventName} {paramName}: {value}");
-                FirebaseAnalytics.LogEvent(eventName, paramName, value);
+                Analytic.LogEvent(eventName, paramName, value);
             }
 
             public Firebase Long(string name, long value)
@@ -71,7 +71,7 @@ namespace LSCore.SDKManagement
             public void Send()
             {
                 Burger.Log($"[FirebaseAnalytics] {log}");
-                FirebaseAnalytics.LogEvent(eventName, parameters.ToArray());
+                Analytic.LogEvent(eventName, parameters.ToArray());
             }
         }
     }
