@@ -199,6 +199,12 @@ namespace LSCore.Extensions
         private Dictionary<object, Action<JToken>> setActions = new();
         
         public void Listen(object key, Action<JToken> action) => setActions[key] = action;
+        public void ListenAndCall(object key, Action<JToken> action)
+        {
+            setActions[key] = action;
+            action(token[key]);
+        }
+
         public void ListenTemp(object key, Action<JToken> action) => tempSetActions[key] = action;
         public bool UnListenTemp(object key, Action<JToken> action) => tempSetActions.Remove(key);
         

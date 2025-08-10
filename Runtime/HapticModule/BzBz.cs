@@ -24,6 +24,7 @@ public static class BzBz
     [Serializable]
     public class Muter : BaseToggleData
     {
+        public static event Action<bool> Changed;
         protected override bool Get => Unmuted;
 
         protected override bool Set
