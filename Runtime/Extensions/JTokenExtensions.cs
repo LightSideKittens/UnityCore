@@ -220,12 +220,12 @@ namespace LSCore.Extensions
             {
                 token[key] = value;
 
-                if (setActions.Remove(key, out var action))
+                if (tempSetActions.Remove(key, out var action))
                 {
                     action(value);
                 }
 
-                if (tempSetActions.TryGetValue(key, out action))
+                if (setActions.TryGetValue(key, out action))
                 {
                     action(value);
                 }
