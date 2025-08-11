@@ -47,8 +47,6 @@
                         Load();
                     }
 
-                    SRDebuggerUtil.EnsureEventSystemExists();
-
                     _debugPanelRootObject.CanvasGroup.alpha = 1.0f;
                     _debugPanelRootObject.CanvasGroup.interactable = true;
                     _debugPanelRootObject.CanvasGroup.blocksRaycasts = true;
@@ -146,8 +144,6 @@
             DontDestroyOnLoad(_debugPanelRootObject);
 
             _debugPanelRootObject.CachedTransform.SetParent(Hierarchy.Get("SRDebugger"), true);
-
-            SRDebuggerUtil.EnsureEventSystemExists();
         }
     }
 }

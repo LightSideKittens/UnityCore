@@ -1,4 +1,6 @@
-﻿using Sirenix.Utilities;
+﻿using System;
+using System.Collections.Generic;
+using Sirenix.Utilities;
 using UnityEngine;
 
 namespace LSCore.Extensions
@@ -61,6 +63,8 @@ namespace LSCore.Extensions
             value = (T)raw;
             return raw != null;
         }
+
+        private static List<Component> compsBuffer = new();
         
         public static T Cast<T>(this object obj)
         {
@@ -95,20 +99,82 @@ namespace LSCore.Extensions
 
                 if (raw is null)
                 {
-                    var comps = go.GetComponents(typeof(Component));
-                    for (var i = 0; i < comps.Length; i++)
+                    go.GetComponents(typeof(Component), compsBuffer);
+                    for (var i = 0; i < compsBuffer.Count; i++)
                     {
-                        var comp = comps[i];
+                        var comp = compsBuffer[i];
+                        if (comp is T castedComp)
+                        {
+                            return castedComp;
+                        }
+
                         cast = comp.GetType().GetCastMethodDelegate(typeof(T));
                         if (cast != null)
                         {
-                            return (T)cast(obj);
+                            return (T)cast(comp);
                         }
                     }
                 }
             }
             
             return (T)raw;
+        }
+        
+        public static object Cast(this object obj, Type type)
+        {
+            var objType = obj.GetType();
+            
+            if (type.IsAssignableFrom(objType))
+            {
+                return obj;
+            }
+
+            var cast = objType.GetCastMethodDelegate(type);
+            if (cast != null)
+            {
+                return cast(obj);
+            }
+
+            object raw;
+            GameObject go = obj as GameObject;
+            if (go is null)
+            {
+                if (obj is Component comp)
+                {
+                    go = comp.gameObject;
+                }
+            }
+
+            if (typeof(GameObject) == type)
+            {
+                raw = go;
+            }
+            else
+            {
+                raw = go.GetComponent(type);
+
+                if (raw is null)
+                {
+                    go.GetComponents(typeof(Component), compsBuffer);
+                    for (var i = 0; i < compsBuffer.Count; i++)
+                    {
+                        var comp = compsBuffer[i];
+                        var compType = comp.GetType();
+                        if (type.IsAssignableFrom(compType))
+                        {
+                            return comp;
+                        }
+
+                        cast = comp.GetType().GetCastMethodDelegate(type);
+                        if (cast != null)
+                        {
+                            return cast(comp);
+                        }
+                    }
+                }
+            }
+            
+            return raw;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using LSCore.Extensions;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
@@ -61,29 +62,10 @@ public partial class LevelsContainer
     private void OnTargetTypeChanged(List<Object> objects)
     {
         var type = Type.GetType(targetType);
-        var isGameObjectType = typeof(GameObject) == type;
         
         for (int i = 0; i < objects.Count; i++)
         {
-            if (isGameObjectType)
-            {
-                if (objects[i] is Component component)
-                {
-                    objects[i] = component.gameObject;
-                }
-                else
-                {
-                    objects[i] = (GameObject)objects[i];
-                }
-            }
-            else if (objects[i] is GameObject gameObject)
-            {
-                objects[i] = gameObject.GetComponent(type);
-            }
-            else if (objects[i] is Component component)
-            {
-                objects[i] = component.GetComponent(type);
-            }
+            objects[i] = (Object)objects[i].Cast(type);
         }
     }
 

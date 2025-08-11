@@ -120,19 +120,6 @@
                 default:
                     throw new Exception("Unhandled TriggerBehaviour");
             }
-            
-            SRDebuggerUtil.EnsureEventSystemExists();
-
-            UnityEngine.SceneManagement.SceneManager.activeSceneChanged += OnActiveSceneChanged;
-        }
-        protected override void OnDestroy()
-        {
-            UnityEngine.SceneManagement.SceneManager.activeSceneChanged -= OnActiveSceneChanged;
-            base.OnDestroy();
-        }
-        private static void OnActiveSceneChanged(UnityEngine.SceneManagement.Scene s1, UnityEngine.SceneManagement.Scene s2)
-        {
-            SRDebuggerUtil.EnsureEventSystemExists();
         }
         
         private void OnTriggerButtonClick()

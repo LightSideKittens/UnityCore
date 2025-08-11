@@ -44,7 +44,6 @@
             _callback = callback;
 
             _isVisible = true;
-            SRDebuggerUtil.EnsureEventSystemExists();
 
             StartCoroutine(OpenCo(takeScreenshotFirst, descriptionText));
         }
