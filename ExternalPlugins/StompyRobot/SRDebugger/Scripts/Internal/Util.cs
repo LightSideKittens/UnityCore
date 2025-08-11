@@ -38,43 +38,6 @@
         }
 
         /// <summary>
-        /// If no event system exists, create one
-        /// </summary>
-        /// <returns>True if the event system was created as a result of this call</returns>
-        public static bool EnsureEventSystemExists()
-        {
-            if (!Settings.Instance.EnableEventSystemGeneration)
-            {
-                return false;
-            }
-
-            if (EventSystem.current != null)
-            {
-                return false;
-            }
-
-            var e = Object.FindAnyObjectByType<EventSystem>();
-
-            // Check if EventSystem is in the scene but not registered yet
-            if (e != null && e.gameObject.activeSelf && e.enabled)
-            {
-                return false;
-            }
-
-            Debug.LogWarning("[SRDebugger] No EventSystem found in scene - creating a default one. Disable this behaviour in Window -> SRDebugger -> Settings Window -> Advanced)");
-
-            CreateDefaultEventSystem();
-            return true;
-        }
-
-        public static void CreateDefaultEventSystem()
-        {
-            var go = new GameObject("EventSystem (Created by SRDebugger, disable in Window -> SRDebugger -> Settings Window -> Advanced)");
-            go.AddComponent<EventSystem>();
-            go.AddComponent<StandaloneInputModule>();
-        }
-
-        /// <summary>
         /// Scan <paramref name="obj" /> for valid options and return a collection of them.
         /// </summary>
         /// <param name="obj"></param>

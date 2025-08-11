@@ -57,8 +57,6 @@
             _pinControl.Show();
 
             _isVisible = true;
-
-            SRDebuggerUtil.EnsureEventSystemExists();
         }
 
         [Obsolete]

@@ -71,7 +71,7 @@ public static class LaLa
         [ValueDropdown("Parameters")] public string parameter;
 
 #if UNITY_EDITOR
-        private IEnumerable<string> Parameters => LaLaEditor.GetExposedParameterNames(SingleAssets.Get<AudioMixer>("AudioMixer"));
+        private IEnumerable<string> Parameters => LaLaEditor.GetExposedParameterNames(SingleAssets.Get<AudioMixer>());
 #endif
 
         protected override bool Get => Unmutes.As(parameter, true);
@@ -80,7 +80,7 @@ public static class LaLa
         {
             set
             {
-                var mixer = SingleAssets.Get<AudioMixer>("AudioMixer");
+                var mixer = SingleAssets.Get<AudioMixer>();
                 var volume = ToDb(value ? Volumes.As(parameter, 1) : 0);
                 var id = HashCode.Combine(mixer, parameter);
                 DOTween.Kill(id);

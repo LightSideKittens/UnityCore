@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.Scripting;
+using Object = UnityEngine.Object;
 
 namespace LSCore
 {
@@ -11,11 +13,33 @@ namespace LSCore
     {
         RectTransform RectTransform { get; }
         WindowManager Manager { get; }
-        
-        static Action<IUIView> Showing; 
-        static Action<IUIView> Showed; 
+
+        private static bool isEventSystemCreated;
+        static Action<IUIView> Showing;
+        static Action<IUIView> Showed;
         static Action<IUIView> Hiding;
         static Action<IUIView> Hidden;
+
+#if UNITY_EDITOR
+        static IUIView()
+        {
+            World.Destroyed += () =>
+            {
+                isEventSystemCreated = false;
+                Showing = null;
+                Showed = null;
+                Hiding = null;
+                Hidden = null;
+            };
+        }
+#endif
+        
+        internal static void EnsureEventSystem()
+        {
+            if(isEventSystemCreated) return;
+            isEventSystemCreated = true;
+            Object.DontDestroyOnLoad(Object.Instantiate(SingleAssets.Get<EventSystem>()).gameObject);
+        }
     }
     
     [RequireComponent(typeof(CanvasGroup))]
@@ -35,6 +59,7 @@ namespace LSCore
         protected virtual ShowWindowOption ShowOption { get; set; }
         protected virtual bool ActiveByDefault => false;
 
+        
         [Preserve]
         protected void SetAnimation(ShowHideAnim anim) => showHideAnim = anim;
         [Preserve]
@@ -43,6 +68,7 @@ namespace LSCore
         protected override void Init()
         {
             base.Init();
+            IUIView.EnsureEventSystem();
             InitManager();
             var rectTransform = (RectTransform)transform;
             RectTransform = rectTransform;
