@@ -40,7 +40,7 @@ namespace LSCore.AnimationsModule
 
         private Dictionary<string, BaseAnim> animsById = new();
         private Dictionary<Type, List<BaseAnim>> animsByType = new();
-        private Sequence sequence;
+        public Sequence sequence;
 
         public int Count => animsData.Count;
         
@@ -158,11 +158,8 @@ namespace LSCore.AnimationsModule
             return sequence;
         }
 
-        public void Kill()
-        {
-            DOTween.Kill(this);
-        }
-        
+        public void Kill() => sequence.Kill();
+
         public void OnBeforeSerialize() { }
 
         public void OnAfterDeserialize()
