@@ -16,6 +16,7 @@ namespace LSCore
 #pragma warning restore CS0067
         
         private static bool isCalledFromStatic;
+        public static bool IsVisible => Instance.Manager.IsShow;
         
         protected override void Init()
         {
