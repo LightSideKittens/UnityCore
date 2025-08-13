@@ -25,6 +25,16 @@ public static class Extensions
         tween.onKill = null;
         tween.Kill();
     }
+
+    public static Tween KillOnEverySecondLoop(this Tween tween)
+    {
+        tween.OnStepComplete(() =>
+        {
+            var loops = (int)(tween.fullPosition / tween.Duration(false));
+            if(loops % 2 == 0) tween.Kill();
+        });
+        return tween;
+    }
 }
 
 [DisallowMultipleComponent]

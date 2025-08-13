@@ -25,6 +25,14 @@ public static class LaLa
         {
             obj.Play();
         }
+
+        public void Stop()
+        {
+            if (obj != null)
+            { 
+                obj.Stop();
+            }
+        }
     }
     
     [Serializable]
