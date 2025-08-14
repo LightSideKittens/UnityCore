@@ -73,13 +73,23 @@ namespace LSCore
             }
 
             private readonly Touch[] dataBuffer = new Touch[20];
+            private int endedCount;
             
             public ArraySlice<LSTouch> GetTouches()
             {
+                if (endedCount > 0)
+                {
+                    for (int i = 0; i < endedCount; i++)
+                    {
+                        touches.Remove(dataBuffer[i]);
+                    }
+                }
+
+                endedCount = 0;
+                
                 if(touches.Count == 0) return ArraySlice<LSTouch>.empty;
                 
                 int count = 0;
-                int endedCount = 0;
                 
                 foreach (var data in touches)
                 {
@@ -126,15 +136,7 @@ namespace LSCore
                     SimulateTouch(touch);
                     touchesBuffer[count++] = touch;
                 }
-
-                if (endedCount > 0)
-                {
-                    for (int i = 0; i < endedCount; i++)
-                    {
-                        touches.Remove(dataBuffer[i]);
-                    }
-                }
-
+                
                 return touchesBuffer.Slice(..count);
             }
         }
