@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Reflection;
 using LSCore.DataStructs;
 using UnityEngine;
 
@@ -19,6 +19,15 @@ namespace LSCore
                 internal Vector2 lastPosition;
                 internal bool pendingDown;
 
+                public TouchPhase Phase
+                {
+                    get
+                    {
+                        if (pendingUp) return TouchPhase.Ended;
+                        if (pendingDown) return TouchPhase.Began;
+                        return TouchPhase.Moved;
+                    }
+                }
                 public void Release() => pendingUp = true;
                 
                 internal Touch()
@@ -28,6 +37,9 @@ namespace LSCore
 
             private readonly List<Touch> touches = new();
 
+            public delegate void SimulateTouchDelegate(UnityEngine.Touch touch);
+            public readonly static SimulateTouchDelegate SimulateTouch = (SimulateTouchDelegate)typeof(Input).GetMethod("SimulateTouch", BindingFlags.Static | BindingFlags.NonPublic).CreateDelegate(typeof(SimulateTouchDelegate));
+            
             internal Simulator()
             {
             }
@@ -45,7 +57,7 @@ namespace LSCore
                     pendingDown = true,
                     pendingUp = false
                 };
-
+                
                 touches.Add(touch);
                 return touch;
             }
@@ -110,7 +122,8 @@ namespace LSCore
                         };
                         data.lastPosition = data.position;
                     }
-                    
+
+                    SimulateTouch(touch);
                     touchesBuffer[count++] = touch;
                 }
 
