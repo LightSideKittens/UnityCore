@@ -14,6 +14,17 @@ namespace LSCore
         public TouchPhase phase;
         
         public bool IsPointerOverUI => EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(fingerId);
+
+        public static implicit operator Touch(LSTouch touch)
+        {
+            return new Touch
+            {
+                fingerId = touch.fingerId,
+                position = touch.position,
+                deltaPosition = touch.deltaPosition,
+                phase = touch.phase
+            };
+        }
     }
 
     public static partial class LSInput
