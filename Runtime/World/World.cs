@@ -40,7 +40,7 @@ namespace LSCore
                 {
                     IsPlayModeDisabling = true;
                 }
-                else if (change == PlayModeStateChange.EnteredPlayMode)
+                else if (change == PlayModeStateChange.ExitingEditMode)
                 {
                     IsPlayModeDisabling = false;
                 }
