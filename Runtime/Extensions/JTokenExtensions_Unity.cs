@@ -42,6 +42,23 @@ namespace LSCore.Extensions
         
         
         
+        public static Vector2Int ToVector2Int(this JToken token)
+        {
+            int x = token["x"].ToInt();
+            int y = token["y"].ToInt();
+            return new Vector2Int(x, y);
+        }
+        
+        public static JObject ToJObject(this Vector2Int vector)
+        {
+            return new JObject
+            {
+                { "x", vector.x },
+                { "y", vector.y },
+            };
+        }
+        
+        
         public static Vector3 ToVector3(this JToken token)
         {
             float x = token["x"].ToFloat();
