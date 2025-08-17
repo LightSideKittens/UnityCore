@@ -38,7 +38,8 @@ namespace LSCore
         }
         
         public static implicit operator float(LSNumber number) => number.Number;
-
+        public static implicit operator int(LSNumber number) => (int)number.Number;
+        
         public static LSNumber operator +(LSNumber a, float b)
         { 
             a.Number += b;
