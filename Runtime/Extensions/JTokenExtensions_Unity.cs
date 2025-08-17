@@ -19,6 +19,11 @@ namespace LSCore.Extensions
             return Convert.ToInt32(((JValue)token).Value, invariantCulture);
         }
         
+        public static long ToLong(this JToken token)
+        {
+            return Convert.ToInt64(((JValue)token).Value, invariantCulture);
+        }
+        
         public static float ToFloat(this JToken token)
         {
             return Convert.ToSingle(((JValue)token).Value, invariantCulture);

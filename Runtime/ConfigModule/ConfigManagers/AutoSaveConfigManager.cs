@@ -19,6 +19,12 @@ namespace LSCore.ConfigModule
             UnSetupAutoSave();
         }
 
+        public override void Unload()
+        {
+            base.Unload();
+            UnSetupAutoSave();
+        }
+
         private void SetupAutoSave()
         {
 #if UNITY_EDITOR
@@ -29,7 +35,7 @@ namespace LSCore.ConfigModule
                 void OnCreating()
                 {
                     World.Creating -= OnCreating;
-                    LoadOnNextAccess();
+                    Unload();
                 }
                 return;
             }
@@ -43,7 +49,7 @@ namespace LSCore.ConfigModule
         private void UnSetupAutoSave()
         {
 #if UNITY_EDITOR
-            if(!World.IsPlaying) return;
+            if(World.IsEditMode) return;
 #endif
             UnsubOnWorldDestroy();
             UnsubOnApplicationPaused();
@@ -62,7 +68,7 @@ namespace LSCore.ConfigModule
         private void OnWorldDestroy()
         {
             Save();
-            LoadOnNextAccess();
+            Unload();
             UnsubOnWorldDestroy();
         }
         

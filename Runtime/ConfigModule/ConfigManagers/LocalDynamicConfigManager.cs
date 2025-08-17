@@ -70,18 +70,20 @@ namespace LSCore.ConfigModule
         protected string fullPath;
         
         private bool wasLoaded;
+        private bool wasSaved;
         private JObject token;
 
         public T Config
         {
             get
             {
+                wasSaved = false;
                 if (!wasLoaded) Load();
                 return cached;
             }
         }
 
-        public void LoadOnNextAccess()
+        public virtual void Unload()
         {
             wasLoaded = false;
             token = null;
@@ -110,11 +112,12 @@ namespace LSCore.ConfigModule
             
             SetMeta(FullFileNameMeta);
             Log("Loading");
-
-            if (string.IsNullOrEmpty(json) && cached == null)
+            
+            cached ??= new T();
+            
+            if (string.IsNullOrEmpty(json))
             {
                 Log("Config created");
-                cached = new T();
                 cached.AddMigrations();
                 cached.SetDefault();
                 wasLoaded = true;
@@ -178,6 +181,9 @@ namespace LSCore.ConfigModule
 
         public virtual void Save()
         {
+            if (wasSaved) return;
+            
+            wasSaved = true;
             string fullFileName = FullFileName;
             string json;
             
@@ -204,9 +210,14 @@ namespace LSCore.ConfigModule
         
         public void Delete()
         {
+            Log("Deleting");
             cached?.OnDeleting();
             OnDelete();
             cached?.OnDeleted();
+            cached = null;
+            token = null;
+            wasLoaded = false;
+            wasSaved = false;
         }
 
         
