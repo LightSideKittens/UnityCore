@@ -84,26 +84,26 @@ public partial class MoveIt
 
         public override void Start()
         {
-            if (World.IsPlaying)
-            {
-                eventt.Start();
-            }
+#if UNITY_EDITOR
+            if (World.IsEditMode) return;
+#endif
+            eventt.Start();
         }
 
         public override void Invoke()
         {
-            if (World.IsPlaying)
-            {
-                eventt.Invoke();
-            }
+#if UNITY_EDITOR
+            if (World.IsEditMode) return;
+#endif
+            eventt.Invoke();
         }
 
         public override void End()
         {
-            if (World.IsPlaying)
-            {
-                eventt.End();
-            }
+#if UNITY_EDITOR
+            if (World.IsEditMode) return;
+#endif
+            eventt.End();
         }
     }
 }

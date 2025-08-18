@@ -80,7 +80,9 @@ namespace LSCore
 
             void ISerializationCallbackReceiver.OnAfterDeserialize()
             {
+#if UNITY_EDITOR
                 if(World.IsEditMode) return;
+#endif
                 World.Updated += OnUpdated;
 
                 void OnUpdated()

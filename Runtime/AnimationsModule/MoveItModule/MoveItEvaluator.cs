@@ -59,6 +59,7 @@ public class MoveItEvaluator<T> where T : IEvaluator
                 break;
         }
         
+#if UNITY_EDITOR
         World.Created += ClearStatic;
         World.Destroyed += ClearStatic;
         
@@ -67,6 +68,7 @@ public class MoveItEvaluator<T> where T : IEvaluator
             evaluators.Clear();
             animatables.Clear();
         }
+#endif
     }
     
     public static void Register(IAnimatable<T> animatable, MoveIt.UpdateModeType updateMode)

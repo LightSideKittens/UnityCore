@@ -14,7 +14,9 @@ namespace LSCore
         {
             get
             {
+#if UNITY_EDITOR
                 if(World.IsEditMode) return FindAnyObjectByType<T>(FindObjectsInactive.Include);
+#endif
                 return staticConstructor();
             }
         }
@@ -24,15 +26,10 @@ namespace LSCore
 
         static SingleService()
         {
-            Editor_Init();
+#if UNITY_EDITOR
+            World.Destroyed += ResetStatic;
+#endif
             staticConstructor = StaticConstructor;
-            return;
-
-            [Conditional("UNITY_EDITOR")]
-            static void Editor_Init()
-            {
-                World.Destroyed += ResetStatic;
-            }
         }
 
         private static T StaticConstructor()

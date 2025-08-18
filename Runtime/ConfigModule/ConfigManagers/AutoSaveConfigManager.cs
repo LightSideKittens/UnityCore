@@ -62,7 +62,9 @@ namespace LSCore.ConfigModule
         [Conditional("UNITY_EDITOR")]
         private void Editor_Init()
         {
+#if UNITY_EDITOR
             World.Destroyed += OnWorldDestroy;
+#endif
         }
         
         private void OnWorldDestroy()
@@ -73,9 +75,14 @@ namespace LSCore.ConfigModule
         }
         
         [Conditional("UNITY_EDITOR")]
-        private void UnsubOnWorldDestroy() => World.Destroyed -= OnWorldDestroy;
+        private void UnsubOnWorldDestroy()
+        {
+#if UNITY_EDITOR
+            World.Destroyed -= OnWorldDestroy;
+#endif
+        }
 
-#endregion
+        #endregion
         
         
 #region RUNTIME

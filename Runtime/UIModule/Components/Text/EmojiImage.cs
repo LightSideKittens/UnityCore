@@ -54,10 +54,10 @@ public class EmojiImage : RawImage
             emojiImagePrefab = new GameObject("Emoji.Image").AddComponent<EmojiImage>();
             emojiImagePrefab.gameObject.hideFlags = HideFlags.HideAndDontSave;
             Pool.Created += OnCreate;
-            if (World.IsPlaying)
-            {
-                DontDestroyOnLoad(emojiImagePrefab.gameObject);
-            }
+#if UNITY_EDITOR
+            if (World.IsEditMode) return;
+#endif
+            DontDestroyOnLoad(emojiImagePrefab.gameObject);
         }
     }
 

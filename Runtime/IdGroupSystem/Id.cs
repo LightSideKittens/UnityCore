@@ -10,7 +10,9 @@ namespace LSCore
         static Id()
         {
             cachedIds = new Dictionary<string, Id>();
+#if UNITY_EDITOR
             World.Destroyed += cachedIds.Clear;
+#endif
         }
         
         public static implicit operator string(Id id) => id.name;
@@ -37,8 +39,10 @@ namespace LSCore
 
         public override bool Equals(object other)
         {
+#if UNITY_EDITOR
             if (World.IsPlaying)
             {
+#endif
                 if (other is Id id)
                 {
                     return id == name;
@@ -50,14 +54,22 @@ namespace LSCore
                 }
 
                 return false;
+#if UNITY_EDITOR
             }
+#endif
             
             return base.Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return World.IsPlaying ? name.GetHashCode() : base.GetHashCode();
+#if UNITY_EDITOR
+            if (World.IsPlaying)
+#endif
+                return name.GetHashCode();
+            
+            
+            return base.GetHashCode();
         }
 
 #if UNITY_EDITOR

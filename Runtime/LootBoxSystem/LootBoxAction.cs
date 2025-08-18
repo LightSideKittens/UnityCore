@@ -92,6 +92,7 @@ namespace LSCore
 
         private bool isInited;
         
+#if UNITY_EDITOR
         [OnInspectorGUI]
         private void OnInspectorGui()
         {
@@ -112,6 +113,7 @@ namespace LSCore
             OnChanceChanged();
             OnGuaranteedAtChanged();
         }
+#endif
         
         public void OnChanceChanged()
         {
