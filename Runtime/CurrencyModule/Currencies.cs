@@ -10,10 +10,12 @@ namespace LSCore
         [JsonProperty] private Dictionary<string, int> currencies = new();
         internal static readonly Dictionary<string, Action<int>> onChangedActions = new();
 
+#if UNITY_EDITOR
         static Currencies()
         {
             World.Destroyed += onChangedActions.Clear;
         }
+#endif
         
         internal static int GetAmount(string name)
         {

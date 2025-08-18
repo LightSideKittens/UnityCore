@@ -57,13 +57,14 @@ namespace LSCore.SDKManagement
 
         public void OnAfterDeserialize()
         {
-            if (World.IsPlaying)
+#if UNITY_EDITOR
+            if(World.IsEditMode) return;
+#endif
+
+            for (int i = 0; i < initializers.Count; i++)
             {
-                for (int i = 0; i < initializers.Count; i++)
-                {
-                    var initializer = initializers[i];
-                    initializersByType.Add(initializer.GetType(), initializer);
-                }
+                var initializer = initializers[i];
+                initializersByType.Add(initializer.GetType(), initializer);
             }
         }
     }

@@ -4,6 +4,10 @@ using System.IO;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace LSCore.ConfigModule
 {
     public interface ILocalConfigManager
@@ -205,7 +209,11 @@ namespace LSCore.ConfigModule
         protected void Save(string fullFileName, string json)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(fullFileName)!);
-            File.WriteAllText(fullFileName,json); 
+            File.WriteAllText(fullFileName,json);
+
+#if UNITY_EDITOR
+            AssetDatabase.SaveAssets();
+#endif
         }
         
         public void Delete()
@@ -223,8 +231,11 @@ namespace LSCore.ConfigModule
         
         protected virtual void OnDelete()
         {
-            string fullFileName = FullFileName;
-            File.Delete(fullFileName);
+            if (Exists)
+            {
+                string fullFileName = FullFileName;
+                File.Delete(fullFileName);
+            }
         }
         
         public bool Exists

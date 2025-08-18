@@ -101,7 +101,7 @@ namespace LSCore
         }
         
         [NonSerialized] private bool isInited;
-
+#if UNITY_EDITOR
         private void OnDestroy()
         {
             World.Created -= OnCreated;
@@ -114,7 +114,7 @@ namespace LSCore
             World.Destroyed -= OnCreated;
             isInited = false;
         }
-
+#endif
         private void Init()
         {
             if (isInited)
@@ -125,10 +125,10 @@ namespace LSCore
                 return;
 #endif
             }
-            
+#if UNITY_EDITOR 
             World.Created += OnCreated;
             World.Destroyed += OnCreated;
-            
+#endif   
             byKeyDict.Clear();
 
             foreach (var entry in byKey)

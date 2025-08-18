@@ -7,7 +7,7 @@ namespace LSCore
 {
     public static class VideoPlayerCreator
     {
-        public static VideoPlayer Create(string filePath, Action<VideoPlayer> onComplete = null)
+        /*public static VideoPlayer Create(string filePath, Action<VideoPlayer> onComplete = null)
         {
             if (!filePath.StartsWith("file://"))
             {
@@ -46,6 +46,6 @@ namespace LSCore
                 vp.targetTexture = renderTexture;
                 onComplete?.Invoke(vp);
             }
-        }
+        }*/
     }
 }

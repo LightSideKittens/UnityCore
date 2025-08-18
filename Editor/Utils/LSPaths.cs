@@ -52,6 +52,7 @@ public static class LSPaths
     public static string ProjectSettingsPath { get; } = Path.Combine(ProjectPath, "ProjectSettings");
     public static string LibraryPath { get; } = Path.Combine(ProjectPath, "Library");
     
+    public static string ToRelative(string path) => path[(ProjectPath.Length + 1)..];
     public static string ToFull(this string path) => Path.Combine(Application.dataPath, path);
     public static string AssetsPathToFull(this string path) => Path.Combine(ProjectPath, path);
 }

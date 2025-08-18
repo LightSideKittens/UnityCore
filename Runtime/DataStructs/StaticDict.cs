@@ -6,7 +6,9 @@ public class StaticDict<TKey, TValue>
 {
     private static readonly Dictionary<TKey, TValue> values = new();
 
+#if UNITY_EDITOR
     static StaticDict() => World.Destroyed += Clear;
+#endif
 
     public static void Set(TKey target, TValue obj) => values[target] = obj;
     public static void Add(TKey target, TValue obj) => values.Add(target, obj);

@@ -84,7 +84,9 @@ namespace LSCore
         {
             get
             {
+#if UNITY_EDITOR
                 if(World.IsEditMode) return FindAnyObjectByType<T>(FindObjectsInactive.Include);
+#endif
                 return instance;
             }
             private set => instance = value;

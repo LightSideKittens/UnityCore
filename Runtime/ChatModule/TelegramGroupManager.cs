@@ -277,7 +277,7 @@ public class TelegramGroupManager : MonoBehaviour
         }
         else if (extension == ".mp4")
         {
-            var videoPlayer = VideoPlayerCreator.Create(localPath, vp =>
+            /*var videoPlayer = VideoPlayerCreator.Create(localPath, vp =>
             {
                 var rawImage = vp.gameObject.AddComponent<LSRawImage>();
                 rawImage.texture = vp.texture;
@@ -285,7 +285,7 @@ public class TelegramGroupManager : MonoBehaviour
                 rawImage.transform.SetParent(content);
             });
             
-            videoPlayer.Play();
+            videoPlayer.Play();*/
         }
         
         Debug.Log($"Custom emoji saved to {localPath}");

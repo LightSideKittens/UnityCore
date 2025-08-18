@@ -10,11 +10,13 @@ public static class AddressablesCatalogUpdater
     public static event Action UpdateCompleted;
     private static Action updateCompleted;
     private static bool isProcessing;
-
+    
+#if UNITY_EDITOR
     static AddressablesCatalogUpdater()
     {
         World.Destroyed += Reset;
     }
+#endif
     
     public static void UpdateCatalog()
     {

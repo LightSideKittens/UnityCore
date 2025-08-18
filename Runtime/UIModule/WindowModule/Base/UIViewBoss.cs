@@ -62,10 +62,12 @@ namespace LSCore
         public static bool IsHidePrevious { get; private set; }
         public static bool IsHideAllPrevious { get; private set; }
 
+#if UNITY_EDITOR
         static UIViewBoss()
         {
             World.Destroyed += Clear;
         }
+#endif
 
         private static void Clear()
         {

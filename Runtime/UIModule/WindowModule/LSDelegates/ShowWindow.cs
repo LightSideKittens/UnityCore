@@ -38,7 +38,7 @@ namespace LSCore
 #if UNITY_EDITOR
             EditorApplication.update += Initialize;
 #else
-            World.Created += Initialize;
+            Initialize();
 #endif
         }
 
@@ -46,8 +46,6 @@ namespace LSCore
         {
 #if UNITY_EDITOR
             EditorApplication.update -= Initialize;
-#else
-            World.Created -= Initialize;
 #endif
             var type = typeof(BaseWindow<>);
 #if UNITY_EDITOR

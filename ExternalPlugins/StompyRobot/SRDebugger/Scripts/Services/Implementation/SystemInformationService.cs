@@ -214,7 +214,7 @@
                 InfoEntry.Create("Image Effects", UnityEngine.SystemInfo.supportsImageEffects),
                 InfoEntry.Create("Cubemaps", UnityEngine.SystemInfo.supportsRenderToCubemap),
                 InfoEntry.Create("Shadows", UnityEngine.SystemInfo.supportsShadows),
-                InfoEntry.Create("Stencil", UnityEngine.SystemInfo.supportsStencil),
+                InfoEntry.Create("Stencil", 1),
                 InfoEntry.Create("Sparse Textures", UnityEngine.SystemInfo.supportsSparseTextures)
             });
 #pragma warning restore 618

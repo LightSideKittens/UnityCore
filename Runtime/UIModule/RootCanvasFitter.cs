@@ -1,4 +1,5 @@
 ﻿using LSCore.Extensions.Unity;
+using UnityEditor;
 using UnityEngine;
 
 namespace LSCore.UIModule
@@ -15,7 +16,16 @@ namespace LSCore.UIModule
         private void OnEnable() => CacheReferencesAndFit();
 
 #if UNITY_EDITOR
-        private void OnValidate() => CacheReferencesAndFit();
+        private void OnValidate()
+        {
+            EditorApplication.update += OnUpdate;
+
+            void OnUpdate()
+            { 
+                EditorApplication.update -= OnUpdate;
+                CacheReferencesAndFit();
+            }
+        }
 #endif
 
         private bool ignoreFitRoot;

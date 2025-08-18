@@ -5,8 +5,10 @@ namespace LSCore.BattleModule
     {
         private static readonly Dictionary<Id, OnOffPool<Unit>> pools = new();
         
+#if UNITY_EDITOR
         static Unit() => World.Destroyed += pools.Clear;
-
+#endif
+        
         public static Unit Create(Unit prefab)
         {
             if (pools.TryGetValue(prefab.Id, out var pool)) return pool.Get();

@@ -119,7 +119,8 @@ public class SingleAssets : ScriptableObject
         {
             typedAssetsDict.Add(typedAssets[i].Type, typedAssets[i].asset);
         }
-        
+
+#if UNITY_EDITOR
         World.Destroyed += OnDestroy;
 
         void OnDestroy()
@@ -128,6 +129,7 @@ public class SingleAssets : ScriptableObject
             Resources.UnloadAsset(this);
             instance = null;
         }
+#endif
     }
     
     private void OnTypeAssetsChanged()

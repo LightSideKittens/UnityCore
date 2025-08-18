@@ -7,6 +7,7 @@ using UnityEngine;
 
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.Build;
 #endif
 
 namespace LSCore
@@ -15,22 +16,39 @@ namespace LSCore
     public class World : MonoBehaviour
     {
         public static event Action ApplicationPaused;
-        public static event Action Creating;
-        public static event Action Created;
         public static event Action Updated;
         public static event Action FixedUpdated;
-        public static event Action Destroyed;
+        
         private static readonly SynchronizationContext synchronizationContext = SynchronizationContext.Current;
         private static bool isCreated;
         private static World instance;
-        
-        public static int InstanceId => instance.GetInstanceID(); 
-        public static Camera Camera { get; private set; }
-        public static bool IsPlaying { get; private set; }
-        public static bool IsEditMode => !IsPlaying;
         public static float FrameRate => 1f / Time.unscaledDeltaTime;
 
 #if UNITY_EDITOR
+        public class BuildHooks : BuildPlayerProcessor
+        {
+            public int callbackOrder => 0;
+
+            public override void PrepareForBuild(BuildPlayerContext buildPlayerContext)
+            {
+                IsBuilding = true;
+                EditorApplication.update += OnUpdate;
+            }
+
+            private void OnUpdate()
+            {
+                EditorApplication.update -= OnUpdate;
+                IsBuilding = false;
+            }
+        }
+        
+        public static event Action Creating;
+        public static event Action Created;
+        public static event Action Destroyed;
+        public static int InstanceId => instance.GetInstanceID(); 
+        public static bool IsPlaying { get; private set; }
+        public static bool IsBuilding { get; private set; }
+        public static bool IsEditMode => !IsPlaying;
         public static bool IsPlayModeDisabling { get; private set; }
         static World()
         {
@@ -52,42 +70,18 @@ namespace LSCore
         private static void Init()
         {
             DOTween.SetTweensCapacity(1000, 1000);
+#if UNITY_EDITOR
             Creating.SafeInvoke();
+#endif
             var go = new GameObject(nameof(World));
             instance = go.AddComponent<World>();
             DontDestroyOnLoad(go);
+#if UNITY_EDITOR
             IsPlaying = true;
-
             Created.SafeInvoke();
+#endif
             Application.targetFrameRate = 120;
             Burger.Log("[World] Created");
-        }
-
-        public static void CallOnCreated(Action action)
-        {
-            if (IsPlaying)
-            {
-                action();
-            }
-            else
-            {
-                Created += action;
-            }
-        }
-        
-        public static void CallOnCreatedOnce(Action action)
-        {
-            CallOnCreated(Call);
-            void Call()
-            {
-                action();
-                Created -= Call;
-            }
-        }
-        
-        private void Awake()
-        {
-            Camera = Camera.main;
         }
 
         private void Update()
@@ -104,9 +98,11 @@ namespace LSCore
         private void OnDestroy()
         {
             Burger.Log("[World] OnDestroy");
+#if UNITY_EDITOR
             IsPlaying = false;
-            Burger.logToFile = false;
             Destroyed.SafeInvoke();
+#endif
+            Burger.logToFile = false;
         }
 
         private void OnApplicationPause(bool pauseStatus)
@@ -119,7 +115,9 @@ namespace LSCore
 
         private void OnApplicationQuit()
         {
+#if UNITY_EDITOR
             IsPlaying = false;
+#endif
             OnApplicationPause(true);
         }
         
@@ -141,12 +139,13 @@ namespace LSCore
                 }
             }
         }
-
+#if UNITY_EDITOR
         public static bool IsDiff(ref int id)
         {
             bool diff = id != InstanceId;
             id = InstanceId;
             return diff;
         }
+#endif
     }
 }
