@@ -48,6 +48,7 @@ namespace LSCore
         public static int InstanceId => instance.GetInstanceID(); 
         public static bool IsPlaying { get; private set; }
         public static bool IsBuilding { get; private set; }
+        public static bool IsCompiling => EditorApplication.isCompiling;
         public static bool IsEditMode => !IsPlaying;
         public static bool IsPlayModeDisabling { get; private set; }
         static World()

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LSCore.Extensions;
+using UnityEngine;
 
 namespace LSCore
 {
@@ -43,15 +44,17 @@ namespace LSCore
         };
 
         internal static int sortingOrder = DefaultSortingOrder;
-        internal static Dictionary<string, WindowsDataInstance> instances = new();
+        internal static Dictionary<string, WindowsGroup> groups = new();
+        
         internal static string Id { get; private set; } = DefaultId;
-        internal static WindowsDataInstance Current
+        
+        internal static WindowsGroup Current
         {
             get
             {
-                if (!instances.TryGetValue(Id, out var result))
+                if (!groups.TryGetValue(Id, out var result))
                 {
-                    instances[Id] = result = new WindowsDataInstance(Id);
+                    groups[Id] = result = new WindowsGroup(Id);
                 }
                 
                 return result;
@@ -62,12 +65,31 @@ namespace LSCore
         public static bool IsHidePrevious { get; private set; }
         public static bool IsHideAllPrevious { get; private set; }
 
-#if UNITY_EDITOR
+
         static UIViewBoss()
         {
+#if UNITY_EDITOR
             World.Destroyed += Clear;
-        }
 #endif
+            World.Updated += Update;
+        }
+
+        private static void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                var lastManager = Current.LastManager;
+                if (lastManager.blockSystemGoBack) return;
+                if (lastManager.systemGoBackOverride != null)
+                {
+                    lastManager.systemGoBackOverride.Do();
+                }
+                else
+                {
+                    GoBack();
+                }
+            }
+        }
 
         private static void Clear()
         {
@@ -76,9 +98,9 @@ namespace LSCore
             IsHideAllPrevious = false;
             Id = DefaultId;
             sortingOrder = DefaultSortingOrder;
-            instances = new ()
+            groups = new ()
             {
-                { DefaultId, new WindowsDataInstance(DefaultId) },
+                { DefaultId, new WindowsGroup(DefaultId) },
             };
             
             ClearInstances();
@@ -86,7 +108,7 @@ namespace LSCore
         
         private static void ClearInstances()
         {
-            foreach (var instance in instances.Values)
+            foreach (var instance in groups.Values)
             {
                 instance.Clear();
             }
@@ -99,9 +121,9 @@ namespace LSCore
             IsGoBack = false;
         }
 
-        private static void OnGoBacksEmpty(WindowsDataInstance instance)
+        private static void OnGoBacksEmpty(WindowsGroup instance)
         {
-            instances.Remove(instance.Id);
+            groups.Remove(instance.Id);
         }
 
         private static void HidePrevious()
@@ -141,24 +163,41 @@ namespace LSCore
 
         public static bool IsHome(WindowManager manager) => Current.IsHome(manager);
 
-        public class WindowsDataInstance
+        public class WindowsGroup
         {
-            internal string Id { get; private set; }
+            internal string Id { get; }
 
-            public WindowsDataInstance(string id)
+            public WindowsGroup(string id)
             {
                 Id = id;
             }
             
-            internal Action hidePrevious;
             internal Action hideAllPrevious;
             private readonly Stack<Action> states = new();
             private Action goHome;
-            private bool recordStates;
+            private bool isRecording;
             private Action recordedState;
 
+            public WindowManager LastManager
+            {
+                get
+                {
+                    var delegates = hideAllPrevious.GetInvocationList();
+                    return (WindowManager)delegates[^1].Target;
+                }
+            }
+            
             internal void GoBack()
             {
+                if (goHome != null)
+                {
+                    var delegates = hideAllPrevious.GetInvocationList();
+                    if (delegates.Length == 1 && delegates[0].Target == goHome.Target)
+                    {
+                        return;
+                    }
+                }
+                
                 IsGoBack = true;
                 
                 if (states.TryPop(out var action))
@@ -177,7 +216,7 @@ namespace LSCore
             internal void HidePrevious()
             {
                 IsHidePrevious = true;
-                hidePrevious?.Invoke();
+                ((Action)hideAllPrevious?.GetInvocationList()[^1])?.Invoke();
                 IsHidePrevious = false;
             }
 
@@ -190,15 +229,15 @@ namespace LSCore
 
             internal void StartRecording()
             {
-                if (recordStates) return;
+                if (isRecording) return;
 
-                recordStates = true;
+                isRecording = true;
                 recordedState = null;
             }
 
             internal void Record(Action state)
             {
-                if (recordStates)
+                if (isRecording)
                 {
                     recordedState += state;
                 }
@@ -206,9 +245,9 @@ namespace LSCore
 
             internal void StopRecording()
             {
-                if (!recordStates) return;
+                if (!isRecording) return;
 
-                recordStates = false;
+                isRecording = false;
                 if (recordedState != null)
                 {
                     states.Push(recordedState);
@@ -226,10 +265,9 @@ namespace LSCore
             public void Clear()
             {
                 states.Clear();
-                hidePrevious = null;
                 hideAllPrevious = null;
                 goHome = null;
-                recordStates = false;
+                isRecording = false;
                 recordedState = null;
             }
 
@@ -265,6 +303,7 @@ namespace LSCore
 
             public bool IsHome(WindowManager manager)
             {
+                if(goHome == null) return false;
                 return goHome.Target == manager;
             }
         }

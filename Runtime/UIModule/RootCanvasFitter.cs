@@ -18,12 +18,14 @@ namespace LSCore.UIModule
 #if UNITY_EDITOR
         private void OnValidate()
         {
+            if(World.IsBuilding) return;
+            if(World.IsCompiling) return;
             EditorApplication.update += OnUpdate;
 
             void OnUpdate()
             { 
                 EditorApplication.update -= OnUpdate;
-                CacheReferencesAndFit();
+                if(this != null) CacheReferencesAndFit();
             }
         }
 #endif

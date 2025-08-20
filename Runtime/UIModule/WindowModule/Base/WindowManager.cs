@@ -42,6 +42,8 @@ namespace LSCore
         public Canvas canvas;
         public bool needDisableOnHidden = true;
         private CanvasGroup canvasGroup;
+        public bool blockSystemGoBack;
+        public DoIt systemGoBackOverride;
         public bool IsShow { get; private set; }
 
         public void Init(CanvasGroup canvasGroup)
@@ -96,7 +98,6 @@ namespace LSCore
 
         protected virtual void RecordState()
         {
-            UIViewBoss.Current.hidePrevious = InternalHide;
             UIViewBoss.Current.hideAllPrevious += InternalHide;
             UIViewBoss.Record(InternalHide);
         }

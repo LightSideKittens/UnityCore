@@ -47,6 +47,11 @@ namespace LSCore
     public abstract class BaseUIView<T> : SingleService<T>, IUIView where T : BaseUIView<T>
     {
         [SerializeReference] public ShowHideAnim showHideAnim = new DefaultUIViewAnimation();
+        [SerializeField] private bool blockSystemGoBack;
+        
+        [HideIf("blockSystemGoBack")]
+        [SerializeReference] public DoIt systemGoBackOverride;
+        
         public RectTransform RectTransform { get; private set; }
         public virtual WindowManager Manager { get; } = new();
         
@@ -84,6 +89,8 @@ namespace LSCore
             Manager.showOption = () => ShowOption;
             Manager.showAnim = () => ShowAnim;
             Manager.hideAnim = () => HideAnim;
+            Manager.blockSystemGoBack = blockSystemGoBack;
+            Manager.systemGoBackOverride = systemGoBackOverride;
         }
 
         protected virtual void OnShowing() => onShowing.Do();
