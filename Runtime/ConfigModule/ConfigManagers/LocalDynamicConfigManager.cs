@@ -210,10 +210,6 @@ namespace LSCore.ConfigModule
         {
             Directory.CreateDirectory(Path.GetDirectoryName(fullFileName)!);
             File.WriteAllText(fullFileName,json);
-
-#if UNITY_EDITOR
-            AssetDatabase.SaveAssets();
-#endif
         }
         
         public void Delete()
