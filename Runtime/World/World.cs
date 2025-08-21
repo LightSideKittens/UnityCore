@@ -16,6 +16,7 @@ namespace LSCore
     public class World : MonoBehaviour
     {
         public static event Action ApplicationPaused;
+        public static event Action ApplicationResumed;
         public static event Action Updated;
         public static event Action FixedUpdated;
         
@@ -111,6 +112,10 @@ namespace LSCore
             if (pauseStatus)
             {
                 ApplicationPaused.SafeInvoke();
+            }
+            else
+            {
+                ApplicationResumed.SafeInvoke();
             }
         }
 

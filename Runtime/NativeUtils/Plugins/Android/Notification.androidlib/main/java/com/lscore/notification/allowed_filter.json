@@ -1,0 +1,27 @@
+{
+  "games": 
+  [
+    {
+      "name": "Crystal Crash",
+      "bigImagePath": "NotificationCache/crystal-crash.png",
+      "id": 77,
+      "paths":
+      [
+        "2ghaf23423nbnw34234",
+        "123dzmnm32234sdfsdkj3"
+      ]
+    },
+    {
+      "name": "Burning Hot",
+      "description": "Крутите слот!",
+      "id": 12,
+      "paths":
+      [
+        "2ghaf23423nbnw34234",
+        "123dzmnm32234sdfdkj3"
+      ]
+    }
+  ],
+  "commonTitle": "{0} успешно загружена!",
+  "commonDescription": "Сыграйте прямо сейчас!"
+}
