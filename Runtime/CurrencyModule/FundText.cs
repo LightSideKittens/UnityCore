@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using System;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 #endif
@@ -9,7 +10,7 @@ namespace LSCore
 {
     public class FundText : LSNumber
     {
-        [field: SerializeField, Id(typeof(CurrencyIdGroup))] public Id Id { get; private set; }
+        [field: SerializeField, Id(typeof(CurrencyIdGroup))] public Id Id { get; protected set; }
         
         [SerializeField] private bool changeTextColorIfNotEnough;
         [ShowIf("changeTextColorIfNotEnough")]
@@ -42,6 +43,15 @@ namespace LSCore
                 this.color = color;
             }
         }
+        
+#if UNITY_EDITOR
+        protected internal event Action Validated;
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+            Validated?.Invoke();
+        }
+#endif
         
         protected override void OnEnable()
         {
@@ -83,12 +93,6 @@ namespace LSCore
             changeTextColorIfNotEnough = children["changeTextColorIfNotEnough"];
             enoughColorId = children["enoughColorId"];
             notEnoughColorId = children["notEnoughColorId"];
-        }
-
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            propertyTree.Dispose();
         }
 
         protected override void Draw()

@@ -102,9 +102,11 @@ namespace LSCore
             }
         }
 
+        protected virtual void DrawNumber() => Number.Draw();
+
         protected virtual void Draw()
         {
-            Number.Draw();
+            DrawNumber();
             TextFormat.Draw();
             NumberFormat.Draw();
 
