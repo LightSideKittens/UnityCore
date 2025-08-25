@@ -185,6 +185,7 @@ namespace LSCore.ConfigModule
 
         public virtual void Save()
         {
+            if (!wasLoaded) return;
             if (wasSaved) return;
             
             wasSaved = true;

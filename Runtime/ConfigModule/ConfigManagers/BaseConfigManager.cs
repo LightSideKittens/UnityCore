@@ -44,7 +44,7 @@ namespace LSCore.ConfigModule
         [JsonIgnore] protected virtual ConfigSerializationSettings Settings => ConfigSerializationSettings.Default;
 
         protected virtual string Tag => $"[{typeof(T).Name}]".ToTag(new Color(0.15f, 0.82f, 0.42f));
-        public bool isLogEnabled;
+        public bool isLogEnabled = true;
 
         private string meta;
         
