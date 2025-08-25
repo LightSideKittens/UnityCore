@@ -42,7 +42,7 @@ public class UIParticleAttractor : MonoBehaviour
             data[i].ps.Play();
         }
 
-        Wait.Delay(delayBeforeAttract, Attract);
+        Wait.Delay(delayBeforeAttract, Attract).KillOnDestroy(this);
     }
     
     public void Attract()

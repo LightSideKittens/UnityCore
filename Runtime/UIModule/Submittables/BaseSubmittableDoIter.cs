@@ -12,15 +12,15 @@ namespace LSCore
         
         public void Subscribe()
         {
-            Submittable.Submitted += OnSubmit;
+            Submittable.Submitted += Do;
         }
 
         public void Unsubscribe()
         {
-            Submittable.Submitted -= OnSubmit;
+            Submittable.Submitted -= Do;
         }
 
-        private void OnSubmit()
+        public void Do()
         {
             onSubmit.Do();
             onSubmitAction?.Invoke();

@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using UnityEngine;
 
 namespace LSCore.AnimationsModule.Animations.Text
 {
@@ -13,7 +14,7 @@ namespace LSCore.AnimationsModule.Animations.Text
 
         protected override Tween AnimAction(LSNumber target)
         {
-            return DOVirtual.Int(startValue, endValue,duration, value => target.Number = value);
+            return DOVirtual.Float(startValue, endValue, duration, value => target.Number = Mathf.CeilToInt(value));
         }
     }
 }

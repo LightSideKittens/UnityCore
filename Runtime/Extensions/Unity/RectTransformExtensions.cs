@@ -41,6 +41,102 @@ namespace LSCore.Extensions.Unity
             target.sizeDelta = size;
         }
         
+        public static Rect GetScreenRect(this RectTransform rectTransform)
+        {
+            if (!rectTransform) return new Rect();
+
+            var canvas = rectTransform.GetComponentInParent<Canvas>();
+            if (!canvas) return new Rect();
+
+            var root = canvas.rootCanvas;
+            Camera cam = null;
+            var mainCam = Camera.main;
+            
+            if (root.renderMode != RenderMode.ScreenSpaceOverlay)
+                cam = root.worldCamera ?? mainCam;
+
+            Vector3[] worldCorners = new Vector3[4];
+            rectTransform.GetWorldCorners(worldCorners);
+
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(cam, worldCorners[0]);
+            Vector2 max = min;
+
+            for (int i = 1; i < 4; i++)
+            {
+                var sp = RectTransformUtility.WorldToScreenPoint(cam, worldCorners[i]);
+                min = Vector2.Min(min, sp);
+                max = Vector2.Max(max, sp);
+            }
+
+            var rect = Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+            
+            return rect;
+        }
+
+        public static Rect GetWorldRect(this RectTransform rectTransform)
+        {
+            if (!rectTransform) return new Rect();
+
+            var canvas = rectTransform.GetComponentInParent<Canvas>();
+            if (!canvas) return new Rect();
+
+            var root = canvas.rootCanvas;
+            Camera cam = null;
+            var mainCam = Camera.main;
+            
+            if (root.renderMode != RenderMode.ScreenSpaceOverlay)
+                cam = root.worldCamera ?? mainCam;
+
+            Vector3[] worldCorners = new Vector3[4];
+            rectTransform.GetWorldCorners(worldCorners);
+
+            Vector2 min = RectTransformUtility.WorldToScreenPoint(cam, worldCorners[0]);
+            Vector2 max = min;
+
+            for (int i = 1; i < 4; i++)
+            {
+                var sp = RectTransformUtility.WorldToScreenPoint(cam, worldCorners[i]);
+                min = Vector2.Min(min, sp);
+                max = Vector2.Max(max, sp);
+            }
+
+            var rect = Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+            
+            return ScreenRectToWorldRectXY(rect, cam ?? mainCam);
+        }
+        
+        private static Vector3 ScreenToWorldOnPlane(Vector2 screenPoint, Camera cam, Plane plane)
+        {
+            var ray = cam.ScreenPointToRay(screenPoint);
+            return plane.Raycast(ray, out float enter) ? ray.GetPoint(enter) : Vector3.zero;
+        }
+        
+        public static Vector3[] ScreenRectToWorldQuad(Rect screenRect, Camera cam, Plane plane)
+        {
+            var bl = ScreenToWorldOnPlane(new Vector2(screenRect.xMin, screenRect.yMin), cam, plane);
+            var tl = ScreenToWorldOnPlane(new Vector2(screenRect.xMin, screenRect.yMax), cam, plane);
+            var tr = ScreenToWorldOnPlane(new Vector2(screenRect.xMax, screenRect.yMax), cam, plane);
+            var br = ScreenToWorldOnPlane(new Vector2(screenRect.xMax, screenRect.yMin), cam, plane);
+            return new[] { bl, tl, tr, br };
+        }
+        
+        public static Rect ScreenRectToWorldRectXY(Rect screenRect, Camera cam, float zWorld = 1f)
+        {
+            var camT = cam.transform;
+            var pos = camT.position;
+            var forward = camT.forward;
+            pos += zWorld * forward;
+            var plane = new Plane(camT.forward, pos);
+            var quad = ScreenRectToWorldQuad(screenRect, cam, plane);
+
+            float xMin = Mathf.Min(quad[0].x, quad[1].x, quad[2].x, quad[3].x);
+            float xMax = Mathf.Max(quad[0].x, quad[1].x, quad[2].x, quad[3].x);
+            float yMin = Mathf.Min(quad[0].y, quad[1].y, quad[2].y, quad[3].y);
+            float yMax = Mathf.Max(quad[0].y, quad[1].y, quad[2].y, quad[3].y);
+
+            return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+        }
+        
         public static void FitToWorldRect(this RectTransform uiRect,
             Bounds worldBounds,
             Camera cam,

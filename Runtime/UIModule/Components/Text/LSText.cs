@@ -227,12 +227,8 @@ namespace LSCore
         protected override void OnDisable()
         {
             base.OnDisable();
-            SceneView.duringSceneGui -= DrawAnchorsOnSceneView;
-        }
-
-        private void OnDestroy()
-        {
             propertyTree.Dispose();
+            SceneView.duringSceneGui -= DrawAnchorsOnSceneView;
         }
 
         private void DrawAnchorsOnSceneView(SceneView sceneView) => LSRaycastTargetEditor.DrawAnchorsOnSceneView(this, sceneView);
