@@ -92,8 +92,8 @@ namespace LSCore
         public void OnlyShow()
         {
             AnimateOnShowing(OnCompleteShow);
-            Showing?.Invoke();
             gameObject.SetActive(true);
+            Showing?.Invoke();
         }
 
         protected virtual void RecordState()
