@@ -161,6 +161,8 @@ namespace LSCore
             States.Select = false;
         }
 
+        public void Submit() => submitted?.Invoke();
+        
         void ISubmitHandler.OnSubmit(BaseEventData eventData)
         {
             States.currentEventData = eventData;
@@ -195,6 +197,8 @@ namespace LSCore
             add => submittable.Submitted += value;
             remove => submittable.Submitted -= value;
         }
+        
+        public void Submit() => submittable.Submit();
 
         protected override void Awake()
         {

@@ -61,6 +61,7 @@ namespace LSCore
             }
         }
 
+        public static bool IsGoBackBlocked { get; set; }
         public static bool IsGoBack { get; private set; }
         public static bool IsHidePrevious { get; private set; }
         public static bool IsHideAllPrevious { get; private set; }
@@ -116,6 +117,7 @@ namespace LSCore
 
         public static void GoBack()
         {
+            if (IsGoBackBlocked) return;
             IsGoBack = true;
             Current.GoBack();
             IsGoBack = false;

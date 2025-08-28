@@ -167,6 +167,14 @@ namespace LSCore
             UpdateLocalizedText();
         }
         
+        public void Localize(string key, params object[] args)
+        {
+            m_text = string.Empty;
+            localizationData.rawArguments = args;
+            localizationData.Key = key;
+            UpdateLocalizedText();
+        }
+        
         public void LocalizeArguments(params object[] args)
         {
             m_text = string.Empty;
