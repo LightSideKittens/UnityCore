@@ -20,7 +20,7 @@ namespace LSCore.ConfigModule
             return true;
         }
 
-        public static bool IsNot(string name) => Config.states.Contains(name);
+        public static bool IsNot(string name) => !Config.states.Contains(name);
         public static bool Pass(string name) => Config.states.Add(name);
     }
 }
