@@ -17,11 +17,19 @@ namespace LSCore
             NormalizedPercent,
             ValueToMax
         }
+
+        [Serializable]
+        public enum NumberMode
+        {
+            Default,
+            WholeInText,
+            WholeEverywhere
+        }
         
         [field: SerializeField] public Image Icon { get; private set; }
         [SerializeField] private LSText text; 
         [SerializeField] private TextMode textMode;
-        [SerializeField] private bool wholeNumberInText;
+        [SerializeField] private NumberMode numberMode;
         [SerializeField] private bool onlyDiff;
         [SerializeField] private bool clampValue;
         
@@ -32,15 +40,15 @@ namespace LSCore
         public float DisplayedValue => GetDisplayedValue(value);
         public float GetDisplayedValue(float val) => onlyDiff ? val - minValue : val;
         
-        public bool WholeNumberInText
+        public NumberMode NumberModee
         {
-            get => wholeNumberInText;
+            get => numberMode;
             set
             {
-                if (wholeNumberInText != value)
+                if (numberMode != value)
                 {
                     UpdateVisuals();
-                    wholeNumberInText = value;
+                    numberMode = value;
                     UpdateValueTextGetter();
                 }
             }
@@ -91,6 +99,12 @@ namespace LSCore
 
         protected virtual void Init()
         {
+            if (numberMode == NumberMode.WholeEverywhere)
+            {
+                m_MinValue = Mathf.Round(m_MinValue);
+                m_MaxValue = Mathf.Round(m_MaxValue);
+            }
+            
             UpdateValueTextGetter();
             UpdateTextGetter();
 
@@ -159,7 +173,7 @@ namespace LSCore
         
         private void UpdateValueTextGetter(Func<float, string> defaultGetter, Func<float, string> intGetter, out Func<float, string> getter)
         {
-            getter = WholeNumberInText ? intGetter : defaultGetter;
+            getter = numberMode > 0 ? intGetter : defaultGetter;
         }
 
         private string IntValue(float val) => $"{(int)GetDisplayedValue(val)}";
