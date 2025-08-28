@@ -65,7 +65,7 @@ public static class CustomBuilder
                 {
                     Defines.Enable("DEBUG");
                     buildOptions |= BuildOptions.CompressWithLz4HC;
-                    stacktraceInfo = Il2CppStacktraceInformation.MethodFileLineNumber;
+                    stacktraceInfo = Il2CppStacktraceInformation.MethodOnly;
                 }
                 else
                 {

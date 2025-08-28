@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.EventSystems;
 namespace LSCore
 {
@@ -6,6 +7,12 @@ namespace LSCore
     {
         [SerializeReference] public DefaultSubmittable submittable = new();
         object ISubmittableElement.Submittable => submittable;
+        
+        public event Action Submitted
+        {
+            add => submittable.Submitted += value;
+            remove => submittable.Submitted -= value;
+        }
         
         protected void Awake()
         {

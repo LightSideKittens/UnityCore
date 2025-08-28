@@ -21,4 +21,21 @@ namespace LSCore.AnimationsModule.Animations
             }).SetTarget(endValue);
         }
     }
+    
+    [Serializable]
+    public class PosByTransformAnim : BaseAnim<Transform, Transform>
+    {
+        protected override void InitAction(Transform target)
+        {
+            target.position = startValue.position;
+        }
+
+        protected override Tween AnimAction(Transform target)
+        {
+            return Wait.Delay(duration).OnStart(() =>
+            {
+                target.DOMove(endValue.position, duration).KillOnDestroy();
+            }).SetTarget(endValue);
+        }
+    }
 }
