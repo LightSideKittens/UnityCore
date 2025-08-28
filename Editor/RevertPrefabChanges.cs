@@ -56,4 +56,23 @@ public static class RevertPrefabChanges
             }
         }
     }
+
+    public static void RevertAll(RectTransform rect, InteractionMode mode = InteractionMode.UserAction)
+    {
+        if (PrefabUtility.IsPartOfPrefabInstance(rect))
+        {
+            SerializedObject serializedObject = new SerializedObject(rect);
+            
+            SerializedProperty property = serializedObject.GetIterator();
+            
+            if (property.NextVisible(true))
+            {
+                do
+                {
+                    PrefabUtility.RevertPropertyOverride(property, mode);
+                }
+                while (property.NextVisible(false));
+            }
+        }
+    }
 }
