@@ -398,7 +398,7 @@ namespace LSCore
         {
             get
             {
-                return m_Value;
+                return numberMode == NumberMode.WholeEverywhere ? Mathf.Round(m_Value) : m_Value;
             }
             set
             {
@@ -778,6 +778,7 @@ namespace LSCore
         private float ClampValue(float input)
         {
             float newValue = Mathf.Clamp(input, minValue, maxValue);
+            if (numberMode == NumberMode.WholeEverywhere) newValue = Mathf.Round(newValue);
             return newValue;
         }
 

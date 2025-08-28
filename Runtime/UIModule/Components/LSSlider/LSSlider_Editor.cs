@@ -20,7 +20,7 @@ namespace LSCore
         SerializedProperty Icon;
         SerializedProperty text;
         SerializedProperty textMode;
-        SerializedProperty wholeNumberInText;
+        SerializedProperty numberMode;
         SerializedProperty onlyDiff;
         SerializedProperty clampValue;
         
@@ -40,7 +40,7 @@ namespace LSCore
             Icon = serializedObject.FindBackingField("Icon");
             text = serializedObject.FindProperty("text");
             textMode = serializedObject.FindProperty("textMode");
-            wholeNumberInText = serializedObject.FindProperty("wholeNumberInText");
+            numberMode = serializedObject.FindProperty("numberMode");
             onlyDiff = serializedObject.FindProperty("onlyDiff");
             clampValue = serializedObject.FindProperty("clampValue");
         }
@@ -54,7 +54,7 @@ namespace LSCore
             EditorGUILayout.PropertyField(Icon);
             EditorGUILayout.PropertyField(text);
             EditorGUILayout.PropertyField(textMode);
-            EditorGUILayout.PropertyField(wholeNumberInText);
+            EditorGUILayout.PropertyField(numberMode);
             EditorGUILayout.PropertyField(onlyDiff);
             
             serializedObject.ApplyModifiedProperties();
