@@ -46,10 +46,18 @@ namespace LSCore
         public DoIt systemGoBackOverride;
         public bool IsShow { get; private set; }
 
-        public void Init(CanvasGroup canvasGroup)
+        internal void Init(CanvasGroup canvasGroup)
         {
             this.gameObject = canvasGroup.gameObject;
             this.canvasGroup = canvasGroup;
+        }
+
+        internal void OnDestroy()
+        {
+            if (IsShow && canvas)
+            {
+                UIViewBoss.sortingOrder--;
+            }
         }
         
         public void Show()
@@ -105,6 +113,9 @@ namespace LSCore
         private void InternalHide()
         {
             if (hideTween != null) return;
+            Burger.Log($"{gameObject.name} InternalHide");
+            IsShow = false;
+            
             if (gameObject == null)
             {
                 UIViewBoss.Current.hideAllPrevious -= InternalHide;
@@ -114,10 +125,7 @@ namespace LSCore
                 }
                 return;
             }
-            
-            Burger.Log($"{gameObject.name} InternalHide");
-            IsShow = false;
-            
+
             if (canvas)
             {
                 UIViewBoss.sortingOrder--;
