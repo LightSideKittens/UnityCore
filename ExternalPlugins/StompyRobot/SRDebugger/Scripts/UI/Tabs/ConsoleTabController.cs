@@ -33,6 +33,8 @@ namespace SRDebugger.UI.Tabs
         [RequiredField]
         public Button StackTraceCopyButton;
         [RequiredField]
+        public Button SaveLogsButton;
+        [RequiredField]
         public Toggle ToggleErrors;
         [RequiredField]
         public Text ToggleErrorsText;
@@ -67,6 +69,7 @@ namespace SRDebugger.UI.Tabs
             FilterToggle.onValueChanged.AddListener(FilterToggleValueChanged);
             FilterBarContainer.SetActive(FilterToggle.isOn);
             StackTraceCopyButton.onClick.AddListener(CopyStackTrace);
+            SaveLogsButton.onClick.AddListener(SaveLogs);
 
 #if UNITY_5_3_OR_NEWER
             FilterField.onValueChanged.AddListener(FilterValueChanged);
@@ -83,6 +86,11 @@ namespace SRDebugger.UI.Tabs
             PopulateStackTraceArea(null);
 
             Refresh();
+        }
+
+        private void SaveLogs()
+        {
+            throw new NotImplementedException();
         }
 
         private void CopyStackTrace()

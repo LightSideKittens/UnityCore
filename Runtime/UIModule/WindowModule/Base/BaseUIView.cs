@@ -79,6 +79,12 @@ namespace LSCore
             RectTransform = rectTransform;
         }
 
+        protected override void DeInit()
+        {
+            base.DeInit();
+            Manager.OnDestroy();
+        }
+
         protected virtual void InitManager()
         {
             Manager.Init(GetComponent<CanvasGroup>());
