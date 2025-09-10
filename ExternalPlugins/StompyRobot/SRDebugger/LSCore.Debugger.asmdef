@@ -2,8 +2,7 @@
     "name": "LSCore.Debugger",
     "rootNamespace": "",
     "references": [
-        "GUID:05dbf8cd246c9274c8a78a65142e5f8a",
-        "GUID:0bc5ada31530a404b84ce1d0d9d2ab77"
+        "GUID:05dbf8cd246c9274c8a78a65142e5f8a"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

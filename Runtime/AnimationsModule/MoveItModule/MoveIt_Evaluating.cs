@@ -159,67 +159,67 @@ public partial class MoveIt
             switch (propertyType)
             {
                 case PropertyType.Float:
-                    floatAccessor = PathAccessorCache.Get<float>(obj, property);
+                    floatAccessor = PathAccessor.Get<float>(obj, property);
                     numGet = GetFloat;
                     numSet = SetFloat;
                     break;
                 case PropertyType.Int8:
-                    sbyteAccessor = PathAccessorCache.Get<sbyte>(obj, property);
+                    sbyteAccessor = PathAccessor.Get<sbyte>(obj, property);
                     numGet = GetInt8;
                     numSet = SetInt8;
                     break;
                 case PropertyType.UInt8:
-                    byteAccessor = PathAccessorCache.Get<byte>(obj, property);
+                    byteAccessor = PathAccessor.Get<byte>(obj, property);
                     numGet = GetUInt8;
                     numSet = SetUInt8;
                     break;
                 case PropertyType.Int16:
-                    shortAccessor = PathAccessorCache.Get<short>(obj, property);
+                    shortAccessor = PathAccessor.Get<short>(obj, property);
                     numGet = GetInt16;
                     numSet = SetInt16;
                     break;
                 case PropertyType.UInt16:
-                    ushortAccessor = PathAccessorCache.Get<ushort>(obj, property);
+                    ushortAccessor = PathAccessor.Get<ushort>(obj, property);
                     numGet = GetUInt16;
                     numSet = SetUInt16;
                     break;
                 case PropertyType.Int32:
-                    intAccessor = PathAccessorCache.Get<int>(obj, property);
+                    intAccessor = PathAccessor.Get<int>(obj, property);
                     numGet = GetInt32;
                     numSet = SetInt32;
                     break;
                 case PropertyType.UInt32:
-                    uintAccessor = PathAccessorCache.Get<uint>(obj, property);
+                    uintAccessor = PathAccessor.Get<uint>(obj, property);
                     numGet = GetUInt32;
                     numSet = SetUInt32;
                     break;
                 case PropertyType.Int64:
-                    longAccessor = PathAccessorCache.Get<long>(obj, property);
+                    longAccessor = PathAccessor.Get<long>(obj, property);
                     numGet = GetInt64;
                     numSet = SetInt64;
                     break;
                 case PropertyType.UInt64:
-                    ulongAccessor = PathAccessorCache.Get<ulong>(obj, property);
+                    ulongAccessor = PathAccessor.Get<ulong>(obj, property);
                     numGet = GetUInt64;
                     numSet = SetUInt64;
                     break;
                 case PropertyType.Double:
-                    doubleAccessor = PathAccessorCache.Get<double>(obj, property);
+                    doubleAccessor = PathAccessor.Get<double>(obj, property);
                     numGet = GetDouble;
                     numSet = SetDouble;
                     break;
                 case PropertyType.Bool:
-                    boolAccessor = PathAccessorCache.Get<bool>(obj, property);
+                    boolAccessor = PathAccessor.Get<bool>(obj, property);
                     numGet = GetBool;
                     numSet = SetBool;
                     break;
                 case PropertyType.Enum:
-                    var accessor = PathAccessorCache.GetRef(obj, property);
+                    var accessor = PathAccessor.GetRef(obj, property);
                     get = accessor.Get;
                     set = accessor.Set;
                     break;
                 case PropertyType.Ref:
-                    var refAccessor = PathAccessorCache.GetRef(obj, property);
+                    var refAccessor = PathAccessor.GetRef(obj, property);
                     get = refAccessor.Get;
                     set = refAccessor.Set;
                     break;

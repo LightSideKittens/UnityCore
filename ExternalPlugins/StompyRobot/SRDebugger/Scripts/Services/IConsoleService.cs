@@ -40,9 +40,16 @@
         public int Count = 1;
 
         public LogType LogType;
+        public int Frame;
+        public float TimeSinceStartUp;
         public string Message;
         public string StackTrace;
-        public ConsoleEntry() {}
+
+        public ConsoleEntry()
+        {
+            Frame = Time.frameCount;
+            TimeSinceStartUp = Time.realtimeSinceStartup;
+        }
 
         public ConsoleEntry(ConsoleEntry other)
         {

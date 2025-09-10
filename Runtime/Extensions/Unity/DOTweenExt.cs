@@ -14,7 +14,7 @@ namespace LSCore.Extensions
             if(World.IsPlayModeDisabling) return;
 #endif
             
-            var sequenceParent = PathAccessorCache.GetRef(tween, "sequenceParent");
+            var sequenceParent = PathAccessor.GetRef(tween, "sequenceParent");
             
             if (sequenceParent.Get(tween) is Sequence sequence)
             {

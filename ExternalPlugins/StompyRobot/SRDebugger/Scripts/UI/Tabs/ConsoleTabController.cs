@@ -1,6 +1,7 @@
 ﻿//#define SR_CONSOLE_DEBUG
 
-using LSCore.Runtime;
+using System.IO;
+using System.Text;
 
 namespace SRDebugger.UI.Tabs
 {
@@ -14,7 +15,7 @@ namespace SRDebugger.UI.Tabs
 
     public class ConsoleTabController : SRMonoBehaviourEx
     {
-        private const int MaxLength = 2600;
+        private const int MaxLength = 4096 * 4;
 
         private Canvas _consoleCanvas;
         private bool _isDirty;
@@ -90,12 +91,16 @@ namespace SRDebugger.UI.Tabs
 
         private void SaveLogs()
         {
-            throw new NotImplementedException();
+            SaveToFile(Service.Console.AllEntries);
         }
 
         private void CopyStackTrace()
         {
-            Clipboard.Value = StackTraceText.text;
+            var log = ConsoleLogControl.ConsoleScrollLayoutGroup.SelectedItem;
+            if (log is ConsoleEntry entry)
+            { 
+                GUIUtility.systemCopyBuffer = entry.Message;
+            }
         }
 
 
@@ -202,6 +207,33 @@ namespace SRDebugger.UI.Tabs
             }
 
             StackTraceScrollRect.normalizedPosition = new Vector2(0, 1);
+        }
+        
+        private static void SaveToFile(IReadOnlyList<ConsoleEntry> entries)
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine($"App version: {Application.version}");
+            sb.AppendLine($"Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine("==========================");
+            sb.AppendLine();
+
+            foreach (var entry in entries)
+            {
+                sb.AppendLine($"[{entry.LogType}] [{entry.TimeSinceStartUp}] [{entry.Frame}] {entry.Message}");
+            
+                if (!string.IsNullOrWhiteSpace(entry.StackTrace))
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("---STACK TRACE---");
+                    sb.AppendLine(entry.StackTrace);
+                }
+
+                sb.AppendLine(new string('-', 40));
+                sb.AppendLine();
+            }
+            
+            File.WriteAllText(Path.Combine(Application.persistentDataPath, $"log_{ DateTime.UtcNow.Ticks}.txt"), sb.ToString(), Encoding.UTF8);
         }
 
         private void Refresh()

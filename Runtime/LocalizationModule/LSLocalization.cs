@@ -70,6 +70,16 @@ namespace LSCore
         {
             return key.Translate(table, MissedText, args);
         }
+
+        public static string Timelyze(this TimeSpan time)
+        {
+            return Timely.FormatCompact(time, Locale.Identifier.CultureInfo);
+        }
+        
+        public static string Timelyze(this TimeSpan time, Timely.Preset preset)
+        {
+            return Timely.Format(time, preset, Locale.Identifier.CultureInfo);
+        }
         
         public static string Translate(this Key key, StringTable table, string missedText, params object[] args)
         {

@@ -1,12 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using LSCore.Attributes;
+using LSCore.Extensions;
 using UnityEngine;
 
 [Serializable]
 public abstract class DoIt
 {
     public abstract void Do();
+    public static implicit operator Action(DoIt doIt) => doIt.Do;
+}
+
+[Serializable]
+[Unwrap]
+public class DoItt : DoIt
+{
+    [SerializeReference] public DoIt doIt;
+    public override void Do() => doIt.Do();
 }
 
 [Serializable]
@@ -59,16 +69,22 @@ public class Log : DoIt
     }
 }
 
-public struct DataBuffer<T>
+public struct DataBuffer
 {
-    public static T value;
+    public static object value;
+    public static Dictionary<string, object> map = new();
+    public static T Get<T>() => value.Cast<T>();
+    public static T Get<T>(string key) => map[key].Cast<T>();
+    public static object GetRaw(string key) => map[key];
+    public static void Set(string key, object val) => map[key] = val;
+    public static bool Remove(string key) => map.Remove(key);
 }
 
 public static class DoItExtensions
 {
     public static void Do<T>(this DoIt action, T value)
     {
-        DataBuffer<T>.value = value;
+        DataBuffer.value = value;
         action.Do();
     }
     
@@ -84,7 +100,7 @@ public static class DoItExtensions
     {
         foreach (var action in actions)
         {
-            DataBuffer<T>.value = value;
+            DataBuffer.value = value;
             action.Do();
         }
     }
@@ -101,8 +117,7 @@ public static class DoItExtensions
     {
         for (int i = 0; i < actions.Count; i++)
         {
-            DataBuffer<object>.value = value;
-            DataBuffer<T>.value = value;
+            DataBuffer.value = value;
             actions[i].Do();
         }
     }
