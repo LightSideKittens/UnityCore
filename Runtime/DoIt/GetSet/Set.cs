@@ -1,80 +1,72 @@
 ﻿using System;
-using LSCore.Extensions;
-using LSCore.Extensions.Unity;
-using Sirenix.OdinInspector;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 [Serializable]
-public class SetBuffer<T> : DoIt
+public class SetBuffer : DoIt
 {
-    [SerializeReference] public Get<T> data;
+    [SerializeReference] public IGetRaw data;
 
     public override void Do()
     {
         var d = data.Data;
-        DataBuffer<object>.value = d;
-        DataBuffer<T>.value = d;
+        DataBuffer.value = d;
     }
 }
 
 [Serializable]
-public class SetKeyBuffer<T> : DoIt
+public class SetKeyBuffer : DoIt
 {
     public string key;
-    [SerializeReference] public Get<T> data;
+    [SerializeReference] public IGetRaw data;
     
     public override void Do()
     {
         var d = data.Data;
         DestroyEvent.AddOnDestroy(d, Remove);
-        StringDict<object>.Set(string.Concat(key, typeof(T).GetSimpleFullName()), d);
-        StringDict<T>.Set(key, d);
+        DataBuffer.Set(key, d);
     }
     
     private void Remove()
     {
-        StringDict<object>.Remove(string.Concat(key, typeof(T).GetSimpleFullName()));
-        StringDict<T>.Remove(key);
+        DataBuffer.Remove(key);
     }
 }
 
 [Serializable]
-public class UnmanagedSetKeyBuffer<T> : DoIt
+public class UnmanagedSetKeyBuffer : DoIt
 {
     public string key;
-    [SerializeReference] public Get<T> data;
+    [SerializeReference] public IGetRaw data;
 
     public override void Do()
     {
         var d = data.Data;
-        StringDict<object>.Set(string.Concat(key, typeof(T)), d);
-        StringDict<T>.Set(key, d);
+        DataBuffer.Set(key, d);
     }
 }
 
 [Serializable]
-public class RemoveKeyBuffer<T> : DoIt
+public class RemoveKeyBuffer : DoIt
 {
     public string key;
 
     public override void Do()
     {
-        StringDict<object>.Remove(string.Concat(key, typeof(T)));
-        StringDict<T>.Remove(key);
+        DataBuffer.Remove(key);
     }
 }
 
 [Serializable]
-public abstract class Set<TTarget, TValue> : DoIt
+public abstract class Set<TValue> : DoIt
 {
     public string propertyPath;
-    [SerializeReference] public IGetRaw<TTarget> target;
+    [SerializeReference] public IGetRaw target;
     [SerializeReference] public Get<TValue> value;
 }
 
 [Serializable]
-public class SetUnityObject : Set<Object, Object>
+public class SetUnityObject : Set<Object>
 {
     private ObjectPathAccessor accessor;
 
@@ -82,13 +74,13 @@ public class SetUnityObject : Set<Object, Object>
     {
         var t = target.Data;
         var v = value.Data;
-        accessor ??= PathAccessorCache.GetRef(t, propertyPath);
+        accessor ??= PathAccessor.GetRef(t, propertyPath);
         accessor.Set(t, v);
     }
 }
 
 [Serializable]
-public abstract class Set : Set<object, object>
+public abstract class Set : Set<object>
 {
 }
 
@@ -101,7 +93,7 @@ public class SetClass : Set
     {
         var t = target.Data;
         var v = value.Data;
-        accessor ??= PathAccessorCache.GetRef(t, propertyPath);
+        accessor ??= PathAccessor.GetRef(t, propertyPath);
         accessor.Set(t, v);
     }
 }
@@ -110,7 +102,7 @@ public class SetClass : Set
 public class SetStruct<TValue> : DoIt where TValue : struct
 {
     public string propertyPath;
-    [SerializeReference] public IGetRaw<object> target;
+    [SerializeReference] public IGetRaw target;
     [SerializeReference] public Get<TValue> value;
     private TypedPathAccessor<TValue> accessor;
     
@@ -118,7 +110,7 @@ public class SetStruct<TValue> : DoIt where TValue : struct
     {
         var t = target.Data;
         var v = value.Data;
-        accessor ??= PathAccessorCache.Get<TValue>(t, propertyPath);
+        accessor ??= PathAccessor.Get<TValue>(t, propertyPath);
         accessor.Set(t, v);
     }
 }

@@ -11,7 +11,8 @@
         "GUID:a6b7f487c8a89734f91e6aeb16bba6ca",
         "GUID:d426b638445cc2f428ed8ba7c1325767",
         "GUID:d5a6795f87674d24b9f54744173883ac",
-        "GUID:1b6b29427dc85403c316475c7068fc50"
+        "GUID:1b6b29427dc85403c316475c7068fc50",
+      "LSCore.Utils"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

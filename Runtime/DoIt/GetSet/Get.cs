@@ -8,7 +8,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 [Serializable]
-public abstract class Get<T> : IGetRaw<T>
+public abstract class Get<T> : IGetRaw
 {
     public abstract T Data { get; }
     object IGetRaw.Data => Data;
@@ -32,10 +32,6 @@ public abstract class Get<T> : IGetRaw<T>
 public interface IGetRaw
 {
     object Data { get; }
-}
-
-public interface IGetRaw<[UsedImplicitly]T> : IGetRaw
-{
 }
 
 public interface IKeyGet<T>
@@ -63,44 +59,10 @@ public class SerializeReference<T> : Get<T>
 }
 
 [Serializable]
-[HideReferenceObjectPicker]
-public class Cast<T> : Get<T>
-{
-    [SerializeReference] public IGetRaw provider;
-    
-    public override T Data
-    {
-        get
-        {
-            var obj = provider.Data;
-
-            if (obj is not T val)
-            {
-                if (obj is Component comp)
-                {
-                    return comp.GetComponent<T>();
-                }
-                
-                if(obj is GameObject go)
-                {
-                    return go.GetComponent<T>();
-                }
-            }
-            else
-            {
-                return val;
-            }
-            
-            return (T)obj; 
-        }
-    }
-}
-
-[Serializable]
 public abstract class BaseGetRaw<T> : Get<T>, IKeyGet<T>
 {
     public string propertyPath;
-    [SerializeReference] public IGetRaw<T> data;
+    [SerializeReference] public IGetRaw data;
     [JsonIgnore] public string Key => propertyPath;
 }
 
@@ -114,8 +76,8 @@ public class Property<T> : BaseGetRaw<T>
         get
         {
             var d = data.Data;
-            accessor ??= PathAccessorCache.GetRef(d, propertyPath);
-            return (T)accessor.Get(d);
+            accessor ??= PathAccessor.GetRef(d, propertyPath);
+            return accessor.Get(d).Cast<T>();
         }
     }
 }
@@ -130,26 +92,26 @@ public class StructProperty<T> : BaseGetRaw<T> where T : struct
         get
         {
             var d = data.Data;
-            accessor ??= PathAccessorCache.Get<T>(d, propertyPath);
+            accessor ??= PathAccessor.Get<T>(d, propertyPath);
             return accessor.Get(d);
         }
     }
 }
 
 [Serializable]
-public class FromBuffer<T> : Get<T>, IGetRaw<T>
+public class FromBuffer<T> : Get<T>, IGetRaw
 {
-    object IGetRaw.Data => DataBuffer<object>.value;
-    public override T Data => DataBuffer<T>.value;
+    object IGetRaw.Data => DataBuffer.value;
+    public override T Data => DataBuffer.Get<T>();
 }
 
 [Serializable]
-public class FromKeyBuffer<T> : Get<T>, IGetRaw<T>, IKeyGet<T>
+public class FromKeyBuffer<T> : Get<T>, IGetRaw, IKeyGet<T>
 {
     public string key;
     
-    object IGetRaw.Data => StringDict<object>.Get(string.Concat(key, typeof(T).GetSimpleFullName()));
-    public override T Data => StringDict<T>.Get(key);
+    object IGetRaw.Data => DataBuffer.GetRaw(key);
+    public override T Data => DataBuffer.Get<T>(key);
     [JsonIgnore] public string Key => key;
 }
 

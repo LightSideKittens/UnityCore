@@ -26,7 +26,9 @@ namespace LSCore.Attributes
             Timer = WatchTime | Second,
             
             WatchTime = Hour | Minute,
-            WatchDateTime = Date | WatchTime
+            WatchDateTime = Date | WatchTime,
+            
+            Seconder = Minute | Second
         }
 
         public TimeAttribute(Options options = Options.Default)
@@ -81,14 +83,11 @@ namespace LSCore.Attributes
 
     public class TimeSpanAttribute : TimeAttribute
     {
-        public static TimeSpan DefaultValue { get; } = new(1, 0, 0);
-        
         public TimeSpan defaultValue;
         
         public TimeSpanAttribute()
         {
             options = Options.Day | Options.FullTime;
-            defaultValue = DefaultValue;
         }
         
         public TimeSpanAttribute(long ticks)

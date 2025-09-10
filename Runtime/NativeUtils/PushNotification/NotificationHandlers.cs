@@ -1,26 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using Firebase.Messaging;
-using LSCore;
+using LSCore.Async;
 using Newtonsoft.Json.Linq;
+using OneSignalSDK;
+using OneSignalSDK.Notifications;
 using UnityEngine;
 
 public static class NotificationHandlers
 {
     private static Dictionary<string, Action<JToken>> notificationActions = new();
+    public static string Id { get; private set; }
     public static string DeviceToken { get; private set; }
     
-    public static void Init()
+    public async static void Init()
     {
+        OneSignal.Initialize("0790afb5-506d-4eba-9f27-a7e9db329238");
+        await OneSignal.Notifications.RequestPermissionAsync(true);
         InitToken();
-        NativeNotification.RequestPermission();
-        World.ApplicationResumed += Handle;
-        Handle();
+        OneSignal.Notifications.Clicked += OnClicked;
 
-        async void InitToken()
+        void InitToken()
         {
-            DeviceToken = await FirebaseMessaging.GetTokenAsync();
-            Burger.Log($"Push-notification Token: {DeviceToken}");
+            Wait.While(() => string.IsNullOrEmpty(OneSignal.User.PushSubscription.Id), () =>
+            {
+                Id = OneSignal.User.PushSubscription.Id;
+                DeviceToken  = OneSignal.User.PushSubscription.Token;
+                Burger.Log($"Push-notification Id: {Id}");
+                Burger.Log($"Push-notification Token: {DeviceToken}");
+            });
         }
     }
 
@@ -29,18 +36,14 @@ public static class NotificationHandlers
         notificationActions[actionId] = action;
     }
 
-    private static void Handle()
+    private static void OnClicked(object sender, NotificationClickEventArgs args)
     {
-        string jsonData = NativeNotification.GetJsonData();
-        Debug.Log($"[NotificationHandlerSystem] Handle {jsonData}");
-        
-        if (!string.IsNullOrEmpty(jsonData))
-        {
-            NativeNotification.CloseNotification();
-            JObject json = JObject.Parse(jsonData);
-            
-            string actionId = json["actionId"]!.ToString();
-            notificationActions[actionId](json);
-        }
+        var data = args.Notification.AdditionalData;
+        Handle(JToken.FromObject(data));
+    }
+    
+    private static void Handle(JToken data)
+    {
+        Debug.Log(data.ToString());
     }
 }

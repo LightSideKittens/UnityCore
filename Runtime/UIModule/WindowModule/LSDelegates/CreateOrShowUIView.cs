@@ -10,11 +10,13 @@ namespace LSCore
     public class Create<T> : DoIt where T : Component
     {
         public T prefab;
+        [SerializeReference] public List<DoIt> transformActions;
         [NonSerialized] public T obj;
         
         public override void Do()
         {
             obj = Object.Instantiate(prefab);
+            transformActions?.Do(obj);
         }
     }
     
@@ -41,15 +43,12 @@ namespace LSCore
     [Serializable]
     public class CreateOrShowUIView<T> : CreateSinglePrefab<T> where T : BaseUIView<T>
     {
-        [SerializeReference] public List<DoIt> transformActions;
         public ShowWindowOption option;
         public string id;
         
         public override void Do()
         {
             base.Do();
-            transformActions?.Do(obj);
-            
             CanvasUpdateRegistry.Updated += Show;
 
             void Show()
@@ -67,4 +66,28 @@ namespace LSCore
     public class CreateOrShowCanvasView : CreateOrShowUIView<CanvasView> { }
     [Serializable]
     public class CreateOrShowUIView : CreateOrShowUIView<UIView> { }
+
+    [Serializable]
+    public class CreateOrShowUIViewDynamic : CreateOrShowUIView
+    {
+        [SerializeReference] public Get<UIView> uiView;
+        
+        public override void Do()
+        {
+            prefab = uiView.Data; 
+            base.Do();
+        }
+    }
+    
+    [Serializable]
+    public class CreateSinglePrefabDynamic<T> : CreateSinglePrefab<T>  where T : Component
+    {
+        [SerializeReference] public Get<T> getPrefab;
+        
+        public override void Do()
+        {
+            prefab = getPrefab.Data;
+            base.Do();
+        }
+    }
 }

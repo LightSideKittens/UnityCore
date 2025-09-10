@@ -33,7 +33,7 @@ public class ObjectPathAccessor
     }
 }
 
-public static class PathAccessorCache
+public static class PathAccessor
 {
     public static TypedPathAccessor<TValue> Get<TValue>(object rootObj, string path)
         => Cache<TValue>.Get(rootObj, path);

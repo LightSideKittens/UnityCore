@@ -27,6 +27,8 @@ namespace SRDebugger.UI.Controls
         public Action<ConsoleEntry> SelectedItemChanged;
         private string _filter;
 
+        public VirtualVerticalLayoutGroup ConsoleScrollLayoutGroup => _consoleScrollLayoutGroup;
+        
         public bool ShowErrors
         {
             get { return _showErrors; }
