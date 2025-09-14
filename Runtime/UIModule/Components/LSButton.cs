@@ -41,7 +41,7 @@ namespace LSCore
         }
     }
     
-    public class SubmittableStates
+    public class UIControlStates
     {
         private ReactBool select;
         private ReactBool press;
@@ -86,28 +86,28 @@ namespace LSCore
     }
 
     [Serializable]
-    public class DefaultSubmittable : ISubmittable
+    public class DefaultUIControl : IUIControl
     {
-        [SerializeReference] public BaseSubmittableAnim anim;
-        [SerializeReference] public BaseSubmittableDoIter doIter = new DefaultSubmittableDoIter();
-        [SerializeReference] public BaseSubmittableSelectBehaviour selectBehaviour;
+        [SerializeReference] public BaseUIControlAnim anim;
+        [SerializeReference] public BaseUIControlDoIter doIter = new DefaultUIControlDoIter();
+        [SerializeReference] public BaseUIControlSelectBehaviour selectBehaviour;
         
         public Transform Transform { get; private set; }
         
-        public event Action Submitted
+        public event Action Did
         {
-            add => doIter.onSubmitAction += value;
-            remove => doIter.onSubmitAction -= value;
+            add => doIter.onActivateAction += value;
+            remove => doIter.onActivateAction -= value;
         }
         
-        event Action ISubmittable.Submitted
+        public event Action Activated
         {
-            add => submitted += value;
-            remove => submitted -= value;
+            add => activated += value;
+            remove => activated -= value;
         }
         
-        private Action submitted;
-        public SubmittableStates States { get; private set; } = new();
+        private Action activated;
+        public UIControlStates States { get; private set; } = new();
 
         public void Init(Transform transform)
         {
@@ -134,7 +134,7 @@ namespace LSCore
         void IPointerClickHandler.OnPointerClick(PointerEventData eventData)
         {
             States.currentEventData = eventData;
-            submitted?.Invoke();
+            Activate();
         }
         
         void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
@@ -160,13 +160,11 @@ namespace LSCore
             States.currentEventData = eventData;
             States.Select = false;
         }
-
-        public void Submit() => submitted?.Invoke();
         
         void ISubmitHandler.OnSubmit(BaseEventData eventData)
         {
             States.currentEventData = eventData;
-            submitted?.Invoke();
+            Activate();
         }
 
         void IPointerEnterHandler.OnPointerEnter(PointerEventData eventData)
@@ -186,36 +184,43 @@ namespace LSCore
             States.currentEventData = eventData;
             selectBehaviour.OnMove(eventData);
         }
+
+        public void Activate()
+        {
+            activated?.Invoke();
+        }
     }
     
-    public class LSButton : LSImage, ISubmittableElement
+    public class LSButton : LSImage, IUIControlElement
     {
-        [SerializeReference] public DefaultSubmittable submittable = new ();
-        object ISubmittableElement.Submittable => submittable;
-        public event Action Submitted
+        [SerializeReference] public DefaultUIControl uiControl = new ();
+        object IUIControlElement.UIControl => uiControl;
+        
+        public event Action Did
         {
-            add => submittable.Submitted += value;
-            remove => submittable.Submitted -= value;
+            add => uiControl.Did += value;
+            remove => uiControl.Did -= value;
         }
         
-        public void Submit() => submittable.Submit();
+        public void Do() => uiControl.doIter.Do();
+        public void Activate() => uiControl.Activate();
 
         protected override void Awake()
         {
             base.Awake();
-            submittable.Init(transform);
+            uiControl.Init(transform);
         }
 
         protected override void OnEnable()
         {
             base.OnEnable();
-            submittable.OnEnable();
+            uiControl.OnEnable();
         }
 
         protected override void OnDisable()
         {
             base.OnDisable();
-            submittable.OnDisable();
+            uiControl.OnDisable();
         }
     }
     
@@ -226,14 +231,14 @@ namespace LSCore
     {
         private LSButton button;
         private PropertyTree propertyTree;
-        private InspectorProperty submittable;
+        private InspectorProperty uiControl;
         
         protected override void OnEnable()
         {
             base.OnEnable();
             button = (LSButton)target;
             propertyTree = PropertyTree.Create(serializedObject);
-            submittable = propertyTree.RootProperty.Children["submittable"];
+            uiControl = propertyTree.RootProperty.Children["uiControl"];
         }
 
         protected override void OnDisable()
@@ -246,7 +251,7 @@ namespace LSCore
         {
             DrawImagePropertiesAsFoldout();
             propertyTree.BeginDraw(true);
-            submittable.Draw();
+            uiControl.Draw();
             propertyTree.EndDraw();
             serializedObject.ApplyModifiedProperties();
         }

@@ -8,7 +8,7 @@ namespace LSCore
     internal class Currencies : GameSingleConfig<Currencies>
     {
         [JsonProperty] private Dictionary<string, int> currencies = new();
-        internal static readonly Dictionary<string, Action<int>> onChangedActions = new();
+        internal static readonly Dictionary<string, Action<(int last, int current)>> onChangedActions = new();
 
 #if UNITY_EDITOR
         static Currencies()
@@ -28,9 +28,11 @@ namespace LSCore
         }
 
         internal static void SetValue(string name, int value)
-        { 
-            Config.currencies[name] = value;
-            TryInvokeOnChanged(name, value);
+        {
+            var c = Config;
+            var last = c.currencies[name];
+            c.currencies[name] = value;
+            TryInvokeOnChanged(name, (last, value));
         }
 
         internal static void Earn(string name, int value)
@@ -62,11 +64,11 @@ namespace LSCore
             Config.currencies.Remove(name);
         }
 
-        private static void TryInvokeOnChanged(string name, int value)
+        private static void TryInvokeOnChanged(string name, (int last, int current) data)
         {
             if (onChangedActions.TryGetValue(name, out var action))
             {
-                action(value);
+                action(data);
             }
         }
     }

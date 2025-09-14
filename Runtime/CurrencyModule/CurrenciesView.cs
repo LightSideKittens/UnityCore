@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DG.Tweening;
+using LSCore.Extensions;
 using UnityEngine;
 
 namespace LSCore
@@ -12,21 +13,27 @@ namespace LSCore
         {
             [Id(typeof(CurrencyIdGroup))]
             [SerializeField] private Id id;
+            public string placement;
             
             public override void Do()
             {
                 if (anims.TryGetValue(id, out var queue))
                 {
-                    queue.Dequeue()();
-                    if (queue.Count == 0)
+                    var p = placement.IsNullOrEmpty() ? "default" : placement;
+                    if (queue.TryGetValue(p, out var action))
                     {
-                        anims.Remove(id);
+                        action();
+                        queue.Remove(p); 
+                        if (queue.Count == 0)
+                        {
+                            anims.Remove(id);
+                        }
                     }
                 }
             }
         }
         
-        private static Dictionary<Id, Queue<Action>> anims = new();
+        private static Dictionary<Id, Dictionary<string, Action>> anims = new();
         
         [Serializable]
         public class Data
@@ -37,12 +44,10 @@ namespace LSCore
             [SerializeField] private GameObject gameObject;
             [SerializeField] private LSButton button;
             [SerializeField] private LSText text;
-            private int lastAmount;
             
             public void Init()
             {
-                lastAmount = Funds.GetAmount(id);
-                text.text = $"{lastAmount}";
+                text.text = $"{Funds.GetAmount(id)}";
                 Funds.AddOnChanged(id, OnChanged);
             }
 
@@ -52,27 +57,25 @@ namespace LSCore
                 anims.Remove(id);
             }
 
-            private void OnChanged(int value)
+            private void OnChanged((int last, int current) data)
             {
-                var la = lastAmount;
-                Action anim = () => DOVirtual.Int(la, value, 0.5f, v => text.text = $"{v}");
-
-                if (la > value)
+                var diff = data.current - data.last;
+                if (!anims.TryGetValue(id, out var queue))
                 {
-                    anim();
+                    queue = new Dictionary<string, Action>();
+                    anims[id] = queue;
                 }
-                else
-                {
-                    if (!anims.TryGetValue(id, out var queue))
-                    {
-                        queue = new Queue<Action>();
-                        anims[id] = queue;
-                    }
-                    
-                    queue.Enqueue(anim);
-                }
+                var placement = Funds.lastPlacement.IsNullOrEmpty() ? "default" : Funds.lastPlacement;
+                queue[placement] = Anim;
                 
-                lastAmount = value;
+                void Anim()
+                {
+                    var cur = int.Parse(text.text);
+                    DOTween.Complete(text);
+                    var completedAmount = int.Parse(text.text);
+                    text.text = cur.ToString();
+                    DOVirtual.Int(cur, completedAmount + diff, 0.5f, v => text.text = $"{v}").SetTarget(text);
+                }
             }
         }
 

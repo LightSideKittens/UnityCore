@@ -12,17 +12,17 @@ namespace LSCore.UIModule
         
         public override void Do()
         {
-            var doiter = button.Data.submittable.doIter;
+            var doiter = button.Data.uiControl.doIter;
             if (lastDoIts == null)
             { 
                 lastDoIts = new(doIts);
                 lastDoIts.Add(this);
             }
 
-            List<DoIt> list = new(doiter.onSubmit);
-            doiter.onSubmit.Clear();
-            doiter.onSubmit.AddRange(lastDoIts);
-            doiter.onSubmit.Add(this);
+            List<DoIt> list = new(doiter.onActivate);
+            doiter.onActivate.Clear();
+            doiter.onActivate.AddRange(lastDoIts);
+            doiter.onActivate.Add(this);
             lastDoIts = list;
         }
     }

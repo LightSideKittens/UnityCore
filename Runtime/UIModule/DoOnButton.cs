@@ -5,13 +5,13 @@ using UnityEngine;
 [Serializable]
 public abstract class DoOnClick : DoIt
 {
-    public abstract ISubmittable Submittable { get; }
+    public abstract IUIControl UIControl { get; }
 
     [SerializeReference] public DoIt[] doIts;
         
     public override void Do()
     {
-        Submittable.Submitted += doIts.Do;
+        UIControl.Activated += doIts.Do;
     }
 }
 
@@ -19,5 +19,5 @@ public abstract class DoOnClick : DoIt
 public class DoOnButton : DoOnClick
 {
     public LSButton button;
-    public override ISubmittable Submittable => button.submittable;
+    public override IUIControl UIControl => button.uiControl;
 }

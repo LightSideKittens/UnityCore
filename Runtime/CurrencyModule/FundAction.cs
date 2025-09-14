@@ -5,8 +5,14 @@ namespace LSCore
 {
     [Serializable]
     public abstract class FundAction : DoIt
-    { 
+    {
         public Funds funds;
+        public string placement;
+
+        public override void Do()
+        {
+            Funds.lastPlacement = placement;
+        }
     }
 
     [Serializable]
@@ -14,6 +20,7 @@ namespace LSCore
     {
         public override void Do()
         {
+            base.Do();
             funds.Earn();
         }
     }
@@ -25,6 +32,7 @@ namespace LSCore
         
         public override void Do()
         {
+            base.Do();
             if (funds.Spend(out var action))
             {
                 onSpent.Do();

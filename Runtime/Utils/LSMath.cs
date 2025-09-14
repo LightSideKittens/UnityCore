@@ -4,7 +4,7 @@ public static class LSMath
 {
     public static int WrapIndex(int value, int min, int max)
     {
-        if(value < min) return value;
+        if(value < min) return value >= max ? max-1 : value;
         return (value - min) % (max - min) + min;
     }
 

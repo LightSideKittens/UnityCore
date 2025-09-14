@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using DG.Tweening;
 using UnityEngine;
 
@@ -54,6 +55,17 @@ namespace LSCore.Async
                     tween.Kill();
                     onComplete();
                 }
+            }
+        }
+
+        public static void EndOfFrame(Action onComplete)
+        {
+            World.BeginCoroutine(Cor());
+            
+            IEnumerator Cor()
+            {
+                yield return new WaitForEndOfFrame();
+                onComplete();
             }
         }
     }

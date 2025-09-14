@@ -1,4 +1,6 @@
-﻿namespace SRDebugger.Services
+﻿using System;
+
+namespace SRDebugger.Services
 {
     using UnityEngine;
 
@@ -47,8 +49,17 @@
 
         public ConsoleEntry()
         {
+#if UNITY_EDITOR
+            try
+            {
+                Frame = Time.frameCount;
+                TimeSinceStartUp = Time.realtimeSinceStartup;
+            }
+            catch (Exception) { }
+#else
             Frame = Time.frameCount;
             TimeSinceStartUp = Time.realtimeSinceStartup;
+#endif
         }
 
         public ConsoleEntry(ConsoleEntry other)

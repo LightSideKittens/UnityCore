@@ -33,16 +33,16 @@ namespace LSCore
                 content.SizeChanged += OnContentSizeChanged;
             });
 
-            nextPage.Submitted += NextPage;
-            previousPage.Submitted += PreviousPage;
+            nextPage.Did += NextPage;
+            previousPage.Did += PreviousPage;
         }
 
         private void OnDisable()
         {
             SetPage(0);
             
-            nextPage.Submitted -= NextPage;
-            previousPage.Submitted -= PreviousPage;
+            nextPage.Did -= NextPage;
+            previousPage.Did -= PreviousPage;
             content.SizeChanged -= OnContentSizeChanged;
         }
 
