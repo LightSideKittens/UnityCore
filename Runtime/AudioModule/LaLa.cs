@@ -66,7 +66,7 @@ public static class LaLa
     }
     
     [Serializable]
-    public class MixerMuter : BaseToggleData
+    public class MixerMuter : ToggleData
     {
 #if UNITY_EDITOR
         static MixerMuter()

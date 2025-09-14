@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 [JsonConverter(typeof(ReactPropConverter))]
 public class ReactProp<T> : IDisposable
 {
-    public void SubOnChangedAndCall(Action<T> action)
+    public void SubAndCall(Action<T> action)
     {
         Changed += action;
         action(value);
@@ -67,6 +67,11 @@ public class FloatReact : ReactProp<float>
     }
     
     public static float operator +(in float a, FloatReact b) => a + b.value;
+}
+
+public class BoolReact : ReactProp<bool>
+{
+    
 }
 
 public class ReactPropConverter : JsonConverter

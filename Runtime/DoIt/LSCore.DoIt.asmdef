@@ -4,8 +4,6 @@
     "references": [
         "GUID:bb5ab3e5517faff4287376ae8f1fc9fc",
         "GUID:a8db40cbaf444aa3aedf3bb887de5433",
-        "GUID:9e24947de15b9834991c9d8411ea37cf",
-        "GUID:84651a3751eca9349aac36a66bba901b",
         "GUID:e2d262c07fab33347bf583c077610e88",
         "GUID:1b6b29427dc85403c316475c7068fc50",
         "GUID:60589634cd8c5134c4f50388f1b1595b",
@@ -13,7 +11,8 @@
         "GUID:2fb5cf31e708b65c6cd386829ff94feb",
         "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
         "GUID:b2621ed9809523852c40dfbc7bd87a56",
-        "LSCore.Utils"
+        "GUID:7d47bdd0b4734221a4f1a8d8b153ebb3",
+        "GUID:5bb0561ab59f4090b284fb2dc8ab2482"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

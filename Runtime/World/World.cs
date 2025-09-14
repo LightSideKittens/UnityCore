@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Threading;
 using DG.Tweening;
@@ -153,5 +154,10 @@ namespace LSCore
             return diff;
         }
 #endif
+
+        public static Coroutine BeginCoroutine(IEnumerator routine)
+        {
+            return instance.StartCoroutine(routine);
+        }
     }
 }

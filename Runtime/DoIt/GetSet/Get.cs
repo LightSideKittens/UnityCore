@@ -11,6 +11,7 @@ using Object = UnityEngine.Object;
 public abstract class Get<T> : IGetRaw
 {
     public abstract T Data { get; }
+    public Type Type => typeof(T);
     object IGetRaw.Data => Data;
 
     public static implicit operator T(Get<T> provider)
@@ -32,12 +33,22 @@ public abstract class Get<T> : IGetRaw
 public interface IGetRaw
 {
     object Data { get; }
+    Type Type { get; }
 }
 
 public interface IKeyGet<T>
 {
     public T Data { get; }
     public string Key { get; }
+}
+
+[Serializable]
+[HideReferenceObjectPicker]
+public class Cast<T> : Get<T>
+{
+    [SerializeReference] 
+    [HideLabel] public IGetRaw data;
+    public override T Data => data.Data.Cast<T>();
 }
 
 [Serializable]

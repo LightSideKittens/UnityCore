@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace LSCore
@@ -64,12 +65,17 @@ namespace LSCore
         public override int GetHashCode()
         {
 #if UNITY_EDITOR
-            if (World.IsPlaying)
-#endif
+            try
+            {
                 return name.GetHashCode();
-            
-            
-            return base.GetHashCode();
+            }
+            catch (Exception)
+            {
+                return base.GetHashCode();
+            }
+#else
+            return name.GetHashCode();
+#endif
         }
 
 #if UNITY_EDITOR

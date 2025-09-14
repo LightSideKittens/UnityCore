@@ -47,11 +47,11 @@ public class ErrorScreen : BaseWindow<ErrorScreen>
     {
         button.gameObject.SetActive(true);
         retry += Hide;
-        button.Submitted += OnSubmit;
+        button.Did += OnSubmit;
 
         void OnSubmit()
         {
-            button.Submitted -= OnSubmit;
+            button.Did -= OnSubmit;
             retry();
         }
     }

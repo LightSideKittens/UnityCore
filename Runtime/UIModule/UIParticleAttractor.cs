@@ -11,50 +11,43 @@ using static UnityEngine.ParticleSystem;
 public class PlayUIParticleAttractor : DoIt
 {
     [SerializeReference] public Get<UIParticleAttractor> attractor;
+    public UIParticleAttractor.Data data;
     
     public override void Do()
     {
-        ((UIParticleAttractor)attractor).Play();
+        ((UIParticleAttractor)attractor).Play(data);
     }
 }
 
 public class UIParticleAttractor : MonoBehaviour
 {
     [Serializable]
-    private struct Data
+    public struct Data
     {
-        public Transform target;
-        public ParticleSystem ps;
+        [SerializeReference] public Get<Transform> target;
+        [SerializeReference] public Get<ParticleSystem> ps;
+        [SerializeReference] public DoIt onAttracted;
+        [SerializeReference] public DoIt onComplete;
     }
     
-    [SerializeField] private List<Data> data;
-    public float delayBeforeAttract = 1f;
+    public float delayBeforeAttract = 0.5f;
     public float duration = 0.3f;
-    public float delayPerParticle = 0.1f;
+    public float delayPerParticle = 0.05f;
     public Ease ease = Ease.InOutCubic;
     [SerializeReference] public DoIt[] onParticleAttracted;
     [SerializeReference] public DoIt[] onComplete;
     
-    public void Play()
+    public void Play(Data data)
     {
-        for (var i = 0; i < data.Count; i++)
+        ParticleSystem ps = data.ps;
+        ps.Play();
+        Wait.Delay(delayBeforeAttract, () =>
         {
-            data[i].ps.Play();
-        }
-
-        Wait.Delay(delayBeforeAttract, Attract).KillOnDestroy(this);
+            Attract(data.ps, data.target, data.onAttracted, data.onComplete);
+        }).KillOnDestroy(this);
     }
     
-    public void Attract()
-    {
-        for (var i = 0; i < data.Count; i++)
-        {
-            var d = data[i];
-            Attract(d.ps, d.target);
-        }
-    }
-
-    public void Attract(ParticleSystem ps, Transform target)
+    public void Attract(ParticleSystem ps, Transform target, Action onAttracted, Action onComplete)
     {
         currentId = Vector4.zero;
         
@@ -78,7 +71,7 @@ public class UIParticleAttractor : MonoBehaviour
                 .SetEase(ease)
                 .KillOnDestroy(ps)
                 .SetDelay(i * delayPerParticle)
-                .OnComplete(() => Kill(ref arr[idx]))
+                .OnComplete(() => Kill(ref arr[idx], onAttracted))
                 .SetUpdate(UpdateType.Manual);
         }
 
@@ -95,12 +88,12 @@ public class UIParticleAttractor : MonoBehaviour
             }
                 
             ps.SetParticles(a);
-        }).KillOnDestroy(ps).OnComplete(onComplete.Do);
+        }).KillOnDestroy(ps).OnComplete(() => onComplete?.Invoke());
     }
     
-    public void Kill(ref Particle particle)
-    {
-        onParticleAttracted.Do();
+    private void Kill(ref Particle particle, Action onAttracted)
+    {                     
+        onAttracted?.Invoke();
         particle.startLifetime = 0;
         particle.remainingLifetime = 0;
     }

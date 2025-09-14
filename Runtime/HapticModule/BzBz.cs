@@ -22,7 +22,7 @@ public static class BzBz
     }
     
     [Serializable]
-    public class Muter : BaseToggleData
+    public class Muter : ToggleData
     {
         public static event Action<bool> Changed;
         protected override bool Get => Unmuted;
@@ -31,8 +31,13 @@ public static class BzBz
         {
             set
             {
+                var isChanged = value != HapticController.hapticsEnabled;
                 HapticController.hapticsEnabled = value;
                 Unmuted = value;
+                if (isChanged)
+                {
+                    Changed?.Invoke(value);
+                }
             }
         }
     }

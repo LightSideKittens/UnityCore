@@ -8,15 +8,7 @@ using UnityEngine;
 public abstract class DoIt
 {
     public abstract void Do();
-    public static implicit operator Action(DoIt doIt) => doIt.Do;
-}
-
-[Serializable]
-[Unwrap]
-public class DoItt : DoIt
-{
-    [SerializeReference] public DoIt doIt;
-    public override void Do() => doIt.Do();
+    public static implicit operator Action(DoIt doIt) => doIt != null ? doIt.Do : null;
 }
 
 [Serializable]
@@ -26,6 +18,21 @@ public class DoIts : DoIt
     [SerializeReference] public DoIt[] doIts;
     public override void Do() => doIts.Do();
 }
+
+[Serializable]
+[Unwrap]
+public class DoOnce : DoIt
+{
+    [SerializeReference] public DoIt doIt;
+    private bool did;
+    public override void Do()
+    {
+        if (did) return;
+        doIt.Do();
+        did = true;
+    }
+}
+
 
 [Serializable]
 public class DelegateDoIt : DoIt

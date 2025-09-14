@@ -8,7 +8,7 @@ using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 #endif
 
-namespace LocalGridSnap
+namespace LSCore.Editor.GridSnapper
 {
     internal static class SnapMath
     {
@@ -44,9 +44,9 @@ namespace LocalGridSnap
 
     public enum FrameSpace
     {
-        Parent,
-        Reference,
-        World
+        World,
+        Local,
+        SpecificTransform
     }
 
     internal static class Settings
@@ -89,7 +89,7 @@ namespace LocalGridSnap
 
         public static FrameSpace Space
         {
-            get => (FrameSpace)EditorPrefs.GetInt(PREF_PREFIX + "Space", (int)FrameSpace.Parent);
+            get => (FrameSpace)EditorPrefs.GetInt(PREF_PREFIX + "Space", (int)FrameSpace.Local);
             set => EditorPrefs.SetInt(PREF_PREFIX + "Space", (int)value);
         }
 
@@ -143,32 +143,20 @@ namespace LocalGridSnap
         public static void DoSnapForSelection()
         {
             if (!Settings.Enabled) return;
-            Transform reference = null;
-            switch (Settings.Space)
-            {
-                case FrameSpace.Parent: reference = null; break;
-                case FrameSpace.Reference: reference = Settings.GetReference(); break;
-                case FrameSpace.World: reference = null; break;
-            }
-
+            Transform frame = Settings.GetReference();
+            var space = Settings.Space;
             var step = Settings.Step;
             var mask = Settings.AxisMask;
 
             foreach (var t in Selection.transforms)
             {
-                Transform frame = null;
-                if (Settings.Space == FrameSpace.Parent) frame = t.parent;
-                else if (Settings.Space == FrameSpace.Reference) frame = reference;
-                
-                if (Settings.Space == FrameSpace.Reference && reference == null)
-                    continue;
-
+                if(space == FrameSpace.Local) frame = t.parent;
                 SnapMath.SnapTransform(t, frame, step, mask);
             }
         }
     }
 
-    [Overlay(typeof(SceneView), "Grid Snapper", true)]
+    [Overlay(typeof(SceneView), "Grid Snapper")]
     public class GridSnapOverlay : Overlay
     {
         public override VisualElement CreatePanelContent()
@@ -196,7 +184,7 @@ namespace LocalGridSnap
             Settings.Enabled = EditorGUILayout.Toggle("Enabled", Settings.Enabled);
             space = (FrameSpace)EditorGUILayout.EnumPopup("Frame", space);
 
-            if (space == FrameSpace.Reference)
+            if (space == FrameSpace.SpecificTransform)
                 reference = (Transform)EditorGUILayout.ObjectField("Reference", reference, typeof(Transform), true);
 
             step = EditorGUILayout.Vector3Field("Step", step);

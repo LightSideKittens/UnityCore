@@ -29,12 +29,12 @@ namespace LSCore
                 base.text = value;
                 if (oldNumber != (int)Number && changeTextColorIfNotEnough)
                 {
-                    UpdateColor((int)Number);
+                    UpdateColor(default);
                 }
             }
         }
 
-        private void UpdateColor(int a)
+        private void UpdateColor((int, int) _)
         {
             var colorId = CanSpend ? enoughColorId : notEnoughColorId;
             

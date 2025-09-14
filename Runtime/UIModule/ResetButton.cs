@@ -9,7 +9,7 @@ namespace LSCore.UIModule
         
         public override void Do()
         {
-            button.submittable.doIter.Unsubscribe();
+            button.uiControl.doIter.Unsubscribe();
         }
     }
 }
