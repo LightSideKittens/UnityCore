@@ -10,98 +10,6 @@ using UnityEngine.UI;
 [ExecuteAlways]
 public sealed class LottieImage : LSRawImage
 {
-    public Transform Transform { get; private set; }
-    public LSRawImage RawImage => this;
-    internal LottieAnimation LottieAnimation => lottieAnimation;
-    internal float AnimationSpeed => animationSpeed;
-
-    [ShowInInspector]
-    public bool Loop
-    {
-        get => loop;
-        set
-        {
-            loop = value;
-            if (value) Play();
-        }
-    }
-
-    [ShowInInspector]
-    public BaseLottieAsset Asset
-    {
-        get => asset;
-        set
-        {
-            if (value == asset) return;
-            asset = value;
-            DisposeLottieAnimation();
-            if (asset != null)
-            {
-                asset.SetupImage(this);
-            }
-            if (Enabled) Play();
-        }
-    }
-
-    private bool localEnabled;
-    public bool Enabled
-    {
-        get => localEnabled;
-        set
-        {
-            if (value == localEnabled) return;
-            localEnabled = value;
-
-            if (localEnabled && !canvasRenderer.cull && enabled)
-            {
-                updated += LocalUpdate;
-            }
-            else
-            {
-                updated -= LocalUpdate;
-            }
-
-            lottieAnimation?.SetVisible(localEnabled && !canvasRenderer.cull);
-        }
-    }
-
-    [HideInInspector] public BaseLottieAsset asset;
-    [SerializeField] private float animationSpeed = 1f;
-    [SerializeField, HideInInspector] private bool loop = true;
-
-    private LottieAnimation lottieAnimation;
-
-    public static LottieImage Create(BaseLottieAsset asset, RectTransform transform, float animationSpeed = 1f, bool loop = true)
-    {
-        var image = new GameObject(nameof(LottieImage)).AddComponent<LottieImage>();
-        image.Asset = asset;
-        image.transform.SetParent(transform, false);
-        image.animationSpeed = animationSpeed;
-        image.loop = loop;
-        return image;
-    }
-
-    protected override void Awake()
-    {
-        base.Awake();
-        Transform = transform;
-        if (asset != null) asset.SetupImage(this);
-    }
-
-    private uint lastSize;
-    private uint Size
-    {
-        get
-        {
-            var size = rectTransform.rect.size;
-            var min = (int)(Mathf.Min(size.x, size.y) * 0.5f);
-            min = Mathf.ClosestPowerOfTwo(min);
-            var newSize = (uint)Mathf.Clamp(min, 64, 2048);
-            lastSize = newSize;
-            return newSize;
-        }
-    }
-
     static LottieImage()
     {
 #if UNITY_EDITOR
@@ -126,133 +34,217 @@ public sealed class LottieImage : LSRawImage
 #endif
         World.Updated += OnUpdate;
     }
-
+    
     private static Action updated;
     private static void OnUpdate() => updated?.Invoke();
+    
+    public static LottieImage Create(BaseLottieAsset asset, RectTransform transform, float animationSpeed = 1f, bool loop = true)
+    {
+        var image = new GameObject(nameof(LottieImage)).AddComponent<LottieImage>();
+        image.Asset = asset;
+        image.transform.SetParent(transform, false);
+        image.animationSpeed = animationSpeed;
+        image.loop = loop;
+        return image;
+    }
+    
+    [SerializeField] private float animationSpeed = 1f;
+    private LottieAnimation lottieAnimation;
+
+    [SerializeField, HideInInspector] private bool loop = true;
+    [ShowInInspector]
+    public bool Loop
+    {
+        get => loop;
+        set
+        {
+            loop = value;
+            if (value)
+            {
+                IsPlaying = true;
+            }
+        }
+    }
+
+    [HideInInspector] public BaseLottieAsset asset;
+    [ShowInInspector]
+    public BaseLottieAsset Asset
+    {
+        get => asset;
+        set
+        {
+            if (value == asset) return;
+            asset = value;
+            DestroyLottieAnimation();
+            if (asset != null)
+            {
+                asset.SetupImage(this);
+            }
+            UpdatePlayingState();
+        }
+    }
+    
+    [SerializeField] private bool isPlaying = true;
+    [ShowInInspector]
+    public bool IsPlaying
+    {
+        get => isPlaying;
+        set
+        {
+            if (value == isPlaying) return;
+            isPlaying = value;
+            UpdatePlayingState();
+        }
+    }
+    
+    public Transform Transform { get; private set; }
+    public LSRawImage RawImage => this;
+    internal LottieAnimation LottieAnimation => lottieAnimation;
+    internal float AnimationSpeed => animationSpeed;
+    public bool IsVisible => !canvasRenderer.cull && IsActive();
+    
+    private uint lastSize;
+    private uint Size
+    {
+        get
+        {
+            var size = rectTransform.rect.size;
+            var min = (int)(Mathf.Min(size.x, size.y) * 0.5f);
+            min = Mathf.ClosestPowerOfTwo(min);
+            var newSize = (uint)Mathf.Clamp(min, 64, 2048);
+            lastSize = newSize;
+            return newSize;
+        }
+    }
+
+    private bool canPlay;
+    private void UpdatePlayingState()
+    {
+        var lastCanPlay = canPlay;
+        canPlay = IsVisible && isPlaying && asset != null;
+        if(canPlay == lastCanPlay) return;
+        
+        if (canPlay)
+        {
+            if (lottieAnimation == null)
+            {
+                CreateLottieAnimation();
+                lottieAnimation!.DrawOneFrame(0);
+            }
+            
+            updated += LocalUpdate;
+        }
+        else
+        {
+            updated -= LocalUpdate;
+        }
+    }
+    
+    protected override void Awake()
+    {
+        base.Awake();
+        Transform = transform;
+        if (asset != null) asset.SetupImage(this);
+    }
 
     protected override void OnEnable()
     {
         base.OnEnable();
-        Play();
+        canPlay = false;
+        CanvasUpdateRegistry.Updated += Update;
+
+        void Update()
+        {
+            CanvasUpdateRegistry.Updated -= Update;
+#if UNITY_EDITOR
+            if(World.IsEditMode && !this) return; 
+#endif
+            UpdatePlayingState();
+        }
     }
 
     protected override void OnDisable()
     {
         base.OnDisable();
-        Enabled = false;
+        UpdatePlayingState();
     }
 
     public override void OnCullingChanged()
     {
         base.OnCullingChanged();
-        Enabled = !canvasRenderer.cull;
-        lottieAnimation?.SetVisible(enabled && !canvasRenderer.cull);
+        UpdatePlayingState();
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
-        DisposeLottieAnimation();
+        DestroyLottieAnimation();
     }
 
     protected override void OnRectTransformDimensionsChange()
     {
         base.OnRectTransformDimensionsChange();
-        if (asset == null) return;
-
+        if(lottieAnimation == null || !IsVisible) return; 
+        
         var prev = lastSize;
         var size = Size;
         if (prev == size) return;
 
-        var lastFrame = lottieAnimation?.CurrentFrame ?? 0;
+        var lastFrame = lottieAnimation.CurrentFrame;
         
-#if UNITY_EDITOR
-        if (World.IsEditMode) CreateLottieAnimationIfNeeded();
-#endif
-        lottieAnimation?.Dispose();
-        lottieAnimation = LottieAnimation.LoadFromJsonData(asset.Json, string.Empty, size);
-        lottieAnimation.DrawOneFrame(lastFrame);
+        DestroyLottieAnimation();
+        CreateLottieAnimation();
         lottieAnimation.CurrentFrame = lastFrame;
-        BindTextureEvents();
-        texture = lottieAnimation.Texture;
     }
 
     [Button] public void Play()
     {
-        CreateLottieAnimationIfNeeded();
-        lottieAnimation?.Play();
-        lottieAnimation?.SetVisible(!canvasRenderer.cull);
-        Enabled = true;
+        IsPlaying = true;
     }
 
     [Button] public void Pause()
     {
-        Enabled = false;
-        lottieAnimation?.Pause();
+        IsPlaying = false;
     }
 
     [Button] public void Resume()
     {
-        Enabled = true;
-        lottieAnimation?.Resume();
+        IsPlaying = true;
     }
 
     [Button] public void Stop()
     {
-        Enabled = false;
-        lottieAnimation?.Stop();
+        IsPlaying = false;
         lottieAnimation?.DrawOneFrame(0);
     }
 
     private void LocalUpdate()
     {
-#if UNITY_EDITOR
-        if (World.IsEditMode && lottieAnimation == null)
-        {
-            Play();
-            if (lottieAnimation == null) return;
-        }
-#endif
-        if (lottieAnimation == null) return;
-
         lottieAnimation.LateUpdateFetch();
-
         lottieAnimation.UpdateAsync(animationSpeed);
-
         if (!loop && lottieAnimation.CurrentFrame == lottieAnimation.TotalFramesCount - 1)
         {
-            Stop();
+            IsPlaying = false;
         }
     }
-
-    internal void CreateLottieAnimationIfNeeded()
+    
+    private void CreateLottieAnimation()
     {
-        if (lottieAnimation != null || asset == null) return;
-
-        lottieAnimation = LottieAnimation.LoadFromJsonData(asset.Json, string.Empty, Size);
-        BindTextureEvents();
-        lottieAnimation.DrawOneFrame(0);
-    }
-
-    private void BindTextureEvents()
-    {
-        if (lottieAnimation == null) return;
-        lottieAnimation.OnTextureSwapped -= OnTextureSwapped;
+        lottieAnimation = new LottieAnimation(asset.Json, string.Empty, Size);
         lottieAnimation.OnTextureSwapped += OnTextureSwapped;
-        lottieAnimation.SetVisible(enabled && !canvasRenderer.cull);
     }
 
     private void OnTextureSwapped(Texture2D tex)
     {
         texture = tex;
+        canvasRenderer.SetTexture(m_Texture);
     }
 
-    internal void DisposeLottieAnimation()
+    internal void DestroyLottieAnimation()
     {
         if (lottieAnimation != null)
         {
-            lottieAnimation.OnTextureSwapped -= OnTextureSwapped;
-            lottieAnimation.Dispose();
+            lottieAnimation.Destroy();
             lottieAnimation = null;
         }
     }
