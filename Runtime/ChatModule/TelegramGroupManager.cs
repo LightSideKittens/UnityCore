@@ -7,6 +7,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using LSCore;
+using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 
 public class TelegramGroupManager : MonoBehaviour
@@ -14,6 +15,7 @@ public class TelegramGroupManager : MonoBehaviour
     public long chatId = 2301292992;
     Client client;
     private Chat globalChat;
+    [SerializeField] private RectTransform messagePrefab;
     [SerializeField] private RectTransform content;
     private string sessionFilePath;
     
@@ -47,16 +49,19 @@ public class TelegramGroupManager : MonoBehaviour
             await SendMessageToGroup(globalChat, message);
         }
     }
-    
-    // Функция-конфигурация для WTelegramClient
+
     string Config(string what)
     {
+        string verificationCode = "";
+        string password = "";
         switch (what)
         {
-            case "api_id": return "29124809"; // Ваш API_ID
+            case "api_id": return "29124809";
             case "api_hash": return "33553afbccfe2882dcbcc9fe5450fdf2";
             case "phone_number": return "+19706041152";
             case "session_pathname": return sessionFilePath;
+            case "verification_code": return verificationCode;
+            case "password": return password;
             default: return null;
         }
     }
@@ -92,11 +97,9 @@ public class TelegramGroupManager : MonoBehaviour
             return null;
         }
 
-        // Создаем группу. Метод возвращает объект Updates, содержащий информацию о созданном чате.
         var updates = await client.Messages_CreateChat(inputUsers.ToArray(), groupTitle);
         if (updates.updates.Chats != null)
         {
-            // Ищем среди созданных чатов объект типа Chat (базовая группа)
             foreach (var chatObj in updates.updates.Chats.Values)
             {
                 if (chatObj is Chat basicChat)
@@ -119,10 +122,8 @@ public class TelegramGroupManager : MonoBehaviour
     {
         try
         {
-            // Запрашиваем подробную информацию о чате
             var fullChat = await client.Messages_GetFullChat(chatId);
 
-            // В fullChat.chats хранится список всех чатов, упомянутых в ответе
             if (fullChat.chats.TryGetValue(chatId, out ChatBase chatBase))
             {
                 if (chatBase is Chat basicChat)
@@ -152,18 +153,14 @@ public class TelegramGroupManager : MonoBehaviour
         await client.SendMessageAsync(inputPeer, message);
         Debug.Log("Сообщение отправлено в группу.");
     }
-    
 
-    // Обработчик входящих обновлений (для получения сообщений)
+
     Task HandleUpdate(IObject update)
     {
-        // Проверяем, является ли обновление объектом UpdateNewMessage
         if (update is UpdateNewMessage newMsg)
         {
-            // Определяем, что сообщение пришло из группы (базовая группа или канал)
             if (newMsg.message.Peer is PeerChat || newMsg.message.Peer is PeerChannel)
             {
-                Debug.Log("Получено новое сообщение из группы: " + newMsg.message.ID);
             }
         }
         else if (update is UpdatesBase updatesBase && updatesBase.UpdateList != null)
@@ -174,11 +171,8 @@ public class TelegramGroupManager : MonoBehaviour
                 {
                     if (nm.message.Peer is PeerChat || nm.message.Peer is PeerChannel)
                     {
-                        Debug.Log("Получено новое сообщение из группы: " + nm.message.ID);
-
                         if (nm.message is Message message)
                         {
-                            Debug.Log("Получено новое сообщение из группы: " + message.message);
                         }
                     }
                 }
@@ -190,12 +184,11 @@ public class TelegramGroupManager : MonoBehaviour
 
     
     [Button]
-    public async void GetMessages()
+    public async void GetMessages(int count)
     {
         try
         {
-            var message = await GetChatLastMessage(chatId);
-            var messages = await GetChatMessages(chatId, message?.ID ?? 0);
+            var messages = await GetChatMessages(chatId, count);
 
             foreach (var m in messages)
             {
@@ -203,14 +196,16 @@ public class TelegramGroupManager : MonoBehaviour
                 {
                     Debug.Log(mm.message);
                     var emojies = mm.entities?.OfType<MessageEntityCustomEmoji>().Select(x => x.document_id).ToArray();
+                    var messageObj = Instantiate(messagePrefab, content);
+                    
                     if (emojies?.Length > 0)
                     {
-                        HandleCustomEmoji(client, emojies);
+                        HandleCustomEmoji(client, emojies, messageObj);
                     }
 
                     if (mm.media is MessageMediaDocument mediaDocument)
                     {
-                        SaveCustomEmoji(client, (Document)mediaDocument.document);
+                        SaveCustomEmoji(client, (Document)mediaDocument.document, messageObj);
                     }
                 }
             }
@@ -221,27 +216,22 @@ public class TelegramGroupManager : MonoBehaviour
         }
     }
     
-    private async Task HandleCustomEmoji(WTelegram.Client client, long[] customEmojiIds)
+    private async Task HandleCustomEmoji(WTelegram.Client client, long[] customEmojiIds, RectTransform messageObj)
     {
-        // Запрашиваем документы
         var documents = await client.Messages_GetCustomEmojiDocuments(customEmojiIds);
 
-        // Возвращается List<Document>, в котором каждый Document – это файл кастомного эмодзи
-        // Обычно это .TGS (анимированный стикер в формате Lottie), либо .WEBM и т.д.
         foreach (var documentBase in documents)
         {
             var doc = (Document)documentBase;
-            // Посмотрим MIME type, например, application/x-tgsticker или video/webm
             Debug.Log($"Found custom emoji doc: ID={doc.ID}, mime={doc.mime_type}");
 
-            // При необходимости скачиваем файл
-            await SaveCustomEmoji(client, doc);
+            await SaveCustomEmoji(client, doc, messageObj);
         }
     }
 
-    private async Task SaveCustomEmoji(WTelegram.Client client, Document doc)
+    public string decompressedAnimatedStickersPath = "AnimatedStickers";
+    private async Task SaveCustomEmoji(WTelegram.Client client, Document doc, RectTransform messageObj)
     {
-        // Выбираем расширение на основе mime_type
         string extension;
         switch (doc.mime_type)
         {
@@ -255,25 +245,63 @@ public class TelegramGroupManager : MonoBehaviour
                 extension = ".mp4";
                 break;
             default:
-                // fallback
                 extension = ".bin";
                 break;
         }
 
-        // Готовим путь к файлу
+        var att = (DocumentAttributeSticker)doc.attributes.First(x => x is DocumentAttributeSticker);
         string basePath = $"{Application.persistentDataPath}/{doc.dc_id}_{doc.id}";
+        
         string localPath = $"{basePath}{extension}";
-        using (var fs = new FileStream(localPath, FileMode.Create, FileAccess.Write))
-        {
-            await client.DownloadFileAsync(doc, fs);
-        }
 
+        try
+        {
+            using (var fs = new FileStream(localPath, FileMode.Create, FileAccess.Write))
+            {
+                await client.DownloadFileAsync(doc, fs);
+            }
+        }
+        catch (Exception)
+        {
+            return;
+        }
+        
         if (extension == ".tgs")
         {
-            TgsHelper.DecompressTgsFile(localPath, $"{basePath}.json");
-            var lottieImage = LottieImage.Create(await File.ReadAllTextAsync($"{basePath}.json"), content);
-            lottieImage.Rotation = LSRawImage.RotationMode.D180;
-            lottieImage.Play();
+            var dirPath = Path.Combine(Application.persistentDataPath, decompressedAnimatedStickersPath);
+            Directory.CreateDirectory(dirPath);
+            
+            var outPath = Path.Combine(dirPath, $"{att.alt}.tgs");
+            var fName = $"{att.alt}";
+            int index = 0;
+            while (File.Exists(outPath))
+            {
+                fName = $"{att.alt}_{++index}";
+                outPath = Path.Combine(dirPath, $"{fName}.tgs");
+            }
+            File.Copy(localPath, outPath, true);
+            
+            if (doc.video_thumbs?.OfType<VideoSize>().Any(v => v.type == "f") == true)
+            {
+                var loc = new InputDocumentFileLocation
+                {
+                    id = doc.id,
+                    access_hash = doc.access_hash,
+                    file_reference = doc.file_reference,
+                    thumb_size = "f" // <- ключ
+                };
+
+                var locPath = $"{basePath}_onclick{extension}";
+                using (var fs = new FileStream(locPath, FileMode.Create, FileAccess.Write))
+                {
+                    await client.DownloadFileAsync(loc, fs);
+                }
+                var outPat = Path.Combine(dirPath, $"{fName}_onclick.tgs");
+                File.Copy(locPath, outPat, true);
+            }
+            
+            var asset = TelegramLottieAsset.Create(await File.ReadAllBytesAsync(localPath));
+            LottieImage.Create(asset, messageObj);
         }
         else if (extension == ".mp4")
         {
@@ -293,38 +321,43 @@ public class TelegramGroupManager : MonoBehaviour
 
     public async Task<MessageBase> GetChatLastMessage(long chatId)
     {
-        var messages = await GetChatMessages(chatId, 0, 1);
+        var messages = await GetChatMessages(chatId, 1);
         return messages.Length > 0 ? messages[0] : null;
     }
     
     
     public async Task<MessageBase[]> GetChatMessages(
         long chatId,
-        int offsetId,
-        int limit = 100,
-        bool needNewest = false)
+        int total = 100)
     {
-        var inputPeer = new InputPeerChat(chatId);
-        
-        Messages_MessagesBase history;
+        var peer = new InputPeerChat(chatId);
+        var all = new List<MessageBase>(total);
 
-        if (needNewest)
+        int offsetId = 0;
+        while (all.Count < total)
         {
-            history = await client.Messages_GetHistory(
-                peer: inputPeer,
-                limit: limit,
-                min_id: offsetId + 1);
-        }
-        else
-        {
-            history = await client.Messages_GetHistory(
-                peer: inputPeer,
-                offset_id: offsetId,
-                limit: limit);
+            int batch = Math.Min(100, total - all.Count);
+            var history = await client.Messages_GetHistory(
+                peer: peer,
+                limit: batch,
+                offset_id: offsetId);
+
+            var msgs = history.Messages;
+            if (msgs == null || msgs.Length == 0)
+                break;
+
+            all.AddRange(msgs);
+
+            int oldestId = msgs.Min(m => m.ID);
+            offsetId = oldestId;
+
+            if (msgs.Length < batch)
+                break;
         }
 
-        return history.Messages;
+        return all.Take(total).ToArray();
     }
+
 
     void OnDestroy()
     {

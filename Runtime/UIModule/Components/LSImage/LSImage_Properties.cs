@@ -10,12 +10,12 @@ namespace LSCore
         [SerializeField] private bool combineFilledWithSliced;
         [SerializeField] private bool ignoreSLAAAAYout;
 
-        public int RotateId
+        public RotationMode RotateId
         {
-            get => rotateId;
+            get => (RotationMode)rotateId;
             set
             {
-                rotateId = value;
+                rotateId = (int)value;
                 SetVerticesDirty();
             }
         }

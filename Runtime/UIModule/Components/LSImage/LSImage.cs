@@ -8,6 +8,14 @@ namespace LSCore
 {
     public partial class LSImage : Image
     {
+        public enum RotationMode
+        {
+            None = 0,
+            D90 = 1,
+            D180 = 2,
+            D270 = 3,
+        }
+        
         private static readonly LSVertexHelper vertexHelper = new LSVertexHelper();
         private RectTransform rt;
         private Rect currentRect;
