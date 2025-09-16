@@ -175,5 +175,12 @@ namespace LSCore.Extensions.Unity
         
         public static void SnapX(this ref Vector2 pos, float step) => pos.x = Mathf.Round(pos.x / step) * step;
         public static void SnapY(this ref Vector2 pos, float step) => pos.y = Mathf.Round(pos.y / step) * step;
+
+        public static Vector2 Clamp(this Vector2 vec, float min, float max)
+        {
+            vec.x = Mathf.Clamp(vec.x, min, max);
+            vec.y = Mathf.Clamp(vec.y, min, max);
+            return vec;
+        }
     }
 }

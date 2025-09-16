@@ -100,7 +100,7 @@ namespace LSCore
             serializedObject.ApplyModifiedProperties();
         }
 
-        private void DrawFlipProperty(string label, SerializedProperty prop)
+        public static void DrawFlipProperty(string label, SerializedProperty prop)
         {
             EditorGUILayout.BeginHorizontal();
 

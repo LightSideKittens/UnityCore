@@ -9,6 +9,7 @@ namespace LSCore.Extensions
     {
         public static int ToPosNeg(this bool b) => b ? 1 : -1;
         public static int ToInt(this bool b) => b ? 1 : 0;
+        public static bool ToBool(this int b) => b != 0;
         public static bool IsNullOrEmpty(this string text) => string.IsNullOrEmpty(text);
         
         public static bool TryCast<T>(this object obj, out T value)

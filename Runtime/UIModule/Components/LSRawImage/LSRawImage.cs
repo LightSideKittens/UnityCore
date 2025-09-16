@@ -1,4 +1,5 @@
 using System;
+using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,14 +8,6 @@ namespace LSCore
 {
     public class LSRawImage : RawImage
     {
-        public enum RotationMode
-        {
-            None = 0,
-            D90 = 1,
-            D180 = 2,
-            D270 = 3,
-        }
-        
         private static readonly LSVertexHelper vertexHelper = new();
         
         static LSRawImage()
@@ -27,10 +20,21 @@ namespace LSCore
         
         [SerializeField] private bool preserveAspectRatio;
         [SerializeField] private int rotateId = 0;
+        [SerializeField] private Vector2Int flip;
         
-        public RotationMode Rotation
+        public (bool x, bool y) Flip
         {
-            get => (RotationMode)rotateId;
+            get => (flip.x.ToBool(),  flip.y.ToBool());
+            set
+            {
+                flip = new Vector2Int(value.x.ToInt(), value.y.ToInt());
+                SetVerticesDirty();
+            }
+        }
+        
+        public LSImage.RotationMode Rotation
+        {
+            get => (LSImage.RotationMode)rotateId;
             set
             {
                 rotateId = (int)value;
@@ -139,7 +143,7 @@ namespace LSCore
         
         private void RotateMesh(LSVertexHelper vh)
         {
-            if(rotateId == 0) return;
+            if(rotateId == 0 && flip is { x: 0, y: 0 }) return;
             
             UIVertex vert = new UIVertex();
             var count = vh.currentVertCount;
@@ -152,6 +156,8 @@ namespace LSCore
                 3 => Rotate270,
                 _ => null
             };
+            
+            rotateAction += Invert;
             
             for (int i = 0; i < count; i++)
             {
@@ -182,6 +188,22 @@ namespace LSCore
                 }
             }
 
+        }
+        
+        private void Invert(ref Vector3 pos, in Vector2 center)
+        {
+            float xOffset = pos.x - center.x;
+            float yOffset = pos.y - center.y;
+            
+            if (flip.x == 1)
+            {
+                pos.x = -xOffset;
+            }
+
+            if (flip.y == 1)
+            {
+                pos.y = -yOffset;
+            }
         }
         
         private void Rotate90(ref Vector3 pos, in Vector2 center)
