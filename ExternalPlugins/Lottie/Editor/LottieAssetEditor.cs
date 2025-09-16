@@ -198,8 +198,9 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         float delta = (float)(t - lastUpdateTime);
         lastUpdateTime = t;
         anim.DrawOneFrame(frame);
+        anim.CurrentFrame = frame;
         anim.UpdateDelta(delta * speed);
-        
+
         lastW = w; lastH = h; lastRotationIndex = angleIdx;
         lastUpdateTime = EditorApplication.timeSinceStartup;
     }

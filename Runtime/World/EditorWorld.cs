@@ -20,6 +20,12 @@ public class EditorWorld : MonoBehaviour
         {
             Destroy();
         };
+
+        World.Built += () =>
+        {
+            Destroy();
+            Create();
+        };
         
         EditorApplication.update += Update;
 
@@ -56,7 +62,10 @@ public class EditorWorld : MonoBehaviour
 
     private static void Destroy()
     {
-        DestroyImmediate(instance.gameObject);
+        if (instance != null)
+        { 
+            DestroyImmediate(instance.gameObject);
+        }
         instance = null;
         EditorApplication.update -= EditorUpdate;
     }

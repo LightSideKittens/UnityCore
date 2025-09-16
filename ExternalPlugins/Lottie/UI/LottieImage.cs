@@ -52,7 +52,6 @@ public sealed class LottieImage : LSRawImage
             if (value == localEnabled) return;
             localEnabled = value;
 
-            // Управляем подпиской на наш статический “тик” только когда реально нужно
             if (localEnabled && !canvasRenderer.cull && enabled)
             {
                 updated += LocalUpdate;
@@ -62,11 +61,7 @@ public sealed class LottieImage : LSRawImage
                 updated -= LocalUpdate;
             }
 
-            // Сообщаем анимации об изменении видимости/активности
-            if (lottieAnimation != null)
-            {
-                lottieAnimation.SetVisible(localEnabled && !canvasRenderer.cull);
-            }
+            lottieAnimation?.SetVisible(localEnabled && !canvasRenderer.cull);
         }
     }
 
@@ -93,7 +88,6 @@ public sealed class LottieImage : LSRawImage
         if (asset != null) asset.SetupImage(this);
     }
 
-    // -------------------- Размер текстуры (pow2 + clamp) --------------------
     private uint lastSize;
     private uint Size
     {
@@ -108,18 +102,26 @@ public sealed class LottieImage : LSRawImage
         }
     }
 
-    // -------------------- Глобальный тик (Editor/Play) --------------------
     static LottieImage()
     {
 #if UNITY_EDITOR
         Selection.selectionChanged += OnSelectionChanged;
+        EditorApplication.update += OnEditorUpdate;
+        
         void OnSelectionChanged()
         {
+
             EditorWorld.Updated -= OnUpdate;
             if (Selection.gameObjects.Any(x => x.TryGetComponent<LottieImage>(out _)))
             {
                 EditorWorld.Updated += OnUpdate;
             }
+        }
+
+        void OnEditorUpdate()
+        {
+            EditorApplication.update -= OnEditorUpdate;
+            OnSelectionChanged();
         }
 #endif
         World.Updated += OnUpdate;
@@ -128,7 +130,6 @@ public sealed class LottieImage : LSRawImage
     private static Action updated;
     private static void OnUpdate() => updated?.Invoke();
 
-    // -------------------- Жизненный цикл UI --------------------
     protected override void OnEnable()
     {
         base.OnEnable();
@@ -138,15 +139,14 @@ public sealed class LottieImage : LSRawImage
     protected override void OnDisable()
     {
         base.OnDisable();
-        Enabled = false; // отпишемся от тика и поставим на паузу
+        Enabled = false;
     }
 
     public override void OnCullingChanged()
     {
         base.OnCullingChanged();
         Enabled = !canvasRenderer.cull;
-        if (lottieAnimation != null)
-            lottieAnimation.SetVisible(enabled && !canvasRenderer.cull);
+        lottieAnimation?.SetVisible(enabled && !canvasRenderer.cull);
     }
 
     protected override void OnDestroy()
@@ -164,18 +164,24 @@ public sealed class LottieImage : LSRawImage
         var size = Size;
         if (prev == size) return;
 
-        // Пересоздаём анимацию под новый размер, стараясь сохранить кадр
         var lastFrame = lottieAnimation?.CurrentFrame ?? 0;
-        RecreateAnimation(size, lastFrame);
+        
+#if UNITY_EDITOR
+        if (World.IsEditMode) CreateLottieAnimationIfNeeded();
+#endif
+        lottieAnimation?.Dispose();
+        lottieAnimation = LottieAnimation.LoadFromJsonData(asset.Json, string.Empty, size);
+        lottieAnimation.DrawOneFrame(lastFrame);
+        lottieAnimation.CurrentFrame = lastFrame;
+        BindTextureEvents();
+        texture = lottieAnimation.Texture;
     }
 
-    // -------------------- Управление --------------------
     [Button] public void Play()
     {
         CreateLottieAnimationIfNeeded();
         lottieAnimation?.Play();
-        if (lottieAnimation != null)
-            lottieAnimation.SetVisible(!canvasRenderer.cull);
+        lottieAnimation?.SetVisible(!canvasRenderer.cull);
         Enabled = true;
     }
 
@@ -198,7 +204,6 @@ public sealed class LottieImage : LSRawImage
         lottieAnimation?.DrawOneFrame(0);
     }
 
-    // -------------------- Обновление по кадрам --------------------
     private void LocalUpdate()
     {
 #if UNITY_EDITOR
@@ -210,20 +215,16 @@ public sealed class LottieImage : LSRawImage
 #endif
         if (lottieAnimation == null) return;
 
-        // 1) Забираем готовый кадр N-1 и переключаем текстуры (GPU без Apply mipmaps)
         lottieAnimation.LateUpdateFetch();
 
-        // 2) Планируем следующий кадр N (асинхронно в плагине)
         lottieAnimation.UpdateAsync(animationSpeed);
 
-        // 3) Если не луп — останавливаемся на последнем кадре
         if (!loop && lottieAnimation.CurrentFrame == lottieAnimation.TotalFramesCount - 1)
         {
             Stop();
         }
     }
 
-    // -------------------- Создание/уничтожение анимации --------------------
     internal void CreateLottieAnimationIfNeeded()
     {
         if (lottieAnimation != null || asset == null) return;
@@ -231,38 +232,13 @@ public sealed class LottieImage : LSRawImage
         lottieAnimation = LottieAnimation.LoadFromJsonData(asset.Json, string.Empty, Size);
         BindTextureEvents();
         lottieAnimation.DrawOneFrame(0);
-        
-    }
-
-    private void RecreateAnimation(uint newSize, int frameToRestore)
-    {
-        // Отписываем события со старого экземпляра
-        if (lottieAnimation != null)
-            lottieAnimation.OnTextureSwapped -= OnTextureSwapped;
-
-        lottieAnimation?.Dispose();
-        lottieAnimation = LottieAnimation.LoadFromJsonData(asset.Json, string.Empty, newSize);
-
-        // Восстанавливаем кадр синхронно (один раз)
-        lottieAnimation.DrawOneFrame(Mathf.Clamp(frameToRestore, 0, (int)lottieAnimation.TotalFramesCount - 1));
-
-        // Делayed-assign через Canvas апдейт, чтобы избежать лишних перерисовок лэйаута
-        CanvasUpdateRegistry.Updated += OnCanvasUpdatedAssignTexture;
-        void OnCanvasUpdatedAssignTexture()
-        {
-            CanvasUpdateRegistry.Updated -= OnCanvasUpdatedAssignTexture;
-            BindTextureEvents();
-            texture = lottieAnimation.Texture;
-        }
     }
 
     private void BindTextureEvents()
     {
         if (lottieAnimation == null) return;
-        // каждый раз при свопе буфера просто подставляем новую Texture2D
         lottieAnimation.OnTextureSwapped -= OnTextureSwapped;
         lottieAnimation.OnTextureSwapped += OnTextureSwapped;
-        // Прокинем текущую видимость
         lottieAnimation.SetVisible(enabled && !canvasRenderer.cull);
     }
 

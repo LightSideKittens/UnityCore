@@ -7,6 +7,7 @@ using LSCore.Extensions;
 using UnityEngine;
 
 #if UNITY_EDITOR
+using UnityEditor.Build.Reporting;
 using UnityEditor;
 using UnityEditor.Build;
 #endif
@@ -34,6 +35,7 @@ namespace LSCore
             public override void PrepareForBuild(BuildPlayerContext buildPlayerContext)
             {
                 IsBuilding = true;
+                Building.SafeInvoke();
                 EditorApplication.update += OnUpdate;
             }
 
@@ -44,9 +46,21 @@ namespace LSCore
             }
         }
         
+        public sealed class BuildDoneHook : IPostprocessBuildWithReport
+        {
+            public int callbackOrder => 0;
+            
+            public void OnPostprocessBuild(BuildReport report)
+            {
+                Built.SafeInvoke();
+            }
+        }
+        
         public static event Action Creating;
         public static event Action Created;
         public static event Action Destroyed;
+        public static event Action Building;
+        public static event Action Built;
         public static int InstanceId => instance.GetInstanceID(); 
         public static bool IsPlaying { get; private set; }
         public static bool IsBuilding { get; private set; }
