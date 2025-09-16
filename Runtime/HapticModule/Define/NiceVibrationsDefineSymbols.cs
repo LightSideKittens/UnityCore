@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.Build;
 #if UNITY_EDITOR
+using UnityEditor.Build;
 using UnityEditor;
 #endif
 

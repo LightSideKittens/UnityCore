@@ -757,7 +757,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 6
-  m_Spacing: 22.72
+  m_Spacing: 24.66
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
   m_ChildControlWidth: 0
@@ -2771,7 +2771,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
-  m_Padding: {x: 0, y: 166.3, z: 0, w: 0}
+  m_Padding: {x: 0, y: 0, z: 0, w: 0}
   m_Softness: {x: 0, y: 0}
 --- !u!1 &1704081787
 GameObject:
@@ -3307,8 +3307,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 676015807}
   m_HandleRect: {fileID: 676015806}
   m_Direction: 2
-  m_Value: -0.000000031299724
-  m_Size: 0.09007671
+  m_Value: -0.00000003118804
+  m_Size: 0.08978416
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3496,7 +3496,7 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  asset: {fileID: 7767725731367759840, guid: 8f9140f9581ceee46a5eb0eb460f80bd, type: 3}
   animationSpeed: 1
   loop: 1
 --- !u!222 &1970686602
