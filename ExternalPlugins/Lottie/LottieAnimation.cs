@@ -8,7 +8,7 @@ using UnityEngine;
 public sealed class LottieAnimation : IDisposable
 {
     public Texture2D Texture => textures[readIndex];
-    public int CurrentFrame { get; private set; }
+    public int CurrentFrame { get; set; }
     public double FrameRate => animationWrapper.frameRate;
     public long TotalFramesCount => animationWrapper.totalFrames;
     public double DurationSeconds => animationWrapper.duration;
@@ -217,8 +217,6 @@ public sealed class LottieAnimation : IDisposable
 
     private void SwapReadWrite()
     {
-        int tmp = readIndex;
-        readIndex = writeIndex;
-        writeIndex = tmp;
+        (readIndex, writeIndex) = (writeIndex, readIndex);
     }
 }
