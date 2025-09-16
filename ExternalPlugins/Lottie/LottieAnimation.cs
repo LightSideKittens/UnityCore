@@ -1,19 +1,21 @@
 using System;
+using System.Collections;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using LSCore;
 using LSCore.Extensions;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
-public sealed class LottieAnimation : IDisposable
+public sealed class LottieAnimation
 {
     public Texture2D Texture => textures[readIndex];
     public int CurrentFrame { get; set; }
     public double FrameRate => animationWrapper.frameRate;
     public long TotalFramesCount => animationWrapper.totalFrames;
     public double DurationSeconds => animationWrapper.duration;
-    public bool IsPlaying { get; private set; } = true;
-
     public event Action<Texture2D> OnTextureSwapped;
 
     private IntPtr animationWrapperIntPtr;
@@ -30,19 +32,14 @@ public sealed class LottieAnimation : IDisposable
     public float timeSinceLastRenderCall;
     private double frameDelta;
     private bool hasPending;
-    private int pendingFrame;
 
     private readonly Action<int> drawOneFrameSyncCached;
     private readonly Action<int> drawOneFrameAsyncPrepareCached;
 
-    private bool isVisible = true;
-    public void SetVisible(bool visible) => isVisible = visible;
-
     private readonly bool clampOneFramePerTick = true;
     private readonly bool loop = true;
-    private readonly bool clearBeforeRender = true;
 
-    private LottieAnimation(string jsonData, string resourcesPath, uint pixelsPerAspectUnit)
+    public LottieAnimation(string jsonData, string resourcesPath, uint pixelsPerAspectUnit)
     {
         var size = GetWH(jsonData);
         var aspect = (float)size.x / Mathf.Max(1, size.y);
@@ -58,26 +55,11 @@ public sealed class LottieAnimation : IDisposable
         drawOneFrameAsyncPrepareCached = DrawOneFrameAsyncPrepareInternal;
     }
 
-    public static LottieAnimation LoadFromJsonData(string jsonData, string resourcesPath, uint pixelsPerAspectUnit)
-    {
-        if (string.IsNullOrWhiteSpace(jsonData))
-            throw new ArgumentException("The provided json animation file is empty");
-
-        return new LottieAnimation(jsonData, resourcesPath, pixelsPerAspectUnit);
-    }
-
     public static Vector2Int GetWH(string json)
     {
         var wh = JTokenExtensions.FindByPath(json, "w", "h");
         return new Vector2Int(wh[0].ToInt(), wh[1].ToInt());
     }
-
-    public void Play()   { IsPlaying = true; }
-    public void Pause()  { IsPlaying = false; }
-    public void Resume() { IsPlaying = true; }
-    public void Stop()   { Pause(); CurrentFrame = 0; }
-
-    public void TogglePlay() => IsPlaying = !IsPlaying;
 
     public void Update(float animationSpeed = 1f)
         => UpdateInternal(animationSpeed * Time.deltaTime, drawOneFrameSyncCached, synchronous: true);
@@ -110,25 +92,30 @@ public sealed class LottieAnimation : IDisposable
         OnTextureSwapped?.Invoke(textures[readIndex]);
     }
 
-    public void Dispose()
+    public void CompletePending()
     {
-        try
+        if (hasPending)
         {
-            NativeBridge.Dispose(animationWrapper);
+            NativeBridge.LottieRenderGetFutureResult(animationWrapperIntPtr, renderDataPtr[writeIndex]);
+            hasPending = false;
         }
-        catch {
-        }
-
+    }
+    
+    public async void Destroy()
+    {
+        await Task.Delay(Random.Range(1000, 3000));
+        CompletePending();
+        NativeBridge.Dispose(animationWrapper);
+        
         for (int i = 0; i < 2; i++)
         {
-            try { NativeBridge.LottieDisposeRenderData(ref renderDataPtr[i]); } catch {
-            }
-            if (textures[i] != null)
-            {
-                try { UnityEngine.Object.DestroyImmediate(textures[i]); } catch {
-                }
-                textures[i] = null;
-            }
+            NativeBridge.LottieDisposeRenderData(ref renderDataPtr[i]);
+#if UNITY_EDITOR
+            if(World.IsEditMode) UnityEngine.Object.DestroyImmediate(textures[i]);
+            else UnityEngine.Object.Destroy(textures[i]);
+#else 
+            UnityEngine.Object.Destroy(textures[i]);
+#endif
         }
     }
 
@@ -162,8 +149,6 @@ public sealed class LottieAnimation : IDisposable
 
     private void UpdateInternal(float deltaTime, Action<int> drawMethod, bool synchronous)
     {
-        if (!IsPlaying || !isVisible) return;
-
         timeSinceLastRenderCall += Mathf.Max(0, deltaTime);
 
         if (timeSinceLastRenderCall < frameDelta)
@@ -181,7 +166,7 @@ public sealed class LottieAnimation : IDisposable
         }
         else
         {
-            if (CurrentFrame >= total) { CurrentFrame = total - 1; IsPlaying = false; }
+            if (CurrentFrame >= total) CurrentFrame = total - 1;
         }
 
         if (synchronous)
@@ -197,7 +182,6 @@ public sealed class LottieAnimation : IDisposable
             {
                 drawMethod(CurrentFrame);
                 hasPending = true;
-                pendingFrame = CurrentFrame;
             }
         }
 
@@ -207,12 +191,12 @@ public sealed class LottieAnimation : IDisposable
 
     private void DrawOneFrameSyncInternal(int frameNumber)
     {
-        NativeBridge.LottieRenderImmediately(animationWrapperIntPtr, renderDataPtr[writeIndex], frameNumber, clearBeforeRender);
+        NativeBridge.LottieRenderImmediately(animationWrapperIntPtr, renderDataPtr[writeIndex], frameNumber, false);
     }
 
     private void DrawOneFrameAsyncPrepareInternal(int frameNumber)
     {
-        NativeBridge.LottieRenderCreateFutureAsync(animationWrapperIntPtr, renderDataPtr[writeIndex], frameNumber, clearBeforeRender);
+        NativeBridge.LottieRenderCreateFutureAsync(animationWrapperIntPtr, renderDataPtr[writeIndex], frameNumber, false);
     }
 
     private void SwapReadWrite()

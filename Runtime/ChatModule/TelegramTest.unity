@@ -186,9 +186,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &39928810
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -264,9 +265,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: 1d9a2c8cf8e132b4cb2693ede2acd167, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: 1d9a2c8cf8e132b4cb2693ede2acd167, type: 3}
+  isPlaying: 1
 --- !u!222 &146746228
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -342,9 +344,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: 212efd733b8874e4592730c51cfacc0a, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: 212efd733b8874e4592730c51cfacc0a, type: 3}
+  isPlaying: 1
 --- !u!222 &162042626
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -420,9 +423,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &211783033
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -498,9 +502,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: c21c93544300b724380fba4c94bd7ef3, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: c21c93544300b724380fba4c94bd7ef3, type: 3}
+  isPlaying: 1
 --- !u!222 &231931952
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -509,6 +514,288 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 231931949}
   m_CullTransparentMesh: 1
+--- !u!1 &235096600
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 235096602}
+  - component: {fileID: 235096601}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &235096601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 235096600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 906011f24c724615878940163daa003a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.DoIt::DoIter
+  doIts:
+  - rid: 7466096639329960007
+  references:
+    version: 2
+    RefIds:
+    - rid: 7466096639329960007
+      type: {class: BaseAnimAction, ns: LSCore.AnimationsModule, asm: LSCore.AnimationsModule}
+      data:
+        anim:
+          rid: 7466096639329960008
+    - rid: 7466096639329960008
+      type: {class: SizeDeltaAnim, ns: LSCore.AnimationsModule.Animations, asm: LSCore.AnimationsModule}
+      data:
+        id: 
+        options:
+        - rid: 7466096639329960011
+        - rid: 7466096640833355880
+        targets:
+        - rid: 7466096640833355890
+        - rid: 7466096640833355891
+        - rid: 7466096640833355892
+        - rid: 7466096640833355893
+        - rid: 7466096640833355894
+        - rid: 7466096640833355895
+        - rid: 7466096640833355896
+        - rid: 7466096640833355897
+        - rid: 7466096640833355898
+        - rid: 7466096640833355899
+        - rid: 7466096640833355900
+        - rid: 7466096640833355901
+        - rid: 7466096640833355902
+        - rid: 7466096640833355903
+        - rid: 7466096640833355904
+        - rid: 7466096640833355905
+        - rid: 7466096640833355906
+        - rid: 7466096640833355907
+        - rid: 7466096640833355908
+        - rid: 7466096640833355909
+        - rid: 7466096640833355910
+        - rid: 7466096640833355911
+        - rid: 7466096640833355912
+        - rid: 7466096640833355913
+        - rid: 7466096640833355914
+        - rid: 7466096640833355915
+        - rid: 7466096640833355916
+        - rid: 7466096640833355917
+        - rid: 7466096640833355918
+        - rid: 7466096640833355919
+        - rid: 7466096640833355920
+        - rid: 7466096640833355921
+        - rid: 7466096640833355922
+        - rid: 7466096640833355923
+        - rid: 7466096640833355924
+        - rid: 7466096640833355925
+        - rid: 7466096640833355926
+        timeOffsetPerTarget:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        needInit: 1
+        duration: 5
+        startValue: {x: 563.8, y: 30}
+        endValue: {x: 563.8, y: 3000}
+    - rid: 7466096639329960011
+      type: {class: SetLoops, ns: LSCore.AnimationsModule.Animations.Options, asm: LSCore.AnimationsModule}
+      data:
+        loopsCount: -1
+        loopType: 1
+    - rid: 7466096640833355880
+      type: {class: SetEase, ns: LSCore.AnimationsModule.Animations.Options, asm: LSCore.AnimationsModule}
+      data:
+        useCustom: 0
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        ease: 4
+    - rid: 7466096640833355890
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1970686600}
+    - rid: 7466096640833355891
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 2147013494}
+    - rid: 7466096640833355892
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1473784145}
+    - rid: 7466096640833355893
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 146746226}
+    - rid: 7466096640833355894
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 724916199}
+    - rid: 7466096640833355895
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 231931950}
+    - rid: 7466096640833355896
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 162042624}
+    - rid: 7466096640833355897
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 2059307194}
+    - rid: 7466096640833355898
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 351520146}
+    - rid: 7466096640833355899
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1312934697}
+    - rid: 7466096640833355900
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1556152284}
+    - rid: 7466096640833355901
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1167987213}
+    - rid: 7466096640833355902
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1525664405}
+    - rid: 7466096640833355903
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 2106816379}
+    - rid: 7466096640833355904
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1704081788}
+    - rid: 7466096640833355905
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1574620799}
+    - rid: 7466096640833355906
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 579604044}
+    - rid: 7466096640833355907
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 238454555}
+    - rid: 7466096640833355908
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 39928808}
+    - rid: 7466096640833355909
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1325672716}
+    - rid: 7466096640833355910
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 2058767937}
+    - rid: 7466096640833355911
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 738630556}
+    - rid: 7466096640833355912
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1479438142}
+    - rid: 7466096640833355913
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1422116058}
+    - rid: 7466096640833355914
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 211783031}
+    - rid: 7466096640833355915
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 2120428746}
+    - rid: 7466096640833355916
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1338001599}
+    - rid: 7466096640833355917
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1017955521}
+    - rid: 7466096640833355918
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 401938545}
+    - rid: 7466096640833355919
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1941284059}
+    - rid: 7466096640833355920
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 851768237}
+    - rid: 7466096640833355921
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1833919960}
+    - rid: 7466096640833355922
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 640168957}
+    - rid: 7466096640833355923
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 438355182}
+    - rid: 7466096640833355924
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1400404518}
+    - rid: 7466096640833355925
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 561024779}
+    - rid: 7466096640833355926
+      type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 289628672}
+--- !u!4 &235096602
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 235096600}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &238454554
 GameObject:
   m_ObjectHideFlags: 0
@@ -576,9 +863,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &238454557
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -654,9 +942,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &289628674
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -695,6 +984,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1122766910}
   - {fileID: 1970686600}
   - {fileID: 2147013494}
   - {fileID: 1473784145}
@@ -846,9 +1136,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: 73ae14a77c4779f42bfec4c2f3ab5e58, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: 73ae14a77c4779f42bfec4c2f3ab5e58, type: 3}
+  isPlaying: 1
 --- !u!222 &351520148
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -924,9 +1215,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &401938547
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1094,9 +1386,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &438355184
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1172,9 +1465,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &561024781
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1250,9 +1544,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &579604046
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1328,9 +1623,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &640168959
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1481,9 +1777,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: c9e1e49ff7c4c9f4ab54577a5dc405c5, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: c9e1e49ff7c4c9f4ab54577a5dc405c5, type: 3}
+  isPlaying: 1
 --- !u!222 &724916201
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1559,9 +1856,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &738630558
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1637,9 +1935,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &851768239
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1715,9 +2014,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &1017955523
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1726,6 +2026,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1017955520}
   m_CullTransparentMesh: 1
+--- !u!1 &1122766909
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1122766910}
+  m_Layer: 5
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1122766910
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122766909}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 298009168}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 111.3}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1167987212
 GameObject:
   m_ObjectHideFlags: 0
@@ -1793,9 +2128,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: f0cabadb834ac2e4a85b24117a3b0b82, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: f0cabadb834ac2e4a85b24117a3b0b82, type: 3}
+  isPlaying: 1
 --- !u!222 &1167987215
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1871,9 +2207,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: 264626c9c0121814daa024a243bd3699, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: 264626c9c0121814daa024a243bd3699, type: 3}
+  isPlaying: 1
 --- !u!222 &1312934699
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1949,9 +2286,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &1325672718
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2027,9 +2365,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &1338001601
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2141,9 +2480,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &1400404520
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2321,9 +2661,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &1422116060
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2399,9 +2740,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: 8d7b78ce6b0b98b47b3772aad0836590, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: 8d7b78ce6b0b98b47b3772aad0836590, type: 3}
+  isPlaying: 1
 --- !u!222 &1473784147
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2477,9 +2819,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &1479438144
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2555,9 +2898,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: a836f9aef06df87448ff0bb326315d75, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: a836f9aef06df87448ff0bb326315d75, type: 3}
+  isPlaying: 1
 --- !u!222 &1525664407
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2565,84 +2909,6 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1525664404}
-  m_CullTransparentMesh: 1
---- !u!1 &1549568707
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1549568708}
-  - component: {fileID: 1549568710}
-  - component: {fileID: 1549568709}
-  m_Layer: 5
-  m_Name: Image_37
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1549568708
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1549568707}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1731245657}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 707, y: -1379.7}
-  m_SizeDelta: {x: 563.8, y: 431.2}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1549568709
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1549568707}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 52181336be374ae49ca49991ceca1bc4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: LSCore.Lottie::LottieImage
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Texture: {fileID: 0}
-  m_UVRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
-  preserveAspectRatio: 1
-  rotateId: 2
-  flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: 8f9140f9581ceee46a5eb0eb460f80bd, type: 3}
-  animationSpeed: 1
-  loop: 1
---- !u!222 &1549568710
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1549568707}
   m_CullTransparentMesh: 1
 --- !u!1 &1556152283
 GameObject:
@@ -2711,9 +2977,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: f0cabadb834ac2e4a85b24117a3b0b82, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: f0cabadb834ac2e4a85b24117a3b0b82, type: 3}
+  isPlaying: 1
 --- !u!222 &1556152286
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2789,9 +3056,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: fdcc7a146e554c5408f248139af35098, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: fdcc7a146e554c5408f248139af35098, type: 3}
+  isPlaying: 1
 --- !u!222 &1574620801
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2918,9 +3186,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &1704081790
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3150,7 +3419,6 @@ RectTransform:
   m_Children:
   - {fileID: 1414984245}
   - {fileID: 1706068839}
-  - {fileID: 1549568708}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3293,9 +3561,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &1833919962
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3386,8 +3655,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 676015807}
   m_HandleRect: {fileID: 676015806}
   m_Direction: 2
-  m_Value: 0.00000003475749
-  m_Size: 0.35469273
+  m_Value: 0.000000030059052
+  m_Size: 0.32219255
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3497,9 +3766,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &1941284061
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3543,7 +3813,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 563.8, y: 123.1}
+  m_SizeDelta: {x: 606.5, y: 536.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1970686601
 MonoBehaviour:
@@ -3575,9 +3845,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: 8f9140f9581ceee46a5eb0eb460f80bd, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: 8f9140f9581ceee46a5eb0eb460f80bd, type: 3}
+  isPlaying: 1
 --- !u!222 &1970686602
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3653,9 +3924,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &2058767939
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3731,9 +4003,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: 8efbd5e5177cebc478a7d67f32181c81, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: 8efbd5e5177cebc478a7d67f32181c81, type: 3}
+  isPlaying: 1
 --- !u!222 &2059307196
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3809,9 +4082,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: fb72bfb321954424996af5e2f581eb87, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: fb72bfb321954424996af5e2f581eb87, type: 3}
+  isPlaying: 1
 --- !u!222 &2106816381
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3887,9 +4161,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+  isPlaying: 1
 --- !u!222 &2120428748
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3965,9 +4240,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  asset: {fileID: 7767725731367759840, guid: 2d0e6c1c9a1fa914682d81045d2ce6a5, type: 3}
   animationSpeed: 1
   loop: 1
+  asset: {fileID: 7767725731367759840, guid: 2d0e6c1c9a1fa914682d81045d2ce6a5, type: 3}
+  isPlaying: 1
 --- !u!222 &2147013496
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3983,3 +4259,4 @@ SceneRoots:
   - {fileID: 411724617}
   - {fileID: 1731245657}
   - {fileID: 1755921451}
+  - {fileID: 235096602}

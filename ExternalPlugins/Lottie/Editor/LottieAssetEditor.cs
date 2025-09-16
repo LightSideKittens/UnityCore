@@ -134,7 +134,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         if (GUILayout.Button("Stop", EditorStyles.miniButton))
         {
             playing = false;
-            if (anim != null) { anim.Stop(); anim.DrawOneFrame(0); }
+            anim?.DrawOneFrame(0);
         }
         
         loop = GUILayout.Toggle(loop, "Loop", EditorStyles.miniButton);
@@ -188,7 +188,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         var frame = anim?.CurrentFrame ?? 0;
         DisposeAnim();
 
-        anim = LottieAnimation.LoadFromJsonData(
+        anim = new LottieAnimation(
             cachedJson,
             string.Empty,
             (uint)Mathf.Min(w, h));
@@ -207,7 +207,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
 
     private void DisposeAnim()
     {
-        if (anim != null) { anim.Dispose(); anim = null; }
+        if (anim != null) { anim.Destroy(); anim = null; }
     }
 }
 #endif
