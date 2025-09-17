@@ -1,8 +1,11 @@
 ﻿#if UNITY_EDITOR
 using System;
+using System.IO;
+using DG.Tweening.Plugins.Core.PathCore;
 using UnityEditor;
 using UnityEditor.AssetImporters;
 using UnityEngine;
+using Path = System.IO.Path;
 
 [CustomEditor(typeof(LottieScriptedImporter), true)]
 public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
@@ -18,7 +21,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
     private int lastW, lastH;
     private int lastRotationIndex = -1;
 
-    private BaseLottieAsset loadedAsset;
+    private BaseLottieAsset asset;
     private string assetPath;
     private string cachedJson;
 
@@ -27,10 +30,10 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         base.OnEnable();
         
         assetPath   = ((AssetImporter)target).assetPath;
-        loadedAsset = AssetDatabase.LoadAssetAtPath<BaseLottieAsset>(assetPath);
-        cachedJson  = loadedAsset.Json;
-        rotateId = (int)loadedAsset.Rotation;
-        flip = loadedAsset.Flip;
+        asset = AssetDatabase.LoadAssetAtPath<BaseLottieAsset>(assetPath);
+        cachedJson  = asset.Json;
+        rotateId = (int)asset.Rotation;
+        flip = asset.Flip;
         playing = true;
         lastUpdateTime = EditorApplication.timeSinceStartup;
     }
@@ -52,6 +55,28 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
     {
         DrawFlip();
         DrawRotateButton();
+        if (asset.IsCompressed)
+        {
+            if (GUILayout.Button("Decompress"))
+            {
+                var json = LottieCompressor.Decompress(File.ReadAllBytes(assetPath));
+                var newPath = Path.ChangeExtension(assetPath, asset.DecompressedExtension);
+                File.WriteAllText(newPath, json);
+                AssetDatabase.DeleteAsset(assetPath);
+                AssetDatabase.Refresh();
+            }
+        }
+        else
+        {
+            if (GUILayout.Button("Compress"))
+            {
+                var bytes = LottieCompressor.Compress(File.ReadAllText(assetPath));
+                var newPath = Path.ChangeExtension(assetPath, asset.CompressedExtension);
+                File.WriteAllBytes(newPath, bytes);
+                AssetDatabase.DeleteAsset(assetPath);
+                AssetDatabase.Refresh();
+            }
+        }
     }
     
     private void DrawFlip()
@@ -144,8 +169,9 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         
         if (anim != null)
         {
+            anim.loop = loop;
             int total = Mathf.Max(1, (int)anim.TotalFramesCount);
-            int cur = Mathf.Clamp((int)anim.CurrentFrame, 0, total - 1);
+            int cur = Mathf.Clamp((int)anim.currentFrame, 0, total - 1);
 
             GUILayout.Space(10);
             GUILayout.Label($"Frame {cur+1}/{total}", GUILayout.Width(110));
@@ -154,6 +180,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
             {
                 playing = false;
                 anim.DrawOneFrame(newFrame);
+                anim.currentFrame = newFrame;
             }
         }
     }
@@ -168,7 +195,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         
         anim.UpdateDelta(delta * speed);
 
-        if (!loop && anim.CurrentFrame >= anim.TotalFramesCount - 1)
+        if (!loop && anim.currentFrame >= anim.TotalFramesCount - 1)
             playing = false;
 
         Repaint();
@@ -185,7 +212,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         if (!needRecreate) return;
         
         var lastTime = anim?.timeSinceLastRenderCall ?? 0;
-        var frame = anim?.CurrentFrame ?? 0;
+        var frame = anim?.currentFrame ?? 0;
         DisposeAnim();
 
         anim = new LottieAnimation(
@@ -198,7 +225,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         float delta = (float)(t - lastUpdateTime);
         lastUpdateTime = t;
         anim.DrawOneFrame(frame);
-        anim.CurrentFrame = frame;
+        anim.currentFrame = frame;
         anim.UpdateDelta(delta * speed);
 
         lastW = w; lastH = h; lastRotationIndex = angleIdx;

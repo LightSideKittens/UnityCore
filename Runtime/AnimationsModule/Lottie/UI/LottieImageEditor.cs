@@ -10,8 +10,8 @@ public class LottieImageEditor : LSRawImageEditor
     private PropertyTree tree;
     private InspectorProperty asset;
     private InspectorProperty loop;
-    private InspectorProperty animationSpeed;
-    private InspectorProperty isPlaying;
+    private InspectorProperty speed;
+    private InspectorProperty isEnabled;
     
     protected override void OnEnable()
     {
@@ -20,18 +20,18 @@ public class LottieImageEditor : LSRawImageEditor
         var children = tree.RootProperty.Children;
         asset = children["Asset"];
         loop = children["Loop"];
-        animationSpeed = children["animationSpeed"];
-        isPlaying = children["IsPlaying"];
+        speed = children["Speed"];
+        isEnabled = children["Enabled"];
     }
 
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
         tree.BeginDraw(true);
-        isPlaying.Draw();
+        isEnabled.Draw();
         asset.Draw();
         loop.Draw();
-        animationSpeed.Draw();
+        speed.Draw();
         tree.EndDraw();
     }
 

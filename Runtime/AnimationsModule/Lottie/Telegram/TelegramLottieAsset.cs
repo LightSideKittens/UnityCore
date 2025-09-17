@@ -5,7 +5,9 @@ public abstract class BaseTelegramLottieAsset : BaseLottieAsset
 {
     public override LSImage.RotationMode Rotation => LSImage.RotationMode.D180;
     public override (bool x, bool y) Flip => (true, false);
-
+    protected override string CompressedExtension => ".tgs";
+    protected override string DecompressedExtension => ".tglottie";
+    
     protected static string SanitizeJson(string src)
     {
         const string tag = "\"tgs\":1,";
@@ -17,14 +19,15 @@ public abstract class BaseTelegramLottieAsset : BaseLottieAsset
 
 public class TelegramLottieAsset : BaseTelegramLottieAsset
 {
-    [SerializeField] internal byte[] rawData;
+    [SerializeField] internal byte[] data;
     private string json;
-    public override string Json => string.IsNullOrEmpty(json) ? json = SanitizeJson(TgsHelper.TgsToJsonString(rawData)) : json;
-
+    public override string Json => string.IsNullOrEmpty(json) ? json = SanitizeJson(LottieCompressor.Decompress(data)) : json;
+    protected override bool IsCompressed => true;
+    
     public static TelegramLottieAsset Create(byte[] rawData)
     {
         var asset = CreateInstance<TelegramLottieAsset>();
-        asset.rawData = rawData;
+        asset.data = rawData;
         return asset;
     }
 }
