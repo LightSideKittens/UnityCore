@@ -64,6 +64,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
                 File.WriteAllText(newPath, json);
                 AssetDatabase.DeleteAsset(assetPath);
                 AssetDatabase.Refresh();
+                Selection.activeObject = AssetDatabase.LoadAssetAtPath<BaseLottieAsset>(newPath);
             }
         }
         else
@@ -75,6 +76,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
                 File.WriteAllBytes(newPath, bytes);
                 AssetDatabase.DeleteAsset(assetPath);
                 AssetDatabase.Refresh();
+                Selection.activeObject = AssetDatabase.LoadAssetAtPath<BaseLottieAsset>(newPath);
             }
         }
     }
