@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using LSCore;
@@ -12,7 +11,9 @@ using Random = UnityEngine.Random;
 public sealed class LottieAnimation
 {
     public Texture2D Texture => textures[readIndex];
-    public int CurrentFrame { get; set; }
+    public int currentFrame;
+    public bool loop = true;
+    
     public double FrameRate => animationWrapper.frameRate;
     public long TotalFramesCount => animationWrapper.totalFrames;
     public double DurationSeconds => animationWrapper.duration;
@@ -35,9 +36,6 @@ public sealed class LottieAnimation
 
     private readonly Action<int> drawOneFrameSyncCached;
     private readonly Action<int> drawOneFrameAsyncPrepareCached;
-
-    private readonly bool clampOneFramePerTick = true;
-    private readonly bool loop = true;
 
     public LottieAnimation(string jsonData, string resourcesPath, uint pixelsPerAspectUnit)
     {
@@ -76,8 +74,8 @@ public sealed class LottieAnimation
 
         NativeBridge.LottieRenderGetFutureResult(animationWrapperIntPtr, renderDataPtr[writeIndex]);
 
-        textures[writeIndex].Apply();
-
+        textures[writeIndex].Apply(false, false);
+        
         SwapReadWrite();
         OnTextureSwapped?.Invoke(textures[readIndex]);
 
@@ -87,7 +85,7 @@ public sealed class LottieAnimation
     public void DrawOneFrame(int frameNumber)
     {
         DrawOneFrameSyncInternal(frameNumber);
-        textures[writeIndex].Apply();
+        textures[writeIndex].Apply(false, false);
         SwapReadWrite();
         OnTextureSwapped?.Invoke(textures[readIndex]);
     }
@@ -131,12 +129,13 @@ public sealed class LottieAnimation
                 bytesPerLine = width * sizeof(uint)
             };
 
-            textures[i] = new Texture2D((int)width, (int)height, fmt, 0, false)
+            var texture = new Texture2D((int)width, (int)height, fmt, 1, false)
             {
                 hideFlags = HideFlags.DontSave
             };
-
-            pixelData[i] = textures[i].GetRawTextureData<byte>();
+            texture.wrapMode = TextureWrapMode.Clamp;
+            textures[i] = texture;
+            pixelData[i] = texture.GetRawTextureData<byte>();
             renderData[i].buffer = pixelData[i].GetUnsafePtr();
 
             NativeBridge.LottieAllocateRenderData(ref renderDataPtr[i]);
@@ -155,23 +154,21 @@ public sealed class LottieAnimation
             return;
 
         int framesDelta = Mathf.FloorToInt((float)(timeSinceLastRenderCall / frameDelta));
-        if (clampOneFramePerTick) framesDelta = Mathf.Min(framesDelta, 1);
-
         int total = Mathf.Max(1, (int)animationWrapper.totalFrames);
-        CurrentFrame = (CurrentFrame + framesDelta);
+        currentFrame = (currentFrame + framesDelta);
 
         if (loop)
         {
-            if (CurrentFrame >= total) CurrentFrame %= total;
+            if (currentFrame >= total) currentFrame %= total;
         }
         else
         {
-            if (CurrentFrame >= total) CurrentFrame = total - 1;
+            if (currentFrame >= total) currentFrame = total - 1;
         }
 
         if (synchronous)
         {
-            drawMethod(CurrentFrame);
+            drawMethod(currentFrame);
             textures[writeIndex].Apply(false, false);
             SwapReadWrite();
             OnTextureSwapped?.Invoke(textures[readIndex]);
@@ -180,7 +177,7 @@ public sealed class LottieAnimation
         {
             if (!hasPending)
             {
-                drawMethod(CurrentFrame);
+                drawMethod(currentFrame);
                 hasPending = true;
             }
         }

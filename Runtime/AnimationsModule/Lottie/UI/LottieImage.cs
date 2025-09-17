@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using LSCore;
-using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using UnityEditor;
 using UnityEngine;
@@ -43,28 +42,12 @@ public sealed class LottieImage : LSRawImage
         var image = new GameObject(nameof(LottieImage)).AddComponent<LottieImage>();
         image.Asset = asset;
         image.transform.SetParent(transform, false);
-        image.animationSpeed = animationSpeed;
+        image.speed = animationSpeed;
         image.loop = loop;
         return image;
     }
     
-    [SerializeField] private float animationSpeed = 1f;
-    private LottieAnimation lottieAnimation;
-
-    [SerializeField, HideInInspector] private bool loop = true;
-    [ShowInInspector]
-    public bool Loop
-    {
-        get => loop;
-        set
-        {
-            loop = value;
-            if (value)
-            {
-                IsPlaying = true;
-            }
-        }
-    }
+    private LottieAnimation lottie;
 
     [HideInInspector] public BaseLottieAsset asset;
     [ShowInInspector]
@@ -75,35 +58,63 @@ public sealed class LottieImage : LSRawImage
         {
             if (value == asset) return;
             asset = value;
-            DestroyLottieAnimation();
+            DestroyLottie();
+            CreateLottie();
             if (asset != null)
             {
                 asset.SetupImage(this);
             }
-            UpdatePlayingState();
+            UpdatePlayState();
         }
     }
     
-    [SerializeField] private bool isPlaying = true;
+    [SerializeField] [HideInInspector] private bool loop = true;
     [ShowInInspector]
-    public bool IsPlaying
+    public bool Loop
     {
-        get => isPlaying;
+        get => loop;
         set
         {
-            if (value == isPlaying) return;
-            isPlaying = value;
-            UpdatePlayingState();
+            if(loop == value) return;
+            if(lottie != null) lottie.loop = value;
+            loop = value;
+            if (value)
+            {
+                UpdatePlayState();
+            }
+        }
+    }
+
+    [SerializeField] private float speed = 1f;
+    [ShowInInspector]
+    public float Speed
+    {
+        get => speed;
+        set
+        {
+            if(Mathf.Abs(speed - value) < 0.01f) return;
+            speed = Mathf.Max(0f, value);
+            UpdatePlayState();
         }
     }
     
-    public Transform Transform { get; private set; }
-    public LSRawImage RawImage => this;
-    internal LottieAnimation LottieAnimation => lottieAnimation;
-    internal float AnimationSpeed => animationSpeed;
+    [SerializeField] private bool isEnabled = true;
+    [ShowInInspector]
+    public bool Enabled
+    {
+        get => isEnabled;
+        set
+        {
+            if (value == isEnabled) return;
+            isEnabled = value;
+            UpdatePlayState();
+        }
+    }
+    
     public bool IsVisible => !canvasRenderer.cull && IsActive();
     
     private uint lastSize;
+    
     private uint Size
     {
         get
@@ -116,41 +127,42 @@ public sealed class LottieImage : LSRawImage
             return newSize;
         }
     }
-
-    private bool canPlay;
-    private void UpdatePlayingState()
+    
+    public bool IsEnded => !loop && lottie.currentFrame >= lottie.TotalFramesCount - 1;
+    public bool IsPlaying { get; private set; }
+    
+    private void UpdatePlayState()
     {
-        var lastCanPlay = canPlay;
-        canPlay = IsVisible && isPlaying && asset != null;
-        if(canPlay == lastCanPlay) return;
-        
-        if (canPlay)
+        var lastIsPlaying = IsPlaying;
+        IsPlaying = IsVisible && isEnabled && asset != null && !IsEnded && speed > 0;
+        if (IsPlaying == lastIsPlaying) return;
+
+        if (IsPlaying)
         {
-            if (lottieAnimation == null)
+            if (lottie == null)
             {
-                CreateLottieAnimation();
-                lottieAnimation!.DrawOneFrame(0);
+                CreateLottie();
+                lottie!.DrawOneFrame(0);
             }
-            
-            updated += LocalUpdate;
+
+            updated += Tick;
         }
         else
         {
-            updated -= LocalUpdate;
+            updated -= Tick;
         }
     }
     
     protected override void Awake()
     {
         base.Awake();
-        Transform = transform;
         if (asset != null) asset.SetupImage(this);
     }
 
     protected override void OnEnable()
     {
         base.OnEnable();
-        canPlay = false;
+        IsPlaying = false;
         CanvasUpdateRegistry.Updated += Update;
 
         void Update()
@@ -159,93 +171,66 @@ public sealed class LottieImage : LSRawImage
 #if UNITY_EDITOR
             if(World.IsEditMode && !this) return; 
 #endif
-            UpdatePlayingState();
+            UpdatePlayState();
         }
     }
 
     protected override void OnDisable()
     {
         base.OnDisable();
-        UpdatePlayingState();
+        UpdatePlayState();
     }
 
     public override void OnCullingChanged()
     {
         base.OnCullingChanged();
-        UpdatePlayingState();
+        UpdatePlayState();
     }
 
     protected override void OnDestroy()
     {
         base.OnDestroy();
-        DestroyLottieAnimation();
+        DestroyLottie();
     }
 
     protected override void OnRectTransformDimensionsChange()
     {
         base.OnRectTransformDimensionsChange();
-        if(lottieAnimation == null || !IsVisible) return; 
-        
-        var prev = lastSize;
-        var size = Size;
-        if (prev == size) return;
+        if(lottie == null || !IsVisible) return; 
+        if (lastSize == Size) return;
 
-        var lastFrame = lottieAnimation.CurrentFrame;
-        
-        DestroyLottieAnimation();
-        CreateLottieAnimation();
-        lottieAnimation.CurrentFrame = lastFrame;
+        var lastFrame = lottie.currentFrame;
+        DestroyLottie();
+        CreateLottie();
+        lottie.currentFrame = lastFrame;
     }
 
-    [Button] public void Play()
+    private void Tick()
     {
-        IsPlaying = true;
-    }
-
-    [Button] public void Pause()
-    {
-        IsPlaying = false;
-    }
-
-    [Button] public void Resume()
-    {
-        IsPlaying = true;
-    }
-
-    [Button] public void Stop()
-    {
-        IsPlaying = false;
-        lottieAnimation?.DrawOneFrame(0);
-    }
-
-    private void LocalUpdate()
-    {
-        lottieAnimation.LateUpdateFetch();
-        lottieAnimation.UpdateAsync(animationSpeed);
-        if (!loop && lottieAnimation.CurrentFrame == lottieAnimation.TotalFramesCount - 1)
-        {
-            IsPlaying = false;
-        }
+        lottie.LateUpdateFetch();
+        lottie.UpdateAsync(speed);
+        if (IsEnded) UpdatePlayState();
     }
     
-    private void CreateLottieAnimation()
+    private void CreateLottie()
     {
-        lottieAnimation = new LottieAnimation(asset.Json, string.Empty, Size);
-        lottieAnimation.OnTextureSwapped += OnTextureSwapped;
+        lottie = new LottieAnimation(asset.Json, string.Empty, Size);
+        lottie.OnTextureSwapped += OnTextureSwapped;
+        lottie.loop = Loop;
     }
 
     private void OnTextureSwapped(Texture2D tex)
     {
-        texture = tex;
+        m_Texture = tex;
         canvasRenderer.SetTexture(m_Texture);
     }
 
-    internal void DestroyLottieAnimation()
+    internal void DestroyLottie()
     {
-        if (lottieAnimation != null)
+        if (lottie != null)
         {
-            lottieAnimation.Destroy();
-            lottieAnimation = null;
+            lottie.Destroy();
+            lottie = null;
         }
     }
 }

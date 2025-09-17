@@ -1,0 +1,4 @@
+﻿{
+  "name": "LSCore.Lottie.Telegram",
+  "references":[ "GUID:68e9f28a67e647deb8fc94f719c5ea5a", "GUID:d426b638445cc2f428ed8ba7c1325767" ]
+}

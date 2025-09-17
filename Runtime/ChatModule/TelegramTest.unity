@@ -186,10 +186,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &39928810
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -265,10 +265,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: 1d9a2c8cf8e132b4cb2693ede2acd167, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &146746228
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -344,10 +344,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: 212efd733b8874e4592730c51cfacc0a, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &162042626
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -423,10 +423,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &211783033
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -502,10 +502,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: c21c93544300b724380fba4c94bd7ef3, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &231931952
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -545,6 +545,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.DoIt::DoIter
   doIts:
   - rid: 7466096639329960007
+  - rid: 7466096658816172099
   references:
     version: 2
     RefIds:
@@ -781,6 +782,104 @@ MonoBehaviour:
       type: {class: 'SerializeField`1[[UnityEngine.RectTransform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
       data:
         data: {fileID: 289628672}
+    - rid: 7466096658816172099
+      type: {class: BaseAnimAction, ns: LSCore.AnimationsModule, asm: LSCore.AnimationsModule}
+      data:
+        anim:
+          rid: 7466096658816172100
+    - rid: 7466096658816172100
+      type: {class: ScaleAnim, ns: LSCore.AnimationsModule.Animations, asm: LSCore.AnimationsModule}
+      data:
+        id: 
+        options:
+        - rid: 7466096658816172101
+        - rid: 7466096658816172102
+        targets:
+        - rid: 7466096658816172103
+        - rid: 7466096658816172104
+        - rid: 7466096658816172105
+        - rid: 7466096658816172106
+        - rid: 7466096658816172107
+        - rid: 7466096658816172108
+        - rid: 7466096658816172109
+        - rid: 7466096658816172110
+        - rid: 7466096658816172111
+        - rid: 7466096658816172112
+        timeOffsetPerTarget:
+          serializedVersion: 2
+          m_Curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        needInit: 1
+        duration: 5
+        startValue: {x: -1, y: -1, z: -1}
+        endValue: {x: 8, y: 8, z: 8}
+    - rid: 7466096658816172101
+      type: {class: SetLoops, ns: LSCore.AnimationsModule.Animations.Options, asm: LSCore.AnimationsModule}
+      data:
+        loopsCount: -1
+        loopType: 1
+    - rid: 7466096658816172102
+      type: {class: SetEase, ns: LSCore.AnimationsModule.Animations.Options, asm: LSCore.AnimationsModule}
+      data:
+        useCustom: 0
+        curve:
+          serializedVersion: 2
+          m_Curve: []
+          m_PreInfinity: 2
+          m_PostInfinity: 2
+          m_RotationOrder: 4
+        ease: 4
+    - rid: 7466096658816172103
+      type: {class: 'SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 507137597}
+    - rid: 7466096658816172104
+      type: {class: 'SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 274352024}
+    - rid: 7466096658816172105
+      type: {class: 'SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 552178227}
+    - rid: 7466096658816172106
+      type: {class: 'SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1122909029}
+    - rid: 7466096658816172107
+      type: {class: 'SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 688192837}
+    - rid: 7466096658816172108
+      type: {class: 'SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1781446989}
+    - rid: 7466096658816172109
+      type: {class: 'SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1611328294}
+    - rid: 7466096658816172110
+      type: {class: 'SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 489577530}
+    - rid: 7466096658816172111
+      type: {class: 'SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1487511394}
+    - rid: 7466096658816172112
+      type: {class: 'SerializeField`1[[UnityEngine.Transform, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 2058227728}
 --- !u!4 &235096602
 Transform:
   m_ObjectHideFlags: 0
@@ -863,10 +962,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &238454557
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -875,6 +974,71 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 238454554}
   m_CullTransparentMesh: 1
+--- !u!1 &274352022
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 274352024}
+  - component: {fileID: 274352023}
+  - component: {fileID: 274352025}
+  m_Layer: 0
+  m_Name: GameObject_2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &274352023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 274352022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: 0eaba12884bae7a49b2edb08e219516f, type: 3}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isEnabled: 1
+  loop: 1
+  speed: 1
+--- !u!4 &274352024
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 274352022}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.48, y: -3.52, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &274352025
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 274352022}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &289628671
 GameObject:
   m_ObjectHideFlags: 0
@@ -942,10 +1106,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &289628674
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1026,7 +1190,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 7, y: -1930.4001}
+  m_AnchoredPosition: {x: 7, y: -1930.3998}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &298009169
@@ -1136,10 +1300,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: 73ae14a77c4779f42bfec4c2f3ab5e58, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &351520148
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1215,10 +1379,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &401938547
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1386,10 +1550,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &438355184
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1398,6 +1562,201 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 438355181}
   m_CullTransparentMesh: 1
+--- !u!1 &489577528
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 489577530}
+  - component: {fileID: 489577529}
+  - component: {fileID: 489577531}
+  m_Layer: 0
+  m_Name: GameObject_8
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &489577529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 489577528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: b53857d488ca7824cbbdc521c319b4a6, type: 3}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isEnabled: 1
+  loop: 1
+  speed: 1
+--- !u!4 &489577530
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 489577528}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.28999996, y: -1.22, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &489577531
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 489577528}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!1 &507137595
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 507137597}
+  - component: {fileID: 507137596}
+  - component: {fileID: 507137598}
+  m_Layer: 0
+  m_Name: GameObject_1
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &507137596
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 507137595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: e291633c2c8162a4b9882aa99b115d4f, type: 3}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isEnabled: 1
+  loop: 1
+  speed: 1
+--- !u!4 &507137597
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 507137595}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.87, y: -2.52, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &507137598
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 507137595}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!1 &552178225
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 552178227}
+  - component: {fileID: 552178226}
+  - component: {fileID: 552178228}
+  m_Layer: 0
+  m_Name: GameObject_3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &552178226
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 552178225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: 466bdb3b38c717a49a604c85244a9300, type: 3}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isEnabled: 1
+  loop: 1
+  speed: 1
+--- !u!4 &552178227
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 552178225}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.234, y: -0.764, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &552178228
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 552178225}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &561024778
 GameObject:
   m_ObjectHideFlags: 0
@@ -1465,10 +1824,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &561024781
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1544,10 +1903,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &579604046
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1623,10 +1982,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &640168959
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1710,6 +2069,71 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 676015805}
   m_CullTransparentMesh: 1
+--- !u!1 &688192835
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 688192837}
+  - component: {fileID: 688192836}
+  - component: {fileID: 688192838}
+  m_Layer: 0
+  m_Name: GameObject_5
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &688192836
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688192835}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: fa7065ff12d3aa14ca37cd40e6d896a9, type: 3}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isEnabled: 1
+  loop: 1
+  speed: 1
+--- !u!4 &688192837
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688192835}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.401, y: 1.747, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &688192838
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 688192835}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &724916198
 GameObject:
   m_ObjectHideFlags: 0
@@ -1777,10 +2201,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: c9e1e49ff7c4c9f4ab54577a5dc405c5, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &724916201
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1856,10 +2280,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &738630558
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1867,6 +2291,85 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 738630555}
+  m_CullTransparentMesh: 1
+--- !u!1 &767314876
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 767314877}
+  - component: {fileID: 767314879}
+  - component: {fileID: 767314878}
+  m_Layer: 5
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &767314877
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767314876}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1.0000799, y: 1.0000799, z: 1.0000799}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1731245657}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 718, y: 1848}
+  m_SizeDelta: {x: 606.5, y: 536.1}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &767314878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767314876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52181336be374ae49ca49991ceca1bc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieImage
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 0}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  preserveAspectRatio: 1
+  rotateId: 2
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: 8f9140f9581ceee46a5eb0eb460f80bd, type: 3}
+  loop: 1
+  speed: 1
+  isEnabled: 1
+--- !u!222 &767314879
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767314876}
   m_CullTransparentMesh: 1
 --- !u!1 &851768236
 GameObject:
@@ -1935,10 +2438,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &851768239
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2014,10 +2517,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1017955523
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2061,6 +2564,71 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 111.3}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1122909027
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1122909029}
+  - component: {fileID: 1122909028}
+  - component: {fileID: 1122909030}
+  m_Layer: 0
+  m_Name: GameObject_4
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1122909028
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122909027}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: d197d4a013f0b6f49be719f756ef1811, type: 3}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isEnabled: 1
+  loop: 1
+  speed: 1
+--- !u!4 &1122909029
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122909027}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.226, y: 0.543, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &1122909030
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1122909027}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &1167987212
 GameObject:
   m_ObjectHideFlags: 0
@@ -2128,10 +2696,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: f0cabadb834ac2e4a85b24117a3b0b82, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1167987215
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2207,10 +2775,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: 264626c9c0121814daa024a243bd3699, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1312934699
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2286,10 +2854,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1325672718
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2365,10 +2933,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1338001601
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2480,10 +3048,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1400404520
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2661,10 +3229,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1422116060
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2740,10 +3308,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: 8d7b78ce6b0b98b47b3772aad0836590, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1473784147
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2819,10 +3387,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1479438144
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2831,6 +3399,71 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1479438141}
   m_CullTransparentMesh: 1
+--- !u!1 &1487511392
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1487511394}
+  - component: {fileID: 1487511393}
+  - component: {fileID: 1487511395}
+  m_Layer: 0
+  m_Name: GameObject_7
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1487511393
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487511392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: 4d68c5f3fbf53a647bcb7d05da1b7e57, type: 3}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isEnabled: 1
+  loop: 1
+  speed: 1
+--- !u!4 &1487511394
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487511392}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.65, y: -1.57, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &1487511395
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1487511392}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &1525664404
 GameObject:
   m_ObjectHideFlags: 0
@@ -2898,10 +3531,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: a836f9aef06df87448ff0bb326315d75, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1525664407
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2977,10 +3610,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: f0cabadb834ac2e4a85b24117a3b0b82, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1556152286
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3056,10 +3689,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: fdcc7a146e554c5408f248139af35098, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1574620801
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3068,6 +3701,71 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1574620798}
   m_CullTransparentMesh: 1
+--- !u!1 &1611328292
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1611328294}
+  - component: {fileID: 1611328293}
+  - component: {fileID: 1611328295}
+  m_Layer: 0
+  m_Name: GameObject_9
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1611328293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1611328292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: b53857d488ca7824cbbdc521c319b4a6, type: 3}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isEnabled: 1
+  loop: 1
+  speed: 1
+--- !u!4 &1611328294
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1611328292}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.28199995, y: 0.08699995, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &1611328295
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1611328292}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &1619834892
 GameObject:
   m_ObjectHideFlags: 0
@@ -3186,10 +3884,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1704081790
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3419,6 +4117,7 @@ RectTransform:
   m_Children:
   - {fileID: 1414984245}
   - {fileID: 1706068839}
+  - {fileID: 767314877}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3494,6 +4193,71 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1781446987
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1781446989}
+  - component: {fileID: 1781446988}
+  - component: {fileID: 1781446990}
+  m_Layer: 0
+  m_Name: GameObject_10
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1781446988
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1781446987}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: d3fcb77e45370dd4d9e6716a61799255, type: 3}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isEnabled: 1
+  loop: 1
+  speed: 1
+--- !u!4 &1781446989
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1781446987}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.45700002, y: 1.2909999, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &1781446990
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1781446987}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &1833919959
 GameObject:
   m_ObjectHideFlags: 0
@@ -3561,10 +4325,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1833919962
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3655,8 +4419,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 676015807}
   m_HandleRect: {fileID: 676015806}
   m_Direction: 2
-  m_Value: 0.000000030059052
-  m_Size: 0.32219255
+  m_Value: -0.00000009017716
+  m_Size: 0.32219425
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3766,10 +4530,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1941284061
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3845,10 +4609,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: 8f9140f9581ceee46a5eb0eb460f80bd, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &1970686602
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3857,6 +4621,71 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1970686599}
   m_CullTransparentMesh: 1
+--- !u!1 &2058227726
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2058227728}
+  - component: {fileID: 2058227727}
+  - component: {fileID: 2058227729}
+  m_Layer: 0
+  m_Name: GameObject_6
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2058227727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2058227726}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  asset: {fileID: 7767725731367759840, guid: 232f27a685c6be84ea276903ac761338, type: 3}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  isEnabled: 1
+  loop: 1
+  speed: 1
+--- !u!4 &2058227728
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2058227726}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.14, y: -3.91, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &2058227729
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2058227726}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &2058767936
 GameObject:
   m_ObjectHideFlags: 0
@@ -3924,10 +4753,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &2058767939
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4003,10 +4832,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: 8efbd5e5177cebc478a7d67f32181c81, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &2059307196
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4082,10 +4911,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: fb72bfb321954424996af5e2f581eb87, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &2106816381
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4161,10 +4990,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &2120428748
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4240,10 +5069,10 @@ MonoBehaviour:
   preserveAspectRatio: 1
   rotateId: 2
   flip: {x: 1, y: 0}
-  animationSpeed: 1
-  loop: 1
   asset: {fileID: 7767725731367759840, guid: 2d0e6c1c9a1fa914682d81045d2ce6a5, type: 3}
-  isPlaying: 1
+  loop: 1
+  speed: 1
+  isEnabled: 1
 --- !u!222 &2147013496
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4260,3 +5089,13 @@ SceneRoots:
   - {fileID: 1731245657}
   - {fileID: 1755921451}
   - {fileID: 235096602}
+  - {fileID: 507137597}
+  - {fileID: 274352024}
+  - {fileID: 552178227}
+  - {fileID: 1122909029}
+  - {fileID: 688192837}
+  - {fileID: 1781446989}
+  - {fileID: 1611328294}
+  - {fileID: 489577530}
+  - {fileID: 1487511394}
+  - {fileID: 2058227728}
