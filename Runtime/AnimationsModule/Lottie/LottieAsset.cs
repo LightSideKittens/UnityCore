@@ -13,14 +13,14 @@ public abstract class BaseLottieAsset : ScriptableObject
     public void SetupImage(LottieImage image)
     {
         image.PreserveAspectRatio = true;
-        image.asset = this;
+        image.manager.asset = this;
         image.Rotation = Rotation;
         image.Flip = Flip;
     }
     
     public void SetupRenderer(LottieRenderer renderer)
     {
-        renderer.asset = this;
+        renderer.manager.asset = this;
         renderer.Rotation = Rotation;
         renderer.Flip = Flip;
     }
