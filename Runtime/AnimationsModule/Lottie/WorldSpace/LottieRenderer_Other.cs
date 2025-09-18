@@ -2,10 +2,11 @@
 using LSCore.Extensions;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
-
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 public sealed partial class LottieRenderer
 {
     static LottieRenderer()
@@ -201,6 +202,8 @@ public sealed partial class LottieRenderer
 
     #endregion
 
+#if UNITY_EDITOR
+
     private (bool x, bool y) DrawFlip((bool x, bool y) value, GUIContent label)
     {
         EditorGUILayout.BeginHorizontal();
@@ -236,4 +239,5 @@ public sealed partial class LottieRenderer
         GUILayout.EndHorizontal();
         return Rotation;
     }
+#endif
 }
