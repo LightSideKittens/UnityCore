@@ -86,6 +86,7 @@ public sealed class LottieImage : LSRawImage
     protected override void OnRectTransformDimensionsChange()
     {
         base.OnRectTransformDimensionsChange();
+        manager.renderer = this;
         manager.ResizeIfNeeded();
     }
 
