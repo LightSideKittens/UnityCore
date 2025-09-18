@@ -267,7 +267,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: a7cf4948e8dde4048b58f9823acab840, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 0245464c7f9c8804884f3e1e284e83e2, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -347,7 +347,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 9da3d9b7db39a094cad48126ab690e23, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 812dd6959f47f174e80b011af4cfacd1, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -427,7 +427,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 55a5a74a499bfb6429db86fd84386439, type: 3}
+    asset: {fileID: 7767725731367759840, guid: f0870de6322ca1f4abf6bdf1aca48b4d, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -507,7 +507,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 2aa9f30d562ea9245a6979f2b559eb63, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 2545b2c8b6a7d7142ae6523160a9f189, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -948,7 +948,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: efa27016ebb43f24ab7e7b2eb15344b5, type: 3}
+    asset: {fileID: 7767725731367759840, guid: f0870de6322ca1f4abf6bdf1aca48b4d, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -991,7 +991,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: 137b7baa8f596b34c8ece5f27e672506, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -1094,7 +1094,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 7, y: -1925.2303}
+  m_AnchoredPosition: {x: 7, y: -1930.3948}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &298009169
@@ -1205,7 +1205,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 0245464c7f9c8804884f3e1e284e83e2, type: 3}
+    asset: {fileID: 7767725731367759840, guid: a1235f0faa3536e409527c9f9bf5adfc, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -1340,7 +1340,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: 87817a633c30e474c868535d5c456eac, type: 3}
+    asset: {fileID: 7767725731367759840, guid: ad6be951603f7a64393bf30e6c45bac3, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -1406,7 +1406,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 278a69cdc9839714c92528a0a7e9f4fb, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -1509,7 +1509,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 812dd6959f47f174e80b011af4cfacd1, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 8d7b78ce6b0b98b47b3772aad0836590, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -1552,7 +1552,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: b65028a240ecaf4489bdbbfb1f3aff52, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 1fe4a2afb8b81ce40be29a5054d261fc, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -1773,7 +1773,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: 1fe4a2afb8b81ce40be29a5054d261fc, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 70c7207b6c71d4d4488f684421082614, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -1876,7 +1876,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: de7bb61a08f58cb4781ab15e87b2c6bc, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 2aa9f30d562ea9245a6979f2b559eb63, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -1956,7 +1956,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: f43bb5b8e619e424a9c7cf84ef5322b1, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 2545b2c8b6a7d7142ae6523160a9f189, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2036,7 +2036,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: c4aaea859e0ff8446954b2746d3d7bbe, type: 3}
+    asset: {fileID: 7767725731367759840, guid: efa27016ebb43f24ab7e7b2eb15344b5, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2116,7 +2116,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: dcaa3c41eafa09e449669e59a3e0cc4f, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 232f27a685c6be84ea276903ac761338, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2196,7 +2196,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 15785fcdec25da2419e930dcbed7ee13, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 2fedcaa4720c1634380238983332059f, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2274,7 +2274,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: 278a69cdc9839714c92528a0a7e9f4fb, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 264626c9c0121814daa024a243bd3699, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2377,7 +2377,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: a7cf4948e8dde4048b58f9823acab840, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 812dd6959f47f174e80b011af4cfacd1, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2457,7 +2457,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: a1235f0faa3536e409527c9f9bf5adfc, type: 3}
+    asset: {fileID: 7767725731367759840, guid: f43bb5b8e619e424a9c7cf84ef5322b1, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2537,7 +2537,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: cea447916c63a294a94be23962106d2e, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 15785fcdec25da2419e930dcbed7ee13, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2617,7 +2617,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 14ff4037aa09d2d49942ba575cf01bce, type: 3}
+    asset: {fileID: 7767725731367759840, guid: de7bb61a08f58cb4781ab15e87b2c6bc, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2835,7 +2835,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 2fedcaa4720c1634380238983332059f, type: 3}
+    asset: {fileID: 7767725731367759840, guid: dcaa3c41eafa09e449669e59a3e0cc4f, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2915,7 +2915,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 2545b2c8b6a7d7142ae6523160a9f189, type: 3}
+    asset: {fileID: 7767725731367759840, guid: eb171e2b660d2234cb220957536730ca, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -2995,7 +2995,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: eb171e2b660d2234cb220957536730ca, type: 3}
+    asset: {fileID: 7767725731367759840, guid: f43bb5b8e619e424a9c7cf84ef5322b1, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -3038,7 +3038,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: 45ea46f6257955242ac257991f9aed1f, type: 3}
+    asset: {fileID: 7767725731367759840, guid: b65028a240ecaf4489bdbbfb1f3aff52, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -3141,7 +3141,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: f0870de6322ca1f4abf6bdf1aca48b4d, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 1f5b6516a1e6b0a4383112fa0d6b99e1, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -3221,7 +3221,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: bce76a1246b51b2408707eea856b0d88, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 55a5a74a499bfb6429db86fd84386439, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -3301,7 +3301,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: f0870de6322ca1f4abf6bdf1aca48b4d, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 0eaba12884bae7a49b2edb08e219516f, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -3381,7 +3381,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 812dd6959f47f174e80b011af4cfacd1, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 9da3d9b7db39a094cad48126ab690e23, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -3461,7 +3461,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: f43bb5b8e619e424a9c7cf84ef5322b1, type: 3}
+    asset: {fileID: 7767725731367759840, guid: a7cf4948e8dde4048b58f9823acab840, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -3504,7 +3504,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: 264626c9c0121814daa024a243bd3699, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 45ea46f6257955242ac257991f9aed1f, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -3658,7 +3658,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 1f5b6516a1e6b0a4383112fa0d6b99e1, type: 3}
+    asset: {fileID: 7767725731367759840, guid: cea447916c63a294a94be23962106d2e, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -3738,7 +3738,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 0eaba12884bae7a49b2edb08e219516f, type: 3}
+    asset: {fileID: 7767725731367759840, guid: bce76a1246b51b2408707eea856b0d88, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -4078,7 +4078,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: ad6be951603f7a64393bf30e6c45bac3, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 87817a633c30e474c868535d5c456eac, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -4181,7 +4181,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 1f5b6516a1e6b0a4383112fa0d6b99e1, type: 3}
+    asset: {fileID: 7767725731367759840, guid: eb171e2b660d2234cb220957536730ca, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -4275,8 +4275,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 676015807}
   m_HandleRect: {fileID: 676015806}
   m_Direction: 2
-  m_Value: -0.0014898654
-  m_Size: 0.3364177
+  m_Value: -0.0000015126967
+  m_Size: 0.35726872
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -4387,7 +4387,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: eb171e2b660d2234cb220957536730ca, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 1f5b6516a1e6b0a4383112fa0d6b99e1, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -4430,7 +4430,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: 70c7207b6c71d4d4488f684421082614, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 137b7baa8f596b34c8ece5f27e672506, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -4533,7 +4533,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 78e0942c50a734f4ab435f3c24b88c8d, type: 3}
+    asset: {fileID: 7767725731367759840, guid: a7cf4948e8dde4048b58f9823acab840, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -4613,7 +4613,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 232f27a685c6be84ea276903ac761338, type: 3}
+    asset: {fileID: 7767725731367759840, guid: c4aaea859e0ff8446954b2746d3d7bbe, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -4782,7 +4782,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 2545b2c8b6a7d7142ae6523160a9f189, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 78e0942c50a734f4ab435f3c24b88c8d, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1
@@ -4862,7 +4862,7 @@ MonoBehaviour:
   rotateId: 2
   flip: {x: 1, y: 0}
   manager:
-    asset: {fileID: 7767725731367759840, guid: 8d7b78ce6b0b98b47b3772aad0836590, type: 3}
+    asset: {fileID: 7767725731367759840, guid: 14ff4037aa09d2d49942ba575cf01bce, type: 3}
     isEnabled: 1
     loop: 1
     speed: 1

@@ -5,14 +5,16 @@ using LSCore;
 using UnityEditor;
 #endif
 
+#if UNITY_EDITOR
 [InitializeOnLoad]
+#endif
 internal static class LottieUpdater
 {
     public static event Action Updated;
-
-#if UNITY_EDITOR
+    
     static LottieUpdater()
     {
+#if UNITY_EDITOR
         Selection.selectionChanged += OnSelectionChanged;
         EditorApplication.update += OnEditorUpdate;
 
