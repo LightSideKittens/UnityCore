@@ -8,30 +8,21 @@ using UnityEditor;
 public class LottieImageEditor : LSRawImageEditor
 {
     private PropertyTree tree;
-    private InspectorProperty asset;
-    private InspectorProperty loop;
-    private InspectorProperty speed;
-    private InspectorProperty isEnabled;
+    private InspectorProperty manager;
     
     protected override void OnEnable()
     {
         base.OnEnable();
         tree = PropertyTree.Create(serializedObject);
         var children = tree.RootProperty.Children;
-        asset = children["Asset"];
-        loop = children["Loop"];
-        speed = children["Speed"];
-        isEnabled = children["Enabled"];
+        manager = children["manager"];
     }
 
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
         tree.BeginDraw(true);
-        isEnabled.Draw();
-        asset.Draw();
-        loop.Draw();
-        speed.Draw();
+        manager.Draw();
         tree.EndDraw();
     }
 
