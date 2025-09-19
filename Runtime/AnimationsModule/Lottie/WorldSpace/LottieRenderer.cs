@@ -1,9 +1,9 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using UnityEngine;
 using UnityEngine.Rendering;
 
 [ExecuteAlways]
 [DisallowMultipleComponent]
-[RequireComponent(typeof(MeshRenderer), typeof(MeshFilter))]
 public sealed partial class LottieRenderer : MonoBehaviour
 {
     private const int MinSize = 64;
@@ -45,9 +45,15 @@ public sealed partial class LottieRenderer : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        Init();
-        mr.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
-        mf.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
+        EditorApplication.update += Update;
+
+        void Update()
+        {
+            EditorApplication.update -= Update;
+            Init();
+            mr.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
+            mf.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
+        }
     }
 #endif
 
@@ -83,9 +89,13 @@ public sealed partial class LottieRenderer : MonoBehaviour
 
     private void OnEnable()
     {
+#if UNITY_EDITOR
+        if (mpb == null) Init();
+#endif
         manager.IsPlaying = false;
         manager.UpdatePlayState();
     }
+    
 
     private void OnDisable() => manager.UpdatePlayState();
     private void OnDestroy() => manager.DestroyLottie();

@@ -9,6 +9,10 @@ using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using Object = UnityEngine.Object;
 
+#if UNITY_EDITOR
+using UnityEditor.Compilation;
+#endif
+
 public sealed class LottieAnimation
 {
     internal class RenderData
@@ -48,7 +52,14 @@ public sealed class LottieAnimation
 #if UNITY_EDITOR
     static LottieAnimation()
     {
-        World.Created += () =>
+        CompilationPipeline.compilationFinished += x =>
+        {
+            DestroyAllTextures(true);
+        };
+
+        World.Created += () => DestroyAllTextures(false);
+
+        void DestroyAllTextures(bool immediate)
         {
             foreach (var renderDataPool in renderDataPools)
             {
@@ -60,11 +71,14 @@ public sealed class LottieAnimation
 
             void OnRemoved(RenderData data)
             {
-                Object.Destroy(data.texture);
+                if (immediate) Object.DestroyImmediate(data.texture);
+                else Object.Destroy(data.texture);
+                texturesCount--;
             }
-        };
+        }
     }
 #endif
+    
     public LottieAnimation(string jsonData, string resourcesPath, uint pixelsPerAspectUnit)
     {
         var s = GetSize(jsonData);
@@ -135,7 +149,7 @@ public sealed class LottieAnimation
     {
         CompletePending();
         NativeBridge.Dispose(animationWrapper);
-
+        
         var pool = renderDataPools[size];
         for (int i = 0; i < 2; i++)
         {
@@ -154,7 +168,8 @@ public sealed class LottieAnimation
         ReleaseRenderData(lastSize);
         SetupRenderData(size);
     }
-    
+
+    private static int texturesCount;
     private static unsafe RenderData CreateTexture(Vector2Int size)
     {
         var data = new RenderData();
@@ -165,7 +180,7 @@ public sealed class LottieAnimation
             hideFlags = HideFlags.DontSave,
             wrapMode = TextureWrapMode.Clamp
         };
-        
+        texturesCount++;
         data.renderData = new LottieRenderData
         {
             width = (uint)size.x,
@@ -263,7 +278,7 @@ public sealed class LottieAnimation
     {
         if (!renderDataPools.TryGetValue(s, out var pool))
         {
-            pool = new LSObjectPool<RenderData>(() => CreateTexture(s));
+            pool = new LSObjectPool<RenderData>(() => CreateTexture(s), shouldStoreActive: true);
             renderDataPools.Add(s, pool);
         }
         
