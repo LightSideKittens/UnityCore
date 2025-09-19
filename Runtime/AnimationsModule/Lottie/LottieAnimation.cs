@@ -2,14 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using LSCore;
 using LSCore.Extensions;
-using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
-using Random = UnityEngine.Random;
+using Object = UnityEngine.Object;
 
 public sealed class LottieAnimation
 {
@@ -37,7 +35,7 @@ public sealed class LottieAnimation
     
     private int readIndex = 0;
     private int writeIndex = 1;
-    private Vector2Int size;
+    internal Vector2Int size;
     
     public float timeSinceLastRenderCall;
     private float frameDelta;
@@ -47,6 +45,26 @@ public sealed class LottieAnimation
     private readonly Action<int> drawOneFrameSyncCached;
     private readonly Action<int> drawOneFrameAsyncPrepareCached;
 
+#if UNITY_EDITOR
+    static LottieAnimation()
+    {
+        World.Created += () =>
+        {
+            foreach (var renderDataPool in renderDataPools)
+            {
+                var pool = renderDataPool.Value;
+                pool.Removed += OnRemoved;
+                pool.Clear();
+                pool.Removed -= OnRemoved;
+            }
+
+            void OnRemoved(RenderData data)
+            {
+                Object.Destroy(data.texture);
+            }
+        };
+    }
+#endif
     public LottieAnimation(string jsonData, string resourcesPath, uint pixelsPerAspectUnit)
     {
         var s = GetSize(jsonData);

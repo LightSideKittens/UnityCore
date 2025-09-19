@@ -86,6 +86,7 @@ namespace LSCore
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
         {
+            Application.targetFrameRate = 120;
             DOTween.SetTweensCapacity(1000, 1000);
 #if UNITY_EDITOR
             Creating.SafeInvoke();
@@ -97,7 +98,6 @@ namespace LSCore
             IsPlaying = true;
             Created.SafeInvoke();
 #endif
-            Application.targetFrameRate = 120;
             Burger.Log("[World] Created");
         }
 
