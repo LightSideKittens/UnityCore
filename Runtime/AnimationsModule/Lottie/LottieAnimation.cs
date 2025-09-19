@@ -74,7 +74,7 @@ public sealed class LottieAnimation
         animationWrapper = NativeBridge.LoadFromData(jsonData, resourcesPath, out animationWrapperIntPtr);
         frameDelta = (float)animationWrapper.duration / animationWrapper.totalFrames;
 
-        CreateDoubleBufferedRenderTargets(); 
+        SetupRenderData(size); 
         drawOneFrameSyncCached = DrawOneFrameSyncInternal;
         drawOneFrameAsyncPrepareCached = DrawOneFrameAsyncPrepareInternal;
     }
@@ -139,8 +139,9 @@ public sealed class LottieAnimation
         var pool = renderDataPools[size];
         for (int i = 0; i < 2; i++)
         {
-            NativeBridge.LottieDisposeRenderData(ref renderData[i].renderDataPtr);
-            pool.Release(renderData);
+            var data = renderData[i];
+            NativeBridge.LottieDisposeRenderData(ref data.renderDataPtr);
+            pool.Release(data);
         }
     }
     
@@ -150,16 +151,8 @@ public sealed class LottieAnimation
         SetupSize(pixelsPerAspectUnit);
         if(lastSize == size) return;
         
-        CompletePending();
-
-        var pool = renderDataPools[lastSize];
-        for (int i = 0; i < 2; i++)
-        {
-            NativeBridge.LottieDisposeRenderData(ref renderData[i].renderDataPtr);
-            pool.Release(renderData);
-        }
-        
-        CreateDoubleBufferedRenderTargets();
+        ReleaseRenderData(lastSize);
+        SetupRenderData(size);
     }
     
     private static unsafe RenderData CreateTexture(Vector2Int size)
@@ -183,28 +176,6 @@ public sealed class LottieAnimation
         data.texture = texture;
         data.renderData.buffer = texture.GetRawTextureData<byte>().GetUnsafePtr();
         return data;
-    }
-
-    private void CreateDoubleBufferedRenderTargets()
-    {
-        if (!renderDataPools.TryGetValue(size, out var pool))
-        {
-            var s = size;
-            pool = new LSObjectPool<RenderData>(() => CreateTexture(s));
-            renderDataPools.Add(size, pool);
-        }
-        
-        for (int i = 0; i < 2; i++)
-        {
-            var data = pool.Get();
-            renderData[i] = data;
-            
-            NativeBridge.LottieAllocateRenderData(ref data.renderDataPtr);
-            Marshal.StructureToPtr(renderData[i].renderData, data.renderDataPtr, false);
-        }
-
-        readIndex = 0;
-        writeIndex = 1;
     }
 
     private void UpdateInternal(float deltaTime, Action<int> drawMethod, bool synchronous)
@@ -274,5 +245,38 @@ public sealed class LottieAnimation
     private void ApplyTexture()
     {
         renderData[writeIndex].texture.Apply(false, false);
+    }
+
+    public void ReleaseRenderData(Vector2Int s)
+    {
+        CompletePending();
+        var pool = renderDataPools[s];
+        for (int i = 0; i < 2; i++)
+        {
+            var data = renderData[i];
+            NativeBridge.LottieDisposeRenderData(ref data.renderDataPtr);
+            pool.Release(data);
+        }
+    }
+
+    public void SetupRenderData(Vector2Int s)
+    {
+        if (!renderDataPools.TryGetValue(s, out var pool))
+        {
+            pool = new LSObjectPool<RenderData>(() => CreateTexture(s));
+            renderDataPools.Add(s, pool);
+        }
+        
+        for (int i = 0; i < 2; i++)
+        {
+            var data = pool.Get();
+            renderData[i] = data;
+            
+            NativeBridge.LottieAllocateRenderData(ref data.renderDataPtr);
+            Marshal.StructureToPtr(renderData[i].renderData, data.renderDataPtr, false);
+        }
+
+        readIndex = 0;
+        writeIndex = 1;
     }
 }

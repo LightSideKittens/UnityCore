@@ -5,6 +5,16 @@ using UnityEngine;
 [Serializable]
 public abstract class BaseLottieManager
 {
+    [ShowInInspector]
+    public Texture Texture
+    {
+        get
+        {
+            var t = lottie?.Texture;
+            return t;
+        }
+    }
+    
     [HideInInspector] public BaseLottieAsset asset;
     [ShowInInspector]
     public BaseLottieAsset Asset
@@ -122,11 +132,16 @@ public abstract class BaseLottieManager
                 CreateLottie();
                 lottie!.DrawOneFrame(0);
             }
+            else
+            {
+                lottie.SetupRenderData(lottie.size);
+            }
 
             LottieUpdater.managers.Add(this);
         }
         else
         {
+            lottie.ReleaseRenderData(lottie.size);
             LottieUpdater.managers.Remove(this);
         }
     }
