@@ -134,6 +134,14 @@ namespace LSCore
                 {
                     Removed(obj);
                 }
+
+                if (activeSet != null)
+                {
+                    foreach (T obj in activeSet)
+                    {
+                        Removed(obj);
+                    }
+                }
             }
             
             activeSet?.Clear();
