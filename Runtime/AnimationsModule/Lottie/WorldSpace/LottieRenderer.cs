@@ -25,7 +25,6 @@ public sealed partial class LottieRenderer : MonoBehaviour
         }
     }
     
-    [ShowInInspector]
     internal uint Size
     {
         get

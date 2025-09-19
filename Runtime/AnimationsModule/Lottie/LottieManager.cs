@@ -67,7 +67,7 @@ public abstract class BaseLottieManager
         }
     }
     
-    private LottieAnimation lottie;
+    internal LottieAnimation lottie;
     
     public abstract void SetupByAsset();
     protected abstract void OnTextureSwapped(Texture tex);
@@ -78,11 +78,30 @@ public abstract class BaseLottieManager
     
     private uint lastSize;
 
+    [ShowInInspector]
+    internal Vector2Int TextureSize
+    {
+        get
+        {
+            var t = lottie?.Texture;
+            if (t != null)
+            {
+                return new Vector2Int(t.width, t.height);
+            }
+
+            return Vector2Int.zero;
+        }
+    }
+    
     public uint Size
     {
         get
         {
             var newSize = Size_Internal;
+            if (newSize > 512)
+            {
+                newSize /= sizeModifier;
+            }
             lastSize = newSize;
             return newSize;
         }
@@ -104,11 +123,11 @@ public abstract class BaseLottieManager
                 lottie!.DrawOneFrame(0);
             }
 
-            LottieUpdater.Updated += Update;
+            LottieUpdater.managers.Add(this);
         }
         else
         {
-            LottieUpdater.Updated -= Update;
+            LottieUpdater.managers.Remove(this);
         }
     }
 
@@ -136,47 +155,37 @@ public abstract class BaseLottieManager
             lottie = null;
         }
     }
-    
+
+
     private float time;
     private float lastDrawTime;
-    private int skippedFrames;
-    private static int skipFrames = 0;
-
-    private bool ShouldSkipFrame
-    {
-        get
-        {
-            time += Time.deltaTime;
-            var sdt = Time.smoothDeltaTime;
-        
-            /*if (sdt > 0.01f)
-            {
-                skipFrames = 1;
-            }
-            else if(sdt > 0.02f)
-            {
-                skipFrames = 2;
-            }*/
-        
-            if (skippedFrames < skipFrames)
-            {
-                skippedFrames++;
-                return true;
-            }
-
-            skippedFrames = 0;
-            return false;
-        }
-    }
+    private int frameCount;
     
-    private void Update()
+    internal void Update()
     {
-        if (ShouldSkipFrame) return;
+        time += Time.deltaTime;
+        if (frameCount < framesToSkip)
+        {
+            frameCount++;
+            return;
+        }
+        
+        frameCount = 0;
+        
         Tick();
         lottie.LateUpdateFetch();
         lottie.UpdateDeltaAsync(speed * time - lastDrawTime);
         if (IsEnded) UpdatePlayState();
         lastDrawTime = time;
+    }
+    
+    internal int framesToSkip;
+    private uint sizeModifier = 1;
+    
+    public void ApplySettings()
+    {
+        framesToSkip = LottieUpdater.framesToSkip;
+        sizeModifier = LottieUpdater.sizeDivider;
     }
 }
 
