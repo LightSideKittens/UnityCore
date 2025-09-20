@@ -4,7 +4,6 @@ using LSCore;
 using LSCore.Extensions;
 using UnityEditor;
 using UnityEditor.Compilation;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 [InitializeOnLoad]
@@ -47,11 +46,16 @@ public class EditorWorld : MonoBehaviour
     {
         if (Updated != null)
         {
-            SceneView.RepaintAll();
-            EditorApplication.QueuePlayerLoopUpdate();
+            ForceUpdate();
         }
     }
 
+    public static void ForceUpdate()
+    {
+        SceneView.RepaintAll();
+        EditorApplication.QueuePlayerLoopUpdate();
+    }
+    
     private static void Create()
     {
         var go = new GameObject("EditorWorld");

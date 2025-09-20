@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using LSCore;
 using LSCore.Extensions;
 using Unity.Collections.LowLevel.Unsafe;
+using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using Object = UnityEngine.Object;
@@ -12,6 +13,13 @@ using Object = UnityEngine.Object;
 #if UNITY_EDITOR
 using UnityEditor.Compilation;
 #endif
+
+public struct LottieSprite
+{
+    public Texture2D texture;
+    public Vector2 uvMin;
+    public Vector2 uvMax;
+}
 
 public sealed class LottieAnimation
 {
@@ -44,6 +52,7 @@ public sealed class LottieAnimation
     public float timeSinceLastRenderCall;
     private float frameDelta;
     private bool hasPending;
+    public bool hasRendererData;
     private float aspect;
     
     private readonly Action<int> drawOneFrameSyncCached;
@@ -73,7 +82,6 @@ public sealed class LottieAnimation
             {
                 if (immediate) Object.DestroyImmediate(data.texture);
                 else Object.Destroy(data.texture);
-                texturesCount--;
             }
         }
     }
@@ -149,14 +157,7 @@ public sealed class LottieAnimation
     {
         CompletePending();
         NativeBridge.Dispose(animationWrapper);
-        
-        var pool = renderDataPools[size];
-        for (int i = 0; i < 2; i++)
-        {
-            var data = renderData[i];
-            NativeBridge.LottieDisposeRenderData(ref data.renderDataPtr);
-            pool.Release(data);
-        }
+        ReleaseRenderData(size);
     }
     
     public void Resize(uint pixelsPerAspectUnit)
@@ -168,8 +169,7 @@ public sealed class LottieAnimation
         ReleaseRenderData(lastSize);
         SetupRenderData(size);
     }
-
-    private static int texturesCount;
+    
     private static unsafe RenderData CreateTexture(Vector2Int size)
     {
         var data = new RenderData();
@@ -180,7 +180,7 @@ public sealed class LottieAnimation
             hideFlags = HideFlags.DontSave,
             wrapMode = TextureWrapMode.Clamp
         };
-        texturesCount++;
+        
         data.renderData = new LottieRenderData
         {
             width = (uint)size.x,
@@ -264,6 +264,7 @@ public sealed class LottieAnimation
 
     public void ReleaseRenderData(Vector2Int s)
     {
+        if(!hasRendererData) return;
         CompletePending();
         var pool = renderDataPools[s];
         for (int i = 0; i < 2; i++)
@@ -272,10 +273,13 @@ public sealed class LottieAnimation
             NativeBridge.LottieDisposeRenderData(ref data.renderDataPtr);
             pool.Release(data);
         }
+
+        hasRendererData = false;
     }
 
     public void SetupRenderData(Vector2Int s)
     {
+        if(hasRendererData) return;
         if (!renderDataPools.TryGetValue(s, out var pool))
         {
             pool = new LSObjectPool<RenderData>(() => CreateTexture(s), shouldStoreActive: true);
@@ -293,5 +297,6 @@ public sealed class LottieAnimation
 
         readIndex = 0;
         writeIndex = 1;
+        hasRendererData = true;
     }
 }

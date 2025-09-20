@@ -1,9 +1,13 @@
 ﻿using System;
+using LSCore;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
 [Serializable]
 public abstract class BaseLottieManager
+#if UNITY_EDITOR
+    : ISerializationCallbackReceiver
+#endif
 {
     [ShowInInspector]
     public Texture Texture
@@ -14,7 +18,8 @@ public abstract class BaseLottieManager
             return t;
         }
     }
-    
+
+    private bool isAssetDirty;
     [HideInInspector] public BaseLottieAsset asset;
     [ShowInInspector]
     public BaseLottieAsset Asset
@@ -24,25 +29,24 @@ public abstract class BaseLottieManager
         {
             if (value == asset) return;
             asset = value;
-            DestroyLottie();
-            CreateLottie();
-            if (asset != null)
+
+            if (!isAssetDirty)
             {
-                SetupByAsset();
+                isAssetDirty = true;
+                SubOnPreRender(ForceUpdateAsset);
             }
-            UpdatePlayState();
         }
     }
     
-    [SerializeField] private bool isEnabled = true;
+    [SerializeField] private bool shouldPlay = true;
     [ShowInInspector]
-    public bool Enabled
+    public bool ShouldPlay
     {
-        get => isEnabled;
+        get => shouldPlay;
         set
         {
-            if (value == isEnabled) return;
-            isEnabled = value;
+            if (value == shouldPlay) return;
+            shouldPlay = value;
             UpdatePlayState();
         }
     }
@@ -82,7 +86,11 @@ public abstract class BaseLottieManager
     public abstract void SetupByAsset();
     protected abstract void OnTextureSwapped(Texture tex);
     
-    public bool IsEnded => !loop && lottie.currentFrame >= lottie.TotalFramesCount - 1;
+    public bool IsEnded =>
+        !loop
+        && lottie != null
+        && lottie.currentFrame >= lottie.TotalFramesCount - 1;
+    
     internal bool IsPlaying { get; set; }
     public abstract bool IsVisible { get; }
     
@@ -108,23 +116,61 @@ public abstract class BaseLottieManager
         get
         {
             var newSize = Size_Internal;
-            if (newSize > 512)
-            {
-                newSize /= sizeModifier;
-            }
             lastSize = newSize;
             return newSize;
         }
     }
 
     protected abstract uint Size_Internal { get; }
-
+    
+    private bool isUpdatePlayStateQueued;
+    
     internal void UpdatePlayState()
     {
-        var lastIsPlaying = IsPlaying;
-        IsPlaying = IsVisible && isEnabled && asset != null && !IsEnded && speed > 0;
-        if (IsPlaying == lastIsPlaying) return;
+        if (!isUpdatePlayStateQueued)
+        {
+            isUpdatePlayStateQueued = true;
+            SubOnPreRender(ForceUpdatePlayState);
+        }
+    }
+    
+    protected abstract void SubOnPreRender(Action action);
+    protected abstract void UnSubOnPreRender(Action action);
 
+    private void ForceUpdateAsset()
+    {
+        if (isAssetDirty)
+        {
+            isAssetDirty = false;
+            UnSubOnPreRender(ForceUpdateAsset);
+        }
+        
+        DestroyLottie();
+        if (asset != null)
+        {
+            CreateLottie();
+            SetupByAsset();
+        }
+        ForceUpdatePlayState();
+    }
+    
+    protected void ForceUpdatePlayState()
+    {
+        if (isUpdatePlayStateQueued)
+        {
+            isUpdatePlayStateQueued = false;
+            UnSubOnPreRender(ForceUpdatePlayState);
+        }
+        
+        var lastIsPlaying = IsPlaying;
+        var isVisible = IsVisible;
+        IsPlaying = isVisible && shouldPlay && asset != null && !IsEnded && speed > 0;
+        if (!isVisible && lottie != null)
+        { 
+            lottie.ReleaseRenderData(lottie.size);
+        }
+        if (IsPlaying == lastIsPlaying) return;
+        
         if (IsPlaying)
         {
             if (lottie == null)
@@ -136,22 +182,22 @@ public abstract class BaseLottieManager
             {
                 lottie.SetupRenderData(lottie.size);
             }
-
+            
             LottieUpdater.managers.Add(this);
         }
         else
         {
-            lottie.ReleaseRenderData(lottie.size);
             LottieUpdater.managers.Remove(this);
         }
     }
+    
 
     protected abstract void Tick();
     
     internal void ResizeIfNeeded()
     {
-        if (lastSize == Size) return; 
         if (lottie == null || !IsVisible) return;
+        if (lastSize == Size) return;
         lottie.Resize(Size);
     }
     
@@ -164,44 +210,37 @@ public abstract class BaseLottieManager
     
     internal void DestroyLottie()
     {
-        if (lottie != null)
+        isAssetDirty = false;
+        isUpdatePlayStateQueued = false;
+        IsPlaying = false;
+        UnSubOnPreRender(ForceUpdatePlayState);
+        UnSubOnPreRender(ForceUpdateAsset);
+        if (lottie == null) return;
+        if (lottie.hasRendererData)
         {
-            lottie.Destroy();
-            lottie = null;
+            lottie.ReleaseRenderData(lottie.size);
+            LottieUpdater.managers.Remove(this);
         }
+        lottie.Destroy();
+        lottie = null;
     }
-
-
-    private float time;
-    private float lastDrawTime;
-    private int frameCount;
     
     internal void Update()
     {
-        time += Time.deltaTime;
-        if (frameCount < framesToSkip)
-        {
-            frameCount++;
-            return;
-        }
-        
-        frameCount = 0;
-        
         Tick();
         lottie.LateUpdateFetch();
-        lottie.UpdateDeltaAsync(speed * time - lastDrawTime);
+        lottie.UpdateDeltaAsync(speed * Time.deltaTime);
         if (IsEnded) UpdatePlayState();
-        lastDrawTime = time;
     }
     
-    internal int framesToSkip;
-    private uint sizeModifier = 1;
-    
-    public void ApplySettings()
+#if UNITY_EDITOR
+    public void OnBeforeSerialize() { }
+    public void OnAfterDeserialize()
     {
-        framesToSkip = LottieUpdater.framesToSkip;
-        sizeModifier = LottieUpdater.sizeDivider;
+        IsPlaying = false;
+        isUpdatePlayStateQueued = false;
     }
+#endif
 }
 
 [Serializable]
@@ -211,17 +250,11 @@ public class LottieImageManager : BaseLottieManager
 
     public override bool IsVisible => renderer.IsVisible;
     protected override uint Size_Internal => renderer.Size;
+    protected override void SubOnPreRender(Action action) => World.CanvasPreRendering += action;
+    protected override void UnSubOnPreRender(Action action) => World.CanvasPreRendering -= action;
     protected override void Tick() { }
-
-    public override void SetupByAsset()
-    {
-        asset.SetupImage(renderer);
-    }
-
-    protected override void OnTextureSwapped(Texture tex)
-    {
-        renderer.OnTextureSwapped(tex);
-    }
+    public override void SetupByAsset() => asset.SetupImage(renderer);
+    protected override void OnTextureSwapped(Texture tex) => renderer.OnTextureSwapped(tex);
 }
 
 [Serializable]
@@ -231,18 +264,9 @@ public class LottieRendererManager : BaseLottieManager
     
     public override bool IsVisible => renderer.IsVisible;
     protected override uint Size_Internal => renderer.Size;
-    protected override void Tick()
-    {
-        renderer.TryRefresh();
-    }
-
-    public override void SetupByAsset()
-    {
-        asset.SetupRenderer(renderer);
-    }
-
-    protected override void OnTextureSwapped(Texture tex)
-    {
-        renderer.OnTextureSwapped(tex);
-    }
+    protected override void SubOnPreRender(Action action) => World.PreRendering += action;
+    protected override void UnSubOnPreRender(Action action) => World.PreRendering -= action;
+    protected override void Tick() => renderer.TryRefresh();
+    public override void SetupByAsset() => asset.SetupRenderer(renderer);
+    protected override void OnTextureSwapped(Texture tex) => renderer.OnTextureSwapped(tex);
 }

@@ -151,9 +151,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -2130.19}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &39928809
@@ -188,7 +188,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 812dd6959f47f174e80b011af4cfacd1, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &39928810
@@ -243,12 +243,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 2048
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &69406890
 Transform:
@@ -259,7 +260,7 @@ Transform:
   m_GameObject: {fileID: 69406887}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.36, y: -2.96, z: 0}
+  m_LocalPosition: {x: 1.3310003, y: -2.272, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -297,9 +298,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -800.35}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &124794146
@@ -334,7 +335,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: f0870de6322ca1f4abf6bdf1aca48b4d, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &124794147
@@ -377,9 +378,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -4346.5894}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &146746227
@@ -414,7 +415,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 812dd6959f47f174e80b011af4cfacd1, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &146746228
@@ -457,9 +458,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -3903.31}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &162042625
@@ -494,7 +495,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 2aa9f30d562ea9245a6979f2b559eb63, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &162042626
@@ -537,9 +538,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -4051.07}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &231931951
@@ -574,7 +575,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: de7bb61a08f58cb4781ab15e87b2c6bc, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &231931952
@@ -601,7 +602,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &235096601
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -978,9 +979,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -2277.95}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &238454556
@@ -1015,7 +1016,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: dcaa3c41eafa09e449669e59a3e0cc4f, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &238454557
@@ -1043,7 +1044,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &274352023
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1058,12 +1059,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 128
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &274352024
 Transform:
@@ -1160,8 +1162,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 7, y: -1930.3989}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 7, y: -1930.4}
+  m_SizeDelta: {x: 0, y: 5400.378}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &298009169
 MonoBehaviour:
@@ -1235,9 +1237,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -3607.79}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &351520147
@@ -1272,7 +1274,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 9da3d9b7db39a094cad48126ab690e23, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &351520148
@@ -1392,7 +1394,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &489577529
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1407,12 +1409,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 87817a633c30e474c868535d5c456eac, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 128
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &489577530
 Transform:
@@ -1458,7 +1461,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &507137596
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1473,12 +1476,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 278a69cdc9839714c92528a0a7e9f4fb, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 128
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &507137597
 Transform:
@@ -1539,9 +1543,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -61.549805}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &544694271
@@ -1576,7 +1580,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: eb171e2b660d2234cb220957536730ca, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &544694272
@@ -1604,7 +1608,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &552178226
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1619,12 +1623,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 1fe4a2afb8b81ce40be29a5054d261fc, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 128
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &552178227
 Transform:
@@ -1670,7 +1675,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!210 &576622498
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -1697,12 +1702,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: ad6be951603f7a64393bf30e6c45bac3, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 2048
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &576622500
 Transform:
@@ -1751,9 +1757,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -2425.71}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &579604045
@@ -1788,7 +1794,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: cea447916c63a294a94be23962106d2e, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &579604046
@@ -1816,7 +1822,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!210 &608396389
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -1843,12 +1849,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 45ea46f6257955242ac257991f9aed1f, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 2048
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &608396391
 Transform:
@@ -1898,7 +1905,7 @@ RectTransform:
   m_Father: {fileID: 1380642430}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0.35745648}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -1957,7 +1964,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &688192836
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1972,12 +1979,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: ad6be951603f7a64393bf30e6c45bac3, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 128
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &688192837
 Transform:
@@ -2038,9 +2046,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -4198.8296}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &724916200
@@ -2075,7 +2083,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: f43bb5b8e619e424a9c7cf84ef5322b1, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &724916201
@@ -2118,9 +2126,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -1686.91}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &738630557
@@ -2155,7 +2163,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 1f5b6516a1e6b0a4383112fa0d6b99e1, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &738630558
@@ -2198,9 +2206,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -1095.87}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &753384852
@@ -2235,7 +2243,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 14ff4037aa09d2d49942ba575cf01bce, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &753384853
@@ -2280,7 +2288,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 718, y: 1848}
+  m_AnchoredPosition: {x: 807, y: 1777.1}
   m_SizeDelta: {x: 606.5, y: 536.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &767314878
@@ -2315,7 +2323,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: efa27016ebb43f24ab7e7b2eb15344b5, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &767314879
@@ -2358,9 +2366,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -209.31}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &773700590
@@ -2395,7 +2403,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: a1235f0faa3536e409527c9f9bf5adfc, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &773700591
@@ -2423,7 +2431,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!210 &796591399
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -2450,12 +2458,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 87817a633c30e474c868535d5c456eac, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
-  pixelsPerUnit: 2048
+  pixelsPerUnit: 512
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &796591401
 Transform:
@@ -2466,9 +2475,112 @@ Transform:
   m_GameObject: {fileID: 796591398}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.28999996, y: -1.22, z: 0}
+  m_LocalPosition: {x: 0.53900003, y: 0.462, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &902595918
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 902595920}
+  - component: {fileID: 902595919}
+  m_Layer: 0
+  m_Name: GameObject_22
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &902595919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 902595918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 906011f24c724615878940163daa003a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.DoIt::DoIter
+  doIts:
+  - rid: 7466096726357049459
+  references:
+    version: 2
+    RefIds:
+    - rid: 7466096726357049459
+      type: {class: Delay, ns: , asm: LSCore.DoIt}
+      data:
+        delay: 5
+        doIt:
+          rid: 7466096726357049460
+    - rid: 7466096726357049460
+      type: {class: DoIts, ns: , asm: LSCore.DoIt}
+      data:
+        doIts:
+        - rid: 7466096726357049461
+        - rid: 7466096726357049463
+        - rid: 7466096726357049465
+        - rid: 7466096726357049466
+    - rid: 7466096726357049461
+      type: {class: SetActive, ns: , asm: LSCore.DoIt}
+      data:
+        active: 0
+        go:
+          rid: 7466096726357049462
+    - rid: 7466096726357049462
+      type: {class: 'SerializeField`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1718465325}
+    - rid: 7466096726357049463
+      type: {class: SetActive, ns: , asm: LSCore.DoIt}
+      data:
+        active: 1
+        go:
+          rid: 7466096726357049464
+    - rid: 7466096726357049464
+      type: {class: 'SerializeField`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1718465325}
+    - rid: 7466096726357049465
+      type: {class: SetActive, ns: , asm: LSCore.DoIt}
+      data:
+        active: 0
+        go:
+          rid: 7466096726357049467
+    - rid: 7466096726357049466
+      type: {class: SetActive, ns: , asm: LSCore.DoIt}
+      data:
+        active: 1
+        go:
+          rid: 7466096726357049468
+    - rid: 7466096726357049467
+      type: {class: 'SerializeField`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1718465325}
+    - rid: 7466096726357049468
+      type: {class: 'SerializeField`1[[UnityEngine.GameObject, UnityEngine.CoreModule]]', ns: , asm: LSCore.DoIt}
+      data:
+        data: {fileID: 1718465325}
+--- !u!4 &902595920
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 902595918}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2489,7 +2601,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!210 &974042377
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -2516,12 +2628,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: b65028a240ecaf4489bdbbfb1f3aff52, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 2048
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &974042379
 Transform:
@@ -2555,7 +2668,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!210 &1046746851
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -2582,12 +2695,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 1fe4a2afb8b81ce40be29a5054d261fc, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
-  pixelsPerUnit: 2048
+  pixelsPerUnit: 512
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &1046746853
 Transform:
@@ -2598,7 +2712,7 @@ Transform:
   m_GameObject: {fileID: 1046746850}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.234, y: -0.764, z: 0}
+  m_LocalPosition: {x: 1.539, y: 0.462, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -2621,7 +2735,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!210 &1104548858
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -2648,12 +2762,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 278a69cdc9839714c92528a0a7e9f4fb, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
-  rotateId: 2
-  pixelsPerUnit: 2048
-  flip: {x: 1, y: 0}
+  rotateId: 0
+  pixelsPerUnit: 512
+  flip: {x: 0, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &1104548860
 Transform:
@@ -2664,7 +2779,7 @@ Transform:
   m_GameObject: {fileID: 1104548857}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.87, y: -2.52, z: 0}
+  m_LocalPosition: {x: 0.53900003, y: -0.538, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -2700,9 +2815,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 50, y: -5344.7285}
   m_SizeDelta: {x: 100, y: 111.3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1122909027
@@ -2722,7 +2837,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1122909028
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2737,12 +2852,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 137b7baa8f596b34c8ece5f27e672506, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 128
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &1122909029
 Transform:
@@ -2803,9 +2919,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -652.58997}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1156654219
@@ -2840,7 +2956,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 1f5b6516a1e6b0a4383112fa0d6b99e1, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1156654220
@@ -2883,9 +2999,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -3164.51}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1167987214
@@ -2920,7 +3036,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 55a5a74a499bfb6429db86fd84386439, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1167987215
@@ -2931,6 +3047,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1167987212}
   m_CullTransparentMesh: 1
+--- !u!1 &1186919014
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1186919017}
+  - component: {fileID: 1186919016}
+  - component: {fileID: 1186919015}
+  m_Layer: 0
+  m_Name: GameObject_21
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!210 &1186919015
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186919014}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1186919016
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186919014}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 1b24396dffb382d418fddd9717826775, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1186919017
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1186919014}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.539, y: -0.538, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1312934696
 GameObject:
   m_ObjectHideFlags: 0
@@ -2963,9 +3146,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -3460.03}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1312934698
@@ -3000,7 +3183,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 2545b2c8b6a7d7142ae6523160a9f189, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1312934699
@@ -3043,9 +3226,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -1982.43}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1325672717
@@ -3080,7 +3263,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 2545b2c8b6a7d7142ae6523160a9f189, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1325672718
@@ -3091,6 +3274,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1325672715}
   m_CullTransparentMesh: 1
+--- !u!1 &1353722129
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1353722132}
+  - component: {fileID: 1353722131}
+  - component: {fileID: 1353722130}
+  m_Layer: 0
+  m_Name: GameObject_23
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!210 &1353722130
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1353722129}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1353722131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1353722129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 264626c9c0121814daa024a243bd3699, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 2048
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1353722132
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1353722129}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.113000154, y: -3.4490001, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1380642429
 GameObject:
   m_ObjectHideFlags: 0
@@ -3261,9 +3511,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -1391.39}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1422116059
@@ -3298,7 +3548,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: a7cf4948e8dde4048b58f9823acab840, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1422116060
@@ -3326,7 +3576,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!210 &1442573562
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -3353,12 +3603,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 137b7baa8f596b34c8ece5f27e672506, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 2048
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &1442573564
 Transform:
@@ -3407,9 +3658,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -4494.349}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1473784146
@@ -3444,7 +3695,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: eb171e2b660d2234cb220957536730ca, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1473784147
@@ -3487,9 +3738,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -1539.15}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1479438143
@@ -3524,7 +3775,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: f0870de6322ca1f4abf6bdf1aca48b4d, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1479438144
@@ -3552,7 +3803,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1487511393
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3567,12 +3818,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 45ea46f6257955242ac257991f9aed1f, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 128
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &1487511394
 Transform:
@@ -3633,9 +3885,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -3016.75}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1525664406
@@ -3670,7 +3922,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 0eaba12884bae7a49b2edb08e219516f, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1525664407
@@ -3713,9 +3965,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -3312.27}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1556152285
@@ -3750,7 +4002,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 0245464c7f9c8804884f3e1e284e83e2, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1556152286
@@ -3793,9 +4045,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -2573.47}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1574620800
@@ -3830,7 +4082,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: bce76a1246b51b2408707eea856b0d88, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1574620801
@@ -3873,9 +4125,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -504.83}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1583550481
@@ -3910,7 +4162,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: a7cf4948e8dde4048b58f9823acab840, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1583550482
@@ -3953,9 +4205,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -357.06998}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1599488292
@@ -3990,7 +4242,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: c4aaea859e0ff8446954b2746d3d7bbe, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1599488293
@@ -4018,7 +4270,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1611328293
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4033,12 +4285,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: b65028a240ecaf4489bdbbfb1f3aff52, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 128
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &1611328294
 Transform:
@@ -4100,9 +4353,9 @@ RectTransform:
   m_Father: {fileID: 1706068839}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -17, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1619834894
 MonoBehaviour:
@@ -4150,9 +4403,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -1243.63}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1644102125
@@ -4187,7 +4440,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 78e0942c50a734f4ab435f3c24b88c8d, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1644102126
@@ -4230,9 +4483,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -2721.23}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1704081789
@@ -4267,7 +4520,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 8d7b78ce6b0b98b47b3772aad0836590, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1704081790
@@ -4420,7 +4673,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!210 &1718465326
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -4446,13 +4699,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
-    asset: {fileID: 7767725731367759840, guid: 264626c9c0121814daa024a243bd3699, type: 3}
-    isEnabled: 1
+    asset: {fileID: 7767725731367759840, guid: c7c084bbad99d7b40ad27ffd3b601db2, type: 3}
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 2048
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &1718465328
 Transform:
@@ -4463,7 +4717,7 @@ Transform:
   m_GameObject: {fileID: 1718465325}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.14, y: -3.91, z: 0}
+  m_LocalPosition: {x: 1.38, y: -3.61, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -4481,13 +4735,14 @@ GameObject:
   - component: {fileID: 1731245656}
   - component: {fileID: 1731245655}
   - component: {fileID: 1731245654}
+  - component: {fileID: 1731245658}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1731245654
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4573,6 +4828,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1731245658
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1731245653}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
+  m_Padding: {x: 0, y: 0, z: 0, w: 0}
+  m_Softness: {x: 0, y: 0}
 --- !u!1 &1755921448
 GameObject:
   m_ObjectHideFlags: 0
@@ -4658,7 +4927,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1781446988
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4673,12 +4942,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 70c7207b6c71d4d4488f684421082614, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 128
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &1781446989
 Transform:
@@ -4739,9 +5009,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -948.11}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1782725567
@@ -4776,7 +5046,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 2fedcaa4720c1634380238983332059f, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1782725568
@@ -4804,7 +5074,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!210 &1828390512
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -4831,12 +5101,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 70c7207b6c71d4d4488f684421082614, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 2048
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &1828390514
 Transform:
@@ -4935,8 +5206,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 676015807}
   m_HandleRect: {fileID: 676015806}
   m_Direction: 2
-  m_Value: -0.00000035178994
-  m_Size: 0.3574557
+  m_Value: 0
+  m_Size: 0.35745648
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -5011,9 +5282,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 303.25, y: -4996.3687}
   m_SizeDelta: {x: 606.5, y: 536.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1970686601
@@ -5048,7 +5319,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: de7bb61a08f58cb4781ab15e87b2c6bc, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &1970686602
@@ -5076,7 +5347,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2058227727
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5091,12 +5362,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
   manager:
     asset: {fileID: 7767725731367759840, guid: 264626c9c0121814daa024a243bd3699, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
   rotateId: 2
   pixelsPerUnit: 128
   flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &2058227728
 Transform:
@@ -5157,9 +5429,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -1834.67}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2058767938
@@ -5194,7 +5466,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 232f27a685c6be84ea276903ac761338, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &2058767939
@@ -5237,9 +5509,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -3755.55}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2059307195
@@ -5274,7 +5546,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: f43bb5b8e619e424a9c7cf84ef5322b1, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &2059307196
@@ -5301,7 +5573,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2075072791
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5406,9 +5678,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -2868.99}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2106816380
@@ -5443,7 +5715,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 14ff4037aa09d2d49942ba575cf01bce, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &2106816381
@@ -5486,9 +5758,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 298009168}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 281.9, y: -4642.109}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2147013495
@@ -5523,7 +5795,7 @@ MonoBehaviour:
   flip: {x: 1, y: 0}
   manager:
     asset: {fileID: 7767725731367759840, guid: 15785fcdec25da2419e930dcbed7ee13, type: 3}
-    isEnabled: 1
+    shouldPlay: 1
     loop: 1
     speed: 1
 --- !u!222 &2147013496
@@ -5554,6 +5826,7 @@ SceneRoots:
   - {fileID: 2058227728}
   - {fileID: 2075072792}
   - {fileID: 1718465328}
+  - {fileID: 1353722132}
   - {fileID: 1828390514}
   - {fileID: 974042379}
   - {fileID: 608396391}
@@ -5562,4 +5835,6 @@ SceneRoots:
   - {fileID: 1046746853}
   - {fileID: 1104548860}
   - {fileID: 796591401}
+  - {fileID: 1186919017}
   - {fileID: 69406890}
+  - {fileID: 902595920}
