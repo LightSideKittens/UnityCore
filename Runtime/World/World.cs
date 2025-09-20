@@ -21,6 +21,8 @@ namespace LSCore
         public static event Action ApplicationResumed;
         public static event Action Updated;
         public static event Action FixedUpdated;
+        public static event Action PreRendering;
+        public static event Action CanvasPreRendering;
         
         private static readonly SynchronizationContext synchronizationContext = SynchronizationContext.Current;
         private static bool isCreated;
@@ -67,8 +69,13 @@ namespace LSCore
         public static bool IsCompiling => EditorApplication.isCompiling;
         public static bool IsEditMode => !IsPlaying;
         public static bool IsPlayModeDisabling { get; private set; }
+#endif
+        
         static World()
         {
+            Camera.onPreRender += OnPreRendering;
+            Canvas.preWillRenderCanvases += OnCanvasPreRendering;
+#if UNITY_EDITOR
             EditorApplication.playModeStateChanged += change =>
             {
                 if (change == PlayModeStateChange.ExitingPlayMode)
@@ -80,8 +87,11 @@ namespace LSCore
                     IsPlayModeDisabling = false;
                 }
             };
-        }
 #endif
+        }
+        
+        private static void OnPreRendering(Camera _) => PreRendering?.Invoke();
+        private static void OnCanvasPreRendering() => CanvasPreRendering?.Invoke();
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
@@ -171,6 +181,7 @@ namespace LSCore
 
         public static Coroutine BeginCoroutine(IEnumerator routine)
         {
+            if (instance == null) return null;
             return instance.StartCoroutine(routine);
         }
     }

@@ -18,8 +18,6 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
     private LottieAnimation anim;
     private bool playing;
     private double lastUpdateTime;
-    private int lastW, lastH;
-    private int lastRotationIndex = -1;
 
     private BaseLottieAsset asset;
     private string assetPath;
@@ -106,7 +104,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         GUILayout.Space(10);
         GUILayout.BeginHorizontal();
 
-        for (int i = 0; i < 4; i++)
+        for (var i = 0; i < 4; i++)
         {
             var targetAngle = i * 90;
             var text = rotateId == i ? $"{targetAngle}° ❤️" : $"{targetAngle}°";
@@ -123,7 +121,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
     {
         if(Event.current.type != EventType.Repaint) return;
         
-        EnsureAnimationForPreviewRect(r);
+        EnsureAnimationForPreviewRect();
         EditorUpdate();
         if (anim?.Texture == null)
         {
@@ -131,10 +129,10 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
             return;
         }
 
-        int angleDeg = rotateId * 90;
-        bool swap = angleDeg is 90 or 270;
+        var angleDeg = rotateId * 90;
+        var swap = angleDeg is 90 or 270;
 
-        Rect drawRect = r;
+        var drawRect = r;
         if (swap)
         {
             drawRect = new Rect(0, 0, r.height, r.width);
@@ -153,7 +151,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
     {
         if (GUILayout.Button(playing ? "Pause" : "Play", EditorStyles.miniButton))
         {
-            if (anim == null) EnsureAnimationForPreviewRect(GUILayoutUtility.GetLastRect());
+            if (anim == null) EnsureAnimationForPreviewRect();
             playing = !playing;
             lastUpdateTime = EditorApplication.timeSinceStartup;
         }
@@ -172,17 +170,16 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         if (anim != null)
         {
             anim.loop = loop;
-            int total = Mathf.Max(1, (int)anim.TotalFramesCount);
-            int cur = Mathf.Clamp((int)anim.currentFrame, 0, total - 1);
+            var total = Mathf.Max(1, (int)anim.TotalFramesCount);
+            var cur = Mathf.Clamp((int)anim.currentFrame, 0, total - 1);
 
             GUILayout.Space(10);
             GUILayout.Label($"Frame {cur+1}/{total}", GUILayout.Width(110));
-            int newFrame = Mathf.RoundToInt(GUILayout.HorizontalSlider(cur, 0, total - 1, GUILayout.Width(150)));
+            var newFrame = Mathf.RoundToInt(GUILayout.HorizontalSlider(cur, 0, total - 1, GUILayout.Width(150)));
             if (newFrame != cur)
             {
                 playing = false;
                 anim.DrawOneFrame(newFrame);
-                anim.currentFrame = newFrame;
             }
         }
     }
@@ -191,8 +188,8 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
     {
         if (!playing || anim == null) return;
 
-        double t = EditorApplication.timeSinceStartup;
-        float delta = (float)(t - lastUpdateTime);
+        var t = EditorApplication.timeSinceStartup;
+        var delta = (float)(t - lastUpdateTime);
         lastUpdateTime = t;
         
         anim.UpdateDelta(delta * speed);
@@ -203,34 +200,19 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         Repaint();
     }
 
-    private void EnsureAnimationForPreviewRect(Rect r)
+    private void EnsureAnimationForPreviewRect()
     {
-        int angleIdx = rotateId;
-        bool swap = angleIdx == 1 || angleIdx == 3;
-        int w = Mathf.Max(1, Mathf.RoundToInt(swap ? r.height : r.width));
-        int h = Mathf.Max(1, Mathf.RoundToInt(swap ? r.width  : r.height));
-
-        bool needRecreate = anim == null || w != lastW || h != lastH || angleIdx != lastRotationIndex;
-        if (!needRecreate) return;
-        
-        var lastTime = anim?.timeSinceLastRenderCall ?? 0;
-        var frame = anim?.currentFrame ?? 0;
-        DisposeAnim();
+        if(anim != null) return;
 
         anim = new LottieAnimation(
             cachedJson,
             string.Empty,
-            (uint)Mathf.Min(w, h));
-
-        anim.timeSinceLastRenderCall = lastTime;
-        double t = EditorApplication.timeSinceStartup;
-        float delta = (float)(t - lastUpdateTime);
+            1024);
+        
+        var t = EditorApplication.timeSinceStartup;
         lastUpdateTime = t;
-        anim.DrawOneFrame(frame);
-        anim.currentFrame = frame;
-        anim.UpdateDelta(delta * speed);
-
-        lastW = w; lastH = h; lastRotationIndex = angleIdx;
+        anim.DrawOneFrame(0);
+        
         lastUpdateTime = EditorApplication.timeSinceStartup;
     }
 

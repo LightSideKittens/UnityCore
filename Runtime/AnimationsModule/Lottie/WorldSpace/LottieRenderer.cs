@@ -23,7 +23,7 @@ public sealed partial class LottieRenderer : MonoBehaviour
             manager.UpdatePlayState();
         }
     }
-    
+
     internal uint Size
     {
         get
@@ -92,7 +92,6 @@ public sealed partial class LottieRenderer : MonoBehaviour
 #if UNITY_EDITOR
         if (mpb == null) Init();
 #endif
-        manager.IsPlaying = false;
         manager.UpdatePlayState();
     }
     
@@ -108,6 +107,12 @@ public sealed partial class LottieRenderer : MonoBehaviour
         {
             BuildUnitQuad();
             verticesIsDirty = false;
+        }
+
+        if (colorIsDirty)
+        {
+            UpdateColor();
+            colorIsDirty = false;
         }
         
         manager.ResizeIfNeeded();

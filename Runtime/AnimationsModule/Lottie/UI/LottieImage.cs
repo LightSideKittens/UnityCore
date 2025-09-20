@@ -1,6 +1,5 @@
 using LSCore;
 using UnityEngine;
-using UnityEngine.UI;
 
 [ExecuteAlways]
 public sealed class LottieImage : LSRawImage
@@ -46,23 +45,12 @@ public sealed class LottieImage : LSRawImage
     {
         manager.renderer = this;
         base.Awake();
-        if (manager.Asset != null) manager.SetupByAsset();
     }
 
     protected override void OnEnable()
     {
         base.OnEnable();
-        manager.IsPlaying = false;
-        CanvasUpdateRegistry.Updated += Update;
-
-        void Update()
-        {
-            CanvasUpdateRegistry.Updated -= Update;
-#if UNITY_EDITOR
-            if(World.IsEditMode && !this) return; 
-#endif
-            manager.UpdatePlayState();
-        }
+        manager.UpdatePlayState();
     }
 
     protected override void OnDisable()

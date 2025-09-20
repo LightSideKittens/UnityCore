@@ -21,12 +21,26 @@ public sealed partial class LottieRenderer
     [SerializeField] [HideInInspector] private int rotateId = 0;
     [SerializeField] [HideInInspector] private int pixelsPerUnit = 128;
     [SerializeField] [HideInInspector] private Vector2Int flip;
+    private bool colorIsDirty;
     private bool verticesIsDirty;
     private MeshRenderer mr;
     private MeshFilter mf;
     private MaterialPropertyBlock mpb;
+    
+    [SerializeField] [HideInInspector] private Color color = Color.white;
+    [ShowInInspector]
+    public Color Color
+    {
+        get => color;
+        set
+        {
+            if(color == value) return;
+            color = value;
+            colorIsDirty = true;
+        }
+    }
+    
     [SerializeField] [HideInInspector] private Material material;
-
     [ShowInInspector]
     public Material Material
     {
@@ -59,7 +73,9 @@ public sealed partial class LottieRenderer
         get => (flip.x.ToBool(), flip.y.ToBool());
         set
         {
-            flip = new Vector2Int(value.x.ToInt(), value.y.ToInt());
+            var newValue = new Vector2Int(value.x.ToInt(), value.y.ToInt());
+            if(flip == newValue) return;
+            flip = newValue;
             verticesIsDirty = true;
         }
     }
@@ -71,21 +87,34 @@ public sealed partial class LottieRenderer
         get => (LSImage.RotationMode)rotateId;
         set
         {
-            rotateId = (int)value;
+            var newValue = (int)value;
+            if(rotateId == newValue) return;
+            rotateId = newValue;
             verticesIsDirty = true;
         }
     }
 
     #region MESH_BUILDING
 
+    private void UpdateColor()
+    {
+        if(quad == null) BuildUnitQuad();
+        var v = quad.colors;
+        for (int i = 0; i < v.Length; i++)
+        {
+            v[i] = color;
+        }
+        quad.colors = v;
+    }
+    
     private void BuildUnitQuad()
     {
         quad ??= new Mesh { name = "LottieWorld_UnitQuad" };
 
         var vh = vertexHelper;
         var v = UIVertex.simpleVert;
-        v.color = Color.white;
-
+        v.color = color;
+        
         v.position = new Vector3(-0.5f, -0.5f, 0f);
         v.uv0 = new Vector2(0f, 0f);
         vh.AddVert(v);
