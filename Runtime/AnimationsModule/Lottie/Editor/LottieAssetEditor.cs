@@ -15,7 +15,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
     private int rotateId;
     private (bool x, bool y) flip;
 
-    private LottieAnimation anim;
+    private Lottie anim;
     private bool playing;
     private double lastUpdateTime;
 
@@ -123,7 +123,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         
         EnsureAnimationForPreviewRect();
         EditorUpdate();
-        if (anim?.Texture == null)
+        if (anim?.Spritee.Texture == null)
         {
             EditorGUI.DropShadowLabel(r, "No texture from LottieAnimation.");
             return;
@@ -143,7 +143,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         var prev = GUI.matrix;
         GUIUtility.RotateAroundPivot(angleDeg, r.center);
         GUIUtility.ScaleAroundPivot(scale, r.center);
-        EditorGUI.DrawPreviewTexture(drawRect, anim.Texture, null, ScaleMode.ScaleToFit);
+        EditorGUI.DrawPreviewTexture(drawRect, anim.Spritee.Texture, null, ScaleMode.ScaleToFit);
         GUI.matrix = prev;
     }
 
@@ -204,10 +204,10 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
     {
         if(anim != null) return;
 
-        anim = new LottieAnimation(
+        anim = new Lottie(
             cachedJson,
             string.Empty,
-            1024);
+            1024, false);
         
         var t = EditorApplication.timeSinceStartup;
         lastUpdateTime = t;

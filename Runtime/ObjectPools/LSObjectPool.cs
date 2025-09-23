@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace LSCore
 {
-    public class LSObjectPool<T>
+    public class LSObjectPool<T> : IEnumerable<T>
     {
         internal readonly HashSet<T> releasedSet;
         public readonly HashSet<T> activeSet;
@@ -148,5 +149,23 @@ namespace LSCore
             releasedSet.Clear();
             CountAll = 0;
         }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            foreach (var element in releasedSet)
+            {
+                yield return element;
+            }
+
+            if (activeSet != null)
+            {
+                foreach (var t in activeSet)
+                {
+                    yield return t;
+                }
+            }
+        }
+        
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

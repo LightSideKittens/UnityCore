@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading;
+using LSCore.DataStructs;
 
 namespace LSCore
 {
@@ -124,6 +125,18 @@ namespace LSCore
             }
         }
         
+        public ArraySlice<T> this[Range range]
+        {
+            get
+            {
+                var count = Count;
+                var start = range.Start.GetOffset(count);
+                var end = range.End.GetOffset(count);
+                count = end - start;
+                return new ArraySlice<T>(items, start, count);
+            }
+        }
+        
         private static bool IsCompatibleObject(object value)
         {
             if (value is T)
@@ -212,6 +225,12 @@ namespace LSCore
                 size = 0;
             }
 
+            ++version;
+        }
+        
+        public void FakeClear()
+        {
+            size = 0;
             ++version;
         }
 
