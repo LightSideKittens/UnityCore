@@ -118,17 +118,24 @@ public sealed partial class LottieRenderer : MonoBehaviour
         manager.ResizeIfNeeded();
     }
 
-    internal void OnTextureSwapped(Texture tex)
+    internal void OnSpriteChanged(Lottie.Sprite sprite)
     {
 #if UNITY_EDITOR
-        if (tex == null) return;
+        if (sprite.Texture == null) return;
 #endif
-        mr.GetPropertyBlock(mpb);
-        mpb.SetTexture(mainTexId, tex);
-        mr.SetPropertyBlock(mpb);
+        var v = quad.uv;
+        v[0] = sprite.UvMin;
+        v[1] = new Vector2(sprite.UvMin.x, sprite.UvMax.y);
+        v[2] = sprite.UvMax;
+        v[3] = new Vector2(sprite.UvMax.x, sprite.UvMin.y);
+        quad.uv = v;
+        OnTextureChanged(sprite.Texture);
     }
 
-#if UNITY_EDITOR
-
-#endif
+    private void OnTextureChanged(Texture texture)
+    {
+        mr.GetPropertyBlock(mpb);
+        mpb.SetTexture(mainTexId, texture);
+        mr.SetPropertyBlock(mpb);
+    }
 }

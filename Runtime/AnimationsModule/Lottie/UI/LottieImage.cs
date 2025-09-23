@@ -78,9 +78,14 @@ public sealed class LottieImage : LSRawImage
         manager.ResizeIfNeeded();
     }
 
-    internal void OnTextureSwapped(Texture tex)
+    internal void OnSpriteChanged(Lottie.Sprite sprite)
     {
-        m_Texture = tex;
+        OnTextureChanged(sprite.Texture);
+    }
+
+    private void OnTextureChanged(Texture texture)
+    {
+        m_Texture = texture;
         canvasRenderer.SetTexture(m_Texture);
     }
 }
