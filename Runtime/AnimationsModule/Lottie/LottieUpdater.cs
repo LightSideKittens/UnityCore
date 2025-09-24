@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using LSCore;
-using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -15,34 +14,7 @@ internal static class LottieUpdater
     public static List<BaseLottieManager> managers = new(64);
     public static Action[] PreRendering = new Action[4];
     public static Action[] CanvasPreRendering = new Action[4];
-    private static Action preUpdated;
-    public static event Action TextureApplyTime
-    {
-        add
-        {
-            if (isPreUpdate)
-            {
-                preUpdated += value;
-            }
-            else
-            {
-                PreRendering[2] += value;
-                CanvasPreRendering[2] += value;
-            }
-        }
-        remove
-        {
-            if (isPreUpdate)
-            {
-                preUpdated -= value;
-            }
-            else
-            {
-                PreRendering[2] -= value;
-                CanvasPreRendering[2] -= value;
-            }
-        }
-    }
+    public static event Action TextureApplyTime;
     
     static LottieUpdater()
     {
@@ -59,6 +31,8 @@ internal static class LottieUpdater
         World.PreRendering += OnPreRendering;
         World.CanvasPreRendering += OnCanvasPreRendering;
         World.Updated += OnUpdate;
+        PreRendering[2] += OnTextureApplyTime;
+        CanvasPreRendering[2] += OnTextureApplyTime;
     }
 
 #if UNITY_EDITOR
@@ -71,8 +45,18 @@ internal static class LottieUpdater
             EditorWorld.Updated += OnUpdate;
         }
     }
+
+    internal static void ForceApplyTexture()
+    {
+        TextureApplyTime?.Invoke();
+    }
 #endif
 
+    private static void OnTextureApplyTime()
+    {
+        TextureApplyTime?.Invoke();
+    }
+    
     private static void OnPreRendering()
     {
         for (int i = 0; i < PreRendering.Length; i++)
@@ -94,17 +78,13 @@ internal static class LottieUpdater
         Update();
     }
 
-    private static bool isPreUpdate;
-    
-    public static void Update()
+    private static void Update()
     {
-        isPreUpdate = true;
         for (int i = 0; i < managers.Count; i++)
         {
             managers[i].PreUpdate();
         }
-        preUpdated?.Invoke();
-        isPreUpdate = false;
+        TextureApplyTime?.Invoke();
         for (int i = 0; i < managers.Count; i++)
         {
             managers[i].Update();
