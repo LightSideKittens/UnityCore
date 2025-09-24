@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using LSCore;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -9,7 +10,7 @@ public sealed partial class LottieRenderer : MonoBehaviour
     private const int MinSize = 64;
     private const int MaxSize = 2048;
 
-    public LottieRendererManager manager;
+    public LottieRendererManager manager = new();
     
     private bool isVisible;
 
@@ -36,15 +37,22 @@ public sealed partial class LottieRenderer : MonoBehaviour
             return newSize;
         }
     }
+    
+    private new GameObject gameObject;
 
     private void Awake()
     {
+        gameObject = base.gameObject;
         Init();
+#if UNITY_EDITOR
+        LottieUpdater.RefreshUpdatingState();
+#endif
     }
 
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        gameObject = base.gameObject;
         EditorApplication.update += Update;
 
         void Update()
@@ -97,7 +105,43 @@ public sealed partial class LottieRenderer : MonoBehaviour
     
 
     private void OnDisable() => manager.UpdatePlayState();
-    private void OnDestroy() => manager.DestroyLottie();
+    private void OnDestroy()
+    {
+        manager.DestroyLottie();
+        LottieUpdater.PreRendering[0] += DestroyDeps;
+        void DestroyDeps()
+        {
+            LottieUpdater.PreRendering[0] -= DestroyDeps;
+            if (gameObject)
+            {
+#if UNITY_EDITOR
+                if (World.IsEditMode)
+                {
+                    EditorApplication.update += OnUpdate;
+
+                    void OnUpdate()
+                    {
+                        EditorApplication.update -= OnUpdate;
+                        DestroyImmediate(mr);
+                        DestroyImmediate(mf);
+                    }
+                }
+                else
+                {
+                    Destroy(mr);
+                    Destroy(mf);
+                }
+#else
+                Destroy(mr);
+                Destroy(mf);
+#endif
+            }
+        }
+#if UNITY_EDITOR
+        LottieUpdater.RefreshUpdatingState();
+#endif
+    }
+
     private void OnBecameVisible() => IsVisible = true;
     private void OnBecameInvisible() => IsVisible = false;
 
@@ -118,24 +162,33 @@ public sealed partial class LottieRenderer : MonoBehaviour
         manager.ResizeIfNeeded();
     }
 
+    private Lottie.Sprite sprite;
+
+    public Lottie.Sprite Sprite
+    {
+        get => sprite;
+        set
+        {
+            if(sprite == value) return;
+            if(sprite != null) sprite.TextureChanged -= OnTextureChanged;
+            sprite = value;
+            sprite.TextureChanged += OnTextureChanged;
+            UpdateUv();
+        }
+    }
+    
     internal void OnSpriteChanged(Lottie.Sprite sprite)
     {
 #if UNITY_EDITOR
         if (sprite.Texture == null) return;
 #endif
-        var v = quad.uv;
-        v[0] = sprite.UvMin;
-        v[1] = new Vector2(sprite.UvMin.x, sprite.UvMax.y);
-        v[2] = sprite.UvMax;
-        v[3] = new Vector2(sprite.UvMax.x, sprite.UvMin.y);
-        quad.uv = v;
-        OnTextureChanged(sprite.Texture);
+        Sprite = sprite;
     }
 
-    private void OnTextureChanged(Texture texture)
+    private void OnTextureChanged()
     {
         mr.GetPropertyBlock(mpb);
-        mpb.SetTexture(mainTexId, texture);
+        mpb.SetTexture(mainTexId, sprite.Texture);
         mr.SetPropertyBlock(mpb);
     }
 }

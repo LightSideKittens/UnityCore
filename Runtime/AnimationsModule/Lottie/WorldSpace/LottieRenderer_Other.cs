@@ -98,7 +98,6 @@ public sealed partial class LottieRenderer
 
     private void UpdateColor()
     {
-        if(quad == null) BuildUnitQuad();
         var v = quad.colors;
         for (int i = 0; i < v.Length; i++)
         {
@@ -116,19 +115,15 @@ public sealed partial class LottieRenderer
         v.color = color;
         
         v.position = new Vector3(-0.5f, -0.5f, 0f);
-        v.uv0 = new Vector2(0f, 0f);
         vh.AddVert(v);
 
         v.position = new Vector3(-0.5f, 0.5f, 0f);
-        v.uv0 = new Vector2(0f, 1f);
         vh.AddVert(v);
 
         v.position = new Vector3(0.5f, 0.5f, 0f);
-        v.uv0 = new Vector2(1f, 1f);
         vh.AddVert(v);
 
         v.position = new Vector3(0.5f, -0.5f, 0f);
-        v.uv0 = new Vector2(1f, 0f);
         vh.AddVert(v);
 
         vh.AddTriangle(0, 1, 2);
@@ -136,9 +131,30 @@ public sealed partial class LottieRenderer
 
         RotateMesh(vh);
         vh.FillMesh(quad);
+        UpdateUv();
         vh.Clear();
         quad.RecalculateBounds();
         mf.sharedMesh = quad;
+    }
+
+    private void UpdateUv()
+    {
+        var v = quad.uv;
+        if (sprite != null)
+        {
+            v[0] = sprite.UvMin;
+            v[1] = new Vector2(sprite.UvMin.x, sprite.UvMax.y);
+            v[2] = sprite.UvMax;
+            v[3] = new Vector2(sprite.UvMax.x, sprite.UvMin.y);
+        }
+        else
+        {
+            v[0] = new Vector2(0, 0);
+            v[1] = new Vector2(0, 1);
+            v[2] = new Vector2(1, 1);
+            v[3] = new Vector2(1, 0);
+        }
+        quad.uv = v;
     }
 
     public delegate void RotateAction(ref Vector3 value, in Vector2 center);

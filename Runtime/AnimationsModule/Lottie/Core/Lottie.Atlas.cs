@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using LSCore;
 using Unity.Burst;
 using Unity.Collections;
@@ -43,7 +44,7 @@ public sealed partial class Lottie
 #endif
 
         private static Dictionary<Vector2Int, LSObjectPool<Atlas>> atlasPools = new();
-
+        
         public static Atlas Get(int size)
         {
             var s = new Vector2Int(size, size);
@@ -63,104 +64,17 @@ public sealed partial class Lottie
             }
         }
 
-        public unsafe struct SpriteCopy
-        {
-            // Разрешаем хранить «сырые» указатели в job-данных
-            [NativeDisableUnsafePtrRestriction] public byte* SrcPtr;
-            // Пишем в одну общую целевую память с непересекающимися регионами
-            [NativeDisableUnsafePtrRestriction] public byte* AtlasPtr;
-            public int AtlasStride; // atlasWidth * Bpp
-            public int SrcStride;
-            public int WidthBytes;   // s.x * Bpp
-            public int Height;       // s.y
-            public int DstOffset;    // смещение в байтах от начала атласа
-        }
+        internal Vector2Int size;
 
-        [BurstCompile]
-        public unsafe struct CopySpritesJob : IJobFor
-        {
-            [ReadOnly] public NativeArray<SpriteCopy> Sprites;
+        public Texture2D Texture => textures[textureIndex];
+        
+        internal Texture2D[] textures = new Texture2D[2];
+        public event Action TextureChanged;
 
-            public void Execute(int i)
-            {
-                var sc = Sprites[i];
-
-                byte* dstBase = sc.AtlasPtr;
-                byte* dst     = dstBase + sc.DstOffset;
-
-                UnsafeUtility.MemCpyStride(
-                    destination:      dst,
-                    destinationStride:sc.AtlasStride,
-                    source:           sc.SrcPtr,
-                    sourceStride:     sc.SrcStride,
-                    elementSize:      sc.WidthBytes,
-                    count:            sc.Height);
-            }
-        }
-
-
-        public static unsafe void CopyAll()
-        {
-            int spriteCount = 0;
-            
-            for (int k = 0; k < atlases.Count; k++)
-            {
-                spriteCount += atlases[k].sprites.Count;
-            }
-            
-            var copies = new NativeArray<SpriteCopy>(spriteCount, Allocator.TempJob);
-            int spriteIndex = 0;
-            
-            for (int k = 0; k < atlases.Count; k++)
-            {
-                var atlas = atlases[k];
-                var sprites = atlas.sprites;
-                int dstStride = atlas.size.x * Bpp;
-                
-                for (int i = 0; i < sprites.Count; i++)
-                {
-                    var sp = sprites[i];
-                    var s  = sp.size;
-                    var ps = sp.pixelStart;
-
-                    copies[spriteIndex] = new SpriteCopy
-                    {
-                        AtlasStride = dstStride,
-                        AtlasPtr = (byte*)atlas.raw.GetUnsafePtr(),
-                        SrcPtr     = sp.renderData.srcPtr,
-                        SrcStride  = sp.renderData.srcStride,
-                        WidthBytes = s.x * Bpp,
-                        Height     = s.y,
-                        DstOffset  = (ps.y * dstStride) + (ps.x * Bpp),
-                    };
-                    
-                    spriteIndex++;
-                }
-                
-                sprites.FakeClear();
-            }
-
-
-            var job = new CopySpritesJob
-            {
-                Sprites = copies,
-            };
-            
-            job.ScheduleParallel(copies.Length, 8, default).Complete();
-            
-            copies.Dispose();
-            atlases.FakeClear();
-            IsSpritesDirty = false;
-        }
-
-
-        private Vector2Int size;
-        public Texture2D Texture { get; }
-        private NativeArray<byte> raw;
-
+        internal int textureIndex;
         private bool isTextureDirty;
 
-        private bool IsTextureDirty
+        internal bool IsTextureDirty
         {
             get => isTextureDirty;
             set
@@ -177,48 +91,14 @@ public sealed partial class Lottie
                 }
             }
         }
-        
-        private static bool isSpritesDirty;
-
-        private static bool IsSpritesDirty
-        {
-            get => isSpritesDirty;
-            set
-            {
-                if (value == isSpritesDirty) return;
-                isSpritesDirty = value;
-                if (value)
-                {
-                    LottieUpdater.TextureApplyTime += CopyAll;
-                }
-                else
-                {
-                    LottieUpdater.TextureApplyTime -= CopyAll;
-                }
-            }
-        }
 
         private Atlas(Vector2Int size)
         {
-            Debug.Log($"Create Atlas {size}");
             this.size = size;
-            var tex = CreateTexture();
-            Texture = tex;
-            raw = tex.GetRawTextureData<byte>();
-        }
-
-        private LSList<Sprite> sprites = new(8);
-        private static LSList<Atlas> atlases = new(8);
-
-        public void AddToBlit(in Sprite sprite)
-        {
-            sprites.Add(sprite);
-            if (!IsTextureDirty)
+            for (int i = 0; i < 2; i++)
             {
-                atlases.Add(this);
+                textures[i] = CreateTexture();
             }
-            IsSpritesDirty = true;
-            IsTextureDirty = true;
         }
 
         private void ApplyTexture()
@@ -227,8 +107,10 @@ public sealed partial class Lottie
             if (!lastDirty) return;
             IsTextureDirty = false;
             Texture.Apply(false, false);
+            TextureChanged?.Invoke();
+            textureIndex = (textureIndex + 1) % 2;
         }
-
+        
         public void Destroy(bool immediate)
         {
             if (immediate) Object.DestroyImmediate(Texture);
@@ -291,6 +173,17 @@ public sealed partial class Lottie
             foreach (var pool in atlasPools.Values) pool.ReleaseAll();
             pending.FakeClear();
             if (animations == null || animations.Count == 0) return;
+
+            var defUvMin = Vector2.zero;
+            var defUvMax = Vector2.one;
+            
+            for (int i = 0; i < animations.Count; i++)
+            {
+                var lottie = animations[i];
+                lottie.Spritee = new Sprite(Get(lottie.size.x), defUvMin, defUvMax);
+            }
+            
+            return;
 
             var counts = new Dictionary<int, int>(8);
             int n = animations.Count;

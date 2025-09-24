@@ -1,75 +1,17 @@
 ﻿using UnityEngine;
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using LSCore;
-using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
 public sealed partial class Lottie
 {
-    private const int Bpp = 4;
-    
     public class Sprite
     {
-        internal class RenderData
+        internal struct RenderData
         {
             public LottieRenderData renderData;
-            private NativeArray<byte> spriteRaw;
-            public unsafe byte* srcPtr;
-            public IntPtr ptr;
-            public int srcStride;
-
-            private unsafe RenderData(Sprite sprite)
-            {
-                var size = sprite.size;
-                srcStride = size.x * Bpp;
-                var byteCount = srcStride * size.y;
-                
-                spriteRaw = new NativeArray<byte>(
-                    byteCount,
-                    Allocator.Persistent,
-                    NativeArrayOptions.UninitializedMemory);
-                
-                srcPtr = (byte*)spriteRaw.GetUnsafePtr();
-                
-                renderData.width = (uint)size.x;
-                renderData.height = (uint)size.y;
-                renderData.bytesPerLine = (uint)srcStride;
-                renderData.buffer = srcPtr;
-            }
-            
-            private static Dictionary<Vector2Int, LSObjectPool<RenderData>> renderDataPools = new();
-
-            public static RenderData Alloc(Sprite sprite)
-            {
-                var size = sprite.size;
-                
-                if (!renderDataPools.TryGetValue(size, out var pool))
-                {
-                    pool = new LSObjectPool<RenderData>(Create, shouldStoreActive: true);
-                    renderDataPools.Add(size, pool);
-                }
-            
-                var rData = pool.Get();
-                NativeBridge.LottieAllocateRenderData(ref rData.ptr);
-                Marshal.StructureToPtr(rData.renderData, rData.ptr, false);
-                return rData;
-
-                RenderData Create()
-                {
-                    var data = new RenderData(sprite);
-                    return data;
-                }
-            }
-
-            public void Release(Sprite sprite)
-            {
-                var size = sprite.size;
-                renderDataPools[size].Release(this);
-                NativeBridge.LottieDisposeRenderData(ref ptr);   
-            }
+            public IntPtr renderDataPtr;
         }
         
         public Texture2D Texture => atlas.Texture;
@@ -77,35 +19,38 @@ public sealed partial class Lottie
         
         private Vector2 uvMin;
         private Vector2 uvMax;
-        
-        internal Vector2Int size;
-        internal Vector2Int pixelStart;
 
-        internal RenderData renderData;
-        private bool isSetup;
+        private Vector2Int atlasSize;
+        private Vector2Int size;
+        private Vector2Int pixelStart;
         
+        private RenderData[] renderData = new RenderData[2];
+
+        private bool isSetup;
         public Vector2 UvMin => uvMin; 
         public Vector2 UvMax => uvMax;
+        
+        public event Action TextureChanged;
         
         public Sprite(Atlas atlas, Vector2 uvMin, Vector2 uvMax)
         {
             this.atlas = atlas;
             this.uvMin = uvMin;
             this.uvMax = uvMax;
-            OnTextureChanged();
-        }
-
-        public void Destroy()
-        {
-            ReleaseRenderData();
-            atlas = null;
+            atlas.TextureChanged += OnTextureChanged;
+            Init();
         }
 
         private void OnTextureChanged()
         {
-            var tex = atlas.Texture;
-            var atlasWidth = tex.width;
-            var atlasHeight = tex.height;
+            TextureChanged?.Invoke();
+        }
+
+        private void Init()
+        {
+            atlasSize = atlas.size;
+            var atlasWidth = atlasSize.x;
+            var atlasHeight = atlasSize.y;
 
             float u0 = uvMin.x, v0 = uvMin.y;
             float u1 = uvMax.x, v1 = uvMax.y;
@@ -118,20 +63,41 @@ public sealed partial class Lottie
             x = Mathf.Clamp(x, 0, atlasWidth - 1);
             y = Mathf.Clamp(y, 0, atlasHeight - 1);
             pixelStart = new Vector2Int(x, y);
-            
             var width = Mathf.Clamp(w, 1, atlasWidth - x);
             var height = Mathf.Clamp(h, 1, atlasHeight - y);
             size = new Vector2Int(width, height);
-            
-            ReleaseRenderData();
             SetupRenderData();
         }
 
-        private void SetupRenderData()
+        public void Destroy()
+        {
+            ReleaseRenderData();
+            atlas.TextureChanged -= OnTextureChanged;
+            atlas = null;
+        }
+        
+        private unsafe void SetupRenderData()
         {
             if (isSetup) return;
             isSetup = true;
-            renderData = RenderData.Alloc(this);
+            const int bpp = 4;
+
+            for (int i = 0; i < renderData.Length; i++)
+            {
+                ref var data = ref renderData[i];
+                var basePtr = (byte*)atlas.textures[i].GetRawTextureData<byte>().GetUnsafePtr();
+                var atlasStride = atlasSize.x * bpp;
+                var startOffset = pixelStart.y * atlasStride + pixelStart.x * bpp;
+                var regionPtr = basePtr + startOffset;
+
+                data.renderData.width = (uint)size.x;
+                data.renderData.height = (uint)size.y;
+                data.renderData.bytesPerLine = (uint)atlasStride;
+                data.renderData.buffer = regionPtr;
+
+                NativeBridge.LottieAllocateRenderData(ref data.renderDataPtr);
+                Marshal.StructureToPtr(data.renderData, data.renderDataPtr, false);
+            }
         }
 
         private void ReleaseRenderData()
@@ -139,15 +105,19 @@ public sealed partial class Lottie
             if (!isSetup) return;
             isSetup = false;
             CompletePending();
-            renderData.Release(this);
+            for (int i = 0; i < renderData.Length; i++)
+            {
+                ref var data = ref renderData[i];
+                NativeBridge.LottieDisposeRenderData(ref data.renderDataPtr);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void DrawOneFrameSyncInternal(IntPtr animationWrapperIntPtr, int frameNumber)
         {
-            NativeBridge.LottieRenderImmediately(animationWrapperIntPtr, renderData.ptr, frameNumber, false);
+            NativeBridge.LottieRenderImmediately(animationWrapperIntPtr, renderData[atlas.textureIndex].renderDataPtr, frameNumber, false);
             animationWrapperPtr = animationWrapperIntPtr;
-            atlas.AddToBlit(this);
+            atlas.IsTextureDirty = true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -156,29 +126,29 @@ public sealed partial class Lottie
             if(hasPending) return;
             hasPending = true;
             animationWrapperPtr = animationWrapperIntPtr;
-            NativeBridge.LottieRenderCreateFutureAsync(animationWrapperIntPtr, renderData.ptr, frameNumber, false);
+            pendingRenderDataPrt = renderData[atlas.textureIndex].renderDataPtr;
+            NativeBridge.LottieRenderCreateFutureAsync(animationWrapperIntPtr, pendingRenderDataPrt, frameNumber, false);
         }
 
         public void FetchTexture()
         {
             if (!hasPending) return;
 
-            NativeBridge.LottieRenderGetFutureResult(animationWrapperPtr, renderData.ptr);
-            atlas.AddToBlit(this);
-
+            NativeBridge.LottieRenderGetFutureResult(animationWrapperPtr, pendingRenderDataPrt);
+            atlas.IsTextureDirty = true;
             hasPending = false;
         }
         
         private bool hasPending;
         private IntPtr animationWrapperPtr;
+        private IntPtr pendingRenderDataPrt;
         
         private void CompletePending()
         {
-            if (hasPending)
-            {
-                NativeBridge.LottieRenderGetFutureResult(animationWrapperPtr, renderData.ptr);
-                hasPending = false;
-            }
+            if (!hasPending) return;
+            
+            NativeBridge.LottieRenderGetFutureResult(animationWrapperPtr, pendingRenderDataPrt);
+            hasPending = false;
         }
     }
 }

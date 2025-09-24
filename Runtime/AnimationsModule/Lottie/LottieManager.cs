@@ -29,7 +29,7 @@ public abstract class BaseLottieManager
         {
             if (value == asset) return;
             asset = value;
-
+            
             if (!isAssetDirty)
             {
                 isAssetDirty = true;
@@ -241,7 +241,7 @@ public abstract class BaseLottieManager
     
     internal void Update()
     {
-        lottie.UpdateDeltaAsync(speed * Time.deltaTime);
+        lottie.UpdateDeltaAsync(speed * World.DeltaTime);
         if (IsEnded) UpdatePlayState();
     }
     

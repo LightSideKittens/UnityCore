@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using LSCore;
+using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -46,30 +47,32 @@ internal static class LottieUpdater
     static LottieUpdater()
     {
 #if UNITY_EDITOR
-        Selection.selectionChanged += OnSelectionChanged;
+        Selection.selectionChanged += RefreshUpdatingState;
         EditorApplication.update += OnEditorUpdate;
-        
-        void OnSelectionChanged()
-        {
-            EditorWorld.Updated -= OnUpdate;
-            if (Selection.gameObjects.Any(go => go && (
-                    go.GetComponent<LottieRenderer>() || go.GetComponent<LottieImage>())))
-            {
-                EditorWorld.Updated += OnUpdate;
-            }
-        }
 
         void OnEditorUpdate()
         {
             EditorApplication.update -= OnEditorUpdate;
-            OnSelectionChanged();
+            RefreshUpdatingState();
         }
 #endif
         World.PreRendering += OnPreRendering;
         World.CanvasPreRendering += OnCanvasPreRendering;
         World.Updated += OnUpdate;
     }
-    
+
+#if UNITY_EDITOR
+    internal static void RefreshUpdatingState()
+    {
+        EditorWorld.Updated -= OnUpdate;
+        if (Selection.gameObjects.Any(go => go && (
+                go.GetComponent<LottieRenderer>() || go.GetComponent<LottieImage>())))
+        {
+            EditorWorld.Updated += OnUpdate;
+        }
+    }
+#endif
+
     private static void OnPreRendering()
     {
         for (int i = 0; i < PreRendering.Length; i++)
