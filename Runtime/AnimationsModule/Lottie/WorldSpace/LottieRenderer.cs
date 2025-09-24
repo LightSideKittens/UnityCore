@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using LSCore;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -45,14 +46,13 @@ public sealed partial class LottieRenderer : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        if(World.IsBuilding) return;
         EditorApplication.update += Update;
 
         void Update()
         {
             EditorApplication.update -= Update;
             Init();
-            mr.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
-            mf.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
         }
     }
 #endif
@@ -79,7 +79,11 @@ public sealed partial class LottieRenderer : MonoBehaviour
             T ret;
 #if UNITY_EDITOR
             ret = GetComponent<T>();
-            if (ret == null) ret = gameObject.AddComponent<T>();
+            if (ret == null)
+            {
+                ret = gameObject.AddComponent<T>();
+            }
+            ret.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
 #else
             ret = gameObject.AddComponent<T>();
 #endif
