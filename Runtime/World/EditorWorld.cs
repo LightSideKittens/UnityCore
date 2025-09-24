@@ -10,6 +10,30 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class EditorWorld : MonoBehaviour
 {
+    private static float targetFps = -1;
+
+    public static float TargetFps
+    {
+        get => targetFps;
+        set
+        {
+            if (Mathf.Approximately(value, targetFps)) return;
+            next = 0;
+            targetFps = value;
+            if (targetFps == 0)
+            {
+                interval = double.PositiveInfinity;
+            }
+            else if (targetFps > 0)
+            { 
+                interval = 1.0 / targetFps;
+            }
+        }
+    }
+    
+    private static double interval;
+    private static double next;
+    
     private static EditorWorld instance;
     public static event Action Updated;
     
@@ -37,11 +61,22 @@ public class EditorWorld : MonoBehaviour
         }
     }
 
+    private static double lastUpdateTime;
+    
     private void Update()
     {
+        if (targetFps >= 0)
+        {
+            var now = EditorApplication.timeSinceStartup;
+            if (now < next) return;
+            next = now + interval;
+        }
+        
+        World.DeltaTime = (float)(EditorApplication.timeSinceStartup - lastUpdateTime);
         Updated.SafeInvoke();
+        lastUpdateTime = EditorApplication.timeSinceStartup;;
     }
-
+    
     private static void EditorUpdate()
     {
         if (Updated != null)
@@ -49,10 +84,9 @@ public class EditorWorld : MonoBehaviour
             ForceUpdate();
         }
     }
-
+    
     public static void ForceUpdate()
     {
-        SceneView.RepaintAll();
         EditorApplication.QueuePlayerLoopUpdate();
     }
     

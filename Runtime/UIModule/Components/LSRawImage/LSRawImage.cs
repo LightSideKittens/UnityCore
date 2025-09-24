@@ -69,8 +69,11 @@ namespace LSCore
 
             var mesh = workerMesh;
             fillMesh(mesh);
+            OnMeshFilled(mesh);
             canvasRenderer.SetMesh(mesh);
         }
+
+        protected virtual void OnMeshFilled(Mesh mesh){}
         
         protected void OnPopulateMesh(LSVertexHelper vh)
         {

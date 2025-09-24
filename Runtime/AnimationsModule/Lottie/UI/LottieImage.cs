@@ -4,7 +4,7 @@ using UnityEngine;
 [ExecuteAlways]
 public sealed class LottieImage : LSRawImage
 {
-    public LottieImageManager manager;
+    public LottieImageManager manager = new();
     
     public static LottieImage Create(BaseLottieAsset asset, RectTransform transform, float animationSpeed = 1f, bool loop = true)
     {
@@ -44,6 +44,9 @@ public sealed class LottieImage : LSRawImage
     protected override void Awake()
     {
         manager.renderer = this;
+#if UNITY_EDITOR
+        LottieUpdater.RefreshUpdatingState();
+#endif
         base.Awake();
     }
 
@@ -69,6 +72,9 @@ public sealed class LottieImage : LSRawImage
     {
         base.OnDestroy();
         manager.DestroyLottie();
+#if UNITY_EDITOR
+        LottieUpdater.RefreshUpdatingState();
+#endif
     }
 
     protected override void OnRectTransformDimensionsChange()
@@ -78,14 +84,42 @@ public sealed class LottieImage : LSRawImage
         manager.ResizeIfNeeded();
     }
 
+    private Lottie.Sprite sprite;
+
+    public Lottie.Sprite Sprite
+    {
+        get => sprite;
+        set
+        {
+            if(sprite == value) return;
+            if(sprite != null) sprite.TextureChanged -= OnTextureChanged;
+            sprite = value;
+            sprite.TextureChanged += OnTextureChanged;
+            SetVerticesDirty();
+        }
+    }
+    
     internal void OnSpriteChanged(Lottie.Sprite sprite)
     {
-        OnTextureChanged(sprite.Texture);
+        Sprite = sprite;
     }
 
-    private void OnTextureChanged(Texture texture)
+    protected override void OnMeshFilled(Mesh mesh)
     {
-        m_Texture = texture;
+        if (sprite != null)
+        {
+            var v = mesh.uv;
+            v[0] = sprite.UvMin;
+            v[1] = new Vector2(sprite.UvMin.x, sprite.UvMax.y);
+            v[2] = sprite.UvMax;
+            v[3] = new Vector2(sprite.UvMax.x, sprite.UvMin.y);
+            mesh.uv = v;
+        }
+    }
+
+    private void OnTextureChanged()
+    {
+        m_Texture = sprite.Texture;
         canvasRenderer.SetTexture(m_Texture);
     }
 }
