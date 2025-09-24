@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 using LSCore;
 using LSCore.Extensions;
 using Unity.Collections.LowLevel.Unsafe;
-using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using Object = UnityEngine.Object;

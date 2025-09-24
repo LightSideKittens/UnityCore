@@ -199,6 +199,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 39928807}
   m_CullTransparentMesh: 1
+--- !u!1 &48395538
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 48395541}
+  - component: {fileID: 48395540}
+  - component: {fileID: 48395539}
+  m_Layer: 0
+  m_Name: GameObject_53
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &48395539
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 48395538}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &48395540
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 48395538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: a9bd141de0d4f6a4185f04e2422aa025, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &48395541
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 48395538}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.5510001, y: -0.5019998, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &69406887
 GameObject:
   m_ObjectHideFlags: 0
@@ -216,7 +283,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!210 &69406888
 SortingGroup:
   m_ObjectHideFlags: 0
@@ -247,7 +314,7 @@ MonoBehaviour:
     loop: 1
     speed: 1
   rotateId: 2
-  pixelsPerUnit: 2048
+  pixelsPerUnit: 128
   flip: {x: 1, y: 0}
   color: {r: 1, g: 1, b: 1, a: 1}
   material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
@@ -261,6 +328,73 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.3310003, y: -2.272, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &123655998
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 123656001}
+  - component: {fileID: 123656000}
+  - component: {fileID: 123655999}
+  m_Layer: 0
+  m_Name: GameObject_39
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &123655999
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 123655998}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &123656000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 123655998}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: eb171e2b660d2234cb220957536730ca, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &123656001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 123655998}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.58500016, y: 4.389, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -300,7 +434,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -800.35}
+  m_AnchoredPosition: {x: 281.9, y: -800.3501}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &124794146
@@ -426,6 +560,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 146746225}
   m_CullTransparentMesh: 1
+--- !u!1 &152659638
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 152659641}
+  - component: {fileID: 152659640}
+  - component: {fileID: 152659639}
+  m_Layer: 0
+  m_Name: GameObject_60
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &152659639
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152659638}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &152659640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152659638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: c9e1e49ff7c4c9f4ab54577a5dc405c5, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &152659641
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152659638}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.541, y: -1.6679997, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &162042623
 GameObject:
   m_ObjectHideFlags: 0
@@ -506,6 +707,140 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 162042623}
   m_CullTransparentMesh: 1
+--- !u!1 &188354565
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 188354568}
+  - component: {fileID: 188354567}
+  - component: {fileID: 188354566}
+  m_Layer: 0
+  m_Name: GameObject_57
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &188354566
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 188354565}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &188354567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 188354565}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 0656bf8a8ba3c9e4ba85f79fbe32f5b4, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &188354568
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 188354565}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.877, y: -1.6949997, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &228663085
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 228663088}
+  - component: {fileID: 228663087}
+  - component: {fileID: 228663086}
+  m_Layer: 0
+  m_Name: GameObject_34
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &228663086
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 228663085}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &228663087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 228663085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 39d9fdc730ed58a4098c314105530260, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &228663088
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 228663085}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.937, y: 2.0349998, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &231931949
 GameObject:
   m_ObjectHideFlags: 0
@@ -1027,6 +1362,86 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 238454554}
   m_CullTransparentMesh: 1
+--- !u!1 &273536527
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 273536528}
+  - component: {fileID: 273536530}
+  - component: {fileID: 273536529}
+  m_Layer: 5
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &273536528
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 273536527}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1731245657}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &273536529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 273536527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 52181336be374ae49ca49991ceca1bc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieImage
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 0}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  preserveAspectRatio: 1
+  rotateId: 2
+  flip: {x: 1, y: 0}
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 73ae14a77c4779f42bfec4c2f3ab5e58, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+--- !u!222 &273536530
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 273536527}
+  m_CullTransparentMesh: 1
 --- !u!1 &274352022
 GameObject:
   m_ObjectHideFlags: 0
@@ -1285,6 +1700,140 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 351520145}
   m_CullTransparentMesh: 1
+--- !u!1 &360966514
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 360966517}
+  - component: {fileID: 360966516}
+  - component: {fileID: 360966515}
+  m_Layer: 0
+  m_Name: GameObject_29
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!210 &360966515
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 360966514}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &360966516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 360966514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &360966517
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 360966514}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.3310003, y: -2.272, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &396494147
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 396494150}
+  - component: {fileID: 396494149}
+  - component: {fileID: 396494148}
+  m_Layer: 0
+  m_Name: GameObject_50
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &396494148
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 396494147}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &396494149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 396494147}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: ef7f9ad9e8f457741b646e978b17cc45, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &396494150
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 396494147}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.903, y: -2.856, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &411724614
 GameObject:
   m_ObjectHideFlags: 0
@@ -1872,6 +2421,140 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &625158319
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 625158322}
+  - component: {fileID: 625158321}
+  - component: {fileID: 625158320}
+  m_Layer: 0
+  m_Name: GameObject_45
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &625158320
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 625158319}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &625158321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 625158319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 3b02fce60a5c9c54f90c206b8e41f61e, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &625158322
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 625158319}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.7959999, y: 4.3710003, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &655876281
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 655876284}
+  - component: {fileID: 655876283}
+  - component: {fileID: 655876282}
+  m_Layer: 0
+  m_Name: GameObject_30
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!210 &655876282
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 655876281}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &655876283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 655876281}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &655876284
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 655876281}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.3310003, y: -2.272, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &676015805
 GameObject:
   m_ObjectHideFlags: 0
@@ -2128,7 +2811,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -1686.91}
+  m_AnchoredPosition: {x: 281.9, y: -1686.9102}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &738630557
@@ -2208,7 +2891,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -1095.87}
+  m_AnchoredPosition: {x: 281.9, y: -1095.8701}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &753384852
@@ -2288,7 +2971,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 807, y: 1777.1}
+  m_AnchoredPosition: {x: 768, y: 1777.1}
   m_SizeDelta: {x: 606.5, y: 536.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &767314878
@@ -2368,7 +3051,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -209.31}
+  m_AnchoredPosition: {x: 281.9, y: -209.31006}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &773700590
@@ -2481,6 +3164,140 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &831818816
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 831818819}
+  - component: {fileID: 831818818}
+  - component: {fileID: 831818817}
+  m_Layer: 0
+  m_Name: GameObject_47
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &831818817
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 831818816}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &831818818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 831818816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 4d68c5f3fbf53a647bcb7d05da1b7e57, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &831818819
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 831818816}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.51699996, y: 4.293, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &869963091
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 869963094}
+  - component: {fileID: 869963093}
+  - component: {fileID: 869963092}
+  m_Layer: 0
+  m_Name: GameObject_41
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &869963092
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 869963091}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &869963093
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 869963091}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 3b72dcfcc17f86949a4f45b505cd8d16, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &869963094
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 869963091}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.827, y: 0.81500006, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &902595918
 GameObject:
   m_ObjectHideFlags: 0
@@ -2584,6 +3401,207 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &926090771
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 926090774}
+  - component: {fileID: 926090773}
+  - component: {fileID: 926090772}
+  m_Layer: 0
+  m_Name: GameObject_58
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &926090772
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 926090771}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &926090773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 926090771}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: c21c93544300b724380fba4c94bd7ef3, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &926090774
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 926090771}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.8610001, y: -4.0759997, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &962485735
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 962485738}
+  - component: {fileID: 962485737}
+  - component: {fileID: 962485736}
+  m_Layer: 0
+  m_Name: GameObject_32
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &962485736
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 962485735}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &962485737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 962485735}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 0eaba12884bae7a49b2edb08e219516f, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &962485738
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 962485735}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.89, y: 0.86, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &964581098
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 964581101}
+  - component: {fileID: 964581100}
+  - component: {fileID: 964581099}
+  m_Layer: 0
+  m_Name: GameObject_42
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &964581099
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 964581098}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &964581100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 964581098}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: f28e7a8a8c170c14488d97e82913e958, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &964581101
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 964581098}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.444, y: 2.0170002, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &974042376
 GameObject:
   m_ObjectHideFlags: 0
@@ -2646,6 +3664,140 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.28199995, y: 0.08699995, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &987563980
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 987563983}
+  - component: {fileID: 987563982}
+  - component: {fileID: 987563981}
+  m_Layer: 0
+  m_Name: GameObject_36
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &987563981
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 987563980}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &987563982
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 987563980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 0245464c7f9c8804884f3e1e284e83e2, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &987563983
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 987563980}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.8740001, y: 3.2409997, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1031832729
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1031832732}
+  - component: {fileID: 1031832731}
+  - component: {fileID: 1031832730}
+  m_Layer: 0
+  m_Name: GameObject_35
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1031832730
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031832729}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1031832731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031832729}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 15785fcdec25da2419e930dcbed7ee13, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1031832732
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031832729}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.6010001, y: 2.0079997, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -2718,6 +3870,140 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1074567027
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1074567030}
+  - component: {fileID: 1074567029}
+  - component: {fileID: 1074567028}
+  m_Layer: 0
+  m_Name: GameObject_63
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1074567028
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1074567027}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1074567029
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1074567027}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: c4aaea859e0ff8446954b2746d3d7bbe, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1074567030
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1074567027}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.8299999, y: -0.51999944, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1077476007
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1077476010}
+  - component: {fileID: 1077476009}
+  - component: {fileID: 1077476008}
+  m_Layer: 0
+  m_Name: GameObject_33
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1077476008
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1077476007}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1077476009
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1077476007}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 828c9b8e46c69c0449a5d80d96924cc5, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1077476010
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1077476007}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.554, y: 0.8329997, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1104548857
 GameObject:
   m_ObjectHideFlags: 0
@@ -2780,6 +4066,140 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.53900003, y: -0.538, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1113360835
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1113360838}
+  - component: {fileID: 1113360837}
+  - component: {fileID: 1113360836}
+  m_Layer: 0
+  m_Name: GameObject_55
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1113360836
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1113360835}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1113360837
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1113360835}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: dcaa3c41eafa09e449669e59a3e0cc4f, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1113360838
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1113360835}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.83, y: -0.58, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1114059085
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1114059088}
+  - component: {fileID: 1114059087}
+  - component: {fileID: 1114059086}
+  m_Layer: 0
+  m_Name: GameObject_24
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!210 &1114059086
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1114059085}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1114059087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1114059085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1114059088
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1114059085}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.3310003, y: -2.272, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -2887,6 +4307,140 @@ SortingGroup:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_SortAtRoot: 0
+--- !u!1 &1140734722
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1140734725}
+  - component: {fileID: 1140734724}
+  - component: {fileID: 1140734723}
+  m_Layer: 0
+  m_Name: GameObject_31
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!210 &1140734723
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1140734722}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1140734724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1140734722}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1140734725
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1140734722}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.3310003, y: -2.272, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1155664839
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1155664842}
+  - component: {fileID: 1155664841}
+  - component: {fileID: 1155664840}
+  m_Layer: 0
+  m_Name: GameObject_46
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1155664840
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1155664839}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1155664841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1155664839}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 97cc11a12cd98254993f49b4e82bd3ca, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1155664842
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1155664839}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.50699997, y: 3.223, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1156654217
 GameObject:
   m_ObjectHideFlags: 0
@@ -2921,7 +4475,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -652.58997}
+  m_AnchoredPosition: {x: 281.9, y: -652.58984}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1156654219
@@ -3114,6 +4668,140 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1200756745
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1200756748}
+  - component: {fileID: 1200756747}
+  - component: {fileID: 1200756746}
+  m_Layer: 0
+  m_Name: GameObject_56
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1200756746
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1200756745}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1200756747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1200756745}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: bcc590abbb957be44b7e765a5b4623a3, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1200756748
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1200756745}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.551, y: -0.5979995, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1228632687
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1228632690}
+  - component: {fileID: 1228632689}
+  - component: {fileID: 1228632688}
+  m_Layer: 0
+  m_Name: GameObject_48
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1228632688
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1228632687}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1228632689
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1228632687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 9abff6803df377443a0a8ed2670c092e, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1228632690
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1228632687}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.856, y: -4.0309997, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1312934696
 GameObject:
   m_ObjectHideFlags: 0
@@ -3228,7 +4916,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -1982.43}
+  m_AnchoredPosition: {x: 281.9, y: -1982.4302}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1325672717
@@ -3377,6 +5065,73 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: -20}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1392043432
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1392043435}
+  - component: {fileID: 1392043434}
+  - component: {fileID: 1392043433}
+  m_Layer: 0
+  m_Name: GameObject_61
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1392043433
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1392043432}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1392043434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1392043432}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: ecd8bc210525fbd498586d96f086aca1, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1392043435
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1392043432}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.5250001, y: -4.0489993, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1414984244
 GameObject:
   m_ObjectHideFlags: 0
@@ -3513,7 +5268,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -1391.39}
+  m_AnchoredPosition: {x: 281.9, y: -1391.3901}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1422116059
@@ -3621,6 +5376,73 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 1.226, y: 0.543, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1457253622
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1457253625}
+  - component: {fileID: 1457253624}
+  - component: {fileID: 1457253623}
+  m_Layer: 0
+  m_Name: GameObject_37
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1457253623
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1457253622}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1457253624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1457253622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: a7cf4948e8dde4048b58f9823acab840, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1457253625
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1457253622}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.5380001, y: 3.2139997, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -3740,7 +5562,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -1539.15}
+  m_AnchoredPosition: {x: 281.9, y: -1539.1499}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1479438143
@@ -4127,7 +5949,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -504.83}
+  m_AnchoredPosition: {x: 281.9, y: -504.83008}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1583550481
@@ -4173,6 +5995,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1583550479}
   m_CullTransparentMesh: 1
+--- !u!1 &1587314492
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1587314495}
+  - component: {fileID: 1587314494}
+  - component: {fileID: 1587314493}
+  m_Layer: 0
+  m_Name: GameObject_59
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1587314493
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1587314492}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1587314494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1587314492}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 74620015bb6ef2f4788d2505ad839945, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1587314495
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1587314492}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.814, y: -2.9009998, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1599488290
 GameObject:
   m_ObjectHideFlags: 0
@@ -4207,7 +6096,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -357.06998}
+  m_AnchoredPosition: {x: 281.9, y: -357.06982}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1599488292
@@ -4320,6 +6209,73 @@ SortingGroup:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_SortAtRoot: 0
+--- !u!1 &1616091699
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1616091702}
+  - component: {fileID: 1616091701}
+  - component: {fileID: 1616091700}
+  m_Layer: 0
+  m_Name: GameObject_38
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1616091700
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1616091699}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1616091701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1616091699}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 14ff4037aa09d2d49942ba575cf01bce, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1616091702
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1616091699}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.8640001, y: 4.311, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1619834892
 GameObject:
   m_ObjectHideFlags: 0
@@ -4405,7 +6361,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -1243.63}
+  m_AnchoredPosition: {x: 281.9, y: -1243.6299}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1644102125
@@ -4451,6 +6407,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1644102123}
   m_CullTransparentMesh: 1
+--- !u!1 &1658229967
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1658229970}
+  - component: {fileID: 1658229969}
+  - component: {fileID: 1658229968}
+  m_Layer: 0
+  m_Name: GameObject_40
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1658229968
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1658229967}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1658229969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1658229967}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 4140f42ff3ddcff4b90c5c7212211658, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1658229970
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1658229967}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.49100006, y: 0.84200037, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1704081787
 GameObject:
   m_ObjectHideFlags: 0
@@ -4656,6 +6679,73 @@ MonoBehaviour:
   messagePrefab: {fileID: 1414984245}
   content: {fileID: 298009168}
   decompressedAnimatedStickersPath: Duck
+--- !u!1 &1711017739
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1711017742}
+  - component: {fileID: 1711017741}
+  - component: {fileID: 1711017740}
+  m_Layer: 0
+  m_Name: GameObject_44
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1711017740
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1711017739}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1711017741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1711017739}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: e11cde73bfa41f94e8c5ab3c692072cf, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1711017742
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1711017739}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.8429999, y: 3.196, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1718465325
 GameObject:
   m_ObjectHideFlags: 0
@@ -4821,6 +6911,7 @@ RectTransform:
   - {fileID: 1414984245}
   - {fileID: 1706068839}
   - {fileID: 767314877}
+  - {fileID: 273536528}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -4907,6 +6998,73 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1774606012
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1774606015}
+  - component: {fileID: 1774606014}
+  - component: {fileID: 1774606013}
+  m_Layer: 0
+  m_Name: GameObject_52
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1774606013
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1774606012}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1774606014
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1774606012}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 2d0e6c1c9a1fa914682d81045d2ce6a5, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1774606015
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1774606012}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.50400007, y: -1.677, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5011,7 +7169,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -948.11}
+  m_AnchoredPosition: {x: 281.9, y: -948.10986}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1782725567
@@ -5057,6 +7215,140 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1782725565}
   m_CullTransparentMesh: 1
+--- !u!1 &1798372139
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1798372142}
+  - component: {fileID: 1798372141}
+  - component: {fileID: 1798372140}
+  m_Layer: 0
+  m_Name: GameObject_26
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!210 &1798372140
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798372139}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1798372141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798372139}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1798372142
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1798372139}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.3310003, y: -2.272, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1819093430
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1819093433}
+  - component: {fileID: 1819093432}
+  - component: {fileID: 1819093431}
+  m_Layer: 0
+  m_Name: GameObject_28
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!210 &1819093431
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819093430}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1819093432
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819093430}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1819093433
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1819093430}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.3310003, y: -2.272, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1828390511
 GameObject:
   m_ObjectHideFlags: 0
@@ -5119,6 +7411,140 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.45700002, y: 1.2909999, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1831392052
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1831392055}
+  - component: {fileID: 1831392054}
+  - component: {fileID: 1831392053}
+  m_Layer: 0
+  m_Name: GameObject_54
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &1831392053
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1831392052}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1831392054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1831392052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 1d9a2c8cf8e132b4cb2693ede2acd167, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1831392055
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1831392052}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.84, y: -1.6500001, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1855279062
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1855279065}
+  - component: {fileID: 1855279064}
+  - component: {fileID: 1855279063}
+  m_Layer: 0
+  m_Name: GameObject_27
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!210 &1855279063
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1855279062}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1855279064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1855279062}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1855279065
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1855279062}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.3310003, y: -2.272, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -5250,6 +7676,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1931726944}
   m_CullTransparentMesh: 1
+--- !u!1 &1941626076
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1941626079}
+  - component: {fileID: 1941626078}
+  - component: {fileID: 1941626077}
+  m_Layer: 0
+  m_Name: GameObject_25
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!210 &1941626077
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1941626076}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &1941626078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1941626076}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 077803a3e04886f408f3e668f05b317b, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 128
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &1941626079
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1941626076}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.3310003, y: -2.272, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1970686599
 GameObject:
   m_ObjectHideFlags: 0
@@ -5330,6 +7823,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1970686599}
   m_CullTransparentMesh: 1
+--- !u!1 &2027439524
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2027439527}
+  - component: {fileID: 2027439526}
+  - component: {fileID: 2027439525}
+  m_Layer: 0
+  m_Name: GameObject_43
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &2027439525
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2027439524}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &2027439526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2027439524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: d3fcb77e45370dd4d9e6716a61799255, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &2027439527
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2027439524}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.78, y: 1.99, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2058227726
 GameObject:
   m_ObjectHideFlags: 0
@@ -5431,7 +7991,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 281.9, y: -1834.67}
+  m_AnchoredPosition: {x: 281.9, y: -1834.6699}
   m_SizeDelta: {x: 563.8, y: 123.1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2058767938
@@ -5557,6 +8117,73 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2059307193}
   m_CullTransparentMesh: 1
+--- !u!1 &2071784374
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2071784377}
+  - component: {fileID: 2071784376}
+  - component: {fileID: 2071784375}
+  m_Layer: 0
+  m_Name: GameObject_49
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &2071784375
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2071784374}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &2071784376
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2071784374}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 7ba04df5fef63a34dbf60deb24928d22, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &2071784377
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2071784374}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.52, y: -4.058, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2075072790
 GameObject:
   m_ObjectHideFlags: 0
@@ -5643,6 +8270,140 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2087940454
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2087940457}
+  - component: {fileID: 2087940456}
+  - component: {fileID: 2087940455}
+  m_Layer: 0
+  m_Name: GameObject_51
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &2087940455
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2087940454}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &2087940456
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2087940454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: bce76a1246b51b2408707eea856b0d88, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &2087940457
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2087940454}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.56700003, y: -2.8830001, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2102686330
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2102686333}
+  - component: {fileID: 2102686332}
+  - component: {fileID: 2102686331}
+  m_Layer: 0
+  m_Name: GameObject_62
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!210 &2102686331
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2102686330}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
+--- !u!114 &2102686332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2102686330}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb11eb289928410ba9a7abb0cb3ead62, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.Lottie::LottieRenderer
+  manager:
+    asset: {fileID: 7767725731367759840, guid: 8f9140f9581ceee46a5eb0eb460f80bd, type: 3}
+    shouldPlay: 1
+    loop: 1
+    speed: 1
+  rotateId: 2
+  pixelsPerUnit: 512
+  flip: {x: 1, y: 0}
+  color: {r: 1, g: 1, b: 1, a: 1}
+  material: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+--- !u!4 &2102686333
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2102686330}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.47800004, y: -2.8739996, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -5837,4 +8598,44 @@ SceneRoots:
   - {fileID: 796591401}
   - {fileID: 1186919017}
   - {fileID: 69406890}
+  - {fileID: 1941626079}
+  - {fileID: 1798372142}
+  - {fileID: 1855279065}
+  - {fileID: 360966517}
+  - {fileID: 655876284}
+  - {fileID: 1819093433}
+  - {fileID: 1114059088}
+  - {fileID: 1140734725}
+  - {fileID: 962485738}
+  - {fileID: 1077476010}
+  - {fileID: 228663088}
+  - {fileID: 1031832732}
+  - {fileID: 1457253625}
+  - {fileID: 123656001}
+  - {fileID: 987563983}
+  - {fileID: 1616091702}
+  - {fileID: 831818819}
+  - {fileID: 1711017742}
+  - {fileID: 869963094}
+  - {fileID: 2027439527}
+  - {fileID: 1155664842}
+  - {fileID: 1658229970}
+  - {fileID: 964581101}
+  - {fileID: 625158322}
+  - {fileID: 1113360838}
+  - {fileID: 1774606015}
+  - {fileID: 2071784377}
+  - {fileID: 2087940457}
+  - {fileID: 1831392055}
+  - {fileID: 1228632690}
+  - {fileID: 396494150}
+  - {fileID: 48395541}
+  - {fileID: 1074567030}
+  - {fileID: 2102686333}
+  - {fileID: 1392043435}
+  - {fileID: 152659641}
+  - {fileID: 1587314495}
+  - {fileID: 926090774}
+  - {fileID: 188354568}
+  - {fileID: 1200756748}
   - {fileID: 902595920}
