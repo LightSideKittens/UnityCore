@@ -52,6 +52,7 @@ public sealed partial class LottieRenderer : MonoBehaviour
 #if UNITY_EDITOR
     private void OnValidate()
     {
+        if(World.IsBuilding) return;
         gameObject = base.gameObject;
         EditorApplication.update += Update;
 
@@ -59,11 +60,10 @@ public sealed partial class LottieRenderer : MonoBehaviour
         {
             EditorApplication.update -= Update;
             Init();
-            mr.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
-            mf.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
         }
     }
 #endif
+    
 
     private void Init()
     {
@@ -78,7 +78,13 @@ public sealed partial class LottieRenderer : MonoBehaviour
         mpb ??= new MaterialPropertyBlock();
 
         if (quad == null) BuildUnitQuad();
-        if (unlitMat == null) unlitMat = new Material(Shader.Find("Sprites/Default"));
+        if (unlitMat == null)
+        {
+            unlitMat = new Material(Shader.Find("Sprites/Default"));
+#if UNITY_EDITOR
+            unlitMat.hideFlags = HideFlags.DontSave;
+#endif
+        }
         if (!Material) Material = unlitMat;
         if(mr.sharedMaterial == null) mr.sharedMaterial = Material;
 
@@ -87,7 +93,11 @@ public sealed partial class LottieRenderer : MonoBehaviour
             T ret;
 #if UNITY_EDITOR
             ret = GetComponent<T>();
-            if (ret == null) ret = gameObject.AddComponent<T>();
+            if (ret == null)
+            {
+                ret = gameObject.AddComponent<T>();
+                ret.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
+            }
 #else
             ret = gameObject.AddComponent<T>();
 #endif
