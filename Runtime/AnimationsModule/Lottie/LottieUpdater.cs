@@ -2,6 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using LSCore;
+
+#if !UNITY_EDITOR
+using UnityEngine;
+#endif
+
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -16,7 +21,17 @@ internal static class LottieUpdater
     public static Action[] CanvasPreRendering = new Action[4];
     public static event Action TextureApplyTime;
     
+#if UNITY_EDITOR
     static LottieUpdater()
+    {
+        Init();
+    }
+#endif
+    
+#if !UNITY_EDITOR
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+#endif
+    private static void Init()
     {
 #if UNITY_EDITOR
         Selection.selectionChanged += RefreshUpdatingState;
@@ -34,7 +49,7 @@ internal static class LottieUpdater
         PreRendering[2] += OnTextureApplyTime;
         CanvasPreRendering[2] += OnTextureApplyTime;
     }
-
+    
 #if UNITY_EDITOR
     internal static void RefreshUpdatingState()
     {

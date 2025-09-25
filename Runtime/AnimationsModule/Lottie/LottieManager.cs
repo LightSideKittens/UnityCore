@@ -33,7 +33,7 @@ public abstract class BaseLottieManager
             if (!isAssetDirty)
             {
                 isAssetDirty = true;
-                SubOnPreRender(ForceUpdateAsset, 0);
+                QueuePreRenderCall(ForceUpdateAsset, 0);
             }
         }
     }
@@ -130,19 +130,19 @@ public abstract class BaseLottieManager
         if (!isUpdatePlayStateQueued)
         {
             isUpdatePlayStateQueued = true;
-            SubOnPreRender(ForceUpdatePlayState, 0);
+            QueuePreRenderCall(ForceUpdatePlayState, 0);
         }
     }
     
-    protected abstract void SubOnPreRender(Action action, int order);
-    protected abstract void UnSubOnPreRender(Action action, int order);
+    protected abstract void QueuePreRenderCall(Action action, int order);
+    protected abstract void DequeuePreRenderCall(Action action, int order);
 
     private void ForceUpdateAsset()
     {
         if (isAssetDirty)
         {
             isAssetDirty = false;
-            UnSubOnPreRender(ForceUpdateAsset, 0);
+            DequeuePreRenderCall(ForceUpdateAsset, 0);
         }
         
         DestroyLottie();
@@ -154,7 +154,7 @@ public abstract class BaseLottieManager
         if (isUpdatePlayStateQueued)
         {
             isUpdatePlayStateQueued = false;
-            UnSubOnPreRender(ForceUpdatePlayState, 0);
+            DequeuePreRenderCall(ForceUpdatePlayState, 0);
         }
         
         var lastIsPlaying = IsPlaying;
@@ -173,17 +173,17 @@ public abstract class BaseLottieManager
             if (lottie == null)
             {
                 CreateLottie();
-                SubOnPreRender(Draw, 1);
+                QueuePreRenderCall(Draw, 1);
 
                 void Draw()
                 {
-                    UnSubOnPreRender(Draw, 1);
+                    DequeuePreRenderCall(Draw, 1);
                     lottie.DrawOneFrame(0);
-                    SubOnPreRender(UpdateAsync, 3);
+                    QueuePreRenderCall(UpdateAsync, 3);
 
                     void UpdateAsync()
                     {
-                        UnSubOnPreRender(UpdateAsync, 3);
+                        DequeuePreRenderCall(UpdateAsync, 3);
                         lottie.UpdateDeltaAsync(speed * Time.deltaTime);
                     }
                 }
@@ -224,8 +224,8 @@ public abstract class BaseLottieManager
         isAssetDirty = false;
         isUpdatePlayStateQueued = false;
         IsPlaying = false;
-        UnSubOnPreRender(ForceUpdatePlayState, 0);
-        UnSubOnPreRender(ForceUpdateAsset, 0);
+        DequeuePreRenderCall(ForceUpdatePlayState, 0);
+        DequeuePreRenderCall(ForceUpdateAsset, 0);
         if (lottie == null) return;
         lottie.DisallowToRender();
         LottieUpdater.managers.Remove(this);
@@ -249,8 +249,11 @@ public abstract class BaseLottieManager
     public void OnBeforeSerialize() { }
     public void OnAfterDeserialize()
     {
-        IsPlaying = false;
-        isUpdatePlayStateQueued = false;
+        if (lottie == null)
+        {
+            IsPlaying = false;
+            isUpdatePlayStateQueued = false;
+        }
     }
 #endif
 }
@@ -262,8 +265,8 @@ public class LottieImageManager : BaseLottieManager
 
     public override bool IsVisible => renderer.IsVisible;
     protected override uint Size_Internal => renderer.Size;
-    protected override void SubOnPreRender(Action action, int order) => LottieUpdater.CanvasPreRendering[order] += action;
-    protected override void UnSubOnPreRender(Action action, int order) => LottieUpdater.CanvasPreRendering[order] -= action;
+    protected override void QueuePreRenderCall(Action action, int order) => LottieUpdater.CanvasPreRendering[order] += action;
+    protected override void DequeuePreRenderCall(Action action, int order) => LottieUpdater.CanvasPreRendering[order] -= action;
 
     protected override void Tick() { }
     public override void SetupByAsset() => asset.SetupImage(renderer);
@@ -277,8 +280,8 @@ public class LottieRendererManager : BaseLottieManager
     
     public override bool IsVisible => renderer.IsVisible;
     protected override uint Size_Internal => renderer.Size;
-    protected override void SubOnPreRender(Action action, int order) => LottieUpdater.PreRendering[order] += action;
-    protected override void UnSubOnPreRender(Action action, int order) => LottieUpdater.PreRendering[order] -= action;
+    protected override void QueuePreRenderCall(Action action, int order) => LottieUpdater.PreRendering[order] += action;
+    protected override void DequeuePreRenderCall(Action action, int order) => LottieUpdater.PreRendering[order] -= action;
 
     protected override void Tick() => renderer.TryRefresh();
     public override void SetupByAsset() => asset.SetupRenderer(renderer);

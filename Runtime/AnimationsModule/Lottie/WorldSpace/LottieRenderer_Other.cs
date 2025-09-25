@@ -108,7 +108,7 @@ public sealed partial class LottieRenderer
     
     private void BuildUnitQuad()
     {
-        quad ??= new Mesh { name = "LottieWorld_UnitQuad" };
+        if (quad == null) quad = new Mesh { name = "LottieWorld_UnitQuad" };
 
         var vh = vertexHelper;
         var v = UIVertex.simpleVert;
