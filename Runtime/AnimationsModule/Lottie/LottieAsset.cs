@@ -1,11 +1,28 @@
 ﻿using LSCore;
+using LSCore.Extensions;
 using UnityEngine;
 
 public abstract class BaseLottieAsset : ScriptableObject
 {
     public abstract string Json { get; }
-    public virtual LSImage.RotationMode Rotation => LSImage.RotationMode.None;
-    public virtual (bool x, bool y) Flip => default;
+    public LSImage.RotationMode rotation;
+    public Vector2Int flip;
+    [SerializeField] private float aspect = float.NegativeInfinity;
+
+    public float Aspect
+    {
+        get
+        {
+            if (float.IsNegativeInfinity(aspect))
+            {
+                var size = Lottie.GetSize(Json);
+                aspect = (float)size.x /  size.y;
+            }
+            
+            return aspect;
+        }
+    }
+    
     protected internal virtual bool IsCompressed => false;
     protected internal abstract string CompressedExtension { get; }
     protected internal abstract string DecompressedExtension { get; }
@@ -14,15 +31,15 @@ public abstract class BaseLottieAsset : ScriptableObject
     {
         image.PreserveAspectRatio = true;
         image.manager.asset = this;
-        image.Rotation = Rotation;
-        image.Flip = Flip;
+        image.Rotation = rotation;
+        image.Flip = (flip.x.ToBool(),  flip.y.ToBool());
     }
     
     public void SetupRenderer(LottieRenderer renderer)
     {
         renderer.manager.asset = this;
-        renderer.Rotation = Rotation;
-        renderer.Flip = Flip;
+        renderer.Rotation = rotation;
+        renderer.Flip = (flip.x.ToBool(),  flip.y.ToBool());
     }
 }
 

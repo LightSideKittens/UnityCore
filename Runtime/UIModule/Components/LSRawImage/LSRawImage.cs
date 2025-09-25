@@ -73,17 +73,11 @@ namespace LSCore
             canvasRenderer.SetMesh(mesh);
         }
 
-        protected virtual void OnMeshFilled(Mesh mesh){}
-        
-        protected void OnPopulateMesh(LSVertexHelper vh)
+        public Rect MeshRect
         {
-            Texture tex = mainTexture;
-            vh.Clear();
-            if(tex == null) return;
-            
-            if (preserveAspectRatio)
+            get
             {
-                float texAspect = tex.AspectRatio();
+                float texAspect = Aspect;
                 Rect r = GetPixelAdjustedRect();
         
                 Vector2 pivot = rectTransform.pivot;
@@ -108,12 +102,27 @@ namespace LSCore
                 float yMin = offsetY;
                 float xMax = offsetX + newWidth;
                 float yMax = offsetY + newHeight;
+                return new Rect(xMin, yMin, xMax - xMin, yMax - yMin);
+            }
+        }
         
+        protected virtual float Aspect => mainTexture.AspectRatio();
+        protected virtual void OnMeshFilled(Mesh mesh){}
+        
+        protected void OnPopulateMesh(LSVertexHelper vh)
+        {
+            Texture tex = mainTexture;
+            vh.Clear();
+            if(tex == null) return;
+            
+            if (preserveAspectRatio)
+            {
+                var meshRect = MeshRect;
                 Color32 color32 = color;
-                vh.AddVert(new Vector3(xMin, yMin), color32, new Vector2(0, 0));
-                vh.AddVert(new Vector3(xMin, yMax), color32, new Vector2(0, 1));
-                vh.AddVert(new Vector3(xMax, yMax), color32, new Vector2(1, 1));
-                vh.AddVert(new Vector3(xMax, yMin), color32, new Vector2(1, 0));
+                vh.AddVert(new Vector3(meshRect.xMin, meshRect.yMin), color32, new Vector2(0, 0));
+                vh.AddVert(new Vector3(meshRect.xMin, meshRect.yMax), color32, new Vector2(0, 1));
+                vh.AddVert(new Vector3(meshRect.xMax, meshRect.yMax), color32, new Vector2(1, 1));
+                vh.AddVert(new Vector3(meshRect.xMax, meshRect.yMin), color32, new Vector2(1, 0));
         
                 vh.AddTriangle(0, 1, 2);
                 vh.AddTriangle(2, 3, 0);

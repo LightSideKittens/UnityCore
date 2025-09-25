@@ -13,32 +13,60 @@ public sealed partial class Lottie
             public LottieRenderData renderData;
             public IntPtr renderDataPtr;
         }
-        
+
         public Texture2D Texture => atlas.Texture;
         private Atlas atlas;
-        
+
         private Vector2 uvMin;
         private Vector2 uvMax;
 
         private Vector2Int atlasSize;
         private Vector2Int size;
         private Vector2Int pixelStart;
-        
+
         private RenderData[] renderData = new RenderData[2];
 
         private bool isSetup;
-        public Vector2 UvMin => uvMin; 
+        public Vector2 UvMin => uvMin;
         public Vector2 UvMax => uvMax;
-        
+        public float Aspect { get; set; }
+
         public event Action TextureChanged;
-        
-        public Sprite(Atlas atlas, Vector2 uvMin, Vector2 uvMax)
+
+        public Sprite(Atlas atlas, RectInt rect, float aspect)
         {
+            Aspect = aspect;
             this.atlas = atlas;
-            this.uvMin = uvMin;
-            this.uvMax = uvMax;
+            atlasSize = atlas.size;
+
+            var rAspect = (float)rect.width / rect.height;
+            float fitW, fitH;
+
+            if (rAspect > aspect)
+            {
+                fitH = rect.height;
+                fitW = fitH * aspect;
+            }
+            else
+            {
+                fitW = rect.width;
+                fitH = fitW / aspect;
+            }
+
+            var x = rect.x + (rect.width - fitW) * 0.5f;
+            var y = rect.y + (rect.height - fitH) * 0.5f;
+
+            uvMin = new Vector2(x / atlasSize.x, y / atlasSize.y);
+            uvMax = new Vector2((x + fitW) / atlasSize.x, (y + fitH) / atlasSize.y);
+
             atlas.TextureChanged += OnTextureChanged;
             Init();
+        }
+
+        public Sprite(Lottie lottie) : this(Atlas.Get(lottie.maxSide), new RectInt(Vector2Int.zero, new Vector2Int(lottie.maxSide, lottie.maxSide)),
+            lottie.aspect)
+        {
+            
         }
 
         private void OnTextureChanged()
@@ -48,7 +76,6 @@ public sealed partial class Lottie
 
         private void Init()
         {
-            atlasSize = atlas.size;
             var atlasWidth = atlasSize.x;
             var atlasHeight = atlasSize.y;
 
@@ -75,14 +102,14 @@ public sealed partial class Lottie
             atlas.TextureChanged -= OnTextureChanged;
             atlas = null;
         }
-        
+
         private unsafe void SetupRenderData()
         {
             if (isSetup) return;
             isSetup = true;
             const int bpp = 4;
 
-            for (int i = 0; i < renderData.Length; i++)
+            for (var i = 0; i < renderData.Length; i++)
             {
                 ref var data = ref renderData[i];
                 var basePtr = (byte*)atlas.textures[i].GetRawTextureData<byte>().GetUnsafePtr();
@@ -105,7 +132,7 @@ public sealed partial class Lottie
             if (!isSetup) return;
             isSetup = false;
             CompletePending();
-            for (int i = 0; i < renderData.Length; i++)
+            for (var i = 0; i < renderData.Length; i++)
             {
                 ref var data = ref renderData[i];
                 NativeBridge.LottieDisposeRenderData(ref data.renderDataPtr);
@@ -115,7 +142,8 @@ public sealed partial class Lottie
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void DrawOneFrameSyncInternal(IntPtr animationWrapperIntPtr, int frameNumber)
         {
-            NativeBridge.LottieRenderImmediately(animationWrapperIntPtr, renderData[atlas.textureIndex].renderDataPtr, frameNumber, false);
+            NativeBridge.LottieRenderImmediately(animationWrapperIntPtr, renderData[atlas.textureIndex].renderDataPtr,
+                frameNumber, true);
             animationWrapperPtr = animationWrapperIntPtr;
             atlas.IsTextureDirty = true;
         }
@@ -123,11 +151,11 @@ public sealed partial class Lottie
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void DrawOneFrameAsyncPrepareInternal(IntPtr animationWrapperIntPtr, int frameNumber)
         {
-            if(hasPending) return;
+            if (hasPending) return;
             hasPending = true;
             animationWrapperPtr = animationWrapperIntPtr;
             pendingRenderDataPrt = renderData[atlas.textureIndex].renderDataPtr;
-            NativeBridge.LottieRenderCreateFutureAsync(animationWrapperIntPtr, pendingRenderDataPrt, frameNumber, false);
+            NativeBridge.LottieRenderCreateFutureAsync(animationWrapperIntPtr, pendingRenderDataPrt, frameNumber, true);
         }
 
         public void FetchTexture()
@@ -138,15 +166,15 @@ public sealed partial class Lottie
             atlas.IsTextureDirty = true;
             hasPending = false;
         }
-        
+
         private bool hasPending;
         private IntPtr animationWrapperPtr;
         private IntPtr pendingRenderDataPrt;
-        
+
         private void CompletePending()
         {
             if (!hasPending) return;
-            
+
             NativeBridge.LottieRenderGetFutureResult(animationWrapperPtr, pendingRenderDataPrt);
             hasPending = false;
         }

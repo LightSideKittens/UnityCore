@@ -173,17 +173,14 @@ public sealed partial class Lottie
             foreach (var pool in atlasPools.Values) pool.ReleaseAll();
             pending.FakeClear();
             if (animations == null || animations.Count == 0) return;
-
-            var defUvMin = Vector2.zero;
-            var defUvMax = Vector2.one;
             
             for (int i = 0; i < animations.Count; i++)
             {
                 var lottie = animations[i];
-                lottie.Spritee = new Sprite(Get(lottie.size.x), defUvMin, defUvMax);
+                lottie.Spritee = new Sprite(lottie);
             }
             
-            return;
+            /*return;
 
             var counts = new Dictionary<int, int>(8);
             int n = animations.Count;
@@ -262,7 +259,7 @@ public sealed partial class Lottie
 
                 var sprite = new Sprite(sc.pages[pageIndex], uvMin, uvMax);
                 lottie.Spritee = sprite;
-            }
+            }*/
         }
 
     }

@@ -183,7 +183,7 @@ public sealed partial class LottieRenderer : MonoBehaviour
             if(sprite != null) sprite.TextureChanged -= OnTextureChanged;
             sprite = value;
             sprite.TextureChanged += OnTextureChanged;
-            UpdateUv();
+            verticesIsDirty = true;
         }
     }
     

@@ -25,8 +25,8 @@ public sealed class LottieImage : LSRawImage
     {
         get
         {
-            var size = rectTransform.rect.size;
-            var min = (int)(Mathf.Min(size.x, size.y) * 0.5f);
+            var size = MeshRect.size;
+            var min = (int)(Mathf.Max(size.x, size.y) * 0.5f);
             min = Mathf.ClosestPowerOfTwo(min);
             var newSize = (uint)Mathf.Clamp(min, 64, 2048);
             return newSize;
@@ -102,6 +102,20 @@ public sealed class LottieImage : LSRawImage
     internal void OnSpriteChanged(Lottie.Sprite sprite)
     {
         Sprite = sprite;
+    }
+
+    protected override float Aspect
+    {
+        get
+        {
+            if (manager.asset != null)
+            {
+                var size = Lottie.GetSize(manager.asset.Json);
+                return (float)size.x / size.y;;
+            }
+            
+            return base.Aspect;
+        }
     }
 
     protected override void OnMeshFilled(Mesh mesh)

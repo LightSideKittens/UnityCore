@@ -1,7 +1,6 @@
 ﻿#if UNITY_EDITOR
-using System;
 using System.IO;
-using DG.Tweening.Plugins.Core.PathCore;
+using LSCore;
 using UnityEditor;
 using UnityEditor.AssetImporters;
 using UnityEngine;
@@ -12,8 +11,6 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
 {
     private float speed = 1;
     private bool loop = true;
-    private int rotateId;
-    private (bool x, bool y) flip;
 
     private Lottie anim;
     private bool playing;
@@ -21,19 +18,32 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
 
     private BaseLottieAsset asset;
     private string assetPath;
-    private string cachedJson;
+
+    private SerializedProperty _rotationProp;
+    private SerializedProperty _flipProp;
+
+    public LSImage.RotationMode rotation
+    {
+        get => (LSImage.RotationMode)_rotationProp.enumValueIndex;
+        set => _rotationProp.enumValueIndex = (int)value;
+    }
+
+    public Vector2Int flip
+    {
+        get => (Vector2Int)_flipProp.vector2IntValue;
+        set => _flipProp.vector2IntValue = (Vector2Int)value;
+    }
 
     public override void OnEnable()
     {
         base.OnEnable();
-        
         assetPath   = ((AssetImporter)target).assetPath;
         asset = AssetDatabase.LoadAssetAtPath<BaseLottieAsset>(assetPath);
-        cachedJson  = asset.Json;
-        rotateId = (int)asset.Rotation;
-        flip = asset.Flip;
         playing = true;
         lastUpdateTime = EditorApplication.timeSinceStartup;
+
+        _rotationProp = serializedObject.FindProperty("rotation");
+        _flipProp = serializedObject.FindProperty("flip");
     }
 
     public override void OnDisable()
@@ -51,8 +61,17 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
     
     public override void OnInspectorGUI()
     {
+        serializedObject.Update();
+
         DrawFlip();
         DrawRotateButton();
+
+        if (serializedObject.ApplyModifiedProperties())
+        {
+            ((AssetImporter)target).SaveAndReimport();
+            asset = AssetDatabase.LoadAssetAtPath<BaseLottieAsset>(assetPath);
+        }
+
         if (asset.IsCompressed)
         {
             if (GUILayout.Button("Decompress"))
@@ -84,18 +103,20 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         GUILayout.Space(10);
         GUILayout.BeginHorizontal();
         GUILayout.Label("Flip", GUILayout.ExpandWidth(true));
-        GUI.color = new Color(1, 1, 1, flip.x ? 1f : 0.5f);
-        if (GUILayout.Button(flip.x ? "X ❤️" : "X", GUILayout.Height(30)))
-        {
-            flip.x = !flip.x;
-        }
-        GUI.color = new Color(1, 1, 1, flip.y ? 1f : 0.5f);
-        
-        if (GUILayout.Button(flip.y ? "Y ❤️" : "Y", GUILayout.Height(30)))
-        {
-            flip.y = !flip.y;
-        }
+
+        var v = _flipProp.vector2IntValue;
+
+        GUI.color = new Color(1, 1, 1, v.x == 1 ? 1f : 0.5f);
+        if (GUILayout.Button(v.x == 1 ? "X ❤️" : "X", GUILayout.Height(30)))
+            v.x = v.x * -1 + 1;
+
+        GUI.color = new Color(1, 1, 1, v.y == 1 ? 1f : 0.5f);
+        if (GUILayout.Button(v.y == 1 ? "Y ❤️" : "Y", GUILayout.Height(30)))
+            v.y = v.y * -1 + 1;
+
         GUI.color = new Color(1, 1, 1, 1);
+        _flipProp.vector2IntValue = v;
+
         GUILayout.EndHorizontal();
     }
     
@@ -104,14 +125,13 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         GUILayout.Space(10);
         GUILayout.BeginHorizontal();
 
+        var cur = _rotationProp.enumValueIndex;
         for (var i = 0; i < 4; i++)
         {
             var targetAngle = i * 90;
-            var text = rotateId == i ? $"{targetAngle}° ❤️" : $"{targetAngle}°";
-            if (GUILayout.Button(text, GUILayout.Height(30)) && rotateId != i)
-            {
-                rotateId = i;
-            }
+            var text = cur == i ? $"{targetAngle}° ❤️" : $"{targetAngle}°";
+            if (GUILayout.Button(text, GUILayout.Height(30)) && cur != i)
+                _rotationProp.enumValueIndex = i;
         }
 
         GUILayout.EndHorizontal();
@@ -129,7 +149,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
             return;
         }
 
-        var angleDeg = rotateId * 90;
+        var angleDeg = (int)rotation * 90;
         var swap = angleDeg is 90 or 270;
 
         var drawRect = r;
@@ -139,7 +159,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
             drawRect.center = r.center;
         }
 
-        var scale = new Vector2(flip.x ? -1 : 1, flip.y ? -1 : 1);
+        var scale = new Vector2(flip.x == 1 ? -1 : 1, flip.y == 1 ? -1 : 1);
         var prev = GUI.matrix;
         GUIUtility.RotateAroundPivot(angleDeg, r.center);
         GUIUtility.ScaleAroundPivot(scale, r.center);
@@ -209,7 +229,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         if(anim != null) return;
 
         anim = new Lottie(
-            cachedJson,
+            asset,
             string.Empty,
             1024, false);
         
