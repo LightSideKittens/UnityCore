@@ -67,7 +67,7 @@ public sealed partial class Lottie
     private IntPtr animationWrapperIntPtr;
     private LottieAnimationWrapper animationWrapper;
     
-    internal Vector2Int size;
+    internal int maxSide;
     private float timeSinceLastRenderCall;
     private float frameDelta;
     public bool hasRendererData;
@@ -77,14 +77,13 @@ public sealed partial class Lottie
     private readonly Action<int> drawOneFrameSyncCached;
     private readonly Action<int> drawOneFrameAsyncPrepareCached;
     
-    public Lottie(string jsonData, string resourcesPath, uint pixelsPerAspectUnit, bool canPack)
+    public Lottie(BaseLottieAsset asset, string resourcesPath, uint maxSide, bool canPack)
     {
+        this.maxSide = (int)maxSide;
         this.canPack = canPack;
-        var s = GetSize(jsonData);
-        aspect = (float)s.x / s.y;
-        SetupSize(pixelsPerAspectUnit);
+        aspect = asset.Aspect;
         
-        animationWrapper = NativeBridge.LoadFromData(jsonData, resourcesPath, out animationWrapperIntPtr);
+        animationWrapper = NativeBridge.LoadFromData(asset.Json, resourcesPath, out animationWrapperIntPtr);
         frameDelta = (float)animationWrapper.duration / animationWrapper.totalFrames;
 
         AllowToRender();
@@ -153,18 +152,10 @@ public sealed partial class Lottie
         sprite.DrawOneFrameAsyncPrepareInternal(animationWrapperIntPtr, frameNumber);
     }
     
-    private void SetupSize(uint pixelsPerAspectUnit)
+    public void Resize(uint maxSide)
     {
-        var width = (int)(pixelsPerAspectUnit * aspect);
-        var height = (int)(pixelsPerAspectUnit / aspect);
-        size = new Vector2Int(width, height);
-    }
-    
-    public void Resize(uint pixelsPerAspectUnit)
-    {
-        var lastSize = size;
-        SetupSize(pixelsPerAspectUnit);
-        if(lastSize == size) return;
+        if(this.maxSide == maxSide) return;
+        this.maxSide = (int)maxSide;
         
         if (canPack)
         {
@@ -172,7 +163,7 @@ public sealed partial class Lottie
         }
         else
         {
-            Spritee = new Sprite(Atlas.Get(size.x), Vector2.zero, Vector2.one);
+            Spritee = new Sprite(this);
         }
     }
     
@@ -188,7 +179,7 @@ public sealed partial class Lottie
         }
         else
         {
-            Spritee = new Sprite(Atlas.Get(size.x), Vector2.zero, Vector2.one);
+            Spritee = new Sprite(this);
         }
     }
 

@@ -24,6 +24,10 @@ public sealed class TelegramLottieScriptedImporter : LottieScriptedImporter
             asset = lottie;
         }
         
+        var baseAsset = (BaseLottieAsset)asset;
+        baseAsset.rotation = rotation;
+        baseAsset.flip = flip;
+        
         asset.name = Path.GetFileNameWithoutExtension(ctx.assetPath);
         ctx.AddObjectToAsset("TelegramLottieAsset", asset);
         ctx.SetMainObject(asset);

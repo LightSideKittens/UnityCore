@@ -1,10 +1,7 @@
-﻿using LSCore;
-using UnityEngine;
+﻿using UnityEngine;
 
 public abstract class BaseTelegramLottieAsset : BaseLottieAsset
 {
-    public override LSImage.RotationMode Rotation => LSImage.RotationMode.D180;
-    public override (bool x, bool y) Flip => (true, false);
     protected override string CompressedExtension => ".tgs";
     protected override string DecompressedExtension => ".tglottie";
     

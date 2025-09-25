@@ -213,7 +213,7 @@ public abstract class BaseLottieManager
     
     private void CreateLottie()
     {
-        lottie = new Lottie(asset.Json, string.Empty, Size, true);
+        lottie = new Lottie(asset, string.Empty, Size, true);
         lottie.SpriteChanged += OnSpriteChanged;
         lottie.loop = Loop;
         SetupByAsset();

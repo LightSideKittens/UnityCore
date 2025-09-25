@@ -113,17 +113,47 @@ public sealed partial class LottieRenderer
         var vh = vertexHelper;
         var v = UIVertex.simpleVert;
         v.color = color;
+        Vector2 uvMin, uvMax;
+        float x = 1; float y = 1;
         
-        v.position = new Vector3(-0.5f, -0.5f, 0f);
+        if (sprite == null)
+        {
+            uvMin = Vector2.zero;
+            uvMax = Vector2.one;
+        }
+        else
+        {
+            uvMin = Sprite.UvMin;
+            uvMax = Sprite.UvMax;
+            if (sprite.Aspect > 1)
+            {
+                x = 1;
+                y = 1 / sprite.Aspect;
+            }
+            else
+            {
+                y = 1;
+                x = 1 / sprite.Aspect;
+            }
+        }
+
+        x /= 2;
+        y /= 2;
+        
+        v.position = new Vector3(-x, -y, 0f);
+        v.uv0 = uvMin;
         vh.AddVert(v);
 
-        v.position = new Vector3(-0.5f, 0.5f, 0f);
+        v.position = new Vector3(-x, y, 0f);
+        v.uv0 = new Vector2(uvMin.x, uvMax.y);
         vh.AddVert(v);
 
-        v.position = new Vector3(0.5f, 0.5f, 0f);
+        v.position = new Vector3(x, y, 0f);
+        v.uv0 = uvMax;
         vh.AddVert(v);
 
-        v.position = new Vector3(0.5f, -0.5f, 0f);
+        v.position = new Vector3(x, -y, 0f);
+        v.uv0 = new Vector2(uvMax.x, uvMin.y);
         vh.AddVert(v);
 
         vh.AddTriangle(0, 1, 2);
@@ -131,30 +161,9 @@ public sealed partial class LottieRenderer
 
         RotateMesh(vh);
         vh.FillMesh(quad);
-        UpdateUv();
         vh.Clear();
         quad.RecalculateBounds();
         mf.sharedMesh = quad;
-    }
-
-    private void UpdateUv()
-    {
-        var v = quad.uv;
-        if (sprite != null)
-        {
-            v[0] = sprite.UvMin;
-            v[1] = new Vector2(sprite.UvMin.x, sprite.UvMax.y);
-            v[2] = sprite.UvMax;
-            v[3] = new Vector2(sprite.UvMax.x, sprite.UvMin.y);
-        }
-        else
-        {
-            v[0] = new Vector2(0, 0);
-            v[1] = new Vector2(0, 1);
-            v[2] = new Vector2(1, 1);
-            v[3] = new Vector2(1, 0);
-        }
-        quad.uv = v;
     }
 
     public delegate void RotateAction(ref Vector3 value, in Vector2 center);
