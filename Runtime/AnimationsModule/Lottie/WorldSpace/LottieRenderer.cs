@@ -68,13 +68,13 @@ public sealed partial class LottieRenderer : MonoBehaviour
     private void Init()
     {
         manager.renderer = this;
-        mr ??= GetComp<MeshRenderer>();
+        mr = GetComp<MeshRenderer>();
         mr.allowOcclusionWhenDynamic = false;
         mr.lightProbeUsage = LightProbeUsage.Off;
         mr.reflectionProbeUsage = ReflectionProbeUsage.Off;
         mr.shadowCastingMode = ShadowCastingMode.Off;
         mr.receiveShadows = false;
-        mf ??= GetComp<MeshFilter>();
+        mf = GetComp<MeshFilter>();
         mpb ??= new MaterialPropertyBlock();
 
         if (quad == null) BuildUnitQuad();
