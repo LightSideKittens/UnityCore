@@ -15,7 +15,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
     private int rotateId;
     private (bool x, bool y) flip;
 
-    private LottieAnimation anim;
+    private Lottie anim;
     private bool playing;
     private double lastUpdateTime;
 
@@ -123,7 +123,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         
         EnsureAnimationForPreviewRect();
         EditorUpdate();
-        if (anim?.Texture == null)
+        if (toDraw == null)
         {
             EditorGUI.DropShadowLabel(r, "No texture from LottieAnimation.");
             return;
@@ -143,7 +143,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         var prev = GUI.matrix;
         GUIUtility.RotateAroundPivot(angleDeg, r.center);
         GUIUtility.ScaleAroundPivot(scale, r.center);
-        EditorGUI.DrawPreviewTexture(drawRect, anim.Texture, null, ScaleMode.ScaleToFit);
+        EditorGUI.DrawPreviewTexture(drawRect, toDraw, null, ScaleMode.ScaleToFit);
         GUI.matrix = prev;
     }
 
@@ -160,6 +160,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         {
             playing = false;
             anim?.DrawOneFrame(0);
+            LottieUpdater.ForceApplyTexture();
         }
         
         loop = GUILayout.Toggle(loop, "Loop", EditorStyles.miniButton);
@@ -180,6 +181,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
             {
                 playing = false;
                 anim.DrawOneFrame(newFrame);
+                LottieUpdater.ForceApplyTexture();
             }
         }
     }
@@ -193,26 +195,32 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         lastUpdateTime = t;
         
         anim.UpdateDelta(delta * speed);
-
+        LottieUpdater.ForceApplyTexture();
         if (!loop && anim.currentFrame >= anim.TotalFramesCount - 1)
             playing = false;
 
         Repaint();
     }
+    
+    private Texture2D toDraw;
 
     private void EnsureAnimationForPreviewRect()
     {
         if(anim != null) return;
 
-        anim = new LottieAnimation(
+        anim = new Lottie(
             cachedJson,
             string.Empty,
-            1024);
+            1024, false);
         
         var t = EditorApplication.timeSinceStartup;
         lastUpdateTime = t;
         anim.DrawOneFrame(0);
-        
+        anim.Spritee.TextureChanged += () =>
+        {
+            toDraw = anim.Spritee.Texture;
+        };
+        LottieUpdater.ForceApplyTexture();
         lastUpdateTime = EditorApplication.timeSinceStartup;
     }
 

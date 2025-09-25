@@ -10,7 +10,7 @@ public sealed partial class LottieRenderer : MonoBehaviour
     private const int MinSize = 64;
     private const int MaxSize = 2048;
 
-    public LottieRendererManager manager;
+    public LottieRendererManager manager = new();
     
     private bool isVisible;
 
@@ -37,16 +37,23 @@ public sealed partial class LottieRenderer : MonoBehaviour
             return newSize;
         }
     }
+    
+    private new GameObject gameObject;
 
     private void Awake()
     {
+        gameObject = base.gameObject;
         Init();
+#if UNITY_EDITOR
+        LottieUpdater.RefreshUpdatingState();
+#endif
     }
 
 #if UNITY_EDITOR
     private void OnValidate()
     {
         if(World.IsBuilding) return;
+        gameObject = base.gameObject;
         EditorApplication.update += Update;
 
         void Update()
@@ -56,21 +63,28 @@ public sealed partial class LottieRenderer : MonoBehaviour
         }
     }
 #endif
+    
 
     private void Init()
     {
         manager.renderer = this;
-        mr ??= GetComp<MeshRenderer>();
+        mr = GetComp<MeshRenderer>();
         mr.allowOcclusionWhenDynamic = false;
         mr.lightProbeUsage = LightProbeUsage.Off;
         mr.reflectionProbeUsage = ReflectionProbeUsage.Off;
         mr.shadowCastingMode = ShadowCastingMode.Off;
         mr.receiveShadows = false;
-        mf ??= GetComp<MeshFilter>();
+        mf = GetComp<MeshFilter>();
         mpb ??= new MaterialPropertyBlock();
 
         if (quad == null) BuildUnitQuad();
-        if (unlitMat == null) unlitMat = new Material(Shader.Find("Sprites/Default"));
+        if (unlitMat == null)
+        {
+            unlitMat = new Material(Shader.Find("Sprites/Default"));
+#if UNITY_EDITOR
+            unlitMat.hideFlags = HideFlags.DontSave;
+#endif
+        }
         if (!Material) Material = unlitMat;
         if(mr.sharedMaterial == null) mr.sharedMaterial = Material;
 
@@ -82,8 +96,8 @@ public sealed partial class LottieRenderer : MonoBehaviour
             if (ret == null)
             {
                 ret = gameObject.AddComponent<T>();
+                ret.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
             }
-            ret.hideFlags = HideFlags.HideAndDontSave | HideFlags.HideInInspector;
 #else
             ret = gameObject.AddComponent<T>();
 #endif
@@ -101,7 +115,43 @@ public sealed partial class LottieRenderer : MonoBehaviour
     
 
     private void OnDisable() => manager.UpdatePlayState();
-    private void OnDestroy() => manager.DestroyLottie();
+    private void OnDestroy()
+    {
+        manager.DestroyLottie();
+        LottieUpdater.PreRendering[0] += DestroyDeps;
+        void DestroyDeps()
+        {
+            LottieUpdater.PreRendering[0] -= DestroyDeps;
+            if (gameObject)
+            {
+#if UNITY_EDITOR
+                if (World.IsEditMode)
+                {
+                    EditorApplication.update += OnUpdate;
+
+                    void OnUpdate()
+                    {
+                        EditorApplication.update -= OnUpdate;
+                        DestroyImmediate(mr);
+                        DestroyImmediate(mf);
+                    }
+                }
+                else
+                {
+                    Destroy(mr);
+                    Destroy(mf);
+                }
+#else
+                Destroy(mr);
+                Destroy(mf);
+#endif
+            }
+        }
+#if UNITY_EDITOR
+        LottieUpdater.RefreshUpdatingState();
+#endif
+    }
+
     private void OnBecameVisible() => IsVisible = true;
     private void OnBecameInvisible() => IsVisible = false;
 
@@ -122,17 +172,33 @@ public sealed partial class LottieRenderer : MonoBehaviour
         manager.ResizeIfNeeded();
     }
 
-    internal void OnTextureSwapped(Texture tex)
+    private Lottie.Sprite sprite;
+
+    public Lottie.Sprite Sprite
+    {
+        get => sprite;
+        set
+        {
+            if(sprite == value) return;
+            if(sprite != null) sprite.TextureChanged -= OnTextureChanged;
+            sprite = value;
+            sprite.TextureChanged += OnTextureChanged;
+            UpdateUv();
+        }
+    }
+    
+    internal void OnSpriteChanged(Lottie.Sprite sprite)
     {
 #if UNITY_EDITOR
-        if (tex == null) return;
+        if (sprite.Texture == null) return;
 #endif
-        mr.GetPropertyBlock(mpb);
-        mpb.SetTexture(mainTexId, tex);
-        mr.SetPropertyBlock(mpb);
+        Sprite = sprite;
     }
 
-#if UNITY_EDITOR
-
-#endif
+    private void OnTextureChanged()
+    {
+        mr.GetPropertyBlock(mpb);
+        mpb.SetTexture(mainTexId, sprite.Texture);
+        mr.SetPropertyBlock(mpb);
+    }
 }
