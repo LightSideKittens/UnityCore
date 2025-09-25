@@ -28,6 +28,7 @@ namespace LSCore
         private static bool isCreated;
         private static World instance;
         public static float FrameRate => 1f / Time.unscaledDeltaTime;
+        public static float DeltaTime { get; set; }
 
 #if UNITY_EDITOR
         public class BuildHooks : BuildPlayerProcessor
@@ -89,13 +90,23 @@ namespace LSCore
             };
 #endif
         }
+
+        private static int renderedFrame = -1;
         
-        private static void OnPreRendering(Camera _) => PreRendering?.Invoke();
+        private static void OnPreRendering(Camera _)
+        {
+            var frame = Time.frameCount;
+            if(renderedFrame == frame) return;
+            renderedFrame = frame;
+            PreRendering?.Invoke();
+        }
+
         private static void OnCanvasPreRendering() => CanvasPreRendering?.Invoke();
         
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
         {
+            renderedFrame = -1;
             Application.targetFrameRate = 120;
             DOTween.SetTweensCapacity(1000, 1000);
 #if UNITY_EDITOR
@@ -113,6 +124,7 @@ namespace LSCore
 
         private void Update()
         {
+            DeltaTime = Time.deltaTime;
             Updated?.Invoke();
             CallActions();
         }
