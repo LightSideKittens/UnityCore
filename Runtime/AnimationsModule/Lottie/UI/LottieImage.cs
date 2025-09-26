@@ -1,5 +1,7 @@
+using System.Reflection;
 using LSCore;
 using UnityEngine;
+using UnityEngine.UI;
 
 [ExecuteAlways]
 public sealed class LottieImage : LSRawImage
@@ -131,9 +133,10 @@ public sealed class LottieImage : LSRawImage
         }
     }
 
+    private static readonly FieldInfo textureField = typeof(RawImage).GetField("m_Texture", BindingFlags.NonPublic | BindingFlags.Instance);
     private void OnTextureChanged()
     {
-        m_Texture = sprite.Texture;
-        canvasRenderer.SetTexture(m_Texture);
+        textureField.SetValue(this, sprite.Texture);
+        canvasRenderer.SetTexture(textureField.GetValue(this) as Texture2D);
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Threading;
-using DG.Tweening;
 using LSCore.Extensions;
 using UnityEngine;
 
@@ -108,7 +107,6 @@ namespace LSCore
         {
             renderedFrame = -1;
             Application.targetFrameRate = 120;
-            DOTween.SetTweensCapacity(1000, 1000);
 #if UNITY_EDITOR
             Creating.SafeInvoke();
 #endif
@@ -119,7 +117,6 @@ namespace LSCore
             IsPlaying = true;
             Created.SafeInvoke();
 #endif
-            Burger.Log("[World] Created");
         }
 
         private void Update()
@@ -136,12 +133,10 @@ namespace LSCore
         
         private void OnDestroy()
         {
-            Burger.Log("[World] OnDestroy");
 #if UNITY_EDITOR
             IsPlaying = false;
             Destroyed.SafeInvoke();
 #endif
-            Burger.logToFile = false;
         }
 
         private void OnApplicationPause(bool pauseStatus)

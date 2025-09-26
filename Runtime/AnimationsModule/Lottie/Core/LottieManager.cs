@@ -248,36 +248,34 @@ public abstract class BaseLottieManager
             isUpdatePlayStateQueued = false;
             DequeuePreRenderCall(ForceUpdatePlayState, 0);
         }
-        else
+        
+        if (lastAsset != asset)
         {
-            if (lastAsset != asset)
-            {
-                var l = lastAsset;
-                lastAsset = asset;
-                asset = asset == null ? l : null;
-                Asset = lastAsset;
-            }
+            var l = lastAsset;
+            lastAsset = asset;
+            asset = asset == null ? l : null;
+            Asset = lastAsset;
+        }
 
-            if (lastShouldPlay != shouldPlay)
-            {
-                lastShouldPlay = shouldPlay;
-                shouldPlay = !shouldPlay;
-                ShouldPlay = lastShouldPlay;
-            }
+        if (lastShouldPlay != shouldPlay)
+        {
+            lastShouldPlay = shouldPlay;
+            shouldPlay = !shouldPlay;
+            ShouldPlay = lastShouldPlay;
+        }
 
-            if (lastLoop != loop)
-            {
-                lastLoop = loop;
-                loop = !loop;
-                Loop = lastLoop;
-            }
+        if (lastLoop != loop)
+        {
+            lastLoop = loop;
+            loop = !loop;
+            Loop = lastLoop;
+        }
 
-            if (!Mathf.Approximately(lastSpeed, speed))
-            {
-                lastSpeed = speed;
-                speed = -1;
-                Speed = lastSpeed;
-            }
+        if (!Mathf.Approximately(lastSpeed, speed))
+        {
+            lastSpeed = speed;
+            speed = -1;
+            Speed = lastSpeed;
         }
     }
 #endif
