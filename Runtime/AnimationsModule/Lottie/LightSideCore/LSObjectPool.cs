@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace LSCore
 {
@@ -103,7 +104,7 @@ namespace LSCore
             }
             else
             {
-                Burger.Warning($"{GetType().Name} shouldStoreActive is false, but you are trying to ReleaseAll. Set shouldStoreActive as true");
+                Debug.LogWarning($"{GetType().Name} shouldStoreActive is false, but you are trying to ReleaseAll. Set shouldStoreActive as true");
             }
         }
 
