@@ -1,15 +1,15 @@
 ﻿using System;
 using LSCore;
-using Sirenix.OdinInspector;
 using UnityEngine;
-
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 [Serializable]
 public abstract class BaseLottieManager
 #if UNITY_EDITOR
     : ISerializationCallbackReceiver
 #endif
 {
-    [ShowInInspector]
     public Texture Texture
     {
         get
@@ -20,8 +20,7 @@ public abstract class BaseLottieManager
     }
 
     private bool isAssetDirty;
-    [HideInInspector] public BaseLottieAsset asset;
-    [ShowInInspector]
+    public BaseLottieAsset asset;
     public BaseLottieAsset Asset
     {
         get => asset;
@@ -38,8 +37,7 @@ public abstract class BaseLottieManager
         }
     }
     
-    [SerializeField] [HideInInspector] private bool shouldPlay = true;
-    [ShowInInspector]
+    [SerializeField] private bool shouldPlay = true;
     public bool ShouldPlay
     {
         get => shouldPlay;
@@ -51,8 +49,7 @@ public abstract class BaseLottieManager
         }
     }
     
-    [SerializeField] [HideInInspector] private bool loop = true;
-    [ShowInInspector]
+    [SerializeField] private bool loop = true;
     public bool Loop
     {
         get => loop;
@@ -68,8 +65,7 @@ public abstract class BaseLottieManager
         }
     }
 
-    [SerializeField] [HideInInspector] private float speed = 1f;
-    [ShowInInspector]
+    [SerializeField] private float speed = 1f;
     public float Speed
     {
         get => speed;
@@ -95,21 +91,6 @@ public abstract class BaseLottieManager
     public abstract bool IsVisible { get; }
     
     private uint lastSize;
-
-    [ShowInInspector]
-    internal Vector2Int TextureSize
-    {
-        get
-        {
-            var t = Texture;
-            if (t != null)
-            {
-                return new Vector2Int(t.width, t.height);
-            }
-
-            return Vector2Int.zero;
-        }
-    }
     
     public uint Size
     {
@@ -246,13 +227,57 @@ public abstract class BaseLottieManager
     }
     
 #if UNITY_EDITOR
-    public void OnBeforeSerialize() { }
+    private BaseLottieAsset lastAsset;
+    private bool lastShouldPlay;
+    private bool lastLoop;
+    private float lastSpeed;
+    
+    public void OnBeforeSerialize()
+    {
+        lastAsset = asset;
+        lastShouldPlay = shouldPlay;
+        lastSpeed = speed;
+        lastLoop = loop;
+    }
+    
     public void OnAfterDeserialize()
     {
         if (lottie == null)
         {
             IsPlaying = false;
             isUpdatePlayStateQueued = false;
+            DequeuePreRenderCall(ForceUpdatePlayState, 0);
+        }
+        else
+        {
+            if (lastAsset != asset)
+            {
+                var l = lastAsset;
+                lastAsset = asset;
+                asset = asset == null ? l : null;
+                Asset = lastAsset;
+            }
+
+            if (lastShouldPlay != shouldPlay)
+            {
+                lastShouldPlay = shouldPlay;
+                shouldPlay = !shouldPlay;
+                ShouldPlay = lastShouldPlay;
+            }
+
+            if (lastLoop != loop)
+            {
+                lastLoop = loop;
+                loop = !loop;
+                Loop = lastLoop;
+            }
+
+            if (!Mathf.Approximately(lastSpeed, speed))
+            {
+                lastSpeed = speed;
+                speed = -1;
+                Speed = lastSpeed;
+            }
         }
     }
 #endif
@@ -287,3 +312,45 @@ public class LottieRendererManager : BaseLottieManager
     public override void SetupByAsset() => asset.SetupRenderer(renderer);
     protected override void OnSpriteChanged(Lottie.Sprite sprite) => renderer.OnSpriteChanged(sprite);
 }
+
+
+#if UNITY_EDITOR
+[CustomPropertyDrawer(typeof(BaseLottieManager), true)]
+public class BaseLottieManagerDrawer : PropertyDrawer
+{
+    public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+    {
+        var iter = property.Copy();
+        var end  = iter.GetEndProperty();
+
+        var y = position.y;
+        bool enterChildren = true;
+
+        while (iter.NextVisible(enterChildren) && !SerializedProperty.EqualContents(iter, end))
+        {
+            float h = EditorGUI.GetPropertyHeight(iter, true);
+            var r = new Rect(position.x, y, position.width, h);
+            EditorGUI.PropertyField(r, iter, true);
+            y += h + EditorGUIUtility.standardVerticalSpacing;
+            enterChildren = false;
+        }
+    }
+
+    public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+    {
+        var iter = property.Copy();
+        var end  = iter.GetEndProperty();
+
+        float h = 0f;
+        bool enterChildren = true;
+
+        while (iter.NextVisible(enterChildren) && !SerializedProperty.EqualContents(iter, end))
+        {
+            h += EditorGUI.GetPropertyHeight(iter, true) + EditorGUIUtility.standardVerticalSpacing;
+            enterChildren = false;
+        }
+        
+        return Mathf.Max(0, h - EditorGUIUtility.standardVerticalSpacing);
+    }
+}
+#endif

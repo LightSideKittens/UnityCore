@@ -1,3 +1,4 @@
+/*
 using System;
 using UnityEngine;
 using WTelegram;
@@ -313,7 +314,7 @@ public class TelegramGroupManager : MonoBehaviour
                 rawImage.transform.SetParent(content);
             });
             
-            videoPlayer.Play();*/
+            videoPlayer.Play();#1#
         }
         
         Debug.Log($"Custom emoji saved to {localPath}");
@@ -364,3 +365,4 @@ public class TelegramGroupManager : MonoBehaviour
         client?.Dispose();
     }
 }
+*/
