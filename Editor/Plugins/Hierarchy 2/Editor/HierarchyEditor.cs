@@ -899,7 +899,7 @@ namespace Hierarchy2
             for (int i = 0; i < components.Count; ++i)
             {
                 var comp = components[i];
-                if ((comp.hideFlags & (HideFlags.HideInInspector | HideFlags.HideInHierarchy)) != 0)
+                if (comp == null || (comp.hideFlags & (HideFlags.HideInInspector | HideFlags.HideInHierarchy)) != 0)
                 {
                     components.RemoveAt(i);
                     i--;

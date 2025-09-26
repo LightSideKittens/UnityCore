@@ -58,18 +58,18 @@ namespace LSCore
             set
             {
                 parent = value;
-                Got -= OnGetWithParent;
-                Got -= OnGet;
+                CreatedOrGot -= OnGetWithParent;
+                CreatedOrGot -= OnGet;
                 
                 if (value != null)
                 {
                     createFunc = InstantiatePrefabWithParent;
-                    Got += OnGetWithParent;
+                    CreatedOrGot += OnGetWithParent;
                 }
                 else
                 {
                     createFunc = InstantiatePrefab;
-                    Got += OnGet;
+                    CreatedOrGot += OnGet;
                 }
             }
         }

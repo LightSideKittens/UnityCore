@@ -51,12 +51,12 @@ namespace LSCore.Editor
             lineMaterial.hideFlags = HideFlags.HideAndDontSave;
             spriteMaterial.hideFlags = HideFlags.HideAndDontSave;
             lines.Created += AddGameObject;
-            lines.Got += line => line.enabled = true;
+            lines.CreatedOrGot += line => line.enabled = true;
             lines.Released += line => line.enabled = false;
             releasePools += lines.ReleaseAll;
 
             sprites.Created += AddGameObject;
-            sprites.Got += sprite => sprite.enabled = true;
+            sprites.CreatedOrGot += sprite => sprite.enabled = true;
             sprites.Released += sprite => sprite.enabled = false;
             releasePools += sprites.ReleaseAll;
         }
