@@ -13,7 +13,7 @@ namespace LSCore.Editor
             static Canvas()
             {
                 texts.Created += AddCanvasGameObject;
-                texts.Got += text => text.GetComponent<MeshRenderer>().enabled = true;
+                texts.CreatedOrGot += text => text.GetComponent<MeshRenderer>().enabled = true;
                 texts.Released += text => text.GetComponent<MeshRenderer>().enabled = false;
                 releasePools += texts.ReleaseAll;
             }

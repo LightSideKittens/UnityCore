@@ -52,7 +52,7 @@ namespace LSCore.BattleModule
         {
             var pool = Unit.CreatePool(prefab);
             pool.Created += InitUnit;
-            pool.Got += OnUnitGot;
+            pool.CreatedOrGot += OnUnitGot;
             pool.Released += OnUnitReleased;
             pool.Removed += OnUnitReleased;
             return pool;

@@ -151,20 +151,50 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
 
         var angleDeg = (int)rotation * 90;
         var swap = angleDeg is 90 or 270;
-
+        var sprite = anim.Spritee;
+        
         var drawRect = r;
         if (swap)
         {
             drawRect = new Rect(0, 0, r.height, r.width);
             drawRect.center = r.center;
         }
-
+        
+        
+        var aspect = sprite.Aspect;
+        drawRect = GetScaleToFitRect(drawRect, aspect);
+        var uvMin = sprite.UvMin;
+        var uvMax = sprite.UvMax;
+        
+        var uv = Rect.MinMaxRect(uvMin.x, uvMin.y, uvMax.x, uvMax.y);
         var scale = new Vector2(flip.x == 1 ? -1 : 1, flip.y == 1 ? -1 : 1);
         var prev = GUI.matrix;
         GUIUtility.RotateAroundPivot(angleDeg, r.center);
         GUIUtility.ScaleAroundPivot(scale, r.center);
-        EditorGUI.DrawPreviewTexture(drawRect, toDraw, null, ScaleMode.ScaleToFit);
+        GUI.DrawTextureWithTexCoords(drawRect, toDraw, uv, true);
         GUI.matrix = prev;
+    }
+    
+    
+    private static Rect GetScaleToFitRect(Rect container, float contentAspect)
+    {
+        if (contentAspect <= 0f) return container;
+
+        float containerAspect = container.width / container.height;
+        if (containerAspect > contentAspect)
+        {
+            float h = container.height;
+            float w = h * contentAspect;
+            float x = container.x + (container.width - w) * 0.5f;
+            return new Rect(x, container.y, w, h);
+        }
+        else
+        {
+            float w = container.width;
+            float h = w / contentAspect;
+            float y = container.y + (container.height - h) * 0.5f;
+            return new Rect(container.x, y, w, h);
+        }
     }
 
     public override void OnPreviewSettings()

@@ -10,6 +10,7 @@ namespace LSCore
         public readonly HashSet<T> activeSet;
         protected Func<T> createFunc;
         public event Action<T> Created;
+        public event Action<T> CreatedOrGot;
         public event Action<T> Got;
         public event Action<T> Released;
         public event Action<T> Removed;
@@ -30,7 +31,7 @@ namespace LSCore
             if (shouldStoreActive)
             {
                 activeSet = new HashSet<T>(capacity);
-                Got += AddActive;
+                CreatedOrGot += AddActive;
                 Released += RemoveActive;
             }
         }
@@ -53,9 +54,10 @@ namespace LSCore
                 enumerator.MoveNext();
                 obj = enumerator.Current;
                 releasedSet.Remove(obj);
+                Got?.Invoke(obj);
             }
             
-            Got?.Invoke(obj);
+            CreatedOrGot?.Invoke(obj);
             return obj;
         }
         

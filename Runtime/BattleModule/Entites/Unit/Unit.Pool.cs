@@ -26,7 +26,7 @@ namespace LSCore.BattleModule
             if (pools.TryGetValue(prefab.Id, out var pool)) return pool;
             
             pool = new OnOffPool<Unit>(prefab);
-            pool.Got += OnGot;
+            pool.CreatedOrGot += OnGot;
             pool.Released += OnReleased;
             pool.Removed += OnRemoved;
             pools.Add(prefab.Id, pool);
