@@ -105,7 +105,7 @@ namespace LSCore
         {
             Rect totalRect = EditorGUILayout.GetControlRect();
             EditorGUI.BeginProperty(totalRect, lbl, prop);
-            prop.vector2IntValue = DrawFlipProperty(lbl, prop.vector2IntValue);
+            prop.vector2IntValue = DrawFlipProperty(totalRect, lbl, prop.vector2IntValue);
             EditorGUI.EndProperty();
         }
 
@@ -115,17 +115,16 @@ namespace LSCore
             var lbl = new GUIContent("Rotation");
             Rect totalRect = EditorGUILayout.GetControlRect();
             EditorGUI.BeginProperty(totalRect, lbl, rotateId);
+            EditorGUI.LabelField(totalRect, lbl);
             rotateId.intValue = DrawRotateButton(rotateId.intValue);
             EditorGUI.EndProperty();
         }
 
-        public static Vector2Int DrawFlipProperty(GUIContent lbl, Vector2Int flip)
+        public static Vector2Int DrawFlipProperty(Rect rect, GUIContent lbl, Vector2Int flip)
         {
             EditorGUILayout.BeginHorizontal();
-            
-            Rect totalRect = EditorGUILayout.GetControlRect();
 
-            Rect fieldRect = EditorGUI.PrefixLabel(totalRect, lbl);
+            Rect fieldRect = EditorGUI.PrefixLabel(rect, lbl);
             
             GUI.Label(fieldRect.TakeFromLeft(18), "X");
             var xFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), flip.x == 1);
@@ -138,19 +137,27 @@ namespace LSCore
         public static int DrawRotateButton(int id)
         {
             var totalRect = EditorGUILayout.GetControlRect(GUILayout.Height(30));
-            GUILayout.BeginHorizontal();
 
+            var text = string.Empty;
             for (int i = 0; i < 4; i++)
             {
                 var targetAngle = i * 90;
-                var text = id == i ? $"{targetAngle}° ❤️" : $"{targetAngle}°";
+                if (id == i)
+                {
+                    text = $"{targetAngle}° ❤️";
+                }
+                else
+                {
+                    text = $"{targetAngle}°";
+                    GUI.color = new Color(1, 1, 1, 0.75f);
+                }
                 if (GUI.Button(totalRect.Split(i, 4), text) && id!= i)
                 {
                     id = i;
                 }
+                GUI.color = Color.white;
             }
-
-            GUILayout.EndHorizontal();
+            
             return id;
         }
         

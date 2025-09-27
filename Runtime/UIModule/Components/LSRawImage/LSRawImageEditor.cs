@@ -43,8 +43,6 @@ namespace LSCore
             MaskableControlsGUI();
             SetShowNativeSize(m_Texture.objectReferenceValue != null, false);
             NativeSizeButtonGUI();
-
-            serializedObject.ApplyModifiedProperties();
             
             EditorGUILayout.PropertyField(preserveAspectRatio);
             LSImageEditor.DrawFlipProperty(new GUIContent("Flip"), flip);

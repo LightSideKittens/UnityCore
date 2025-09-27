@@ -261,7 +261,8 @@ public sealed partial class LottieRenderer
 
     private Vector2Int DrawFlip(Vector2Int value, GUIContent label)
     {
-        return LSImageEditor.DrawFlipProperty(new GUIContent("Flip"), value);
+        Rect totalRect = EditorGUILayout.GetControlRect();
+        return LSImageEditor.DrawFlipProperty(totalRect, new GUIContent("Flip"), value);
     }
 
     private int DrawRotateButton(int value, GUIContent label)
