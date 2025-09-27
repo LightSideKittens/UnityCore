@@ -1477,7 +1477,7 @@ namespace Sirenix.OdinInspector.Editor
                     Undo.FlushUndoRecordObjects();
                     this.Tree.RootProperty.RecordForUndo();
                     PrefabUtility.SetPropertyModifications(target, unityMods.ToArray());
-                    (property.ValueEntry as PropertyValueEntry).TriggerOnValueChanged(targetIndex);
+                    property.ValueEntry.TriggerOnValueChanged(targetIndex);
                 }
                 else if (property.ValueEntry.SerializationBackend == SerializationBackend.Odin)
                 {

@@ -58,9 +58,7 @@ namespace Sirenix.OdinInspector.Editor.Drawers
             {
                 this.customValue.Context.NamedValues.Set("callNextDrawer", (Func<GUIContent, bool>)this.CallNextDrawer);
             }
-#if !SIRENIX_INTERNAL && ODIN_INSPECTOR_4_0 && !ODIN_BETA
-#error Make a better alternative to this value/action hack, like allowing void as a ValueResolver type indicating any value, including no value, is an acceptable result.
-#endif
+            
             else if (this.customValue.ErrorMessage.Contains("void"))
             {
                 this.customAction = ActionResolver.Get(this.Property, this.Attribute.Action, customDrawerArgsAction);

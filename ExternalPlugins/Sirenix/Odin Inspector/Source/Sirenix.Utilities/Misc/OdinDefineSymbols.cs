@@ -19,37 +19,5 @@ namespace Sirenix.Utilities
 #else
         public const bool SIRENIX_INTERNAL = false;
 #endif
-
-
-#if ODIN_ASSET_STORE
-        public const bool ODIN_ASSET_STORE = true;
-#else
-        public const bool ODIN_ASSET_STORE = false;
-#endif
-
-
-#if ODIN_TRIAL
-        public const bool ODIN_TRIAL = true;
-#else
-        public const bool ODIN_TRIAL = false;
-#endif
-
-        //#if ODIN_ENTERPRISE
-        //        public const bool ODIN_ENTERPRISE = true;
-        //#else
-        //        public const bool ODIN_ENTERPRISE = false;
-        //#endif
-
-#if ODIN_EDUCATIONAL
-        public const bool ODIN_EDUCATIONAL = true;
-#else
-        public const bool ODIN_EDUCATIONAL = false;
-#endif
-
-#if ODIN_GAMEJAM
-        public const bool ODIN_GAMEJAM = true;
-#else
-        public const bool ODIN_GAMEJAM = false;
-#endif
     }
 }

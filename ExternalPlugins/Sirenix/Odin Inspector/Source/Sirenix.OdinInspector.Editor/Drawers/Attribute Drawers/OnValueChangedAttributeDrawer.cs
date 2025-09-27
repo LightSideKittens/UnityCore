@@ -16,7 +16,7 @@ namespace Sirenix.OdinInspector.Editor.Drawers
     using Utilities.Editor;
     using UnityEngine;
     using System;
-    using Sirenix.OdinInspector.Editor.ActionResolvers;
+    using ActionResolvers;
     using UnityEditor;
 
     /// <summary>
@@ -35,62 +35,70 @@ namespace Sirenix.OdinInspector.Editor.Drawers
 
         protected override void Initialize()
         {
-            if (this.Attribute.InvokeOnUndoRedo)
+            if (Attribute.InvokeOnUndoRedo)
             {
-                this.Property.Tree.OnUndoRedoPerformed += this.OnUndoRedo;
-                this.subscribedToOnUndoRedo = true;
+                Property.Tree.OnUndoRedoPerformed += OnUndoRedo;
+                subscribedToOnUndoRedo = true;
             }
 
-            this.onChangeAction = ActionResolver.Get(this.Property, this.Attribute.Action);
+            onChangeAction = ActionResolver.Get(Property, Attribute.Action);
 
             // TODO: OnValueChanged notifications whenever prefabs are modified, if this is the modified prefab
             //Undo.postprocessModifications += TODO_THIS;
 
-            Action<int> triggerAction = this.TriggerAction;
-            this.ValueEntry.OnValueChanged += triggerAction;
+            Action<int> triggerAction = TriggerAction;
+            ValueEntry.OnValueChanged += triggerAction;
 
-            if (this.Attribute.IncludeChildren || typeof(T).IsValueType)
+            if (Attribute.IncludeChildren || typeof(T).IsValueType)
             {
-                this.ValueEntry.OnChildValueChanged += triggerAction;
+                ValueEntry.OnChildValueChanged += triggerAction;
             }
 
-            if (this.Attribute.InvokeOnInitialize && !this.onChangeAction.HasError)
+            if (Attribute.InvokeOnInitialize && !onChangeAction.HasError)
             {
-                this.onChangeAction.DoActionForAllSelectionIndices();
+                onChangeAction.DoActionForAllSelectionIndices();
             }
         }
 
         protected override void DrawPropertyLayout(GUIContent label)
         {
-            if (this.onChangeAction.HasError)
+            if (onChangeAction.HasError)
             {
-                SirenixEditorGUI.ErrorMessageBox(this.onChangeAction.ErrorMessage);
+                SirenixEditorGUI.ErrorMessageBox(onChangeAction.ErrorMessage);
             }
 
-            this.CallNextDrawer(label);
+            CallNextDrawer(label);
         }
 
         private void OnUndoRedo()
         {
-            for (int i = 0; i < this.ValueEntry.ValueCount; i++)
+            for (int i = 0; i < ValueEntry.ValueCount; i++)
             {
-                this.TriggerAction(i);
+                TriggerAction(i);
             }
         }
 
         private void TriggerAction(int selectionIndex)
         {
-            this.Property.Tree.DelayActionUntilRepaint(() =>
+            Property.Tree.DelayActionUntilRepaint(() =>
             {
-                this.onChangeAction.DoAction(selectionIndex);
+                onChangeAction.DoAction(selectionIndex);
             });
         }
 
         public void Dispose()
         {
-            if (this.subscribedToOnUndoRedo)
+            if (subscribedToOnUndoRedo)
             {
-                this.Property.Tree.OnUndoRedoPerformed -= this.OnUndoRedo;
+                if (Undo.isProcessing)
+                { 
+                    for (int i = 0; i < ValueEntry.ValueCount; i++)
+                    {
+                        onChangeAction.DoAction(i);
+                    }
+                }
+                
+                Property.Tree.OnUndoRedoPerformed -= OnUndoRedo;
             }
         }
     }

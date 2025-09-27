@@ -19,9 +19,8 @@ public abstract class BaseLottieManager
         }
     }
 
-    private bool isAssetDirty;
-    [HideInInspector] public BaseLottieAsset asset;
-    [ShowInInspector]
+    private bool isAssetDirty; 
+    [OnValueChanged("OnAssetChanged")] [SerializeField] internal BaseLottieAsset asset;
     public BaseLottieAsset Asset
     {
         get => asset;
@@ -29,17 +28,20 @@ public abstract class BaseLottieManager
         {
             if (value == asset) return;
             asset = value;
-            
-            if (!isAssetDirty)
-            {
-                isAssetDirty = true;
-                QueuePreRenderCall(ForceUpdateAsset, 0);
-            }
+            OnAssetChanged();
+        }
+    }
+
+    private void OnAssetChanged()
+    {
+        if (!isAssetDirty)
+        {
+            isAssetDirty = true;
+            QueuePreRenderCall(ForceUpdateAsset, 0);
         }
     }
     
-    [SerializeField] [HideInInspector] private bool shouldPlay = true;
-    [ShowInInspector]
+    [SerializeField] [OnValueChanged("UpdatePlayState")] bool shouldPlay = true;
     public bool ShouldPlay
     {
         get => shouldPlay;
@@ -51,8 +53,7 @@ public abstract class BaseLottieManager
         }
     }
     
-    [SerializeField] [HideInInspector] private bool loop = true;
-    [ShowInInspector]
+    [SerializeField] [OnValueChanged("OnLoopChanged")] bool loop = true;
     public bool Loop
     {
         get => loop;
@@ -61,24 +62,30 @@ public abstract class BaseLottieManager
             if(loop == value) return;
             if(lottie != null) lottie.loop = value;
             loop = value;
-            if (value)
-            {
-                UpdatePlayState();
-            }
+            OnLoopChanged();
         }
     }
 
-    [SerializeField] [HideInInspector] private float speed = 1f;
-    [ShowInInspector]
+    private void OnLoopChanged()
+    {
+        if (loop) UpdatePlayState();
+    }
+
+    [SerializeField] [OnValueChanged("OnSpeedChanged")] float speed = 1f;
     public float Speed
     {
         get => speed;
         set
         {
             if(Mathf.Abs(speed - value) < 0.01f) return;
-            speed = Mathf.Max(0f, value);
-            UpdatePlayState();
+            OnSpeedChanged();
         }
+    }
+
+    private void OnSpeedChanged()
+    {
+        speed = Mathf.Max(0f, speed);
+        UpdatePlayState();
     }
     
     internal Lottie lottie;

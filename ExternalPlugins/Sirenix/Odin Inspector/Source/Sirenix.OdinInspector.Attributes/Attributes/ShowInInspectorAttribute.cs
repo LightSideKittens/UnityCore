@@ -39,5 +39,11 @@ namespace Sirenix.OdinInspector
     [System.Diagnostics.Conditional("UNITY_EDITOR")]
     public class ShowInInspectorAttribute : Attribute
     {
+	    public string serializedPropertyName;
+
+	    public ShowInInspectorAttribute(string serializedPropertyName = null)
+	    {
+		    this.serializedPropertyName = serializedPropertyName;
+	    }
     }
 }

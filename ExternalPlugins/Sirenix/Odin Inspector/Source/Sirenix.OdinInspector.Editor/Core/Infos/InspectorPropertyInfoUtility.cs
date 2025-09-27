@@ -161,6 +161,8 @@ namespace Sirenix.OdinInspector.Editor
 
             return false;
         }
+        
+        
 
         private static readonly List<Attribute> ChildProcessedAttributes = new List<Attribute>();
 

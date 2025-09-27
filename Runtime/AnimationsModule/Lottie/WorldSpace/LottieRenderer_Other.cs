@@ -1,6 +1,7 @@
 ﻿using LSCore;
 using LSCore.Extensions;
 using Sirenix.OdinInspector;
+using Sirenix.OdinInspector.Editor;
 using Sirenix.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,17 +19,11 @@ public sealed partial class LottieRenderer
     private static Material unlitMat;
     private static readonly int mainTexId = Shader.PropertyToID("_MainTex");
     private static readonly LSVertexHelper vertexHelper = new();
-    [SerializeField] [HideInInspector] private int rotateId = 0;
-    [SerializeField] [HideInInspector] private int pixelsPerUnit = 128;
-    [SerializeField] [HideInInspector] private Vector2Int flip;
-    private bool colorIsDirty;
-    private bool verticesIsDirty;
     private MeshRenderer mr;
     private MeshFilter mf;
     private MaterialPropertyBlock mpb;
     
-    [SerializeField] [HideInInspector] private Color color = Color.white;
-    [ShowInInspector]
+    [SerializeField] [OnValueChanged("MarkColorAsDirty")] Color color = Color.white;
     public Color Color
     {
         get => color;
@@ -36,12 +31,11 @@ public sealed partial class LottieRenderer
         {
             if(color == value) return;
             color = value;
-            colorIsDirty = true;
+            MarkColorAsDirty();
         }
     }
     
-    [SerializeField] [HideInInspector] private Material material;
-    [ShowInInspector]
+    [SerializeField] [OnValueChanged("OnMaterialChanged")] Material material;
     public Material Material
     {
         get => material;
@@ -49,14 +43,17 @@ public sealed partial class LottieRenderer
         {
             if (material == value) return;
             material = value;
-            mr.sharedMaterial = value;
+            OnMaterialChanged();
         }
     }
+    private void OnMaterialChanged() => mr.sharedMaterial = material;
 
-    [ShowInInspector]
+    [SerializeField] [OnValueChanged("OnPixelsPerUnitChanged")] 
+    [MinValue(MinSize)] [MaxValue(MaxSize)] int pixelsPerUnit = 128;
+    
     public int PixelsPerUnit
     {
-        get => pixelsPerUnit;
+        get => Mathf.Clamp(pixelsPerUnit, MinSize, MaxSize);
         set
         {
             var val = Mathf.Clamp(value, MinSize, MaxSize);
@@ -66,8 +63,13 @@ public sealed partial class LottieRenderer
         }
     }
 
-    [ShowInInspector]
-    [CustomValueDrawer("DrawFlip")]
+    private void OnPixelsPerUnitChanged()
+    {
+        pixelsPerUnit = Mathf.Clamp(pixelsPerUnit, MinSize, MaxSize);
+        manager.ResizeIfNeeded();
+    }
+    
+    [SerializeField] [CustomValueDrawer("DrawFlip")] [MarkAsAtomic] Vector2Int flip;
     public (bool x, bool y) Flip
     {
         get => (flip.x.ToBool(), flip.y.ToBool());
@@ -75,13 +77,12 @@ public sealed partial class LottieRenderer
         {
             var newValue = new Vector2Int(value.x.ToInt(), value.y.ToInt());
             if(flip == newValue) return;
-            flip = newValue;
-            verticesIsDirty = true;
+            flip = newValue; 
+            MarkMeshAsDirty();
         }
     }
-
-    [ShowInInspector]
-    [CustomValueDrawer("DrawRotateButton")]
+    
+    [SerializeField] [CustomValueDrawer("DrawRotateButton")] int rotateId = 0;
     public LSImage.RotationMode Rotation
     {
         get => (LSImage.RotationMode)rotateId;
@@ -89,8 +90,8 @@ public sealed partial class LottieRenderer
         {
             var newValue = (int)value;
             if(rotateId == newValue) return;
-            rotateId = newValue;
-            verticesIsDirty = true;
+            rotateId = newValue; 
+            MarkMeshAsDirty();
         }
     }
 
@@ -258,40 +259,15 @@ public sealed partial class LottieRenderer
 
 #if UNITY_EDITOR
 
-    private (bool x, bool y) DrawFlip((bool x, bool y) value, GUIContent label)
+    private Vector2Int DrawFlip(Vector2Int value, GUIContent label)
     {
-        EditorGUILayout.BeginHorizontal();
-
-        var lbl = new GUIContent(label);
-        Rect totalRect = EditorGUILayout.GetControlRect();
-        Rect fieldRect = EditorGUI.PrefixLabel(totalRect, lbl);
-
-        GUI.Label(fieldRect.TakeFromLeft(18), "X");
-        var xFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), value.x);
-        GUI.Label(fieldRect.TakeFromLeft(18), "Y");
-        var yFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), value.y);
-        Flip = (xFlipValue, yFlipValue);
-        EditorGUILayout.EndHorizontal();
-        return Flip;
+        return LSImageEditor.DrawFlipProperty(new GUIContent("Flip"), value);
     }
 
-    private LSImage.RotationMode DrawRotateButton(LSImage.RotationMode value, GUIContent label)
+    private int DrawRotateButton(int value, GUIContent label)
     {
-        GUILayout.Space(10);
-        GUILayout.BeginHorizontal();
-
-        for (int i = 0; i < 4; i++)
-        {
-            var targetAngle = i * 90;
-            var text = rotateId == i ? $"{targetAngle}° ❤️" : $"{targetAngle}°";
-            if (GUILayout.Button(text, GUILayout.Height(30)) && rotateId != i)
-            {
-                Rotation = (LSImage.RotationMode)i;
-            }
-        }
-
-        GUILayout.EndHorizontal();
-        return Rotation;
+        GUILayout.Label("Rotation");
+        return LSImageEditor.DrawRotateButton(value);
     }
 #endif
 }

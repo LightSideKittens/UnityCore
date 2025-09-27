@@ -881,7 +881,7 @@ namespace Sirenix.OdinInspector.Editor.GettingStarted
 
                     if (i > 0) EditorGUI.DrawRect(rect.AlignLeft(2).AddXMin(-1), Color.black);
 
-                    if (i < 2 && (OdinDefineSymbols.ODIN_ASSET_STORE || OdinDefineSymbols.SIRENIX_INTERNAL) && p.Enabled)
+                    if (i < 2 && (OdinDefineSymbols.SIRENIX_INTERNAL) && p.Enabled)
                     {
                         var t1 = this.VerticalSlideT;
                         if (t1 > 0)
@@ -1584,11 +1584,7 @@ namespace Sirenix.OdinInspector.Editor.GettingStarted
                     StatusIconColor = textColor,
                     Pages = new (GettingStartedPage page, string btnName)[]
                     {
-#if ODIN_ASSET_STORE
-                        (new ButtonPage(OpenProjectValidatorURLAssetStore), "Learn more"),
-#else
                         (new ButtonPage(OpenProjectValidatorURL), "Learn more"),
-#endif
                         (new ButtonPage(OpenProjectValidatorDownloadURL), "Download"),
                     }
                 };
