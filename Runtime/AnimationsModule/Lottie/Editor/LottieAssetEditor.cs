@@ -64,7 +64,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         serializedObject.Update();
 
         DrawFlip();
-        DrawRotateButton();
+        LSImageEditor.DrawRotateButton(_rotationProp);
 
         if (serializedObject.ApplyModifiedProperties())
         {
@@ -106,33 +106,16 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
 
         var v = _flipProp.vector2IntValue;
 
-        GUI.color = new Color(1, 1, 1, v.x == 1 ? 1f : 0.5f);
+        GUI.color = new Color(1, 1, 1, v.x == 1 ? 1f : 0.75f);
         if (GUILayout.Button(v.x == 1 ? "X ❤️" : "X", GUILayout.Height(30)))
             v.x = v.x * -1 + 1;
 
-        GUI.color = new Color(1, 1, 1, v.y == 1 ? 1f : 0.5f);
+        GUI.color = new Color(1, 1, 1, v.y == 1 ? 1f : 0.75f);
         if (GUILayout.Button(v.y == 1 ? "Y ❤️" : "Y", GUILayout.Height(30)))
             v.y = v.y * -1 + 1;
 
         GUI.color = new Color(1, 1, 1, 1);
         _flipProp.vector2IntValue = v;
-
-        GUILayout.EndHorizontal();
-    }
-    
-    private void DrawRotateButton()
-    {
-        GUILayout.Space(10);
-        GUILayout.BeginHorizontal();
-
-        var cur = _rotationProp.enumValueIndex;
-        for (var i = 0; i < 4; i++)
-        {
-            var targetAngle = i * 90;
-            var text = cur == i ? $"{targetAngle}° ❤️" : $"{targetAngle}°";
-            if (GUILayout.Button(text, GUILayout.Height(30)) && cur != i)
-                _rotationProp.enumValueIndex = i;
-        }
 
         GUILayout.EndHorizontal();
     }
