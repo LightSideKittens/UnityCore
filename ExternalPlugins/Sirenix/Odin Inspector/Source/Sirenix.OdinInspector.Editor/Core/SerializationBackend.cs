@@ -105,9 +105,10 @@ namespace Sirenix.OdinInspector.Editor
 
         public override bool CanSerializeMember(MemberInfo member)
         {
-            return UnitySerializationUtility.GuessIfUnityWillSerialize(member);
+            var attribute = member.GetCustomAttribute<ShowInInspectorAttribute>();
+            return UnitySerializationUtility.GuessIfUnityWillSerialize(member) || (attribute != null && !string.IsNullOrEmpty(attribute.serializedPropertyName));
         }
-
+        
         public override bool CanSerializeType(Type type)
         {
             return UnitySerializationUtility.GuessIfUnityWillSerialize(type);

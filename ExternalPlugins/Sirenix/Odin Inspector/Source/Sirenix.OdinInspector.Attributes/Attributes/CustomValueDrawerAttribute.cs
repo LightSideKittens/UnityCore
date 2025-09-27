@@ -60,19 +60,6 @@ namespace Sirenix.OdinInspector
     public class CustomValueDrawerAttribute : Attribute
     {
         /// <summary>
-        /// Name of the custom drawer method. Obsolete; use the Action member instead.
-        /// </summary>
-        [Obsolete("Use the Action member instead.", 
-#if SIRENIX_INTERNAL
-            true
-#else
-            false
-#endif
-        )]
-        [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-        public string MethodName { get { return this.Action; } set { this.Action = value; } }
-
-        /// <summary>
         /// A resolved string that defines the custom drawer action to take, such as an expression or method invocation.
         /// </summary>
         public string Action;

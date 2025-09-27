@@ -151,22 +151,7 @@ namespace Sirenix.OdinInspector.Editor
 
             if (nextDrawer != null)
             {
-#if ODIN_TRIAL
-                bool former = true;
-                if (TrialUtilities.IsReallyExpired && this.Property.Tree.TargetType != typeof(InspectorConfig))
-                {
-                    former = GUI.enabled;
-                    GUI.enabled = false;
-                }
-#endif
                 nextDrawer.DrawPropertyLayout(label);
-
-#if ODIN_TRIAL
-                if (TrialUtilities.IsReallyExpired && this.Property.Tree.TargetType != typeof(InspectorConfig))
-                {
-                    GUI.enabled = former;
-                }
-#endif
                 return true;
             }
             else if (property.ValueEntry != null)

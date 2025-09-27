@@ -309,7 +309,15 @@ namespace Sirenix.OdinInspector.Editor
             {
                 if (this.unityPropertyPath == null)
                 {
-                    this.unityPropertyPath = InspectorUtilities.ConvertToUnityPropertyPath(this.Path);
+                    var showInInspector = GetAttribute<ShowInInspectorAttribute>();
+                    var path = Path;
+                    if (showInInspector != null && !string.IsNullOrEmpty(showInInspector.serializedPropertyName))
+                    {
+                        var lastIndex = path.LastIndexOf('.');
+                        path = lastIndex == -1 ? showInInspector.serializedPropertyName : string.Concat(path[..(lastIndex + 1)], showInInspector.serializedPropertyName);
+                    }
+
+                    this.unityPropertyPath = InspectorUtilities.ConvertToUnityPropertyPath(path);
                 }
 
                 return this.unityPropertyPath;
@@ -836,22 +844,8 @@ namespace Sirenix.OdinInspector.Editor
                                 {
                                     GUIHelper.PushGUIEnabled(false);
                                 }
-
-#if ODIN_TRIAL
-                                bool former = true;
-                                if (TrialUtilities.IsReallyExpired && this.Tree.TargetType != typeof(InspectorConfig))
-                                {
-                                    former = GUI.enabled;
-                                    GUI.enabled = false;
-                                }
-#endif
+                                
                                 chain.Current.DrawProperty(defaultLabel);
-#if ODIN_TRIAL
-                                if (TrialUtilities.IsReallyExpired && this.Tree.TargetType != typeof(InspectorConfig))
-                                {
-                                    GUI.enabled = former;
-                                }
-#endif
 
                                 if (popPushGUIDisabled)
                                 {

@@ -19,8 +19,8 @@ namespace Sirenix.OdinInspector.Editor
     using System.Linq;
     using System.Reflection;
     using System.Runtime.CompilerServices;
-    using Sirenix.OdinInspector.Editor.Validation;
-    using Sirenix.OdinInspector.Editor.Internal;
+    using Validation;
+    using Internal;
     using Sirenix.Utilities.Editor;
     using UnityEditor;
     using UnityEngine;
@@ -31,7 +31,7 @@ namespace Sirenix.OdinInspector.Editor
     /// </summary>
     public abstract class PropertyTree : IDisposable
     {
-        private static GUIFrameCounter frameCounter = new GUIFrameCounter();
+        private static GUIFrameCounter frameCounter = new();
         private static int drawnInspectorDepthCount = 0;
         private static ValueGetter<SerializedObject, IntPtr> SerializedObject_nativeObjectPtrGetter;
 
@@ -63,7 +63,7 @@ namespace Sirenix.OdinInspector.Editor
 
         private static WeakReferenceEventListener<PropertyTree> UndoEventListener;
 
-        public static readonly EditorPrefBool EnableLeakDetection = new EditorPrefBool("OdinPropertyTree_EnableLeakDetection", true);
+        public static readonly EditorPrefBool EnableLeakDetection = new("OdinPropertyTree_EnableLeakDetection", true);
 
         static PropertyTree()
         {
@@ -96,7 +96,7 @@ namespace Sirenix.OdinInspector.Editor
         /// <summary>
         /// The component providers that create components for each property in the tree. If you change this list after the tree has been used, you should call tree.RootProperty.RefreshSetup() to make the changes update properly throughout the tree.
         /// </summary>
-        public readonly List<ComponentProvider> ComponentProviders = new List<ComponentProvider>();
+        public readonly List<ComponentProvider> ComponentProviders = new();
 
         /// <summary>
         /// The <see cref="SerializedObject"/> that this tree represents, if the tree was created for a <see cref="SerializedObject"/>.
@@ -152,21 +152,21 @@ namespace Sirenix.OdinInspector.Editor
         {
             get
             {
-                if (this.serializationBackend == null)
+                if (serializationBackend == null)
                 {
-                    var odinSerialized = InspectorPropertyInfoUtility.TypeDefinesShowOdinSerializedPropertiesInInspectorAttribute_Cached(this.TargetType);
-                    this.serializationBackend = odinSerialized ? SerializationBackend.Odin : SerializationBackend.Unity;
+                    var odinSerialized = InspectorPropertyInfoUtility.TypeDefinesShowOdinSerializedPropertiesInInspectorAttribute_Cached(TargetType);
+                    serializationBackend = odinSerialized ? SerializationBackend.Odin : SerializationBackend.Unity;
                 }
 
-                return this.serializationBackend;
+                return serializationBackend;
             }
 
             set
             {
-                if (this.serializationBackend != value)
+                if (serializationBackend != value)
                 {
-                    this.serializationBackend = value;
-                    this.DisposeAndResetRootProperty();
+                    serializationBackend = value;
+                    DisposeAndResetRootProperty();
                 }
             }
         }
@@ -178,19 +178,19 @@ namespace Sirenix.OdinInspector.Editor
         {
             get
             {
-                if (this.attributeProcessorLocator == null)
+                if (attributeProcessorLocator == null)
                 {
-                    this.attributeProcessorLocator = DefaultOdinAttributeProcessorLocator.Instance;
+                    attributeProcessorLocator = DefaultOdinAttributeProcessorLocator.Instance;
                 }
 
-                return this.attributeProcessorLocator;
+                return attributeProcessorLocator;
             }
             set
             {
-                if (!object.ReferenceEquals(this.attributeProcessorLocator, value))
+                if (!ReferenceEquals(attributeProcessorLocator, value))
                 {
-                    this.attributeProcessorLocator = value;
-                    this.RootProperty.RefreshSetup();
+                    attributeProcessorLocator = value;
+                    RootProperty.RefreshSetup();
                 }
             }
         }
@@ -202,19 +202,19 @@ namespace Sirenix.OdinInspector.Editor
         {
             get
             {
-                if (this.propertyResolverLocator == null)
+                if (propertyResolverLocator == null)
                 {
-                    this.propertyResolverLocator = DefaultOdinPropertyResolverLocator.Instance;
+                    propertyResolverLocator = DefaultOdinPropertyResolverLocator.Instance;
                 }
 
-                return this.propertyResolverLocator;
+                return propertyResolverLocator;
             }
             set
             {
-                if (!object.ReferenceEquals(this.propertyResolverLocator, value))
+                if (!ReferenceEquals(propertyResolverLocator, value))
                 {
-                    this.propertyResolverLocator = value;
-                    this.RootProperty.RefreshSetup();
+                    propertyResolverLocator = value;
+                    RootProperty.RefreshSetup();
                 }
             }
         }
@@ -226,19 +226,19 @@ namespace Sirenix.OdinInspector.Editor
         {
             get
             {
-                if (this.drawerChainResolver == null)
+                if (drawerChainResolver == null)
                 {
-                    this.drawerChainResolver = DefaultDrawerChainResolver.Instance;
+                    drawerChainResolver = DefaultDrawerChainResolver.Instance;
                 }
 
-                return this.drawerChainResolver;
+                return drawerChainResolver;
             }
             set
             {
-                if (!object.ReferenceEquals(this.drawerChainResolver, value))
+                if (!ReferenceEquals(drawerChainResolver, value))
                 {
-                    this.drawerChainResolver = value;
-                    this.RootProperty.RefreshSetup();
+                    drawerChainResolver = value;
+                    RootProperty.RefreshSetup();
                 }
             }
         }
@@ -250,19 +250,19 @@ namespace Sirenix.OdinInspector.Editor
         {
             get
             {
-                if (this.stateUpdaterLocator == null)
+                if (stateUpdaterLocator == null)
                 {
-                    this.stateUpdaterLocator = DefaultStateUpdaterLocator.Instance;
+                    stateUpdaterLocator = DefaultStateUpdaterLocator.Instance;
                 }
 
-                return this.stateUpdaterLocator;
+                return stateUpdaterLocator;
             }
             set
             {
-                if (!object.ReferenceEquals(this.stateUpdaterLocator, value))
+                if (!ReferenceEquals(stateUpdaterLocator, value))
                 {
-                    this.stateUpdaterLocator = value;
-                    this.RootProperty.RefreshSetup();
+                    stateUpdaterLocator = value;
+                    RootProperty.RefreshSetup();
                 }
             }
         }
@@ -288,16 +288,16 @@ namespace Sirenix.OdinInspector.Editor
         /// </summary>
         public PropertyTree()
         {
-            if (typeof(UnityEngine.Object).IsAssignableFrom(this.TargetType))
+            if (typeof(UnityEngine.Object).IsAssignableFrom(TargetType))
             {
-                this.onValidateMethod = GetOnValidateMethod(this.TargetType);
+                onValidateMethod = GetOnValidateMethod(TargetType);
                 //Undo.undoRedoPerformed += this.InvokeOnUndoRedoPerformed;
                 UndoEventListener.SubscribeListener(this);
             }
 
             if (EnableLeakDetection.Value)
             {
-                this.allocationTrace = new System.Diagnostics.StackTrace(true);
+                allocationTrace = new System.Diagnostics.StackTrace(true);
             }
         }
 
@@ -322,11 +322,11 @@ namespace Sirenix.OdinInspector.Editor
 
         internal void InvokeOnPropertyValueChanged(InspectorProperty property, int selectionIndex)
         {
-            if (this.OnPropertyValueChanged != null)
+            if (OnPropertyValueChanged != null)
             {
                 try
                 {
-                    this.OnPropertyValueChanged(property, selectionIndex);
+                    OnPropertyValueChanged(property, selectionIndex);
                 }
                 catch (ExitGUIException ex)
                 {
@@ -420,7 +420,7 @@ namespace Sirenix.OdinInspector.Editor
         [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
         public InspectorProperty GetPropertyAtDeepReflectionPath(string path)
         {
-            return this.GetPropertyAtPrefabModificationPath(path);
+            return GetPropertyAtPrefabModificationPath(path);
         }
 
         /// <summary>
@@ -447,9 +447,9 @@ namespace Sirenix.OdinInspector.Editor
         /// </summary>
         public void Draw(bool applyUndo = true)
         {
-            this.BeginDraw(applyUndo);
-            this.DrawProperties();
-            this.EndDraw();
+            BeginDraw(applyUndo);
+            DrawProperties();
+            EndDraw();
 
             //InspectorUtilities.BeginDrawPropertyTree(this, applyUndo);
             //InspectorUtilities.DrawPropertiesInTree(this);
@@ -463,9 +463,9 @@ namespace Sirenix.OdinInspector.Editor
             // - Bjarke
             if (Event.current.type == EventType.Repaint)
             {
-                this.ContextWidth = GUIHelper.ContextWidth;
+                ContextWidth = GUIHelper.ContextWidth;
             }
-            GUIHelper.BetterContextWidth = this.ContextWidth;
+            GUIHelper.BetterContextWidth = ContextWidth;
 
             if (frameCounter.Update().IsNewFrame)
             {
@@ -478,11 +478,11 @@ namespace Sirenix.OdinInspector.Editor
                 throw new ArgumentNullException("tree");
             }
 
-            if (!this.IsStatic)
+            if (!IsStatic)
             {
-                for (int i = 0; i < this.WeakTargets.Count; i++)
+                for (int i = 0; i < WeakTargets.Count; i++)
                 {
-                    if (this.WeakTargets[i] == null)
+                    if (WeakTargets[i] == null)
                     {
                         GUILayout.Label("An inspected object has been destroyed; please refresh the inspector.");
                         return;
@@ -490,46 +490,46 @@ namespace Sirenix.OdinInspector.Editor
                 }
             }
 
-            this.UpdateTree();
+            UpdateTree();
 
-            this.RecordUndoForChanges = false;
+            RecordUndoForChanges = false;
 
             if (withUndo)
             {
-                if (this.TargetType.ImplementsOrInherits(typeof(UnityEngine.Object)) == false)
+                if (TargetType.ImplementsOrInherits(typeof(UnityEngine.Object)) == false)
                 {
-                    Debug.LogError("Automatic inspector undo only works when you're inspecting a type derived from UnityEngine.Object, and you are inspecting '" + this.TargetType.GetNiceName() + "'.");
+                    Debug.LogError("Automatic inspector undo only works when you're inspecting a type derived from UnityEngine.Object, and you are inspecting '" + TargetType.GetNiceName() + "'.");
                 }
                 else
                 {
-                    this.RecordUndoForChanges = true;
+                    RecordUndoForChanges = true;
                 }
             }
 
-            this.RootProperty.OnStateUpdate(this.UpdateID);
+            RootProperty.OnStateUpdate(UpdateID);
 
-            if (this.PrefabModificationHandler.HasNestedOdinPrefabData)
+            if (PrefabModificationHandler.HasNestedOdinPrefabData)
             {
                 SirenixEditorGUI.ErrorMessageBox("A selected object is serialized by Odin, is a prefab, and contains nested prefab data (IE, more than one possible layer of prefab modifications). This is NOT CURRENTLY SUPPORTED by Odin - therefore, modification of all Odin-serialized values has been disabled for this object.\n\nThere is a strong likelihood that Odin-serialized values will be corrupt and/or wrong in other ways, as well as a very real risk that your computer may spontaneously combust and turn into a flaming wheel of cheese.");
             }
 
 
-            if (this.DrawMonoScriptObjectField)
+            if (DrawMonoScriptObjectField)
             {
-                if (!this.monoScriptPropertyHasBeenGotten)
+                if (!monoScriptPropertyHasBeenGotten)
                 {
-                    if (this.UnitySerializedObject != null)
+                    if (UnitySerializedObject != null)
                     {
-                        this.monoScriptProperty = this.GetUnitySerializedObjectNoUpdate().FindProperty("m_Script");
+                        monoScriptProperty = GetUnitySerializedObjectNoUpdate().FindProperty("m_Script");
                     }
 
-                    this.monoScriptPropertyHasBeenGotten = true;
+                    monoScriptPropertyHasBeenGotten = true;
                 }
 
-                if (this.monoScriptProperty != null)
+                if (monoScriptProperty != null)
                 {
                     GUIHelper.PushGUIEnabled(false);
-                    EditorGUILayout.PropertyField(this.monoScriptProperty);
+                    EditorGUILayout.PropertyField(monoScriptProperty);
                     GUIHelper.PopGUIEnabled();
                 }
             }
@@ -537,12 +537,12 @@ namespace Sirenix.OdinInspector.Editor
 
         public void DrawProperties()
         {
-            if (this.AllowSearchFiltering && this.searchFilter != null)
+            if (AllowSearchFiltering && searchFilter != null)
             {
-                if (this.DrawSearch()) return;
+                if (DrawSearch()) return;
             }
 
-            this.RootProperty.Draw(null);
+            RootProperty.Draw(null);
         }
 
         /// <summary>
@@ -553,13 +553,13 @@ namespace Sirenix.OdinInspector.Editor
         /// <returns>True if the property tree is being searched and is currently drawing its search results, otherwise false.</returns>
         public bool DrawSearch()
         {
-            if (this.AllowSearchFiltering && this.searchFilter != null)
+            if (AllowSearchFiltering && searchFilter != null)
             {
-                this.searchFilter.DrawDefaultSearchFieldLayout(null);
+                searchFilter.DrawDefaultSearchFieldLayout(null);
 
-                if (this.searchFilter.HasSearchResults)
+                if (searchFilter.HasSearchResults)
                 {
-                    this.searchFilter.DrawSearchResults();
+                    searchFilter.DrawSearchResults();
                     return true;
                 }
 
@@ -570,9 +570,9 @@ namespace Sirenix.OdinInspector.Editor
 
         public void EndDraw()
         {
-            this.InvokeDelayedActions();
+            InvokeDelayedActions();
 
-            var so = this.GetUnitySerializedObjectNoUpdate();
+            var so = GetUnitySerializedObjectNoUpdate();
 
             if (so != null)
             {
@@ -588,7 +588,7 @@ namespace Sirenix.OdinInspector.Editor
                     }
                 }
 
-                if (this.RecordUndoForChanges)
+                if (RecordUndoForChanges)
                 {
                     so.ApplyModifiedProperties();
                 }
@@ -600,26 +600,26 @@ namespace Sirenix.OdinInspector.Editor
 
             bool appliedOdinChanges = false;
 
-            if (this.ApplyChanges())
+            if (ApplyChanges())
             {
                 appliedOdinChanges = true;
                 GUIHelper.RequestRepaint();
             }
 
             // This is very important, as applying changes may cause more actions to be delayed
-            this.InvokeDelayedActions();
+            InvokeDelayedActions();
 
             if (appliedOdinChanges)
             {
-                this.InvokeOnValidate();
+                InvokeOnValidate();
 
-                if (this.PrefabModificationHandler.HasPrefabs)
+                if (PrefabModificationHandler.HasPrefabs)
                 {
-                    var targets = this.WeakTargets;
+                    var targets = WeakTargets;
 
                     for (int i = 0; i < targets.Count; i++)
                     {
-                        if (this.PrefabModificationHandler.TargetPrefabs[i] == null) continue;
+                        if (PrefabModificationHandler.TargetPrefabs[i] == null) continue;
 
                         var target = (UnityEngine.Object)targets[i];
                         PrefabUtility.RecordPrefabInstancePropertyModifications(target);
@@ -627,7 +627,7 @@ namespace Sirenix.OdinInspector.Editor
                 }
             }
 
-            if (this.RecordUndoForChanges)
+            if (RecordUndoForChanges)
             {
                 if (appliedOdinChanges && Application.platform == RuntimePlatform.OSXEditor)
                 {
@@ -642,7 +642,7 @@ namespace Sirenix.OdinInspector.Editor
 
                     Undo.IncrementCurrentGroup();
 
-                    foreach (var target in this.WeakTargets)
+                    foreach (var target in WeakTargets)
                     {
                         if (target is UnityEngine.Object)
                         {
@@ -656,95 +656,6 @@ namespace Sirenix.OdinInspector.Editor
             }
 
             drawnInspectorDepthCount--;
-
-            if (OdinDefineSymbols.ODIN_TRIAL || OdinDefineSymbols.ODIN_EDUCATIONAL || OdinDefineSymbols.ODIN_GAMEJAM)
-            {
-                if (drawnInspectorDepthCount == 0)
-                {
-                    float height = 17;
-                    Rect rect = GUILayoutUtility.GetRect(20, height, GUILayoutOptions.ExpandWidth().Height(height));
-                    rect.y += 2;
-
-                    if (OdinDefineSymbols.ODIN_GAMEJAM)
-                    {
-                        GUI.Label(rect, "Odin Inspector Non-Commercial Gamejam Version", SirenixGUIStyles.RightAlignedGreyMiniLabel);
-                    }
-                    else if (OdinDefineSymbols.ODIN_TRIAL)
-                    {
-                        GUI.Label(rect, "Odin Inspector Trial Version", SirenixGUIStyles.RightAlignedGreyMiniLabel);
-                    }
-                    else
-                    {
-                        GUI.Label(rect, "Odin Inspector Non-Commercial Version", SirenixGUIStyles.RightAlignedGreyMiniLabel);
-                    }
-                }
-            }
-
-#if ODIN_TRIAL || ODIN_GAMEJAM
-            if (drawnInspectorDepthCount == 0)
-            {
-                bool prevEnabled = GUI.enabled;
-                GUI.enabled = true;
-
-                GUILayout.Space(4);
-
-                if (TrialUtilities.IsExpired)  
-                {
-                    if (!EditorGUIUtility.isProSkin)
-                    {
-                        GUIHelper.PushColor(Color.red * 0.7f);
-                    }
-
-#if ODIN_GAMEJAM
-                    if (TrialUtilities.IsReallyExpired)
-                    {
-                        SirenixEditorGUI.WarningMessageBox("Your Odin Inspector gamejam trial expired " + TrialUtilities.EndTimeString + ", " + TrialUtilities.TimeLeftString + " ago; all Odin editors and windows except Odin's Editor Types preferences have been disabled.");
-                    }
-                    else
-                    {
-                        SirenixEditorGUI.WarningMessageBox("Your Odin Inspector gamejam trial expired " + TrialUtilities.EndTimeString + ", " + TrialUtilities.TimeLeftString + " ago; all Odin editors and windows will be fully disabled three days after expiration.");
-                    }
-#else
-                    if (TrialUtilities.IsReallyExpired)
-                    {
-                        SirenixEditorGUI.WarningMessageBox("Your Odin Inspector trial expired " + TrialUtilities.EndTimeString + ", " + TrialUtilities.TimeLeftString + " ago; all Odin editors and windows except Odin's Editor Types preferences have been disabled.");
-                    }
-                    else
-                    {
-                        SirenixEditorGUI.WarningMessageBox("Your Odin Inspector trial expired " + TrialUtilities.EndTimeString + ", " + TrialUtilities.TimeLeftString + " ago; all Odin editors and windows will be fully disabled three days after expiration.");
-                    }
-#endif
-
-                    if (!EditorGUIUtility.isProSkin)
-                    {
-                        GUIHelper.PopColor();
-                    }
-
-                    if (GUILayout.Button("Purchase Odin Inspector", EditorStyles.miniButton))
-                    {
-                        Application.OpenURL("https://odininspector.com/pricing");
-                    }
-
-                    if (TrialUtilities.IsReallyExpired && GUILayout.Button("Disable all Odin Inspector editors", EditorStyles.miniButton))
-                    {
-                        EditorApplication.update += () => InspectorConfig.Instance.EnableOdinInInspector = false;
-                    }
-                }
-                else
-                {
-                    GUIHelper.PushColor(Color.white * 0.7f);
-#if ODIN_GAMEJAM
-                    SirenixEditorGUI.InfoMessageBox("Your Odin Inspector gamejam trial will expire " + TrialUtilities.EndTimeString + ", in " + TrialUtilities.TimeLeftString);
-#else
-                    SirenixEditorGUI.InfoMessageBox("Your Odin Inspector trial will expire " + TrialUtilities.EndTimeString + ", in " + TrialUtilities.TimeLeftString);
-#endif
-                    GUIHelper.PopColor();
-                }
-
-                GUI.enabled = prevEnabled;
-            }
-#endif
-
         }
 
         /// <summary>
@@ -754,7 +665,7 @@ namespace Sirenix.OdinInspector.Editor
         public SerializedProperty GetUnityPropertyForPath(string path)
         {
             FieldInfo fieldInfo;
-            return this.GetUnityPropertyForPath(path, out fieldInfo);
+            return GetUnityPropertyForPath(path, out fieldInfo);
         }
 
         /// <summary>
@@ -812,13 +723,13 @@ namespace Sirenix.OdinInspector.Editor
         /// </summary>
         public void InvokeOnValidate()
         {
-            if (this.onValidateMethod != null)
+            if (onValidateMethod != null)
             {
-                for (int i = 0; i < this.WeakTargets.Count; i++)
+                for (int i = 0; i < WeakTargets.Count; i++)
                 {
                     try
                     {
-                        this.onValidateMethod.Invoke(this.WeakTargets[i], null);
+                        onValidateMethod.Invoke(WeakTargets[i], null);
                     }
                     catch (Exception ex)
                     {
@@ -992,7 +903,7 @@ namespace Sirenix.OdinInspector.Editor
                 {
                     for (int i = 0; i < targets.Count; i++)
                     {
-                        if (!object.ReferenceEquals(targets[i], targetObjects[i]))
+                        if (!ReferenceEquals(targets[i], targetObjects[i]))
                         {
                             valid = false;
                             break;
@@ -1013,7 +924,7 @@ namespace Sirenix.OdinInspector.Editor
                 Type otherType;
                 object target = targets[i];
 
-                if (object.ReferenceEquals(target, null))
+                if (ReferenceEquals(target, null))
                 {
                     throw new ArgumentException("Target at index " + i + " was null.");
                 }
@@ -1063,19 +974,19 @@ namespace Sirenix.OdinInspector.Editor
 
         private void InvokeOnUndoRedoPerformed()
         {
-            if (this.OnUndoRedoPerformed != null)
+            if (OnUndoRedoPerformed != null)
             {
-                this.OnUndoRedoPerformed();
+                OnUndoRedoPerformed();
             }
         }
 
         protected void InitSearchFilter()
         {
-            var searchAttr = this.RootProperty.GetAttribute<SearchableAttribute>();
+            var searchAttr = RootProperty.GetAttribute<SearchableAttribute>();
 
             if (searchAttr != null)
             {
-                this.searchFilter = new PropertySearchFilter(this.RootProperty, searchAttr);
+                searchFilter = new PropertySearchFilter(RootProperty, searchAttr);
             }
         }
 
@@ -1088,14 +999,14 @@ namespace Sirenix.OdinInspector.Editor
         /// <param name="config">If the tree is set to be searchable, then if this parameter is not null, it will be used to configure the property tree search. If the parameter is null, the SearchableAttribute on the tree's <see cref="RootProperty"/> will be used. If that property has no such attribute, then default search settings will be applied.</param>
         public void SetSearchable(bool searchable, SearchableAttribute config = null)
         {
-            this.AllowSearchFiltering = searchable;
+            AllowSearchFiltering = searchable;
             if (searchable)
             {
-                this.searchFilter = new PropertySearchFilter(this.RootProperty, config ?? this.RootProperty.GetAttribute<SearchableAttribute>() ?? new SearchableAttribute());
+                searchFilter = new PropertySearchFilter(RootProperty, config ?? RootProperty.GetAttribute<SearchableAttribute>() ?? new SearchableAttribute());
             }
             else
             {
-                this.searchFilter = null;
+                searchFilter = null;
             }
         }
 
@@ -1104,18 +1015,18 @@ namespace Sirenix.OdinInspector.Editor
 
         protected virtual void Dispose(bool finalizer)
         {
-            if (!this.disposedValue)
+            if (!disposedValue)
             {
                 if (finalizer)
                 {
-                    if (this.allocationTrace != null)
+                    if (allocationTrace != null)
                     {
 #if SIRENIX_INTERNAL
                         Debug.LogError(
 #else
                         Debug.LogWarning(
 #endif
-                            "An Odin PropertyTree instance is being garbage collected without first having been disposed. PropertyTree instances must be disposed once they are no longer needed. This instance was allocated at the following location: \n\n" + this.allocationTrace.ToString());
+                            "An Odin PropertyTree instance is being garbage collected without first having been disposed. PropertyTree instances must be disposed once they are no longer needed. This instance was allocated at the following location: \n\n" + allocationTrace.ToString());
                     }
 
                     // The tree is being garbage collected, but has not yet been disposed.
@@ -1124,11 +1035,11 @@ namespace Sirenix.OdinInspector.Editor
                     // while it is waiting to be disposed, through the subscribed action, which will be
                     // cleared after it runs. The second time the property tree is collected by the GC,
                     // it will have been disposed properly already, and will not be resurrected again.
-                    UnityEditorEventUtility.DelayActionThreadSafe(this.ActuallyDispose);
+                    UnityEditorEventUtility.DelayActionThreadSafe(ActuallyDispose);
                 }
                 else
                 {
-                    this.ActuallyDispose();
+                    ActuallyDispose();
                 }
             }
         }
@@ -1145,35 +1056,19 @@ namespace Sirenix.OdinInspector.Editor
 
         private void ActuallyDispose()
         {
-            this.ApplyChanges();
+            ApplyChanges();
 
-            if (this.HasRootPropertyYet)
+            if (HasRootPropertyYet)
             {
-                this.RootProperty.Dispose();
+                RootProperty.Dispose();
             }
-
-            //Undo.undoRedoPerformed -= this.InvokeOnUndoRedoPerformed;
+            
             UndoEventListener.DesubscribeListener(this);
-
-            if (this.drawerChainResolver is IDisposable)
-            {
-                (this.drawerChainResolver as IDisposable).Dispose();
-            }
-
-            if (this.attributeProcessorLocator is IDisposable)
-            {
-                (this.attributeProcessorLocator as IDisposable).Dispose();
-            }
-
-            if (this.propertyResolverLocator is IDisposable)
-            {
-                (this.propertyResolverLocator as IDisposable).Dispose();
-            }
-
-            this.OnUndoRedoPerformed = null;
-            this.OnPropertyValueChanged = null;
-            this.DisposeInheritedStuff();
-            this.disposedValue = true;
+            
+            OnUndoRedoPerformed = null;
+            OnPropertyValueChanged = null;
+            DisposeInheritedStuff();
+            disposedValue = true;
         }
 
         protected abstract void DisposeInheritedStuff();
@@ -1181,10 +1076,10 @@ namespace Sirenix.OdinInspector.Editor
 
         public PropertyTree SetUpForIMGUIDrawing()
         {
-            this.TreeIsSetupForIMGUIDrawing_TEMP_INTERNAL = true;
-            this.ComponentProviders.Clear();
+            TreeIsSetupForIMGUIDrawing_TEMP_INTERNAL = true;
+            ComponentProviders.Clear();
 
-            this.ComponentProviders.Add(new ValidationComponentProvider(new DefaultValidatorLocator()
+            ComponentProviders.Add(new ValidationComponentProvider(new DefaultValidatorLocator()
             {
                 CustomValidatorFilter = (type) =>
                 {
@@ -1195,16 +1090,16 @@ namespace Sirenix.OdinInspector.Editor
                 }
             }));
 
-            this.RootProperty.RefreshSetup();
+            RootProperty.RefreshSetup();
             return this;
         }
 
         public PropertyTree SetUpForValidation()
         {
-            this.TreeIsSetupForIMGUIDrawing_TEMP_INTERNAL = false;
-            this.ComponentProviders.Clear();
-            this.ComponentProviders.Add(new ValidationComponentProvider());
-            this.RootProperty.RefreshSetup();
+            TreeIsSetupForIMGUIDrawing_TEMP_INTERNAL = false;
+            ComponentProviders.Clear();
+            ComponentProviders.Add(new ValidationComponentProvider());
+            RootProperty.RefreshSetup();
             return this;
         }
 
@@ -1230,17 +1125,17 @@ namespace Sirenix.OdinInspector.Editor
         private static readonly bool TargetIsValueType = typeof(T).IsValueType;
         private static readonly bool TargetIsUnityObject = typeof(UnityEngine.Object).IsAssignableFrom(typeof(T));
 
-        private Dictionary<object, int> objectReferenceCounts = new Dictionary<object, int>(ReferenceEqualityComparer<object>.Default);
-        private Dictionary<object, string> objectReferences = new Dictionary<object, string>(ReferenceEqualityComparer<object>.Default);
+        private Dictionary<object, int> objectReferenceCounts = new(ReferenceEqualityComparer<object>.Default);
+        private Dictionary<object, string> objectReferences = new(ReferenceEqualityComparer<object>.Default);
 
-        private Dictionary<string, Dictionary<Type, SerializedProperty>> emittedUnityPropertyCache = new Dictionary<string, Dictionary<Type, SerializedProperty>>();
+        private Dictionary<string, Dictionary<Type, SerializedProperty>> emittedUnityPropertyCache = new();
         //private Dictionary<UnityEngine.Object, SerializedObjectData> serializedObjects = new Dictionary<UnityEngine.Object, SerializedObjectData>(ReferenceEqualityComparer<UnityEngine.Object>.Default);
         //private Dictionary<string, Dictionary<Type, UnityPropertyEmitter.Handle>> emittedUnityGameObjectPropertyCache = new Dictionary<string, Dictionary<Type, UnityPropertyEmitter.Handle>>();
 
-        private List<Action> delayedActions = new List<Action>();
-        private List<Action> delayedRepaintActions = new List<Action>();
+        private List<Action> delayedActions = new();
+        private List<Action> delayedRepaintActions = new();
 
-        private List<InspectorProperty> dirtyProperties = new List<InspectorProperty>();
+        private List<InspectorProperty> dirtyProperties = new();
 
         private T[] targets;
 
@@ -1259,7 +1154,7 @@ namespace Sirenix.OdinInspector.Editor
 
         private static readonly bool includesSpeciallySerializedMembers_StaticCache = InspectorPropertyInfoUtility.TypeDefinesShowOdinSerializedPropertiesInInspectorAttribute_Cached(typeof(T));
 
-        protected override bool HasRootPropertyYet { get { return this.rootProperty != null; } }
+        protected override bool HasRootPropertyYet { get { return rootProperty != null; } }
 
         /// <summary>
         /// Gets the root property of the tree.
@@ -1268,26 +1163,26 @@ namespace Sirenix.OdinInspector.Editor
         {
             get
             {
-                if (this.rootProperty == null)
+                if (rootProperty == null)
                 {
-                    this.rootProperty = InspectorProperty.Create(
+                    rootProperty = InspectorProperty.Create(
                         this,
                         null,
                         InspectorPropertyInfo.CreateValue(
                             name: "$ROOT",
                             order: 0,
-                            serializationBackend: this.SerializationBackend,
+                            serializationBackend: SerializationBackend,
                             getterSetter: new GetterSetter<int, T>(
-                                getter: (ref int index) => this.targets[index],
-                                setter: (ref int index, T value) => this.targets[index] = value),
+                                getter: (ref int index) => targets[index],
+                                setter: (ref int index, T value) => targets[index] = value),
                             attributes: null),
                         0,
                         true);
 
-                    this.rootProperty.Update(true);
+                    rootProperty.Update(true);
                 }
 
-                return this.rootProperty;
+                return rootProperty;
             }
         }
 
@@ -1296,7 +1191,7 @@ namespace Sirenix.OdinInspector.Editor
         /// </summary>
         [Obsolete("Use RootProperty instead; the root is no longer considered 'secret'.", false)]
         [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-        public override InspectorProperty SecretRootProperty { get { return this.RootProperty; } }
+        public override InspectorProperty SecretRootProperty { get { return RootProperty; } }
 
         /// <summary>
         /// Gets the <see cref="prefabModificationHandler"/> for the PropertyTree.
@@ -1305,25 +1200,25 @@ namespace Sirenix.OdinInspector.Editor
         {
             get
             {
-                if (this.prefabModificationHandler == null)
+                if (prefabModificationHandler == null)
                 {
-                    this.prefabModificationHandler = new PrefabModificationHandler(this);
+                    prefabModificationHandler = new PrefabModificationHandler(this);
                 }
 
-                if (TargetIsUnityObject && this.prefabModificationHandler_lastUpdateID != this.updateID)
+                if (TargetIsUnityObject && prefabModificationHandler_lastUpdateID != updateID)
                 {
-                    this.prefabModificationHandler.Update();
-                    this.prefabModificationHandler_lastUpdateID = this.updateID;
+                    prefabModificationHandler.Update();
+                    prefabModificationHandler_lastUpdateID = updateID;
                 }
 
-                return this.prefabModificationHandler;
+                return prefabModificationHandler;
             }
         }
 
         /// <summary>
         /// The current update ID of the tree. This is incremented once, each update, and is used by <see cref="InspectorProperty.Update(bool)" /> to avoid updating multiple times in the same update round.
         /// </summary>
-        public override int UpdateID { get { return this.updateID; } }
+        public override int UpdateID { get { return updateID; } }
 
         /// <summary>
         /// The <see cref="SerializedObject" /> that this tree represents, if the tree was created for a <see cref="SerializedObject" />.
@@ -1332,13 +1227,13 @@ namespace Sirenix.OdinInspector.Editor
         {
             get
             {
-                if (this.serializedObject != null && this.serializedObjectUpdateID != this.updateID)
+                if (serializedObject != null && serializedObjectUpdateID != updateID)
                 {
-                    this.serializedObjectUpdateID = this.updateID;
-                    this.serializedObject.Update();
+                    serializedObjectUpdateID = updateID;
+                    serializedObject.Update();
                 }
 
-                return this.serializedObject;
+                return serializedObject;
             }
         }
 
@@ -1354,12 +1249,12 @@ namespace Sirenix.OdinInspector.Editor
         {
             get
             {
-                if (this.immutableTargets == null)
+                if (immutableTargets == null)
                 {
-                    this.immutableTargets = new ImmutableList<T>(this.targets);
+                    immutableTargets = new ImmutableList<T>(targets);
                 }
 
-                return this.immutableTargets;
+                return immutableTargets;
             }
         }
 
@@ -1370,28 +1265,28 @@ namespace Sirenix.OdinInspector.Editor
         {
             get
             {
-                if (this.immutableWeakTargets == null)
+                if (immutableWeakTargets == null)
                 {
-                    if (this.weakTargets == null)
+                    if (weakTargets == null)
                     {
-                        this.weakTargets = new object[this.targets.Length];
-                        this.targets.CopyTo(this.weakTargets, 0);
+                        weakTargets = new object[targets.Length];
+                        targets.CopyTo(weakTargets, 0);
                     }
 
-                    this.immutableWeakTargets = new ImmutableList<object>(this.weakTargets);
+                    immutableWeakTargets = new ImmutableList<object>(weakTargets);
                 }
                 else if (TargetIsValueType)
                 {
-                    this.targets.CopyTo(this.weakTargets, 0);
+                    targets.CopyTo(weakTargets, 0);
                 }
 
-                return this.immutableWeakTargets;
+                return immutableWeakTargets;
             }
         }
 
         internal override SerializedObject GetUnitySerializedObjectNoUpdate()
         {
-            return this.serializedObject;
+            return serializedObject;
         }
 
         //// Preliminary work for adding compatibility for getting serialized objects for UnityEngine.Objects that exist further down in the tree than the root
@@ -1422,7 +1317,7 @@ namespace Sirenix.OdinInspector.Editor
         /// <summary>
         /// The number of root properties in the tree.
         /// </summary>
-        public override int RootPropertyCount { get { return this.RootProperty.Children.Count; } }
+        public override int RootPropertyCount { get { return RootProperty.Children.Count; } }
 
         /// <summary>
         /// Whether this property tree also represents members that are specially serialized by Odin.
@@ -1436,10 +1331,10 @@ namespace Sirenix.OdinInspector.Editor
         /// </summary>
         public PropertyTree()
         {
-            this.IsStatic = true;
-            this.targets = new T[1];
+            IsStatic = true;
+            targets = new T[1];
 
-            this.InitSearchFilter();
+            InitSearchFilter();
         }
 
         /// <summary>
@@ -1504,22 +1399,22 @@ namespace Sirenix.OdinInspector.Editor
 
                 for (int i = 0; i < targets.Length; i++)
                 {
-                    if (object.ReferenceEquals(targets[i], null))
+                    if (ReferenceEquals(targets[i], null))
                     {
                         throw new ArgumentException("A target at index '" + i + "' is a null value.");
                     }
                 }
 
-                this.includesSpeciallySerializedMembers = includesSpeciallySerializedMembers_StaticCache;
+                includesSpeciallySerializedMembers = includesSpeciallySerializedMembers_StaticCache;
                 this.serializedObject = serializedObject;
                 this.targets = targets;
 
                 if (backend != null)
                 {
-                    this.SerializationBackend = backend;
+                    SerializationBackend = backend;
                 }
 
-                this.InitSearchFilter();
+                InitSearchFilter();
 
                 /// Preliminary work for adding compatibility for getting serialized objects for UnityEngine.Objects that exist further down in the tree than the root
                 //if (serializedObject != null)
@@ -1534,7 +1429,7 @@ namespace Sirenix.OdinInspector.Editor
             }
             catch (Exception)
             {
-                this.Dispose();
+                Dispose();
                 throw;
             }
         }
@@ -1551,9 +1446,9 @@ namespace Sirenix.OdinInspector.Editor
 
             // Apply changes for dirty properties
             {
-                for (int i = 0; i < this.dirtyProperties.Count; i++)
+                for (int i = 0; i < dirtyProperties.Count; i++)
                 {
-                    var property = this.dirtyProperties[i];
+                    var property = dirtyProperties[i];
 
                     IApplyableResolver resolver = property.ChildResolver as IApplyableResolver;
 
@@ -1570,9 +1465,9 @@ namespace Sirenix.OdinInspector.Editor
 
                             if (property.BaseValueEntry.ValueChangedFromPrefab)
                             {
-                                for (int k = 0; k < this.Targets.Count; k++)
+                                for (int k = 0; k < Targets.Count; k++)
                                 {
-                                    this.PrefabModificationHandler.RegisterPrefabValueModification(property, k);
+                                    PrefabModificationHandler.RegisterPrefabValueModification(property, k);
                                 }
                             }
                         }
@@ -1602,32 +1497,32 @@ namespace Sirenix.OdinInspector.Editor
                     }
                 }
 
-                this.dirtyProperties.Clear();
+                dirtyProperties.Clear();
             }
 
-            if (changed && this.PrefabModificationHandler != null && this.PrefabModificationHandler.HasPrefabs && this.UnitySerializedObject != null)
+            if (changed && PrefabModificationHandler != null && PrefabModificationHandler.HasPrefabs && UnitySerializedObject != null)
             {
-                this.DelayActionUntilRepaint(() =>
+                DelayActionUntilRepaint(() =>
                 {
                     // We make ABSOLUTELY SURE that this code runs at the *very end* of Repaint, after *all* other delayed Repaint invokes.
 
-                    this.DelayActionUntilRepaint(() =>
+                    DelayActionUntilRepaint(() =>
                     {
-                        for (int i = 0; i < this.WeakTargets.Count; i++)
+                        for (int i = 0; i < WeakTargets.Count; i++)
                         {
                             // Before we ever call PrefabUtility.RecordPrefabInstancePropertyModifications, we MUST
                             // make sure that prefab modifications are registered and applied on the object.
                             //
                             // If we don't, there is a chance that Unity will crash, for unknown reasons.
 
-                            var receiver = this.WeakTargets[i] as ISerializationCallbackReceiver;
+                            var receiver = WeakTargets[i] as ISerializationCallbackReceiver;
 
                             if (receiver != null)
                             {
                                 receiver.OnBeforeSerialize();
                             }
 
-                            PrefabUtility.RecordPrefabInstancePropertyModifications((UnityEngine.Object)this.WeakTargets[i]);
+                            PrefabUtility.RecordPrefabInstancePropertyModifications((UnityEngine.Object)WeakTargets[i]);
                         }
                     });
                 });
@@ -1643,7 +1538,7 @@ namespace Sirenix.OdinInspector.Editor
         /// <exception cref="NotImplementedException"></exception>
         public override void RegisterPropertyDirty(InspectorProperty property)
         {
-            this.dirtyProperties.Add(property);
+            dirtyProperties.Add(property);
         }
 
         /// <summary>
@@ -1653,22 +1548,22 @@ namespace Sirenix.OdinInspector.Editor
         {
             // Changes might have been set since the last frame, during event calls that occurred outside of IMGUI.
             // Those changes should be applied before we do anything else, so they don't get lost.
-            this.ApplyChanges();
+            ApplyChanges();
 
             unchecked
             {
-                this.updateID++;
+                updateID++;
             }
 
-            this.objectReferences.Clear();
-            this.objectReferenceCounts.Clear();
+            objectReferences.Clear();
+            objectReferenceCounts.Clear();
 
             //if (TargetIsUnityObject)
             //{
             //    this.PrefabModificationHandler.Update();
             //}
 
-            this.RootProperty.Update();
+            RootProperty.Update();
         }
 
         /// <summary>
@@ -1684,7 +1579,7 @@ namespace Sirenix.OdinInspector.Editor
                 return false;
             }
             
-            return this.objectReferences.TryGetValue(value, out referencePath);
+            return objectReferences.TryGetValue(value, out referencePath);
         }
 
         /// <summary>
@@ -1694,7 +1589,7 @@ namespace Sirenix.OdinInspector.Editor
         public override int GetReferenceCount(object reference)
         {
             int count;
-            this.objectReferenceCounts.TryGetValue(reference, out count);
+            objectReferenceCounts.TryGetValue(reference, out count);
             return count;
         }
 
@@ -1705,7 +1600,7 @@ namespace Sirenix.OdinInspector.Editor
         public override InspectorProperty GetPropertyAtPath(string path)
         {
             InspectorProperty closest;
-            return this.GetPropertyAtPath(path, out closest);
+            return GetPropertyAtPath(path, out closest);
         }
 
         /// <summary>
@@ -1717,8 +1612,8 @@ namespace Sirenix.OdinInspector.Editor
         {
             if (path == "$ROOT")
             {
-                closestProperty = this.RootProperty;
-                return this.RootProperty;
+                closestProperty = RootProperty;
+                return RootProperty;
             }
 
             closestProperty = null;
@@ -1727,7 +1622,7 @@ namespace Sirenix.OdinInspector.Editor
             var currentPathIndex = 0;
             var nextSeparator = StringIndexOf(path, '.', currentPathIndex);
             var step = nextSeparator == -1 ? new StringSlice(path) : path.Slice(currentPathIndex, nextSeparator - currentPathIndex);
-            var current = this.RootProperty;
+            var current = RootProperty;
 
             while (true)
             {
@@ -1777,7 +1672,7 @@ namespace Sirenix.OdinInspector.Editor
         public override InspectorProperty GetPropertyAtUnityPath(string path)
         {
             InspectorProperty closest;
-            return this.GetPropertyAtUnityPath(path, out closest);
+            return GetPropertyAtUnityPath(path, out closest);
         }
 
         /// <summary>
@@ -1795,7 +1690,7 @@ namespace Sirenix.OdinInspector.Editor
             var currentPathIndex = 0;
             var nextSeparator = StringIndexOf(path, '.', currentPathIndex);
             var step = nextSeparator == -1 ? new StringSlice(path) : path.Slice(currentPathIndex, nextSeparator - currentPathIndex);
-            var current = this.RootProperty;
+            var current = RootProperty;
 
             while (true)
             {
@@ -1835,7 +1730,7 @@ namespace Sirenix.OdinInspector.Editor
                     // If the above lookup failed, perhaps due to the concrete member being hidden in a group somewhere,
                     // recursively look through all groups in this property for concrete members with a matching name.
 
-                    next = this.TryFindChildMemberPropertyWithNameFromGroups(step, current);
+                    next = TryFindChildMemberPropertyWithNameFromGroups(step, current);
                 }
 
                 current = next;
@@ -1861,7 +1756,7 @@ namespace Sirenix.OdinInspector.Editor
         public override InspectorProperty GetPropertyAtPrefabModificationPath(string path)
         {
             InspectorProperty closest;
-            return this.GetPropertyAtPrefabModificationPath(path, out closest);
+            return GetPropertyAtPrefabModificationPath(path, out closest);
         }
 
         /// <summary>
@@ -1879,7 +1774,7 @@ namespace Sirenix.OdinInspector.Editor
             var currentPathIndex = 0;
             var nextSeparator = StringIndexOf(path, '.', currentPathIndex);
             var step = nextSeparator == -1 ? new StringSlice(path) : path.Slice(currentPathIndex, nextSeparator - currentPathIndex);
-            var current = this.RootProperty;
+            var current = RootProperty;
 
             while (true)
             {
@@ -1890,7 +1785,7 @@ namespace Sirenix.OdinInspector.Editor
                     // If the above lookup failed, perhaps due to the concrete member being hidden in a group somewhere,
                     // recursively look through all groups in this property for concrete members with a matching name.
 
-                    next = this.TryFindChildMemberPropertyWithNameFromGroups(step, current);
+                    next = TryFindChildMemberPropertyWithNameFromGroups(step, current);
                 }
 
                 current = next;
@@ -1955,7 +1850,7 @@ namespace Sirenix.OdinInspector.Editor
 
                     case PropertyType.Group:
                     {
-                        var found = this.TryFindChildMemberPropertyWithNameFromGroups(name, child);
+                        var found = TryFindChildMemberPropertyWithNameFromGroups(name, child);
                         if (found != null) return found;
                     }
                     break;
@@ -1977,7 +1872,7 @@ namespace Sirenix.OdinInspector.Editor
         {
             backingField = null;
             string unityPath;
-            InspectorProperty prop = this.GetPropertyAtPath(path); 
+            InspectorProperty prop = GetPropertyAtPath(path); 
 
             if (prop == null)
             {
@@ -1990,7 +1885,7 @@ namespace Sirenix.OdinInspector.Editor
 
             SerializedProperty result = null;
 
-            var so = this.UnitySerializedObject;
+            var so = UnitySerializedObject;
 
             if (so != null)
             {
@@ -2013,21 +1908,21 @@ namespace Sirenix.OdinInspector.Editor
             {
                 Dictionary<Type, SerializedProperty> innerDict;
 
-                if (!this.emittedUnityPropertyCache.TryGetValue(path, out innerDict))
+                if (!emittedUnityPropertyCache.TryGetValue(path, out innerDict))
                 {
                     innerDict = new Dictionary<Type, SerializedProperty>(FastTypeComparer.Instance);
-                    this.emittedUnityPropertyCache.Add(path, innerDict);
+                    emittedUnityPropertyCache.Add(path, innerDict);
                 }
 
                 if (!innerDict.TryGetValue(prop.ValueEntry.TypeOfValue, out result))
                 {
-                    result = UnityPropertyEmitter.CreateEmittedScriptableObjectProperty(prop.Info.PropertyName, prop.ValueEntry.TypeOfValue, this.targets.Length);
+                    result = UnityPropertyEmitter.CreateEmittedScriptableObjectProperty(prop.Info.PropertyName, prop.ValueEntry.TypeOfValue, targets.Length);
                     innerDict.Add(prop.ValueEntry.TypeOfValue, result);
                 }
                 // TargetObject is sometimes destroyed or the serialized object is disposed, often when the profiler is toggled. Not sure why, but we need to handle the case.
                 else if (result != null && result.serializedObject.targetObject == null)
                 {
-                    result = UnityPropertyEmitter.CreateEmittedScriptableObjectProperty(prop.Info.PropertyName, prop.ValueEntry.TypeOfValue, this.targets.Length);
+                    result = UnityPropertyEmitter.CreateEmittedScriptableObjectProperty(prop.Info.PropertyName, prop.ValueEntry.TypeOfValue, targets.Length);
                     innerDict[prop.ValueEntry.TypeOfValue] = result;
                 }
                 //else if (result == null)
@@ -2077,12 +1972,12 @@ namespace Sirenix.OdinInspector.Editor
         {
             if (includeChildren)
             {
-                if (this.RootProperty.Children.Count == 0)
+                if (RootProperty.Children.Count == 0)
                 {
                     yield break;
                 }
 
-                var current = this.RootProperty.Children.Get(0);
+                var current = RootProperty.Children.Get(0);
 
                 while (current != null)
                 {
@@ -2096,14 +1991,14 @@ namespace Sirenix.OdinInspector.Editor
             }
             else
             {
-                for (int i = 0; i < this.RootProperty.Children.Count; i++)
+                for (int i = 0; i < RootProperty.Children.Count; i++)
                 {
-                    var child = this.RootProperty.Children.Get(i);
+                    var child = RootProperty.Children.Get(i);
 
                     if (onlyVisible && !child.State.Visible)
                         continue;
 
-                    yield return this.RootProperty.Children.Get(i);
+                    yield return RootProperty.Children.Get(i);
                 }
             }
         }
@@ -2130,7 +2025,7 @@ namespace Sirenix.OdinInspector.Editor
                 }
             }
 
-            foreach (var prop in this.EnumerateTree(true))
+            foreach (var prop in EnumerateTree(true))
             {
                 if (prop.Info.PropertyType == PropertyType.Value && !prop.Info.TypeOfValue.IsValueType)
                 {
@@ -2140,7 +2035,7 @@ namespace Sirenix.OdinInspector.Editor
                     {
                         object obj = valueEntry.WeakValues[i];
 
-                        if (object.ReferenceEquals(from, obj))
+                        if (ReferenceEquals(from, obj))
                         {
                             valueEntry.WeakValues[i] = to;
                         }
@@ -2151,7 +2046,7 @@ namespace Sirenix.OdinInspector.Editor
 
         internal override void ForceRegisterObjectReference(object reference, InspectorProperty property)
         {
-            this.objectReferences[reference] = property.Path;
+            objectReferences[reference] = property.Path;
         }
 
         /// <summary>
@@ -2160,7 +2055,7 @@ namespace Sirenix.OdinInspector.Editor
         /// <param name="index">The index of the property to get.</param>
         public override InspectorProperty GetRootProperty(int index)
         {
-            return this.RootProperty.Children.Get(index);
+            return RootProperty.Children.Get(index);
         }
 
         /// <summary>
@@ -2175,7 +2070,7 @@ namespace Sirenix.OdinInspector.Editor
                 throw new ArgumentNullException("action");
             }
 
-            this.delayedActions.Add(action);
+            delayedActions.Add(action);
         }
 
         /// <summary>
@@ -2190,7 +2085,7 @@ namespace Sirenix.OdinInspector.Editor
                 throw new ArgumentNullException("action");
             }
 
-            this.delayedRepaintActions.Add(action);
+            delayedRepaintActions.Add(action);
             GUIHelper.RequestRepaint();
         }
 
@@ -2199,11 +2094,11 @@ namespace Sirenix.OdinInspector.Editor
         /// </summary>
         public override void InvokeDelayedActions()
         {
-            for (int i = 0; i < this.delayedActions.Count; i++)
+            for (int i = 0; i < delayedActions.Count; i++)
             {
                 try
                 {
-                    this.delayedActions[i]();
+                    delayedActions[i]();
                 }
                 catch (Exception ex)
                 {
@@ -2211,15 +2106,15 @@ namespace Sirenix.OdinInspector.Editor
                 }
             }
 
-            this.delayedActions.Clear();
+            delayedActions.Clear();
 
-            if ((Event.current != null && Event.current.type == EventType.Repaint) || !this.TreeIsSetupForIMGUIDrawing_TEMP_INTERNAL)
+            if ((Event.current != null && Event.current.type == EventType.Repaint) || !TreeIsSetupForIMGUIDrawing_TEMP_INTERNAL)
             {
-                for (int i = 0; i < this.delayedRepaintActions.Count; i++)
+                for (int i = 0; i < delayedRepaintActions.Count; i++)
                 {
                     try
                     {
-                        this.delayedRepaintActions[i]();
+                        delayedRepaintActions[i]();
                     }
                     catch (Exception ex)
                     {
@@ -2227,46 +2122,46 @@ namespace Sirenix.OdinInspector.Editor
                     }
                 }
 
-                this.delayedRepaintActions.Clear();
+                delayedRepaintActions.Clear();
             }
         }
 
         public override void CleanForCachedReuse()
         {
-            var rootChild = this.RootProperty.Children;
+            var rootChild = RootProperty.Children;
 
             foreach (var child in rootChild.GetExistingChildren())
             {
                 child.CleanForCachedReuse();
             }
 
-            this.delayedActions.Clear();
-            this.delayedRepaintActions.Clear();
+            delayedActions.Clear();
+            delayedRepaintActions.Clear();
 
-            if (this.prefabModificationHandler != null)
+            if (prefabModificationHandler != null)
             {
-                this.prefabModificationHandler.CleanForCachedReuse();
+                prefabModificationHandler.CleanForCachedReuse();
             }
 
             unchecked
             {
-                this.updateID++;
+                updateID++;
             }
         }
 
         public override void SetTargets(params object[] newTargets)
         {
-            this.serializedObject = null;
+            serializedObject = null;
             //this.prefabModificationHandler = null;
-            this.monoScriptProperty = null;
-            this.monoScriptPropertyHasBeenGotten = false;
+            monoScriptProperty = null;
+            monoScriptPropertyHasBeenGotten = false;
 
-            if (this.targets.Length != newTargets.Length)
+            if (targets.Length != newTargets.Length)
             {
                 throw new ArgumentException("Target count of tree cannot be changed");
             }
 
-            for (int i = 0; i < this.targets.Length; i++)
+            for (int i = 0; i < targets.Length; i++)
             {
                 var target = (T)newTargets[i];
 
@@ -2275,29 +2170,29 @@ namespace Sirenix.OdinInspector.Editor
                     throw new NullReferenceException("Tree target cannot be null");
                 }
 
-                this.targets[i] = target;
+                targets[i] = target;
             }
 
-            this.targets.CopyTo(this.weakTargets, 0);
+            targets.CopyTo(weakTargets, 0);
 
-            this.UpdateTree();
+            UpdateTree();
         }
 
         public override void SetSerializedObject(SerializedObject serializedObject)
         {
             this.serializedObject = serializedObject;
             //this.prefabModificationHandler = null;
-            this.monoScriptProperty = null;
-            this.monoScriptPropertyHasBeenGotten = false;
+            monoScriptProperty = null;
+            monoScriptPropertyHasBeenGotten = false;
 
             var newTargets = serializedObject.targetObjects;
 
-            if (this.targets.Length != newTargets.Length)
+            if (targets.Length != newTargets.Length)
             {
                 throw new ArgumentException("Target count of tree cannot be changed");
             }
 
-            for (int i = 0; i < this.targets.Length; i++)
+            for (int i = 0; i < targets.Length; i++)
             {
                 var target = (T)(object)newTargets[i];
 
@@ -2306,29 +2201,29 @@ namespace Sirenix.OdinInspector.Editor
                     throw new NullReferenceException("Tree target cannot be null");
                 }
 
-                this.targets[i] = target;
+                targets[i] = target;
             }
 
-            this.targets.CopyTo(this.weakTargets, 0);
+            targets.CopyTo(weakTargets, 0);
 
-            this.UpdateTree();
+            UpdateTree();
         }
 
         protected override void DisposeInheritedStuff()
         {
-            if (this.prefabModificationHandler != null)
+            if (prefabModificationHandler != null)
             {
-                this.prefabModificationHandler.Dispose();
-                this.prefabModificationHandler = null;
+                prefabModificationHandler.Dispose();
+                prefabModificationHandler = null;
             }
         }
 
         protected override void DisposeAndResetRootProperty()
         {
-            if (this.rootProperty != null)
+            if (rootProperty != null)
             {
-                this.rootProperty.Dispose();
-                this.rootProperty = null;
+                rootProperty.Dispose();
+                rootProperty = null;
             }
         }
     }

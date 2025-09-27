@@ -47,33 +47,10 @@ namespace LSCore
             serializedObject.ApplyModifiedProperties();
             
             EditorGUILayout.PropertyField(preserveAspectRatio);
-            LSImageEditor.DrawFlipProperty("Flip", flip);
-            DrawRotateButton();
-
-            serializedObject.ApplyModifiedProperties();
-        }
-
-        protected virtual void DrawRotateButton()
-        {
-            GUILayout.Space(10);
-            GUILayout.BeginHorizontal();
-
-            var lbl = GUIContent.none;
-            Rect totalRect = EditorGUILayout.GetControlRect(GUILayout.Height(30));
-            EditorGUI.BeginProperty(totalRect, lbl, rotateId);
+            LSImageEditor.DrawFlipProperty(new GUIContent("Flip"), flip);
+            LSImageEditor.DrawRotateButton(rotateId);
             
-            for (int i = 0; i < 4; i++)
-            {
-                var targetAngle = i * 90;
-                var text = rotateId.intValue == i ? $"{targetAngle}° ❤️" : $"{targetAngle}°";
-                if (GUI.Button(totalRect.Split(i, 4), text) && rotateId.intValue != i)
-                {
-                    rotateId.intValue = i;
-                    image.SetVerticesDirty();
-                }
-            }
-            EditorGUI.EndProperty();
-            GUILayout.EndHorizontal();
+            serializedObject.ApplyModifiedProperties();
         }
     }
 }

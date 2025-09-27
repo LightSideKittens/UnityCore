@@ -142,6 +142,8 @@ namespace Sirenix.OdinInspector.Editor
         /// <param name="value">The value to check differences against.</param>
         /// <param name="index">The selection index to compare against.</param>
         bool ValueIsPrefabDifferent(object value, int index);
+
+        void TriggerOnValueChanged(int index);
     }
 
     /// <summary>

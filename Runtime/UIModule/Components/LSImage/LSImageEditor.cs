@@ -1,4 +1,5 @@
 ﻿#if UNITY_EDITOR
+using System;
 using System.Reflection;
 using LSCore.Extensions;
 using Sirenix.Utilities;
@@ -90,32 +91,67 @@ namespace LSCore
             EditorGUILayout.EndFadeGroup();
             NativeSizeButtonGUI();
 
-            DrawFlipProperty("Flip", flip);
-            DrawFlipProperty("Mirror", mirror);
+            DrawFlipProperty(new GUIContent("Flip"), flip);
+            DrawFlipProperty(new GUIContent("Mirror"), mirror);
             
             EditorGUILayout.PropertyField(ignoreSLAAAAYout, new GUIContent("Ignore SLAAAAYout"));
             
-            DrawRotateButton();
-
+            DrawRotateButton(rotateId);
+            
             serializedObject.ApplyModifiedProperties();
         }
 
-        public static void DrawFlipProperty(string label, SerializedProperty prop)
+        public static void DrawFlipProperty(GUIContent lbl, SerializedProperty prop)
         {
-            EditorGUILayout.BeginHorizontal();
-
-            var lbl = new GUIContent(label);
             Rect totalRect = EditorGUILayout.GetControlRect();
             EditorGUI.BeginProperty(totalRect, lbl, prop);
+            prop.vector2IntValue = DrawFlipProperty(lbl, prop.vector2IntValue);
+            EditorGUI.EndProperty();
+        }
+
+        public static void DrawRotateButton(SerializedProperty rotateId)
+        {
+            GUILayout.Space(10);
+            var lbl = new GUIContent("Rotation");
+            Rect totalRect = EditorGUILayout.GetControlRect();
+            EditorGUI.BeginProperty(totalRect, lbl, rotateId);
+            rotateId.intValue = DrawRotateButton(rotateId.intValue);
+            EditorGUI.EndProperty();
+        }
+
+        public static Vector2Int DrawFlipProperty(GUIContent lbl, Vector2Int flip)
+        {
+            EditorGUILayout.BeginHorizontal();
+            
+            Rect totalRect = EditorGUILayout.GetControlRect();
+
             Rect fieldRect = EditorGUI.PrefixLabel(totalRect, lbl);
             
             GUI.Label(fieldRect.TakeFromLeft(18), "X");
-            var xFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), prop.vector2IntValue.x == 1);
+            var xFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), flip.x == 1);
             GUI.Label(fieldRect.TakeFromLeft(18), "Y");
-            var yFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), prop.vector2IntValue.y == 1);
-            prop.vector2IntValue = new Vector2Int(xFlipValue.ToInt(), yFlipValue.ToInt());
-            EditorGUI.EndProperty();
+            var yFlipValue = EditorGUI.Toggle(fieldRect.TakeFromLeft(25), flip.y == 1);
             EditorGUILayout.EndHorizontal();
+            return new Vector2Int(xFlipValue.ToInt(), yFlipValue.ToInt());
+        }
+
+        public static int DrawRotateButton(int id)
+        {
+            var totalRect = EditorGUILayout.GetControlRect(GUILayout.Height(30));
+            GUILayout.BeginHorizontal();
+
+            for (int i = 0; i < 4; i++)
+            {
+                var targetAngle = i * 90;
+                var text = id == i ? $"{targetAngle}° ❤️" : $"{targetAngle}°";
+                if (GUI.Button(totalRect.Split(i, 4), text) && id!= i)
+                {
+                    id = i;
+                }
+            }
+
+            GUILayout.EndHorizontal();
+            return id;
         }
         
         void SetShowNativeSize(bool instant)
@@ -124,25 +160,6 @@ namespace LSCore
             bool showNativeSize = (type == Image.Type.Simple || type == Image.Type.Filled) &&
                                   m_Sprite.objectReferenceValue != null;
             base.SetShowNativeSize(showNativeSize, instant);
-        }
-
-        protected virtual void DrawRotateButton()
-        {
-            GUILayout.Space(10);
-            GUILayout.BeginHorizontal();
-
-            for (int i = 0; i < 4; i++)
-            {
-                var targetAngle = i * 90;
-                var text = rotateId.intValue == i ? $"{targetAngle}° ❤️" : $"{targetAngle}°";
-                if (GUILayout.Button(text, GUILayout.Height(30)) && rotateId.intValue != i)
-                {
-                    rotateId.intValue = i;
-                    image.SetVerticesDirty();
-                }
-            }
-
-            GUILayout.EndHorizontal();
         }
 
         [MenuItem("GameObject/LSCore/Image")]

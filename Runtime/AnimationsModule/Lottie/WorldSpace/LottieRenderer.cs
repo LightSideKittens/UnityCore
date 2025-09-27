@@ -31,7 +31,7 @@ public sealed partial class LottieRenderer : MonoBehaviour
         {
             var s = transform.localScale;
             var maxAxis = Mathf.Max(Mathf.Abs(s.x), Mathf.Abs(s.y));
-            var px = Mathf.RoundToInt(maxAxis * pixelsPerUnit);
+            var px = Mathf.RoundToInt(maxAxis * PixelsPerUnit);
             var clamped = Mathf.Clamp(px, MinSize, MaxSize);
             var newSize = (uint)Mathf.ClosestPowerOfTwo(clamped);
             return newSize;
@@ -54,17 +54,22 @@ public sealed partial class LottieRenderer : MonoBehaviour
     {
         if(World.IsBuilding) return;
         gameObject = base.gameObject;
+        if (AssetDatabase.Contains(gameObject))
+        {
+            return;
+        }
+        MarkMeshAsDirty();
+        MarkColorAsDirty();
         EditorApplication.update += Update;
 
         void Update()
         {
             EditorApplication.update -= Update;
-            Init();
+            if(this) Init();
         }
     }
 #endif
     
-
     private void Init()
     {
         manager.renderer = this;
@@ -157,18 +162,6 @@ public sealed partial class LottieRenderer : MonoBehaviour
 
     internal void TryRefresh()
     {
-        if (verticesIsDirty)
-        {
-            BuildUnitQuad();
-            verticesIsDirty = false;
-        }
-
-        if (colorIsDirty)
-        {
-            UpdateColor();
-            colorIsDirty = false;
-        }
-        
         manager.ResizeIfNeeded();
     }
 
@@ -183,7 +176,37 @@ public sealed partial class LottieRenderer : MonoBehaviour
             if(sprite != null) sprite.TextureChanged -= OnTextureChanged;
             sprite = value;
             sprite.TextureChanged += OnTextureChanged;
-            verticesIsDirty = true;
+            MarkMeshAsDirty();
+        }
+    }
+
+    private bool isMeshDirty;
+    internal void MarkMeshAsDirty()
+    {
+        if(isMeshDirty) return;
+        isMeshDirty  = true;
+        LottieUpdater.PreRendering[3] += Rebuild;
+        void Rebuild()
+        {
+            isMeshDirty = false;
+            LottieUpdater.PreRendering[3] -= Rebuild;
+            if(!this) return;
+            BuildUnitQuad();
+        }
+    }
+    
+    private bool isColorDirty;
+    internal void MarkColorAsDirty()
+    {
+        if(isColorDirty) return;
+        isColorDirty  = true;
+        LottieUpdater.PreRendering[3] += Rebuild;
+        void Rebuild()
+        {
+            isColorDirty = false;
+            LottieUpdater.PreRendering[3] -= Rebuild;
+            if(!this) return;
+            UpdateColor();
         }
     }
     

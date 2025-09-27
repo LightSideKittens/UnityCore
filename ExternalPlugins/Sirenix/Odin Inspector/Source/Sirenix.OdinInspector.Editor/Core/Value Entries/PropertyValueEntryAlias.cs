@@ -162,6 +162,8 @@ namespace Sirenix.OdinInspector.Editor
         /// <param name="index">The selection index to compare against.</param>
         public abstract bool ValueIsPrefabDifferent(object value, int index);
 
+        public abstract void TriggerOnValueChanged(int index);
+
         public abstract void Dispose();
     }
 
@@ -381,6 +383,11 @@ namespace Sirenix.OdinInspector.Editor
         /// </summary>
         public override event Action<int> OnChildValueChanged { add { this.entry.OnChildValueChanged += value; } remove { this.entry.OnChildValueChanged -= value; } }
         
+        public override void TriggerOnValueChanged(int index)
+        {
+            entry.TriggerOnValueChanged(index);
+        }
+        
         /// <summary>
         /// Applies the changes made to this value entry to the target objects, and registers prefab modifications as necessary.
         /// </summary>
@@ -547,6 +554,8 @@ namespace Sirenix.OdinInspector.Editor
         {
             this.entry.Dispose();
         }
+        
+        
     }
 }
 #endif

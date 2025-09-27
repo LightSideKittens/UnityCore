@@ -380,7 +380,7 @@ namespace Sirenix.OdinInspector.Editor
         /// </summary>
         protected abstract void Initialize();
 
-        internal void TriggerOnValueChanged(int index)
+        public void TriggerOnValueChanged(int index)
         {
             Action action = () =>
             {
@@ -669,7 +669,13 @@ namespace Sirenix.OdinInspector.Editor
         /// <summary>
         /// Whether this type is marked as an atomic type using a <see cref="IAtomHandler"/>.
         /// </summary>
-        public override bool IsMarkedAtomic { get { return ValueIsMarkedAtomic; } }
+        public override bool IsMarkedAtomic 
+        {
+            get
+            {
+                return ValueIsMarkedAtomic || Property.Attributes.HasAttribute<MarkAsAtomicAttribute>();
+            }
+        }
 
         /// <summary>
         /// <para>A weakly typed smart value that represents the first element of the value entry's value collection, but has "smart logic" for setting the value that detects relevant changes and applies them in parallel.</para>
