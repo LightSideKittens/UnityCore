@@ -61,9 +61,12 @@ internal static class LottieUpdater
         }
     }
 
+    internal static bool isForceApplying = false;
     internal static void ForceApplyTexture()
     {
+        isForceApplying = true;
         TextureApplyTime?.Invoke();
+        isForceApplying = false;
     }
 #endif
 
