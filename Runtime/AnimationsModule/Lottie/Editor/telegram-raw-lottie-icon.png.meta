@@ -160,7 +160,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      telegram-raw-lottie-icon_0: -3008883546605282886
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,10 +1,10 @@
-﻿using System;
+﻿#if !UNITY_EDITOR
+#define RUNTIME
+#endif
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using LSCore;
-using Unity.Burst;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
-using Unity.Jobs;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
 using Object = UnityEngine.Object;
@@ -106,15 +106,42 @@ public sealed partial class Lottie
             var lastDirty = IsTextureDirty;
             if (!lastDirty) return;
             IsTextureDirty = false;
-            Texture.Apply(false, false);
+
+            ApplyTexture_Editor();
+            ApplyTexture_Runtime();
+
             TextureChanged?.Invoke();
             textureIndex = (textureIndex + 1) % 2;
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        private void ApplyTexture_Editor()
+        {
+            if (LottieUpdater.isForceApplying)
+            { 
+                Texture.Apply(false, false);
+            }
+            else
+            {
+                Texture.ApplyAsync();
+            }
+        }
+        
+        [Conditional("RUNTIME")]
+        private void ApplyTexture_Runtime()
+        {
+            Texture.ApplyAsync();
         }
         
         public void Destroy(bool immediate)
         {
-            if (immediate) Object.DestroyImmediate(Texture);
-            else Object.Destroy(Texture);
+            for (int i = 0; i < 2; i++)
+            {
+                var texture = textures[i];
+                texture.Unregister();
+                if (immediate) Object.DestroyImmediate(texture);
+                else Object.Destroy(texture);
+            }
         }
 
         private Texture2D CreateTexture() => CreateTexture(size);
