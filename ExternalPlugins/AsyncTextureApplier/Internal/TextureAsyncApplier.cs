@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using LSCore;
 using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -44,13 +45,21 @@ public static class TextureAsyncApplier
     private static CommandBuffer commandBuffer;
     private static Camera registeredCamera;
     private static CameraEvent registeredEvent;
-    private static int lastFrame;
+    private static int lastFrame = -1;
     
     private static bool IsUsingScriptableRenderPipeline => GraphicsSettings.currentRenderPipeline != null;
 
 #if UNITY_EDITOR
     static TextureAsyncApplier()
     {
+        World.Creating += () =>
+        {
+            commandBuffer?.Clear();
+            applyingIds.Clear();
+            registeredCamera = null;
+            lastFrame = -1;
+        };
+        
         InitializeOnLoad();
     }
 #endif
@@ -76,8 +85,11 @@ public static class TextureAsyncApplier
             Camera.onPreRender += OnPreRender;
             Camera.onPostRender += cam =>
             {
-                commandBuffer.Clear();
-                applyingIds.Clear();
+                if (applyingIds.Count > 0)
+                {
+                    commandBuffer.Clear();
+                    applyingIds.Clear();
+                }
             };
         }
     }
