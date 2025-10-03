@@ -22,9 +22,8 @@ public sealed partial class Lottie
         static Atlas()
         {
             CompilationPipeline.compilationFinished += x => { DestroyAllTextures(true); };
-
-            World.Created += () => DestroyAllTextures(false);
-
+            
+            return;
             void DestroyAllTextures(bool immediate)
             {
                 foreach (var renderDataPool in atlasPools)
