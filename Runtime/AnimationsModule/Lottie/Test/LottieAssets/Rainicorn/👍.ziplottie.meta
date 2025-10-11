@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: ef7f9ad9e8f457741b646e978b17cc45
+ScriptedImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 2
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+  script: {fileID: 11500000, guid: 020eec82cf724ef1a22d5f8224183104, type: 3}
+  rotation: 2
+  flip: {x: 1, y: 0}

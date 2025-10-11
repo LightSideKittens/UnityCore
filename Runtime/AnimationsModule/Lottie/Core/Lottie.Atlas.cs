@@ -113,8 +113,11 @@ public sealed partial class Lottie
         
         public void Destroy(bool immediate)
         {
-            if (immediate) Object.DestroyImmediate(Texture);
-            else Object.Destroy(Texture);
+            for (int i = 0; i < 2; i++)
+            {
+                if (immediate) Object.DestroyImmediate(textures[i]);
+                else Object.Destroy(textures[i]);
+            }
         }
 
         private Texture2D CreateTexture() => CreateTexture(size);
