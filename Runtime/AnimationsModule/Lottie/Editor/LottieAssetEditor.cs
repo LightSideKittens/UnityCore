@@ -79,9 +79,7 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
                 var json = LottieCompressor.Decompress(File.ReadAllBytes(assetPath));
                 var newPath = Path.ChangeExtension(assetPath, asset.DecompressedExtension);
                 File.WriteAllText(newPath, json);
-                AssetDatabase.DeleteAsset(assetPath);
-                AssetDatabase.Refresh();
-                Selection.activeObject = AssetDatabase.LoadAssetAtPath<BaseLottieAsset>(newPath);
+                RefreshAsset(newPath);
             }
         }
         else
@@ -91,10 +89,23 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
                 var bytes = LottieCompressor.Compress(File.ReadAllText(assetPath));
                 var newPath = Path.ChangeExtension(assetPath, asset.CompressedExtension);
                 File.WriteAllBytes(newPath, bytes);
-                AssetDatabase.DeleteAsset(assetPath);
-                AssetDatabase.Refresh();
-                Selection.activeObject = AssetDatabase.LoadAssetAtPath<BaseLottieAsset>(newPath);
+                RefreshAsset(newPath);
             }
+        }
+
+        void RefreshAsset(string newPath)
+        {
+            var lastImporter = (LottieScriptedImporter)AssetImporter.GetAtPath(assetPath);
+            AssetDatabase.DeleteAsset(assetPath);
+            AssetDatabase.Refresh();
+            var newAsset = AssetDatabase.LoadAssetAtPath<BaseLottieAsset>(newPath);
+            Selection.activeObject = newAsset;
+            var importer = (LottieScriptedImporter)AssetImporter.GetAtPath(newPath);
+            importer.flip = lastImporter.flip;
+            importer.rotation = lastImporter.rotation;
+            EditorUtility.SetDirty(importer);
+            AssetDatabase.SaveAssetIfDirty(importer);
+            AssetDatabase.ImportAsset(newPath);
         }
     }
     
