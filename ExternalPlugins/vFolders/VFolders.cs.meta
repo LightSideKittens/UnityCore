@@ -13,6 +13,6 @@ AssetOrigin:
   serializedVersion: 1
   productId: 255470
   packageName: vFolders 2
-  packageVersion: 2.1.7
-  assetPath: Assets/vFolders/VFolders.cs
-  uploadId: 765419
+  packageVersion: 2.1.9
+  assetPath: Assets/LightSideCore/ExternalPlugins/vFolders/VFolders.cs
+  uploadId: 796868
