@@ -1,5 +1,6 @@
 ﻿#if UNITY_EDITOR
 using System.IO;
+using System.Linq;
 using LSCore;
 using UnityEditor;
 using UnityEditor.AssetImporters;
@@ -76,23 +77,68 @@ public sealed class LottieScriptedImporterEditor : ScriptedImporterEditor
         {
             if (GUILayout.Button("Decompress"))
             {
-                var json = LottieCompressor.Decompress(File.ReadAllBytes(assetPath));
-                var newPath = Path.ChangeExtension(assetPath, asset.DecompressedExtension);
-                File.WriteAllText(newPath, json);
-                RefreshAsset(newPath);
+                CompDecomp(asset, false);
             }
         }
         else
         {
             if (GUILayout.Button("Compress"))
             {
-                var bytes = LottieCompressor.Compress(File.ReadAllText(assetPath));
-                var newPath = Path.ChangeExtension(assetPath, asset.CompressedExtension);
-                File.WriteAllBytes(newPath, bytes);
-                RefreshAsset(newPath);
+                CompDecomp(asset, true);
             }
         }
+    }
+    
+    private const string MenuPath = LSPaths.AssetMenuItem.Root  + "/Lottie/";
 
+    [MenuItem(MenuPath + "Compress", true, 1)]
+    private static bool CompressValidate()
+    {
+        return Selection.objects.Any(x => x is BaseLottieAsset);
+    }
+
+    [MenuItem(MenuPath + "Decompress", true, 1)]
+    private static bool DecompressValidate() => CompressValidate();
+    
+    
+    [MenuItem(MenuPath + "Compress")]
+    private static void Compress()
+    {
+        var assets = Selection.objects.OfType<BaseLottieAsset>();
+        foreach (var asset in assets)
+        {
+            CompDecomp(asset, true);
+        }
+    }
+
+    [MenuItem(MenuPath + "Decompress")]
+    private static void Decompress()
+    {
+        var assets = Selection.objects.OfType<BaseLottieAsset>();
+        foreach (var asset in assets)
+        {
+            CompDecomp(asset, false);
+        }
+    }
+
+    private static void CompDecomp(BaseLottieAsset asset, bool compress)
+    {
+        var assetPath = AssetDatabase.GetAssetPath(asset);
+        if (asset.IsCompressed && !compress)
+        {
+            var json = LottieCompressor.Decompress(File.ReadAllBytes(assetPath));
+            var newPath = Path.ChangeExtension(assetPath, asset.DecompressedExtension);
+            File.WriteAllText(newPath, json);
+            RefreshAsset(newPath);
+        }
+        else if(!asset.IsCompressed && compress)
+        {
+            var bytes = LottieCompressor.Compress(File.ReadAllText(assetPath));
+            var newPath = Path.ChangeExtension(assetPath, asset.CompressedExtension);
+            File.WriteAllBytes(newPath, bytes);
+            RefreshAsset(newPath);
+        }
+            
         void RefreshAsset(string newPath)
         {
             var lastImporter = (LottieScriptedImporter)AssetImporter.GetAtPath(assetPath);
