@@ -271,13 +271,13 @@ public class TelegramGroupManager : MonoBehaviour
             var dirPath = Path.Combine(Application.persistentDataPath, decompressedAnimatedStickersPath);
             Directory.CreateDirectory(dirPath);
             
-            var outPath = Path.Combine(dirPath, $"{att.alt}.tgs");
+            var outPath = Path.Combine(dirPath, $"{att.alt}.ziplottie");
             var fName = $"{att.alt}";
             int index = 0;
             while (File.Exists(outPath))
             {
                 fName = $"{att.alt}_{++index}";
-                outPath = Path.Combine(dirPath, $"{fName}.tgs");
+                outPath = Path.Combine(dirPath, $"{fName}.ziplottie");
             }
             File.Copy(localPath, outPath, true);
             
@@ -296,11 +296,11 @@ public class TelegramGroupManager : MonoBehaviour
                 {
                     await client.DownloadFileAsync(loc, fs);
                 }
-                var outPat = Path.Combine(dirPath, $"{fName}_onclick.tgs");
+                var outPat = Path.Combine(dirPath, $"{fName}_onclick.ziplottie");
                 File.Copy(locPath, outPat, true);
             }
             
-            var asset = TelegramLottieAsset.Create(await File.ReadAllBytesAsync(localPath));
+            var asset = LottieAsset.Create(await File.ReadAllBytesAsync(localPath));
             LottieImage.Create(asset, messageObj);
         }
         else if (extension == ".mp4")
