@@ -65,6 +65,11 @@ public class EditorWorld : MonoBehaviour
     
     private void Update()
     {
+        if (instance != this)
+        {
+            Destroy(gameObject);
+        }
+        
         if (targetFps >= 0)
         {
             var now = EditorApplication.timeSinceStartup;
@@ -95,6 +100,7 @@ public class EditorWorld : MonoBehaviour
         var go = new GameObject("EditorWorld");
         go.hideFlags = HideFlags.HideAndDontSave;
         instance = go.AddComponent<EditorWorld>();
+        EditorApplication.update -= EditorUpdate;
         EditorApplication.update += EditorUpdate;
     }
 
