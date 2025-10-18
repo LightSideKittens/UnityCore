@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿/*using UnityEngine;
 using UnityEditor;
 using System.IO;
 
@@ -47,4 +47,4 @@ public class ChangeFileExtensions : MonoBehaviour
 
         Debug.Log($"✅ Изменено расширение у {changedCount} файлов на {newExtension}");
     }
-}
+}*/
