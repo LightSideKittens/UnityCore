@@ -1,8 +1,6 @@
 ﻿using LSCore;
 using LSCore.Extensions;
 using Sirenix.OdinInspector;
-using Sirenix.OdinInspector.Editor;
-using Sirenix.Utilities;
 using UnityEngine;
 using UnityEngine.UI;
 #if UNITY_EDITOR
