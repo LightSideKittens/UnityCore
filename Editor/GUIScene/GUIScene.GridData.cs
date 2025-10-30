@@ -22,12 +22,11 @@ namespace LSCore.Editor
             public bool displayYGrid = true;
             public Color scaleBackColor = new(0f, 0f, 0f, 0.5f);
             public float SnappingStep { get; private set; }
+            public const float MinValue = -100_000_000_000_000f;
+            public const float MaxValue = 100_000_000_000_000f;
             
             public void Draw()
             {
-                const float minValue = -100_000_000_000_000f;
-                const float maxValue = 100_000_000_000_000f;
-                
                 if (eventType != EventType.Repaint) return;
 
                 Vector2 minCamPos = cam.ViewportToWorldPoint(new Vector3(0, 0, cam.nearClipPlane));
@@ -134,8 +133,8 @@ namespace LSCore.Editor
                 void DrawLine(float x, float y, int compIndex)
                 {
                     var line = GetLine(c, lw, false);
-                    positions[0] = currentMatrix.MultiplyPoint3x4(new Vector3(x, y)).SetByIndex(minValue, compIndex);
-                    positions[1] = currentMatrix.MultiplyPoint3x4(new Vector3(x, y)).SetByIndex(maxValue, compIndex);
+                    positions[0] = currentMatrix.MultiplyPoint3x4(new Vector3(x, y)).SetByIndex(MinValue, compIndex);
+                    positions[1] = currentMatrix.MultiplyPoint3x4(new Vector3(x, y)).SetByIndex(MaxValue, compIndex);
 
                     line.positionCount = 2;
                     line.SetPositions(positions);

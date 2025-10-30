@@ -8,6 +8,7 @@ using LSCore.Editor;
 using LSCore.Extensions;
 using LSCore.Extensions.Unity;
 using Newtonsoft.Json.Linq;
+using Sirenix.Utilities.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,12 +17,14 @@ public delegate void RefAction<T>(MoveItCurveEditor editor, int index, ref T val
 [Serializable]
 public class MoveItMultiCurveEditor
 {
+    public const float ConstWidth = 0.05f / 3;
+    private const float SeparatorWidth = ConstWidth / 6;
+    private static Color separatorColor = new(0.24f, 0.72f, 1f, 0.1f);
     public Action BeforeDraw;
     public RefAction<BezierPoint> OverridePointPosForSelection;
 
     private static JToken Config => Manager.Config.data;
     private static EditorConfigManager Manager => EditorConfig.GetManager(nameof(MoveItMultiCurveEditor));
-    public MoveItCurveEditor First => visibleEditors[0];
     public List<MoveItCurveEditor> editors = new();
     private List<MoveItCurveEditor> visibleEditors = new();
     public Matrix4x4 matrix = Matrix4x4.identity * Matrix4x4.Scale(new Vector3(10, 1, 1));
@@ -44,19 +47,15 @@ public class MoveItMultiCurveEditor
     
     public MoveItMultiCurveEditor(IEnumerable<MoveItCurveEditor> editors) : this()
     {
-        this.editors.AddRange(editors);
-        foreach (var editor in this.editors)
+        foreach (var editor in editors)
         {
-            SetupPointsBoundsGetter(editor);
+            Add(editor);
         }
-        OnEnable();
     }
     
     public MoveItMultiCurveEditor(MoveItCurveEditor editor) : this()
     {
-        SetupPointsBoundsGetter(editor);
-        editors.Add(editor);
-        OnEnable();
+        Add(editor);
     }
 
     public MoveItMultiCurveEditor()
@@ -66,14 +65,38 @@ public class MoveItMultiCurveEditor
     
     public void Add(MoveItCurveEditor editor)
     {
+        if (editors.Contains(editor))
+        {
+            return;
+        }
+        
         SetupPointsBoundsGetter(editor);
         editors.Add(editor);
+        editor.Edited += OnEdited;
         editor.OnEnable();
     }
+    
 
+    public void Remove(MoveItCurveEditor editor)
+    {
+        editors.Remove(editor);
+        editor.Edited -= OnEdited;
+        editor.OnDisable();
+    }
+    
     public void Clear()
     {
+        foreach (var editor in editors)
+        {
+            editor.Edited -= OnEdited;
+            editor.OnDisable();
+        }
         editors.Clear();
+    }
+
+    private void OnEdited()
+    {
+        Edited?.Invoke();
     }
     
     private void SetupPointsBoundsGetter(MoveItCurveEditor editor)
@@ -144,6 +167,12 @@ public class MoveItMultiCurveEditor
         GUIScene.DrawGrid(gridData);
         BeforeDraw?.Invoke();
         GUIScene.SelectRect.Draw();
+        GUIScene.DrawLine(SeparatorWidth, separatorColor, 
+            new Vector3(GUIScene.GridData.MinValue, 0, 0),
+            new Vector3(GUIScene.GridData.MaxValue, 0, 0));
+        GUIScene.DrawLine(SeparatorWidth, separatorColor, 
+            new Vector3(0, GUIScene.GridData.MinValue, 0),
+            new Vector3(0, GUIScene.GridData.MaxValue, 0));
 
         if (visibleEditors.Count > 0)
         {
@@ -153,6 +182,12 @@ public class MoveItMultiCurveEditor
         
         GUIScene.End();
         matrix = GUIScene.EndMatrix();
+        var e = Event.current;
+
+        if (e.OnKeyDown(KeyCode.N))
+        {
+            matrix = Matrix4x4.identity * Matrix4x4.Scale(new Vector3(10, 1, 1));
+        }
         
         BeforeDraw = null;
         OverridePointPosForSelection = null;
@@ -269,7 +304,7 @@ public class MoveItMultiCurveEditor
             if (!rectContainsMouse) return;
             UpdateSnappingStep();
             var e = Event.current;
-
+            
             if (e.type == EventType.MouseDown)
             {
                 if (e.button == 0)
@@ -501,18 +536,19 @@ public class MoveItMultiCurveEditor
 
     public void OnEnable()
     {
-        for (int i = 0; i < visibleEditors.Count; i++)
+        for (int i = 0; i < editors.Count; i++)
         {
-            var editor = visibleEditors[i];
+            var editor = editors[i];
             editor.OnEnable();
+            SetupPointsBoundsGetter(editor);
         }
     }
 
     public void OnDisable()
     {
-        for (int i = 0; i < visibleEditors.Count; i++)
+        for (int i = 0; i < editors.Count; i++)
         {
-            var editor = visibleEditors[i];
+            var editor = editors[i];
             editor.OnDisable();
         }
     }
@@ -553,9 +589,6 @@ public class MoveItMultiCurveEditor
         }
     }
 
-    public void Remove(MoveItCurveEditor editor)
-    {
-        editors.Remove(editor);
-    }
+    public event Action Edited;
 }
 #endif
