@@ -38,6 +38,8 @@ public class MoveItCurveDrawer : PropertyDrawer
             }
             
             window = MoveItCurveWindow.ShowWindow(curve);
+            window.editor.editors[0].IsFocused = true;
+            window.editor.snapping = false;
             
             window.Edited += () =>
             {

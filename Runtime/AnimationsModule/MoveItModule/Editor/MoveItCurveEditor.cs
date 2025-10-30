@@ -14,9 +14,9 @@ public partial class MoveItCurveEditor
 {
     public Object context;
     public MoveItCurve curve;
-    public const float constWidth = 0.05f / 3;
-    private const float BezierWidth = constWidth / 4;
-    private const float tangentWidth = constWidth / 10;
+    public const float ConstWidth = 0.05f / 3;
+    private const float BezierWidth = ConstWidth / 4;
+    private const float TangentWidth = ConstWidth / 10;
     
     public RefAction<BezierPoint> OverridePointPosition;
     public Color curveColor = new (1f, 0.32f, 0.36f);
@@ -77,8 +77,8 @@ public partial class MoveItCurveEditor
 
                 var st = curve[0];
                 var sp = curve[1];
-                DrawTangentLine(tangentWidth, tangentLineColor, st.e, sp.e);
-                DrawTangentPoint(st.e, constWidth, tangentPointColor);
+                DrawTangentLine(TangentWidth, tangentLineColor, st.e, sp.e);
+                DrawTangentPoint(st.e, ConstWidth, tangentPointColor);
 
                 for (int i = 1; i < curve.Count - 2; i += 3)
                 {
@@ -90,31 +90,31 @@ public partial class MoveItCurveEditor
                     GUIScene.DrawBezier(startPosition.p, startTangent.p, endTangent.p, endPosition.p, curveColor,
                         bezierWidth);
 
-                    DrawTangentLine(tangentWidth, tangentLineColor, startTangent.e, startPosition.e);
-                    DrawTangentLine(tangentWidth, tangentLineColor, endTangent.e, endPosition.e);
+                    DrawTangentLine(TangentWidth, tangentLineColor, startTangent.e, startPosition.e);
+                    DrawTangentLine(TangentWidth, tangentLineColor, endTangent.e, endPosition.e);
 
-                    GUIScene.DrawCircle(startPosition.e, constWidth, keyPointColor);
-                    DrawTangentPoint(startTangent.e, constWidth, tangentPointColor);
-                    DrawTangentPoint(endTangent.e, constWidth, tangentPointColor);
+                    GUIScene.DrawCircle(startPosition.e, ConstWidth, keyPointColor);
+                    DrawTangentPoint(startTangent.e, ConstWidth, tangentPointColor);
+                    DrawTangentPoint(endTangent.e, ConstWidth, tangentPointColor);
                 }
 
                 var ep = curve[^2];
                 var et = curve[^1];
-                DrawTangentLine(tangentWidth, tangentLineColor, et.e, ep.e);
-                DrawTangentPoint(et.e, constWidth, tangentPointColor);
+                DrawTangentLine(TangentWidth, tangentLineColor, et.e, ep.e);
+                DrawTangentPoint(et.e, ConstWidth, tangentPointColor);
 
-                GUIScene.DrawCircle(ep.e, constWidth, keyPointColor);
+                GUIScene.DrawCircle(ep.e, ConstWidth, keyPointColor);
 
                 for (int i = 0; i < selectedPointIndexes.Count; i++)
                 {
                     var target = selectedPointIndexes[i];
                     if (IsRoot(target))
                     {
-                        GUIScene.DrawCircle(curve[target].e, constWidth, selectionColor);
+                        GUIScene.DrawCircle(curve[target].e, ConstWidth, selectionColor);
                     }
                     else if (!IsLocked)
                     {
-                        GUIScene.DrawRing(curve[target].e, constWidth, selectionColor);
+                        GUIScene.DrawRing(curve[target].e, ConstWidth, selectionColor);
                     }
                 }
             }
@@ -124,6 +124,8 @@ public partial class MoveItCurveEditor
         {
             ProcessEvents(Event.current);
         }
+        
+        ApplyChangedPoints();
 
         void DrawTangentPoint(Vector2 pos, float size, Color color)
         {
@@ -164,7 +166,6 @@ public partial class MoveItCurveEditor
     
     public bool IsPointSelected(int index) => selectedPointIndexes.Contains(index);
     
-    private readonly int[] workedPointIndexesArr = new int[2];
     [SerializeField] private List<int> selectedPointIndexes = new();
     private List<int> oldsSelectedPointIndexes;
     
@@ -221,7 +222,7 @@ public partial class MoveItCurveEditor
     }
     
     public Func<Rect> pointsBoundsGetter;
-    private GUIScene.PointsTransformer pointsTransformer;
+    private PointsTransformer pointsTransformer;
     private bool lastIsRecorded;
 
     public bool IsRecorded
@@ -431,7 +432,7 @@ public partial class MoveItCurveEditor
 
             continue;
 
-            bool Check() => IsInDistance(pos, mp, constWidth);
+            bool Check() => IsInDistance(pos, mp, ConstWidth);
         }
 
         index = -1;
@@ -532,7 +533,7 @@ public partial class MoveItCurveEditor
             for (int j = -1; j < 2; j++)
             {
                 var ind = i + j;
-                SetPos(ref ind, curve[ind].e + delta, true);
+                SetPos(ind, curve[ind].e + delta);
             }
         }
     }
@@ -544,17 +545,19 @@ public partial class MoveItCurveEditor
             for (int j = -1; j < 2; j++)
             {
                 var ind = i + j;
-                UpdatePos(ref ind, true);
+                UpdatePos(ind);
             }
         }
     }
 
-    private void UpdatePos(ref int i, bool isRootMoving)
+    private void UpdatePos(int i)
     {
-        SetPos(ref i, curve[i], isRootMoving);
+        SetPos(i, curve[i]);
     }
     
-    private void SetPos(ref int i, Vector2 pos, bool isRootMoving)
+    private HashSet<int> changedPointIndexes = new();
+    
+    private void SetPos(int i, Vector2 pos)
     {
         if(IsLocked) return;
         
@@ -567,74 +570,89 @@ public partial class MoveItCurveEditor
         }
 
         pos.x = GUIScene.SnapX(pos.x, SnappingStep);
+
+        point.e = pos;
+        curve[i] = point;
+        changedPointIndexes.Add(i);
+    }
+
+    private void ApplyChangedPoints()
+    {
+        changedPointIndexes ??= new HashSet<int>();
+        if(changedPointIndexes.Count == 0) return;
         
-        curve[i] = point.epSet(pos);
-        
-        if (ClampTangent(i))
+        var list = changedPointIndexes.ToList();
+        foreach (var index in changedPointIndexes)
         {
-            if(isRootMoving) return;
+            var i = index;
+            var point = curve[i];
             
-            int f1;
-            int f2;
-            
-            if (IsForwardTangent(i))
+            if (IsRoot(i))
             {
-                f1 = -1;
-                f2 = -2;
-            }
-            else
-            {
-                f1 = 1;
-                f2 = 2;
-            }
-            
-            var root = curve[i + f1];
-            var tangent = curve[i + f2];
-            var dir = (curve[i].e - root.p).normalized;
-                
-            if (root.alignType == AlignType.Aligned)
-            {
-                var dis = (tangent.e - root.p).magnitude;
-                tangent.epSet(root.p + -dir * dis);
-                curve[i + f2] = tangent;
-                ClampTangent(i + f2);
+                TrySwap(i);
+
+                void TrySwap(int ii)
+                {
+                    var diff = point.e.x - point.x;
+                    var newIndex = curve.GetLeftKeyIndexByX(point.e.x);
+                    if (newIndex == -1) newIndex = 1;
+                    else if(diff < 0) newIndex += 3;
+                    if (newIndex != ii)
+                    {
+                        if (SwapKeys(ii, newIndex))
+                        {
+                            list.Add(newIndex);
+                        }
+                    }
+                }
             }
         }
-        else
+        
+        foreach (var i in list)
         {
-            var li = i;
-            TrySwapNext(ref i);
-            TrySwapPrev(ref i);
-            
-            if (li == i)
+            var p = curve[i];
+            p.p = p.e;
+            curve[i] = p;
+        }
+        
+        foreach (var i in list)
+        {
+            if (IsRoot(i))
             {
                 ClampTangentsByKey(i);
             }
-            
-            return;
-            
-            void TrySwapNext(ref int ii)
+            else
             {
-                if(ii + 3 > curve.Count - 1) return;
-                
-                var next = curve[ii + 3];
-                if (point.x > next.x)
-                {
-                    SwapKeys(ref ii, ii + 3);
-                }
-            }
+                ClampTangent(i);
+                int f1;
+                int f2;
 
-            void TrySwapPrev(ref int ii)
-            {
-                if(ii - 3 < 0) return;
-                
-                var prev = curve[ii - 3];
-                if (point.x < prev.x)
+                if (IsForwardTangent(i))
                 {
-                    SwapKeys(ref ii, ii - 3);
+                    f1 = -1;
+                    f2 = -2;
+                }
+                else
+                {
+                    f1 = 1;
+                    f2 = 2;
+                }
+
+                var root = curve[i + f1];
+                
+                if (root.alignType == AlignType.Aligned)
+                {
+                    var tangent = curve[i + f2];
+                    var dir = (curve[i].e - root.p).normalized;
+                    var dis = (tangent.e - root.p).magnitude;
+                    tangent.epSet(root.p + -dir * dis);
+                    curve[i + f2] = tangent;
+                    ClampTangent(i + f2);
                 }
             }
         }
+        
+        changedPointIndexes.Clear();
     }
     
     private void ClampTangentsByKey(int keyIndex)
@@ -708,44 +726,55 @@ public partial class MoveItCurveEditor
         if (alignType == AlignType.Aligned)
         {
             var a = i;
-            UpdatePos(ref a, true);
+            UpdatePos(a);
             a = i + f1;
-            UpdatePos(ref a, false);
+            UpdatePos(a);
             a = i + f2;
-            UpdatePos(ref a, false);
+            UpdatePos(a);
         }
     }
-    
-    private int[] GetTangentIndexes(int i)
-    {
-        if (IsTangent(i)) return Array.Empty<int>();
-        
-        workedPointIndexesArr[0] = i - 1;
-        workedPointIndexesArr[1] = i + 1;
-        return workedPointIndexesArr[..];
-    }
-    
-    private static bool IsInDistance(BezierPoint point, Vector2 worldMousePos, float distance) => GUIScene.IsInDistance(point.e, worldMousePos, distance);
 
-    public void SwapKeys(ref int root1, int root2)
+    public bool SwapKeys(int root1, int root2)
     {
         RecordMove();
-        if(IsTangent(root1) || IsTangent(root2)) return;
+        if(IsTangent(root1) || IsTangent(root2)) return false;
 
         var root1Tangents = GetTangentIndexes(root1);
         var root2Tangents = GetTangentIndexes(root2);
         
         (curve[root1], curve[root2]) = (curve[root2], curve[root1]);
-        (root1, root2) = (root2, root1);
         
         for (int i = 0; i < 2; i++)
         {
             (curve[root1Tangents[i]], curve[root2Tangents[i]]) = (curve[root2Tangents[i]], curve[root1Tangents[i]]);
         }
 
-        ClampTangentsByKey(root1);
-        ClampTangentsByKey(root2);
+        TrySwapSelected();
+        return true;
+
+        void TrySwapSelected()
+        {
+            var indices = new[] {root1, root1Tangents[0], root1Tangents[1]};
+            var indices2 = new[] {root2, root2Tangents[0], root2Tangents[1]};
+            
+            for (int j = 0; j < indices.Length; j++)
+            {
+                var i = selectedPointIndexes.IndexOf(indices[j]);
+                if (i != -1)
+                {
+                    selectedPointIndexes[i] = indices2[j];
+                }
+            }
+        }
+        
+        int[] GetTangentIndexes(int i)
+        {
+            if (IsTangent(i)) return Array.Empty<int>();
+            return new[] {i -1, i + 1};
+        }
     }
+
+    private static bool IsInDistance(BezierPoint point, Vector2 worldMousePos, float distance) => GUIScene.IsInDistance(point.e, worldMousePos, distance);
 
     public void HandleMultiSelection()
     {
@@ -814,13 +843,12 @@ public partial class MoveItCurveEditor
                     {
                         ind = targetIndex + j;
                         copyind = copyTargetIndex + j;
-                        SetPosByMouseDrag(ref ind, copyind, true);
+                        SetPosByMouseDrag(ind, copyind);
                     }
                                 
                     ind = targetIndex;
                     copyind = copyTargetIndex;
-                    SetPosByMouseDrag(ref ind, copyind, true);
-                    selectedPointIndexes[i] = ind;
+                    SetPosByMouseDrag(ind, copyind);
                 }
             }
             else
@@ -829,19 +857,18 @@ public partial class MoveItCurveEditor
                 {
                     var ind = targetIndex;
                     var copyind = copyTargetIndex;
-                    SetPosByMouseDrag(ref ind, copyind, false);
-                    selectedPointIndexes[i] = ind;
+                    SetPosByMouseDrag(ind, copyind);
                 }
             }
         }
         
         GUI.changed = true;
         
-        void SetPosByMouseDrag(ref int ind, int copyi, bool isRoot)
+        void SetPosByMouseDrag(int ind, int copyi)
         {
             var delta = GUIScene.MouseInWorldPoint - startMousePosition;
             var point = copyPoints[copyi].e + delta;
-            SetPos(ref ind, point, isRoot);
+            SetPos(ind, point);
         }
     }
 
@@ -866,7 +893,7 @@ public partial class MoveItCurveEditor
                 {
                     yWasBlocked = isYBlocked;
                     isYBlocked = false;
-                    if (yWasBlocked) pointsTransformer.currentAxis = Axis.X;
+                    if (yWasBlocked) pointsTransformer.axis = Axis.X;
                 }
                 
                 var copy = new MoveItCurve(curve);
@@ -882,8 +909,8 @@ public partial class MoveItCurveEditor
                 pointsTransformer.eventHandler = _ =>
                 {
                     var curPos = GUIScene.MouseInWorldPoint;
-                    var transformation = pointsTransformer.GetMatrix(bounds, startPos, curPos);
-
+                    var transformer = pointsTransformer.BuildTransformer(bounds, startPos, curPos);
+                    
                     for (int i = 0; i < selectedPointIndexes.Count; i++)
                     {
                         var targetIndex = selectedPointIndexes[i];
@@ -898,20 +925,19 @@ public partial class MoveItCurveEditor
                             for (int j = -1; j < 2; j += 2)
                             {
                                 ind = targetIndex + j;
-                                point = transformation.MultiplyPoint(copy[lastTargetIndex + j].e);
-                                SetPos(ref ind, point, true);
+                                point = transformer(copy[lastTargetIndex + j].e);
+                                SetPos(ind, point);
                             }
 
                             ind = targetIndex;
-                            point = transformation.MultiplyPoint(copy[lastTargetIndex].e);
-                            SetPos(ref ind, point, true);
-                            selectedPointIndexes[i] = ind;
+                            point = transformer(copy[lastTargetIndex].e);
+                            SetPos(ind, point);
                         }
                         else
                         {
                             var ind = targetIndex;
-                            var point = transformation.MultiplyPoint(copy[lastTargetIndex].e);
-                            SetPos(ref ind, point, false);
+                            var point = transformer(copy[lastTargetIndex].e);
+                            SetPos(ind, point);
                         }
                     }
                 };
@@ -943,7 +969,7 @@ public partial class MoveItCurveEditor
             var mp = leftPoint.e;
             mp.x = x;
             
-            if (IsInDistance(leftPoint, mp, constWidth))
+            if (IsInDistance(leftPoint, mp, ConstWidth))
             {
                 return leftPoint;
             }
@@ -956,7 +982,7 @@ public partial class MoveItCurveEditor
             var mpr = rightPoint.e;
             mpr.x = x;
             
-            if (IsInDistance(rightPoint, mpr, constWidth))
+            if (IsInDistance(rightPoint, mpr, ConstWidth))
             {
                 return rightPoint;
             }

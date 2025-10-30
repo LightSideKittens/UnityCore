@@ -6,7 +6,7 @@ using UnityEngine;
 public class MoveItCurveWindow : EditorWindow
 {
     public MoveItMultiCurveEditor editor;
-    public event Action Edited {add => editor.First.Edited += value; remove => editor.First.Edited -= value; }
+    public event Action Edited {add => editor.Edited += value; remove => editor.Edited -= value; }
     
     public static MoveItCurveWindow ShowWindow(MoveItCurve curve)
     {
