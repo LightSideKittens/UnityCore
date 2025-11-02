@@ -32,6 +32,11 @@ namespace LSCore
                 Number = reference.Number * multiplier;
             }
         }
+
+        protected override void OnDestroy()
+        {
+            reference.Validated -= OnValidate;
+        }
 #endif
     }
     
