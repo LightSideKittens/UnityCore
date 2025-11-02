@@ -21,7 +21,17 @@ namespace LSCore
             }
         }
         
-        public static bool IsNull => instance == null;
+        public static bool IsNull
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if(World.IsEditMode) return FindAnyObjectByType<T>(FindObjectsInactive.Include) == null;
+#endif
+                return instance == null;
+            }
+        }
+
         public static bool IsExistsInManager => ServiceManager.IsExists<T>();
 
         static SingleService()
