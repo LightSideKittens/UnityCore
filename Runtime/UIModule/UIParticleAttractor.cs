@@ -34,8 +34,6 @@ public class UIParticleAttractor : MonoBehaviour
     public float duration = 0.3f;
     public float delayPerParticle = 0.05f;
     public Ease ease = Ease.InOutCubic;
-    [SerializeReference] public DoIt[] onParticleAttracted;
-    [SerializeReference] public DoIt[] onComplete;
     
     public void Play(Data data)
     {

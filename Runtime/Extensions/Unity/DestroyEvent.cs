@@ -46,17 +46,17 @@ public class DestroyEvent : MonoBehaviour, DestroyEvent.I
         switch (obj)
         {
             case I e:
-                e.Destroyed += onDestroy;
+                e.Subscribe(onDestroy);
                 break;
             case Component component:
             {
                 de = component.GetOrAddComponent<DestroyEvent>();
-                de.Destroyed += onDestroy;
+                de.Subscribe(onDestroy);
                 break;
             }
             case GameObject gameObject:
                 de = gameObject.GetOrAddComponent<DestroyEvent>();
-                de.Destroyed += onDestroy;
+                de.Subscribe(onDestroy);
                 break;
         }
         
@@ -71,9 +71,42 @@ public class DestroyEvent : MonoBehaviour, DestroyEvent.I
     public interface I
     {
         event Action Destroyed;
+        void Subscribe(Action onDestroy);
     }
     
     public event Action Destroyed;
+    private static Action updated;
+
+    static DestroyEvent()
+    {
+        World.Updated += () => updated?.Invoke();
+    }
+
+    void I.Subscribe(Action onDestroy) => Subscribe(onDestroy);
+    
+    private void Subscribe(Action onDestroy)
+    {
+        if (!didAwake)
+        { 
+            updated += CheckDestroy;
+        }
+        
+        Destroyed += onDestroy;
+    }
+
+    private void Awake()
+    {
+        updated -= CheckDestroy;
+    }
+
+    private void CheckDestroy()
+    {
+        if (this == null)
+        {
+            updated -= CheckDestroy;
+            OnDestroy();
+        }
+    }
 
     private void OnDestroy()
     {
