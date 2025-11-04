@@ -179,14 +179,6 @@ namespace LSCore
         private string IntValue(float val) => $"{(int)GetDisplayedValue(val)}";
         private string ValueText(float val) => $"{GetDisplayedValue(val)}";
         
-        /// <summary>
-        /// Set the value of the slider.
-        /// </summary>
-        /// <param name="input">The new value for the slider.</param>
-        /// <param name="sendCallback">If the OnValueChanged callback should be invoked.</param>
-        /// <remarks>
-        /// Process the input to ensure the value is between min and max value. If the input is different set the value and send the callback is required.
-        /// </remarks>
         protected virtual void Set(float input, bool sendCallback = true)
         {
             float newValue = clampValue ? ClampValue(input) : input;
