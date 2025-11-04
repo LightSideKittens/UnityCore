@@ -109,7 +109,8 @@ namespace LSCore
         internal void TrySort()
         {
             if(EditorGUIUtility.editingTextField) return;
-            
+
+            total = 0;
             intervals.Sort((a, b) => (int)Mathf.Sign(a.value - b.value));
 
             for (int i = 0; i < intervals.Count; i++)
