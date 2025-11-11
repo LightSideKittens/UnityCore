@@ -1,19 +1,18 @@
 {
-    "name": "LSCore.DoIt",
+    "name": "LSCore.DailyRewardsModule",
     "rootNamespace": "",
     "references": [
-        "GUID:bb5ab3e5517faff4287376ae8f1fc9fc",
-        "GUID:a8db40cbaf444aa3aedf3bb887de5433",
-        "GUID:e2d262c07fab33347bf583c077610e88",
-        "GUID:1b6b29427dc85403c316475c7068fc50",
-        "GUID:60589634cd8c5134c4f50388f1b1595b",
-        "GUID:9c38c981acbf419b9287676bf57791e2",
-        "GUID:2fb5cf31e708b65c6cd386829ff94feb",
+        "GUID:49c8b4161276466c9b71ed5be1d40c16",
+        "GUID:1bc6eecb763177148a383c0cb9ad9369",
         "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
-        "GUID:b2621ed9809523852c40dfbc7bd87a56",
+        "GUID:488fbb5f4bad8a94daedd0c8d1239e93",
+        "GUID:247942eb90ec48b696028c8e4c1f8e20",
+        "GUID:d426b638445cc2f428ed8ba7c1325767",
+        "GUID:a8db40cbaf444aa3aedf3bb887de5433",
         "GUID:7d47bdd0b4734221a4f1a8d8b153ebb3",
         "GUID:5bb0561ab59f4090b284fb2dc8ab2482",
-        "GUID:060c0c84c34efbc47989cd1b96db33f6"
+        "GUID:b8174984431948ae8b532ea76c54d68a",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

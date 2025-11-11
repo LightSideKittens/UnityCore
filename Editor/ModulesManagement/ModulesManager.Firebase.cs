@@ -1,5 +1,4 @@
 using System;
-using Attributes;
 using JetBrains.Annotations;
 using UnityEngine;
 using static LSCore.Editor.Defines.Names;
@@ -9,7 +8,7 @@ namespace LSCore.Editor
     internal partial class ModulesManager
     {
         [UsedImplicitly]
-        [ColoredField, SerializeField] private FirebaseModules firebaseModules = new();
+        [SerializeField] private FirebaseModules firebaseModules = new();
 
         [Serializable]
         [UsedImplicitly]

@@ -19,7 +19,7 @@ namespace LSCore
         private static readonly LSVertexHelper vertexHelper = new LSVertexHelper();
         private RectTransform rt;
         private Rect currentRect;
-        private bool isShowed;
+        public bool IsShowed { get; private set; }
         public event Action Showed;
         public event Action Hidden;
 
@@ -46,19 +46,18 @@ namespace LSCore
         {
             rt = rectTransform;
             base.OnEnable();
-            StartCoroutine(DelayedOnEnable());
-        }
+            CanvasUpdateRegistry.Updated += OnUpdate;
 
-        private IEnumerator DelayedOnEnable()
-        {
-            yield return null;
-
-            if (!canvasRenderer.cull)
+            void OnUpdate()
             {
-                OnShowed();
-            }
+                CanvasUpdateRegistry.Updated -= OnUpdate;
+                if (!canvasRenderer.cull)
+                {
+                    OnShowed();
+                }
 
-            onCullStateChanged.AddListener(OnCullStateChanged);
+                onCullStateChanged.AddListener(OnCullStateChanged);
+            }
         }
 
         private void OnCullStateChanged(bool cull)
@@ -89,17 +88,17 @@ namespace LSCore
 
         protected virtual void OnShowed()
         {
-            if (isShowed) return;
+            if (IsShowed) return;
 
-            isShowed = true;
+            IsShowed = true;
             Showed?.Invoke();
         }
 
         protected virtual void OnHidden()
         {
-            if (!isShowed) return;
+            if (!IsShowed) return;
 
-            isShowed = false;
+            IsShowed = false;
             Hidden?.Invoke();
         }
 

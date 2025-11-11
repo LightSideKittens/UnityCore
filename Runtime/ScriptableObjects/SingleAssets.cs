@@ -2,18 +2,9 @@
 using System.Collections.Generic;
 using LSCore;
 using LSCore.DataStructs;
-using LSCore.Extensions;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using Object = UnityEngine.Object;
-
-public class FromSingleAssetsAttribute : ValueDropdownAttribute
-{
-    public FromSingleAssetsAttribute() : base("@SingleAssets.Keys")
-    {
-        
-    }
-}
 
 public class SingleAssets : ScriptableObject
 {

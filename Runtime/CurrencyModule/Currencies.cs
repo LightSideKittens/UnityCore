@@ -9,6 +9,7 @@ namespace LSCore
     {
         [JsonProperty] private Dictionary<string, int> currencies = new();
         internal static readonly Dictionary<string, Action<(int last, int current)>> onChangedActions = new();
+        public static event Action<string, (int last, int current)> Changed;
 
 #if UNITY_EDITOR
         static Currencies()
@@ -66,10 +67,12 @@ namespace LSCore
 
         private static void TryInvokeOnChanged(string name, (int last, int current) data)
         {
+            Changed?.Invoke(name, data);
             if (onChangedActions.TryGetValue(name, out var action))
             {
                 action(data);
             }
         }
+        
     }
 }

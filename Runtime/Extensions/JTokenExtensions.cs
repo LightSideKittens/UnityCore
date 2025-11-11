@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -306,5 +307,6 @@ namespace LSCore.Extensions
         public static implicit operator RJObject(JObject token) => new(token);
 
         public bool ContainsKey(string key) => Token.ContainsKey(key);
+        public bool TryGetValue(string key, [CanBeNull] out JToken token) => Token.TryGetValue(key, out token);
     }
 }

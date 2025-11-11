@@ -1,13 +1,7 @@
 {
     "name": "LSCore.Attributes",
     "rootNamespace": "",
-    "references": [
-        "GUID:e203c3ad7a7046548ca22a43fa4eb0de",
-        "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
-        "GUID:1b6b29427dc85403c316475c7068fc50",
-        "GUID:2fb5cf31e708b65c6cd386829ff94feb",
-        "GUID:60589634cd8c5134c4f50388f1b1595b"
-    ],
+    "references": ["GUID:1b6b29427dc85403c316475c7068fc50","GUID:2fb5cf31e708b65c6cd386829ff94feb","GUID:60589634cd8c5134c4f50388f1b1595b"],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

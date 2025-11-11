@@ -1,5 +1,4 @@
-﻿using Attributes;
-using LSCore;
+﻿using LSCore;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -10,11 +9,12 @@ namespace Animatable
         private Canvas canvas;
         private static Camera Cam => Instance.canvas.worldCamera;
 
-        [ColoredField, SerializeField] private AnimText animText;
-        [ColoredField, SerializeField] private HealthBar healthBar;
-        [ColoredField, SerializeField] private HealthBar opponentHealthBar;
-        [ColoredField, SerializeField] private Loader loader;
-        [ColoredField, SerializeField] private PopupText popupText;
+        [SerializeField] private AnimText animText;
+        [SerializeField] private HealthBar healthBar;
+        [SerializeField] private HealthBar opponentHealthBar;
+        [SerializeField] private Loader loader;
+        [SerializeField] private PopupText popupText;
+        [SerializeField] private ParticlesAttractor particlesAttractor;
 
         public static int SortingOrder
         {
@@ -27,6 +27,7 @@ namespace Animatable
         internal static PopupText PopupText => Instance.popupText;
         internal static HealthBar HealthBar => Instance.healthBar;
         internal static HealthBar OpponentHealthBar => Instance.opponentHealthBar;
+        internal static ParticlesAttractor ParticlesAttractor => Instance.particlesAttractor;
         internal static Loader Loader => Instance.loader;
 
         private void Awake()
@@ -41,6 +42,7 @@ namespace Animatable
             popupText.Init();
             healthBar.Init();
             opponentHealthBar.Init();
+            particlesAttractor.Init();
             canvas = GetComponent<Canvas>();
             canvas.worldCamera = Camera.main;
             
@@ -74,6 +76,7 @@ namespace Animatable
             instance.healthBar.ReleaseAll();
             instance.popupText.ReleaseAll();
             instance.opponentHealthBar.ReleaseAll();
+            instance.particlesAttractor.ReleaseAll();
         }
     }
 }
