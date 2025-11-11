@@ -17,7 +17,7 @@ namespace LSCore.Attributes
     {
         protected override void DrawPropertyLayout(GUIContent label)
         {
-            Property.CallMethod(Property);
+            //roperty.CallMethod(Property);
         }
     }
 #endif

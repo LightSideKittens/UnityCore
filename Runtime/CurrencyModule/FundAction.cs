@@ -7,11 +7,11 @@ namespace LSCore
     public abstract class FundAction : DoIt
     {
         public Funds funds;
-        public string placement;
+        public string transactionId;
 
         public override void Do()
         {
-            Funds.lastPlacement = placement;
+            Funds.lastTransactionId =  transactionId;
         }
     }
 
@@ -22,6 +22,7 @@ namespace LSCore
         {
             base.Do();
             funds.Earn();
+            Funds.lastTransactionId = null;
         }
     }
     
@@ -38,6 +39,7 @@ namespace LSCore
                 onSpent.Do();
                 action();
             }
+            Funds.lastTransactionId = null;
         }
     }
 }

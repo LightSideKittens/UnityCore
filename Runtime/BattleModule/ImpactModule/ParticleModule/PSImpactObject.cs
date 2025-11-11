@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Attributes;
 using LSCore.Async;
 using LSCore.Attributes;
 using LSCore.DataStructs;
@@ -26,8 +25,7 @@ namespace LSCore
         
         [PropertySpace(20)]
         [SerializeReference] public List<ParticleImpact> impacts;
-
-        [ColoredField]
+        
         public TriggerHandler triggerHandler;
 
         [SerializeField] private GameObject preview;

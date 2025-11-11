@@ -12,6 +12,8 @@ public class UIParticleRenderer : MonoBehaviour
     private CanvasRenderer cr;
     private Mesh mesh;
 
+    public ParticleSystem ParticleSystem => ps;
+
     private void Awake()
     {
         InitComponents();

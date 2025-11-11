@@ -1,5 +1,4 @@
 ﻿using System;
-using Attributes;
 using JetBrains.Annotations;
 using UnityEngine;
 using static LSCore.Editor.Defines.Names;
@@ -8,7 +7,7 @@ namespace LSCore.Editor
 {
     internal partial class ModulesManager
     {
-        [ColoredField, SerializeField] private AdsModules adsModules = new();
+        [SerializeField] private AdsModules adsModules = new();
 
         [Serializable]
         [UsedImplicitly]

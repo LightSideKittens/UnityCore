@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LSCore.Extensions.Unity;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
@@ -30,11 +31,10 @@ namespace LSCore
             if (!objectByPrefab.TryGetValue(prefab, out obj))
             {
                 base.Do();
-                var destroyEvent = obj.gameObject.AddComponent<DestroyEvent>();
-                destroyEvent.Destroyed += () =>
+                DestroyEvent.AddOnDestroy(obj.gameObject, () =>
                 {
                     objectByPrefab.Remove(prefab);
-                };
+                });
                 objectByPrefab.Add(prefab, obj);
             }
         }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using LSCore.Attributes;
 using LSCore.ConditionModule;
 using LSCore.Extensions;
 using Sirenix.OdinInspector;
@@ -12,21 +11,6 @@ namespace LSCore.LifecycleSystem
     public class LifecycleObject : MonoBehaviour
     {
         [Serializable]
-        public abstract class Action : DoIt { }
-
-        [Serializable]
-        [Unwrap]
-        public class ActionWrapper : Action
-        {
-            [SerializeReference] public DoIt action;
-            
-            public override void Do()
-            {
-                action?.Do();
-            }
-        }
-        
-        [Serializable]
         public class Handlers : Ifs<Handler> { }
         
         [Serializable]
@@ -35,24 +19,19 @@ namespace LSCore.LifecycleSystem
             public RJToken lastObjData;
             public RJToken targetObjData;
             
-            public abstract void BuildTargetData(RJToken objToken);
-
-            public void SetupView()
-            {
-                OnSetupView();
-            }
+            public abstract void BuildTargetData(RJToken targetData);
             
-            protected abstract void OnSetupView();
+            public abstract void SetupView();
             public abstract void OnShowed();
         }
 
         public const string isNew = nameof(isNew);
 
-        [SerializeField] private NumberMark markPrefab;
+        //[SerializeField] private NumberMark markPrefab; //TODO: Improve Mark logic
         [SerializeField] public LSImage cullEvent;
         [SerializeReference] public Handlers handlers;
-        [SerializeReference] public List<Action> onComplete;
-
+        [SerializeReference] public List<DoIt> onComplete;
+        
         [SerializeField] private bool useId;
 
         [ShowIf("useId")]
@@ -99,7 +78,7 @@ namespace LSCore.LifecycleSystem
             if (handlers)
             {
                 targetObjData[LifecycleManager.completedAt] = DateTime.UtcNow.Ticks;
-                onComplete.Do(this);
+                onComplete.Do();
             }
         }
         
@@ -112,7 +91,7 @@ namespace LSCore.LifecycleSystem
                 handlers[i].BuildTargetData(token);
             }
             
-            markPrefab.Increase();
+            //markPrefab.Increase();
         }
 
         private void Awake()
@@ -131,7 +110,7 @@ namespace LSCore.LifecycleSystem
                 if (targetObjData[isNew]!.ToObject<bool>())
                 {
                     targetObjData[isNew] = false;
-                    markPrefab.Decrease();
+                    //markPrefab.Decrease();
                 }
             }
         }

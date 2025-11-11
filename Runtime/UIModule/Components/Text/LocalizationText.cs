@@ -175,7 +175,7 @@ namespace LSCore
             UpdateLocalizedText();
         }
         
-        public void LocalizeArguments(params object[] args)
+        public void LocalizeArguments(params object[] args) //TODO: Optimize. We don't need to translate whole text when only arguments were changed
         {
             m_text = string.Empty;
             localizationData.rawArguments = args;

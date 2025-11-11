@@ -12,7 +12,7 @@ namespace LSCore
     [Serializable]
     public class Funds : IEnumerable<BaseFund>
     {
-        public static string lastPlacement;
+        public static string lastTransactionId;
         [SerializeReference] private List<BaseFund> funds = new();
 
         public bool Contains(Id id)
@@ -62,6 +62,8 @@ namespace LSCore
         
         public static void AddOnChanged(Id id, Action<(int last, int current)> onChanged, bool callImmediate = false)
         {
+            if(onChanged == null) return;
+            
             onChangedActions.TryGetValue(id, out var action);
             action += onChanged;
             onChangedActions[id] = action;
@@ -79,6 +81,13 @@ namespace LSCore
             {
                 action -= onChanged;
             }
+
+            if (action == null)
+            {
+                onChangedActions.Remove(id);
+                return;
+            }
+            
             onChangedActions[id] = action;
         }
         

@@ -1,4 +1,5 @@
 ﻿using System;
+using LSCore.Attributes;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -9,10 +10,45 @@ public class InvokeEvent : DoIt
     
     public override void Do()
     {
-        var k = Listen.GetKey(key);
+        var k = DoEventListener.GetKey(key);
         if (StringDict<Action>.TryGet(k, out var action))
         {
-            action();
+            if (action == null)
+            {
+                StringDict<Action>.Remove(k);
+            }
+            else
+            { 
+                action();
+            }
+        }
+    }
+}
+
+public static class DoEventListener
+{
+    public static string GetKey(string key) => string.Concat("DoIt_Event", key);
+    public static void Listen(string key, Action doIt)
+    {
+        var k = GetKey(key);
+        StringDict<Action>.TryGet(k, out var action);
+        action -= doIt;
+        action += doIt;
+        StringDict<Action>.Set(k, action);
+    }
+    
+    public static void UnListen(string key, Action doIt)
+    {
+        var k = GetKey(key);
+        StringDict<Action>.TryGet(k, out var action);
+        action -= doIt;
+        if (action == null)
+        {
+            StringDict<Action>.Remove(k);
+        }
+        else
+        { 
+            StringDict<Action>.Set(k, action);
         }
     }
 }
@@ -20,7 +56,6 @@ public class InvokeEvent : DoIt
 [Serializable]
 public class Listen : DoIt
 {
-    public static string GetKey(string key) => string.Concat("DoIt_Event", key);
     [GetContext] public Object owner;
     public string key;
     [SerializeReference] public DoIt doIt;
@@ -28,30 +63,57 @@ public class Listen : DoIt
     
     public override void Do()
     {
-        var k = GetKey(key);
-        StringDict<Action>.TryGet(k, out var action);
-        action += doIt.Do;
-        StringDict<Action>.Set(k, action);
+        DoEventListener.Listen(key, doIt.Do);
         if (owner != null && !subscribed)
         {
             subscribed = true;
-            DestroyEvent.AddOnDestroy(owner, () =>
-            {
-                StringDict<Action>.Remove(k);
-            });
+            DestroyEvent.AddOnDestroy(owner, UnListen);
         }
+    }
+
+    public void UnListen()
+    {
+        DoEventListener.UnListen(key, doIt.Do);
     }
 }
 
-
 [Serializable]
-public class UnListen : DoIt
+[Unwrap]
+public class MultiListener : DoIt
 {
-    public string key;
+    [Serializable]
+    [Unwrap]
+    public struct Data
+    {
+        public string key;
+        [SerializeReference] public DoIt doIt;
+    }
+    
+    [GetContext] public Object owner;
+    [UnwrapTarget] public Data[] data;
+    private bool subscribed;
     
     public override void Do()
     {
-        var k = Listen.GetKey(key);
-        StringDict<Action>.Remove(k);
+        for (int i = 0; i < data.Length; i++)
+        {
+            var d = data[i];
+            DoEventListener.Listen(d.key, d.doIt.Do);
+        }
+
+        if (owner != null && !subscribed)
+        {
+            subscribed = true;
+            DestroyEvent.AddOnDestroy(owner, UnListen);
+        }
+    }
+
+    public void UnListen()
+    {
+        for (int i = 0; i < data.Length; i++)
+        {
+            var d = data[i];
+            DoEventListener.UnListen(d.key, d.doIt.Do);
+        }
     }
 }
