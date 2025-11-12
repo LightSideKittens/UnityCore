@@ -34,7 +34,7 @@ namespace LSCore
             base.OnOpen();
             Selection.selectionChanged += OnSelectionChanged;
             Undo.postprocessModifications += OnPostprocessModifications;
-            PropertyTreePatcher.InvokeOnPropertyValueChanged.Called += OnPostprocessModifications;
+            //PropertyTreePatcher.InvokeOnPropertyValueChanged.Called += OnPostprocessModifications;
         }
 
         protected override void OnClose(int code, string reason)
@@ -42,7 +42,7 @@ namespace LSCore
             base.OnClose(code, reason);
             Selection.selectionChanged -= OnSelectionChanged;
             Undo.postprocessModifications -= OnPostprocessModifications;
-            PropertyTreePatcher.InvokeOnPropertyValueChanged.Called -= OnPostprocessModifications;
+            //PropertyTreePatcher.InvokeOnPropertyValueChanged.Called -= OnPostprocessModifications;
         }
 
         private void OnSelectionChanged()

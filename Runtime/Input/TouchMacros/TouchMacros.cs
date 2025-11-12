@@ -10,14 +10,14 @@ public partial class TouchMacros : MonoBehaviour
     
     private void OnEnable()
     {
-        GameViewExt.PostGUI -= OnGui;
-        GameViewExt.PostGUI += OnGui;
+        /*GameViewExt.PostGUI -= OnGui;
+        GameViewExt.PostGUI += OnGui;*/
         touchTexture = LSIcons.Get("touch");
     }
     
     private void OnDisable()
     {
-        GameViewExt.PostGUI -= OnGui;
+        //GameViewExt.PostGUI -= OnGui;
     }
 
     private void Update()
@@ -47,8 +47,8 @@ public partial class TouchMacros : MonoBehaviour
     {
         rect = GUIUtility.GUIToScreenRect(rect);
         rect.y += 21;
-        var viewRect = GameViewExt.ViewRect;
-        var screenSize = GameViewExt.ScreenSize;
+        Rect viewRect = default;
+        Vector2 screenSize = default;
         var factor = (viewRect.width / screenSize.x);
         var touchRect = new Rect();
         touchRect.position = viewRect.position;
