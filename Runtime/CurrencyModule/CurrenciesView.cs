@@ -205,15 +205,14 @@ namespace LSCore
                 {
                     statViewsCount.Remove(id);
                     statViews.Remove(id);
+                    foreach (var acceptableTransaction in acceptableTransactions)
+                    {
+                        RemoveTransaction(id, acceptableTransaction);
+                    }
                 }
                 else
                 {
                     statViewsCount[id] = count;
-                }
-                
-                foreach (var acceptableTransaction in acceptableTransactions)
-                {
-                    RemoveTransaction(id, acceptableTransaction);
                 }
             }
 
