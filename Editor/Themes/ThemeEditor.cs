@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿/*using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using DG.DemiEditor;
@@ -129,4 +129,4 @@ namespace LSCore.Editor.EditorThemes
             color = Color.HSVToRGB(hue, s * saturation, v * brightness);
         }
     }
-}
+}*/
