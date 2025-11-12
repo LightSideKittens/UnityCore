@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using DG.Tweening;
 using LSCore.ConfigModule;
 using LSCore.Extensions;
@@ -49,7 +50,7 @@ namespace LSCore
             {
                 if (fundsCount > 10)
                 {
-                    fundsCount = (int)Mathf.Lerp(10, 30, (fundsCount - 10) / 150f);
+                    fundsCount = (int)Mathf.Lerp(10, 20, (fundsCount - 10) / 500f);
                 }
                 
                 return fundsCount;
@@ -153,6 +154,7 @@ namespace LSCore
         }
         
         private static Dictionary<Id, StatView> statViews = new();
+        private static Dictionary<Id, int> statViewsCount = new();
         
         [Serializable]
         public class StatView
@@ -181,26 +183,42 @@ namespace LSCore
             public void OnEnable()
             {
                 statViews[id] = this;
+                statViewsCount.TryGetValue(id, out var count);
+                count++;
+                statViewsCount[id] = count;
+                
                 var amount = Funds.GetAmount(id);
                 
-                foreach (var acceptableTransaction in acceptableTransactions)
+                foreach (var transaction in GetTransactions(id))
                 {
-                    if (TryGetTransaction(id, acceptableTransaction, out var transaction))
-                    {
-                        amount += transaction.Diff;
-                    }
+                    amount -= transaction.Diff;
                 }
-
+                
                 text.Number = amount;
             }
 
-            public void DeInit()
+            public void OnDisable()
             {
-                statViews.Remove(id);
+                statViewsCount.TryGetValue(id, out var count);
+                count--;
+                if (count == 0)
+                {
+                    statViewsCount.Remove(id);
+                    statViews.Remove(id);
+                }
+                else
+                {
+                    statViewsCount[id] = count;
+                }
+                
                 foreach (var acceptableTransaction in acceptableTransactions)
                 {
                     RemoveTransaction(id, acceptableTransaction);
                 }
+            }
+
+            public void DeInit()
+            {
                 ChangedWithoutTransaction -= OnChangedWithoutTransaction;
             }
 
@@ -271,6 +289,14 @@ namespace LSCore
             var currency = transactions.As(currencyId);
             return currency.TryGetValue(transactionId, out transaction);
         }
+
+        public static IEnumerable<Transaction> GetTransactions(string currencyId)
+        {
+            foreach (var (_, val) in transactions.As(currencyId))
+            {
+                yield return val;
+            }
+        }
         
         public StatView[] data;
         public string[] acceptableTransactions;
@@ -288,6 +314,14 @@ namespace LSCore
             for (int i = 0; i < data.Length; i++)
             {
                 data[i].OnEnable();
+            }
+        }
+        
+        private void OnDisable()
+        {
+            for (int i = 0; i < data.Length; i++)
+            {
+                data[i].OnDisable();
             }
         }
 

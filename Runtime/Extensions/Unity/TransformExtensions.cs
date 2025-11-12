@@ -48,21 +48,24 @@ namespace LSCore.Extensions.Unity
             transform.localPosition = pos;
         }
         
-        public static void SetLossyScale(this Transform tr, Vector3 worldScale)
+        public static void SetLossyScale(this Transform tr, Vector3 worldScale) => tr.localScale = tr.GetLocalByWorldScale(worldScale);
+        public static void SetLossyScaleUnsafe(this Transform tr, Vector3 worldScale) => tr.localScale = tr.GetLocalByWorldScaleUnsafe(worldScale);
+
+        public static Vector3 GetLocalByWorldScale(this Transform tr, Vector3 worldScale)
         {
             Vector3 parentScale = tr.parent ? tr.parent.lossyScale : Vector3.one;
             
-            tr.localScale = new Vector3(
+            return new Vector3(
                 parentScale.x == 0 ? 0 : worldScale.x / parentScale.x,
                 parentScale.y == 0 ? 0 : worldScale.y / parentScale.y,
                 parentScale.z == 0 ? 0 : worldScale.z / parentScale.z);
         }
         
-        public static void SetLossyScaleUnsafe(this Transform tr, Vector3 worldScale)
+        public static Vector3 GetLocalByWorldScaleUnsafe(this Transform tr, Vector3 worldScale)
         {
             Vector3 parentScale = tr.parent ? tr.parent.lossyScale : Vector3.one;
             
-            tr.localScale = new Vector3(
+            return new Vector3(
                 worldScale.x / parentScale.x,
                 worldScale.y / parentScale.y,
                 worldScale.z / parentScale.z);
