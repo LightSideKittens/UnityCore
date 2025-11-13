@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using DG.Tweening;
 using LSCore;
+using LSCore.AnimationsModule.Animations;
 using LSCore.Async;
 using LSCore.Extensions;
 using UnityEngine;
@@ -44,33 +45,14 @@ public class DailyReward : ViewState.Switcher
     protected override string ViewJObjectKey => $"day_{day}";
     
     [Serializable]
-    public class ChestSlider : ViewState.Changer
+    public class ChestSlider : ViewState.BaseSliderChanger
     {
-        public IntervalSlider slider;
         protected override string ViewJObjectKey => "chest_slider";
-    
-        public override void Init()
-        {
-            slider.value = ClaimedDay;
-        }
+        protected override int ActualValue => DailyRewardsSave.ClaimedDay;
 
-        public override void Change(Action onComplete)
+        protected override int SavedValue
         {
-            slider.DOValue(DailyRewardsSave.ClaimedDay, 1).OnComplete(onComplete.Invoke);
-            ClaimedDay = DailyRewardsSave.ClaimedDay; 
-        }
-
-        private int ClaimedDay
-        {
-            get
-            {
-                if (ViewJObject.TryGetValue("claimedDay", out var claimedDay))
-                {
-                    return claimedDay.ToInt();
-                }
-            
-                return DailyRewardsSave.ClaimedDay;
-            }
+            get => ViewJObject.As("claimedDay", 0);
             set => ViewJObject["claimedDay"] = value;
         }
     }

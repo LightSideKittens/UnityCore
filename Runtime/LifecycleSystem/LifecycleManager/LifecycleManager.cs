@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace LSCore.LifecycleSystem
 {
-    public partial class LifecycleManager : ScriptableObject
+    public partial class LifecycleManager : ScriptableObject //TODO: Implement Just SchedulerSystem instead
     {
         public const string createdAt = nameof(createdAt);
         public const string startedAt = nameof(startedAt);

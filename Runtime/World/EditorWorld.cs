@@ -67,7 +67,14 @@ public class EditorWorld : MonoBehaviour
     {
         if (instance != this)
         {
-            Destroy(gameObject);
+            if (Application.isPlaying)
+            { 
+                Destroy(gameObject);
+            }
+            else
+            {
+                DestroyImmediate(gameObject);
+            }
         }
         
         if (targetFps >= 0)

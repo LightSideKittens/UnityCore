@@ -32,7 +32,7 @@ public class UIParticleAttractor : MonoBehaviour
     
     public float delayBeforeAttract = 0.5f;
     public float duration = 0.3f;
-    public float delayPerParticle = 0.05f;
+    public float sharedDelayPerParticle = 0.05f;
     public Ease ease = Ease.InOutCubic;
     
     public void Play(Data data)
@@ -51,6 +51,7 @@ public class UIParticleAttractor : MonoBehaviour
         
         int count = ps.particleCount;
         ArraySlice<Particle> arr = ps.GetParticles();
+        var newDelayPerParticle = sharedDelayPerParticle / arr.Length;
         TryInitParticles(ps);
         var tweens = new Tween[count];
             
@@ -68,12 +69,12 @@ public class UIParticleAttractor : MonoBehaviour
                     duration)
                 .SetEase(ease)
                 .KillOnDestroy(ps)
-                .SetDelay(i * delayPerParticle)
+                .SetDelay(i * newDelayPerParticle)
                 .OnComplete(() => Kill(ref arr[idx], onAttracted))
                 .SetUpdate(UpdateType.Manual);
         }
 
-        Wait.Run(delayPerParticle * count + duration, () =>
+        Wait.Run(newDelayPerParticle * count + duration, () =>
         {
             var a = ps.GetParticles();
             ps.GetCustomParticleData(customData, ParticleSystemCustomData.Custom2);

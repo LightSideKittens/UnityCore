@@ -119,6 +119,22 @@ namespace LSCore.Extensions
             return defaultValue;
         }
         
+        public static T AsJ<T>(this JArray array, int index) where T : JToken, new()
+        {
+            T result; 
+            if (index <= array.Count)
+            {
+                result = new T();
+                array.Add(result);
+            }
+            else
+            {
+                result = array[index] as T;
+            }
+            
+            return result;
+        }
+        
         public static T AsJ<T>(this JToken token, object key, T defaultValue) where T : JToken
         {
             if (token[key] != null)
