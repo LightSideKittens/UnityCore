@@ -44,7 +44,7 @@ public class UIParticleRenderer : MonoBehaviour
             return;
         }
 
-        psr.BakeMesh(mesh, ParticleSystemBakeMeshOptions.Default);
+        psr.BakeMesh(mesh, ParticleSystemBakeMeshOptions.Default | ParticleSystemBakeMeshOptions.BakePosition);
         cr.SetMesh(mesh);
     }
 

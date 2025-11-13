@@ -15,7 +15,7 @@ public class ParticlesAttractor
     
     internal void Init()
     {
-        attractorPool = new OnOffPool<UIParticleAttractor>(attractor, shouldStoreActive: true);
+        attractorPool = new OnOffPool<UIParticleAttractor>(attractor, parent: AnimatableCanvas.SpawnPoint, shouldStoreActive: true);
         foreach (var (key, value) in particles.Data)
         { 
             var pool = new OnOffPool<UIParticleRenderer>(value, shouldStoreActive: true);

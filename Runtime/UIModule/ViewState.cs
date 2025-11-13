@@ -5,6 +5,7 @@ using System.Linq;
 using DG.Tweening;
 using LSCore;
 using LSCore.AnimationsModule;
+using LSCore.AnimationsModule.Animations;
 using LSCore.Attributes;
 using LSCore.ConditionModule;
 using LSCore.ConfigModule;
@@ -68,6 +69,27 @@ public class ViewState : MonoBehaviour
         public abstract void Init();
         public virtual void PrepareToChange(){}
         public abstract void Change(Action onComplete);
+    }
+    
+    [Serializable]
+    public abstract class BaseSliderChanger : Changer
+    {
+        public LSSliderAnim sliderAnim;
+        
+        public override void Init()
+        {
+            sliderAnim.FirstTarget.value = SavedValue;
+        }
+
+        public override void Change(Action onComplete)
+        {
+            sliderAnim.endValue = ActualValue;
+            sliderAnim.Animate().OnComplete(onComplete.Invoke);
+            SavedValue = ActualValue; 
+        }
+
+        protected abstract int ActualValue { get; }
+        protected abstract int SavedValue { get; set; }
     }
     
     [Serializable]
