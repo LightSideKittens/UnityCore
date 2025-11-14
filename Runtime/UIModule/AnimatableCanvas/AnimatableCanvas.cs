@@ -4,6 +4,11 @@ using UnityEngine.SceneManagement;
 
 namespace Animatable
 {
+    public abstract class BaseAnimatableCanvas<T> : SingleService<AnimatableCanvas> where T : BaseAnimatableCanvas<T>
+    {
+        
+    }
+
     public class AnimatableCanvas : SingleService<AnimatableCanvas>
     {
         private Canvas canvas;
@@ -15,6 +20,7 @@ namespace Animatable
         [SerializeField] private Loader loader;
         [SerializeField] private PopupText popupText;
         [SerializeField] private ParticlesAttractor particlesAttractor;
+        [SerializeField] private BlockCount blockCount;
 
         public static int SortingOrder
         {
@@ -28,6 +34,7 @@ namespace Animatable
         internal static HealthBar HealthBar => Instance.healthBar;
         internal static HealthBar OpponentHealthBar => Instance.opponentHealthBar;
         internal static ParticlesAttractor ParticlesAttractor => Instance.particlesAttractor;
+        internal static BlockCount BlockCount => Instance.blockCount;
         internal static Loader Loader => Instance.loader;
 
         private void Awake()
@@ -43,6 +50,7 @@ namespace Animatable
             healthBar.Init();
             opponentHealthBar.Init();
             particlesAttractor.Init();
+            blockCount.Init();
             canvas = GetComponent<Canvas>();
             canvas.worldCamera = Camera.main;
             
@@ -77,6 +85,7 @@ namespace Animatable
             instance.popupText.ReleaseAll();
             instance.opponentHealthBar.ReleaseAll();
             instance.particlesAttractor.ReleaseAll();
+            instance.blockCount.ReleaseAll();
         }
     }
 }
