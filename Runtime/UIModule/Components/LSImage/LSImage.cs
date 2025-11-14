@@ -51,6 +51,7 @@ namespace LSCore
             void OnUpdate()
             {
                 CanvasUpdateRegistry.Updated -= OnUpdate;
+                if (this == null) return;
                 if (!canvasRenderer.cull)
                 {
                     OnShowed();

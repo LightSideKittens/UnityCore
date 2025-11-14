@@ -37,6 +37,8 @@ namespace LSCore.ConfigModule
         
         public static TManager Get(string path)
         {
+            path = path.Replace('/', '\\');
+            
             if (meowfault?.DefaultPath == path)
             {
                 return meowfault;

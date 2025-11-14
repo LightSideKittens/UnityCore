@@ -108,5 +108,10 @@ namespace LSCore
             Destroyed = null;
             base.OnDestroy();
         }
+
+        protected static void SetInstance<TService>(TService instance) where TService : SingleService<TService>
+        {
+            SingleService<TService>.instance = instance;
+        }
     }
 }

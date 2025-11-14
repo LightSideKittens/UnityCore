@@ -20,6 +20,17 @@ namespace LSCore
             transformActions?.Do(obj);
         }
     }
+
+    [Serializable]
+    public class Destroy : DoIt
+    {
+        [SerializeReference] public Get<Object> obj;
+        
+        public override void Do()
+        {
+            Object.Destroy(obj);
+        }
+    }
     
     [Serializable]
     public class CreateSinglePrefab<T> : Create<T> where T : Component
@@ -81,6 +92,18 @@ namespace LSCore
     
     [Serializable]
     public class CreateSinglePrefabDynamic<T> : CreateSinglePrefab<T>  where T : Component
+    {
+        [SerializeReference] public Get<T> getPrefab;
+        
+        public override void Do()
+        {
+            prefab = getPrefab.Data;
+            base.Do();
+        }
+    }
+    
+    [Serializable]
+    public class CreateDynamic<T> : Create<T>  where T : Component
     {
         [SerializeReference] public Get<T> getPrefab;
         

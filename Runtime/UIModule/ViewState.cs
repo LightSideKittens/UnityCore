@@ -58,6 +58,17 @@ public class OnJTokenGameConfigChanged : DoIt
 }
 
 [Serializable]
+public class DeleteJTokenGameConfig : DoIt
+{
+    [SerializeReference] public Get<string> path;
+    
+    public override void Do()
+    {
+        JTokenGameConfig.GetManager(path).Delete();
+    }
+}
+
+[Serializable]
 public class ViewState : MonoBehaviour
 {
     [Serializable]
@@ -67,8 +78,30 @@ public class ViewState : MonoBehaviour
         protected abstract string ViewJObjectKey { get; }
         protected JObject ViewJObject => viewSave.Config.AsJ<JObject>(ViewJObjectKey);
         public abstract void Init();
-        public virtual void PrepareToChange(){}
-        public abstract void Change(Action onComplete);
+        public virtual bool CanChange => true;
+
+        public void PrepareToChange()
+        {
+            if (CanChange)
+            {
+                OnPrepareToChange();
+            }
+        }
+
+        public void Change(Action onComplete)
+        {
+            if (CanChange)
+            {
+                OnChange(onComplete);
+            }
+            else
+            {
+                onComplete?.Invoke();
+            }
+        }
+        
+        protected virtual void OnPrepareToChange(){}
+        protected abstract void OnChange(Action onComplete);
     }
     
     [Serializable]
@@ -81,7 +114,9 @@ public class ViewState : MonoBehaviour
             sliderAnim.FirstTarget.value = SavedValue;
         }
 
-        public override void Change(Action onComplete)
+        public override bool CanChange => ActualValue != SavedValue;
+
+        protected override void OnChange(Action onComplete)
         {
             sliderAnim.endValue = ActualValue;
             sliderAnim.Animate().OnComplete(onComplete.Invoke);
@@ -164,7 +199,7 @@ public class ViewState : MonoBehaviour
         private AnimSequencer currentAnimSequencer;
         private Tween currentTween;
         
-        public override void PrepareToChange()
+        protected override void OnPrepareToChange()
         {
             currentState = CurrentState;
             if (currentState == lastState)
@@ -179,7 +214,7 @@ public class ViewState : MonoBehaviour
             SavedState = currentState;
         }
         
-        public override void Change(Action onComplete)
+        protected override void OnChange(Action onComplete)
         {
             if (currentAnimSequencer == null)
             {
@@ -225,7 +260,7 @@ public class ViewState : MonoBehaviour
     public string[] listenKeysForChange;
     private Save save;
     
-    private void Awake()
+    protected virtual void Awake()
     {
         init?.Do();
         save = new Save(viewSavePath);
@@ -236,7 +271,7 @@ public class ViewState : MonoBehaviour
         }
     }
 
-    private void OnEnable()
+    protected virtual void OnEnable()
     {
         for (int i = 0; i < listenKeysForChange.Length; i++)
         {

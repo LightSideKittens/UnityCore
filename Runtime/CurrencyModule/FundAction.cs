@@ -36,7 +36,7 @@ namespace LSCore
             base.Do();
             if (funds.Spend(out var action))
             {
-                onSpent.Do();
+                onSpent?.Do();
                 action();
             }
             Funds.lastTransactionId = null;
