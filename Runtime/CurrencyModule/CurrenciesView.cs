@@ -128,7 +128,7 @@ namespace LSCore
             {
                 foreach (var (id, stack) in statViews)
                 {
-                    var statView = stack.Peek();
+                    var statView = stack.First().Value;
                     if (RemoveTransaction(statView.text.Id, transactionId, out var animData))
                     {
                         bool animCalled = false;
@@ -143,7 +143,7 @@ namespace LSCore
                         {
                             if (!animCalled)
                             {
-                                foreach (var view in stack)
+                                foreach (var view in stack.Values)
                                 {
                                     view.Anim(diff); 
                                 }
@@ -159,7 +159,7 @@ namespace LSCore
             }
         }
         
-        private static Dictionary<Id, Stack<StatView>> statViews = new();
+        private static Dictionary<Id, Dictionary<FundText, StatView>> statViews = new();
         
         [Serializable]
         public class StatView
@@ -188,10 +188,11 @@ namespace LSCore
             {
                 if (!statViews.TryGetValue(text.Id, out var statView))
                 {
-                    statView = new Stack<StatView>();
+                    statView = new Dictionary<FundText, StatView>();
                     statViews.Add(text.Id, statView);
                 }
-                statView.Push(this);
+                
+                statView[text] = this;
                 
                 var amount = Funds.GetAmount(text.Id);
                 
@@ -206,7 +207,7 @@ namespace LSCore
             public void OnDisable()
             {
                 var stack = statViews[text.Id];
-                stack.Pop();
+                stack.Remove(text);
                 if (stack.Count == 0)
                 {
                     statViews.Remove(text.Id);

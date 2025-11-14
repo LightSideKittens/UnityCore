@@ -19,6 +19,9 @@ namespace LSCore.Async
         private static void plugTo(float t){}
         public static Tween Cycles(in float delay, int cycles, TweenCallback onLoop) => DOTween.Sequence().AppendInterval(delay).SetLoops(cycles).OnStepComplete(onLoop);
         public static Tween InfinityLoop(in float delay, TweenCallback onLoop) => Cycles(delay, -1, onLoop);
+        
+        private static TimeSpan second = TimeSpan.FromSeconds(1);
+        
         public static Tween Seconder(this TimeSpan time, Action<TimeSpan> onLoop, bool callImmediately = true)
         {
             if (callImmediately)
@@ -28,8 +31,21 @@ namespace LSCore.Async
             
             return Cycles(1, -1, () =>
             {
-                time -= TimeSpan.FromSeconds(1);
+                time -= second;
                 onLoop(time);
+            });
+        }
+        
+        public static Tween Seconder(this DateTime target, Action<TimeSpan> onLoop, bool callImmediately = true)
+        {
+            if (callImmediately)
+            {
+                onLoop(target - DateTime.Now);
+            }
+            
+            return Cycles(1, -1, () =>
+            {
+                onLoop(target - DateTime.Now);
             });
         }
 
