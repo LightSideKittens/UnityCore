@@ -126,8 +126,9 @@ namespace LSCore
             //TODO: Implement count and scale changing of particles
             public override void Do()
             {
-                foreach (var (id, statView) in statViews)
+                foreach (var (id, stack) in statViews)
                 {
+                    var statView = stack.Peek();
                     if (RemoveTransaction(statView.id, transactionId, out var animData))
                     {
                         bool animCalled = false;
@@ -141,8 +142,12 @@ namespace LSCore
                         void OnAttracted()
                         {
                             if (!animCalled)
-                            { 
-                                statView.Anim(diff); 
+                            {
+                                foreach (var view in stack)
+                                {
+                                    view.Anim(diff); 
+                                }
+                                
                                 animCalled = true;
                             }
                             
@@ -154,8 +159,7 @@ namespace LSCore
             }
         }
         
-        private static Dictionary<Id, StatView> statViews = new();
-        private static Dictionary<Id, int> statViewsCount = new();
+        private static Dictionary<Id, Stack<StatView>> statViews = new();
         
         [Serializable]
         public class StatView
@@ -183,10 +187,12 @@ namespace LSCore
 
             public void OnEnable()
             {
-                statViews[id] = this;
-                statViewsCount.TryGetValue(id, out var count);
-                count++;
-                statViewsCount[id] = count;
+                if (!statViews.TryGetValue(id, out var statView))
+                {
+                    statView = new Stack<StatView>();
+                    statViews.Add(id, statView);
+                }
+                statView.Push(this);
                 
                 var amount = Funds.GetAmount(id);
                 
@@ -200,20 +206,15 @@ namespace LSCore
 
             public void OnDisable()
             {
-                statViewsCount.TryGetValue(id, out var count);
-                count--;
-                if (count == 0)
+                var stack = statViews[id];
+                stack.Pop();
+                if (stack.Count == 0)
                 {
-                    statViewsCount.Remove(id);
                     statViews.Remove(id);
                     foreach (var acceptableTransaction in acceptableTransactions)
                     {
                         RemoveTransaction(id, acceptableTransaction);
                     }
-                }
-                else
-                {
-                    statViewsCount[id] = count;
                 }
             }
 

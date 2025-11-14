@@ -14,11 +14,13 @@ namespace LSCore
     
     public struct UIViewBoss
     {
-        public readonly struct UseId : IDisposable
+        public static IdScope UseId(string id) => new IdScope(id);
+        
+        public readonly struct IdScope : IDisposable
         {
             private readonly string prevId;
 
-            public UseId(string id)
+            internal IdScope(string id)
             {
                 prevId = Id;
                 
@@ -97,6 +99,7 @@ namespace LSCore
             IsGoBack = false;
             IsHidePrevious = false;
             IsHideAllPrevious = false;
+            IsGoBackBlocked = false;
             Id = DefaultId;
             sortingOrder = DefaultSortingOrder;
             groups = new ()
