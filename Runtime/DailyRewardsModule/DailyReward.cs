@@ -67,10 +67,12 @@ public class DailyReward : ViewState.Switcher
         public GameObject disableState;
         public LocalizationText text;
         private Tween timer;
+        private bool lastCan;
         
         public override void Do()
         {
             button.Did += OnDid;
+            lastCan = !DailyRewardsSave.CanClaim.Yes;
             UpdateButtonState();
             DailyRewardsSave.Config.PropertyChanged += UpdateButtonState;
             DestroyEvent.AddOnDestroy(button, OnDestroy);
@@ -78,6 +80,7 @@ public class DailyReward : ViewState.Switcher
 
         private void OnDestroy()
         {
+            DailyRewardsSave.Config.PropertyChanged -= UpdateButtonState;
             timer?.Kill();
         }
 
@@ -86,6 +89,8 @@ public class DailyReward : ViewState.Switcher
         private void UpdateButtonState()
         {
             var can = DailyRewardsSave.CanClaim.Yes;
+            if(lastCan == can) return;
+            lastCan = can;
             if (can)
             {
                 timer?.Kill();
@@ -93,8 +98,8 @@ public class DailyReward : ViewState.Switcher
             }
             else
             {
-                var remaining = TimeSpan.FromTicks(DailyRewardsSave.NextClaimDateTime - DateTime.Now.Ticks);
-                timer = remaining.Seconder(time =>
+                var nextDateTime = new DateTime(DailyRewardsSave.NextClaimDateTime);
+                timer = nextDateTime.Seconder(time =>
                 {
                     text.Localize("nextRewardInX", time.Timelyze(Timely.Preset.Compact3));
                     if (DailyRewardsSave.CanClaim.Yes)
