@@ -15,7 +15,7 @@ namespace Animatable
             var animText = AnimatableCanvas.Loader;
 
             var scale = animText.gameObject.transform.localScale;
-            var obj = Object.Instantiate(animText.gameObject, SpawnPoint);
+            var obj = Object.Instantiate(animText.gameObject, AnimatableCanvas.SpawnPoint);
             obj.transform.localScale = scale;
 
             return new Loader

@@ -23,11 +23,11 @@ namespace Animatable
 
         public static HealthBar Create(float maxValue, Transform target, Vector2 offset, Vector2 scale, bool isOpponent)
         {
-            var template = isOpponent ? OpponentHealthBar : AnimatableCanvas.HealthBar;
+            var template = isOpponent ? AnimatableCanvas.OpponentHealthBar : AnimatableCanvas.HealthBar;
             
             var bar = template.pool.Get();
             var barTransform = bar.transform;
-            barTransform.SetParent(SpawnPoint, false);
+            barTransform.SetParent(AnimatableCanvas.SpawnPoint, false);
             barTransform.localScale = scale;
             bar.maxValue = maxValue;
             bar.value = maxValue;
@@ -49,7 +49,7 @@ namespace Animatable
 
         public void Update()
         {
-            mainBar.transform.localPosition = GetLocalPosition(target.position + offset);
+            mainBar.transform.localPosition = AnimatableCanvas.GetLocalPosition(target.position + offset);
         }
 
         public void SetValue(float value)

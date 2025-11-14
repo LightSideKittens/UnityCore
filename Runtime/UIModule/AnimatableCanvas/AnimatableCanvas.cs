@@ -4,24 +4,10 @@ using UnityEngine.SceneManagement;
 
 namespace Animatable
 {
-    public abstract class BaseAnimatableCanvas<T> : SingleService<AnimatableCanvas> where T : BaseAnimatableCanvas<T>
+    public abstract class BaseAnimatableCanvas<T> : SingleService<T> where T : BaseAnimatableCanvas<T>
     {
-        
-    }
-
-    public class AnimatableCanvas : SingleService<AnimatableCanvas>
-    {
-        private Canvas canvas;
+         private Canvas canvas;
         private static Camera Cam => Instance.canvas.worldCamera;
-
-        [SerializeField] private AnimText animText;
-        [SerializeField] private HealthBar healthBar;
-        [SerializeField] private HealthBar opponentHealthBar;
-        [SerializeField] private Loader loader;
-        [SerializeField] private PopupText popupText;
-        [SerializeField] private ParticlesAttractor particlesAttractor;
-        [SerializeField] private BlockCount blockCount;
-
         public static int SortingOrder
         {
             get => Instance.canvas.sortingOrder;
@@ -29,13 +15,7 @@ namespace Animatable
         }
         
         public static Transform SpawnPoint => Instance.transform;
-        internal static AnimText AnimText => Instance.animText;
-        internal static PopupText PopupText => Instance.popupText;
-        internal static HealthBar HealthBar => Instance.healthBar;
-        internal static HealthBar OpponentHealthBar => Instance.opponentHealthBar;
-        internal static ParticlesAttractor ParticlesAttractor => Instance.particlesAttractor;
-        internal static BlockCount BlockCount => Instance.blockCount;
-        internal static Loader Loader => Instance.loader;
+
 
         private void Awake()
         {
@@ -45,12 +25,6 @@ namespace Animatable
         protected override void Init()
         {
             base.Init();
-            animText.Init();
-            popupText.Init();
-            healthBar.Init();
-            opponentHealthBar.Init();
-            particlesAttractor.Init();
-            blockCount.Init();
             canvas = GetComponent<Canvas>();
             canvas.worldCamera = Camera.main;
             
@@ -69,23 +43,54 @@ namespace Animatable
             Clean();
         }
 
-        internal static Vector3 GetLocalPosition(Vector3 worldPos)
+        public static Vector3 GetLocalPosition(Vector3 worldPos)
         {
             var targetLocalPosByCam = Cam.transform.InverseTransformPoint(worldPos);
             targetLocalPosByCam /= Instance.canvas.transform.lossyScale.x;
             targetLocalPosByCam.z = 0;
             return targetLocalPosByCam;
         }
+
+        protected virtual void OnClean() { }
         
-        public static void Clean()
+        public static void Clean() => Instance.OnClean();
+    }
+
+    public class AnimatableCanvas : BaseAnimatableCanvas<AnimatableCanvas>
+    {
+        [SerializeField] private AnimText animText;
+        [SerializeField] private HealthBar healthBar;
+        [SerializeField] private HealthBar opponentHealthBar;
+        [SerializeField] private Loader loader;
+        [SerializeField] private PopupText popupText;
+        [SerializeField] private ParticlesAttractor particlesAttractor;
+
+        
+        internal static AnimText AnimText => Instance.animText;
+        internal static PopupText PopupText => Instance.popupText;
+        internal static HealthBar HealthBar => Instance.healthBar;
+        internal static HealthBar OpponentHealthBar => Instance.opponentHealthBar;
+        internal static ParticlesAttractor ParticlesAttractor => Instance.particlesAttractor;
+        internal static Loader Loader => Instance.loader;
+
+        protected override void Init()
         {
-            var instance = Instance;
-            instance.animText.ReleaseAll();
-            instance.healthBar.ReleaseAll();
-            instance.popupText.ReleaseAll();
-            instance.opponentHealthBar.ReleaseAll();
-            instance.particlesAttractor.ReleaseAll();
-            instance.blockCount.ReleaseAll();
+            base.Init();
+            animText.Init();
+            popupText.Init();
+            healthBar.Init();
+            opponentHealthBar.Init();
+            particlesAttractor.Init();
+        }
+
+        protected override void OnClean()
+        {
+            base.OnClean();
+            animText.ReleaseAll();
+            healthBar.ReleaseAll();
+            popupText.ReleaseAll();
+            opponentHealthBar.ReleaseAll();
+            particlesAttractor.ReleaseAll();
         }
     }
 }
