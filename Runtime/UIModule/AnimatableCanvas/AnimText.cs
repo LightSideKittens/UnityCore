@@ -24,13 +24,13 @@ namespace Animatable
 
             if (fromWorldSpace)
             {
-                pos = GetLocalPosition(pos + offset);
+                pos = AnimatableCanvas.GetLocalPosition(pos + offset);
             }
 
             var scale = template.text.transform.localScale;
             var text = template.pool.Get();
             var textTransform = text.transform;
-            textTransform.SetParent(SpawnPoint, true);
+            textTransform.SetParent(AnimatableCanvas.SpawnPoint, true);
             textTransform.position = pos;
             textTransform.localScale = scale;
             text.text = message;

@@ -43,14 +43,14 @@ namespace Animatable
 
             if (fromWorldSpace)
             {
-                pos = GetLocalPosition(pos + offset);
+                pos = AnimatableCanvas.GetLocalPosition(pos + offset);
             }
 
             var scale = template.group.transform.localScale;
             var group = template.pool.Get();
             var text = Object.Instantiate(message, group.transform);
             var groupTransform = (RectTransform)group.transform;
-            groupTransform.SetParent(SpawnPoint, true);
+            groupTransform.SetParent(AnimatableCanvas.SpawnPoint, true);
             groupTransform.localPosition = pos;
             groupTransform.localScale = scale;
             groupTransform.localRotation = Quaternion.identity;
