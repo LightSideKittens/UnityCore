@@ -129,7 +129,7 @@ namespace LSCore
                 foreach (var (id, stack) in statViews)
                 {
                     var statView = stack.Peek();
-                    if (RemoveTransaction(statView.id, transactionId, out var animData))
+                    if (RemoveTransaction(statView.text.Id, transactionId, out var animData))
                     {
                         bool animCalled = false;
                         var diff = animData.Diff;
@@ -164,7 +164,6 @@ namespace LSCore
         [Serializable]
         public class StatView
         {
-            [Id(typeof(CurrencyIdGroup))] public Id id;
             public Transform attractionPoint;
             public LSButton button;
             public FundText text;
@@ -178,7 +177,7 @@ namespace LSCore
 
             private void OnChangedWithoutTransaction(string idStr, (int last, int current) data)
             {
-                if (idStr == id)
+                if (idStr == text.Id)
                 { 
                     var diff =  data.current - data.last;
                     text.Number += diff;
@@ -187,16 +186,16 @@ namespace LSCore
 
             public void OnEnable()
             {
-                if (!statViews.TryGetValue(id, out var statView))
+                if (!statViews.TryGetValue(text.Id, out var statView))
                 {
                     statView = new Stack<StatView>();
-                    statViews.Add(id, statView);
+                    statViews.Add(text.Id, statView);
                 }
                 statView.Push(this);
                 
-                var amount = Funds.GetAmount(id);
+                var amount = Funds.GetAmount(text.Id);
                 
-                foreach (var transaction in GetTransactions(id))
+                foreach (var transaction in GetTransactions(text.Id))
                 {
                     amount -= transaction.Diff;
                 }
@@ -206,14 +205,14 @@ namespace LSCore
 
             public void OnDisable()
             {
-                var stack = statViews[id];
+                var stack = statViews[text.Id];
                 stack.Pop();
                 if (stack.Count == 0)
                 {
-                    statViews.Remove(id);
+                    statViews.Remove(text.Id);
                     foreach (var acceptableTransaction in acceptableTransactions)
                     {
-                        RemoveTransaction(id, acceptableTransaction);
+                        RemoveTransaction(text.Id, acceptableTransaction);
                     }
                 }
             }
