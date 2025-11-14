@@ -29,7 +29,7 @@ public static class DailyRewardsSave
     
     public static long NextClaimDateTime
     {
-        get => Config.As("nextClaimDateTime", 0);
+        get => Config.As<long>("nextClaimDateTime");
         set => Config["nextClaimDateTime"] = value;
     }
 
