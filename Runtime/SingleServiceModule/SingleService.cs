@@ -6,7 +6,7 @@ namespace LSCore
 {
     public abstract class SingleService<T> : BaseSingleService where T : SingleService<T>
     {
-        private static T instance;
+        internal static T instance;
         private static Func<T> staticConstructor;
         public override Type Type => typeof(T);
         
@@ -15,7 +15,11 @@ namespace LSCore
             get
             {
 #if UNITY_EDITOR
-                if(World.IsEditMode) return FindAnyObjectByType<T>(FindObjectsInactive.Include);
+                if (World.IsEditMode)
+                {
+                    if(instance != null) return instance;
+                    return FindAnyObjectByType<T>(FindObjectsInactive.Include);
+                }
 #endif
                 return staticConstructor();
             }
@@ -26,7 +30,11 @@ namespace LSCore
             get
             {
 #if UNITY_EDITOR
-                if(World.IsEditMode) return FindAnyObjectByType<T>(FindObjectsInactive.Include) == null;
+                if (World.IsEditMode)
+                {
+                    if(instance != null) return false;
+                    return FindAnyObjectByType<T>(FindObjectsInactive.Include) == null;
+                }
 #endif
                 return instance == null;
             }
