@@ -65,7 +65,7 @@ namespace LSCore
             void Show()
             {
                 CanvasUpdateRegistry.Updated -= Show;
-                using (new UIViewBoss.UseId(id))
+                using (UIViewBoss.UseId(id))
                 {
                     obj.Show(option);
                 }

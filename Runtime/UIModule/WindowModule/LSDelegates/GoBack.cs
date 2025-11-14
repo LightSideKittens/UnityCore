@@ -15,7 +15,7 @@ namespace LSCore
             }
             else
             {
-                using (new UIViewBoss.UseId(id))
+                using (UIViewBoss.UseId(id))
                 {
                     UIViewBoss.GoBack();
                 }
