@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using DG.Tweening;
 using LSCore;
-using LSCore.AnimationsModule.Animations;
 using LSCore.Async;
 using LSCore.Extensions;
 using UnityEngine;
@@ -113,10 +112,11 @@ public class DailyReward : ViewState.Switcher
 
         private void OnDid()
         {
-            var claimedDay = DailyRewardsSave.ClaimedDay % 7;
+            var claimedDay = DailyRewardsSave.ClaimedDay;
             if (DailyRewardsSave.TryClaim())
             {
-                claimActionsPerDay[claimedDay].Do();
+                claimActionsPerDay[claimedDay % 7].Do();
+                Analytic.LogEvent("daily_reward_claimed", ("day", claimedDay));
             }
             
             buttonDid.Do();
