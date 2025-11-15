@@ -64,8 +64,9 @@ namespace Animatable
         [SerializeField] private Loader loader;
         [SerializeField] private PopupText popupText;
         [SerializeField] private ParticlesAttractor particlesAttractor;
-
+        [SerializeField] private ImageAnim imageAnim;
         
+        internal static ImageAnim ImageAnim => Instance.imageAnim;
         internal static AnimText AnimText => Instance.animText;
         internal static PopupText PopupText => Instance.popupText;
         internal static HealthBar HealthBar => Instance.healthBar;
@@ -81,6 +82,7 @@ namespace Animatable
             healthBar.Init();
             opponentHealthBar.Init();
             particlesAttractor.Init();
+            imageAnim.Init();
         }
 
         protected override void OnClean()
@@ -91,6 +93,7 @@ namespace Animatable
             popupText.ReleaseAll();
             opponentHealthBar.ReleaseAll();
             particlesAttractor.ReleaseAll();
+            imageAnim.ReleaseAll();
         }
     }
 }

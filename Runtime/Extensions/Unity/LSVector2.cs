@@ -16,6 +16,7 @@ namespace LSCore.Extensions.Unity
         public static readonly float oneMagnitude = Vector2.one.magnitude;
         public static readonly Vector2 half = Vector2.one / 2;
         public static readonly Vector2 one = Vector2.one;
+        public static readonly Vector2 zero = Vector2.zero;
         public static readonly Vector2 oneDir = Vector2.one.normalized;
         
         public static Vector2 ToVector(this Axis axis)
