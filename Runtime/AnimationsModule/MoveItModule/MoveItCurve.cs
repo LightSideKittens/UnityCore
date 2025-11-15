@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using LSCore.Extensions.Unity;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -413,31 +414,129 @@ public class MoveItCurve : IList<BezierPoint>
         Insert(i, backTangent);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Vector2 EvaluateNormalizedVector(float t)
     {
-        float xTarget = GetXByNormalized(t);
-        return new Vector2(xTarget, Evaluate(xTarget));
+        if (!CanEvaluate) return LSVector2.zero;
+        float xTarget = Internal_GetXByNormalized(t);
+        return new Vector2(xTarget, Internal_Evaluate(xTarget));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float GetXByNormalized(float t)
+    {
+        if (!CanEvaluate) return 0;
+        return Internal_GetXByNormalized(t);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float GetXByNormalized(float t, EvaluateMode mode)
+    {
+        if (!CanEvaluate) return 0;
+        return Internal_GetXByNormalized(t, mode);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private float Internal_GetXByNormalized(float t)
     {
         float xMin = points[1].x;
         float xMax = points[^2].x;
         float xTarget = Mathf.Lerp(xMin, xMax, t);
         return xTarget;
     }
-    
-    public float EvaluateNormalized(float t)
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private float Internal_GetXByNormalized(float t, EvaluateMode mode)
     {
-        float xTarget = GetXByNormalized(t);
-        return Evaluate(xTarget);
+        float xMin = points[1].x;
+        float xMax = points[^2].x;
+        float xTarget = Mathf.LerpUnclamped(xMin, xMax, t);
+        return LerpByEvaluateMode(xMin, xMax, xTarget, mode);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public unsafe float Evaluate(float x)
+    private float Internal_LerpByEvaluateMode(float x, EvaluateMode mode)
+    {
+        float xMin = points[1].x;
+        float xMax = points[^2].x;
+        return LerpByEvaluateMode(xMin, xMax, x, mode);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float EvaluateNormalized(float t)
+    {
+        if (!CanEvaluate) return 0;
+        float xTarget = Internal_GetXByNormalized(t);
+        return Internal_Evaluate(xTarget);
+    }
+
+    public enum EvaluateMode
+    {
+        Default,
+        Loop,
+        PingPong
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float LerpByEvaluateMode(float start, float end, float value, EvaluateMode mode)
+    {
+        if (Mathf.Approximately(start, end))
+            return start;
+
+        float t = (value - start) / (end - start);
+
+        switch (mode)
+        {
+            case EvaluateMode.Loop:
+                t = Mathf.Repeat(t, 1f);
+                break;
+
+            case EvaluateMode.PingPong:
+                t = Mathf.PingPong(t, 1f);
+                break;
+
+            case EvaluateMode.Default:
+            default:
+                t = Mathf.Clamp01(t);
+                break;
+        }
+
+        return Mathf.Lerp(start, end, t);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float EvaluateNormalized(float t, EvaluateMode mode)
+    {
+        if (!CanEvaluate) return 0;
+        float xTarget = Internal_GetXByNormalized(t, mode);
+        return Internal_Evaluate(xTarget);
+    }
+
+    private bool CanEvaluate
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => points.Length > 3;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Evaluate(float x, EvaluateMode mode)
+    {
+        if (!CanEvaluate) return 0;
+        x = Internal_LerpByEvaluateMode(x, mode);
+        return Internal_Evaluate(x);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float Evaluate(float x)
+    {
+        if (!CanEvaluate) return 0;
+        return Internal_Evaluate(x);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private unsafe float Internal_Evaluate(float x)
     {
         int count = points.Length;
-        if(count < 3) return 0;
         
         fixed (BezierPoint* pPoints = points)
         {
