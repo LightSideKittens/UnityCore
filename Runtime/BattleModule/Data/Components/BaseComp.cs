@@ -50,7 +50,7 @@ namespace LSCore.BattleModule
         public void Register(CompData data)
         {
 #if UNITY_EDITOR
-            var instanceId = World.InstanceId;
+            var instanceId = World.instanceId;
             if (lastWorldInstanceId != instanceId)
             {
                 lastWorldInstanceId = instanceId;

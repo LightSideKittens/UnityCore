@@ -37,8 +37,27 @@ public class EditorWorld : MonoBehaviour
     private static EditorWorld instance;
     public static event Action Updated;
     
+    const string BootIdKey = "LightSideCore_EditorBootId";
+    const string SessionInitKey = "LightSideCore_EditorSessionInit";
+
+    public static readonly int BootId;
+    
+    
     static EditorWorld()
     {
+        if (!SessionState.GetBool(SessionInitKey, false))
+        {
+            SessionState.SetBool(SessionInitKey, true);
+
+            var count = EditorPrefs.GetInt(BootIdKey, 0) + 1;
+            EditorPrefs.SetInt(BootIdKey, count);
+            BootId = count;
+        }
+        else
+        {
+            BootId = EditorPrefs.GetInt(BootIdKey, 0);
+        }
+        
         CompilationPipeline.compilationFinished += x =>
         {
             Destroy();
@@ -51,7 +70,7 @@ public class EditorWorld : MonoBehaviour
         };
         
         EditorApplication.update += Update;
-
+        
         void Update()
         {
             EditorApplication.update -= Update;

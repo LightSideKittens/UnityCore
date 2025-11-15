@@ -1,4 +1,5 @@
 ﻿using System;
+using LSCore;
 using LSCore.ConditionModule;
 using LSCore.ConfigModule;
 using LSCore.Extensions;
@@ -9,7 +10,7 @@ public static class DailyRewardsSave
     [Serializable]
     public class CanClaim : If
     {
-        public static bool Yes => DateTime.Now.Ticks > NextClaimDateTime;
+        public static bool Yes => DeviceTime.Now > NextClaimDateTime;
         protected override bool Check() => Yes;
     }
     
@@ -27,11 +28,10 @@ public static class DailyRewardsSave
         set => Config["weeks"] = value;
     }
     
-    public static long NextClaimDateTime
-    {
-        get => Config.As<long>("nextClaimDateTime");
-        set => Config["nextClaimDateTime"] = value;
-    }
+    private static DeviceTime nextClaimDateTime;
+    public static DeviceTime NextClaimDateTime => 
+        nextClaimDateTime = W.RS(ref nextClaimDateTime) 
+                            ?? new DeviceTimeJObject(Config, "nextClaimDateTime").Value;
 
     public static bool TryClaim()
     {
@@ -39,8 +39,7 @@ public static class DailyRewardsSave
         
         if (can)
         {
-            var now = DateTime.Now.Ticks;
-            NextClaimDateTime = now + TimeSpan.FromDays(1).Ticks;
+            NextClaimDateTime.Time = DeviceTime.Now + TimeSpan.FromDays(1);
             ClaimedDay++;
         }
         

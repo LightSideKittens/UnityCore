@@ -13,7 +13,23 @@ public class Popup : PopupWindowContent
     {
         size = new Vector2(200f, 200f);
     }
-
+    
+    public static Popup Draw(Rect position, Action onGui)
+    {
+        Popup popup = new Popup();
+        popup.onGui = onGui;
+        PopupWindow.Show(position, popup);
+        return popup;
+    }
+    
+    public static Popup Draw(Action onGui)
+    {
+        Popup popup = new Popup();
+        popup.onGui = onGui;
+        PopupWindow.Show(new Rect(Event.current.mousePosition, new Vector2(10, 10)), popup);
+        return popup;
+    }
+    
     public Popup(Vector2 position, Vector2 size)
     {
         this.position = position;

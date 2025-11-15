@@ -98,13 +98,13 @@ public class DailyReward : ViewState.Switcher
             }
             else
             {
-                var nextDateTime = new DateTime(DailyRewardsSave.NextClaimDateTime);
+                var nextDateTime = DailyRewardsSave.NextClaimDateTime;
                 timer = nextDateTime.Seconder(time =>
                 {
                     text.Localize("nextRewardInX", time.Timelyze(Timely.Preset.Compact3));
                     if (DailyRewardsSave.CanClaim.Yes)
                     {
-                        DailyRewardsSave.NextClaimDateTime--;
+                        DailyRewardsSave.NextClaimDateTime.Ticks--;
                     }
                 });
             }
