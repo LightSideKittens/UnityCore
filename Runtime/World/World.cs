@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using DG.Tweening;
 using LSCore.Extensions;
@@ -14,6 +15,14 @@ using UnityEditor.Build;
 
 namespace LSCore
 {
+    public static class W
+    {
+        public static T RS<T>(ref T obj) => World.ResetStatic(ref obj);
+        
+        [Conditional("UNITY_EDITOR")]
+        public static void NR(ref bool needReset) => World.NeedReset(ref needReset);
+    }
+    
     [DefaultExecutionOrder(-999)]
     public class World : MonoBehaviour
     {
@@ -64,7 +73,8 @@ namespace LSCore
         public static event Action Destroyed;
         public static event Action Building;
         public static event Action Built;
-        public static int InstanceId => instance.GetInstanceID(); 
+        private static int lastInstanceId; 
+        public static int instanceId; 
         public static bool IsPlaying { get; private set; }
         public static bool IsBuilding { get; private set; }
         public static bool IsCompiling => EditorApplication.isCompiling;
@@ -116,6 +126,7 @@ namespace LSCore
             instance = go.AddComponent<World>();
             DontDestroyOnLoad(go);
 #if UNITY_EDITOR
+            instanceId = instance.GetInstanceID();
             IsPlaying = true;
             Created.SafeInvoke();
 #endif
@@ -138,6 +149,7 @@ namespace LSCore
         {
             Burger.Log("[World] OnDestroy");
 #if UNITY_EDITOR
+            lastInstanceId = instanceId;
             IsPlaying = false;
             Destroyed.SafeInvoke();
 #endif
@@ -182,14 +194,23 @@ namespace LSCore
                 }
             }
         }
-#if UNITY_EDITOR
-        public static bool IsDiff(ref int id)
+
+        [Conditional("UNITY_EDITOR")]
+        public static void NeedReset(ref bool needReset)
         {
-            bool diff = id != InstanceId;
-            id = InstanceId;
-            return diff;
-        }
+#if UNITY_EDITOR
+            needReset = lastInstanceId != instanceId;
 #endif
+        }
+        
+        public static T ResetStatic<T>(ref T value)
+        {
+#if UNITY_EDITOR
+            if(lastInstanceId != instanceId) value = default;
+            return value;
+#endif
+            return value;
+        }
 
         public static Coroutine BeginCoroutine(IEnumerator routine)
         {

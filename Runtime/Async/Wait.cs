@@ -48,6 +48,19 @@ namespace LSCore.Async
                 onLoop(target - DateTime.Now);
             });
         }
+        
+        public static Tween Seconder(this DeviceTime target, Action<TimeSpan> onLoop, bool callImmediately = true)
+        {
+            if (callImmediately)
+            {
+                onLoop(target - DeviceTime.Now);
+            }
+            
+            return Cycles(1, -1, () =>
+            {
+                onLoop(target - DeviceTime.Now);
+            });
+        }
 
         public static Tween Frames(uint count, Action onComplete)
         {

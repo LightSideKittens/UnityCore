@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using System;
+using Newtonsoft.Json.Linq;
 
 namespace LSCore.ConfigModule
 {
@@ -27,7 +28,15 @@ namespace LSCore.ConfigModule
     public class JTokenGameConfig : LocalDynamicConfig
     {
         public JObject data = new JObject();
+        public event Action Serializing;
+        public static JTokenGameConfig GetConfig(string path) => GetManager(path).Config;
         public static JObject Get(string path) => GetManager(path).Config.data;
         public static JTokenGameConfigManager GetManager(string path) => ConfigMaster<JTokenGameConfigManager>.Get(path);
+
+        protected internal override void OnSerializing()
+        {
+            base.OnSerializing();
+            Serializing?.Invoke();
+        }
     }
 }

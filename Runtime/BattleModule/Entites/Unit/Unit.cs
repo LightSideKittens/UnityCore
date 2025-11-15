@@ -36,7 +36,7 @@ namespace LSCore.BattleModule
         public void RegisterComps()
         {
 #if UNITY_EDITOR
-            var instanceId = World.InstanceId;
+            var instanceId = World.instanceId;
             if (lastWorldInstanceId != instanceId)
             {
                 lastWorldInstanceId = instanceId;
