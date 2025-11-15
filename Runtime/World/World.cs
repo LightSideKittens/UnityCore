@@ -15,12 +15,10 @@ using UnityEditor.Build;
 
 namespace LSCore
 {
-    public static class W
+    [Conditional("UNITY_EDITOR")]
+    public class ResetStaticAttribute : Attribute
     {
-        public static T RS<T>(ref T obj) => World.ResetStatic(ref obj);
         
-        [Conditional("UNITY_EDITOR")]
-        public static void NR(ref bool needReset) => World.NeedReset(ref needReset);
     }
     
     [DefaultExecutionOrder(-999)]
@@ -120,6 +118,11 @@ namespace LSCore
             Application.targetFrameRate = 120;
             DOTween.SetTweensCapacity(1000, 1000);
 #if UNITY_EDITOR
+            var fields = TypeCache.GetFieldsWithAttribute<ResetStaticAttribute>();
+            foreach (var fieldInfo in fields)
+            {
+                fieldInfo.SetValue(null, null);
+            }
             Creating.SafeInvoke();
 #endif
             var go = new GameObject(nameof(World));
