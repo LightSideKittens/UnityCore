@@ -231,6 +231,7 @@ namespace LSCore.Extensions
             return defaultValue;
         }
         
+        
         public static T AsJ<T>(this IRJToken token, object key) where T : JToken, new()
         {
             return (T)(token[key] ??= new T());
@@ -259,10 +260,16 @@ namespace LSCore.Extensions
         private Dictionary<object, Action<JToken>> tempSetActions = new();
         private Dictionary<object, Action<JToken>> setActions = new();
         
-        public void Listen(object key, Action<JToken> action) => setActions[key] = action;
+        public void Listen(object key, Action<JToken> action)
+        {
+            setActions.TryGetValue(key, out var temp);
+            temp += action;
+            setActions[key] = temp;
+        }
+
         public void ListenAndCall(object key, Action<JToken> action)
         {
-            setActions[key] = action;
+            Listen(key, action);
             action(token[key]);
         }
 

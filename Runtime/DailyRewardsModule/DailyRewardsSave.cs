@@ -30,8 +30,7 @@ public static class DailyRewardsSave
     
     private static DeviceTime nextClaimDateTime;
     public static DeviceTime NextClaimDateTime => 
-        nextClaimDateTime = W.RS(ref nextClaimDateTime) 
-                            ?? new DeviceTimeJObject(Config, "nextClaimDateTime").Value;
+        nextClaimDateTime ??= new DeviceTimeJObject(Config, "nextClaimDateTime").Value;
 
     public static bool TryClaim()
     {

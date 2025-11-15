@@ -15,6 +15,9 @@ public static class LaLa
     [Serializable]
     public class Play : CreateSinglePrefab<AudioSource>
     {
+        private float volume;
+        private Tween tween;
+        
         public override void Do()
         {
             base.Do();
@@ -32,6 +35,31 @@ public static class LaLa
             { 
                 obj.Stop();
             }
+        }
+
+        public void FadeIn(float duration = 0.5f)
+        {
+            Do();
+            if (tween == null)
+            {
+                obj.volume = 0; 
+                tween ??= obj.DOFade(volume, duration).SetAutoKill(false).KillOnDestroy();
+            }
+            
+            tween.PlayForward();
+        }
+
+        public void FadeOut()
+        {
+            tween?.PlayBackwards();
+        }
+        
+        protected override void OnCreated()
+        {
+            base.OnCreated();
+            Object.DontDestroyOnLoad(obj.gameObject);
+            volume = obj.volume;
+            tween = null;
         }
     }
     
