@@ -272,6 +272,20 @@ namespace LSCore.Extensions
             Listen(key, action);
             action(token[key]);
         }
+        
+        public void UnListen(string key, Action<JToken> action)
+        {
+            setActions.TryGetValue(key, out var temp);
+            temp -= action;
+            if (temp == null)
+            {
+                tempSetActions.Remove(key);
+            }
+            else
+            {
+                setActions[key] = temp;
+            }
+        }
 
         public void ListenTemp(object key, Action<JToken> action) => tempSetActions[key] = action;
         public bool UnListenTemp(object key, Action<JToken> action) => tempSetActions.Remove(key);
@@ -286,16 +300,18 @@ namespace LSCore.Extensions
             get => token[key];
             set
             {
-                token[key] = value;
-
+                var val = value;
+                token[key] = val;
+                val = token[key];
+                
                 if (tempSetActions.Remove(key, out var action))
                 {
-                    action(value);
+                    action(val);
                 }
 
                 if (setActions.TryGetValue(key, out action))
                 {
-                    action(value);
+                    action(val);
                 }
             }
         }
