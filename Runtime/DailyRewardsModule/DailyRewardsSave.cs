@@ -28,7 +28,7 @@ public static class DailyRewardsSave
         set => Config["weeks"] = value;
     }
     
-    private static DeviceTime nextClaimDateTime;
+    [ResetStatic] private static DeviceTime nextClaimDateTime;
     public static DeviceTime NextClaimDateTime => 
         nextClaimDateTime ??= new DeviceTimeJObject(Config, "nextClaimDateTime").Value;
 
