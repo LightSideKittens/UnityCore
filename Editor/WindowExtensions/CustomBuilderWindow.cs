@@ -41,9 +41,12 @@ public static class CustomBuilder
                     patch++;
                     break;
                 case VersionImportance.Minor:
+                    patch = 0;
                     minor++; 
                     break;
                 case VersionImportance.Major:
+                    patch = 0;
+                    minor = 0;
                     major++;
                     break;
             }

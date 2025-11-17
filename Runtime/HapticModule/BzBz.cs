@@ -42,15 +42,13 @@ public static class BzBz
         }
     }
     
-    public static JObject Config => config ?? JTokenGameConfig.Get("BzBzSettings");
+    public static JObject Config => JTokenGameConfig.Get("BzBzSettings");
 
     public static bool Unmuted
     {
         get => Config.As("unmuted", true);
         set => Config["unmuted"] = value;
     }
-    
-    private static JObject config;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Init()

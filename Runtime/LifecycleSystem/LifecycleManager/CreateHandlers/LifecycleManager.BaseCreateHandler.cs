@@ -26,7 +26,7 @@ namespace LSCore.LifecycleSystem
             
             protected abstract void StartCreating();
 
-            protected RJToken Create(string objId, LifecycleObject lifecycleObject)
+            protected JToken Create(string objId, LifecycleObject lifecycleObject)
             {
                 var objToken = GetObj(objId);
                 objToken[createdAt] = DateTime.UtcNow.Ticks;

@@ -244,8 +244,9 @@ public class ViewState : MonoBehaviour
     public class Save
     {
         private string viewSavePath;
-        public RJObject Config => config ?? JTokenGameConfig.Get(Path.Combine("ViewStates", viewSavePath));
-        private RJObject config;
+        private string path;
+        private string Path => path ??= System.IO.Path.Combine("ViewStates", viewSavePath);
+        public JObject Config => JTokenGameConfig.Get(Path);
 
         public Save(string viewSavePath)
         {

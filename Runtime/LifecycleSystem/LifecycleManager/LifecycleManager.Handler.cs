@@ -22,7 +22,7 @@ namespace LSCore.LifecycleSystem
             [NonSerialized] public string managerId;
             [NonSerialized] public List<LifecycleObject> objs;
             protected JToken Config => LifecycleConfig.Get(systemId, LifecycleConfig.Type.Data, managerId);
-            protected RJToken GetObj(string objId) => new(LifecycleConfig.Get(systemId, LifecycleConfig.Type.Data, GetObjPath(objId)));
+            protected JToken GetObj(string objId) => LifecycleConfig.Get(systemId, LifecycleConfig.Type.Data, GetObjPath(objId));
             
             public string GetObjPath(string objId) => Path.Combine(managerId, objId);
             
@@ -58,7 +58,7 @@ namespace LSCore.LifecycleSystem
                 
                 if (timeMark == null)
                 {
-                    objToken.Listen(timeMarkKey, Do);
+                    //objToken.Listen(timeMarkKey, Do); //TODO: Refactor
                     return;
                 }
 

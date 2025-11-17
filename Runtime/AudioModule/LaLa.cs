@@ -127,10 +127,9 @@ public static class LaLa
         }
     }
     
-    public static JObject Config => config ?? JTokenGameConfig.Get("LaLaSettings");
+    public static JObject Config => JTokenGameConfig.Get("LaLaSettings");
     public static JObject Volumes => Config.AsJ<JObject>("volumes");
     public static JObject Unmutes => Config.AsJ<JObject>("unmutes");
-    private static JObject config;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void Init()
