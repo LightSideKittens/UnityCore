@@ -45,7 +45,7 @@ namespace LSCore
             { ShowWindowOption.HideAllPrevious, HideAllPrevious },
         };
 
-        internal static int sortingOrder = DefaultSortingOrder;
+        public static int CurrentSortingOrder { get; internal set; } = DefaultSortingOrder;
         internal static Dictionary<string, WindowsGroup> groups = new();
         
         internal static string Id { get; private set; } = DefaultId;
@@ -67,7 +67,8 @@ namespace LSCore
         public static bool IsGoBack { get; private set; }
         public static bool IsHidePrevious { get; private set; }
         public static bool IsHideAllPrevious { get; private set; }
-
+        internal static bool IsViewsStackDirty { get; set; }
+        internal static event Action ViewsStackChanged;
 
         static UIViewBoss()
         {
@@ -92,6 +93,12 @@ namespace LSCore
                     GoBack();
                 }
             }
+
+            if (IsViewsStackDirty)
+            {
+                ViewsStackChanged?.Invoke();
+                IsViewsStackDirty = false;
+            }
         }
 
         private static void Clear()
@@ -101,7 +108,7 @@ namespace LSCore
             IsHideAllPrevious = false;
             IsGoBackBlocked = false;
             Id = DefaultId;
-            sortingOrder = DefaultSortingOrder;
+            CurrentSortingOrder = DefaultSortingOrder;
             groups = new ()
             {
                 { DefaultId, new WindowsGroup(DefaultId) },

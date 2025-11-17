@@ -13,10 +13,11 @@ namespace LSCore
 
         public static event Action Showed;
         public static event Action Hidden;
+        public static ReactBool isOnTop;
 #pragma warning restore CS0067
         
         private static bool isCalledFromStatic;
-        public static bool IsVisible => !IsNull && Instance.Manager.IsShow;
+        public static bool IsVisible => !IsNull && Instance.Manager.IsShowed;
         
         protected override void Init()
         {
@@ -38,6 +39,7 @@ namespace LSCore
             Manager.Showed += () => { Showed?.Invoke(); };
             Manager.Hiding += () => { Hiding?.Invoke(); };
             Manager.Hidden += () => { Hidden?.Invoke(); };
+            Manager.isOnTop.action += val => { isOnTop.Value = val; };
         }
 
         private static string logTag = $"[{typeof(T).Name}]".ToTag(new Color(0f, 0.79f, 0.22f));
