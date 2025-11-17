@@ -44,20 +44,30 @@ namespace LSCore
         private CanvasGroup canvasGroup;
         public bool blockSystemGoBack;
         public DoIt systemGoBackOverride;
-        public bool IsShow { get; private set; }
+
+        public ReactBool isOnTop;
+        
+        public bool IsShowed { get; private set; }
 
         internal void Init(CanvasGroup canvasGroup)
         {
             this.gameObject = canvasGroup.gameObject;
             this.canvasGroup = canvasGroup;
+            UIViewBoss.ViewsStackChanged += OnViewsStackChanged;
+        }
+
+        private void OnViewsStackChanged()
+        {
+            isOnTop.Value = IsShowed && (canvas && canvas.sortingOrder >= UIViewBoss.CurrentSortingOrder);
         }
 
         internal void OnDestroy()
         {
-            if (IsShow && canvas)
+            if (IsShowed && canvas)
             {
-                UIViewBoss.sortingOrder--;
+                UIViewBoss.CurrentSortingOrder--;
             }
+            UIViewBoss.ViewsStackChanged -= OnViewsStackChanged;
         }
         
         public void Show()
@@ -85,13 +95,14 @@ namespace LSCore
             if (showTween != null) return;
             
             Burger.Log($"{gameObject.name} InternalShow by Id {UIViewBoss.Id}");
-            IsShow = true;
+            IsShowed = true;
+            UIViewBoss.IsViewsStackDirty = true;
             UIViewBoss.CallOption(showOption());
             RecordState();
             
             if (canvas)
             {
-                canvas.sortingOrder = UIViewBoss.sortingOrder++;
+                canvas.sortingOrder = UIViewBoss.CurrentSortingOrder++;
             }
             
             OnlyShow();
@@ -114,21 +125,22 @@ namespace LSCore
         {
             if (hideTween != null) return;
             Burger.Log($"{gameObject.name} InternalHide");
-            IsShow = false;
+            IsShowed = false;
+            UIViewBoss.IsViewsStackDirty = true;
             
             if (gameObject == null)
             {
                 UIViewBoss.Current.hideAllPrevious -= InternalHide;
                 if (canvas is not null)
                 {
-                    UIViewBoss.sortingOrder--;
+                    UIViewBoss.CurrentSortingOrder--;
                 }
                 return;
             }
 
             if (canvas)
             {
-                UIViewBoss.sortingOrder--;
+                UIViewBoss.CurrentSortingOrder--;
             }
             
             UIViewBoss.Current.hideAllPrevious -= InternalHide;
