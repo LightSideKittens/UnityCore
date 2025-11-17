@@ -29,13 +29,15 @@ namespace LSCore
         public float Number
         {
             get => number;
-            set { number = value; UpdateText(); }
+            set { number = value; UpdateText(); OnNumberChanged(); }
         }
 
         private void UpdateText()
         {
             base.text = string.Format(textFormat, number.ToString(numberFormat));
         }
+
+        protected virtual void OnNumberChanged(){}
         
         public static implicit operator float(LSNumber number) => number.Number;
         public static implicit operator int(LSNumber number) => (int)number.Number;

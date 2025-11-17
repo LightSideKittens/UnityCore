@@ -7,7 +7,7 @@ namespace LSCore
 {
     public class ReferencedFundText : FundText
     {
-        public FundText reference;
+        public Get<FundText> reference;
         public float multiplier = 2;
         
         
@@ -16,26 +16,28 @@ namespace LSCore
         {
             base.OnValidate();
             if (reference == null) return;
-            if (reference == this)
+            var value = reference.Data;
+            
+            if (value == this)
             {
                 reference = null;
                 return;
             }
 
             OnValidate();
-            reference.Validated -= OnValidate;
-            reference.Validated += OnValidate;
+            value.Validated -= OnValidate;
+            value.Validated += OnValidate;
 
             void OnValidate()
             {
-                Id = reference.Id;
-                Number = reference.Number * multiplier;
+                Id = value.Id;
+                Number = value.Number * multiplier;
             }
         }
 
         protected override void OnDestroy()
         {
-            reference.Validated -= OnValidate;
+            reference.Data.Validated -= OnValidate;
         }
 #endif
     }

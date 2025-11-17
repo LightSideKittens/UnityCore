@@ -34,6 +34,15 @@ namespace LSCore
             }
         }
 
+        protected override void OnNumberChanged()
+        {
+            base.OnNumberChanged();
+            if (changeTextColorIfNotEnough)
+            {
+                UpdateColor(default);
+            }
+        }
+
         private void UpdateColor((int, int) _)
         {
             var colorId = CanSpend ? enoughColorId : notEnoughColorId;

@@ -30,6 +30,7 @@ namespace LSCore
     public class Spend : FundAction
     {
         [SerializeReference] public DoIt onSpent;
+        [SerializeReference] public DoIt onCannotSpent;
         
         public override void Do()
         {
@@ -38,6 +39,10 @@ namespace LSCore
             {
                 onSpent?.Do();
                 action();
+            }
+            else
+            {
+                onCannotSpent?.Do();
             }
             Funds.lastTransactionId = null;
         }
