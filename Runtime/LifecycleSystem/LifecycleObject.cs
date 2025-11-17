@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using LSCore.ConditionModule;
 using LSCore.Extensions;
+using Newtonsoft.Json.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -16,10 +17,10 @@ namespace LSCore.LifecycleSystem
         [Serializable]
         public abstract class Handler : If
         {
-            public RJToken lastObjData;
-            public RJToken targetObjData;
+            public JToken lastObjData;
+            public JToken targetObjData;
             
-            public abstract void BuildTargetData(RJToken targetData);
+            public abstract void BuildTargetData(JToken targetData);
             
             public abstract void SetupView();
             public abstract void OnShowed();
@@ -42,8 +43,8 @@ namespace LSCore.LifecycleSystem
         private string placementId;
         private string objId;
         
-        private RJToken lastObjData;
-        private RJToken targetObjData;
+        private JToken lastObjData;
+        private JToken targetObjData;
 
         public string Id => id;
         private string ViewDataPath => useId ? Path.Combine(objId, $"{placementId}{id}") : objId;
@@ -65,8 +66,8 @@ namespace LSCore.LifecycleSystem
             this.systemId = systemId;
             this.placementId = placementId;
             this.objId = objId;
-            lastObjData = new(LifecycleConfig.Get(systemId, LifecycleConfig.Type.View, ViewDataPath));
-            targetObjData = new(LifecycleConfig.Get(systemId, LifecycleConfig.Type.Data, objId));
+            lastObjData = LifecycleConfig.Get(systemId, LifecycleConfig.Type.View, ViewDataPath);
+            targetObjData = LifecycleConfig.Get(systemId, LifecycleConfig.Type.Data, objId);
             
             for (int i = 0; i < handlers.Count; i++)
             {
@@ -82,7 +83,7 @@ namespace LSCore.LifecycleSystem
             }
         }
         
-        public void BuildTargetData(RJToken token)
+        public void BuildTargetData(JToken token)
         {
             token[isNew] = true;
             

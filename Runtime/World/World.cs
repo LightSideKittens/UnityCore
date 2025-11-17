@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading;
 using DG.Tweening;
 using LSCore.Extensions;
@@ -18,7 +19,19 @@ namespace LSCore
     [Conditional("UNITY_EDITOR")]
     public class ResetStaticAttribute : Attribute
     {
+        public bool useNew;
+        public Type specifiedType;
+
+        public ResetStaticAttribute(){}
         
+        public ResetStaticAttribute(Type specifiedType, bool useNew)
+        {
+            this.specifiedType = specifiedType;
+            this.useNew = useNew;
+        }
+        
+        public ResetStaticAttribute(bool useNew) => this.useNew = useNew;
+        public ResetStaticAttribute(Type specifiedType) => this.specifiedType = specifiedType;
     }
     
     [DefaultExecutionOrder(-999)]
@@ -121,7 +134,19 @@ namespace LSCore
             var fields = TypeCache.GetFieldsWithAttribute<ResetStaticAttribute>();
             foreach (var fieldInfo in fields)
             {
-                fieldInfo.SetValue(null, null);
+                var resetAtt = fieldInfo.GetCustomAttribute<ResetStaticAttribute>();
+                object value = null;
+                if (resetAtt.useNew)
+                {
+                    Type type = resetAtt.specifiedType ?? fieldInfo.FieldType;
+                    try
+                    {
+                        value = Activator.CreateInstance(type);
+                    }
+                    catch{}
+                   
+                }
+                fieldInfo.SetValue(null, value);
             }
             Creating.SafeInvoke();
 #endif

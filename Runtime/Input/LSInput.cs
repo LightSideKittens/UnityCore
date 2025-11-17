@@ -13,6 +13,7 @@ namespace LSCore
         public Vector2 deltaPosition;
         public TouchPhase phase;
         
+        public bool IsPositionChanged => deltaPosition.sqrMagnitude > 0;
         public bool IsPointerOverUI => EventSystem.current != null && EventSystem.current.IsPointerOverGameObject(fingerId);
 
         public static implicit operator Touch(LSTouch touch)
@@ -46,7 +47,7 @@ namespace LSCore
 
         static LSInput()
         {
-            World.Updated += Update;
+            EventSystem.Updated += Update;
             
 #if UNITY_EDITOR
             World.Creating += () =>

@@ -18,6 +18,7 @@ namespace LSCore
 
             public ArraySlice<LSTouch> GetTouches()
             {
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
                 var count = Input.touchCount;
                 
                 if (count > 0)
@@ -35,6 +36,9 @@ namespace LSCore
                     }
                     return touchesBuffer.Slice(..count);
                 }
+                
+                return ArraySlice<LSTouch>.empty;
+#endif
                 
                 Vector2 current = Input.mousePosition;
                 LSTouch? t = null;

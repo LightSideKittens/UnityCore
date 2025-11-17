@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using JetBrains.Annotations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -161,7 +160,6 @@ namespace LSCore.Extensions
             target[key]?.Parent?.Remove();
         }
         
-        
         public static string ToStr(this JToken token)
         {
             return Convert.ToString(((JValue)token).Value, invariantCulture);
@@ -195,157 +193,5 @@ namespace LSCore.Extensions
                 
             return false;
         }
-    }
-    
-    public static class RJTokenExtensions
-    {
-        public static void Remove(this IRJToken target, object key)
-        {
-            target[key]?.Parent?.Remove();
-        }
-
-        public static bool CheckDiffAndSync<T>(this IRJToken lastData, object key, JToken currentValue, Action<(T lastValue, T currentValue)> onSync = null) 
-        {
-            var lastValue = lastData[key];
-                
-            if (lastValue == null || !JToken.DeepEquals(lastValue, currentValue))
-            {
-                var lastVal = lastValue != null ? lastValue.ToObject<T>() ?? default(T) : default;
-                    
-                onSync?.Invoke((lastVal, currentValue.ToObject<T>()));
-                lastData[key] = currentValue;
-                return true;
-            }
-                
-            return false;
-        }
-        
-        public static T As<T>(this IRJToken token, object key, T defaultValue = default)
-        {
-            if (token[key] != null)
-            {
-                return token[key].ToObject<T>();
-            }
-            
-            token[key] = JToken.FromObject(defaultValue);
-            return defaultValue;
-        }
-        
-        
-        public static T AsJ<T>(this IRJToken token, object key) where T : JToken, new()
-        {
-            return (T)(token[key] ??= new T());
-        }
-    }
-        
-    public struct Wrapper : IRJToken
-    {
-        public static Wrapper wrapper = new();
-        public JToken token;
-
-        public JToken this[object key]
-        {
-            get => token[key];
-            set => token[key] = value;
-        }
-    }
-
-    public interface IRJToken
-    {
-        public JToken? this[object key] { get; set; }
-    }
-    
-    public class BaseRJToken<T> : IRJToken where T : JToken
-    {
-        private Dictionary<object, Action<JToken>> tempSetActions = new();
-        private Dictionary<object, Action<JToken>> setActions = new();
-        
-        public void Listen(object key, Action<JToken> action)
-        {
-            setActions.TryGetValue(key, out var temp);
-            temp += action;
-            setActions[key] = temp;
-        }
-
-        public void ListenAndCall(object key, Action<JToken> action)
-        {
-            Listen(key, action);
-            action(token[key]);
-        }
-        
-        public void UnListen(string key, Action<JToken> action)
-        {
-            setActions.TryGetValue(key, out var temp);
-            temp -= action;
-            if (temp == null)
-            {
-                tempSetActions.Remove(key);
-            }
-            else
-            {
-                setActions[key] = temp;
-            }
-        }
-
-        public void ListenTemp(object key, Action<JToken> action) => tempSetActions[key] = action;
-        public bool UnListenTemp(object key, Action<JToken> action) => tempSetActions.Remove(key);
-        
-        private T token;
-        public T Token => token;
-
-        public BaseRJToken(T token) => this.token = token;
-        
-        public virtual JToken? this[object key]
-        {
-            get => token[key];
-            set
-            {
-                var val = value;
-                token[key] = val;
-                val = token[key];
-                
-                if (tempSetActions.Remove(key, out var action))
-                {
-                    action(val);
-                }
-
-                if (setActions.TryGetValue(key, out action))
-                {
-                    action(val);
-                }
-            }
-        }
-
-        public void Replace(BaseRJToken<T> value)
-        {
-            token.Replace(value.token);
-        }
-        
-        public int Increase(object key, int value)
-        {
-            var count = this[key]?.ToInt() ?? 0;
-            count += value;
-            this[key] = count;
-            return count;
-        }
-    }
-    
-    public class RJToken : BaseRJToken<JToken>
-    {
-        public RJToken(JToken token) : base(token)
-        {
-        }
-    }
-    
-    public class RJObject : BaseRJToken<JObject>
-    {
-        public RJObject(JObject token) : base(token)
-        {
-        }
-        
-        public static implicit operator RJObject(JObject token) => new(token);
-
-        public bool ContainsKey(string key) => Token.ContainsKey(key);
-        public bool TryGetValue(string key, [CanBeNull] out JToken token) => Token.TryGetValue(key, out token);
     }
 }
