@@ -1,6 +1,6 @@
 ﻿namespace LSCore.ConfigModule
 {
-    public class DebugConfigManager<T> : LocalDynamicConfigManager<T> where T : LocalDynamicConfig, new()
+    public class DebugConfigManager<T> : AutoSaveConfigManager<T> where T : LocalDynamicConfig, new()
     {
         public new static DebugConfigManager<T> Get(string path) =>
             ConfigMaster<DebugConfigManager<T>>.Get(path); 

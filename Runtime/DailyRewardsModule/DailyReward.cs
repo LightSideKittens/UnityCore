@@ -73,13 +73,13 @@ public class DailyReward : ViewState.Switcher
             button.Did += OnDid;
             lastCan = !DailyRewardsSave.CanClaim.Yes;
             UpdateButtonState();
-            DailyRewardsSave.Config.PropertyChanged += UpdateButtonState;
+            DoEvent.Listen("config_changed", UpdateButtonState);
             DestroyEvent.AddOnDestroy(button, OnDestroy);
         }
 
         private void OnDestroy()
         {
-            DailyRewardsSave.Config.PropertyChanged -= UpdateButtonState;
+            DoEvent.UnListen("config_changed", UpdateButtonState);
             timer?.Kill();
         }
 
@@ -98,12 +98,13 @@ public class DailyReward : ViewState.Switcher
             else
             {
                 var nextDateTime = DailyRewardsSave.NextClaimDateTime;
+                
                 timer = nextDateTime.Seconder(time =>
                 {
                     text.Localize("nextRewardInX", time.Timelyze(Timely.Preset.Compact3));
                     if (DailyRewardsSave.CanClaim.Yes)
                     {
-                        DailyRewardsSave.NextClaimDateTime.Ticks--;
+                        DoEvent.Invoke("config_changed");
                     }
                 });
             }
@@ -116,7 +117,7 @@ public class DailyReward : ViewState.Switcher
             if (DailyRewardsSave.TryClaim())
             {
                 claimActionsPerDay[claimedDay % 7].Do();
-                Analytic.LogEvent("daily_reward_claimed", ("day", claimedDay));
+                Analytic.LogEvent("daily_reward_claimed", ("day", claimedDay + 1));
             }
             
             buttonDid.Do();
