@@ -17,6 +17,8 @@ namespace LSCore
             public long id;
             public bool IsValid => !string.IsNullOrEmpty(key) || id > 0;
         }
+
+        private static string logTag = "[Localization]".ToTag(new Color(1f, 0.81f, 0.93f));
         
         public static string MissedText = "Oops...";
         private static Locale locale;
@@ -88,6 +90,9 @@ namespace LSCore
 #if UNITY_EDITOR
                 if (World.IsEditMode) return "Key is null";
 #endif
+#if DEBUG
+                Debug.LogError($"{logTag} Key is null");
+#endif
                 return missedText;
             }
 
@@ -95,6 +100,9 @@ namespace LSCore
             {
 #if UNITY_EDITOR
                 if (World.IsEditMode) return "StringTable is null";
+#endif
+#if DEBUG
+                Debug.LogError($"{logTag} StringTable is null");
 #endif
                 return missedText;
             }
@@ -111,7 +119,13 @@ namespace LSCore
                     }
                     catch(Exception e)
                     {
-                        text = e.ToString();
+#if UNITY_EDITOR
+                        if (World.IsEditMode) return $"{e}";
+#endif
+#if DEBUG
+                        Debug.LogError($"{logTag} {e}");
+#endif
+                        text = missedText;
                     }
                 }
                 
@@ -120,6 +134,9 @@ namespace LSCore
             
 #if UNITY_EDITOR
             if (World.IsEditMode) return $"No value for key {key}";
+#endif
+#if DEBUG
+            Debug.LogError($"{logTag} No value for key {key}");
 #endif
             return missedText;
         }

@@ -38,6 +38,15 @@ namespace LSCore
         [JsonProperty] 
         public bool LogWindowsActivity { get; set; }
 
+        [Category("DeviceTime")]
+        [Preserve]
+        [JsonProperty]
+        public bool EnableTimeCheats
+        {
+            get => DeviceTime.enableTimeCheats;
+            set => DeviceTime.enableTimeCheats = value;
+        }
+
         protected override void OnDeserialized()
         {
             base.OnDeserialized();

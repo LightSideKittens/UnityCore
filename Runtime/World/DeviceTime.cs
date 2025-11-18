@@ -6,6 +6,12 @@ using UnityEngine;
 
 public class DeviceTime
 {
+    public static bool enableTimeCheats
+#if DEBUG
+    = true
+#endif
+        ;
+    
     private long ticks;
     private long clockTicks;
     private int bootId;
@@ -16,11 +22,14 @@ public class DeviceTime
     {
         get
         {
-            if (bootId != CurrentBootId)
+            var bootIdChanged = bootId != CurrentBootId;
+#if DEBUG
+            bootIdChanged |= enableTimeCheats;   
+#endif
+            if (bootIdChanged)
             {
                 ticks = CurrentTicks + (clockTicks - DateTime.UtcNow.Ticks);
                 bootId = CurrentBootId;
-                Debug.Log($"BootId Changed {bootId}");
                 Changed?.Invoke();
             }
             return ticks;
@@ -57,6 +66,7 @@ public class DeviceTime
         {
             if (now == null) now = new DeviceTime(CurrentTicks);
             else now.ticks = CurrentTicks;
+            now.clockTicks = DateTime.UtcNow.Ticks;
             return now;
         }
     }
@@ -79,7 +89,6 @@ public class DeviceTime
     {
         bootId = CurrentBootId;
         this.Time = new(ticks);
-        Debug.Log($"CurrentTicks {TimeSpan.FromTicks(CurrentTicks).TotalMinutes}");
     }
 
     private static AndroidJavaClass cls;
@@ -153,7 +162,11 @@ public static class DeviceTimeExtensions
         
     public static JObject SyncJObject(this DeviceTime time, JObject jObject)
     {
-        jObject["ticks"] = time.Ticks;
+        var last = DeviceTime.enableTimeCheats;
+        DeviceTime.enableTimeCheats = false;
+        var ticks = time.Ticks;
+        DeviceTime.enableTimeCheats = last;
+        jObject["ticks"] = ticks;
         jObject["clockTicks"] = time.ClockTicks;
         jObject["bootId"] = time.BootId;
         return jObject;

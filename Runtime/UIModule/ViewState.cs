@@ -276,7 +276,7 @@ public class ViewState : MonoBehaviour
     {
         for (int i = 0; i < listenKeysForChange.Length; i++)
         {
-            DoEventListener.Listen(listenKeysForChange[i], TryChange);
+            DoEvent.Listen(listenKeysForChange[i], TryChange);
         }
         
         TryChange();
@@ -286,7 +286,7 @@ public class ViewState : MonoBehaviour
     {
         for (int i = 0; i < listenKeysForChange.Length; i++)
         {
-            DoEventListener.UnListen(listenKeysForChange[i], TryChange);
+            DoEvent.UnListen(listenKeysForChange[i], TryChange);
         }
     }
 

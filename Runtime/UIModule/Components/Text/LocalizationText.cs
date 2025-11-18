@@ -187,6 +187,7 @@ namespace LSCore
         private void UpdateLocalizedText()
         {
             if(!IsLocalized) return;
+            if(Table == null) return;
             var lastText = m_text;
             localizedText = localizationData.id.Translate(Table, localizationData.Arguments);
             base.text = localizedText;
