@@ -39,7 +39,7 @@ namespace LSCore.Editor
         [Serializable]
         public abstract class BaseGameObjectsModifier : BaseModifier
         {
-            public override string Filter => "t:Scene t:Prefab";
+            public sealed override string Filter => "t:Scene t:Prefab";
 
             protected virtual bool OnEnter(List<GameObject> roots, out bool needBreak)
             {
@@ -59,7 +59,7 @@ namespace LSCore.Editor
                     List<GameObject> roots = new();
                     var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
                     Scene scene = default;
-                    bool sceneDirty = false;
+                    bool isModified = false;
 
                     if (prefab != null)
                     {
@@ -71,23 +71,27 @@ namespace LSCore.Editor
                         roots.AddRange(scene.GetRootGameObjects());
                     }
 
-                    sceneDirty |= OnEnter(roots, out var needBreak);
+                    isModified |= OnEnter(roots, out var needBreak);
 
                     if (!needBreak)
                     {
                         var gos = roots.SelectMany(x => x.GetComponentsInChildren<Transform>(true).Select(t => t.gameObject)).ToList();
-                        foreach (var go in gos)
+                        isModified |= ModifyAll(gos, out needBreak);
+                        if (!needBreak)
                         {
-                            if(go == null) continue;
-                            sceneDirty |= Modify(go, out needBreak);
-                            if (needBreak)
+                            foreach (var go in gos)
                             {
-                                break;
+                                if(go == null) continue;
+                                isModified |= Modify(go, out needBreak);
+                                if (needBreak)
+                                {
+                                    break;
+                                }
                             }
                         }
                     }
 
-                    if (sceneDirty)
+                    if (isModified)
                     {
                         if (prefab != null)
                         {
@@ -103,8 +107,18 @@ namespace LSCore.Editor
                     }
                 }
             }
-            
-            protected abstract bool Modify(GameObject go, out bool needBreak);
+
+            protected virtual bool ModifyAll(List<GameObject> gos, out bool needBreak)
+            {
+                needBreak = true;
+                return false;
+            }
+
+            protected virtual bool Modify(GameObject go, out bool needBreak)
+            {
+                needBreak = true;
+                return false;
+            }
         }
         
         [SerializeReference] public BaseModifier[] modifiers;
