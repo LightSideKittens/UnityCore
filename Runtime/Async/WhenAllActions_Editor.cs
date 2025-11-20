@@ -12,7 +12,7 @@ namespace LSCore.Async
 
             partial void SetCreatePlace()
             {
-                createdPlace = UniTrace.Create(3);
+                //createdPlace = UniTrace.Create(3);
             }
 
             partial void RegisterAction(string place)

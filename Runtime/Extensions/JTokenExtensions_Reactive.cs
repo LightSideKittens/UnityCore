@@ -1,89 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using Newtonsoft.Json.Linq;
 
 namespace LSCore.Extensions
 {
     public static partial class JTokenExtensions
     {
-        [ResetStatic(true)] 
-        private static Dictionary<JContainer, Dictionary<Action, Action>> unlistens = new();
+        public static JTokenListener Listen(this JToken token) => JTokenListener.Get(token);
         
-        public static void ListenAndCall(this JToken token, Action action) => token.Parent.ListenAndCall(action);
-
-        public static void UnListen(this JToken token, Action action) => token.Parent.UnListen(action);
-        
-        public static void ListenAndCall(this JObject obj, string key, Action action)
+        public static JTokenListener ListenAndCall(this JToken token, string path, Action callback)
         {
-            if (!unlistens.TryGetValue(obj, out var unlistenDict))
-            {
-                unlistenDict = new();
-                unlistens.Add(obj, unlistenDict);
-            }
-            
-            unlistenDict.TryGetValue(action, out var unlisten);
-            unlisten += UnListen;
-            unlistenDict[action] = unlisten;
-            
-            obj.PropertyChanged += OnPropertyChanged;
-            action();
-            
-            void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
-            {
-                if (key == e.PropertyName)
-                {
-                    action();
-                }
-            }
-
-            void UnListen()
-            {
-                obj.PropertyChanged -= OnPropertyChanged;
-                unlistenDict.TryGetValue(action, out var nunlisten);
-                nunlisten -= UnListen;
-                unlistenDict[action] = nunlisten;
-            }
+            var listener = Get(token, path);
+            listener.ListenAndCall(callback);
+            return listener;
         }
-        
-        public static void ListenAndCall(this JContainer token, Action action)
-        {
-            if (!unlistens.TryGetValue(token, out var unlistenDict))
-            {
-                unlistenDict = new();
-                unlistens.Add(token, unlistenDict);
-            }
-            
-            unlistenDict.TryGetValue(action, out var unlisten);
-            unlisten += UnListen;
-            unlistenDict[action] = unlisten;
-            
-            token.ListChanged += OnListChanged;
-            action();
-            
-            void OnListChanged(object sender, ListChangedEventArgs e)
-            {
-                action();
-            }
 
-            void UnListen()
-            {
-                token.ListChanged -= OnListChanged;
-                unlistenDict.TryGetValue(action, out var nunlisten);
-                nunlisten -= UnListen;
-                unlistenDict[action] = nunlisten;
-            }
-        }
-        
-        public static void UnListen(this JContainer token, Action action)
+        public static JTokenListener UnListen(this JToken token, string path, Action callback)
         {
-            if (!unlistens.TryGetValue(token, out var unlistenDict))
+            var listener = Get(token, path);
+            listener.UnListen(callback);
+            return listener;
+        }
+
+        private static JTokenListener Get(this JToken token, string path)
+        {
+            var listener = JTokenListener.Get(token);
+            foreach (var key in path.Split('.'))
             {
-                unlistenDict = new();
-                unlistens.Add(token, unlistenDict);
+                listener = listener[key];
             }
-            
-            unlistenDict.TryGetValue(action, out var unlisten);
-            unlisten?.Invoke();
-        } }
+            return listener;
+        }
+    }
 }

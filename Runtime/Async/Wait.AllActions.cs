@@ -32,7 +32,7 @@ namespace LSCore.Async
             
             public void OnComplete(Action onComlete) => Completed = onComlete;
 
-            public Action WaitAction()
+            /*public Action WaitAction()
             {
                 dependenciesCount++;
 #if UNITY_EDITOR
@@ -54,7 +54,7 @@ namespace LSCore.Async
                         Completed?.Invoke();
                     }
                 }
-            }
+            }*/
         }
     }
 }
