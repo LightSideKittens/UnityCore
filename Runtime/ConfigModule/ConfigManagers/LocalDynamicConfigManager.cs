@@ -212,7 +212,7 @@ namespace LSCore.ConfigModule
         protected void Save(string fullFileName, string json)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(fullFileName)!);
-            File.WriteAllText(fullFileName,json);
+            File.WriteAllTextAsync(fullFileName,json);
         }
         
         public void Delete()

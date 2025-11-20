@@ -2,14 +2,22 @@
 #define RUNTIME
 #endif
 using System.Diagnostics;
+using DG.Tweening;
+using LSCore.Async;
 
 namespace LSCore.ConfigModule
 {
     public abstract class AutoSaveConfigManager<T> : LocalDynamicConfigManager<T> where T : LocalDynamicConfig, new()
     {
+        private static float currentSaveDelay;
+        private float saveDelay;
+        private Tween saveTween;
+        
         public override void Load()
         {
             base.Load();
+            currentSaveDelay = (currentSaveDelay + 1) % 5;
+            saveDelay = currentSaveDelay + 1;
             SetupAutoSave();
         }
 
@@ -64,11 +72,13 @@ namespace LSCore.ConfigModule
         {
 #if UNITY_EDITOR
             World.Destroyed += OnWorldDestroy;
+            saveTween = Wait.InfinityLoop(saveDelay, OnApplicationPaused);
 #endif
         }
         
         private void OnWorldDestroy()
         {
+            saveTween.Kill();
             Save();
             Unload();
             UnsubOnWorldDestroy();
@@ -94,10 +104,12 @@ namespace LSCore.ConfigModule
             if (isSaveListening) return;
             isSaveListening = true;
             World.ApplicationPaused += OnApplicationPaused;
+            saveTween = Wait.InfinityLoop(saveDelay, OnApplicationPaused);
         }
         
         private void OnApplicationPaused()
         {
+            saveTween.Restart();
             Save();
         }
         
@@ -107,6 +119,7 @@ namespace LSCore.ConfigModule
             if (!isSaveListening) return;
             isSaveListening = false;
             World.ApplicationPaused -= OnApplicationPaused;
+            saveTween.Kill();
         }
 
         #endregion
