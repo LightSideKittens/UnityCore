@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "227253067810",
+    "project_id": "light-side-llc",
+    "storage_bucket": "light-side-llc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:227253067810:android:5d3323aa6f70b5b6746a7b",
+        "android_client_info": {
+          "package_name": "light.side.llc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3eA9AoJR0cR5prhBU2lt-SZu2Zi-Fzt4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
