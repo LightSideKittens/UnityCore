@@ -9,3 +9,10 @@ MonoImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 183370
+  packageName: Feel
+  packageVersion: 5.8
+  assetPath: Assets/LightSideCore/Runtime/HapticModule/Components/HapticReceiver.cs
+  uploadId: 799856
