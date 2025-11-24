@@ -50,6 +50,19 @@ namespace LSCore
         public static float FrameRate => 1f / Time.unscaledDeltaTime;
         public static float DeltaTime { get; set; }
 
+        private static string userId;
+        public static string UserId
+        {
+            get
+            {
+                if(!string.IsNullOrEmpty(userId)) return userId;
+                
+                var id = PlayerPrefs.GetString("UserId", Guid.NewGuid().ToString("N"));
+                PlayerPrefs.SetString("UserId", id);
+                return id;
+            }
+        }
+
 #if UNITY_EDITOR
         public class BuildHooks : BuildPlayerProcessor
         {
