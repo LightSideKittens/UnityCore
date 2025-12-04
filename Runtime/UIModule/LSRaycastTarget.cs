@@ -53,7 +53,7 @@ namespace LSCore
                 return;
 
             var graphic = editor.target as Graphic;
-            RectTransform gui = graphic.rectTransform;
+            RectTransform gui = graphic.GetComponent<RectTransform>();
             Transform ownSpace = gui.transform;
             Rect rectInOwnSpace = gui.rect;
 

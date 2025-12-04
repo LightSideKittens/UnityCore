@@ -142,8 +142,7 @@ public sealed partial class Lottie
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void DrawOneFrameSyncInternal(IntPtr animationWrapperIntPtr, int frameNumber)
         {
-            NativeBridge.LottieRenderImmediately(animationWrapperIntPtr, renderData[atlas.textureIndex].renderDataPtr,
-                frameNumber, true);
+            NativeBridge.LottieRenderImmediately(animationWrapperIntPtr, renderData[atlas.textureIndex].renderDataPtr, frameNumber, true);
             animationWrapperPtr = animationWrapperIntPtr;
             atlas.IsTextureDirty = true;
         }
