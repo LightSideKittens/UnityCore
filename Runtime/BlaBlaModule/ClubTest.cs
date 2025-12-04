@@ -1,13 +1,52 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Sendbird.Chat;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
 public class ClubTest : MonoBehaviour
 {
+    [Serializable]
+    public class Club
+    {
+        public SbGroupChannel channel;
+        public string url;
+        public string name;
+        public int maxMembers;
+        [ProgressBar(0, "maxMembers")]
+        public int members;
+
+        public void Setup(SbGroupChannel channel)
+        {
+            this.channel = channel;
+            url = channel.Url;
+            name = channel.Name;
+            maxMembers = 30;
+            members = channel.Members.Count;
+        }
+
+        [Button]
+        public void Join()
+        {
+            BlaBla.Club.Join(channel, () =>
+            {
+                Debug.Log("Joined");
+            });
+        }
+        
+        [Button]
+        public void Leave()
+        {
+            BlaBla.Club.Leave(channel, () =>
+            {
+                Debug.Log("Leaved");
+            });
+        }
+    }
+    
     [ShowInInspector] public SbUser user;
     [ShowInInspector] public SbGroupChannelCreateParams createParams;
-    public List<SbGroupChannel> channels = new();
+    public List<Club> channels = new();
 
     [Button]
     public void Connect()
@@ -31,7 +70,7 @@ public class ClubTest : MonoBehaviour
     private SbPublicGroupChannelListQuery loader;
 
     [Button]
-    public void GetChannels()
+    public void GetClubLoader()
     {
         var query = BlaBla.Club.Ref.Limit(50);
         BlaBla.Club.GetPageLoader(query, loader =>
@@ -48,7 +87,12 @@ public class ClubTest : MonoBehaviour
     {
         loader.LoadNextPage((x, error) =>
         {
-            channels.AddRange(x);
+            for (int i = 0; i < x.Count; i++)
+            {
+                var club = new Club();
+                club.Setup(x[i]);
+                channels.Add(club);
+            }
         });
     }
 }

@@ -165,7 +165,7 @@ namespace LSCore.NativeUtils
 
             GUI.matrix = Matrix4x4.identity;
             Graphics.SetRenderTarget(renderTexture);
-            style.Draw(rect, new GUIContent(emoji), GUIUtility.GetControlID(FocusType.Keyboard), false);
+            style.Draw(rect, new GUIContent(emoji), 0, false);
 
             texture.ReadPixels(new Rect(0, 0, textureSize, textureSize), 0, 0);
             texture.Apply();
