@@ -23,7 +23,7 @@ public class SetColor : BaseChange
 [Serializable]
 public class SetText : BaseChange
 {
-    [SerializeReference] public IKeyGet<TMPText> text;
+    [SerializeReference] public IKeyGet<TMP_Text> text;
     public string textString;
 
     public override void Do(Action onComplete)
