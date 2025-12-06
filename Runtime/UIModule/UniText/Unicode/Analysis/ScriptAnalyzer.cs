@@ -14,6 +14,15 @@ public sealed class ScriptAnalyzer
     }
 
     /// <summary>
+    /// Создать ScriptAnalyzer с использованием статического UnicodeData.
+    /// </summary>
+    public ScriptAnalyzer()
+    {
+        this.dataProvider = UnicodeData.Provider ?? throw new InvalidOperationException(
+            "UnicodeData not initialized. Call UnicodeData.EnsureInitialized() first.");
+    }
+
+    /// <summary>
     /// Анализировать скрипты и записать результат в предоставленный буфер.
     /// </summary>
     public void Analyze(ReadOnlySpan<int> codepoints, UnicodeScript[] result)

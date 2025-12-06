@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(dir /s /b \"C:\\C-UnityProjects\\LittleLand\\Library\\PackageCache\")",
+      "Bash(findstr:*)",
+      "Bash(ren TMP_Bitmap.shader UniText_Bitmap.shader)",
+      "Bash(ren:*)",
+      "Bash(ren TMP_SDF-Mobile.shader UniText_SDF-Mobile.shader)",
+      "Bash(ren TMP_SDF-Mobile-2-Pass.shader UniText_SDF-Mobile-2-Pass.shader)",
+      "Bash(ren TMP_SDF-Surface.shader UniText_SDF-Surface.shader)",
+      "Bash(git reset:*)",
+      "Bash(dir /s /b \"C:\\C-UnityProjects\\LittleLand\\Assets\\LightSideCore\\Runtime\\UIModule\\UniText\\TMP\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 /// <summary>
@@ -33,7 +34,7 @@ public struct TextProcessSettings
 
 /// <summary>
 /// Главный координатор text processing pipeline.
-/// Использует unified buffers для избежания лишних копирований.
+/// Использует SharedTextBuffers для избежания аллокаций.
 /// </summary>
 public sealed class TextProcessor
 {
@@ -41,82 +42,60 @@ public sealed class TextProcessor
     private readonly RichTextParser parser;
     private readonly BidiEngine bidiEngine;
     private readonly ScriptAnalyzer scriptAnalyzer;
-    private readonly Itemizer itemizer;
+    private readonly Itemizer itemizer;  // Reserved for future use
     private readonly IShapingEngine shapingEngine;
     private readonly LineBreaker lineBreaker;
     private readonly TextLayout layout;
 
-    // Unified buffers
-    private int[] codepoints = new int[256];
-    private int codepointCount;
-
-    private readonly List<TextAttributeBase> attributes = new(32);
-
-    private byte[] bidiLevels = new byte[256];
-    private BidiParagraph[] bidiParagraphs = Array.Empty<BidiParagraph>();
-    private TextDirection baseDirection;
-
-    private UnicodeScript[] scripts = new UnicodeScript[256];
-
-    private TextRun[] runs = new TextRun[32];
-    private int runCount;
-
-    private ShapedRun[] shapedRuns = new ShapedRun[32];
-    private int shapedRunCount;
-    private ShapedGlyph[] shapedGlyphs = new ShapedGlyph[256];
-    private int shapedGlyphCount;
-
-    private TextLine[] lines = new TextLine[16];
-    private int lineCount;
-    private ShapedRun[] orderedRuns = new ShapedRun[32];
-    private int orderedRunCount;
-
-    private PositionedGlyph[] positionedGlyphs = new PositionedGlyph[256];
-    private int positionedGlyphCount;
-
     // State
-    private TMPFontProvider fontProvider;
+    private UniTextFontProvider fontProvider;
     private int baseFontId;
     private float resultWidth;
     private float resultHeight;
 
-    public TextProcessor(IUnicodeDataProvider unicodeData, TagRegistry tagRegistry = null)
+    /// <summary>
+    /// Создать TextProcessor с использованием статического UnicodeData.
+    /// </summary>
+    public TextProcessor(TagRegistry tagRegistry = null)
     {
+        var unicodeData = UnicodeData.Provider;
         if (unicodeData == null)
-            throw new ArgumentNullException(nameof(unicodeData));
+            throw new InvalidOperationException("UnicodeData not initialized. Call UnicodeData.EnsureInitialized() first.");
 
         parser = new RichTextParser(tagRegistry ?? TagRegistry.CreateDefault());
-        bidiEngine = new BidiEngine(unicodeData);
-        scriptAnalyzer = new ScriptAnalyzer(unicodeData);
-        itemizer = new Itemizer(unicodeData);
-        shapingEngine = new TMPShapingEngine(unicodeData);
-        lineBreaker = new LineBreaker(unicodeData);
+        bidiEngine = new BidiEngine();
+        scriptAnalyzer = new ScriptAnalyzer();
+        itemizer = new Itemizer();
+        shapingEngine = new UniTextShapingEngine();
+        lineBreaker = new LineBreaker();
         layout = new TextLayout();
     }
 
     /// <summary>
     /// Создать с custom shaping engine (для HarfBuzz).
     /// </summary>
-    public TextProcessor(IUnicodeDataProvider unicodeData, IShapingEngine shapingEngine, TagRegistry tagRegistry = null)
+    public TextProcessor(IShapingEngine shapingEngine, TagRegistry tagRegistry = null)
     {
-        if (unicodeData == null)
-            throw new ArgumentNullException(nameof(unicodeData));
         if (shapingEngine == null)
             throw new ArgumentNullException(nameof(shapingEngine));
 
+        var unicodeData = UnicodeData.Provider;
+        if (unicodeData == null)
+            throw new InvalidOperationException("UnicodeData not initialized. Call UnicodeData.EnsureInitialized() first.");
+
         parser = new RichTextParser(tagRegistry ?? TagRegistry.CreateDefault());
-        bidiEngine = new BidiEngine(unicodeData);
-        scriptAnalyzer = new ScriptAnalyzer(unicodeData);
-        itemizer = new Itemizer(unicodeData);
+        bidiEngine = new BidiEngine();
+        scriptAnalyzer = new ScriptAnalyzer();
+        itemizer = new Itemizer();
         this.shapingEngine = shapingEngine;
-        lineBreaker = new LineBreaker(unicodeData);
+        lineBreaker = new LineBreaker();
         layout = new TextLayout();
     }
 
     /// <summary>
     /// Установить font provider.
     /// </summary>
-    public void SetFontProvider(TMPFontProvider provider, int defaultFontId = 0)
+    public void SetFontProvider(UniTextFontProvider provider, int defaultFontId = 0)
     {
         fontProvider = provider;
         baseFontId = defaultFontId;
@@ -127,11 +106,13 @@ public sealed class TextProcessor
     /// </summary>
     public ReadOnlySpan<PositionedGlyph> Process(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
+        // Сброс shared буферов перед обработкой
+        SharedTextBuffers.Reset();
+        resultWidth = 0;
+        resultHeight = 0;
+
         if (text.IsEmpty)
         {
-            positionedGlyphCount = 0;
-            resultWidth = 0;
-            resultHeight = 0;
             return ReadOnlySpan<PositionedGlyph>.Empty;
         }
 
@@ -146,11 +127,8 @@ public sealed class TextProcessor
         else
             ParsePlain(text);
 
-        if (codepointCount == 0)
+        if (SharedTextBuffers.codepointCount == 0)
         {
-            positionedGlyphCount = 0;
-            resultWidth = 0;
-            resultHeight = 0;
             return ReadOnlySpan<PositionedGlyph>.Empty;
         }
 
@@ -173,7 +151,7 @@ public sealed class TextProcessor
         // 7. Layout
         LayoutText(settings);
 
-        return positionedGlyphs.AsSpan(0, positionedGlyphCount);
+        return SharedTextBuffers.positionedGlyphs.AsSpan(0, SharedTextBuffers.positionedGlyphCount);
     }
 
     /// <summary>
@@ -182,18 +160,18 @@ public sealed class TextProcessor
     public float ResultWidth => resultWidth;
     public float ResultHeight => resultHeight;
     public Vector2 ResultSize => new(resultWidth, resultHeight);
-    public ReadOnlySpan<PositionedGlyph> PositionedGlyphs => positionedGlyphs.AsSpan(0, positionedGlyphCount);
-    public ReadOnlySpan<int> Codepoints => codepoints.AsSpan(0, codepointCount);
-    public IReadOnlyList<TextAttributeBase> Attributes => attributes;
+    public ReadOnlySpan<PositionedGlyph> PositionedGlyphs => SharedTextBuffers.positionedGlyphs.AsSpan(0, SharedTextBuffers.positionedGlyphCount);
+    public ReadOnlySpan<int> Codepoints => SharedTextBuffers.codepoints.AsSpan(0, SharedTextBuffers.codepointCount);
+    public IReadOnlyList<TextAttributeBase> Attributes => SharedTextBuffers.attributes;
 
     #region Pipeline Steps
 
     private void Parse(ReadOnlySpan<char> text)
     {
-        codepointCount = 0;
-        attributes.Clear();
+        SharedTextBuffers.codepointCount = 0;
+        SharedTextBuffers.attributes.Clear();
 
-        EnsureCodepointCapacity(text.Length);
+        SharedTextBuffers.EnsureCodepointCapacity(text.Length);
 
         int i = 0;
         bool inNoparse = false;
@@ -208,7 +186,7 @@ public sealed class TextProcessor
                 if (tagEnd > i)
                 {
                     var tagContent = text.Slice(i + 1, tagEnd - i - 1);
-                    if (parser.ProcessTagDirect(tagContent, codepointCount, attributes, AddCodepoint, out bool isNoparseOpen))
+                    if (parser.ProcessTagDirect(tagContent, SharedTextBuffers.codepointCount, SharedTextBuffers.attributes, AddCodepoint, out bool isNoparseOpen))
                     {
                         if (isNoparseOpen) inNoparse = true;
                         i = tagEnd + 1;
@@ -232,10 +210,10 @@ public sealed class TextProcessor
 
     private void ParsePlain(ReadOnlySpan<char> text)
     {
-        codepointCount = 0;
-        attributes.Clear();
+        SharedTextBuffers.codepointCount = 0;
+        SharedTextBuffers.attributes.Clear();
 
-        EnsureCodepointCapacity(text.Length);
+        SharedTextBuffers.EnsureCodepointCapacity(text.Length);
 
         int i = 0;
         while (i < text.Length)
@@ -244,6 +222,7 @@ public sealed class TextProcessor
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddCharacter(ReadOnlySpan<char> text, ref int i)
     {
         char c = text[i];
@@ -261,15 +240,20 @@ public sealed class TextProcessor
         }
     }
 
-    private void AddCodepoint(int cp)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AddCodepoint(int cp)
     {
-        EnsureCodepointCapacity(codepointCount + 1);
-        codepoints[codepointCount++] = cp;
+        int count = SharedTextBuffers.codepointCount;
+        if (count >= SharedTextBuffers.codepoints.Length)
+            SharedTextBuffers.EnsureCodepointCapacity(count + 1);
+        SharedTextBuffers.codepoints[count] = cp;
+        SharedTextBuffers.codepointCount = count + 1;
     }
 
     private void AnalyzeBidi(TextDirection requestedDirection)
     {
-        EnsureBidiCapacity(codepointCount);
+        int cpCount = SharedTextBuffers.codepointCount;
+        SharedTextBuffers.EnsureBidiCapacity(cpCount);
 
         // Конвертируем TextDirection в BidiParagraphDirection
         var direction = requestedDirection switch
@@ -280,78 +264,79 @@ public sealed class TextProcessor
             _ => BidiParagraphDirection.Auto
         };
 
-        var result = bidiEngine.Process(codepoints.AsSpan(0, codepointCount), direction);
+        var result = bidiEngine.Process(SharedTextBuffers.codepoints.AsSpan(0, cpCount), direction);
 
         if (result.levels != null && result.levels.Length > 0)
         {
-            int copyLen = Math.Min(result.levels.Length, codepointCount);
-            result.levels.AsSpan(0, copyLen).CopyTo(bidiLevels);
+            int copyLen = Math.Min(result.levels.Length, cpCount);
+            result.levels.AsSpan(0, copyLen).CopyTo(SharedTextBuffers.bidiLevels);
         }
         else
         {
-            bidiLevels.AsSpan(0, codepointCount).Fill(0);
+            SharedTextBuffers.bidiLevels.AsSpan(0, cpCount).Fill(0);
         }
 
         // Сохраняем информацию о параграфах (каждый имеет свой baseLevel)
-        bidiParagraphs = result.paragraphs ?? Array.Empty<BidiParagraph>();
+        SharedTextBuffers.bidiParagraphs = result.paragraphs ?? Array.Empty<BidiParagraph>();
 
         // baseDirection первого параграфа (для совместимости)
-        baseDirection = result.Direction == BidiDirection.RightToLeft
+        SharedTextBuffers.baseDirection = result.Direction == BidiDirection.RightToLeft
             ? TextDirection.RightToLeft
             : TextDirection.LeftToRight;
     }
 
     private void AnalyzeScripts()
     {
-        EnsureScriptCapacity(codepointCount);
-        scriptAnalyzer.Analyze(codepoints.AsSpan(0, codepointCount), scripts);
+        int cpCount = SharedTextBuffers.codepointCount;
+        SharedTextBuffers.EnsureScriptCapacity(cpCount);
+        scriptAnalyzer.Analyze(SharedTextBuffers.codepoints.AsSpan(0, cpCount), SharedTextBuffers.scripts);
     }
 
     private void Itemize()
     {
-        runCount = 0;
+        SharedTextBuffers.runCount = 0;
 
-        if (codepointCount == 0) return;
+        int cpCount = SharedTextBuffers.codepointCount;
+        if (cpCount == 0) return;
 
-        var cp = codepoints.AsSpan(0, codepointCount);
+        var cpSpan = SharedTextBuffers.codepoints.AsSpan(0, cpCount);
+        var lvlSpan = SharedTextBuffers.bidiLevels.AsSpan(0, cpCount);
+        var scrSpan = SharedTextBuffers.scripts.AsSpan(0, cpCount);
+        var fp = fontProvider;
+        int baseFont = baseFontId;
 
         int runStart = 0;
-        byte currentLevel = bidiLevels[0];
-        var currentScript = scripts[0];
-        int currentFontId = fontProvider?.FindFontForCodepoint(cp[0], baseFontId) ?? baseFontId;
+        byte currentLevel = lvlSpan[0];
+        var currentScript = scrSpan[0];
+        int currentFontId = fp?.FindFontForCodepoint(cpSpan[0], baseFont) ?? baseFont;
 
-        for (int i = 1; i < codepointCount; i++)
+        for (int i = 1; i < cpCount; i++)
         {
-            bool needBreak = false;
+            byte level = lvlSpan[i];
+            var script = scrSpan[i];
+            int fontId = fp?.FindFontForCodepoint(cpSpan[i], baseFont) ?? baseFont;
 
-            if (bidiLevels[i] != currentLevel)
-                needBreak = true;
-
-            if (scripts[i] != currentScript)
-                needBreak = true;
-
-            int fontId = fontProvider?.FindFontForCodepoint(cp[i], baseFontId) ?? baseFontId;
-            if (fontId != currentFontId)
-                needBreak = true;
-
-            if (needBreak)
+            if (level != currentLevel || script != currentScript || fontId != currentFontId)
             {
                 AddRun(runStart, i - runStart, currentLevel, currentScript, currentFontId);
                 runStart = i;
-                currentLevel = bidiLevels[i];
-                currentScript = scripts[i];
+                currentLevel = level;
+                currentScript = script;
                 currentFontId = fontId;
             }
         }
 
-        AddRun(runStart, codepointCount - runStart, currentLevel, currentScript, currentFontId);
+        AddRun(runStart, cpCount - runStart, currentLevel, currentScript, currentFontId);
     }
 
-    private void AddRun(int start, int length, byte bidiLevel, UnicodeScript script, int fontId)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AddRun(int start, int length, byte bidiLevel, UnicodeScript script, int fontId)
     {
-        EnsureRunCapacity(runCount + 1);
+        int count = SharedTextBuffers.runCount;
+        if (count >= SharedTextBuffers.runs.Length)
+            SharedTextBuffers.EnsureRunCapacity(count + 1);
 
-        runs[runCount++] = new TextRun
+        SharedTextBuffers.runs[count] = new TextRun
         {
             range = new TextRange(start, length),
             bidiLevel = bidiLevel,
@@ -359,18 +344,21 @@ public sealed class TextProcessor
             fontId = fontId,
             attributeSnapshot = 0
         };
+        SharedTextBuffers.runCount = count + 1;
     }
 
     private void Shape()
     {
-        shapedRunCount = 0;
-        shapedGlyphCount = 0;
+        SharedTextBuffers.shapedRunCount = 0;
+        SharedTextBuffers.shapedGlyphCount = 0;
 
-        var cp = codepoints.AsSpan(0, codepointCount);
+        int cpCount = SharedTextBuffers.codepointCount;
+        int runCnt = SharedTextBuffers.runCount;
+        var cp = SharedTextBuffers.codepoints.AsSpan(0, cpCount);
 
-        for (int i = 0; i < runCount; i++)
+        for (int i = 0; i < runCnt; i++)
         {
-            var run = runs[i];
+            var run = SharedTextBuffers.runs[i];
             var runCodepoints = cp.Slice(run.range.start, run.range.length);
 
             var result = shapingEngine.Shape(
@@ -380,7 +368,7 @@ public sealed class TextProcessor
                 run.script,
                 run.Direction);
 
-            int glyphStart = shapedGlyphCount;
+            int glyphStart = SharedTextBuffers.shapedGlyphCount;
             AddShapedGlyphs(result.Glyphs);
 
             AddShapedRun(new ShapedRun
@@ -397,40 +385,60 @@ public sealed class TextProcessor
         }
     }
 
-    private void AddShapedGlyphs(ReadOnlySpan<ShapedGlyph> glyphs)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AddShapedGlyphs(ReadOnlySpan<ShapedGlyph> glyphs)
     {
-        EnsureShapedGlyphCapacity(shapedGlyphCount + glyphs.Length);
-        glyphs.CopyTo(shapedGlyphs.AsSpan(shapedGlyphCount));
-        shapedGlyphCount += glyphs.Length;
+        int count = SharedTextBuffers.shapedGlyphCount;
+        int required = count + glyphs.Length;
+        if (SharedTextBuffers.shapedGlyphs.Length < required)
+            SharedTextBuffers.EnsureShapedGlyphCapacity(required);
+
+        glyphs.CopyTo(SharedTextBuffers.shapedGlyphs.AsSpan(count));
+        SharedTextBuffers.shapedGlyphCount = required;
     }
 
-    private void AddShapedRun(ShapedRun run)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void AddShapedRun(ShapedRun run)
     {
-        EnsureShapedRunCapacity(shapedRunCount + 1);
-        shapedRuns[shapedRunCount++] = run;
+        int count = SharedTextBuffers.shapedRunCount;
+        if (count >= SharedTextBuffers.shapedRuns.Length)
+            SharedTextBuffers.EnsureShapedRunCapacity(count + 1);
+
+        SharedTextBuffers.shapedRuns[count] = run;
+        SharedTextBuffers.shapedRunCount = count + 1;
     }
 
     private void BreakLines(float maxWidth)
     {
-        lineCount = 0;
-        orderedRunCount = 0;
+        SharedTextBuffers.lineCount = 0;
+        SharedTextBuffers.orderedRunCount = 0;
+
+        var linesArr = SharedTextBuffers.lines;
+        var orderedRunsArr = SharedTextBuffers.orderedRuns;
+        int lineCnt = SharedTextBuffers.lineCount;
+        int orderedRunCnt = SharedTextBuffers.orderedRunCount;
 
         lineBreaker.BreakLines(
-            codepoints.AsSpan(0, codepointCount),
-            shapedRuns.AsSpan(0, shapedRunCount),
-            shapedGlyphs.AsSpan(0, shapedGlyphCount),
+            SharedTextBuffers.codepoints.AsSpan(0, SharedTextBuffers.codepointCount),
+            SharedTextBuffers.shapedRuns.AsSpan(0, SharedTextBuffers.shapedRunCount),
+            SharedTextBuffers.shapedGlyphs.AsSpan(0, SharedTextBuffers.shapedGlyphCount),
             maxWidth,
-            bidiParagraphs,
-            ref lines, ref lineCount,
-            ref orderedRuns, ref orderedRunCount);
+            SharedTextBuffers.bidiParagraphs,
+            ref linesArr, ref lineCnt,
+            ref orderedRunsArr, ref orderedRunCnt);
+
+        SharedTextBuffers.lines = linesArr;
+        SharedTextBuffers.orderedRuns = orderedRunsArr;
+        SharedTextBuffers.lineCount = lineCnt;
+        SharedTextBuffers.orderedRunCount = orderedRunCnt;
     }
 
     private void LayoutText(TextProcessSettings settings)
     {
-        positionedGlyphCount = 0;
+        SharedTextBuffers.positionedGlyphCount = 0;
 
         // Убедимся, что буфер достаточно большой для всех глифов
-        EnsurePositionedGlyphCapacity(shapedGlyphCount);
+        SharedTextBuffers.EnsurePositionedGlyphCapacity(SharedTextBuffers.shapedGlyphCount);
 
         if (fontProvider != null)
         {
@@ -449,67 +457,25 @@ public sealed class TextProcessor
         };
         layout.SetLayoutSettings(layoutSettings);
 
+        int glyphCnt = SharedTextBuffers.positionedGlyphCount;
         layout.Layout(
-            lines.AsSpan(0, lineCount),
-            orderedRuns.AsSpan(0, orderedRunCount),
-            shapedGlyphs.AsSpan(0, shapedGlyphCount),
-            positionedGlyphs, ref positionedGlyphCount,
+            SharedTextBuffers.lines.AsSpan(0, SharedTextBuffers.lineCount),
+            SharedTextBuffers.orderedRuns.AsSpan(0, SharedTextBuffers.orderedRunCount),
+            SharedTextBuffers.shapedGlyphs.AsSpan(0, SharedTextBuffers.shapedGlyphCount),
+            SharedTextBuffers.positionedGlyphs, ref glyphCnt,
             out resultWidth, out resultHeight);
-    }
-
-    #endregion
-
-    #region Buffer Management
-
-    private void EnsureCodepointCapacity(int required)
-    {
-        if (codepoints.Length >= required) return;
-        Array.Resize(ref codepoints, Math.Max(required, codepoints.Length * 2));
-    }
-
-    private void EnsureBidiCapacity(int required)
-    {
-        if (bidiLevels.Length >= required) return;
-        Array.Resize(ref bidiLevels, Math.Max(required, bidiLevels.Length * 2));
-    }
-
-    private void EnsureScriptCapacity(int required)
-    {
-        if (scripts.Length >= required) return;
-        Array.Resize(ref scripts, Math.Max(required, scripts.Length * 2));
-    }
-
-    private void EnsureRunCapacity(int required)
-    {
-        if (runs.Length >= required) return;
-        Array.Resize(ref runs, Math.Max(required, runs.Length * 2));
-    }
-
-    private void EnsureShapedRunCapacity(int required)
-    {
-        if (shapedRuns.Length >= required) return;
-        Array.Resize(ref shapedRuns, Math.Max(required, shapedRuns.Length * 2));
-    }
-
-    private void EnsureShapedGlyphCapacity(int required)
-    {
-        if (shapedGlyphs.Length >= required) return;
-        Array.Resize(ref shapedGlyphs, Math.Max(required, shapedGlyphs.Length * 2));
-    }
-
-    private void EnsurePositionedGlyphCapacity(int required)
-    {
-        if (positionedGlyphs.Length >= required) return;
-        Array.Resize(ref positionedGlyphs, Math.Max(required, positionedGlyphs.Length * 2));
+        SharedTextBuffers.positionedGlyphCount = glyphCnt;
     }
 
     #endregion
 
     #region Utilities
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int FindTagEnd(ReadOnlySpan<char> text, int start)
     {
-        for (int i = start + 1; i < text.Length && i < start + 128; i++)
+        int end = Math.Min(text.Length, start + 128);
+        for (int i = start + 1; i < end; i++)
         {
             if (text[i] == '>')
                 return i;
@@ -517,6 +483,7 @@ public sealed class TextProcessor
         return -1;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int SkipToTagEnd(ReadOnlySpan<char> text, int start)
     {
         for (int i = start; i < text.Length; i++)
@@ -541,7 +508,8 @@ public sealed class TextProcessor
             char c = text[start + 2 + i];
             char t = tagName[i];
 
-            if (char.ToLowerInvariant(c) != char.ToLowerInvariant(t))
+            // Inline lowercase comparison (avoid char.ToLowerInvariant overhead)
+            if (c != t && (c | 0x20) != (t | 0x20))
                 return false;
         }
 

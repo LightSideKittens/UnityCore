@@ -182,6 +182,15 @@ public sealed class BidiEngine
         this.unicodeData = unicodeData ?? throw new ArgumentNullException(nameof(unicodeData));
     }
 
+    /// <summary>
+    /// Создать BidiEngine с использованием статического UnicodeData.
+    /// </summary>
+    public BidiEngine()
+    {
+        this.unicodeData = UnicodeData.Provider ?? throw new InvalidOperationException(
+            "UnicodeData not initialized. Call UnicodeData.EnsureInitialized() first.");
+    }
+
     public BidiResult Process(ReadOnlySpan<int> codePoints,
         BidiParagraphDirection direction = BidiParagraphDirection.Auto)
     {

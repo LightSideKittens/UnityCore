@@ -111,6 +111,7 @@ public struct PositionedGlyph
     public float y;
     public int fontId;
     public int attributeSnapshot; // Для получения цвета и других атрибутов
+    public UnityEngine.Color32 color; // Цвет глифа
 }
 
 /// <summary>

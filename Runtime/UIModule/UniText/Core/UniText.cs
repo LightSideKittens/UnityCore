@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Компонент для отображения текста с полной Unicode поддержкой.
-/// Использует TMP шрифты для рендеринга, но собственный pipeline для:
+/// Использует UniTextFontAsset для рендеринга и собственный pipeline для:
 /// - BiDi (правильное отображение RTL текста)
 /// - Line breaking по Unicode правилам
 /// - Script detection
@@ -45,15 +45,10 @@ public class UniText : MaskableGraphic
     [SerializeField]
     private VerticalAlignment verticalAlignment = VerticalAlignment.Top;
 
-    [Header("Unicode Data")]
-    [SerializeField]
-    private TextAsset unicodeDataAsset;
-
     // Runtime components
     private TextProcessor processor;
-    private TMPFontProvider fontProvider;
-    private TMPMeshGenerator meshGenerator;
-    private IUnicodeDataProvider unicodeData;
+    private UniTextFontProvider fontProvider;
+    private UniTextMeshGenerator meshGenerator;
 
     private bool isDirty = true;
 
@@ -63,7 +58,13 @@ public class UniText : MaskableGraphic
 
     // Sub-mesh objects для fallback шрифтов
     private readonly List<UniTextSubMesh> subMeshObjects = new();
-    private List<MeshMaterialPair> lastMeshPairs;
+    private List<UniTextMeshPair> lastMeshPairs;
+
+    // Mesh tracking - mesh'и из SharedMeshPool, которые нужно вернуть при OnDisable/OnDestroy
+    private readonly List<Mesh> acquiredMeshes = new();
+
+    // Cached delegate to avoid lambda allocation
+    private Func<Mesh> cachedMeshProvider;
 
     // Материал для основного mesh (из первого MeshMaterialPair)
     private Material primaryMaterial;
@@ -265,46 +266,72 @@ public class UniText : MaskableGraphic
         }
         subMeshObjects.Clear();
 
-        // Очистка mesh из lastMeshPairs
-        if (lastMeshPairs != null)
+        // Возвращаем mesh'и в SharedMeshPool
+        ReleaseMeshes();
+
+        lastMeshPairs = null;
+    }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+
+        // Возвращаем mesh'и в пул когда компонент отключён
+        ReleaseMeshes();
+    }
+
+    /// <summary>
+    /// Вернуть все acquired mesh'и в SharedMeshPool.
+    /// </summary>
+    private void ReleaseMeshes()
+    {
+        if (acquiredMeshes.Count > 0)
         {
-            foreach (var pair in lastMeshPairs)
-            {
-                if (pair.mesh != null)
-                {
-                    if (Application.isPlaying)
-                        Destroy(pair.mesh);
-                    else
-                        DestroyImmediate(pair.mesh);
-                }
-            }
-            lastMeshPairs = null;
+            SharedMeshPool.Release(acquiredMeshes);
+            acquiredMeshes.Clear();
         }
+    }
+
+    /// <summary>
+    /// Получить mesh из SharedMeshPool.
+    /// </summary>
+    private Mesh GetPooledMesh(string name)
+    {
+        var mesh = SharedMeshPool.Acquire(name);
+        acquiredMeshes.Add(mesh);
+        return mesh;
     }
 
     private void Initialize()
     {
-        if (unicodeDataAsset == null)
+        if (!UnicodeData.IsInitialized)
         {
-            Debug.LogWarning("UniText: Unicode data asset not assigned.");
-            return;
+            UnicodeData.EnsureInitialized();
+            if (!UnicodeData.IsInitialized)
+            {
+                Debug.LogError("UniText: Unicode data not initialized. Check UniTextSettings in Resources. Component disabled.");
+                enabled = false;
+                return;
+            }
         }
 
         if (font == null)
         {
-            Debug.LogWarning("UniText: Font not assigned.");
+            Debug.LogError("UniText: Font not assigned. Component disabled.");
+            enabled = false;
             return;
         }
 
         try
         {
-            unicodeData = new BinaryUnicodeDataProvider(unicodeDataAsset.bytes);
-            processor = new TextProcessor(unicodeData);
+            processor = new TextProcessor();
+            cachedMeshProvider = () => GetPooledMesh("UniText Mesh");
             RebuildFontProvider();
         }
         catch (Exception ex)
         {
             Debug.LogError($"UniText: Failed to initialize: {ex.Message}\n{ex.StackTrace}");
+            enabled = false;
         }
     }
 
@@ -312,8 +339,8 @@ public class UniText : MaskableGraphic
     {
         if (font == null) return;
 
-        fontProvider = new TMPFontProvider(font);
-        meshGenerator = new TMPMeshGenerator(fontProvider, unicodeData);
+        fontProvider = new UniTextFontProvider(font);
+        meshGenerator = new UniTextMeshGenerator(fontProvider);
 
         if (processor != null)
         {
@@ -322,27 +349,36 @@ public class UniText : MaskableGraphic
     }
 
     /// <summary>
-    /// Помечает текст как требующий перестройки и немедленно перестраивает его.
+    /// Помечает текст как требующий перестройки.
+    /// Перестройка произойдёт через систему CanvasUpdateRegistry (Graphic.Rebuild).
     /// </summary>
     public void SetDirty()
     {
-        // Если компонент неактивен или не инициализирован - откладываем
+        if (!isDirty)
+        {
+            isDirty = true;
+            SetVerticesDirty();
+        }
+    }
+
+    /// <summary>
+    /// Принудительно перестраивает текст немедленно.
+    /// Используйте когда нужен синхронный результат (например, для получения размеров).
+    /// </summary>
+    public void ForceMeshUpdate()
+    {
         if (!isActiveAndEnabled || processor == null)
         {
             isDirty = true;
             return;
         }
 
-        // Защита от рекурсии
         if (isRebuilding)
-        {
             return;
-        }
 
         isRebuilding = true;
         try
         {
-            // Перестраиваем синхронно чтобы избежать мерцания
             RebuildText();
             UpdateCanvasRenderer();
             isDirty = false;
@@ -370,14 +406,40 @@ public class UniText : MaskableGraphic
         // Пустой - не даём Unity перестраивать геометрию
     }
 
-    private void LateUpdate()
+    /// <summary>
+    /// Вызывается CanvasUpdateRegistry на этапе Canvas.willRenderCanvases.
+    /// Это гарантирует, что rebuild происходит после всех Update/LateUpdate
+    /// и непосредственно перед рендерингом — никто не может изменить текст после этого.
+    /// </summary>
+    public override void Rebuild(CanvasUpdate update)
     {
-        // Обрабатываем отложенный dirty (если SetDirty был вызван когда компонент был неактивен)
-        if (isDirty)
+        // Вызываем base для обработки материала
+        base.Rebuild(update);
+
+        // Rebuild геометрии происходит на этапе PreRender
+        if (update != CanvasUpdate.PreRender)
+            return;
+
+        if (!isDirty || isRebuilding)
+            return;
+
+        if (processor == null)
+        {
+            Initialize();
+            if (processor == null)
+                return;
+        }
+
+        isRebuilding = true;
+        try
         {
             RebuildText();
             UpdateCanvasRenderer();
             isDirty = false;
+        }
+        finally
+        {
+            isRebuilding = false;
         }
     }
 
@@ -419,7 +481,7 @@ public class UniText : MaskableGraphic
     /// <summary>
     /// Обновляет sub-mesh объекты для fallback шрифтов.
     /// </summary>
-    private void UpdateSubMeshes(List<MeshMaterialPair> meshPairs)
+    private void UpdateSubMeshes(List<UniTextMeshPair> meshPairs)
     {
         int requiredCount = meshPairs.Count - 1;
 
@@ -588,6 +650,9 @@ public class UniText : MaskableGraphic
             }
         }
 
+        // Возвращаем старые mesh'и в пул перед получением новых
+        ReleaseMeshes();
+
         if (string.IsNullOrEmpty(text))
         {
             lastMeshPairs = null;
@@ -628,8 +693,8 @@ public class UniText : MaskableGraphic
             // Установить offset для корректного позиционирования относительно pivot
             meshGenerator.SetRectOffset(rect);
 
-            // Сгенерировать mesh — возвращает список пар mesh/material
-            lastMeshPairs = meshGenerator.GenerateMeshes(glyphs);
+            // Сгенерировать mesh с использованием пула (cached delegate to avoid allocation)
+            lastMeshPairs = meshGenerator.GenerateMeshes(glyphs, cachedMeshProvider);
         }
         catch (Exception ex)
         {

@@ -15,6 +15,15 @@ public sealed class LineBreakAlgorithm
     }
 
     /// <summary>
+    /// Создать LineBreakAlgorithm с использованием статического UnicodeData.
+    /// </summary>
+    public LineBreakAlgorithm()
+    {
+        this.dataProvider = UnicodeData.Provider ?? throw new InvalidOperationException(
+            "UnicodeData not initialized. Call UnicodeData.EnsureInitialized() first.");
+    }
+
+    /// <summary>
     /// Get break opportunities for a sequence of codepoints.
     /// </summary>
     public void GetBreakOpportunities(ReadOnlySpan<int> codePoints, Span<bool> breaks)

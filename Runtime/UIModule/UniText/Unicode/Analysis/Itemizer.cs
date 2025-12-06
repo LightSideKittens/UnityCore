@@ -9,11 +9,16 @@ using System;
 /// </summary>
 public sealed class Itemizer
 {
-    private readonly IUnicodeDataProvider unicodeData;
-
     public Itemizer(IUnicodeDataProvider unicodeData)
     {
-        this.unicodeData = unicodeData;
+        // Kept for compatibility, but we use static UnicodeData.Provider
+    }
+
+    /// <summary>
+    /// Создать Itemizer с использованием статического UnicodeData.
+    /// </summary>
+    public Itemizer()
+    {
     }
 
     /// <summary>
@@ -23,7 +28,7 @@ public sealed class Itemizer
         ReadOnlySpan<int> codepoints,
         ReadOnlySpan<byte> bidiLevels,
         UnicodeScript[] scripts,
-        TMPFontProvider fontProvider,
+        UniTextFontProvider fontProvider,
         int baseFontId,
         TextRun[] runs,
         ref int runCount)

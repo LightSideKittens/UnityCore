@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Line Breaker — разбивает текст на строки.
@@ -32,12 +33,12 @@ public sealed class LineBreaker
         this.lineBreakAlgorithm = lineBreakAlgorithm ?? throw new ArgumentNullException(nameof(lineBreakAlgorithm));
     }
 
-    public LineBreaker(IUnicodeDataProvider dataProvider)
+    /// <summary>
+    /// Создать LineBreaker с использованием статического UnicodeData.
+    /// </summary>
+    public LineBreaker()
     {
-        if (dataProvider == null)
-            throw new ArgumentNullException(nameof(dataProvider));
-
-        lineBreakAlgorithm = new LineBreakAlgorithm(dataProvider);
+        lineBreakAlgorithm = new LineBreakAlgorithm();
     }
 
     /// <summary>
@@ -95,20 +96,20 @@ public sealed class LineBreaker
         lineBreakAlgorithm.GetBreakOpportunities(codepoints, breakOpportunities);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool CanBreakAfter(int index)
     {
         int breakIndex = index + 1;
-        if (breakIndex < 0 || breakIndex >= breakOpportunities.Length)
-            return false;
-        return breakOpportunities[breakIndex];
+        return (uint)breakIndex < (uint)breakOpportunities.Length && breakOpportunities[breakIndex];
     }
 
-    private static bool IsMandatoryBreak(ReadOnlySpan<int> codepoints, int index)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsMandatoryBreak(int cp)
     {
-        if (index < 0 || index >= codepoints.Length)
-            return false;
+        // Optimized: single comparison for most common case (not a break)
+        // Most characters are > 0x2029, so this check is fast
+        if (cp > ParagraphSeparator) return false;
 
-        int cp = codepoints[index];
         return cp == LineFeed ||
                cp == VerticalTab ||
                cp == FormFeed ||
@@ -133,24 +134,29 @@ public sealed class LineBreaker
         int lastBreakRun = -1;
         int lastBreakGlyph = -1;
         float widthAtLastBreak = 0;
+        int runsLen = runs.Length;
 
-        for (int runIdx = 0; runIdx < runs.Length; runIdx++)
+        for (int runIdx = 0; runIdx < runsLen; runIdx++)
         {
             var run = runs[runIdx];
-            var runGlyphs = glyphs.Slice(run.glyphStart, run.glyphCount);
+            int runGlyphCount = run.glyphCount;
+            int glyphStart = run.glyphStart;
+            int rangeStart = run.range.start;
 
-            for (int g = 0; g < runGlyphs.Length; g++)
+            for (int g = 0; g < runGlyphCount; g++)
             {
-                var glyph = runGlyphs[g];
-                int codepointIndex = run.range.start + glyph.cluster;
+                var glyph = glyphs[glyphStart + g];
+                int codepointIndex = rangeStart + glyph.cluster;
 
-                if (IsMandatoryBreak(codepoints, codepointIndex))
+                // Check mandatory break first (cheaper than array lookup most of the time)
+                int cp = (uint)codepointIndex < (uint)codepoints.Length ? codepoints[codepointIndex] : 0;
+                if (IsMandatoryBreak(cp))
                 {
                     CreateLineFromGlyphs(runs, glyphs, lineStartRun, lineStartGlyph, runIdx, g, lineWidth);
 
                     lineStartRun = runIdx;
                     lineStartGlyph = g + 1;
-                    if (lineStartGlyph >= runGlyphs.Length)
+                    if (lineStartGlyph >= runGlyphCount)
                     {
                         lineStartRun = runIdx + 1;
                         lineStartGlyph = 0;
@@ -177,13 +183,13 @@ public sealed class LineBreaker
 
                     lineStartRun = lastBreakRun;
                     lineStartGlyph = lastBreakGlyph + 1;
-                    var breakRun = runs[lastBreakRun];
-                    if (lineStartGlyph >= breakRun.glyphCount)
+                    int breakRunGlyphCount = runs[lastBreakRun].glyphCount;
+                    if (lineStartGlyph >= breakRunGlyphCount)
                     {
                         lineStartRun = lastBreakRun + 1;
                         lineStartGlyph = 0;
                     }
-                    lineWidth = lineWidth - widthAtLastBreak;
+                    lineWidth -= widthAtLastBreak;
                     lastBreakRun = -1;
                     lastBreakGlyph = -1;
                 }
@@ -191,9 +197,9 @@ public sealed class LineBreaker
         }
 
         // Last line
-        if (lineStartRun < runs.Length)
+        if (lineStartRun < runsLen)
         {
-            int lastRun = runs.Length - 1;
+            int lastRun = runsLen - 1;
             int lastGlyph = runs[lastRun].glyphCount - 1;
             if (lastGlyph >= 0 || lineStartRun < lastRun)
             {
@@ -304,6 +310,7 @@ public sealed class LineBreaker
             // Find the paragraph that contains this line
             byte paragraphBaseLevel = FindParagraphBaseLevel(line.range.start, paragraphs);
 
+            // UAX #9 Rule L2: Reorder runs based on BiDi levels
             ReorderRunsInLine(line.runStart, line.runCount, paragraphBaseLevel);
 
             // Store the paragraph base level in the line for layout alignment
@@ -315,18 +322,24 @@ public sealed class LineBreaker
     /// <summary>
     /// Find the base level of the paragraph containing the given codepoint index.
     /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte FindParagraphBaseLevel(int codepointIndex, BidiParagraph[] paragraphs)
     {
         if (paragraphs == null || paragraphs.Length == 0)
             return 0; // Default LTR
 
-        foreach (var para in paragraphs)
+        // Most common case: single paragraph
+        if (paragraphs.Length == 1)
+            return paragraphs[0].baseLevel;
+
+        // Multiple paragraphs: search
+        for (int i = 0; i < paragraphs.Length; i++)
         {
+            var para = paragraphs[i];
             if (codepointIndex >= para.startIndex && codepointIndex <= para.endIndex)
                 return para.baseLevel;
         }
 
-        // If not found, use first paragraph's level (shouldn't happen)
         return paragraphs[0].baseLevel;
     }
 
@@ -379,14 +392,16 @@ public sealed class LineBreaker
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ReverseRuns(int start, int count)
     {
+        var arr = tempOrderedRuns;
         int end = start + count - 1;
         while (start < end)
         {
-            var temp = tempOrderedRuns[start];
-            tempOrderedRuns[start] = tempOrderedRuns[end];
-            tempOrderedRuns[end] = temp;
+            var temp = arr[start];
+            arr[start] = arr[end];
+            arr[end] = temp;
             start++;
             end--;
         }

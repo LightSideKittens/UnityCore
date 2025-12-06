@@ -11,7 +11,7 @@ public interface IShapingEngine
     /// </summary>
     ShapingResult Shape(
         ReadOnlySpan<int> codepoints,
-        TMPFontProvider fontProvider,
+        UniTextFontProvider fontProvider,
         int fontId,
         UnicodeScript script,
         TextDirection direction);
