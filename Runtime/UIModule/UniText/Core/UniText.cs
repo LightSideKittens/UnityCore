@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,7 +22,7 @@ public class UniText : MaskableGraphic
 
     [Header("Font")]
     [SerializeField]
-    private TMP_FontAsset font;
+    private UniTextFontAsset font;
 
     [SerializeField]
     private float fontSize = 36f;
@@ -82,7 +81,7 @@ public class UniText : MaskableGraphic
         }
     }
 
-    public TMP_FontAsset Font
+    public UniTextFontAsset Font
     {
         get => font;
         set

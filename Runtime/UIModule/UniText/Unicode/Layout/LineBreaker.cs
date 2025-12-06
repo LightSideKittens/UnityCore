@@ -10,15 +10,6 @@ public sealed class LineBreaker
 {
     private readonly LineBreakAlgorithm lineBreakAlgorithm;
 
-    // Mandatory line break characters (stable Unicode codepoints per UAX #14)
-    private const int LineFeed = 0x000A;
-    private const int VerticalTab = 0x000B;
-    private const int FormFeed = 0x000C;
-    private const int CarriageReturn = 0x000D;
-    private const int NextLine = 0x0085;
-    private const int LineSeparator = 0x2028;
-    private const int ParagraphSeparator = 0x2029;
-
     // Internal buffers for break opportunities
     private bool[] breakOpportunities = new bool[257];
 
@@ -108,15 +99,15 @@ public sealed class LineBreaker
     {
         // Optimized: single comparison for most common case (not a break)
         // Most characters are > 0x2029, so this check is fast
-        if (cp > ParagraphSeparator) return false;
+        if (cp > UnicodeData.ParagraphSeparator) return false;
 
-        return cp == LineFeed ||
-               cp == VerticalTab ||
-               cp == FormFeed ||
-               cp == CarriageReturn ||
-               cp == NextLine ||
-               cp == LineSeparator ||
-               cp == ParagraphSeparator;
+        return cp == UnicodeData.LineFeed ||
+               cp == UnicodeData.VerticalTab ||
+               cp == UnicodeData.FormFeed ||
+               cp == UnicodeData.CarriageReturn ||
+               cp == UnicodeData.NextLine ||
+               cp == UnicodeData.LineSeparator ||
+               cp == UnicodeData.ParagraphSeparator;
     }
 
     private void WrapLines(

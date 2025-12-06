@@ -1,10 +1,12 @@
 # UniText — Unicode Text Engine for Unity
 
+Добавляй сюда новые общие правила, которые посчитаешь нужным, что они будут общими на весь проект.
 ---
 
 ## ⚠️ ГЛАВНАЯ ЦЕЛЬ ПРОЕКТА — ЧИТАЙ ПЕРВЫМ ⚠️
 
 **UniText должен быть МАКСИМАЛЬНО ПРАВИЛЬНЫМ текстовым компонентом по ВСЕМ Unicode стандартам.**
+**Создать промышленный текстовый движок для Unity, соответствующий всем стандартам Unicode и лучшим практикам индустрии (Pango, DirectWrite, Core Text).**
 
 Это означает:
 - **100% compliance** со всеми UAX стандартами (BiDi, Line Breaking, Script, Grapheme)
@@ -117,7 +119,8 @@ for (int g = 0; g < glyphLen; g++)
 ## Известные TODO
 
 ### КРИТИЧЕСКИ ВАЖНО (без этого проект не считается завершённым)
-- [ ] **HarfBuzz интеграция** — ОБЯЗАТЕЛЬНО для правильного рендеринга всех скриптов
+- [x] **UniTextFontAsset с raw bytes** — реализовано, готово для HarfBuzz
+- [ ] **HarfBuzz интеграция** — использовать `UniTextFontAsset.FontData` для shaping
 - [ ] **Применение атрибутов** (color, size) в рендеринге — rich text должен работать полностью
 
 ### Важно
@@ -143,6 +146,22 @@ for (int g = 0; g < glyphLen; g++)
 - Размер билда не увеличивается
 - Эмодзи в стиле платформы (Apple/Google/Windows)
 - Автоматическая поддержка новых эмодзи
+
+### UniTextFontAsset (реализовано)
+Собственный font asset, полностью независимый от TMP_FontAsset:
+- **Raw font bytes** — сериализуются в ассет для использования HarfBuzz
+- **В Editor**: Назначается `sourceFont`, автоматически извлекаются байты
+- **В Runtime**: Только `byte[] fontData` + атлас + метрики
+- **FontEngine** используется для динамической загрузки глифов
+- **Fallback fonts** поддерживаются через `FallbackFontAssetTable`
+
+```csharp
+// Создание из raw bytes (для HarfBuzz):
+var fontAsset = UniTextFontAsset.CreateFontAsset(fontBytes);
+
+// Доступ к raw bytes для HarfBuzz:
+byte[] fontData = fontAsset.FontData;
+```
 
 ### Static UnicodeData
 Unicode данные загружаются один раз через `UnicodeData.Provider`. Все компоненты используют статический синглтон.

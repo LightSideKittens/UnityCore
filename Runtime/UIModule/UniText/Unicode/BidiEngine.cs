@@ -371,7 +371,7 @@ public sealed class BidiEngine
         {
             int cp = codePoints[i];
             if ((uint)cp > 0x10FFFFU)
-                cp = 0xFFFD;
+                cp = UnicodeData.ReplacementCharacter;
 
             BidiClass bc = unicodeData.GetBidiClass(cp);
             bidiClasses[i] = bc;
@@ -1080,15 +1080,15 @@ public sealed class BidiEngine
             if (paired == closeCp)
                 return true;
 
-            if (openCp == 0x2329 && (closeCp == 0x232A || closeCp == 0x3009))
+            if (openCp == UnicodeData.LeftPointingAngleBracket && (closeCp == UnicodeData.RightPointingAngleBracket || closeCp == UnicodeData.RightAngleBracket))
                 return true;
-            if (openCp == 0x3008 && (closeCp == 0x232A || closeCp == 0x3009))
+            if (openCp == UnicodeData.LeftAngleBracket && (closeCp == UnicodeData.RightPointingAngleBracket || closeCp == UnicodeData.RightAngleBracket))
                 return true;
 
             return false;
         }
 
-        return openCp == 0x0028 && closeCp == 0x0029;
+        return openCp == UnicodeData.LeftParenthesis && closeCp == UnicodeData.RightParenthesis;
     }
 
     private void ResolveWeakTypesForParagraph(

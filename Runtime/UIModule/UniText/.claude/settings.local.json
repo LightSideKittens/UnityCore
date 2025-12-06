@@ -11,7 +11,10 @@
       "Bash(ren TMP_SDF-Mobile-2-Pass.shader UniText_SDF-Mobile-2-Pass.shader)",
       "Bash(ren TMP_SDF-Surface.shader UniText_SDF-Surface.shader)",
       "Bash(git reset:*)",
-      "Bash(dir /s /b \"C:\\C-UnityProjects\\LittleLand\\Assets\\LightSideCore\\Runtime\\UIModule\\UniText\\TMP\")"
+      "Bash(dir /s /b \"C:\\C-UnityProjects\\LittleLand\\Assets\\LightSideCore\\Runtime\\UIModule\\UniText\\TMP\")",
+      "Bash(dir /b \"C:\\C-UnityProjects\\LittleLand\\Assets\\LightSideCore\")",
+      "Bash(cat:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []

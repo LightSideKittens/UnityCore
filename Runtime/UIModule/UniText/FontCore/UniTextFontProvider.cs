@@ -1,24 +1,23 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using TMPro;
 using UnityEngine;
 using UnityEngine.TextCore;
 
 /// <summary>
-/// Font provider that bridges TMP_FontAsset with the text processing pipeline.
-/// Uses TMP_FontAssetUtilities for proper fallback handling (same as TMP itself).
+/// Font provider that bridges UniTextFontAsset with the text processing pipeline.
+/// Handles font fallback lookup and glyph information retrieval.
 /// </summary>
 public sealed class UniTextFontProvider
 {
     // Registered font assets by ID
-    private readonly Dictionary<int, TMP_FontAsset> fontAssets = new();
+    private readonly Dictionary<int, UniTextFontAsset> fontAssets = new();
 
     // Reverse lookup: font asset instance ID -> our font ID
     private readonly Dictionary<int, int> fontAssetToId = new();
 
     // Main font asset (ID = 0)
-    private TMP_FontAsset mainFontAsset;
+    private UniTextFontAsset mainFontAsset;
 
     // Current font size
     private float fontSize = 36f;
@@ -28,6 +27,9 @@ public sealed class UniTextFontProvider
 
     // Next available font ID for dynamically discovered fonts
     private int nextFontId = 1000;
+
+    // Searched font assets (to prevent infinite recursion in fallback search)
+    private static HashSet<int> searchedFontAssets;
 
     /// <summary>
     /// Current font size.
@@ -56,9 +58,9 @@ public sealed class UniTextFontProvider
     public float GetScale(int fontId, float size)
     {
         var fontAsset = GetFontAsset(fontId);
-        if (fontAsset != null && fontAsset.faceInfo.pointSize > 0)
+        if (fontAsset != null && fontAsset.FaceInfo.pointSize > 0)
         {
-            return size / fontAsset.faceInfo.pointSize;
+            return size / fontAsset.FaceInfo.pointSize;
         }
         return 1f;
     }
@@ -66,12 +68,12 @@ public sealed class UniTextFontProvider
     /// <summary>
     /// Main font asset.
     /// </summary>
-    public TMP_FontAsset MainFontAsset => mainFontAsset;
+    public UniTextFontAsset MainFontAsset => mainFontAsset;
 
     /// <summary>
     /// Create a font provider with the specified main font asset.
     /// </summary>
-    public UniTextFontProvider(TMP_FontAsset fontAsset, float fontSize = 36f)
+    public UniTextFontProvider(UniTextFontAsset fontAsset, float fontSize = 36f)
     {
         if (fontAsset == null)
             throw new ArgumentNullException(nameof(fontAsset));
@@ -84,27 +86,19 @@ public sealed class UniTextFontProvider
     }
 
     /// <summary>
-    /// Create a font provider using the default font from settings.
+    /// Create a font provider (requires setting font asset separately).
     /// </summary>
     public UniTextFontProvider(float fontSize = 36f)
     {
         this.fontSize = fontSize;
-
-        var defaultFont = TMP_Settings.defaultFontAsset;
-        if (defaultFont != null)
-        {
-            this.mainFontAsset = defaultFont;
-            RegisterFontAsset(0, defaultFont);
-        }
-
         UpdateFontScale();
     }
 
     private void UpdateFontScale()
     {
-        if (mainFontAsset != null && mainFontAsset.faceInfo.pointSize > 0)
+        if (mainFontAsset != null && mainFontAsset.FaceInfo.pointSize > 0)
         {
-            fontScale = fontSize / mainFontAsset.faceInfo.pointSize;
+            fontScale = fontSize / mainFontAsset.FaceInfo.pointSize;
         }
         else
         {
@@ -115,7 +109,7 @@ public sealed class UniTextFontProvider
     /// <summary>
     /// Register a font asset with a specific ID.
     /// </summary>
-    public void RegisterFontAsset(int fontId, TMP_FontAsset fontAsset)
+    public void RegisterFontAsset(int fontId, UniTextFontAsset fontAsset)
     {
         if (fontAsset == null) return;
 
@@ -132,15 +126,18 @@ public sealed class UniTextFontProvider
     /// <summary>
     /// Get font asset by ID.
     /// </summary>
-    public TMP_FontAsset GetFontAsset(int fontId)
+    public UniTextFontAsset GetFontAsset(int fontId)
     {
-        return fontAssets.TryGetValue(fontId, out var asset) ? asset : mainFontAsset;
+        if (fontAssets.TryGetValue(fontId, out var asset))
+            return asset;
+
+        return mainFontAsset;
     }
 
     /// <summary>
     /// Get or create font ID for a font asset.
     /// </summary>
-    private int GetOrCreateFontId(TMP_FontAsset fontAsset)
+    private int GetOrCreateFontId(UniTextFontAsset fontAsset)
     {
         if (fontAsset == null)
             return 0;
@@ -169,24 +166,17 @@ public sealed class UniTextFontProvider
         if (fontAsset == null)
             return false;
 
-        // Use TMP's utility to get character (same as TMP does internally)
-        var character = TMP_FontAssetUtilities.GetCharacterFromFontAsset(
-            (uint)codepoint,
-            fontAsset,
-            false, // Don't search fallbacks here - we handle that in FindFontForCodepoint
-            FontStyles.Normal,
-            FontWeight.Regular,
-            out _);
+        var charLookup = fontAsset.CharacterLookupTable;
+        if (charLookup == null || !charLookup.TryGetValue((uint)codepoint, out var character))
+            return false;
 
-        if (character?.glyph == null)
+        if (character.glyph == null)
             return false;
 
         var glyph = character.glyph;
         var glyphMetrics = glyph.metrics;
 
-        // Get scale for the actual font that contains the glyph
-        var actualFont = character.textAsset as TMP_FontAsset ?? fontAsset;
-        float scale = fontSize / actualFont.faceInfo.pointSize;
+        float scale = fontSize / fontAsset.FaceInfo.pointSize;
 
         metrics = new GlyphMetrics
         {
@@ -202,7 +192,6 @@ public sealed class UniTextFontProvider
 
     /// <summary>
     /// Try to get glyph info (index and advance) for a codepoint.
-    /// Uses TMP_FontAssetUtilities - the same method TMP uses internally.
     /// IMPORTANT: Does NOT search fallback fonts - use FindFontForCodepoint first!
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -217,31 +206,33 @@ public sealed class UniTextFontProvider
         if (fontAsset == null)
             return false;
 
-        // Use TMP's utility to get character - this is exactly how TMP does it
-        var character = TMP_FontAssetUtilities.GetCharacterFromFontAsset(
-            (uint)codepoint,
-            fontAsset,
-            false, // Don't search fallbacks - caller should have used FindFontForCodepoint
-            FontStyles.Normal,
-            FontWeight.Regular,
-            out _);
+        var charLookup = fontAsset.CharacterLookupTable;
+        if (charLookup == null)
+            return false;
+
+        // Try to get existing character
+        if (!charLookup.TryGetValue((uint)codepoint, out var character))
+        {
+            // Try to add character dynamically
+            if (fontAsset.AtlasPopulationMode == UniTextAtlasPopulationMode.Dynamic)
+            {
+                if (!fontAsset.TryAddCharacter((uint)codepoint, out character))
+                    return false;
+            }
+            else
+            {
+                return false;
+            }
+        }
 
         if (character?.glyph == null)
             return false;
 
-        // Verify the character is from the expected font
-        var actualFont = character.textAsset as TMP_FontAsset;
-        if (actualFont != null && actualFont.GetInstanceID() != fontAsset.GetInstanceID())
-        {
-            // Character was found in a different font (shouldn't happen with includeFallbacks=false)
-            return false;
-        }
-
         glyphIndex = character.glyphIndex;
 
         // Calculate scale for this specific font
-        float scale = fontAsset.faceInfo.pointSize > 0
-            ? fontSize / fontAsset.faceInfo.pointSize
+        float scale = fontAsset.FaceInfo.pointSize > 0
+            ? fontSize / fontAsset.FaceInfo.pointSize
             : fontScale;
 
         advance = character.glyph.metrics.horizontalAdvance * scale;
@@ -261,7 +252,7 @@ public sealed class UniTextFontProvider
             return;
         }
 
-        var faceInfo = mainFontAsset.faceInfo;
+        var faceInfo = mainFontAsset.FaceInfo;
         ascender = faceInfo.ascentLine * fontScale;
         descender = faceInfo.descentLine * fontScale;
         lineHeight = faceInfo.lineHeight * fontScale;
@@ -283,8 +274,8 @@ public sealed class UniTextFontProvider
             return;
         }
 
-        float scale = size / mainFontAsset.faceInfo.pointSize;
-        var faceInfo = mainFontAsset.faceInfo;
+        float scale = size / mainFontAsset.FaceInfo.pointSize;
+        var faceInfo = mainFontAsset.FaceInfo;
         ascender = faceInfo.ascentLine * scale;
         descender = faceInfo.descentLine * scale;
         lineHeight = faceInfo.lineHeight * scale;
@@ -295,8 +286,7 @@ public sealed class UniTextFontProvider
 
     /// <summary>
     /// Find font ID that contains the specified codepoint.
-    /// Uses TMP_FontAssetUtilities with fallback search - exactly like TMP does.
-    /// Returns the font ID for the font that actually contains the glyph.
+    /// Searches: base font → font's fallbacks → global fallbacks (UniTextSettings).
     /// Uses SharedFontCache for performance.
     /// </summary>
     public int FindFontForCodepoint(int codepoint, int baseFontId)
@@ -315,52 +305,93 @@ public sealed class UniTextFontProvider
             return baseFontId;
         }
 
-        // Use TMP's utility WITH fallback search - this is exactly how TMP finds glyphs
-        var character = TMP_FontAssetUtilities.GetCharacterFromFontAsset(
-            (uint)codepoint,
-            baseFont,
-            true, // includeFallbacks - search all fallback fonts
-            FontStyles.Normal,
-            FontWeight.Regular,
-            out _);
+        // Initialize search tracking
+        searchedFontAssets ??= new HashSet<int>();
+        searchedFontAssets.Clear();
+        searchedFontAssets.Add(baseFont.GetInstanceID());
 
-        if (character == null)
+        // 1. Search in base font and its fallbacks
+        var foundFont = FindCharacterInFontAsset((uint)codepoint, baseFont, true);
+
+        // 2. Search in global fallback fonts from UniTextSettings
+        if (foundFont == null)
         {
-            // Not found anywhere - try global fallbacks
-            var globalFallbacks = TMP_Settings.fallbackFontAssets;
+            var globalFallbacks = UniTextSettings.FallbackFontAssets;
             if (globalFallbacks != null && globalFallbacks.Count > 0)
             {
-                character = TMP_FontAssetUtilities.GetCharacterFromFontAssets(
-                    (uint)codepoint,
-                    baseFont,
-                    globalFallbacks,
-                    true,
-                    FontStyles.Normal,
-                    FontWeight.Regular,
-                    out _);
+                for (int i = 0; i < globalFallbacks.Count; i++)
+                {
+                    var fallback = globalFallbacks[i];
+                    if (fallback == null)
+                        continue;
+
+                    int fallbackId = fallback.GetInstanceID();
+                    if (!searchedFontAssets.Add(fallbackId))
+                        continue; // Already searched
+
+                    foundFont = FindCharacterInFontAsset((uint)codepoint, fallback, true);
+                    if (foundFont != null)
+                        break;
+                }
             }
         }
 
-        if (character == null)
-        {
-            SharedFontCache.Set(codepoint, baseFontId, baseFontId);
-            return baseFontId;
-        }
-
-        // character.textAsset tells us which font ACTUALLY contains this glyph
-        var actualFont = character.textAsset as TMP_FontAsset;
-        if (actualFont == null)
+        if (foundFont == null)
         {
             SharedFontCache.Set(codepoint, baseFontId, baseFontId);
             return baseFontId;
         }
 
         // Get or create font ID for this font
-        int fontId = GetOrCreateFontId(actualFont);
+        int fontId = GetOrCreateFontId(foundFont);
 
         // Cache the result
         SharedFontCache.Set(codepoint, baseFontId, fontId);
         return fontId;
+    }
+
+    /// <summary>
+    /// Find character in font asset, optionally searching fallbacks.
+    /// Returns the font asset that contains the character.
+    /// </summary>
+    private UniTextFontAsset FindCharacterInFontAsset(uint unicode, UniTextFontAsset fontAsset, bool searchFallbacks)
+    {
+        if (fontAsset == null)
+            return null;
+
+        var charLookup = fontAsset.CharacterLookupTable;
+
+        // Check if character exists in this font
+        if (charLookup != null && charLookup.ContainsKey(unicode))
+            return fontAsset;
+
+        // Try to add character dynamically
+        if (fontAsset.AtlasPopulationMode == UniTextAtlasPopulationMode.Dynamic)
+        {
+            if (fontAsset.TryAddCharacter(unicode, out _))
+                return fontAsset;
+        }
+
+        // Search fallback fonts
+        if (searchFallbacks && fontAsset.FallbackFontAssetTable != null)
+        {
+            for (int i = 0; i < fontAsset.FallbackFontAssetTable.Count; i++)
+            {
+                var fallback = fontAsset.FallbackFontAssetTable[i];
+                if (fallback == null)
+                    continue;
+
+                int fallbackId = fallback.GetInstanceID();
+                if (!searchedFontAssets.Add(fallbackId))
+                    continue; // Already searched this font
+
+                var result = FindCharacterInFontAsset(unicode, fallback, true);
+                if (result != null)
+                    return result;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -381,7 +412,7 @@ public sealed class UniTextFontProvider
         if (!fontAssets.TryGetValue(fontId, out var fontAsset))
             fontAsset = mainFontAsset;
 
-        return fontAsset?.atlasTexture;
+        return fontAsset?.AtlasTexture;
     }
 
     /// <summary>
@@ -392,6 +423,6 @@ public sealed class UniTextFontProvider
         if (!fontAssets.TryGetValue(fontId, out var fontAsset))
             fontAsset = mainFontAsset;
 
-        return fontAsset?.material;
+        return fontAsset?.Material;
     }
 }

@@ -634,19 +634,19 @@ using System.Collections.Generic;
             
             registry.Register(new TagDefinition("nbsp", (ref TagContext ctx) =>
             {
-                ctx.AddCodepoint(0x00A0); // Non-breaking space
+                ctx.AddCodepoint(UnicodeData.NoBreakSpace);
                 return true;
             }));
-            
+
             registry.Register(new TagDefinition("zwsp", (ref TagContext ctx) =>
             {
-                ctx.AddCodepoint(0x200B); // Zero-width space
+                ctx.AddCodepoint(UnicodeData.ZeroWidthSpace);
                 return true;
             }));
-            
+
             registry.Register(new TagDefinition("shy", (ref TagContext ctx) =>
             {
-                ctx.AddCodepoint(0x00AD); // Soft hyphen
+                ctx.AddCodepoint(UnicodeData.SoftHyphen);
                 return true;
             }));
             

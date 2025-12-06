@@ -873,19 +873,13 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
     }
     
     /// <summary>
-    /// U+25CC DOTTED CIRCLE - placeholder character for displaying combining marks in isolation.
-    /// This is a stable Unicode codepoint that will not change.
-    /// Used for LB28a Brahmic script rules per UAX #14.
-    /// </summary>
-    private const int DottedCircle = 0x25CC;
-
-    /// <summary>
     /// Check if codepoint is U+25CC DOTTED CIRCLE.
     /// This is a placeholder character used to display combining marks in isolation.
+    /// Used for LB28a Brahmic script rules per UAX #14.
     /// </summary>
     public bool IsDottedCircle(int codePoint)
     {
-        return codePoint == DottedCircle;
+        return codePoint == UnicodeData.DottedCircle;
     }
     
     /// <summary>

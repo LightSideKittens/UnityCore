@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
+using UnityEngine.TextCore;
 
 /// <summary>
 /// Pair of mesh and material for rendering.
@@ -116,13 +116,13 @@ public class UniTextMeshGenerator
             var mesh = meshProvider?.Invoke() ?? new Mesh();
             GenerateMeshForFont(mesh, fontGlyphs, fontAsset);
 
-            resultBuffer.Add(new UniTextMeshPair(mesh, fontAsset.material));
+            resultBuffer.Add(new UniTextMeshPair(mesh, fontAsset.Material));
         }
 
         return resultBuffer;
     }
 
-    private void GenerateMeshForFont(Mesh mesh, List<PositionedGlyph> glyphs, TMP_FontAsset fontAsset)
+    private void GenerateMeshForFont(Mesh mesh, List<PositionedGlyph> glyphs, UniTextFontAsset fontAsset)
     {
         int glyphCount = glyphs.Count;
         int maxVertexCount = glyphCount * 4;
@@ -131,10 +131,10 @@ public class UniTextMeshGenerator
         // Ensure buffer capacity
         EnsureBufferCapacity(maxVertexCount, maxTriangleCount);
 
-        float scale = FontSize / fontAsset.faceInfo.pointSize;
-        float atlasWidth = fontAsset.atlasWidth;
-        float atlasHeight = fontAsset.atlasHeight;
-        float padding = fontAsset.atlasPadding;
+        float scale = FontSize / fontAsset.FaceInfo.pointSize;
+        float atlasWidth = fontAsset.AtlasWidth;
+        float atlasHeight = fontAsset.AtlasHeight;
+        float padding = fontAsset.AtlasPadding;
 
         float offsetX = rectOffset.xMin;
         float offsetY = rectOffset.yMax;
@@ -142,7 +142,7 @@ public class UniTextMeshGenerator
         // Calculate xScale for SDF rendering
         float xScale = CalculateXScale(scale);
 
-        var glyphLookup = fontAsset.glyphLookupTable;
+        var glyphLookup = fontAsset.GlyphLookupTable;
         int vertIdx = 0;
         int triIdx = 0;
 

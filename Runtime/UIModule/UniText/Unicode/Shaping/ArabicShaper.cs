@@ -58,9 +58,6 @@ public static class ArabicShaper
         }
     }
 
-    private const int ZWNJ = 0x200C;
-    private const int ZWJ = 0x200D;
-
     private static readonly object initLock = new();
     private static bool initialized;
 
@@ -152,7 +149,7 @@ public static class ArabicShaper
         {
             int cp = codepoints[i];
 
-            if (cp == 0x0644 && i + 1 < length)
+            if (cp == UnicodeData.ArabicLam && i + 1 < length)
             {
                 int j = i + 1;
 
@@ -261,7 +258,7 @@ public static class ArabicShaper
                 while (k >= 0 && IsTransparentMark(output[k], joiningTypes[k]))
                     k--;
 
-                if (k >= 0 && output[k] == ZWJ)
+                if (k >= 0 && output[k] == UnicodeData.ZeroWidthJoiner)
                 {
                     joinPrev[i] = true;
                 }
@@ -273,7 +270,7 @@ public static class ArabicShaper
                 while (k < newLen && IsTransparentMark(output[k], joiningTypes[k]))
                     k++;
 
-                if (k < newLen && output[k] == ZWJ)
+                if (k < newLen && output[k] == UnicodeData.ZeroWidthJoiner)
                 {
                     joinNext[i] = true;
                 }
@@ -308,7 +305,7 @@ public static class ArabicShaper
         for (int i = 0; i < output.Length; i++)
         {
             int cp = output[i];
-            if (cp == ZWJ || cp == ZWNJ)
+            if (cp == UnicodeData.ZeroWidthJoiner || cp == UnicodeData.ZeroWidthNonJoiner)
                 continue;
             count++;
         }
@@ -322,7 +319,7 @@ public static class ArabicShaper
             for (int i = 0; i < output.Length; i++)
             {
                 int cp = output[i];
-                if (cp == ZWJ || cp == ZWNJ)
+                if (cp == UnicodeData.ZeroWidthJoiner || cp == UnicodeData.ZeroWidthNonJoiner)
                     continue;
 
                 finalOutput[dst] = cp;
@@ -394,54 +391,57 @@ public static class ArabicShaper
     {
         ligatureCp = 0;
 
-        switch (alefCp)
+        if (alefCp == UnicodeData.ArabicAlefMaddaAbove)
         {
-            case 0x0622:
-                ligatureCp = joinPrevLam ? 0xFEF6 : 0xFEF5;
-                return true;
-
-            case 0x0623:
-                ligatureCp = joinPrevLam ? 0xFEF8 : 0xFEF7;
-                return true;
-
-            case 0x0625:
-                ligatureCp = joinPrevLam ? 0xFEFA : 0xFEF9;
-                return true;
-
-            case 0x0627:
-                ligatureCp = joinPrevLam ? 0xFEFC : 0xFEFB;
-                return true;
-
-            default:
-                return false;
+            ligatureCp = joinPrevLam
+                ? UnicodeData.ArabicLigatureLamAlefMaddaFinal
+                : UnicodeData.ArabicLigatureLamAlefMaddaIsolated;
+            return true;
         }
-    }
 
-    private static bool IsArabicScript(int cp)
-    {
-        if ((cp >= 0x0600 && cp <= 0x06FF) ||
-            (cp >= 0x0750 && cp <= 0x077F) ||
-            (cp >= 0x08A0 && cp <= 0x08FF) ||
-            (cp >= 0xFB50 && cp <= 0xFDFF) ||
-            (cp >= 0xFE70 && cp <= 0xFEFF))
+        if (alefCp == UnicodeData.ArabicAlefHamzaAbove)
         {
+            ligatureCp = joinPrevLam
+                ? UnicodeData.ArabicLigatureLamAlefHamzaAboveFinal
+                : UnicodeData.ArabicLigatureLamAlefHamzaAboveIsolated;
+            return true;
+        }
+
+        if (alefCp == UnicodeData.ArabicAlefHamzaBelow)
+        {
+            ligatureCp = joinPrevLam
+                ? UnicodeData.ArabicLigatureLamAlefHamzaBelowFinal
+                : UnicodeData.ArabicLigatureLamAlefHamzaBelowIsolated;
+            return true;
+        }
+
+        if (alefCp == UnicodeData.ArabicAlef)
+        {
+            ligatureCp = joinPrevLam
+                ? UnicodeData.ArabicLigatureLamAlefFinal
+                : UnicodeData.ArabicLigatureLamAlefIsolated;
             return true;
         }
 
         return false;
     }
 
+    private static bool IsArabicScript(int cp)
+    {
+        return (cp >= UnicodeData.ArabicBlockStart && cp <= UnicodeData.ArabicBlockEnd) ||
+               (cp >= UnicodeData.ArabicSupplementStart && cp <= UnicodeData.ArabicSupplementEnd) ||
+               (cp >= UnicodeData.ArabicExtendedAStart && cp <= UnicodeData.ArabicExtendedAEnd) ||
+               (cp >= UnicodeData.ArabicPresentationFormsAStart && cp <= UnicodeData.ArabicPresentationFormsAEnd) ||
+               (cp >= UnicodeData.ArabicPresentationFormsBStart && cp <= UnicodeData.ArabicPresentationFormsBEnd);
+    }
+
     private static JoiningType GetJoiningType(int codepoint)
     {
-        if (codepoint == ZWJ)
-        {
+        if (codepoint == UnicodeData.ZeroWidthJoiner)
             return JoiningType.T;
-        }
 
-        if (codepoint == ZWNJ)
-        {
+        if (codepoint == UnicodeData.ZeroWidthNonJoiner)
             return JoiningType.U;
-        }
 
         if (joiningTypes.TryGetValue(codepoint, out var jt))
             return jt;
@@ -599,6 +599,6 @@ public static class ArabicShaper
 
     private static bool IsTransparentMark(int codepoint, JoiningType jt)
     {
-        return jt == JoiningType.T && codepoint != ZWJ;
+        return jt == JoiningType.T && codepoint != UnicodeData.ZeroWidthJoiner;
     }
 }
