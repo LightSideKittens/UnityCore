@@ -7,7 +7,11 @@ using System;
 public enum TextDirection : byte
 {
     LeftToRight = 0,
-    RightToLeft = 1
+    RightToLeft = 1,
+    /// <summary>
+    /// Автоматическое определение по первому Strong символу (UAX #9)
+    /// </summary>
+    Auto = 2
 }
 
 // UnicodeScript и LineBreakClass определены в Unicode модуле (UnicodeDataTypes.cs)
@@ -78,6 +82,7 @@ public struct ShapedRun
     public int glyphCount; // Количество глифов
     public float width; // Ширина run
     public TextDirection direction;
+    public byte bidiLevel; // BiDi level для reordering (UAX #9)
     public int fontId;
     public int attributeSnapshot;
 }
@@ -93,6 +98,7 @@ public struct TextLine
     public float width; // Ширина строки
     public float height; // Высота строки
     public float baseline; // Позиция baseline
+    public byte paragraphBaseLevel; // Base level параграфа (0=LTR, 1=RTL) для alignment
 }
 
 /// <summary>
@@ -105,4 +111,24 @@ public struct PositionedGlyph
     public float y;
     public int fontId;
     public int attributeSnapshot; // Для получения цвета и других атрибутов
+}
+
+/// <summary>
+/// Горизонтальное выравнивание текста
+/// </summary>
+public enum HorizontalAlignment : byte
+{
+    Left = 0,
+    Center = 1,
+    Right = 2
+}
+
+/// <summary>
+/// Вертикальное выравнивание текста
+/// </summary>
+public enum VerticalAlignment : byte
+{
+    Top = 0,
+    Middle = 1,
+    Bottom = 2
 }

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 
-namespace Tekst
-{
     /// <summary>
     /// Контекст парсинга тэга
     /// </summary>
@@ -46,7 +44,7 @@ namespace Tekst
         /// <summary>
         /// Добавить атрибут
         /// </summary>
-        public Action<ITextAttribute> AddAttribute;
+        public Action<TextAttributeBase> AddAttribute;
     }
     
     /// <summary>
@@ -807,4 +805,4 @@ namespace Tekst
                 (byte)(rgba & 0xFF));
         }
     }
-}
+

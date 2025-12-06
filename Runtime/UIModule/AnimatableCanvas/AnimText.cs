@@ -10,12 +10,12 @@ namespace Animatable
     [Serializable]
     public class AnimText
     {
-        [SerializeField] private TMPText text;
+        [SerializeField] private TMP_Text text;
         [SerializeField] private Vector2 animOffset = new Vector2(0, 100);
         [SerializeField] private float duration = 1;
-        private OnOffPool<TMPText> pool;
+        private OnOffPool<TMP_Text> pool;
 
-        internal void Init() => pool = new OnOffPool<TMPText>(text, shouldStoreActive: true);
+        internal void Init() => pool = new OnOffPool<TMP_Text>(text, shouldStoreActive: true);
         internal void ReleaseAll() => pool.ReleaseAll();
 
         public static AnimText Create(string message, Vector2 pos = default, Vector2 offset = default, bool fromWorldSpace = false)

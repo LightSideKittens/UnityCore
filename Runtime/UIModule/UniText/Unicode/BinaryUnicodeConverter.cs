@@ -17,6 +17,7 @@ struct UnicodeProps
     public EastAsianWidth eastAsianWidth;
     public GraphemeClusterBreak graphemeClusterBreak;
     public IndicConjunctBreak indicConjunctBreak;
+    public bool defaultIgnorable;
 }
 
 /// <summary>
@@ -369,6 +370,43 @@ public class UnicodeDataBuilder
             {
                 ParseRangeAndApply(codeRangePart, cp => props[cp].indicConjunctBreak = incb);
             }
+        }
+    }
+
+    /// <summary>
+    /// Load Default_Ignorable_Code_Point from DerivedCoreProperties.txt.
+    /// Format: 00AD          ; Default_Ignorable_Code_Point # Cf SOFT HYPHEN
+    /// Format: 034F          ; Default_Ignorable_Code_Point # Mn COMBINING GRAPHEME JOINER
+    /// </summary>
+    public void LoadDefaultIgnorable(string path)
+    {
+        using var reader = new StreamReader(path);
+
+        string? line;
+        while ((line = reader.ReadLine()) != null)
+        {
+            line = StripComment(line);
+            if (string.IsNullOrWhiteSpace(line))
+                continue;
+
+            // Looking for lines with Default_Ignorable_Code_Point property
+            if (!line.Contains("Default_Ignorable_Code_Point"))
+                continue;
+
+            string[] semi = line.Split(';');
+            if (semi.Length < 2)
+                continue;
+
+            string codeRangePart = semi[0].Trim();
+            string propertyName = semi[1].Trim();
+
+            if (propertyName != "Default_Ignorable_Code_Point")
+                continue;
+
+            if (codeRangePart.Length == 0)
+                continue;
+
+            ParseRangeAndApply(codeRangePart, cp => props[cp].defaultIgnorable = true);
         }
     }
 
@@ -1087,6 +1125,41 @@ public class UnicodeDataBuilder
         return result;
     }
 
+    /// <summary>
+    /// Build range entries for Default_Ignorable_Code_Point property.
+    /// Only includes ranges where Default_Ignorable_Code_Point=true.
+    /// </summary>
+    public List<DefaultIgnorableRangeEntry> BuildDefaultIgnorableRangeEntries()
+    {
+        var result = new List<DefaultIgnorableRangeEntry>();
+
+        int currentStart = -1;
+        bool inRange = false;
+
+        for (int cp = 0; cp <= MaxCodePoint; cp++)
+        {
+            bool di = props[cp].defaultIgnorable;
+
+            if (di && !inRange)
+            {
+                currentStart = cp;
+                inRange = true;
+            }
+            else if (!di && inRange)
+            {
+                result.Add(new DefaultIgnorableRangeEntry(currentStart, cp - 1));
+                inRange = false;
+            }
+        }
+
+        if (inRange)
+        {
+            result.Add(new DefaultIgnorableRangeEntry(currentStart, MaxCodePoint));
+        }
+
+        return result;
+    }
+
     public static List<MirrorEntry> BuildMirrorEntries(string bidiMirroringPath)
     {
         if (string.IsNullOrEmpty(bidiMirroringPath))
@@ -1201,9 +1274,10 @@ public static class UnicodeBinaryWriter
     const ushort FormatVersion5 = 5;
     const ushort FormatVersion6 = 6;
     const ushort FormatVersion7 = 7;
+    const ushort FormatVersion8 = 8;
 
     /// <summary>
-    /// Write format version 7 (with Script, LineBreak, Extended_Pictographic, GeneralCategory, EastAsianWidth, GraphemeBreak, InCB, ScriptExtensions)
+    /// Write format version 8 (V7 + Default_Ignorable_Code_Point)
     /// </summary>
     public static void WriteBinary(
         string outputPath,
@@ -1218,6 +1292,7 @@ public static class UnicodeBinaryWriter
         IReadOnlyList<GraphemeBreakRangeEntry> graphemeBreaks,
         IReadOnlyList<IndicConjunctBreakRangeEntry> indicConjunctBreaks,
         IReadOnlyList<ScriptExtensionEntry> scriptExtensions,
+        IReadOnlyList<DefaultIgnorableRangeEntry> defaultIgnorables,
         int unicodeVersionRaw)
     {
         using var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
@@ -1227,12 +1302,12 @@ public static class UnicodeBinaryWriter
         long headerPosition = stream.Position;
 
         writer.Write(Magic);
-        writer.Write(FormatVersion7);
+        writer.Write(FormatVersion8);
         writer.Write((ushort)0); // Reserved
         writer.Write((uint)unicodeVersionRaw);
 
-        // Section offsets placeholder (12 sections * 8 bytes)
-        for (int i = 0; i < 24; i++)
+        // Section offsets placeholder (13 sections * 8 bytes)
+        for (int i = 0; i < 26; i++)
             writer.Write((uint)0);
 
         // Write Range section
@@ -1387,11 +1462,21 @@ public static class UnicodeBinaryWriter
         }
         uint scxLength = (uint)(stream.Position - scxOffset);
 
+        // Write Default_Ignorable_Code_Point section
+        long diOffset = stream.Position;
+        writer.Write((uint)defaultIgnorables.Count);
+        foreach (var di in defaultIgnorables)
+        {
+            writer.Write((uint)di.startCodePoint);
+            writer.Write((uint)di.endCodePoint);
+        }
+        uint diLength = (uint)(stream.Position - diOffset);
+
         // Go back and write header with offsets
         stream.Position = headerPosition;
 
         writer.Write(Magic);
-        writer.Write(FormatVersion7);
+        writer.Write(FormatVersion8);
         writer.Write((ushort)0);
         writer.Write((uint)unicodeVersionRaw);
 
@@ -1417,6 +1502,8 @@ public static class UnicodeBinaryWriter
         writer.Write(incbLength);
         writer.Write((uint)scxOffset);
         writer.Write(scxLength);
+        writer.Write((uint)diOffset);
+        writer.Write(diLength);
 
         writer.Flush();
     }

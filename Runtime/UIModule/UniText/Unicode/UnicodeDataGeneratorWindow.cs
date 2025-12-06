@@ -94,7 +94,7 @@ public class TestData
                 // 2. Test analyzer (ScriptAnalyzerTest.txt)
                 if (scriptAnalyzerTestAsset != null)
                 {
-                    var analyzer = new Tekst.ScriptAnalyzer(provider);
+                    var analyzer = new ScriptAnalyzer(provider);
                     var analyzerSummary = runner.RunAnalyzerTests(analyzer, scriptAnalyzerTestAsset.text, maxFailuresToLog);
                     LogSummary("ScriptAnalyzerTest", analyzerSummary.passedTests, analyzerSummary.failedTests,
                         0, analyzerSummary.sampleFailures);

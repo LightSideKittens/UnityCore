@@ -25,7 +25,7 @@ public class UnicodeDataGeneratorData : ScriptableObject
     [Header("Output")]
     public DefaultAsset outputFolder;
     public string outputFileName = "UnicodeData.bytes";
-    public bool useFormatV7 = true;
+    public bool useFormatV8 = true;
 
     [Header("Testing")]
     public TestData testing = new();
@@ -140,7 +140,7 @@ public class UnicodeDataGeneratorData : ScriptableObject
             false);
 
         outputFileName = EditorGUILayout.TextField("Output File Name", outputFileName);
-        useFormatV7 = EditorGUILayout.Toggle("Use Format V7 (Full Unicode Properties)", useFormatV7);
+        useFormatV8 = EditorGUILayout.Toggle("Use Format V8 (Full Unicode Properties)", useFormatV8);
 
         if (EditorGUI.EndChangeCheck())
         {
@@ -156,10 +156,10 @@ public class UnicodeDataGeneratorData : ScriptableObject
                           bidiMirroringAsset != null &&
                           outputFolder != null;
 
-        if (useFormatV7)
+        if (useFormatV8)
         {
-            canGenerate = canGenerate && scriptsAsset != null && lineBreakAsset != null && 
-                         emojiDataAsset != null && generalCategoryAsset != null && 
+            canGenerate = canGenerate && scriptsAsset != null && lineBreakAsset != null &&
+                         emojiDataAsset != null && generalCategoryAsset != null &&
                          eastAsianWidthAsset != null && graphemeBreakPropertyAsset != null &&
                          derivedCorePropertiesAsset != null && scriptExtensionsAsset != null;
         }
@@ -232,8 +232,8 @@ public class UnicodeDataGeneratorData : ScriptableObject
             // Unicode version (17.0.0 = 0x110000)
             int unicodeVersion = 0x110000;
 
-            if (useFormatV7 && scriptsAsset != null && lineBreakAsset != null && 
-                emojiDataAsset != null && generalCategoryAsset != null && 
+            if (useFormatV8 && scriptsAsset != null && lineBreakAsset != null &&
+                emojiDataAsset != null && generalCategoryAsset != null &&
                 eastAsianWidthAsset != null && graphemeBreakPropertyAsset != null &&
                 derivedCorePropertiesAsset != null && scriptExtensionsAsset != null)
             {
@@ -253,6 +253,7 @@ public class UnicodeDataGeneratorData : ScriptableObject
                 builder.LoadEastAsianWidth(eastAsianWidthPath);
                 builder.LoadGraphemeBreakProperty(graphemeBreakPath);
                 builder.LoadIndicConjunctBreak(derivedCorePropertiesPath);
+                builder.LoadDefaultIgnorable(derivedCorePropertiesPath);
                 builder.LoadScriptExtensions(scriptExtensionsPath);
 
                 var scripts = builder.BuildScriptRangeEntries();
@@ -263,13 +264,14 @@ public class UnicodeDataGeneratorData : ScriptableObject
                 var graphemeBreaks = builder.BuildGraphemeBreakRangeEntries();
                 var indicConjunctBreaks = builder.BuildIndicConjunctBreakRangeEntries();
                 var scriptExtensions = builder.GetScriptExtensionEntries();
+                var defaultIgnorables = builder.BuildDefaultIgnorableRangeEntries();
 
                 UnicodeBinaryWriter.WriteBinary(
-                    outputPath, ranges, mirrors, brackets, scripts, lineBreaks, 
+                    outputPath, ranges, mirrors, brackets, scripts, lineBreaks,
                     extendedPictographics, generalCategories, eastAsianWidths, graphemeBreaks,
-                    indicConjunctBreaks, scriptExtensions, unicodeVersion);
+                    indicConjunctBreaks, scriptExtensions, defaultIgnorables, unicodeVersion);
 
-                Debug.Log($"Generated Unicode data (Format V7) with {ranges.Count} ranges, " +
+                Debug.Log($"Generated Unicode data (Format V8) with {ranges.Count} ranges, " +
                           $"{mirrors.Count} mirrors, {brackets.Count} brackets, " +
                           $"{scripts.Count} script ranges, {lineBreaks.Count} line break ranges, " +
                           $"{extendedPictographics.Count} Extended_Pictographic ranges, " +
@@ -277,7 +279,8 @@ public class UnicodeDataGeneratorData : ScriptableObject
                           $"{eastAsianWidths.Count} EastAsianWidth ranges, " +
                           $"{graphemeBreaks.Count} GraphemeBreak ranges, " +
                           $"{indicConjunctBreaks.Count} InCB ranges, " +
-                          $"{scriptExtensions.Count} ScriptExtension entries.");
+                          $"{scriptExtensions.Count} ScriptExtension entries, " +
+                          $"{defaultIgnorables.Count} Default_Ignorable ranges.");
             }
             else
             {

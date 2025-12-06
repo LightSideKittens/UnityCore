@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using Tekst;
+
 
 /// <summary>
 /// Validates Script property implementation against UAX #24 (Unicode Script Property).
@@ -96,26 +96,29 @@ public sealed class ScriptConformanceRunner
     /// Validate ScriptAnalyzer against ScriptAnalyzerTest.txt
     /// Format: 0041 0042 ; Latin Latin # comment
     /// </summary>
-    public ScriptAnalyzerTestSummary RunAnalyzerTests(IScriptAnalyzer analyzer, string testFileContent, int maxFailuresToLog = 20)
+    public ScriptAnalyzerTestSummary RunAnalyzerTests(ScriptAnalyzer analyzer, string testFileContent, int maxFailuresToLog = 20)
     {
         if (analyzer == null)
             throw new ArgumentNullException(nameof(analyzer));
-        
+
         var summary = new ScriptAnalyzerTestSummary();
-        
+
         if (string.IsNullOrEmpty(testFileContent))
         {
             summary.sampleFailures = "Test file content is empty or null.";
             return summary;
         }
-        
+
         var failures = new StringBuilder();
         int failureCount = 0;
-        
+
+        // Буфер для результатов анализа
+        UnicodeScript[] scriptsBuffer = new UnicodeScript[256];
+
         foreach (var (lineNumber, codepointsPart, scriptsPart) in ParseDataFile(testFileContent))
         {
             summary.totalTests++;
-            
+
             // Parse codepoints
             if (!TryParseCodepoints(codepointsPart, out int[] codepoints))
             {
@@ -124,7 +127,7 @@ public sealed class ScriptConformanceRunner
                     failures.AppendLine($"Line {lineNumber}: Invalid codepoints '{codepointsPart}'");
                 continue;
             }
-            
+
             // Parse expected scripts
             if (!TryParseScriptList(scriptsPart, out UnicodeScript[] expectedScripts))
             {
@@ -133,7 +136,7 @@ public sealed class ScriptConformanceRunner
                     failures.AppendLine($"Line {lineNumber}: Invalid scripts '{scriptsPart}'");
                 continue;
             }
-            
+
             // Validate lengths match
             if (codepoints.Length != expectedScripts.Length)
             {
@@ -142,13 +145,16 @@ public sealed class ScriptConformanceRunner
                     failures.AppendLine($"Line {lineNumber}: Length mismatch - {codepoints.Length} codepoints vs {expectedScripts.Length} scripts");
                 continue;
             }
-            
+
+            // Ensure buffer is large enough
+            if (scriptsBuffer.Length < codepoints.Length)
+                scriptsBuffer = new UnicodeScript[codepoints.Length];
+
             // Run analyzer
             try
             {
-                var resultBuffer = new ScriptResultBuffer();
-                analyzer.Analyze(codepoints, resultBuffer);
-                var actualScripts = resultBuffer.Scripts;
+                analyzer.Analyze(codepoints, scriptsBuffer);
+                var actualScripts = scriptsBuffer.AsSpan(0, codepoints.Length);
                 
                 if (actualScripts.Length != expectedScripts.Length)
                 {

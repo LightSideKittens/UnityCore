@@ -621,4 +621,12 @@ public interface IUnicodeDataProvider
     /// Check if character has specified script in its Script_Extensions.
     /// </summary>
     bool HasScriptExtension(int codePoint, UnicodeScript script);
+
+    /// <summary>
+    /// Check if codepoint has Default_Ignorable_Code_Point property (from DerivedCoreProperties.txt).
+    /// Default ignorable characters should be rendered as completely invisible (zero-width)
+    /// if not explicitly supported. This includes format control characters (ZWJ, ZWNJ, etc.),
+    /// variation selectors, and other non-visible characters.
+    /// </summary>
+    bool IsDefaultIgnorable(int codePoint);
 }

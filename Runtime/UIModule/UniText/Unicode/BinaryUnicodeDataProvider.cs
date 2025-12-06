@@ -176,6 +176,23 @@ public readonly struct IndicConjunctBreakRangeEntry
 }
 
 /// <summary>
+/// Entry for Default_Ignorable_Code_Point property ranges.
+/// Characters in these ranges should be rendered as invisible (zero-width)
+/// if not explicitly supported by the font/renderer.
+/// </summary>
+public readonly struct DefaultIgnorableRangeEntry
+{
+    public readonly int startCodePoint;
+    public readonly int endCodePoint;
+
+    public DefaultIgnorableRangeEntry(int startCodePoint, int endCodePoint)
+    {
+        this.startCodePoint = startCodePoint;
+        this.endCodePoint = endCodePoint;
+    }
+}
+
+/// <summary>
 /// Range entry for Script_Extensions property (from ScriptExtensions.txt)
 /// </summary>
 public readonly struct ScriptExtensionRangeEntry
@@ -203,7 +220,8 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
     private const ushort FormatVersion5 = 5;
     private const ushort FormatVersion6 = 6;
     private const ushort FormatVersion7 = 7;
-    
+    private const ushort FormatVersion8 = 8;
+
     private const int BmpSize = 65536; // 0x0000–0xFFFF
 
     private readonly RangeEntry[] ranges;
@@ -217,6 +235,7 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
     private readonly GraphemeBreakRangeEntry[] graphemeBreakRanges;
     private readonly IndicConjunctBreakRangeEntry[] indicConjunctBreakRanges;
     private readonly ScriptExtensionRangeEntry[] scriptExtensionRanges;
+    private readonly DefaultIgnorableRangeEntry[] defaultIgnorableRanges;
     
     // BMP direct lookup tables (O(1) for code points 0x0000–0xFFFF)
     private readonly BidiClass[] bmpBidiClass;
@@ -244,10 +263,10 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             throw new InvalidDataException("Invalid Unicode data blob: magic mismatch.");
 
         FormatVersion = reader.ReadUInt16();
-        if (FormatVersion != FormatVersion1 && FormatVersion != FormatVersion2 && 
+        if (FormatVersion != FormatVersion1 && FormatVersion != FormatVersion2 &&
             FormatVersion != FormatVersion3 && FormatVersion != FormatVersion4 &&
             FormatVersion != FormatVersion5 && FormatVersion != FormatVersion6 &&
-            FormatVersion != FormatVersion7)
+            FormatVersion != FormatVersion7 && FormatVersion != FormatVersion8)
             throw new InvalidDataException($"Unsupported Unicode data format version: {FormatVersion}.");
 
         reader.ReadUInt16(); // Reserved
@@ -321,6 +340,15 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
         {
             scxOffset = reader.ReadUInt32();
             scxLength = reader.ReadUInt32();
+        }
+
+        // Format v8 adds Default_Ignorable_Code_Point section
+        uint diOffset = 0, diLength = 0;
+
+        if (FormatVersion >= FormatVersion8)
+        {
+            diOffset = reader.ReadUInt32();
+            diLength = reader.ReadUInt32();
         }
 
         // Read Range section
@@ -616,7 +644,29 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
         {
             scriptExtensionRanges = Array.Empty<ScriptExtensionRangeEntry>();
         }
-        
+
+        // Read Default_Ignorable_Code_Point section (format v8)
+        if (diOffset != 0 && diLength != 0)
+        {
+            stream.Position = diOffset;
+            uint diCount = reader.ReadUInt32();
+            defaultIgnorableRanges = new DefaultIgnorableRangeEntry[diCount];
+
+            for (uint i = 0; i < diCount; i++)
+            {
+                uint start = reader.ReadUInt32();
+                uint end = reader.ReadUInt32();
+
+                defaultIgnorableRanges[i] = new DefaultIgnorableRangeEntry(
+                    startCodePoint: unchecked((int)start),
+                    endCodePoint: unchecked((int)end));
+            }
+        }
+        else
+        {
+            defaultIgnorableRanges = Array.Empty<DefaultIgnorableRangeEntry>();
+        }
+
         // Initialize BMP lookup tables for O(1) access
         bmpBidiClass = new BidiClass[BmpSize];
         bmpJoiningType = new JoiningType[BmpSize];
@@ -906,9 +956,60 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             }
             return false;
         }
-        
+
         // Default: check against single Script value
         return GetScript(codePoint) == script;
+    }
+
+    /// <summary>
+    /// Check if codepoint has Default_Ignorable_Code_Point property.
+    /// Uses binary data from DerivedCoreProperties.txt (format v8+).
+    /// Falls back to heuristic for older format versions.
+    /// </summary>
+    public bool IsDefaultIgnorable(int codePoint)
+    {
+        // If we have v8 data, use binary search on ranges
+        if (defaultIgnorableRanges != null && defaultIgnorableRanges.Length > 0)
+        {
+            return FindDefaultIgnorableRange(codePoint) != null;
+        }
+
+        // Fallback for older formats: approximate check
+        var lbc = GetLineBreakClass(codePoint);
+        if (lbc == LineBreakClass.ZW || lbc == LineBreakClass.ZWJ)
+            return true;
+
+        var gc = GetGeneralCategory(codePoint);
+        return gc == GeneralCategory.Cf ||
+               gc == GeneralCategory.Mn ||
+               gc == GeneralCategory.Me;
+    }
+
+    private DefaultIgnorableRangeEntry? FindDefaultIgnorableRange(int codePoint)
+    {
+        int lo = 0;
+        int hi = defaultIgnorableRanges.Length - 1;
+
+        while (lo <= hi)
+        {
+            int mid = lo + (hi - lo) / 2;
+            var entry = defaultIgnorableRanges[mid];
+
+            if (codePoint < entry.startCodePoint)
+            {
+                hi = mid - 1;
+            }
+            else if (codePoint > entry.endCodePoint)
+            {
+                lo = mid + 1;
+            }
+            else
+            {
+                return entry;
+            }
+        }
+
+        return null;
     }
 
     private RangeEntry? FindRange(int codePoint)
