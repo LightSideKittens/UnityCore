@@ -40,23 +40,12 @@ public class EditorWorld : MonoBehaviour
     const string BootIdKey = "LightSideCore_EditorBootId";
     const string SessionInitKey = "LightSideCore_EditorSessionInit";
 
-    public static readonly int BootId;
+    public static int BootId;
     
     
     static EditorWorld()
     {
-        if (!SessionState.GetBool(SessionInitKey, false))
-        {
-            SessionState.SetBool(SessionInitKey, true);
 
-            var count = EditorPrefs.GetInt(BootIdKey, 0) + 1;
-            EditorPrefs.SetInt(BootIdKey, count);
-            BootId = count;
-        }
-        else
-        {
-            BootId = EditorPrefs.GetInt(BootIdKey, 0);
-        }
         
         CompilationPipeline.compilationFinished += x =>
         {
@@ -73,6 +62,19 @@ public class EditorWorld : MonoBehaviour
         
         void Update()
         {
+            if (!SessionState.GetBool(SessionInitKey, false))
+            {
+                SessionState.SetBool(SessionInitKey, true);
+
+                var count = EditorPrefs.GetInt(BootIdKey, 0) + 1;
+                EditorPrefs.SetInt(BootIdKey, count);
+                BootId = count;
+            }
+            else
+            {
+                BootId = EditorPrefs.GetInt(BootIdKey, 0);
+            }
+            
             EditorApplication.update -= Update;
             Create();
             World.Creating += Destroy;

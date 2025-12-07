@@ -146,6 +146,10 @@ public class UniTextFontAsset : ScriptableObject
     // Flag to track if we need cleanup
     private bool tempFileCreated;
 
+    // Cached font loading state to avoid repeated LoadFontFace calls
+    private bool fontFaceLoaded;
+    private int cachedFaceIndex = -1;
+
     #endregion
 
     #region Properties
@@ -384,27 +388,42 @@ public class UniTextFontAsset : ScriptableObject
     /// </summary>
     public FontEngineError LoadFontFace()
     {
-        var accessor = PathAccessor.Get<int>(faceInfo, "m_FaceIndex");
+        // Fast path: font already loaded this session
+        if (fontFaceLoaded)
+            return FontEngineError.Success;
+
+        // Cache faceIndex to avoid reflection on every call
+        if (cachedFaceIndex < 0)
+        {
+            var accessor = PathAccessor.Get<int>(faceInfo, "m_FaceIndex");
+            cachedFaceIndex = accessor.Get(faceInfo);
+        }
+
         float pointSize = faceInfo.pointSize > 0 ? faceInfo.pointSize : 90;
-        int faceIndex = accessor.Get(faceInfo);
         int ptSize = (int)pointSize;
-        
+
         // Try loading from raw bytes via temp file (LoadFontFace(byte[]) has issues)
         if (fontData != null && fontData.Length > 0)
         {
             string tempPath = GetOrCreateTempFontFile();
             if (!string.IsNullOrEmpty(tempPath))
             {
-                if (FontEngine.LoadFontFace(tempPath, ptSize, faceIndex) == FontEngineError.Success)
+                if (FontEngine.LoadFontFace(tempPath, ptSize, cachedFaceIndex) == FontEngineError.Success)
+                {
+                    fontFaceLoaded = true;
                     return FontEngineError.Success;
+                }
             }
         }
 
         // Fallback to file path (for DynamicOS mode)
         if (!string.IsNullOrEmpty(sourceFontFilePath))
         {
-            if (FontEngine.LoadFontFace(sourceFontFilePath, ptSize, faceIndex) == FontEngineError.Success)
+            if (FontEngine.LoadFontFace(sourceFontFilePath, ptSize, cachedFaceIndex) == FontEngineError.Success)
+            {
+                fontFaceLoaded = true;
                 return FontEngineError.Success;
+            }
         }
 
         return FontEngineError.Invalid_File;
@@ -426,9 +445,16 @@ public class UniTextFontAsset : ScriptableObject
     /// </summary>
     private string GetOrCreateTempFontFile()
     {
-        // Return cached path if file still exists
-        if (!string.IsNullOrEmpty(cachedTempFontPath) && System.IO.File.Exists(cachedTempFontPath))
+        // Fast path: if we already created the file this session, skip File.Exists check
+        if (tempFileCreated && !string.IsNullOrEmpty(cachedTempFontPath))
             return cachedTempFontPath;
+
+        // Slower path: verify file exists (only needed on first call or after domain reload)
+        if (!string.IsNullOrEmpty(cachedTempFontPath) && System.IO.File.Exists(cachedTempFontPath))
+        {
+            tempFileCreated = true; // Mark as verified
+            return cachedTempFontPath;
+        }
 
         if (fontData == null || fontData.Length == 0)
             return null;

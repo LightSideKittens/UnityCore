@@ -55,6 +55,9 @@ public class UniTextMeshGenerator
     private static readonly Vector3 s_DefaultNormal = new(0f, 0f, -1f);
     private static readonly Vector4 s_DefaultTangent = new(-1f, 0f, 0f, 1f);
 
+    // Static UV2 pattern for quad corners (BL, TL, TR, BR)
+    private static readonly Vector2[] s_QuadUV2 = { new(0, 0), new(0, 1), new(1, 1), new(1, 0) };
+
     public UniTextMeshGenerator(UniTextFontProvider fontProvider)
     {
         this.fontProvider = fontProvider ?? throw new ArgumentNullException(nameof(fontProvider));
@@ -63,13 +66,10 @@ public class UniTextMeshGenerator
     public void SetCanvasParameters(Transform transform, Canvas canvas)
     {
         this.canvas = canvas;
-        this.lossyScale = transform != null ? transform.lossyScale.x : 1f;
+        lossyScale = transform?.lossyScale.x ?? 1f;
     }
 
-    public void SetRectOffset(Rect rect)
-    {
-        this.rectOffset = rect;
-    }
+    public void SetRectOffset(Rect rect) => rectOffset = rect;
 
     /// <summary>
     /// Generates meshes from positioned glyphs.
@@ -91,14 +91,16 @@ public class UniTextMeshGenerator
             return resultBuffer;
 
         // Group glyphs by fontId (each font needs its own mesh/material)
-        for (int i = 0; i < glyphs.Length; i++)
+        int glyphLen = glyphs.Length;
+        for (int i = 0; i < glyphLen; i++)
         {
-            var glyph = glyphs[i];
-            if (!glyphsByFont.TryGetValue(glyph.fontId, out var list))
+            ref readonly var glyph = ref glyphs[i];
+            int fontId = glyph.fontId;
+            if (!glyphsByFont.TryGetValue(fontId, out var list))
             {
                 // Get from pool or create new
                 list = glyphListPool.Count > 0 ? glyphListPool.Pop() : new List<PositionedGlyph>(64);
-                glyphsByFont[glyph.fontId] = list;
+                glyphsByFont[fontId] = list;
             }
             list.Add(glyph);
         }
@@ -131,10 +133,14 @@ public class UniTextMeshGenerator
         // Ensure buffer capacity
         EnsureBufferCapacity(maxVertexCount, maxTriangleCount);
 
-        float scale = FontSize / fontAsset.FaceInfo.pointSize;
+        float pointSize = fontAsset.FaceInfo.pointSize;
+        float scale = pointSize > 0 ? FontSize / pointSize : 1f;
         float atlasWidth = fontAsset.AtlasWidth;
         float atlasHeight = fontAsset.AtlasHeight;
         float padding = fontAsset.AtlasPadding;
+        float invAtlasWidth = 1f / atlasWidth;
+        float invAtlasHeight = 1f / atlasHeight;
+        float padding2 = padding * 2;
 
         float offsetX = rectOffset.xMin;
         float offsetY = rectOffset.yMax;
@@ -142,15 +148,26 @@ public class UniTextMeshGenerator
         // Calculate xScale for SDF rendering
         float xScale = CalculateXScale(scale);
 
+        // glyphId после shaping — это glyph index из HarfBuzz или Unity
+        // Используем GlyphLookupTable для получения данных глифа
         var glyphLookup = fontAsset.GlyphLookupTable;
+        Color32 defaultColor = DefaultColor;
         int vertIdx = 0;
         int triIdx = 0;
+
+        // Cache local references for faster access
+        var verts = vertices;
+        var uvData = uvs0;
+        var cols = colors32;
+        var tris = triangles;
 
         for (int i = 0; i < glyphCount; i++)
         {
             var glyph = glyphs[i];
+            uint glyphIndex = (uint)glyph.glyphId;
 
-            if (!glyphLookup.TryGetValue((uint)glyph.glyphId, out var glyphData))
+            // Lookup по glyph index
+            if (!glyphLookup.TryGetValue(glyphIndex, out var glyphData) || glyphData == null)
                 continue;
 
             var glyphRect = glyphData.glyphRect;
@@ -161,65 +178,62 @@ public class UniTextMeshGenerator
                 continue;
 
             // Vertex positions
-            float tlX = offsetX + glyph.x + (metrics.horizontalBearingX - padding) * scale;
-            float tlY = offsetY - glyph.y + (metrics.horizontalBearingY + padding) * scale;
-            float blY = tlY - (metrics.height + padding * 2) * scale;
-            float trX = tlX + (metrics.width + padding * 2) * scale;
+            float bearingXScaled = (metrics.horizontalBearingX - padding) * scale;
+            float bearingYScaled = (metrics.horizontalBearingY + padding) * scale;
+            float heightScaled = (metrics.height + padding2) * scale;
+            float widthScaled = (metrics.width + padding2) * scale;
+
+            float tlX = offsetX + glyph.x + bearingXScaled;
+            float tlY = offsetY - glyph.y + bearingYScaled;
+            float blY = tlY - heightScaled;
+            float trX = tlX + widthScaled;
 
             // UV coordinates
-            float uvBLx = (glyphRect.x - padding) / atlasWidth;
-            float uvBLy = (glyphRect.y - padding) / atlasHeight;
-            float uvTLy = (glyphRect.y + glyphRect.height + padding) / atlasHeight;
-            float uvTRx = (glyphRect.x + glyphRect.width + padding) / atlasWidth;
+            float uvBLx = (glyphRect.x - padding) * invAtlasWidth;
+            float uvBLy = (glyphRect.y - padding) * invAtlasHeight;
+            float uvTLy = (glyphRect.y + glyphRect.height + padding) * invAtlasHeight;
+            float uvTRx = (glyphRect.x + glyphRect.width + padding) * invAtlasWidth;
 
             int i0 = vertIdx;
             int i1 = vertIdx + 1;
             int i2 = vertIdx + 2;
             int i3 = vertIdx + 3;
 
-            // Vertices (BL, TL, TR, BR)
-            vertices[i0] = new Vector3(tlX, blY, 0);
-            vertices[i1] = new Vector3(tlX, tlY, 0);
-            vertices[i2] = new Vector3(trX, tlY, 0);
-            vertices[i3] = new Vector3(trX, blY, 0);
+            // Vertices (BL, TL, TR, BR) - direct field assignment avoids struct construction
+            ref var v0 = ref verts[i0];
+            v0.x = tlX; v0.y = blY; v0.z = 0;
+            ref var v1 = ref verts[i1];
+            v1.x = tlX; v1.y = tlY; v1.z = 0;
+            ref var v2 = ref verts[i2];
+            v2.x = trX; v2.y = tlY; v2.z = 0;
+            ref var v3 = ref verts[i3];
+            v3.x = trX; v3.y = blY; v3.z = 0;
 
-            // UV0 (xy = texture coords, w = xScale for SDF)
-            uvs0[i0] = new Vector4(uvBLx, uvBLy, 0, xScale);
-            uvs0[i1] = new Vector4(uvBLx, uvTLy, 0, xScale);
-            uvs0[i2] = new Vector4(uvTRx, uvTLy, 0, xScale);
-            uvs0[i3] = new Vector4(uvTRx, uvBLy, 0, xScale);
-
-            // UV2
-            uvs2[i0] = new Vector2(0, 0);
-            uvs2[i1] = new Vector2(0, 1);
-            uvs2[i2] = new Vector2(1, 1);
-            uvs2[i3] = new Vector2(1, 0);
+            // UV0 (xy = texture coords, w = xScale for SDF) - direct field assignment
+            ref var uv0 = ref uvData[i0];
+            uv0.x = uvBLx; uv0.y = uvBLy; uv0.z = 0; uv0.w = xScale;
+            ref var uv1 = ref uvData[i1];
+            uv1.x = uvBLx; uv1.y = uvTLy; uv1.z = 0; uv1.w = xScale;
+            ref var uv2 = ref uvData[i2];
+            uv2.x = uvTRx; uv2.y = uvTLy; uv2.z = 0; uv2.w = xScale;
+            ref var uv3 = ref uvData[i3];
+            uv3.x = uvTRx; uv3.y = uvBLy; uv3.z = 0; uv3.w = xScale;
 
             // Colors
-            Color32 color = glyph.color.a > 0 ? glyph.color : DefaultColor;
-            colors32[i0] = color;
-            colors32[i1] = color;
-            colors32[i2] = color;
-            colors32[i3] = color;
-
-            // Normals & Tangents
-            normals[i0] = s_DefaultNormal;
-            normals[i1] = s_DefaultNormal;
-            normals[i2] = s_DefaultNormal;
-            normals[i3] = s_DefaultNormal;
-
-            tangents[i0] = s_DefaultTangent;
-            tangents[i1] = s_DefaultTangent;
-            tangents[i2] = s_DefaultTangent;
-            tangents[i3] = s_DefaultTangent;
+            Color32 color = glyph.color.a > 0 ? glyph.color : defaultColor;
+            cols[i0] = color;
+            cols[i1] = color;
+            cols[i2] = color;
+            cols[i3] = color;
 
             // Triangles
-            triangles[triIdx++] = i0;
-            triangles[triIdx++] = i1;
-            triangles[triIdx++] = i2;
-            triangles[triIdx++] = i2;
-            triangles[triIdx++] = i3;
-            triangles[triIdx++] = i0;
+            tris[triIdx] = i0;
+            tris[triIdx + 1] = i1;
+            tris[triIdx + 2] = i2;
+            tris[triIdx + 3] = i2;
+            tris[triIdx + 4] = i3;
+            tris[triIdx + 5] = i0;
+            triIdx += 6;
 
             vertIdx += 4;
         }
@@ -251,6 +265,14 @@ public class UniTextMeshGenerator
             colors32 = new Color32[newSize];
             normals = new Vector3[newSize];
             tangents = new Vector4[newSize];
+
+            // Pre-fill static values
+            Array.Fill(normals, s_DefaultNormal);
+            Array.Fill(tangents, s_DefaultTangent);
+
+            // Pre-fill UV2 pattern (repeating quad corners)
+            for (int i = 0; i < newSize; i++)
+                uvs2[i] = s_QuadUV2[i & 3];
         }
         if (triangles.Length < triangleCount)
         {
@@ -260,22 +282,15 @@ public class UniTextMeshGenerator
 
     private float CalculateXScale(float scale)
     {
-        float xScale = scale;
-        if (canvas != null)
+        if (canvas == null) return scale;
+
+        float absLossyScale = Mathf.Abs(lossyScale);
+        return canvas.renderMode switch
         {
-            switch (canvas.renderMode)
-            {
-                case RenderMode.ScreenSpaceOverlay:
-                    xScale *= Mathf.Abs(lossyScale) / canvas.scaleFactor;
-                    break;
-                case RenderMode.ScreenSpaceCamera:
-                    xScale *= canvas.worldCamera != null ? Mathf.Abs(lossyScale) : 1f;
-                    break;
-                case RenderMode.WorldSpace:
-                    xScale *= Mathf.Abs(lossyScale);
-                    break;
-            }
-        }
-        return xScale;
+            RenderMode.ScreenSpaceOverlay => scale * absLossyScale / canvas.scaleFactor,
+            RenderMode.ScreenSpaceCamera => scale * (canvas.worldCamera != null ? absLossyScale : 1f),
+            RenderMode.WorldSpace => scale * absLossyScale,
+            _ => scale
+        };
     }
 }

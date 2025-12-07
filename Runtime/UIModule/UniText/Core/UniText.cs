@@ -68,6 +68,9 @@ public class UniText : MaskableGraphic
     // Материал для основного mesh (из первого MeshMaterialPair)
     private Material primaryMaterial;
 
+    // Cached Canvas reference (avoid GetComponentInParent every frame)
+    private Canvas cachedCanvas;
+
     public string Text
     {
         get => text;
@@ -201,19 +204,16 @@ public class UniText : MaskableGraphic
     {
         base.OnEnable();
 
-        // После рекомпиляции или enable нужно пересобрать текст
-        // так как runtime данные (lastMeshPairs, processor и т.д.) не сериализуются
+        // Re-initialize after Domain Reload (runtime data not serialized)
         isDirty = true;
+        processor = null;
+        fontProvider = null;
+        meshGenerator = null;
+        cachedCanvas = null;
+        shaderChannelsConfigured = false;
 
-        // Восстанавливаем существующие sub-mesh объекты после рекомпиляции
         CollectExistingSubMeshes();
-
-        // Настраиваем shader channels сразу при enable, а не при первом рендере
-        // Это предотвращает сброс фокуса с текстового поля при первом вводе символа
         EnsureCanvasShaderChannels();
-
-        // Назначаем материал сразу при enable, чтобы избежать перехода null→material
-        // при первом вводе символа (это вызывает сброс фокуса в Editor)
         EnsureMaterialAssigned();
     }
 
@@ -245,6 +245,14 @@ public class UniText : MaskableGraphic
     protected override void OnRectTransformDimensionsChange()
     {
         base.OnRectTransformDimensionsChange();
+        SetDirty();
+    }
+
+    protected override void OnTransformParentChanged()
+    {
+        base.OnTransformParentChanged();
+        cachedCanvas = null;
+        shaderChannelsConfigured = false;
         SetDirty();
     }
 
@@ -308,7 +316,7 @@ public class UniText : MaskableGraphic
             UnicodeData.EnsureInitialized();
             if (!UnicodeData.IsInitialized)
             {
-                Debug.LogError("UniText: Unicode data not initialized. Check UniTextSettings in Resources. Component disabled.");
+                Debug.LogError("UniText: Unicode data not initialized. Check UniTextSettings.");
                 enabled = false;
                 return;
             }
@@ -316,7 +324,7 @@ public class UniText : MaskableGraphic
 
         if (font == null)
         {
-            Debug.LogError("UniText: Font not assigned. Component disabled.");
+            Debug.LogError("UniText: Font not assigned.");
             enabled = false;
             return;
         }
@@ -329,7 +337,7 @@ public class UniText : MaskableGraphic
         }
         catch (Exception ex)
         {
-            Debug.LogError($"UniText: Failed to initialize: {ex.Message}\n{ex.StackTrace}");
+            Debug.LogError($"UniText: Failed to initialize: {ex.Message}");
             enabled = false;
         }
     }
@@ -360,10 +368,6 @@ public class UniText : MaskableGraphic
         }
     }
 
-    /// <summary>
-    /// Принудительно перестраивает текст немедленно.
-    /// Используйте когда нужен синхронный результат (например, для получения размеров).
-    /// </summary>
     public void ForceMeshUpdate()
     {
         if (!isActiveAndEnabled || processor == null)
@@ -371,55 +375,19 @@ public class UniText : MaskableGraphic
             isDirty = true;
             return;
         }
-
-        if (isRebuilding)
-            return;
-
-        isRebuilding = true;
-        try
-        {
-            RebuildText();
-            UpdateCanvasRenderer();
-            isDirty = false;
-        }
-        finally
-        {
-            isRebuilding = false;
-        }
+        PerformRebuild();
     }
 
     private bool isRebuilding;
 
-    protected override void OnPopulateMesh(VertexHelper vh)
-    {
-        // Очищаем VertexHelper - мы используем mesh напрямую через CanvasRenderer
-        vh.Clear();
-    }
+    protected override void OnPopulateMesh(VertexHelper vh) => vh.Clear();
+    protected override void UpdateGeometry() { }
 
-    /// <summary>
-    /// Переопределяем чтобы Unity не перестраивал геометрию.
-    /// Мы управляем mesh напрямую через CanvasRenderer.SetMesh().
-    /// </summary>
-    protected override void UpdateGeometry()
-    {
-        // Пустой - не даём Unity перестраивать геометрию
-    }
-
-    /// <summary>
-    /// Вызывается CanvasUpdateRegistry на этапе Canvas.willRenderCanvases.
-    /// Это гарантирует, что rebuild происходит после всех Update/LateUpdate
-    /// и непосредственно перед рендерингом — никто не может изменить текст после этого.
-    /// </summary>
     public override void Rebuild(CanvasUpdate update)
     {
-        // Вызываем base для обработки материала
         base.Rebuild(update);
 
-        // Rebuild геометрии происходит на этапе PreRender
-        if (update != CanvasUpdate.PreRender)
-            return;
-
-        if (!isDirty || isRebuilding)
+        if (update != CanvasUpdate.PreRender || !isDirty || isRebuilding)
             return;
 
         if (processor == null)
@@ -428,6 +396,12 @@ public class UniText : MaskableGraphic
             if (processor == null)
                 return;
         }
+        PerformRebuild();
+    }
+
+    private void PerformRebuild()
+    {
+        if (isRebuilding) return;
 
         isRebuilding = true;
         try
@@ -452,40 +426,28 @@ public class UniText : MaskableGraphic
 
         EnsureCanvasShaderChannels();
 
-        // Первый mesh отображается на основном CanvasRenderer
-        if (lastMeshPairs.Count > 0)
+        var firstPair = lastMeshPairs[0];
+        if (firstPair.mesh != null && firstPair.mesh.vertexCount > 0)
         {
-            var firstPair = lastMeshPairs[0];
-            if (firstPair.mesh != null && firstPair.mesh.vertexCount > 0)
-            {
-                // Сохраняем материал первого mesh для property material
-                primaryMaterial = firstPair.material;
-
-                // Устанавливаем mesh
-                canvasRenderer.SetMesh(firstPair.mesh);
-
-                // Применяем материал напрямую для немедленного отображения
-                ApplyMaterial();
-            }
-            else
-            {
-                canvasRenderer.Clear();
-            }
+            primaryMaterial = firstPair.material;
+            canvasRenderer.SetMesh(firstPair.mesh);
+            ApplyMaterial();
+        }
+        else
+        {
+            canvasRenderer.Clear();
         }
 
-        // Остальные mesh отображаются через sub-mesh objects
         UpdateSubMeshes(lastMeshPairs);
     }
 
-    /// <summary>
-    /// Обновляет sub-mesh объекты для fallback шрифтов.
-    /// </summary>
     private void UpdateSubMeshes(List<UniTextMeshPair> meshPairs)
     {
         int requiredCount = meshPairs.Count - 1;
+        int existingCount = subMeshObjects.Count;
 
-        // Скрываем лишние
-        for (int i = requiredCount; i < subMeshObjects.Count; i++)
+        // Hide unused
+        for (int i = requiredCount; i < existingCount; i++)
         {
             var subMesh = subMeshObjects[i];
             if (subMesh != null)
@@ -495,40 +457,31 @@ public class UniText : MaskableGraphic
             }
         }
 
-        // Обновляем или создаём нужные
+        // Update or create required
         for (int i = 0; i < requiredCount; i++)
         {
             var pair = meshPairs[i + 1];
 
-            if (i < subMeshObjects.Count && subMeshObjects[i] != null)
+            if (i < existingCount)
             {
-                // Переиспользуем существующий
                 var subMesh = subMeshObjects[i];
-                if (!subMesh.gameObject.activeSelf)
+                if (subMesh != null)
                 {
-                    subMesh.gameObject.SetActive(true);
+                    if (!subMesh.gameObject.activeSelf)
+                        subMesh.gameObject.SetActive(true);
+                    subMesh.SetMeshAndMaterial(pair.mesh, pair.material);
+                    continue;
                 }
-                subMesh.SetMeshAndMaterial(pair.mesh, pair.material);
             }
+
+            var newSubMesh = CreateSubMesh(i + 1, pair.mesh, pair.material);
+            if (i < existingCount)
+                subMeshObjects[i] = newSubMesh;
             else
-            {
-                // Создаём новый с данными сразу
-                var subMesh = CreateSubMesh(i + 1, pair.mesh, pair.material);
-                if (i < subMeshObjects.Count)
-                {
-                    subMeshObjects[i] = subMesh;
-                }
-                else
-                {
-                    subMeshObjects.Add(subMesh);
-                }
-            }
+                subMeshObjects.Add(newSubMesh);
         }
     }
 
-    /// <summary>
-    /// Применяет материал к CanvasRenderer.
-    /// </summary>
     private void ApplyMaterial()
     {
         if (primaryMaterial == null)
@@ -542,44 +495,25 @@ public class UniText : MaskableGraphic
         canvasRenderer.SetTexture(mainTexture);
     }
 
-    /// <summary>
-    /// Вызывается Unity UI системой для применения материала.
-    /// </summary>
-    protected override void UpdateMaterial()
-    {
-        ApplyMaterial();
-    }
+    protected override void UpdateMaterial() => ApplyMaterial();
 
-    /// <summary>
-    /// Назначает материал шрифта на CanvasRenderer сразу, даже если текста нет.
-    /// Это предотвращает переход null→material при первом вводе символа,
-    /// который вызывает сброс фокуса в Editor.
-    /// </summary>
     private void EnsureMaterialAssigned()
     {
-        if (font == null || font.material == null) return;
-        if (canvasRenderer == null) return;
-
-        // Если материал ещё не назначен - назначаем материал шрифта
-        if (primaryMaterial == null)
+        if (primaryMaterial == null && font?.material != null)
         {
             primaryMaterial = font.material;
-            canvasRenderer.materialCount = 1;
-            canvasRenderer.SetMaterial(materialForRendering, 0);
-            canvasRenderer.SetTexture(mainTexture);
+            ApplyMaterial();
         }
     }
 
     private void ClearAllRenderers()
     {
-        // НЕ сбрасываем primaryMaterial в null - оставляем материал назначенным
-        // чтобы избежать перехода null↔material который сбрасывает фокус в Editor
-
-        // Очищаем только mesh, но не материал
         canvasRenderer?.SetMesh(null);
 
-        foreach (var subMesh in subMeshObjects)
+        int count = subMeshObjects.Count;
+        for (int i = 0; i < count; i++)
         {
+            var subMesh = subMeshObjects[i];
             if (subMesh != null)
                 subMesh.Clear();
         }
@@ -587,31 +521,21 @@ public class UniText : MaskableGraphic
 
     private UniTextSubMesh CreateSubMesh(int index, Mesh mesh, Material material)
     {
-        GameObject go;
-
-#if UNITY_EDITOR
-        // В Editor используем способ, который не регистрирует Undo и не сбрасывает фокус
-        go = UnityEditor.EditorUtility.CreateGameObjectWithHideFlags(
-            $"UniText SubMesh [{index}]",
-            HideFlags.HideAndDontSave,
-            typeof(RectTransform), typeof(CanvasRenderer), typeof(UniTextSubMesh));
-#else
-        go = new GameObject($"UniText SubMesh [{index}]", typeof(RectTransform), typeof(CanvasRenderer), typeof(UniTextSubMesh));
-        go.hideFlags = HideFlags.HideAndDontSave;
-#endif
-
+        var go = new GameObject($"UniText SubMesh [{index}]")
+        {
+            hideFlags = HideFlags.HideAndDontSave
+        };
         go.transform.SetParent(transform, false);
 
-        var rt = go.GetComponent<RectTransform>();
+        var rt = go.AddComponent<RectTransform>();
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
 
-        var subMesh = go.GetComponent<UniTextSubMesh>();
+        go.AddComponent<CanvasRenderer>();
+        var subMesh = go.AddComponent<UniTextSubMesh>();
         subMesh.Initialize(this);
-
-        // Устанавливаем mesh и material сразу после создания
         subMesh.SetMeshAndMaterial(mesh, material);
 
         return subMesh;
@@ -621,19 +545,14 @@ public class UniText : MaskableGraphic
 
     private void EnsureCanvasShaderChannels()
     {
-        // Делаем только один раз чтобы не сбрасывать фокус при каждом обновлении
         if (shaderChannelsConfigured) return;
 
-        var canvas = GetComponentInParent<Canvas>();
-        if (canvas == null) return;
+        cachedCanvas = GetComponentInParent<Canvas>();
+        if (cachedCanvas == null) return;
 
-        // TMP SDF шейдер использует UV1 (TEXCOORD1) для SDF scale данных
-        var requiredChannels = AdditionalCanvasShaderChannels.TexCoord1;
-
-        if ((canvas.additionalShaderChannels & requiredChannels) != requiredChannels)
-        {
-            canvas.additionalShaderChannels |= requiredChannels;
-        }
+        const AdditionalCanvasShaderChannels requiredChannels = AdditionalCanvasShaderChannels.TexCoord1;
+        if ((cachedCanvas.additionalShaderChannels & requiredChannels) != requiredChannels)
+            cachedCanvas.additionalShaderChannels |= requiredChannels;
 
         shaderChannelsConfigured = true;
     }
@@ -643,13 +562,9 @@ public class UniText : MaskableGraphic
         if (processor == null || fontProvider == null || meshGenerator == null)
         {
             Initialize();
-            if (processor == null)
-            {
-                return;
-            }
+            if (processor == null) return;
         }
 
-        // Возвращаем старые mesh'и в пул перед получением новых
         ReleaseMeshes();
 
         if (string.IsNullOrEmpty(text))
@@ -663,7 +578,6 @@ public class UniText : MaskableGraphic
         try
         {
             var rect = rectTransform.rect;
-
             var settings = new TextProcessSettings
             {
                 maxWidth = enableWordWrap ? rect.width : float.MaxValue,
@@ -676,28 +590,20 @@ public class UniText : MaskableGraphic
                 verticalAlignment = verticalAlignment
             };
 
-            // Обработать текст через pipeline
             var glyphs = processor.Process(text.AsSpan(), settings);
             lastResultWidth = processor.ResultWidth;
             lastResultHeight = processor.ResultHeight;
 
-            // Настроить mesh generator
             meshGenerator.FontSize = fontSize;
             meshGenerator.DefaultColor = color;
-
-            // Установить параметры canvas/transform для правильного SDF сглаживания
-            var canvas = GetComponentInParent<Canvas>();
-            meshGenerator.SetCanvasParameters(transform, canvas);
-
-            // Установить offset для корректного позиционирования относительно pivot
+            meshGenerator.SetCanvasParameters(transform, cachedCanvas);
             meshGenerator.SetRectOffset(rect);
 
-            // Сгенерировать mesh с использованием пула (cached delegate to avoid allocation)
             lastMeshPairs = meshGenerator.GenerateMeshes(glyphs, cachedMeshProvider);
         }
         catch (Exception ex)
         {
-            Debug.LogError($"UniText: Failed to rebuild text: {ex.Message}\n{ex.StackTrace}");
+            Debug.LogError($"UniText: RebuildText failed: {ex.Message}");
             lastMeshPairs = null;
         }
     }
@@ -706,13 +612,10 @@ public class UniText : MaskableGraphic
     {
         get
         {
-            // Используем материал из текущего mesh (для поддержки fallback)
             if (primaryMaterial != null)
                 return primaryMaterial.mainTexture;
-
             if (font != null && font.material != null)
                 return font.material.mainTexture;
-
             return base.mainTexture;
         }
     }
@@ -721,21 +624,15 @@ public class UniText : MaskableGraphic
     {
         get
         {
-            // Используем материал из текущего mesh (для поддержки fallback)
             if (primaryMaterial != null)
                 return primaryMaterial;
-
             if (font != null)
                 return font.material;
-
             return base.material;
         }
         set => base.material = value;
     }
 
-    /// <summary>
-    /// Получить позицию символа по индексу.
-    /// </summary>
     public bool TryGetCharacterPosition(int charIndex, out Vector2 position)
     {
         position = Vector2.zero;
@@ -752,26 +649,28 @@ public class UniText : MaskableGraphic
         return true;
     }
 
-    /// <summary>
-    /// Получить индекс символа по позиции (hit testing).
-    /// </summary>
     public int GetCharacterIndexAtPosition(Vector2 localPosition)
     {
         if (processor == null)
             return -1;
 
         var glyphs = processor.PositionedGlyphs;
-        float closestDist = float.MaxValue;
+        int glyphCount = glyphs.Length;
+        float closestDistSq = float.MaxValue;
         int closestIndex = -1;
+        float localX = localPosition.x;
+        float localY = localPosition.y;
 
-        for (int i = 0; i < glyphs.Length; i++)
+        for (int i = 0; i < glyphCount; i++)
         {
-            var glyph = glyphs[i];
-            float dist = Vector2.Distance(localPosition, new Vector2(glyph.x, glyph.y));
+            ref readonly var glyph = ref glyphs[i];
+            float dx = localX - glyph.x;
+            float dy = localY - glyph.y;
+            float distSq = dx * dx + dy * dy;
 
-            if (dist < closestDist)
+            if (distSq < closestDistSq)
             {
-                closestDist = dist;
+                closestDistSq = distSq;
                 closestIndex = i;
             }
         }

@@ -24,9 +24,30 @@ public sealed class RichTextParser
     private List<TextAttributeBase> directAttributes;
     private int directPosition;
 
+    // Cached delegates to avoid allocations in CreateContextDirect
+    private Action<int> cachedAddCodepointDelegate;
+    private Action<string, object> cachedOpenScopeDelegate;
+    private Func<string, int> cachedGetScopeStartDelegate;
+    private Func<string, object> cachedGetScopeValueDelegate;
+    private Action<string> cachedCloseCurrentScopeDelegate;
+    private Action<TextAttributeBase> cachedAddAttributeDelegate;
+
     public RichTextParser(TagRegistry tagRegistry)
     {
         this.tagRegistry = tagRegistry ?? TagRegistry.CreateDefault();
+
+        // Initialize cached delegates once to avoid allocations
+        cachedAddCodepointDelegate = AddCodepointDirect;
+        cachedOpenScopeDelegate = OpenScope;
+        cachedGetScopeStartDelegate = GetScopeStart;
+        cachedGetScopeValueDelegate = GetScopeValue;
+        cachedCloseCurrentScopeDelegate = CloseCurrentScope;
+        cachedAddAttributeDelegate = AddAttributeDirect;
+    }
+
+    private void AddCodepointDirect(int cp)
+    {
+        directAddCodepoint?.Invoke(cp);
     }
 
     public RichTextParser() : this(TagRegistry.CreateDefault())
@@ -111,12 +132,12 @@ public sealed class RichTextParser
         {
             Value = value,
             Position = directPosition,
-            AddCodepoint = cp => directAddCodepoint?.Invoke(cp),
-            OpenScope = OpenScope,
-            GetScopeStart = GetScopeStart,
-            GetScopeValue = GetScopeValue,
-            CloseCurrentScope = CloseCurrentScope,
-            AddAttribute = AddAttributeDirect
+            AddCodepoint = cachedAddCodepointDelegate,
+            OpenScope = cachedOpenScopeDelegate,
+            GetScopeStart = cachedGetScopeStartDelegate,
+            GetScopeValue = cachedGetScopeValueDelegate,
+            CloseCurrentScope = cachedCloseCurrentScopeDelegate,
+            AddAttribute = cachedAddAttributeDelegate
         };
     }
 

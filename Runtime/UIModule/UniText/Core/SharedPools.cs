@@ -4,48 +4,38 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Shared static буферы для TextProcessor.
-/// Все UI rebuild'ы происходят на main thread последовательно,
-/// поэтому можно безопасно использовать общие буферы.
+/// Shared static буферы для TextProcessor. Thread-safe для main thread UI rebuild.
 /// </summary>
 public static class SharedTextBuffers
 {
-    // Parsing buffers
-    public static int[] codepoints = new int[256];
+    // Increased initial sizes to reduce allocations on first few frames
+    // Most UI text is 100-500 characters, so 1024 is a good starting point
+    public static int[] codepoints = new int[1024];
     public static int codepointCount;
     public static readonly List<TextAttributeBase> attributes = new(32);
 
-    // BiDi buffers
-    public static byte[] bidiLevels = new byte[256];
+    public static byte[] bidiLevels = new byte[1024];
     public static BidiParagraph[] bidiParagraphs = Array.Empty<BidiParagraph>();
     public static TextDirection baseDirection;
 
-    // Script analysis
-    public static UnicodeScript[] scripts = new UnicodeScript[256];
+    public static UnicodeScript[] scripts = new UnicodeScript[1024];
 
-    // Itemization
-    public static TextRun[] runs = new TextRun[32];
+    public static TextRun[] runs = new TextRun[64];
     public static int runCount;
 
-    // Shaping
-    public static ShapedRun[] shapedRuns = new ShapedRun[32];
+    public static ShapedRun[] shapedRuns = new ShapedRun[64];
     public static int shapedRunCount;
-    public static ShapedGlyph[] shapedGlyphs = new ShapedGlyph[256];
+    public static ShapedGlyph[] shapedGlyphs = new ShapedGlyph[1024];
     public static int shapedGlyphCount;
 
-    // Line breaking
-    public static TextLine[] lines = new TextLine[16];
+    public static TextLine[] lines = new TextLine[32];
     public static int lineCount;
-    public static ShapedRun[] orderedRuns = new ShapedRun[32];
+    public static ShapedRun[] orderedRuns = new ShapedRun[64];
     public static int orderedRunCount;
 
-    // Layout
-    public static PositionedGlyph[] positionedGlyphs = new PositionedGlyph[256];
+    public static PositionedGlyph[] positionedGlyphs = new PositionedGlyph[1024];
     public static int positionedGlyphCount;
 
-    /// <summary>
-    /// Сбросить все счётчики перед новой обработкой.
-    /// </summary>
     public static void Reset()
     {
         codepointCount = 0;
@@ -60,79 +50,72 @@ public static class SharedTextBuffers
         attributes.Clear();
     }
 
-    #region Capacity Management
-
     public static void EnsureCodepointCapacity(int required)
     {
-        if (codepoints.Length >= required) return;
-        Array.Resize(ref codepoints, Math.Max(required, codepoints.Length * 2));
+        if (codepoints.Length < required)
+            Array.Resize(ref codepoints, Math.Max(required, codepoints.Length * 2));
     }
 
     public static void EnsureBidiCapacity(int required)
     {
-        if (bidiLevels.Length >= required) return;
-        Array.Resize(ref bidiLevels, Math.Max(required, bidiLevels.Length * 2));
+        if (bidiLevels.Length < required)
+            Array.Resize(ref bidiLevels, Math.Max(required, bidiLevels.Length * 2));
     }
 
     public static void EnsureScriptCapacity(int required)
     {
-        if (scripts.Length >= required) return;
-        Array.Resize(ref scripts, Math.Max(required, scripts.Length * 2));
+        if (scripts.Length < required)
+            Array.Resize(ref scripts, Math.Max(required, scripts.Length * 2));
     }
 
     public static void EnsureRunCapacity(int required)
     {
-        if (runs.Length >= required) return;
-        Array.Resize(ref runs, Math.Max(required, runs.Length * 2));
+        if (runs.Length < required)
+            Array.Resize(ref runs, Math.Max(required, runs.Length * 2));
     }
 
     public static void EnsureShapedRunCapacity(int required)
     {
-        if (shapedRuns.Length >= required) return;
-        Array.Resize(ref shapedRuns, Math.Max(required, shapedRuns.Length * 2));
+        if (shapedRuns.Length < required)
+            Array.Resize(ref shapedRuns, Math.Max(required, shapedRuns.Length * 2));
     }
 
     public static void EnsureShapedGlyphCapacity(int required)
     {
-        if (shapedGlyphs.Length >= required) return;
-        Array.Resize(ref shapedGlyphs, Math.Max(required, shapedGlyphs.Length * 2));
+        if (shapedGlyphs.Length < required)
+            Array.Resize(ref shapedGlyphs, Math.Max(required, shapedGlyphs.Length * 2));
     }
 
     public static void EnsureLineCapacity(int required)
     {
-        if (lines.Length >= required) return;
-        Array.Resize(ref lines, Math.Max(required, lines.Length * 2));
+        if (lines.Length < required)
+            Array.Resize(ref lines, Math.Max(required, lines.Length * 2));
     }
 
     public static void EnsureOrderedRunCapacity(int required)
     {
-        if (orderedRuns.Length >= required) return;
-        Array.Resize(ref orderedRuns, Math.Max(required, orderedRuns.Length * 2));
+        if (orderedRuns.Length < required)
+            Array.Resize(ref orderedRuns, Math.Max(required, orderedRuns.Length * 2));
     }
 
     public static void EnsurePositionedGlyphCapacity(int required)
     {
-        if (positionedGlyphs.Length >= required) return;
-        Array.Resize(ref positionedGlyphs, Math.Max(required, positionedGlyphs.Length * 2));
+        if (positionedGlyphs.Length < required)
+            Array.Resize(ref positionedGlyphs, Math.Max(required, positionedGlyphs.Length * 2));
     }
 
-    #endregion
-
-    /// <summary>
-    /// Сброс при Domain Reload (для Editor).
-    /// </summary>
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
-        codepoints = new int[256];
-        bidiLevels = new byte[256];
-        scripts = new UnicodeScript[256];
-        runs = new TextRun[32];
-        shapedRuns = new ShapedRun[32];
-        shapedGlyphs = new ShapedGlyph[256];
-        lines = new TextLine[16];
-        orderedRuns = new ShapedRun[32];
-        positionedGlyphs = new PositionedGlyph[256];
+        codepoints = new int[1024];
+        bidiLevels = new byte[1024];
+        scripts = new UnicodeScript[1024];
+        runs = new TextRun[64];
+        shapedRuns = new ShapedRun[64];
+        shapedGlyphs = new ShapedGlyph[1024];
+        lines = new TextLine[32];
+        orderedRuns = new ShapedRun[64];
+        positionedGlyphs = new PositionedGlyph[1024];
         bidiParagraphs = Array.Empty<BidiParagraph>();
         attributes.Clear();
         Reset();
@@ -140,8 +123,7 @@ public static class SharedTextBuffers
 }
 
 /// <summary>
-/// Shared static кеш для font lookup.
-/// Позволяет избежать повторных поисков fallback шрифтов.
+/// Shared static кеш для font fallback lookup.
 /// </summary>
 public static class SharedFontCache
 {
@@ -159,27 +141,14 @@ public static class SharedFontCache
         }
     }
 
-    private const int CacheSize = 256;
+    // Increased from 256 to 4096 for much better hit rate
+    // Most text uses ~100-500 unique codepoints, so 4096 should have very high hit rate
+    private const int CacheSize = 4096;
     private const int CacheMask = CacheSize - 1;
-    private static FontCacheEntry[] cache;
+    private static FontCacheEntry[] cache = new FontCacheEntry[CacheSize];
 
-    static SharedFontCache()
-    {
-        Initialize();
-    }
+    static SharedFontCache() => Clear();
 
-    private static void Initialize()
-    {
-        cache = new FontCacheEntry[CacheSize];
-        for (int i = 0; i < CacheSize; i++)
-        {
-            cache[i] = new FontCacheEntry(-1, -1, -1);
-        }
-    }
-
-    /// <summary>
-    /// Попытаться получить результат из кеша.
-    /// </summary>
     public static bool TryGet(int codepoint, int preferredFontId, out int resultFontId)
     {
         int index = (codepoint ^ (preferredFontId << 16)) & CacheMask;
@@ -195,45 +164,30 @@ public static class SharedFontCache
         return false;
     }
 
-    /// <summary>
-    /// Сохранить результат в кеш.
-    /// </summary>
     public static void Set(int codepoint, int preferredFontId, int resultFontId)
     {
         int index = (codepoint ^ (preferredFontId << 16)) & CacheMask;
         cache[index] = new FontCacheEntry(codepoint, preferredFontId, resultFontId);
     }
 
-    /// <summary>
-    /// Очистить кеш. Вызывать при смене шрифтов.
-    /// </summary>
     public static void Clear()
     {
         for (int i = 0; i < CacheSize; i++)
-        {
             cache[i] = new FontCacheEntry(-1, -1, -1);
-        }
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        Initialize();
-    }
+    private static void OnDomainReload() => Clear();
 }
 
 /// <summary>
-/// Shared static пул Mesh объектов.
-/// Mesh'и переиспользуются между разными UniText компонентами.
+/// Shared static пул Mesh объектов для UniText.
 /// </summary>
 public static class SharedMeshPool
 {
     private static readonly List<Mesh> available = new(16);
     private static bool initialized;
 
-    /// <summary>
-    /// Получить mesh из пула или создать новый.
-    /// </summary>
     public static Mesh Acquire(string name)
     {
         EnsureInitialized();
@@ -256,20 +210,13 @@ public static class SharedMeshPool
         return mesh;
     }
 
-    /// <summary>
-    /// Вернуть mesh в пул.
-    /// </summary>
     public static void Release(Mesh mesh)
     {
         if (mesh == null) return;
-
         mesh.Clear();
         available.Add(mesh);
     }
 
-    /// <summary>
-    /// Вернуть несколько mesh'ей в пул.
-    /// </summary>
     public static void Release(List<Mesh> meshes)
     {
         if (meshes == null) return;
@@ -284,45 +231,28 @@ public static class SharedMeshPool
         }
     }
 
-    /// <summary>
-    /// Очистить неиспользуемые mesh'и (освободить GPU память).
-    /// Вызывается автоматически при выгрузке сцены.
-    /// </summary>
     public static void ClearUnused()
     {
         foreach (var mesh in available)
-        {
             if (mesh != null)
-            {
                 UnityEngine.Object.Destroy(mesh);
-            }
-        }
         available.Clear();
     }
 
-    /// <summary>
-    /// Текущий размер пула (для диагностики).
-    /// </summary>
     public static int PoolSize => available.Count;
 
     private static void EnsureInitialized()
     {
         if (initialized) return;
-
         initialized = true;
         SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
 
-    private static void OnSceneUnloaded(Scene scene)
-    {
-        // Очищаем пул при выгрузке сцены чтобы избежать накопления mesh'ей
-        ClearUnused();
-    }
+    private static void OnSceneUnloaded(Scene scene) => ClearUnused();
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
-        // Очищаем при Domain Reload (Editor)
         available.Clear();
         initialized = false;
     }

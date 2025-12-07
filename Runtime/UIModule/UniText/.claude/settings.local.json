@@ -14,7 +14,18 @@
       "Bash(dir /s /b \"C:\\C-UnityProjects\\LittleLand\\Assets\\LightSideCore\\Runtime\\UIModule\\UniText\\TMP\")",
       "Bash(dir /b \"C:\\C-UnityProjects\\LittleLand\\Assets\\LightSideCore\")",
       "Bash(cat:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(where:*)",
+      "Bash(mkdir:*)",
+      "Bash(curl:*)",
+      "Bash(dir:*)",
+      "Bash(powershell:*)",
+      "Bash(for:*)",
+      "Bash(do mv \"$f\" \"$f%.nupkg.zip\")",
+      "Bash(done)",
+      "WebFetch(domain:harfbuzz.github.io)",
+      "WebFetch(domain:www.mrumpler.at)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ],
     "deny": [],
     "ask": []

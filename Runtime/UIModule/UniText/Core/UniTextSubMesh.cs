@@ -3,25 +3,28 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Sub-mesh компонент для отображения глифов из fallback шрифтов.
-/// Аналог TMP_SubMeshUI.
+/// НЕ наследует MaskableGraphic чтобы избежать rebuild loop при создании во время Rebuild().
+/// Управляет CanvasRenderer напрямую.
 /// </summary>
 [RequireComponent(typeof(CanvasRenderer))]
 [RequireComponent(typeof(RectTransform))]
-public sealed class UniTextSubMesh : MaskableGraphic
+[ExecuteAlways]
+public sealed class UniTextSubMesh : MonoBehaviour, IMaterialModifier
 {
     private UniText parentText;
+    private CanvasRenderer canvasRenderer;
     private Mesh mesh;
     private Material sharedMaterial;
 
-    protected override void Awake()
+    private void Awake()
     {
-        base.Awake();
-        raycastTarget = false;
+        canvasRenderer = GetComponent<CanvasRenderer>();
     }
 
     public void Initialize(UniText parent)
     {
         parentText = parent;
+        canvasRenderer = GetComponent<CanvasRenderer>();
     }
 
     public void SetMeshAndMaterial(Mesh newMesh, Material newMaterial)
@@ -29,96 +32,82 @@ public sealed class UniTextSubMesh : MaskableGraphic
         mesh = newMesh;
         sharedMaterial = newMaterial;
 
-        var cr = GetCanvasRenderer();
-        if (cr == null) return;
+        if (canvasRenderer == null)
+            canvasRenderer = GetComponent<CanvasRenderer>();
+
+        if (canvasRenderer == null) return;
 
         if (mesh == null || mesh.vertexCount == 0)
         {
-            cr.Clear();
+            canvasRenderer.Clear();
             return;
         }
 
         // Устанавливаем mesh напрямую
-        cr.SetMesh(mesh);
+        canvasRenderer.SetMesh(mesh);
 
-        // Применяем материал напрямую для немедленного отображения
-        ApplyMaterialToRenderer(cr);
+        // Применяем материал
+        ApplyMaterial();
     }
 
     public void Clear()
     {
         mesh = null;
-        sharedMaterial = null;
+        // НЕ сбрасываем sharedMaterial чтобы избежать мерцания
 
-        var cr = GetCanvasRenderer();
-        cr?.Clear();
-    }
+        if (canvasRenderer == null)
+            canvasRenderer = GetComponent<CanvasRenderer>();
 
-    private CanvasRenderer GetCanvasRenderer()
-    {
-        // canvasRenderer от Graphic может быть null сразу после AddComponent
-        return GetComponent<CanvasRenderer>();
+        canvasRenderer?.SetMesh(null);
     }
 
     /// <summary>
     /// Применяет материал к CanvasRenderer.
     /// </summary>
-    private void ApplyMaterialToRenderer(CanvasRenderer cr)
+    private void ApplyMaterial()
     {
-        if (cr == null || sharedMaterial == null)
+        if (canvasRenderer == null || sharedMaterial == null)
         {
-            cr?.Clear();
+            canvasRenderer?.Clear();
             return;
         }
 
-        cr.materialCount = 1;
-        cr.SetMaterial(materialForRendering, 0);
-        cr.SetTexture(mainTexture);
+        // Получаем модифицированный материал (для масок и т.д.)
+        var materialToUse = GetModifiedMaterial(sharedMaterial);
+
+        canvasRenderer.materialCount = 1;
+        canvasRenderer.SetMaterial(materialToUse, 0);
+        canvasRenderer.SetTexture(sharedMaterial.mainTexture);
     }
 
     /// <summary>
-    /// Вызывается Unity UI системой для применения материала.
+    /// IMaterialModifier implementation для поддержки масок.
     /// </summary>
-    protected override void UpdateMaterial()
+    public Material GetModifiedMaterial(Material baseMaterial)
     {
-        ApplyMaterialToRenderer(GetCanvasRenderer());
-    }
+        if (parentText == null)
+            return baseMaterial;
 
-    protected override void OnPopulateMesh(VertexHelper vh)
-    {
-        vh.Clear();
-    }
-
-    /// <summary>
-    /// Переопределяем чтобы Unity не перестраивал геометрию.
-    /// Мы управляем mesh напрямую через CanvasRenderer.SetMesh().
-    /// </summary>
-    protected override void UpdateGeometry()
-    {
-        // Пустой - не даём Unity перестраивать геометрию
-    }
-
-    public override Texture mainTexture
-    {
-        get
+        // Получаем mask материал через parent
+        var maskable = parentText as IMaterialModifier;
+        if (maskable != null)
         {
-            if (sharedMaterial != null)
-                return sharedMaterial.mainTexture;
-
-            return base.mainTexture;
+            return maskable.GetModifiedMaterial(baseMaterial);
         }
+
+        return baseMaterial;
     }
 
-    public override Material material
+    public Material Material
     {
-        get => sharedMaterial ?? base.material;
+        get => sharedMaterial;
         set
         {
             if (sharedMaterial == value)
                 return;
 
             sharedMaterial = value;
-            ApplyMaterialToRenderer(GetCanvasRenderer());
+            ApplyMaterial();
         }
     }
 }

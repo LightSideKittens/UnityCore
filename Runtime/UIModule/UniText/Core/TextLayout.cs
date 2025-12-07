@@ -1,6 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 
 /// <summary>
 /// Настройки layout
@@ -113,21 +113,22 @@ public sealed class TextLayout
 
         for (int i = 0; i < lineCount; i++)
         {
-            var line = lines[i];
+            ref readonly var line = ref lines[i];
             int runStart = line.runStart;
             int runCount = line.runCount;
 
             // Вычисляем реальную ширину строки
             float lineWidth = 0;
-            for (int r = 0; r < runCount; r++)
-                lineWidth += runs[runStart + r].width;
+            int runEnd = runStart + runCount;
+            for (int r = runStart; r < runEnd; r++)
+                lineWidth += runs[r].width;
 
             // Начальная X позиция
             float x;
             if (hasFiniteWidth)
             {
                 bool isRtlLine = (line.paragraphBaseLevel & 1) == 1;
-                x = ComputeLineStartXFast(lineWidth, isRtlLine, availableWidth, hAlign);
+                x = ComputeLineStartX(lineWidth, isRtlLine, availableWidth, hAlign);
             }
             else
             {
@@ -135,113 +136,31 @@ public sealed class TextLayout
             }
 
             // Позиционируем каждый run в строке
-            for (int r = 0; r < runCount; r++)
+            for (int r = runStart; r < runEnd; r++)
             {
-                var run = runs[runStart + r];
+                ref readonly var run = ref runs[r];
                 int glyphStart = run.glyphStart;
                 int glyphLen = run.glyphCount;
 
-                // Defensive check: verify glyph indices are within bounds
-                Debug.Assert(glyphStart >= 0 && glyphStart + glyphLen <= glyphs.Length,
-                    $"Invalid glyph range: start={glyphStart}, count={glyphLen}, glyphs.Length={glyphs.Length}");
+                // Defensive check: verify glyph indices are within bounds (no string allocation)
+                Debug.Assert(glyphStart >= 0 && glyphStart + glyphLen <= glyphs.Length);
 
                 int fontId = run.fontId;
                 int attrSnapshot = run.attributeSnapshot;
-                float currentY = y; // Cache y value
+                int glyphEnd = glyphStart + glyphLen;
 
-                if (run.direction == TextDirection.RightToLeft)
+                for (int g = glyphStart; g < glyphEnd; g++)
                 {
-                    // RTL: глифы внутри run идут справа налево
-                    float runEndX = x + run.width;
-
-                    for (int g = 0; g < glyphLen; g++)
+                    ref readonly var glyph = ref glyphs[g];
+                    result[glyphCount++] = new PositionedGlyph
                     {
-                        var glyph = glyphs[glyphStart + g];
-                        runEndX -= glyph.advanceX;
-
-                        result[glyphCount++] = new PositionedGlyph
-                        {
-                            glyphId = glyph.glyphId,
-                            x = runEndX + glyph.offsetX,
-                            y = currentY + glyph.offsetY,
-                            fontId = fontId,
-                            attributeSnapshot = attrSnapshot
-                        };
-                    }
-
-                    x += run.width;
-                }
-                else
-                {
-                    // LTR - unrolled for common case of many glyphs
-                    int g = 0;
-                    int glyphEnd = glyphStart + glyphLen;
-
-                    // Process 4 glyphs at a time for better cache performance
-                    for (; g + 3 < glyphLen; g += 4)
-                    {
-                        var g0 = glyphs[glyphStart + g];
-                        var g1 = glyphs[glyphStart + g + 1];
-                        var g2 = glyphs[glyphStart + g + 2];
-                        var g3 = glyphs[glyphStart + g + 3];
-
-                        result[glyphCount++] = new PositionedGlyph
-                        {
-                            glyphId = g0.glyphId,
-                            x = x + g0.offsetX,
-                            y = currentY + g0.offsetY,
-                            fontId = fontId,
-                            attributeSnapshot = attrSnapshot
-                        };
-                        x += g0.advanceX;
-
-                        result[glyphCount++] = new PositionedGlyph
-                        {
-                            glyphId = g1.glyphId,
-                            x = x + g1.offsetX,
-                            y = currentY + g1.offsetY,
-                            fontId = fontId,
-                            attributeSnapshot = attrSnapshot
-                        };
-                        x += g1.advanceX;
-
-                        result[glyphCount++] = new PositionedGlyph
-                        {
-                            glyphId = g2.glyphId,
-                            x = x + g2.offsetX,
-                            y = currentY + g2.offsetY,
-                            fontId = fontId,
-                            attributeSnapshot = attrSnapshot
-                        };
-                        x += g2.advanceX;
-
-                        result[glyphCount++] = new PositionedGlyph
-                        {
-                            glyphId = g3.glyphId,
-                            x = x + g3.offsetX,
-                            y = currentY + g3.offsetY,
-                            fontId = fontId,
-                            attributeSnapshot = attrSnapshot
-                        };
-                        x += g3.advanceX;
-                    }
-
-                    // Process remaining glyphs
-                    for (; g < glyphLen; g++)
-                    {
-                        var glyph = glyphs[glyphStart + g];
-
-                        result[glyphCount++] = new PositionedGlyph
-                        {
-                            glyphId = glyph.glyphId,
-                            x = x + glyph.offsetX,
-                            y = currentY + glyph.offsetY,
-                            fontId = fontId,
-                            attributeSnapshot = attrSnapshot
-                        };
-
-                        x += glyph.advanceX;
-                    }
+                        glyphId = glyph.glyphId,
+                        x = x + glyph.offsetX,
+                        y = y + glyph.offsetY,
+                        fontId = fontId,
+                        attributeSnapshot = attrSnapshot
+                    };
+                    x += glyph.advanceX;
                 }
             }
 
@@ -256,80 +175,28 @@ public sealed class TextLayout
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static float ComputeLineStartXFast(float lineWidth, bool isRtlLine, float availableWidth, HorizontalAlignment alignment)
+    private static float ComputeLineStartX(float lineWidth, bool isRtlLine, float availableWidth, HorizontalAlignment alignment)
     {
-        switch (alignment)
+        return alignment switch
         {
-            case HorizontalAlignment.Left:
-                return isRtlLine ? availableWidth - lineWidth : 0;
-
-            case HorizontalAlignment.Right:
-                return isRtlLine ? 0 : availableWidth - lineWidth;
-
-            case HorizontalAlignment.Center:
-            default:
-                return (availableWidth - lineWidth) * 0.5f;
-        }
+            HorizontalAlignment.Left => isRtlLine ? availableWidth - lineWidth : 0,
+            HorizontalAlignment.Right => isRtlLine ? 0 : availableWidth - lineWidth,
+            _ => (availableWidth - lineWidth) * 0.5f
+        };
     }
 
-    /// <summary>
-    /// Вычислить начальную X позицию строки.
-    /// Per-line alignment: каждая строка выравнивается по своему направлению.
-    /// </summary>
-    private static float ComputeLineStartX(float lineWidth, TextDirection lineDirection, LayoutSettings settings)
-    {
-        float availableWidth = settings.maxWidth;
-        if (float.IsInfinity(availableWidth) || availableWidth <= 0)
-        {
-            return 0;
-        }
-
-        var alignment = settings.horizontalAlignment;
-
-        switch (alignment)
-        {
-            case HorizontalAlignment.Left:
-                // "Left" = естественное начало строки
-                // LTR строка → прижата влево
-                // RTL строка → прижата вправо
-                return lineDirection == TextDirection.RightToLeft
-                    ? availableWidth - lineWidth
-                    : 0;
-
-            case HorizontalAlignment.Right:
-                // "Right" = противоположный край
-                // LTR строка → прижата вправо
-                // RTL строка → прижата влево
-                return lineDirection == TextDirection.RightToLeft
-                    ? 0
-                    : availableWidth - lineWidth;
-
-            case HorizontalAlignment.Center:
-            default:
-                return (availableWidth - lineWidth) / 2;
-        }
-    }
-
-    /// <summary>
-    /// Вычислить начальную Y позицию текста (vertical alignment)
-    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float ComputeTextStartY(float totalTextHeight, LayoutSettings settings)
     {
         float availableHeight = settings.maxHeight;
         if (float.IsInfinity(availableHeight) || availableHeight <= 0)
             return 0;
 
-        switch (settings.verticalAlignment)
+        return settings.verticalAlignment switch
         {
-            case VerticalAlignment.Middle:
-                return (availableHeight - totalTextHeight) / 2;
-
-            case VerticalAlignment.Bottom:
-                return availableHeight - totalTextHeight;
-
-            case VerticalAlignment.Top:
-            default:
-                return 0;
-        }
+            VerticalAlignment.Middle => (availableHeight - totalTextHeight) * 0.5f,
+            VerticalAlignment.Bottom => availableHeight - totalTextHeight,
+            _ => 0
+        };
     }
 }
