@@ -31,6 +31,9 @@ public sealed class UniTextFontProvider
     // Searched font assets (to prevent infinite recursion in fallback search)
     private static HashSet<int> searchedFontAssets;
 
+    // DEBUG: Enable detailed logging
+    public static bool DebugLogging = false;
+
     /// <summary>
     /// Current font size.
     /// </summary>
@@ -85,6 +88,13 @@ public sealed class UniTextFontProvider
 
         RegisterFontAsset(0, fontAsset);
         UpdateFontScale();
+
+        if (DebugLogging)
+        {
+            Debug.Log($"[UniTextFontProvider] Created with fontAsset={fontAsset.name}, " +
+                $"hasFontData={fontAsset.HasFontData}, fontDataSize={fontAsset.FontData?.Length ?? 0}, " +
+                $"glyphLookup={fontAsset.GlyphLookupTable?.Count ?? 0}, charLookup={fontAsset.CharacterLookupTable?.Count ?? 0}");
+        }
     }
 
     /// <summary>
@@ -276,7 +286,11 @@ public sealed class UniTextFontProvider
         // Fast path: check cache first
         if (SharedFontCache.TryGet(codepoint, baseFontId, out int cachedFontId) &&
             (cachedFontId == 0 || fontAssets.ContainsKey(cachedFontId)))
+        {
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] U+{codepoint:X4} -> cached fontId={cachedFontId}");
             return cachedFontId;
+        }
 
         var baseFont = baseFontId == 0 ? mainFontAsset : (fontAssets.TryGetValue(baseFontId, out var f) ? f : mainFontAsset);
         if (baseFont == null)
@@ -285,6 +299,9 @@ public sealed class UniTextFontProvider
             return baseFontId;
         }
 
+        if (DebugLogging)
+            Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] Searching for U+{codepoint:X4} in {baseFont.name}");
+
         searchedFontAssets ??= new HashSet<int>();
         searchedFontAssets.Clear();
         searchedFontAssets.Add(baseFont.GetInstanceID());
@@ -292,11 +309,20 @@ public sealed class UniTextFontProvider
         uint unicode = (uint)codepoint;
         var foundFont = FindCharacterInFontAsset(unicode, baseFont, true);
 
+        if (DebugLogging && foundFont != null)
+            Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] U+{codepoint:X4} found in base font {foundFont.name}");
+
         if (foundFont == null)
         {
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] U+{codepoint:X4} not in base font, checking global fallbacks...");
+
             var globalFallbacks = UniTextSettings.FallbackFontAssets;
             if (globalFallbacks != null)
             {
+                if (DebugLogging)
+                    Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] Global fallbacks count: {globalFallbacks.Count}");
+
                 int count = globalFallbacks.Count;
                 for (int i = 0; i < count; i++)
                 {
@@ -304,14 +330,29 @@ public sealed class UniTextFontProvider
                     if (fallback == null || !searchedFontAssets.Add(fallback.GetInstanceID()))
                         continue;
 
+                    if (DebugLogging)
+                        Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] Checking fallback[{i}]: {fallback.name}");
+
                     foundFont = FindCharacterInFontAsset(unicode, fallback, true);
-                    if (foundFont != null) break;
+                    if (foundFont != null)
+                    {
+                        if (DebugLogging)
+                            Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] U+{codepoint:X4} FOUND in fallback {foundFont.name}");
+                        break;
+                    }
                 }
+            }
+            else
+            {
+                if (DebugLogging)
+                    Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] No global fallbacks configured!");
             }
         }
 
         if (foundFont == null)
         {
+            if (DebugLogging)
+                Debug.LogWarning($"[UniTextFontProvider.FindFontForCodepoint] U+{codepoint:X4} NOT FOUND in any font! Using base font.");
             SharedFontCache.Set(codepoint, baseFontId, baseFontId);
             return baseFontId;
         }
@@ -327,17 +368,84 @@ public sealed class UniTextFontProvider
             return null;
 
         var charLookup = fontAsset.CharacterLookupTable;
-        if (charLookup != null && charLookup.ContainsKey(unicode))
-            return fontAsset;
+        if (charLookup != null && charLookup.TryGetValue(unicode, out var character))
+        {
+            // Check that we have valid glyph data
+            if (character != null && character.glyphIndex != 0 && character.glyph != null)
+            {
+                var metrics = character.glyph.metrics;
+                // Glyph must have non-zero size to be valid (not .notdef placeholder)
+                if (metrics.width > 0 || metrics.height > 0)
+                {
+                    // Additional check: for complex scripts (Arabic, Hebrew, Indic, etc.)
+                    // verify using HarfBuzz that the font actually supports this codepoint
+                    bool needsHarfBuzzCheck = unicode >= 0x0590 && unicode <= 0x10FF; // RTL and Indic ranges
+
+                    if (needsHarfBuzzCheck && fontAsset.HasFontData)
+                    {
+                        // Use HarfBuzz to verify - it reads cmap table directly
+                        uint hbGlyphIndex = HarfBuzzFontValidator.GetGlyphIndex(fontAsset, unicode);
+                        if (hbGlyphIndex == 0)
+                        {
+                            if (DebugLogging)
+                                Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} in {fontAsset.name} charLookup but HarfBuzz says glyph=0, INVALID!");
+                            // Don't return, continue to fallback search
+                        }
+                        else
+                        {
+                            if (DebugLogging)
+                                Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} exists in {fontAsset.name} (glyphIndex={character.glyphIndex}, HB={hbGlyphIndex}, size={metrics.width}x{metrics.height})");
+                            return fontAsset;
+                        }
+                    }
+                    else
+                    {
+                        if (DebugLogging)
+                            Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} exists in {fontAsset.name} charLookup (glyphIndex={character.glyphIndex}, size={metrics.width}x{metrics.height})");
+                        return fontAsset;
+                    }
+                }
+                else
+                {
+                    if (DebugLogging)
+                        Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} in {fontAsset.name} has zero-size glyph, skipping");
+                }
+            }
+            else
+            {
+                if (DebugLogging)
+                    Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} in {fontAsset.name} charLookup but glyphIndex=0 or no glyph data, skipping");
+            }
+        }
 
         if (fontAsset.AtlasPopulationMode == UniTextAtlasPopulationMode.Dynamic)
         {
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} not in charLookup, trying TryAddCharacter (Dynamic mode) in {fontAsset.name}");
+
             if (fontAsset.TryAddCharacter(unicode, out _))
+            {
+                if (DebugLogging)
+                    Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} successfully added to {fontAsset.name}");
                 return fontAsset;
+            }
+            else
+            {
+                if (DebugLogging)
+                    Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} TryAddCharacter FAILED in {fontAsset.name}");
+            }
+        }
+        else
+        {
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} not in {fontAsset.name} (Static mode, no dynamic add)");
         }
 
         if (searchFallbacks && fontAsset.FallbackFontAssetTable != null)
         {
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] Checking {fontAsset.FallbackFontAssetTable.Count} local fallbacks for U+{unicode:X4}");
+
             for (int i = 0; i < fontAsset.FallbackFontAssetTable.Count; i++)
             {
                 var fallback = fontAsset.FallbackFontAssetTable[i];
@@ -388,7 +496,18 @@ public sealed class UniTextFontProvider
         => (fontAssets.TryGetValue(fontId, out var f) ? f : mainFontAsset)?.Material;
 
     public byte[] GetFontData(int fontId)
-        => (fontAssets.TryGetValue(fontId, out var f) ? f : mainFontAsset)?.FontData;
+    {
+        var fontAsset = fontAssets.TryGetValue(fontId, out var f) ? f : mainFontAsset;
+        var data = fontAsset?.FontData;
+
+        if (DebugLogging)
+        {
+            Debug.Log($"[UniTextFontProvider.GetFontData] fontId={fontId}, " +
+                $"fontAsset={fontAsset?.name ?? "null"}, dataSize={data?.Length ?? 0}");
+        }
+
+        return data;
+    }
 
     public bool HasFontData(int fontId)
         => (fontAssets.TryGetValue(fontId, out var f) ? f : mainFontAsset)?.HasFontData ?? false;

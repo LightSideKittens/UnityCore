@@ -18,6 +18,9 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 
     private int lastClearedSessionId;
 
+    // DEBUG: Enable detailed logging
+    public static bool DebugLogging = false;
+
     /// <summary>
     /// Cached HarfBuzz objects for a font. Blob/Face/Font are kept alive together.
     /// Uses unmanaged memory to avoid GC relocation issues with Blob.FromStream.
@@ -101,6 +104,12 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             oldEntry.Dispose();
 
         fontCache[fontId] = new HarfBuzzFontCache(fontData);
+
+        if (DebugLogging)
+        {
+            var entry = fontCache[fontId];
+            UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.RegisterFont] fontId={fontId}, dataSize={fontData.Length}, upem={entry.upem}");
+        }
     }
 
     public bool HasFont(int fontId) => fontCache.ContainsKey(fontId);
@@ -114,19 +123,32 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 
     private bool TryAutoRegisterFont(int fontId, UniTextFontProvider fontProvider)
     {
-        if (fontProvider == null) return false;
+        if (fontProvider == null)
+        {
+            if (DebugLogging)
+                UnityEngine.Debug.LogWarning($"[HarfBuzzShapingEngine.TryAutoRegisterFont] fontProvider is null!");
+            return false;
+        }
 
         byte[] fontData = fontProvider.GetFontData(fontId);
         if (fontData == null || fontData.Length == 0)
+        {
+            if (DebugLogging)
+                UnityEngine.Debug.LogWarning($"[HarfBuzzShapingEngine.TryAutoRegisterFont] No font data for fontId={fontId}");
             return false;
+        }
 
         try
         {
             RegisterFont(fontId, fontData);
+            if (DebugLogging)
+                UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.TryAutoRegisterFont] Successfully registered fontId={fontId}");
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            if (DebugLogging)
+                UnityEngine.Debug.LogError($"[HarfBuzzShapingEngine.TryAutoRegisterFont] Failed to register fontId={fontId}: {ex.Message}");
             return false;
         }
     }
@@ -142,11 +164,28 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
         if (length == 0)
             return new ShapingResult(ReadOnlySpan<ShapedGlyph>.Empty, 0);
 
+        if (DebugLogging)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"[HarfBuzzShapingEngine.Shape] fontId={fontId}, script={script}, dir={direction}, codepoints({length}): ");
+            for (int j = 0; j < length && j < 20; j++)
+                sb.Append($"U+{codepoints[j]:X4} ");
+            if (length > 20) sb.Append("...");
+            UnityEngine.Debug.Log(sb.ToString());
+        }
+
         // Get or create cached font
         if (!fontCache.TryGetValue(fontId, out var fontEntry))
         {
+            if (DebugLogging)
+                UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.Shape] Font not in cache, trying to auto-register fontId={fontId}");
+
             if (!TryAutoRegisterFont(fontId, fontProvider))
+            {
+                if (DebugLogging)
+                    UnityEngine.Debug.LogWarning($"[HarfBuzzShapingEngine.Shape] Auto-register failed, using fallback shaping for fontId={fontId}");
                 return FallbackShape(codepoints, fontProvider, fontId, direction);
+            }
             fontEntry = fontCache[fontId];
         }
 
@@ -165,12 +204,18 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             buffer.Script = MapScript(script);
             buffer.GuessSegmentProperties();
 
+            if (DebugLogging)
+                UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.Shape] Calling HarfBuzz Shape with script={buffer.Script}, dir={buffer.Direction}");
+
             fontEntry.font.Shape(buffer);
 
             // Use Span-based methods to avoid array allocations
             var glyphInfos = buffer.GetGlyphInfoSpan();
             var glyphPositions = buffer.GetGlyphPositionSpan();
             int glyphCount = glyphInfos.Length;
+
+            if (DebugLogging)
+                UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.Shape] HarfBuzz returned {glyphCount} glyphs, upem={fontEntry.upem}");
 
             if (outputBuffer.Length < glyphCount)
                 outputBuffer = new ShapedGlyph[Math.Max(glyphCount, outputBuffer.Length * 2)];
@@ -179,6 +224,20 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             bool hasFontProvider = fontProvider != null;
             float fontSize = hasFontProvider ? fontProvider.FontSize : 36f;
             float offsetScale = fontSize / fontEntry.upem;
+
+            if (DebugLogging)
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.Append($"[HarfBuzzShapingEngine.Shape] Glyphs from HarfBuzz (fontSize={fontSize}, offsetScale={offsetScale:F4}):\n");
+                for (int j = 0; j < glyphCount && j < 30; j++)
+                {
+                    ref readonly var info = ref glyphInfos[j];
+                    ref readonly var pos = ref glyphPositions[j];
+                    sb.Append($"  [{j}] glyphId={info.Codepoint}, cluster={info.Cluster}, xAdv={pos.XAdvance}, yAdv={pos.YAdvance}, xOff={pos.XOffset}, yOff={pos.YOffset}\n");
+                }
+                if (glyphCount > 30) sb.Append("  ...\n");
+                UnityEngine.Debug.Log(sb.ToString());
+            }
 
             for (int i = 0; i < glyphCount; i++)
             {
@@ -203,6 +262,9 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 
                 totalAdvance += advanceX;
             }
+
+            if (DebugLogging)
+                UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.Shape] Result: {glyphCount} glyphs, totalAdvance={totalAdvance:F2}");
 
             return new ShapingResult(outputBuffer.AsSpan(0, glyphCount), totalAdvance);
         }

@@ -156,7 +156,9 @@ public sealed class TextLayout
                     {
                         glyphId = glyph.glyphId,
                         x = x + glyph.offsetX,
-                        y = y + glyph.offsetY,
+                        // HarfBuzz uses typographic coordinates (Y up), but our layout uses Y down
+                        // So we need to subtract offsetY to move diacritics up
+                        y = y - glyph.offsetY,
                         fontId = fontId,
                         attributeSnapshot = attrSnapshot
                     };

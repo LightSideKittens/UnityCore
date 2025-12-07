@@ -113,14 +113,21 @@ public sealed class HybridShapingEngine : IShapingEngine
     private readonly UniTextShapingEngine simpleEngine = new();
     private readonly IShapingEngine complexEngine;
 
+    // DEBUG: Enable detailed logging
+    public static bool DebugLogging = false;
+
     public HybridShapingEngine(IShapingEngine harfBuzzEngine)
     {
         complexEngine = harfBuzzEngine ?? simpleEngine;
+        if (DebugLogging)
+            UnityEngine.Debug.Log($"[HybridShapingEngine] Created with complexEngine={complexEngine.GetType().Name}");
     }
 
     public HybridShapingEngine()
     {
         complexEngine = simpleEngine;
+        if (DebugLogging)
+            UnityEngine.Debug.Log("[HybridShapingEngine] Created with NO complex engine (using simple for all)");
     }
 
     public ShapingResult Shape(
@@ -130,7 +137,15 @@ public sealed class HybridShapingEngine : IShapingEngine
         UnicodeScript script,
         TextDirection direction)
     {
-        var engine = UniTextShapingEngine.CanHandle(script) ? simpleEngine : complexEngine;
+        bool canHandleSimple = UniTextShapingEngine.CanHandle(script);
+        var engine = canHandleSimple ? simpleEngine : complexEngine;
+
+        if (DebugLogging)
+        {
+            string engineName = canHandleSimple ? "SimpleEngine" : $"ComplexEngine({complexEngine.GetType().Name})";
+            UnityEngine.Debug.Log($"[HybridShapingEngine.Shape] script={script}, canHandleSimple={canHandleSimple} -> using {engineName}");
+        }
+
         return engine.Shape(codepoints, fontProvider, fontId, script, direction);
     }
 }

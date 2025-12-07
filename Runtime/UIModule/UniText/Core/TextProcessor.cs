@@ -43,6 +43,9 @@ public sealed class TextProcessor
     private float resultWidth;
     private float resultHeight;
 
+    // DEBUG: Enable detailed logging for Arabic text issues
+    public static bool DebugLogging = false;
+
     public TextProcessor(TagRegistry tagRegistry = null)
         : this(new HybridShapingEngine(new HarfBuzzShapingEngine()), tagRegistry) { }
 
@@ -141,6 +144,23 @@ public sealed class TextProcessor
 
             AddCharacter(text, ref i);
         }
+
+        // DEBUG: Log parsed codepoints
+        if (DebugLogging && SharedTextBuffers.codepointCount > 0)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append("[TextProcessor.Parse] Parsed ");
+            sb.Append(SharedTextBuffers.codepointCount);
+            sb.Append(" codepoints: ");
+            for (int j = 0; j < SharedTextBuffers.codepointCount && j < 50; j++)
+            {
+                int cp = SharedTextBuffers.codepoints[j];
+                sb.Append($"U+{cp:X4} ");
+            }
+            if (SharedTextBuffers.codepointCount > 50)
+                sb.Append("...");
+            UnityEngine.Debug.Log(sb.ToString());
+        }
     }
 
     private void ParsePlain(ReadOnlySpan<char> text)
@@ -214,6 +234,20 @@ public sealed class TextProcessor
         SharedTextBuffers.baseDirection = result.Direction == BidiDirection.RightToLeft
             ? TextDirection.RightToLeft
             : TextDirection.LeftToRight;
+
+        // DEBUG: Log BiDi analysis results
+        if (DebugLogging)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"[TextProcessor.AnalyzeBidi] baseDirection={SharedTextBuffers.baseDirection}, paragraphs={SharedTextBuffers.bidiParagraphs.Length}, levels: ");
+            for (int j = 0; j < cpCount && j < 30; j++)
+            {
+                sb.Append(SharedTextBuffers.bidiLevels[j]);
+                sb.Append(' ');
+            }
+            if (cpCount > 30) sb.Append("...");
+            UnityEngine.Debug.Log(sb.ToString());
+        }
     }
 
     private void AnalyzeScripts()
@@ -221,6 +255,26 @@ public sealed class TextProcessor
         int cpCount = SharedTextBuffers.codepointCount;
         SharedTextBuffers.EnsureScriptCapacity(cpCount);
         scriptAnalyzer.Analyze(SharedTextBuffers.codepoints.AsSpan(0, cpCount), SharedTextBuffers.scripts);
+
+        // DEBUG: Log script analysis results
+        if (DebugLogging)
+        {
+            var scriptCounts = new System.Collections.Generic.Dictionary<UnicodeScript, int>();
+            for (int j = 0; j < cpCount; j++)
+            {
+                var script = SharedTextBuffers.scripts[j];
+                if (!scriptCounts.ContainsKey(script))
+                    scriptCounts[script] = 0;
+                scriptCounts[script]++;
+            }
+            var sb = new System.Text.StringBuilder();
+            sb.Append("[TextProcessor.AnalyzeScripts] Scripts detected: ");
+            foreach (var kvp in scriptCounts)
+            {
+                sb.Append($"{kvp.Key}={kvp.Value}, ");
+            }
+            UnityEngine.Debug.Log(sb.ToString());
+        }
     }
 
     private void Itemize()
@@ -259,6 +313,20 @@ public sealed class TextProcessor
         }
 
         AddRun(runStart, cpCount - runStart, currentLevel, currentScript, currentFontId);
+
+        // DEBUG: Log itemization results
+        if (DebugLogging)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"[TextProcessor.Itemize] Created {SharedTextBuffers.runCount} runs:\n");
+            for (int j = 0; j < SharedTextBuffers.runCount; j++)
+            {
+                ref var run = ref SharedTextBuffers.runs[j];
+                sb.Append($"  Run[{j}]: start={run.range.start}, len={run.range.length}, ");
+                sb.Append($"bidiLevel={run.bidiLevel}, script={run.script}, fontId={run.fontId}\n");
+            }
+            UnityEngine.Debug.Log(sb.ToString());
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -301,6 +369,24 @@ public sealed class TextProcessor
                 run.script,
                 run.Direction);
 
+            // DEBUG: Log shaping result for each run
+            if (DebugLogging)
+            {
+                var sb = new System.Text.StringBuilder();
+                sb.Append($"[TextProcessor.Shape] Run[{i}] script={run.script}, dir={run.Direction}: ");
+                sb.Append($"{runCodepoints.Length} codepoints -> {result.Glyphs.Length} glyphs, totalAdvance={result.TotalAdvance:F2}\n");
+                sb.Append("  Glyphs: ");
+                int maxShow = Math.Min(result.Glyphs.Length, 20);
+                for (int g = 0; g < maxShow; g++)
+                {
+                    var glyph = result.Glyphs[g];
+                    sb.Append($"[id={glyph.glyphId}, adv={glyph.advanceX:F1}] ");
+                }
+                if (result.Glyphs.Length > maxShow)
+                    sb.Append("...");
+                UnityEngine.Debug.Log(sb.ToString());
+            }
+
             int glyphStart = SharedTextBuffers.shapedGlyphCount;
             AddShapedGlyphs(result.Glyphs);
 
@@ -315,6 +401,12 @@ public sealed class TextProcessor
                 fontId = run.fontId,
                 attributeSnapshot = run.attributeSnapshot
             });
+        }
+
+        // DEBUG: Log total shaping summary
+        if (DebugLogging)
+        {
+            UnityEngine.Debug.Log($"[TextProcessor.Shape] Total: {SharedTextBuffers.shapedRunCount} shaped runs, {SharedTextBuffers.shapedGlyphCount} glyphs");
         }
     }
 

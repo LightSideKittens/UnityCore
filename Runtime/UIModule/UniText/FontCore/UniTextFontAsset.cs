@@ -577,47 +577,101 @@ public class UniTextFontAsset : ScriptableObject
         return TryAddCharacterInternal(unicode, out character);
     }
 
+    // DEBUG: Enable detailed logging
+    public static bool DebugLogging = false;
+
     private bool TryAddCharacterInternal(uint unicode, out UniTextCharacter character)
     {
         character = null;
 
-        if (LoadFontFace() != FontEngineError.Success)
-            return false;
+        // First, check using HarfBuzz (reliable, per-font)
+        uint glyphIndex = 0;
 
-        uint glyphIndex = UniTextFontEngine.GetGlyphIndex(unicode);
+        if (HasFontData)
+        {
+            glyphIndex = HarfBuzzFontValidator.GetGlyphIndex(this, unicode);
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontAsset.TryAddCharacterInternal] U+{unicode:X4} in {name}: HarfBuzz.GetGlyphIndex returned {glyphIndex}");
+        }
+
+        // Fallback to FontEngine for fonts without raw data
+        if (glyphIndex == 0 && LoadFontFace() == FontEngineError.Success)
+        {
+            glyphIndex = UniTextFontEngine.GetGlyphIndex(unicode);
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontAsset.TryAddCharacterInternal] U+{unicode:X4} in {name}: FontEngine.GetGlyphIndex returned {glyphIndex}");
+        }
+
         if (glyphIndex == 0)
         {
             // Handle special cases
-            switch (unicode)
+            uint specialCodepoint = unicode switch
             {
-                case UnicodeData.NoBreakSpace:
-                    glyphIndex = UniTextFontEngine.GetGlyphIndex(UnicodeData.Space);
-                    break;
-                case UnicodeData.SoftHyphen:
-                case UnicodeData.NonBreakingHyphen:
-                    glyphIndex = UniTextFontEngine.GetGlyphIndex(UnicodeData.Hyphen);
-                    break;
+                UnicodeData.NoBreakSpace => UnicodeData.Space,
+                UnicodeData.SoftHyphen => UnicodeData.Hyphen,
+                UnicodeData.NonBreakingHyphen => UnicodeData.Hyphen,
+                _ => 0
+            };
+
+            if (specialCodepoint != 0)
+            {
+                if (HasFontData)
+                    glyphIndex = HarfBuzzFontValidator.GetGlyphIndex(this, specialCodepoint);
+                if (glyphIndex == 0 && LoadFontFace() == FontEngineError.Success)
+                    glyphIndex = UniTextFontEngine.GetGlyphIndex(specialCodepoint);
             }
 
             if (glyphIndex == 0)
+            {
+                if (DebugLogging)
+                    Debug.Log($"[UniTextFontAsset.TryAddCharacterInternal] U+{unicode:X4}: glyph not found in font {name}");
                 return false;
+            }
+        }
+
+        // Need to load font face for atlas operations
+        if (LoadFontFace() != FontEngineError.Success)
+        {
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontAsset.TryAddCharacterInternal] U+{unicode:X4}: LoadFontFace failed for atlas");
+            return false;
+        }
+
+        // Check if character already exists in lookup
+        if (characterLookupDictionary.ContainsKey(unicode))
+        {
+            character = characterLookupDictionary[unicode];
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontAsset.TryAddCharacterInternal] U+{unicode:X4}: already in characterLookup, reusing");
+            return true;
         }
 
         // Check if glyph already exists
         if (glyphLookupDictionary.TryGetValue(glyphIndex, out var existingGlyph))
         {
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontAsset.TryAddCharacterInternal] U+{unicode:X4}: glyph {glyphIndex} already in atlas, reusing");
+
             character = new UniTextCharacter(unicode, glyphIndex)
             {
                 fontAsset = this,
                 glyph = existingGlyph
             };
             characterTable.Add(character);
-            characterLookupDictionary.Add(unicode, character);
+            characterLookupDictionary[unicode] = character; // Use indexer to avoid duplicate key exception
             return true;
         }
 
+        if (DebugLogging)
+            Debug.Log($"[UniTextFontAsset.TryAddCharacterInternal] U+{unicode:X4}: adding glyph {glyphIndex} to atlas...");
+
         // Add new glyph to atlas
-        return TryAddGlyphToAtlas(unicode, glyphIndex, out character);
+        bool result = TryAddGlyphToAtlas(unicode, glyphIndex, out character);
+
+        if (DebugLogging)
+            Debug.Log($"[UniTextFontAsset.TryAddCharacterInternal] U+{unicode:X4}: TryAddGlyphToAtlas returned {result}");
+
+        return result;
     }
 
     private bool TryAddGlyphToAtlas(uint unicode, uint glyphIndex, out UniTextCharacter character)

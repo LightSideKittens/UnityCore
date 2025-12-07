@@ -31,6 +31,9 @@ public class UniTextMeshGenerator
     public float FontSize { get; set; } = 36f;
     public Color32 DefaultColor { get; set; } = new Color32(255, 255, 255, 255);
 
+    // DEBUG: Enable detailed logging
+    public static bool DebugLogging = false;
+
     // Canvas parameters for xScale calculation
     private Canvas canvas;
     private float lossyScale = 1f;
@@ -87,6 +90,9 @@ public class UniTextMeshGenerator
         glyphsByFont.Clear();
         resultBuffer.Clear();
 
+        if (DebugLogging)
+            Debug.Log($"[UniTextMeshGenerator.GenerateMeshes] Input: {glyphs.Length} positioned glyphs");
+
         if (glyphs.Length == 0)
             return resultBuffer;
 
@@ -105,6 +111,15 @@ public class UniTextMeshGenerator
             list.Add(glyph);
         }
 
+        if (DebugLogging)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"[UniTextMeshGenerator.GenerateMeshes] Grouped into {glyphsByFont.Count} fonts: ");
+            foreach (var kvp in glyphsByFont)
+                sb.Append($"fontId={kvp.Key}({kvp.Value.Count} glyphs), ");
+            Debug.Log(sb.ToString());
+        }
+
         // Generate mesh for each font
         foreach (var kvp in glyphsByFont)
         {
@@ -113,13 +128,20 @@ public class UniTextMeshGenerator
 
             var fontAsset = fontProvider.GetFontAsset(fontId);
             if (fontAsset == null)
+            {
+                if (DebugLogging)
+                    Debug.LogWarning($"[UniTextMeshGenerator.GenerateMeshes] No fontAsset for fontId={fontId}!");
                 continue;
+            }
 
             var mesh = meshProvider?.Invoke() ?? new Mesh();
             GenerateMeshForFont(mesh, fontGlyphs, fontAsset);
 
             resultBuffer.Add(new UniTextMeshPair(mesh, fontAsset.Material));
         }
+
+        if (DebugLogging)
+            Debug.Log($"[UniTextMeshGenerator.GenerateMeshes] Result: {resultBuffer.Count} mesh pairs");
 
         return resultBuffer;
     }
@@ -155,6 +177,17 @@ public class UniTextMeshGenerator
         int vertIdx = 0;
         int triIdx = 0;
 
+        // DEBUG: Track glyph lookup statistics
+        int foundCount = 0;
+        int notFoundCount = 0;
+        int whitespaceCount = 0;
+        var notFoundGlyphs = DebugLogging ? new System.Collections.Generic.List<int>() : null;
+
+        if (DebugLogging)
+        {
+            Debug.Log($"[UniTextMeshGenerator.GenerateMeshForFont] Processing {glyphCount} glyphs, glyphLookup has {glyphLookup?.Count ?? 0} entries");
+        }
+
         // Cache local references for faster access
         var verts = vertices;
         var uvData = uvs0;
@@ -168,14 +201,24 @@ public class UniTextMeshGenerator
 
             // Lookup по glyph index
             if (!glyphLookup.TryGetValue(glyphIndex, out var glyphData) || glyphData == null)
+            {
+                notFoundCount++;
+                if (DebugLogging && notFoundGlyphs != null && notFoundGlyphs.Count < 50)
+                    notFoundGlyphs.Add((int)glyphIndex);
                 continue;
+            }
 
             var glyphRect = glyphData.glyphRect;
             var metrics = glyphData.metrics;
 
             // Skip whitespace (zero-size glyphs)
             if (glyphRect.width == 0 || glyphRect.height == 0)
+            {
+                whitespaceCount++;
                 continue;
+            }
+
+            foundCount++;
 
             // Vertex positions
             float bearingXScaled = (metrics.horizontalBearingX - padding) * scale;
@@ -238,6 +281,38 @@ public class UniTextMeshGenerator
             vertIdx += 4;
         }
 
+        // DEBUG: Log glyph lookup statistics
+        if (DebugLogging)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"[UniTextMeshGenerator.GenerateMeshForFont] Stats: found={foundCount}, notFound={notFoundCount}, whitespace={whitespaceCount}\n");
+            if (notFoundCount > 0 && notFoundGlyphs != null && notFoundGlyphs.Count > 0)
+            {
+                sb.Append("  Missing glyph IDs: ");
+                for (int j = 0; j < notFoundGlyphs.Count; j++)
+                {
+                    sb.Append(notFoundGlyphs[j]);
+                    sb.Append(", ");
+                }
+                if (notFoundGlyphs.Count >= 50)
+                    sb.Append("... (truncated)");
+                sb.Append("\n");
+
+                // Also log what's in the glyphLookup for debugging
+                sb.Append("  Available glyph IDs in lookup (first 30): ");
+                int cnt = 0;
+                foreach (var key in glyphLookup.Keys)
+                {
+                    if (cnt++ >= 30) break;
+                    sb.Append(key);
+                    sb.Append(", ");
+                }
+                if (glyphLookup.Count > 30)
+                    sb.Append("...");
+            }
+            Debug.Log(sb.ToString());
+        }
+
         // Apply to mesh using SetXxx with count parameter (no allocation)
         mesh.Clear();
 
@@ -251,6 +326,14 @@ public class UniTextMeshGenerator
             mesh.SetColors(colors32, 0, vertIdx);
             mesh.SetTriangles(triangles, 0, triIdx, 0);
             mesh.RecalculateBounds();
+
+            if (DebugLogging)
+                Debug.Log($"[UniTextMeshGenerator.GenerateMeshForFont] Created mesh with {vertIdx} vertices, {triIdx} triangle indices");
+        }
+        else
+        {
+            if (DebugLogging)
+                Debug.LogWarning($"[UniTextMeshGenerator.GenerateMeshForFont] No vertices generated! All glyphs were either not found or whitespace.");
         }
     }
 
