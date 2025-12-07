@@ -193,16 +193,18 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
         var buffer = AcquireBuffer();
         try
         {
-            buffer.ContentType = ContentType.Unicode;
-
-            for (int i = 0; i < length; i++)
-                buffer.Add(codepoints[i], i);
-
+            // Set properties BEFORE adding content for better performance
             buffer.Direction = direction == TextDirection.RightToLeft
                 ? Direction.RightToLeft
                 : Direction.LeftToRight;
             buffer.Script = MapScript(script);
-            buffer.GuessSegmentProperties();
+            buffer.ContentType = ContentType.Unicode;
+
+            // Batch add all codepoints at once (much faster than loop with Add())
+            // Cluster indices are automatically assigned as 0, 1, 2, ...
+            buffer.AddCodepoints(codepoints);
+
+            // NOTE: GuessSegmentProperties() removed - we already set Direction and Script explicitly
 
             if (DebugLogging)
                 UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.Shape] Calling HarfBuzz Shape with script={buffer.Script}, dir={buffer.Direction}");

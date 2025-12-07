@@ -8,6 +8,7 @@ public sealed class UniTextShapingEngine : IShapingEngine
 {
     private ShapedGlyph[] outputBuffer = new ShapedGlyph[256];
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ShapingResult Shape(
         ReadOnlySpan<int> codepoints,
         UniTextFontProvider fontProvider,
@@ -22,41 +23,62 @@ public sealed class UniTextShapingEngine : IShapingEngine
         if (outputBuffer.Length < length)
             outputBuffer = new ShapedGlyph[Math.Max(length, outputBuffer.Length * 2)];
 
+        // Cache locals for faster access in loop
+        var buffer = outputBuffer;
         float totalAdvance = 0;
-        bool isRtl = direction == TextDirection.RightToLeft;
-        var unicodeData = UnicodeData.Provider;
 
-        for (int i = 0; i < length; i++)
+        // Split into two paths: RTL (rare) and LTR (common)
+        if (direction == TextDirection.RightToLeft)
         {
-            int codepoint = codepoints[i];
-            int glyphCodepoint = codepoint;
+            var unicodeData = UnicodeData.Provider;
+            bool hasUnicodeData = unicodeData != null;
 
-            if (isRtl && unicodeData != null && unicodeData.IsBidiMirrored(codepoint))
+            for (int i = 0; i < length; i++)
             {
-                int mirrored = unicodeData.GetBidiMirroringGlyph(codepoint);
-                if (mirrored != 0 && mirrored != codepoint)
-                    glyphCodepoint = mirrored;
+                int codepoint = codepoints[i];
+                int glyphCodepoint = codepoint;
+
+                // BiDi mirroring for RTL
+                if (hasUnicodeData && unicodeData.IsBidiMirrored(codepoint))
+                {
+                    int mirrored = unicodeData.GetBidiMirroringGlyph(codepoint);
+                    if (mirrored != 0 && mirrored != codepoint)
+                        glyphCodepoint = mirrored;
+                }
+
+                fontProvider.TryGetGlyphInfo(fontId, glyphCodepoint, out uint glyphIndex, out float advance);
+
+                // RTL: reverse order
+                buffer[length - 1 - i] = new ShapedGlyph
+                {
+                    glyphId = (int)glyphIndex,
+                    cluster = i,
+                    advanceX = advance
+                };
+
+                totalAdvance += advance;
             }
-
-            uint glyphIndex = 0;
-            float advance = 0;
-            fontProvider?.TryGetGlyphInfo(fontId, glyphCodepoint, out glyphIndex, out advance);
-
-            int outputIndex = isRtl ? (length - 1 - i) : i;
-            outputBuffer[outputIndex] = new ShapedGlyph
+        }
+        else
+        {
+            // LTR fast path - no mirroring, no reverse
+            for (int i = 0; i < length; i++)
             {
-                glyphId = (int)glyphIndex,
-                cluster = i,
-                advanceX = advance,
-                advanceY = 0,
-                offsetX = 0,
-                offsetY = 0
-            };
+                int codepoint = codepoints[i];
+                fontProvider.TryGetGlyphInfo(fontId, codepoint, out uint glyphIndex, out float advance);
 
-            totalAdvance += advance;
+                buffer[i] = new ShapedGlyph
+                {
+                    glyphId = (int)glyphIndex,
+                    cluster = i,
+                    advanceX = advance
+                };
+
+                totalAdvance += advance;
+            }
         }
 
-        return new ShapingResult(outputBuffer.AsSpan(0, length), totalAdvance);
+        return new ShapingResult(buffer.AsSpan(0, length), totalAdvance);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -130,6 +152,7 @@ public sealed class HybridShapingEngine : IShapingEngine
             UnityEngine.Debug.Log("[HybridShapingEngine] Created with NO complex engine (using simple for all)");
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ShapingResult Shape(
         ReadOnlySpan<int> codepoints,
         UniTextFontProvider fontProvider,
@@ -137,15 +160,10 @@ public sealed class HybridShapingEngine : IShapingEngine
         UnicodeScript script,
         TextDirection direction)
     {
-        bool canHandleSimple = UniTextShapingEngine.CanHandle(script);
-        var engine = canHandleSimple ? simpleEngine : complexEngine;
+        // Fast path: avoid virtual call overhead for simple scripts
+        if (UniTextShapingEngine.CanHandle(script))
+            return simpleEngine.Shape(codepoints, fontProvider, fontId, script, direction);
 
-        if (DebugLogging)
-        {
-            string engineName = canHandleSimple ? "SimpleEngine" : $"ComplexEngine({complexEngine.GetType().Name})";
-            UnityEngine.Debug.Log($"[HybridShapingEngine.Shape] script={script}, canHandleSimple={canHandleSimple} -> using {engineName}");
-        }
-
-        return engine.Shape(codepoints, fontProvider, fontId, script, direction);
+        return complexEngine.Shape(codepoints, fontProvider, fontId, script, direction);
     }
 }

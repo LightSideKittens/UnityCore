@@ -198,40 +198,60 @@ public sealed class UniTextFontProvider
         return true;
     }
 
+    // Cache for fast repeated access to same font
+    private int cachedFontId = -1;
+    private UniTextFontAsset cachedFontAsset;
+    private float cachedScale;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetGlyphInfo(int fontId, int codepoint, out uint glyphIndex, out float advance)
     {
         glyphIndex = 0;
         advance = 0;
 
-        var fontAsset = fontId == 0 ? mainFontAsset : (fontAssets.TryGetValue(fontId, out var f) ? f : null);
-        if (fontAsset == null)
-            return false;
+        // Fast path: use cached font if same fontId
+        UniTextFontAsset fontAsset;
+        float scale;
+
+        if (fontId == cachedFontId && cachedFontAsset != null)
+        {
+            fontAsset = cachedFontAsset;
+            scale = cachedScale;
+        }
+        else
+        {
+            fontAsset = fontId == 0 ? mainFontAsset : (fontAssets.TryGetValue(fontId, out var f) ? f : null);
+            if (fontAsset == null)
+                return false;
+
+            float pointSize = fontAsset.FaceInfo.pointSize;
+            scale = pointSize > 0 ? fontSize / pointSize : fontScale;
+
+            // Cache for next call
+            cachedFontId = fontId;
+            cachedFontAsset = fontAsset;
+            cachedScale = scale;
+        }
 
         var charLookup = fontAsset.CharacterLookupTable;
         if (charLookup == null)
             return false;
 
         uint unicode = (uint)codepoint;
-        if (!charLookup.TryGetValue(unicode, out var character))
+        if (!charLookup.TryGetValue(unicode, out var character) || character == null)
         {
+            // Try dynamic add only if not found
             if (fontAsset.AtlasPopulationMode != UniTextAtlasPopulationMode.Dynamic ||
                 !fontAsset.TryAddCharacter(unicode, out character))
                 return false;
         }
 
-        if (character?.glyph == null)
-        {
-            if (fontAsset.AtlasPopulationMode != UniTextAtlasPopulationMode.Dynamic ||
-                !fontAsset.TryAddCharacter(unicode, out character) ||
-                character?.glyph == null)
-                return false;
-        }
+        var glyph = character.glyph;
+        if (glyph == null)
+            return false;
 
         glyphIndex = character.glyphIndex;
-        float pointSize = fontAsset.FaceInfo.pointSize;
-        float scale = pointSize > 0 ? fontSize / pointSize : fontScale;
-        advance = character.glyph.metrics.horizontalAdvance * scale;
+        advance = glyph.metrics.horizontalAdvance * scale;
         return true;
     }
 

@@ -55,8 +55,8 @@ public class UniText : MaskableGraphic
     private float lastResultWidth;
     private float lastResultHeight;
 
-    // Sub-mesh objects для fallback шрифтов
-    private readonly List<UniTextSubMesh> subMeshObjects = new();
+    // Sub-mesh renderers для fallback шрифтов (работаем напрямую с CanvasRenderer)
+    private readonly List<CanvasRenderer> subMeshRenderers = new();
     private List<UniTextMeshPair> lastMeshPairs;
 
     // Mesh tracking - mesh'и из SharedMeshPool, которые нужно вернуть при OnDisable/OnDestroy
@@ -212,24 +212,28 @@ public class UniText : MaskableGraphic
         cachedCanvas = null;
         shaderChannelsConfigured = false;
 
-        CollectExistingSubMeshes();
+        CollectExistingSubMeshRenderers();
         EnsureCanvasShaderChannels();
         EnsureMaterialAssigned();
     }
 
     /// <summary>
-    /// Собирает существующие sub-mesh объекты после рекомпиляции.
+    /// Собирает существующие sub-mesh CanvasRenderer'ы после рекомпиляции.
     /// </summary>
-    private void CollectExistingSubMeshes()
+    private void CollectExistingSubMeshRenderers()
     {
-        subMeshObjects.Clear();
+        subMeshRenderers.Clear();
         for (int i = 0; i < transform.childCount; i++)
         {
             var child = transform.GetChild(i);
-            var subMesh = child.GetComponent<UniTextSubMesh>();
-            if (subMesh != null)
+            // Проверяем что это наш submesh объект по имени
+            if (child.name.StartsWith("UniText SubMesh"))
             {
-                subMeshObjects.Add(subMesh);
+                var renderer = child.GetComponent<CanvasRenderer>();
+                if (renderer != null)
+                {
+                    subMeshRenderers.Add(renderer);
+                }
             }
         }
     }
@@ -261,17 +265,17 @@ public class UniText : MaskableGraphic
         base.OnDestroy();
 
         // Очистка sub-mesh объектов
-        foreach (var subMesh in subMeshObjects)
+        foreach (var renderer in subMeshRenderers)
         {
-            if (subMesh != null)
+            if (renderer != null)
             {
                 if (Application.isPlaying)
-                    Destroy(subMesh.gameObject);
+                    Destroy(renderer.gameObject);
                 else
-                    DestroyImmediate(subMesh.gameObject);
+                    DestroyImmediate(renderer.gameObject);
             }
         }
-        subMeshObjects.Clear();
+        subMeshRenderers.Clear();
 
         // Возвращаем mesh'и в SharedMeshPool
         ReleaseMeshes();
@@ -282,6 +286,9 @@ public class UniText : MaskableGraphic
     protected override void OnDisable()
     {
         base.OnDisable();
+
+        // Очищаем все CanvasRenderer'ы (основной и submesh)
+        ClearAllRenderers();
 
         // Возвращаем mesh'и в пул когда компонент отключён
         ReleaseMeshes();
@@ -418,6 +425,10 @@ public class UniText : MaskableGraphic
 
     private void UpdateCanvasRenderer()
     {
+        // Получаем CanvasRenderer безопасно
+        var cr = GetComponent<CanvasRenderer>();
+        if (cr == null) return;
+
         if (lastMeshPairs == null || lastMeshPairs.Count == 0)
         {
             ClearAllRenderers();
@@ -430,12 +441,12 @@ public class UniText : MaskableGraphic
         if (firstPair.mesh != null && firstPair.mesh.vertexCount > 0)
         {
             primaryMaterial = firstPair.material;
-            canvasRenderer.SetMesh(firstPair.mesh);
+            cr.SetMesh(firstPair.mesh);
             ApplyMaterial();
         }
         else
         {
-            canvasRenderer.Clear();
+            cr.Clear();
         }
 
         UpdateSubMeshes(lastMeshPairs);
@@ -444,16 +455,16 @@ public class UniText : MaskableGraphic
     private void UpdateSubMeshes(List<UniTextMeshPair> meshPairs)
     {
         int requiredCount = meshPairs.Count - 1;
-        int existingCount = subMeshObjects.Count;
+        int existingCount = subMeshRenderers.Count;
 
         // Hide unused
         for (int i = requiredCount; i < existingCount; i++)
         {
-            var subMesh = subMeshObjects[i];
-            if (subMesh != null)
+            var renderer = subMeshRenderers[i];
+            if (renderer != null)
             {
-                subMesh.Clear();
-                subMesh.gameObject.SetActive(false);
+                renderer.Clear();
+                renderer.gameObject.SetActive(false);
             }
         }
 
@@ -464,35 +475,55 @@ public class UniText : MaskableGraphic
 
             if (i < existingCount)
             {
-                var subMesh = subMeshObjects[i];
-                if (subMesh != null)
+                var renderer = subMeshRenderers[i];
+                if (renderer != null)
                 {
-                    if (!subMesh.gameObject.activeSelf)
-                        subMesh.gameObject.SetActive(true);
-                    subMesh.SetMeshAndMaterial(pair.mesh, pair.material);
+                    if (!renderer.gameObject.activeSelf)
+                        renderer.gameObject.SetActive(true);
+                    SetSubMeshRendererData(renderer, pair.mesh, pair.material);
                     continue;
                 }
             }
 
-            var newSubMesh = CreateSubMesh(i + 1, pair.mesh, pair.material);
+            var newRenderer = CreateSubMeshRenderer(i + 1, pair.mesh, pair.material);
             if (i < existingCount)
-                subMeshObjects[i] = newSubMesh;
+                subMeshRenderers[i] = newRenderer;
             else
-                subMeshObjects.Add(newSubMesh);
+                subMeshRenderers.Add(newRenderer);
         }
+    }
+
+    private void SetSubMeshRendererData(CanvasRenderer renderer, Mesh mesh, Material material)
+    {
+        if (mesh == null || mesh.vertexCount == 0)
+        {
+            renderer.Clear();
+            return;
+        }
+
+        renderer.SetMesh(mesh);
+        renderer.materialCount = 1;
+
+        // Применяем материал с учётом масок
+        var materialToUse = GetModifiedMaterial(material);
+        renderer.SetMaterial(materialToUse, 0);
+        renderer.SetTexture(material.mainTexture);
     }
 
     private void ApplyMaterial()
     {
+        var cr = GetComponent<CanvasRenderer>();
+        if (cr == null) return;
+
         if (primaryMaterial == null)
         {
-            canvasRenderer.Clear();
+            cr.Clear();
             return;
         }
 
-        canvasRenderer.materialCount = 1;
-        canvasRenderer.SetMaterial(materialForRendering, 0);
-        canvasRenderer.SetTexture(mainTexture);
+        cr.materialCount = 1;
+        cr.SetMaterial(materialForRendering, 0);
+        cr.SetTexture(mainTexture);
     }
 
     protected override void UpdateMaterial() => ApplyMaterial();
@@ -508,18 +539,22 @@ public class UniText : MaskableGraphic
 
     private void ClearAllRenderers()
     {
-        canvasRenderer?.SetMesh(null);
+        // Используем GetComponent вместо свойства canvasRenderer,
+        // так как свойство может выбросить исключение после Domain Reload
+        var cr = GetComponent<CanvasRenderer>();
+        if (cr != null)
+            cr.Clear();
 
-        int count = subMeshObjects.Count;
+        int count = subMeshRenderers.Count;
         for (int i = 0; i < count; i++)
         {
-            var subMesh = subMeshObjects[i];
-            if (subMesh != null)
-                subMesh.Clear();
+            var renderer = subMeshRenderers[i];
+            if (renderer != null)
+                renderer.Clear();
         }
     }
 
-    private UniTextSubMesh CreateSubMesh(int index, Mesh mesh, Material material)
+    private CanvasRenderer CreateSubMeshRenderer(int index, Mesh mesh, Material material)
     {
         var go = new GameObject($"UniText SubMesh [{index}]")
         {
@@ -533,12 +568,10 @@ public class UniText : MaskableGraphic
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
 
-        go.AddComponent<CanvasRenderer>();
-        var subMesh = go.AddComponent<UniTextSubMesh>();
-        subMesh.Initialize(this);
-        subMesh.SetMeshAndMaterial(mesh, material);
+        var renderer = go.AddComponent<CanvasRenderer>();
+        SetSubMeshRendererData(renderer, mesh, material);
 
-        return subMesh;
+        return renderer;
     }
 
     private bool shaderChannelsConfigured;
@@ -565,6 +598,10 @@ public class UniText : MaskableGraphic
             if (processor == null) return;
         }
 
+        // Получаем RectTransform безопасно
+        var rt = GetComponent<RectTransform>();
+        if (rt == null) return;
+
         ReleaseMeshes();
 
         if (string.IsNullOrEmpty(text))
@@ -577,7 +614,7 @@ public class UniText : MaskableGraphic
 
         try
         {
-            var rect = rectTransform.rect;
+            var rect = rt.rect;
             var settings = new TextProcessSettings
             {
                 maxWidth = enableWordWrap ? rect.width : float.MaxValue,

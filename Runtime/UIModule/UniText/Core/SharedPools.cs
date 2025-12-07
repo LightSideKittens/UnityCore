@@ -192,26 +192,31 @@ public static class SharedMeshPool
     {
         EnsureInitialized();
 
-        Mesh mesh;
-        int count = available.Count;
-
-        if (count > 0)
+        // Ищем валидный mesh в пуле (не destroyed)
+        while (available.Count > 0)
         {
-            mesh = available[count - 1];
-            available.RemoveAt(count - 1);
-        }
-        else
-        {
-            mesh = new Mesh();
+            int lastIndex = available.Count - 1;
+            var mesh = available[lastIndex];
+            available.RemoveAt(lastIndex);
+
+            // Проверяем что mesh не был уничтожен Unity
+            if (mesh != null)
+            {
+                mesh.Clear();
+                mesh.name = name;
+                return mesh;
+            }
         }
 
-        mesh.Clear();
-        mesh.name = name;
-        return mesh;
+        // Пул пуст или все mesh'и destroyed — создаём новый
+        var newMesh = new Mesh();
+        newMesh.name = name;
+        return newMesh;
     }
 
     public static void Release(Mesh mesh)
     {
+        // Проверяем что mesh не destroyed
         if (mesh == null) return;
         mesh.Clear();
         available.Add(mesh);
@@ -223,6 +228,7 @@ public static class SharedMeshPool
 
         foreach (var mesh in meshes)
         {
+            // Проверяем что mesh не destroyed
             if (mesh != null)
             {
                 mesh.Clear();
@@ -233,9 +239,13 @@ public static class SharedMeshPool
 
     public static void ClearUnused()
     {
-        foreach (var mesh in available)
+        for (int i = available.Count - 1; i >= 0; i--)
+        {
+            var mesh = available[i];
+            // Проверяем что mesh не destroyed перед уничтожением
             if (mesh != null)
                 UnityEngine.Object.Destroy(mesh);
+        }
         available.Clear();
     }
 

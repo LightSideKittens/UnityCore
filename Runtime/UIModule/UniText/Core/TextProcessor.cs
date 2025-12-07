@@ -289,18 +289,45 @@ public sealed class TextProcessor
         var scrSpan = SharedTextBuffers.scripts.AsSpan(0, cpCount);
         var fp = fontProvider;
         int baseFont = baseFontId;
-        bool hasFontProvider = fp != null;
+
+        if (fp == null)
+        {
+            // Fast path: no font provider, single run per bidi/script change
+            ItemizeWithoutFontLookup(cpCount, lvlSpan, scrSpan, baseFont);
+            return;
+        }
+
+        // Cache last font lookup to avoid redundant calls for same codepoint range
+        int lastLookupCodepoint = -1;
+        int lastLookupResult = baseFont;
 
         int runStart = 0;
         byte currentLevel = lvlSpan[0];
         var currentScript = scrSpan[0];
-        int currentFontId = hasFontProvider ? fp.FindFontForCodepoint(cpSpan[0], baseFont) : baseFont;
+
+        int cp0 = cpSpan[0];
+        lastLookupCodepoint = cp0;
+        lastLookupResult = fp.FindFontForCodepoint(cp0, baseFont);
+        int currentFontId = lastLookupResult;
 
         for (int i = 1; i < cpCount; i++)
         {
             byte level = lvlSpan[i];
             var script = scrSpan[i];
-            int fontId = hasFontProvider ? fp.FindFontForCodepoint(cpSpan[i], baseFont) : baseFont;
+
+            // Only lookup font if bidi/script changed or it's a different codepoint
+            int fontId;
+            int cp = cpSpan[i];
+            if (cp == lastLookupCodepoint)
+            {
+                fontId = lastLookupResult;
+            }
+            else
+            {
+                fontId = fp.FindFontForCodepoint(cp, baseFont);
+                lastLookupCodepoint = cp;
+                lastLookupResult = fontId;
+            }
 
             if (level != currentLevel || script != currentScript || fontId != currentFontId)
             {
@@ -313,20 +340,29 @@ public sealed class TextProcessor
         }
 
         AddRun(runStart, cpCount - runStart, currentLevel, currentScript, currentFontId);
+    }
 
-        // DEBUG: Log itemization results
-        if (DebugLogging)
+    private static void ItemizeWithoutFontLookup(int cpCount, Span<byte> lvlSpan, Span<UnicodeScript> scrSpan, int fontId)
+    {
+        int runStart = 0;
+        byte currentLevel = lvlSpan[0];
+        var currentScript = scrSpan[0];
+
+        for (int i = 1; i < cpCount; i++)
         {
-            var sb = new System.Text.StringBuilder();
-            sb.Append($"[TextProcessor.Itemize] Created {SharedTextBuffers.runCount} runs:\n");
-            for (int j = 0; j < SharedTextBuffers.runCount; j++)
+            byte level = lvlSpan[i];
+            var script = scrSpan[i];
+
+            if (level != currentLevel || script != currentScript)
             {
-                ref var run = ref SharedTextBuffers.runs[j];
-                sb.Append($"  Run[{j}]: start={run.range.start}, len={run.range.length}, ");
-                sb.Append($"bidiLevel={run.bidiLevel}, script={run.script}, fontId={run.fontId}\n");
+                AddRun(runStart, i - runStart, currentLevel, currentScript, fontId);
+                runStart = i;
+                currentLevel = level;
+                currentScript = script;
             }
-            UnityEngine.Debug.Log(sb.ToString());
         }
+
+        AddRun(runStart, cpCount - runStart, currentLevel, currentScript, fontId);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
