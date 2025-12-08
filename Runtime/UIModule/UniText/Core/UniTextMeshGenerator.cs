@@ -55,11 +55,11 @@ public class UniTextMeshGenerator
     private readonly Stack<List<PositionedGlyph>> glyphListPool = new();
     private readonly List<UniTextMeshPair> resultBuffer = new(4);
 
-    private static readonly Vector3 s_DefaultNormal = new(0f, 0f, -1f);
-    private static readonly Vector4 s_DefaultTangent = new(-1f, 0f, 0f, 1f);
+    private static readonly Vector3 defaultNormal = new(0f, 0f, -1f);
+    private static readonly Vector4 defaultTangent = new(-1f, 0f, 0f, 1f);
 
     // Static UV2 pattern for quad corners (BL, TL, TR, BR)
-    private static readonly Vector2[] s_QuadUV2 = { new(0, 0), new(0, 1), new(1, 1), new(1, 0) };
+    private static readonly Vector2[] quadUV2 = { new(0, 0), new(0, 1), new(1, 1), new(1, 0) };
 
     public UniTextMeshGenerator(UniTextFontProvider fontProvider)
     {
@@ -350,12 +350,12 @@ public class UniTextMeshGenerator
             tangents = new Vector4[newSize];
 
             // Pre-fill static values
-            Array.Fill(normals, s_DefaultNormal);
-            Array.Fill(tangents, s_DefaultTangent);
+            Array.Fill(normals, defaultNormal);
+            Array.Fill(tangents, defaultTangent);
 
             // Pre-fill UV2 pattern (repeating quad corners)
             for (int i = 0; i < newSize; i++)
-                uvs2[i] = s_QuadUV2[i & 3];
+                uvs2[i] = quadUV2[i & 3];
         }
         if (triangles.Length < triangleCount)
         {
@@ -368,12 +368,6 @@ public class UniTextMeshGenerator
         if (canvas == null) return scale;
 
         float absLossyScale = Mathf.Abs(lossyScale);
-        return canvas.renderMode switch
-        {
-            RenderMode.ScreenSpaceOverlay => scale * absLossyScale / canvas.scaleFactor,
-            RenderMode.ScreenSpaceCamera => scale * (canvas.worldCamera != null ? absLossyScale : 1f),
-            RenderMode.WorldSpace => scale * absLossyScale,
-            _ => scale
-        };
+        return scale * (canvas.worldCamera != null ? absLossyScale : 1f);
     }
 }
