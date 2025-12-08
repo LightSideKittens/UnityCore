@@ -14,11 +14,11 @@ public sealed class LineBreaker
     // DEBUG
     public static bool DebugLogging = false;
 
-    // Internal buffers
-    private bool[] breakOpportunities = new bool[257];
-    private float[] cpWidthsBuffer = new float[257];
+    // Internal buffer from ArrayPool
+    private const int MinBreakOpportunitiesSize = 256;
+    private bool[] breakOpportunities = ArrayPool<bool>.Shared.Rent(MinBreakOpportunitiesSize);
 
-    // Temporary state during line breaking
+    // Temporary state during line breaking (uses external buffers from SharedTextBuffers)
     private TextLine[] tempLines;
     private int tempLineCount;
     private ShapedRun[] tempOrderedRuns;
@@ -87,7 +87,10 @@ public sealed class LineBreaker
         int requiredLength = codepoints.Length + 1;
         if (breakOpportunities.Length < requiredLength)
         {
-            breakOpportunities = new bool[Math.Max(requiredLength, breakOpportunities.Length * 2)];
+            // Return old buffer and rent larger one
+            int newSize = Math.Max(requiredLength, breakOpportunities.Length * 2);
+            ArrayPool<bool>.Shared.Return(breakOpportunities);
+            breakOpportunities = ArrayPool<bool>.Shared.Rent(newSize);
         }
 
         lineBreakAlgorithm.GetBreakOpportunities(codepoints, breakOpportunities);
@@ -421,13 +424,33 @@ public sealed class LineBreaker
 
     private void EnsureLineCapacity(int required)
     {
-        if (tempLines.Length >= required) return;
-        Array.Resize(ref tempLines, Math.Max(required, tempLines.Length * 2));
+        if (tempLines != null && tempLines.Length >= required) return;
+
+        int newSize = Math.Max(required, tempLines?.Length * 2 ?? 128);
+        var newBuffer = ArrayPool<TextLine>.Shared.Rent(newSize);
+
+        if (tempLines != null)
+        {
+            tempLines.AsSpan(0, tempLineCount).CopyTo(newBuffer);
+            ArrayPool<TextLine>.Shared.Return(tempLines);
+        }
+
+        tempLines = newBuffer;
     }
 
     private void EnsureOrderedRunCapacity(int required)
     {
-        if (tempOrderedRuns.Length >= required) return;
-        Array.Resize(ref tempOrderedRuns, Math.Max(required, tempOrderedRuns.Length * 2));
+        if (tempOrderedRuns != null && tempOrderedRuns.Length >= required) return;
+
+        int newSize = Math.Max(required, tempOrderedRuns?.Length * 2 ?? 512);
+        var newBuffer = ArrayPool<ShapedRun>.Shared.Rent(newSize);
+
+        if (tempOrderedRuns != null)
+        {
+            tempOrderedRuns.AsSpan(0, tempOrderedRunCount).CopyTo(newBuffer);
+            ArrayPool<ShapedRun>.Shared.Return(tempOrderedRuns);
+        }
+
+        tempOrderedRuns = newBuffer;
     }
 }

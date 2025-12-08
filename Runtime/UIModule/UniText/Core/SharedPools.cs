@@ -1,42 +1,60 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Shared static буферы для TextProcessor. Thread-safe для main thread UI rebuild.
+/// Shared static буферы для TextProcessor.
+/// Использует ArrayPool для zero-allocation при resize.
 /// </summary>
 public static class SharedTextBuffers
 {
-    // Increased initial sizes to reduce allocations on first few frames
-    // Most UI text is 100-500 characters, so 1024 is a good starting point
-    public static int[] codepoints = new int[1024];
+    // Minimum sizes - ArrayPool will return at least this
+    private const int MinCodepointCapacity = 256;
+    private const int MinRunCapacity = 64;
+    private const int MinGlyphCapacity = 256;
+    private const int MinLineCapacity = 32;
+
+    // Current buffers (from ArrayPool or initial allocation)
+    public static int[] codepoints = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
     public static int codepointCount;
 
-    public static byte[] bidiLevels = new byte[1024];
+    public static byte[] bidiLevels = ArrayPool<byte>.Shared.Rent(MinCodepointCapacity);
     public static BidiParagraph[] bidiParagraphs = Array.Empty<BidiParagraph>();
     public static TextDirection baseDirection;
 
-    public static UnicodeScript[] scripts = new UnicodeScript[1024];
+    public static UnicodeScript[] scripts = ArrayPool<UnicodeScript>.Shared.Rent(MinCodepointCapacity);
 
-    public static TextRun[] runs = new TextRun[64];
+    public static TextRun[] runs = ArrayPool<TextRun>.Shared.Rent(MinRunCapacity);
     public static int runCount;
 
-    public static ShapedRun[] shapedRuns = new ShapedRun[64];
+    public static ShapedRun[] shapedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
     public static int shapedRunCount;
-    public static ShapedGlyph[] shapedGlyphs = new ShapedGlyph[1024];
+    public static ShapedGlyph[] shapedGlyphs = ArrayPool<ShapedGlyph>.Shared.Rent(MinGlyphCapacity);
     public static int shapedGlyphCount;
 
-    public static TextLine[] lines = new TextLine[32];
+    public static TextLine[] lines = ArrayPool<TextLine>.Shared.Rent(MinLineCapacity);
     public static int lineCount;
-    public static ShapedRun[] orderedRuns = new ShapedRun[64];
+    public static ShapedRun[] orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
     public static int orderedRunCount;
 
-    public static PositionedGlyph[] positionedGlyphs = new PositionedGlyph[1024];
+    public static PositionedGlyph[] positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
     public static int positionedGlyphCount;
+
+    // Track peak usage for diagnostics
+    public static int peakCodepointCount;
+    public static int peakRunCount;
+    public static int peakGlyphCount;
 
     public static void Reset()
     {
+        // Track peak usage before reset (for diagnostics)
+        if (codepointCount > peakCodepointCount) peakCodepointCount = codepointCount;
+        if (runCount > peakRunCount) peakRunCount = runCount;
+        if (shapedGlyphCount > peakGlyphCount) peakGlyphCount = shapedGlyphCount;
+
         codepointCount = 0;
         runCount = 0;
         shapedRunCount = 0;
@@ -48,74 +66,217 @@ public static class SharedTextBuffers
         baseDirection = TextDirection.LeftToRight;
     }
 
+    /// <summary>
+    /// Log peak usage for tuning initial buffer sizes.
+    /// </summary>
+    public static void LogPeakUsage()
+    {
+        UnityEngine.Debug.Log($"[SharedTextBuffers] Peak usage: codepoints={peakCodepointCount}, runs={peakRunCount}, glyphs={peakGlyphCount}");
+        UnityEngine.Debug.Log($"[SharedTextBuffers] Buffer sizes: codepoints={codepoints.Length}, runs={runs.Length}, glyphs={shapedGlyphs.Length}");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureCodepointCapacity(int required)
     {
         if (codepoints.Length < required)
-            Array.Resize(ref codepoints, Math.Max(required, codepoints.Length * 2));
+            GrowCodepoints(required);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void GrowCodepoints(int required)
+    {
+        int newSize = Math.Max(required, codepoints.Length * 2);
+
+        // Grow all codepoint-indexed buffers together
+        var newCodepoints = ArrayPool<int>.Shared.Rent(newSize);
+        codepoints.AsSpan(0, codepointCount).CopyTo(newCodepoints);
+        ArrayPool<int>.Shared.Return(codepoints);
+        codepoints = newCodepoints;
+
+        var newBidiLevels = ArrayPool<byte>.Shared.Rent(newSize);
+        bidiLevels.AsSpan(0, Math.Min(codepointCount, bidiLevels.Length)).CopyTo(newBidiLevels);
+        ArrayPool<byte>.Shared.Return(bidiLevels);
+        bidiLevels = newBidiLevels;
+
+        var newScripts = ArrayPool<UnicodeScript>.Shared.Rent(newSize);
+        scripts.AsSpan(0, Math.Min(codepointCount, scripts.Length)).CopyTo(newScripts);
+        ArrayPool<UnicodeScript>.Shared.Return(scripts);
+        scripts = newScripts;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureBidiCapacity(int required)
     {
         if (bidiLevels.Length < required)
-            Array.Resize(ref bidiLevels, Math.Max(required, bidiLevels.Length * 2));
+            GrowBidiLevels(required);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void GrowBidiLevels(int required)
+    {
+        int newSize = Math.Max(required, bidiLevels.Length * 2);
+        var newBuffer = ArrayPool<byte>.Shared.Rent(newSize);
+        bidiLevels.AsSpan().CopyTo(newBuffer);
+        ArrayPool<byte>.Shared.Return(bidiLevels);
+        bidiLevels = newBuffer;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureScriptCapacity(int required)
     {
         if (scripts.Length < required)
-            Array.Resize(ref scripts, Math.Max(required, scripts.Length * 2));
+            GrowScripts(required);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void GrowScripts(int required)
+    {
+        int newSize = Math.Max(required, scripts.Length * 2);
+        var newBuffer = ArrayPool<UnicodeScript>.Shared.Rent(newSize);
+        scripts.AsSpan().CopyTo(newBuffer);
+        ArrayPool<UnicodeScript>.Shared.Return(scripts);
+        scripts = newBuffer;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureRunCapacity(int required)
     {
         if (runs.Length < required)
-            Array.Resize(ref runs, Math.Max(required, runs.Length * 2));
+            GrowRuns(required);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void GrowRuns(int required)
+    {
+        int newSize = Math.Max(required, runs.Length * 2);
+        var newBuffer = ArrayPool<TextRun>.Shared.Rent(newSize);
+        runs.AsSpan(0, runCount).CopyTo(newBuffer);
+        ArrayPool<TextRun>.Shared.Return(runs);
+        runs = newBuffer;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureShapedRunCapacity(int required)
     {
         if (shapedRuns.Length < required)
-            Array.Resize(ref shapedRuns, Math.Max(required, shapedRuns.Length * 2));
+            GrowShapedRuns(required);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void GrowShapedRuns(int required)
+    {
+        int newSize = Math.Max(required, shapedRuns.Length * 2);
+        var newBuffer = ArrayPool<ShapedRun>.Shared.Rent(newSize);
+        shapedRuns.AsSpan(0, shapedRunCount).CopyTo(newBuffer);
+        ArrayPool<ShapedRun>.Shared.Return(shapedRuns);
+        shapedRuns = newBuffer;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureShapedGlyphCapacity(int required)
     {
         if (shapedGlyphs.Length < required)
-            Array.Resize(ref shapedGlyphs, Math.Max(required, shapedGlyphs.Length * 2));
+            GrowShapedGlyphs(required);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void GrowShapedGlyphs(int required)
+    {
+        int newSize = Math.Max(required, shapedGlyphs.Length * 2);
+        var newBuffer = ArrayPool<ShapedGlyph>.Shared.Rent(newSize);
+        shapedGlyphs.AsSpan(0, shapedGlyphCount).CopyTo(newBuffer);
+        ArrayPool<ShapedGlyph>.Shared.Return(shapedGlyphs);
+        shapedGlyphs = newBuffer;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureLineCapacity(int required)
     {
         if (lines.Length < required)
-            Array.Resize(ref lines, Math.Max(required, lines.Length * 2));
+            GrowLines(required);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void GrowLines(int required)
+    {
+        int newSize = Math.Max(required, lines.Length * 2);
+        var newBuffer = ArrayPool<TextLine>.Shared.Rent(newSize);
+        lines.AsSpan(0, lineCount).CopyTo(newBuffer);
+        ArrayPool<TextLine>.Shared.Return(lines);
+        lines = newBuffer;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsureOrderedRunCapacity(int required)
     {
         if (orderedRuns.Length < required)
-            Array.Resize(ref orderedRuns, Math.Max(required, orderedRuns.Length * 2));
+            GrowOrderedRuns(required);
     }
 
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void GrowOrderedRuns(int required)
+    {
+        int newSize = Math.Max(required, orderedRuns.Length * 2);
+        var newBuffer = ArrayPool<ShapedRun>.Shared.Rent(newSize);
+        orderedRuns.AsSpan(0, orderedRunCount).CopyTo(newBuffer);
+        ArrayPool<ShapedRun>.Shared.Return(orderedRuns);
+        orderedRuns = newBuffer;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void EnsurePositionedGlyphCapacity(int required)
     {
         if (positionedGlyphs.Length < required)
-            Array.Resize(ref positionedGlyphs, Math.Max(required, positionedGlyphs.Length * 2));
+            GrowPositionedGlyphs(required);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void GrowPositionedGlyphs(int required)
+    {
+        int newSize = Math.Max(required, positionedGlyphs.Length * 2);
+        var newBuffer = ArrayPool<PositionedGlyph>.Shared.Rent(newSize);
+        positionedGlyphs.AsSpan(0, positionedGlyphCount).CopyTo(newBuffer);
+        ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs);
+        positionedGlyphs = newBuffer;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
-        codepoints = new int[1024];
-        bidiLevels = new byte[1024];
-        scripts = new UnicodeScript[1024];
-        runs = new TextRun[64];
-        shapedRuns = new ShapedRun[64];
-        shapedGlyphs = new ShapedGlyph[1024];
-        lines = new TextLine[32];
-        orderedRuns = new ShapedRun[64];
-        positionedGlyphs = new PositionedGlyph[1024];
+        // Return old buffers to pool (if they exist and are valid)
+        ReturnAllBuffers();
+
+        // Rent new buffers
+        codepoints = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
+        bidiLevels = ArrayPool<byte>.Shared.Rent(MinCodepointCapacity);
+        scripts = ArrayPool<UnicodeScript>.Shared.Rent(MinCodepointCapacity);
+        runs = ArrayPool<TextRun>.Shared.Rent(MinRunCapacity);
+        shapedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
+        shapedGlyphs = ArrayPool<ShapedGlyph>.Shared.Rent(MinGlyphCapacity);
+        lines = ArrayPool<TextLine>.Shared.Rent(MinLineCapacity);
+        orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
+        positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
         bidiParagraphs = Array.Empty<BidiParagraph>();
+        peakCodepointCount = 0;
+        peakRunCount = 0;
+        peakGlyphCount = 0;
         Reset();
+    }
+
+    /// <summary>
+    /// Return all buffers to ArrayPool. Call when shutting down.
+    /// </summary>
+    public static void ReturnAllBuffers()
+    {
+        if (codepoints != null) { ArrayPool<int>.Shared.Return(codepoints); codepoints = null; }
+        if (bidiLevels != null) { ArrayPool<byte>.Shared.Return(bidiLevels); bidiLevels = null; }
+        if (scripts != null) { ArrayPool<UnicodeScript>.Shared.Return(scripts); scripts = null; }
+        if (runs != null) { ArrayPool<TextRun>.Shared.Return(runs); runs = null; }
+        if (shapedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(shapedRuns); shapedRuns = null; }
+        if (shapedGlyphs != null) { ArrayPool<ShapedGlyph>.Shared.Return(shapedGlyphs); shapedGlyphs = null; }
+        if (lines != null) { ArrayPool<TextLine>.Shared.Return(lines); lines = null; }
+        if (orderedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(orderedRuns); orderedRuns = null; }
+        if (positionedGlyphs != null) { ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs); positionedGlyphs = null; }
     }
 }
 

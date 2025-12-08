@@ -40,6 +40,9 @@ public sealed class TextProcessor
     private float resultWidth;
     private float resultHeight;
 
+    // Track if shaping data is valid for layout-only rebuilds
+    private bool hasValidShapingData;
+
     // DEBUG: Enable detailed logging for Arabic text issues
     public static bool DebugLogging = false;
 
@@ -64,31 +67,85 @@ public sealed class TextProcessor
         baseFontId = defaultFontId;
     }
 
-    public ReadOnlySpan<PositionedGlyph> Process(ReadOnlySpan<char> text, TextProcessSettings settings)
+    /// <summary>
+    /// Process text with specified dirty flags to skip unnecessary steps.
+    /// </summary>
+    /// <param name="text">Text to process</param>
+    /// <param name="settings">Processing settings</param>
+    /// <param name="dirtyFlags">Which parts need rebuilding. Full = everything.</param>
+    public ReadOnlySpan<PositionedGlyph> Process(
+        ReadOnlySpan<char> text,
+        TextProcessSettings settings,
+        UniTextDirtyFlags dirtyFlags = UniTextDirtyFlags.Full)
     {
-        SharedTextBuffers.Reset();
+        bool fullRebuild = (dirtyFlags & UniTextDirtyFlags.Full) != 0 ||
+                           (dirtyFlags & UniTextDirtyFlags.FontSize) != 0 ||
+                           !hasValidShapingData;
+
+        if (fullRebuild)
+        {
+            // Full rebuild - reset everything
+            SharedTextBuffers.Reset();
+            hasValidShapingData = false;
+        }
+        else
+        {
+            // Partial rebuild - only reset layout buffers
+            SharedTextBuffers.lineCount = 0;
+            SharedTextBuffers.orderedRunCount = 0;
+            SharedTextBuffers.positionedGlyphCount = 0;
+        }
+
         resultWidth = 0;
         resultHeight = 0;
 
         if (text.IsEmpty)
+        {
+            hasValidShapingData = false;
             return ReadOnlySpan<PositionedGlyph>.Empty;
+        }
 
         fontProvider?.SetFontSize(settings.fontSize);
-        
-        Parse(text);
-        
-        if (SharedTextBuffers.codepointCount == 0)
-            return ReadOnlySpan<PositionedGlyph>.Empty;
 
-        AnalyzeBidi(settings.baseDirection);
-        AnalyzeScripts();
-        Itemize();
-        Shape();
-        EnsureGlyphsInAtlas();
+        if (fullRebuild)
+        {
+            // Full pipeline
+            Parse(text);
+
+            if (SharedTextBuffers.codepointCount == 0)
+            {
+                hasValidShapingData = false;
+                return ReadOnlySpan<PositionedGlyph>.Empty;
+            }
+
+            AnalyzeBidi(settings.baseDirection);
+            AnalyzeScripts();
+            Itemize();
+            Shape();
+            EnsureGlyphsInAtlas();
+
+            hasValidShapingData = true;
+        }
+        // else: use existing shaping data from SharedTextBuffers
+
+        // Always do layout (depends on width/height/alignment)
         BreakLines(settings.enableWordWrap ? settings.maxWidth : float.MaxValue);
         LayoutText(settings);
 
         return SharedTextBuffers.positionedGlyphs.AsSpan(0, SharedTextBuffers.positionedGlyphCount);
+    }
+
+    /// <summary>
+    /// Check if shaping data is valid for layout-only rebuild.
+    /// </summary>
+    public bool HasValidShapingData => hasValidShapingData;
+
+    /// <summary>
+    /// Invalidate shaping data (call when text/font/direction changes).
+    /// </summary>
+    public void InvalidateShapingData()
+    {
+        hasValidShapingData = false;
     }
 
     public float ResultWidth => resultWidth;
