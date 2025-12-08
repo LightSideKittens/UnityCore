@@ -91,6 +91,7 @@ public sealed class TextProcessor
         AnalyzeScripts();
         Itemize();
         Shape();
+        EnsureGlyphsInAtlas();
         BreakLines(settings.enableWordWrap ? settings.maxWidth : float.MaxValue);
         LayoutText(settings);
 
@@ -467,6 +468,20 @@ public sealed class TextProcessor
 
         SharedTextBuffers.shapedRuns[count] = run;
         SharedTextBuffers.shapedRunCount = count + 1;
+    }
+
+    /// <summary>
+    /// Ensure all glyph indices from shaping are in the font atlases.
+    /// Must be called after Shape() and before rendering.
+    /// </summary>
+    private void EnsureGlyphsInAtlas()
+    {
+        if (fontProvider == null)
+            return;
+
+        fontProvider.EnsureGlyphsInAtlas(
+            SharedTextBuffers.shapedRuns.AsSpan(0, SharedTextBuffers.shapedRunCount),
+            SharedTextBuffers.shapedGlyphs.AsSpan(0, SharedTextBuffers.shapedGlyphCount));
     }
 
     private void BreakLines(float maxWidth)

@@ -126,6 +126,12 @@ public class UniTextFontAsset : ScriptableObject
     [SerializeField]
     private bool isMultiAtlasTexturesEnabled = true;
 
+    /// <summary>
+    /// Clear dynamic data (glyphs, characters, atlas) on build.
+    /// </summary>
+    [SerializeField]
+    internal bool clearDynamicDataOnBuild = true;
+
     #endregion
 
     #region Runtime Fields
@@ -146,9 +152,11 @@ public class UniTextFontAsset : ScriptableObject
     // Flag to track if we need cleanup
     private bool tempFileCreated;
 
-    // Cached font loading state to avoid repeated LoadFontFace calls
-    private bool fontFaceLoaded;
+    // Cached faceIndex to avoid reflection
     private int cachedFaceIndex = -1;
+
+    // Static tracking of currently loaded font in FontEngine (FontEngine is global!)
+    private static int currentlyLoadedFontInstanceId = 0;
 
     #endregion
 
@@ -385,12 +393,13 @@ public class UniTextFontAsset : ScriptableObject
 
     /// <summary>
     /// Load font face into FontEngine.
+    /// FontEngine is GLOBAL - only one font can be loaded at a time.
+    /// NOTE: We ALWAYS reload because external code (Unity Editor, TMP, etc.) may have
+    /// loaded a different font into FontEngine without our knowledge.
     /// </summary>
     public FontEngineError LoadFontFace()
     {
-        // Fast path: font already loaded this session
-        if (fontFaceLoaded)
-            return FontEngineError.Success;
+        int myInstanceId = GetInstanceID();
 
         // Cache faceIndex to avoid reflection on every call
         if (cachedFaceIndex < 0)
@@ -402,15 +411,25 @@ public class UniTextFontAsset : ScriptableObject
         float pointSize = faceInfo.pointSize > 0 ? faceInfo.pointSize : 90;
         int ptSize = (int)pointSize;
 
+        if (DebugLogging)
+            Debug.Log($"[UniTextFontAsset.LoadFontFace] Loading {name}: fontData={fontData?.Length ?? 0} bytes, sourcePath={sourceFontFilePath ?? "null"}, ptSize={ptSize}");
+
         // Try loading from raw bytes via temp file (LoadFontFace(byte[]) has issues)
         if (fontData != null && fontData.Length > 0)
         {
             string tempPath = GetOrCreateTempFontFile();
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontAsset.LoadFontFace] {name} tempPath={tempPath}");
+
             if (!string.IsNullOrEmpty(tempPath))
             {
-                if (FontEngine.LoadFontFace(tempPath, ptSize, cachedFaceIndex) == FontEngineError.Success)
+                var result = FontEngine.LoadFontFace(tempPath, ptSize, cachedFaceIndex);
+                if (DebugLogging)
+                    Debug.Log($"[UniTextFontAsset.LoadFontFace] {name} FontEngine.LoadFontFace(tempPath) result={result}");
+
+                if (result == FontEngineError.Success)
                 {
-                    fontFaceLoaded = true;
+                    currentlyLoadedFontInstanceId = myInstanceId;
                     return FontEngineError.Success;
                 }
             }
@@ -419,12 +438,19 @@ public class UniTextFontAsset : ScriptableObject
         // Fallback to file path (for DynamicOS mode)
         if (!string.IsNullOrEmpty(sourceFontFilePath))
         {
-            if (FontEngine.LoadFontFace(sourceFontFilePath, ptSize, cachedFaceIndex) == FontEngineError.Success)
+            var result = FontEngine.LoadFontFace(sourceFontFilePath, ptSize, cachedFaceIndex);
+            if (DebugLogging)
+                Debug.Log($"[UniTextFontAsset.LoadFontFace] {name} FontEngine.LoadFontFace(sourcePath) result={result}");
+
+            if (result == FontEngineError.Success)
             {
-                fontFaceLoaded = true;
+                currentlyLoadedFontInstanceId = myInstanceId;
                 return FontEngineError.Success;
             }
         }
+
+        if (DebugLogging)
+            Debug.LogWarning($"[UniTextFontAsset.LoadFontFace] {name} FAILED to load!");
 
         return FontEngineError.Invalid_File;
     }
@@ -678,6 +704,10 @@ public class UniTextFontAsset : ScriptableObject
     {
         character = null;
 
+        // CRITICAL: FontEngine is GLOBAL! Must ensure THIS font is loaded before rendering glyph.
+        if (LoadFontFace() != FontEngineError.Success)
+            return false;
+
         // Ensure atlas texture exists
         if (atlasTextures == null || atlasTextures.Length == 0)
         {
@@ -747,6 +777,10 @@ public class UniTextFontAsset : ScriptableObject
     {
         character = null;
 
+        // CRITICAL: Ensure correct font is loaded before rendering
+        if (LoadFontFace() != FontEngineError.Success)
+            return false;
+
         // Create new atlas texture
         atlasTextureIndex++;
         Array.Resize(ref atlasTextures, atlasTextureIndex + 1);
@@ -788,6 +822,208 @@ public class UniTextFontAsset : ScriptableObject
         };
         characterTable.Add(character);
         characterLookupDictionary.Add(unicode, character);
+
+        atlasTextures[atlasTextureIndex].Apply(false, false);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Try to add a glyph to atlas by glyph index (from shaping result).
+    /// This is the correct way to populate atlas - after shaping, using glyph indices.
+    /// </summary>
+    public bool TryAddGlyphByIndex(uint glyphIndex)
+    {
+        if (atlasPopulationMode != UniTextAtlasPopulationMode.Dynamic)
+            return false;
+
+        // Already in atlas?
+        if (glyphLookupDictionary != null && glyphLookupDictionary.ContainsKey(glyphIndex))
+            return true;
+
+        // Need to load font for atlas operations
+        if (LoadFontFace() != FontEngineError.Success)
+            return false;
+
+        return TryAddGlyphToAtlasByIndex(glyphIndex);
+    }
+
+    /// <summary>
+    /// Try to add multiple glyphs to atlas by glyph indices (batch operation).
+    /// </summary>
+    public int TryAddGlyphsByIndex(ReadOnlySpan<uint> glyphIndices)
+    {
+        if (atlasPopulationMode != UniTextAtlasPopulationMode.Dynamic)
+            return 0;
+
+        if (LoadFontFace() != FontEngineError.Success)
+            return 0;
+
+        int addedCount = 0;
+        for (int i = 0; i < glyphIndices.Length; i++)
+        {
+            uint glyphIndex = glyphIndices[i];
+
+            // Skip if already in atlas or zero (missing glyph)
+            if (glyphIndex == 0)
+                continue;
+
+            if (glyphLookupDictionary != null && glyphLookupDictionary.ContainsKey(glyphIndex))
+                continue;
+
+            if (TryAddGlyphToAtlasByIndex(glyphIndex))
+                addedCount++;
+        }
+
+        return addedCount;
+    }
+
+    /// <summary>
+    /// Try to add multiple glyphs to atlas by glyph indices (List overload for compatibility).
+    /// </summary>
+    public int TryAddGlyphsByIndex(List<uint> glyphIndices)
+    {
+        if (glyphIndices == null || glyphIndices.Count == 0)
+            return 0;
+
+        if (atlasPopulationMode != UniTextAtlasPopulationMode.Dynamic)
+            return 0;
+
+        if (LoadFontFace() != FontEngineError.Success)
+            return 0;
+
+        int addedCount = 0;
+        int count = glyphIndices.Count;
+        for (int i = 0; i < count; i++)
+        {
+            uint glyphIndex = glyphIndices[i];
+
+            if (glyphIndex == 0)
+                continue;
+
+            if (glyphLookupDictionary != null && glyphLookupDictionary.ContainsKey(glyphIndex))
+                continue;
+
+            if (TryAddGlyphToAtlasByIndex(glyphIndex))
+                addedCount++;
+        }
+
+        return addedCount;
+    }
+
+    private bool TryAddGlyphToAtlasByIndex(uint glyphIndex)
+    {
+        // CRITICAL: FontEngine is GLOBAL! Must ensure THIS font is loaded before rendering glyph.
+        // Without this, glyph may be rendered from wrong font if another font was loaded between calls.
+        var loadResult = LoadFontFace();
+        if (loadResult != FontEngineError.Success)
+        {
+            if (DebugLogging)
+                Debug.LogWarning($"[UniTextFontAsset.TryAddGlyphToAtlasByIndex] {name} LoadFontFace FAILED: {loadResult}");
+            return false;
+        }
+
+        if (DebugLogging)
+            Debug.Log($"[UniTextFontAsset.TryAddGlyphToAtlasByIndex] {name} adding glyphIndex={glyphIndex}");
+
+        // Ensure atlas texture exists
+        if (atlasTextures == null || atlasTextures.Length == 0)
+        {
+            atlasTextures = new Texture2D[1];
+            var texFormat = atlasRenderMode == GlyphRenderMode.COLOR || atlasRenderMode == GlyphRenderMode.COLOR_HINTED
+                ? TextureFormat.RGBA32
+                : TextureFormat.Alpha8;
+            atlasTextures[0] = new Texture2D(atlasWidth, atlasHeight, texFormat, false);
+            UniTextFontEngine.ResetAtlasTexture(atlasTextures[0]);
+
+            freeGlyphRects ??= new List<GlyphRect>();
+            freeGlyphRects.Clear();
+            freeGlyphRects.Add(new GlyphRect(0, 0, atlasWidth - 1, atlasHeight - 1));
+            usedGlyphRects ??= new List<GlyphRect>();
+            usedGlyphRects.Clear();
+        }
+
+        // Resize if needed
+        if (atlasTextures[atlasTextureIndex].width <= 1 || atlasTextures[atlasTextureIndex].height <= 1)
+        {
+            atlasTextures[atlasTextureIndex].Reinitialize(atlasWidth, atlasHeight);
+            UniTextFontEngine.ResetAtlasTexture(atlasTextures[atlasTextureIndex]);
+        }
+
+        // Try to add glyph (FontEngine uses currently loaded font)
+        bool success = UniTextFontEngine.TryAddGlyphToTexture(
+            glyphIndex,
+            atlasPadding,
+            GlyphPackingMode.BestShortSideFit,
+            freeGlyphRects,
+            usedGlyphRects,
+            atlasRenderMode,
+            atlasTextures[atlasTextureIndex],
+            out var glyph);
+
+        if (!success || glyph == null)
+        {
+            // Try multi-atlas if enabled
+            if (isMultiAtlasTexturesEnabled)
+                return TryAddGlyphToNewAtlasByIndex(glyphIndex);
+            return false;
+        }
+
+        glyph.atlasIndex = atlasTextureIndex;
+
+        // Add to glyph tables only (no character mapping - we don't know the codepoint)
+        glyphTable.Add(glyph);
+        glyphLookupDictionary ??= new Dictionary<uint, Glyph>();
+        glyphLookupDictionary[glyphIndex] = glyph;
+        glyphIndexList ??= new List<uint>();
+        glyphIndexList.Add(glyphIndex);
+
+        atlasTextures[atlasTextureIndex].Apply(false, false);
+
+        if (DebugLogging)
+            Debug.Log($"[UniTextFontAsset.TryAddGlyphToAtlasByIndex] Added glyphIndex={glyphIndex} to atlas");
+
+        return true;
+    }
+
+    private bool TryAddGlyphToNewAtlasByIndex(uint glyphIndex)
+    {
+        // CRITICAL: Ensure correct font is loaded before rendering
+        if (LoadFontFace() != FontEngineError.Success)
+            return false;
+
+        atlasTextureIndex++;
+        Array.Resize(ref atlasTextures, atlasTextureIndex + 1);
+
+        var texFormat = atlasRenderMode == GlyphRenderMode.COLOR || atlasRenderMode == GlyphRenderMode.COLOR_HINTED
+            ? TextureFormat.RGBA32
+            : TextureFormat.Alpha8;
+        atlasTextures[atlasTextureIndex] = new Texture2D(atlasWidth, atlasHeight, texFormat, false);
+        UniTextFontEngine.ResetAtlasTexture(atlasTextures[atlasTextureIndex]);
+
+        freeGlyphRects.Clear();
+        freeGlyphRects.Add(new GlyphRect(0, 0, atlasWidth - 1, atlasHeight - 1));
+
+        bool success = UniTextFontEngine.TryAddGlyphToTexture(
+            glyphIndex,
+            atlasPadding,
+            GlyphPackingMode.BestShortSideFit,
+            freeGlyphRects,
+            usedGlyphRects,
+            atlasRenderMode,
+            atlasTextures[atlasTextureIndex],
+            out var glyph);
+
+        if (!success || glyph == null)
+            return false;
+
+        glyph.atlasIndex = atlasTextureIndex;
+
+        glyphTable.Add(glyph);
+        glyphLookupDictionary ??= new Dictionary<uint, Glyph>();
+        glyphLookupDictionary[glyphIndex] = glyph;
+        glyphIndexList ??= new List<uint>();
+        glyphIndexList.Add(glyphIndex);
 
         atlasTextures[atlasTextureIndex].Apply(false, false);
 
@@ -898,6 +1134,84 @@ public class UniTextFontAsset : ScriptableObject
         fontAsset.ReadFontAssetDefinition();
 
         return fontAsset;
+    }
+
+    #endregion
+
+    #region Dynamic Data Management
+
+    /// <summary>
+    /// Clear dynamic data on build setting.
+    /// </summary>
+    public bool ClearDynamicDataOnBuild
+    {
+        get => clearDynamicDataOnBuild;
+        set => clearDynamicDataOnBuild = value;
+    }
+
+    /// <summary>
+    /// Clears all dynamically generated data (glyphs, characters, atlas textures).
+    /// Atlas will be regenerated at runtime as characters are requested.
+    /// </summary>
+    public void ClearDynamicData()
+    {
+        // Clear glyph and character tables
+        glyphTable?.Clear();
+        characterTable?.Clear();
+
+        // Clear lookup dictionaries
+        glyphLookupDictionary?.Clear();
+        characterLookupDictionary?.Clear();
+        glyphIndexList?.Clear();
+        glyphIndexListNewlyAdded?.Clear();
+        charactersToAdd?.Clear();
+        charactersToAddLookup?.Clear();
+
+        // Clear packing rects
+        usedGlyphRects?.Clear();
+        freeGlyphRects?.Clear();
+        freeGlyphRects?.Add(new GlyphRect(0, 0, atlasWidth - 1, atlasHeight - 1));
+
+        // Reset atlas to minimal 1x1 texture
+        if (atlasTextures != null && atlasTextures.Length > 0)
+        {
+            // Destroy additional atlas textures (keep only first one)
+            for (int i = 1; i < atlasTextures.Length; i++)
+            {
+                if (atlasTextures[i] != null)
+                {
+#if UNITY_EDITOR
+                    DestroyImmediate(atlasTextures[i], true);
+#else
+                    Destroy(atlasTextures[i]);
+#endif
+                }
+            }
+
+            // Reset first texture to 1x1
+            var firstTexture = atlasTextures[0];
+            if (firstTexture != null)
+            {
+                var texFormat = atlasRenderMode == GlyphRenderMode.COLOR || atlasRenderMode == GlyphRenderMode.COLOR_HINTED
+                    ? TextureFormat.RGBA32
+                    : TextureFormat.Alpha8;
+                firstTexture.Reinitialize(1, 1, texFormat, false);
+                UniTextFontEngine.ResetAtlasTexture(firstTexture);
+                firstTexture.Apply(false, false);
+            }
+
+            // Keep only first texture
+            if (atlasTextures.Length > 1)
+                atlasTextures = new[] { firstTexture };
+        }
+
+        atlasTextureIndex = 0;
+
+        // Reset font loading tracking (if this font was loaded, invalidate the cache)
+        if (currentlyLoadedFontInstanceId == GetInstanceID())
+            currentlyLoadedFontInstanceId = 0;
+
+        Debug.Log($"UniTextFontAsset [{name}]: Dynamic data cleared. Atlas will regenerate at runtime.");
     }
 
     #endregion

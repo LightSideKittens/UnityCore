@@ -301,6 +301,11 @@ public sealed class UniTextFontProvider
             lineHeight = (ascender - descender) * 1.2f;
     }
 
+    /// <summary>
+    /// Find which font supports the given codepoint.
+    /// Only checks cmap (via HarfBuzz), does NOT add to atlas.
+    /// Atlas population happens after shaping, by glyph indices.
+    /// </summary>
     public int FindFontForCodepoint(int codepoint, int baseFontId)
     {
         // Fast path: check cache first
@@ -327,10 +332,7 @@ public sealed class UniTextFontProvider
         searchedFontAssets.Add(baseFont.GetInstanceID());
 
         uint unicode = (uint)codepoint;
-        var foundFont = FindCharacterInFontAsset(unicode, baseFont, true);
-
-        if (DebugLogging && foundFont != null)
-            Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] U+{codepoint:X4} found in base font {foundFont.name}");
+        var foundFont = FindFontWithGlyph(unicode, baseFont, true);
 
         if (foundFont == null)
         {
@@ -340,9 +342,6 @@ public sealed class UniTextFontProvider
             var globalFallbacks = UniTextSettings.FallbackFontAssets;
             if (globalFallbacks != null)
             {
-                if (DebugLogging)
-                    Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] Global fallbacks count: {globalFallbacks.Count}");
-
                 int count = globalFallbacks.Count;
                 for (int i = 0; i < count; i++)
                 {
@@ -350,22 +349,14 @@ public sealed class UniTextFontProvider
                     if (fallback == null || !searchedFontAssets.Add(fallback.GetInstanceID()))
                         continue;
 
-                    if (DebugLogging)
-                        Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] Checking fallback[{i}]: {fallback.name}");
-
-                    foundFont = FindCharacterInFontAsset(unicode, fallback, true);
+                    foundFont = FindFontWithGlyph(unicode, fallback, true);
                     if (foundFont != null)
                     {
                         if (DebugLogging)
-                            Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] U+{codepoint:X4} FOUND in fallback {foundFont.name}");
+                            Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] U+{codepoint:X4} FOUND in global fallback {foundFont.name}");
                         break;
                     }
                 }
-            }
-            else
-            {
-                if (DebugLogging)
-                    Debug.Log($"[UniTextFontProvider.FindFontForCodepoint] No global fallbacks configured!");
             }
         }
 
@@ -382,99 +373,54 @@ public sealed class UniTextFontProvider
         return fontId;
     }
 
-    private UniTextFontAsset FindCharacterInFontAsset(uint unicode, UniTextFontAsset fontAsset, bool searchFallbacks)
+    /// <summary>
+    /// Check if font has glyph for codepoint using cmap (via HarfBuzz).
+    /// Does NOT add to atlas - only checks font coverage.
+    /// </summary>
+    private UniTextFontAsset FindFontWithGlyph(uint unicode, UniTextFontAsset fontAsset, bool searchFallbacks)
     {
         if (fontAsset == null)
             return null;
 
-        var charLookup = fontAsset.CharacterLookupTable;
-        if (charLookup != null && charLookup.TryGetValue(unicode, out var character))
+        // Check cmap via HarfBuzz (authoritative source for font coverage)
+        if (fontAsset.HasFontData)
         {
-            // Check that we have valid glyph data
-            if (character != null && character.glyphIndex != 0 && character.glyph != null)
-            {
-                var metrics = character.glyph.metrics;
-                // Glyph must have non-zero size to be valid (not .notdef placeholder)
-                if (metrics.width > 0 || metrics.height > 0)
-                {
-                    // Additional check: for complex scripts (Arabic, Hebrew, Indic, etc.)
-                    // verify using HarfBuzz that the font actually supports this codepoint
-                    bool needsHarfBuzzCheck = unicode >= 0x0590 && unicode <= 0x10FF; // RTL and Indic ranges
-
-                    if (needsHarfBuzzCheck && fontAsset.HasFontData)
-                    {
-                        // Use HarfBuzz to verify - it reads cmap table directly
-                        uint hbGlyphIndex = HarfBuzzFontValidator.GetGlyphIndex(fontAsset, unicode);
-                        if (hbGlyphIndex == 0)
-                        {
-                            if (DebugLogging)
-                                Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} in {fontAsset.name} charLookup but HarfBuzz says glyph=0, INVALID!");
-                            // Don't return, continue to fallback search
-                        }
-                        else
-                        {
-                            if (DebugLogging)
-                                Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} exists in {fontAsset.name} (glyphIndex={character.glyphIndex}, HB={hbGlyphIndex}, size={metrics.width}x{metrics.height})");
-                            return fontAsset;
-                        }
-                    }
-                    else
-                    {
-                        if (DebugLogging)
-                            Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} exists in {fontAsset.name} charLookup (glyphIndex={character.glyphIndex}, size={metrics.width}x{metrics.height})");
-                        return fontAsset;
-                    }
-                }
-                else
-                {
-                    if (DebugLogging)
-                        Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} in {fontAsset.name} has zero-size glyph, skipping");
-                }
-            }
-            else
+            uint glyphIndex = HarfBuzzFontValidator.GetGlyphIndex(fontAsset, unicode);
+            if (glyphIndex != 0)
             {
                 if (DebugLogging)
-                    Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} in {fontAsset.name} charLookup but glyphIndex=0 or no glyph data, skipping");
-            }
-        }
-
-        if (fontAsset.AtlasPopulationMode == UniTextAtlasPopulationMode.Dynamic)
-        {
-            if (DebugLogging)
-                Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} not in charLookup, trying TryAddCharacter (Dynamic mode) in {fontAsset.name}");
-
-            if (fontAsset.TryAddCharacter(unicode, out _))
-            {
-                if (DebugLogging)
-                    Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} successfully added to {fontAsset.name}");
+                    Debug.Log($"[UniTextFontProvider.FindFontWithGlyph] U+{unicode:X4} found in {fontAsset.name} cmap (glyphIndex={glyphIndex})");
                 return fontAsset;
-            }
-            else
-            {
-                if (DebugLogging)
-                    Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} TryAddCharacter FAILED in {fontAsset.name}");
             }
         }
         else
         {
-            if (DebugLogging)
-                Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] U+{unicode:X4} not in {fontAsset.name} (Static mode, no dynamic add)");
+            // Fallback to FontEngine for fonts without raw data
+            if (fontAsset.LoadFontFace() == UnityEngine.TextCore.LowLevel.FontEngineError.Success)
+            {
+                uint glyphIndex = UniTextFontEngine.GetGlyphIndex(unicode);
+                if (glyphIndex != 0)
+                {
+                    if (DebugLogging)
+                        Debug.Log($"[UniTextFontProvider.FindFontWithGlyph] U+{unicode:X4} found in {fontAsset.name} via FontEngine (glyphIndex={glyphIndex})");
+                    return fontAsset;
+                }
+            }
         }
 
+        if (DebugLogging)
+            Debug.Log($"[UniTextFontProvider.FindFontWithGlyph] U+{unicode:X4} NOT in {fontAsset.name} cmap");
+
+        // Search local fallbacks
         if (searchFallbacks && fontAsset.FallbackFontAssetTable != null)
         {
-            if (DebugLogging)
-                Debug.Log($"[UniTextFontProvider.FindCharacterInFontAsset] Checking {fontAsset.FallbackFontAssetTable.Count} local fallbacks for U+{unicode:X4}");
-
             for (int i = 0; i < fontAsset.FallbackFontAssetTable.Count; i++)
             {
                 var fallback = fontAsset.FallbackFontAssetTable[i];
-                if (fallback == null) continue;
-
-                if (!searchedFontAssets.Add(fallback.GetInstanceID()))
+                if (fallback == null || !searchedFontAssets.Add(fallback.GetInstanceID()))
                     continue;
 
-                var result = FindCharacterInFontAsset(unicode, fallback, true);
+                var result = FindFontWithGlyph(unicode, fallback, true);
                 if (result != null)
                     return result;
             }
@@ -531,4 +477,59 @@ public sealed class UniTextFontProvider
 
     public bool HasFontData(int fontId)
         => (fontAssets.TryGetValue(fontId, out var f) ? f : mainFontAsset)?.HasFontData ?? false;
+
+    /// <summary>
+    /// Ensure all glyph indices from shaping results are in the atlas.
+    /// This should be called AFTER shaping, before rendering.
+    /// </summary>
+    public void EnsureGlyphsInAtlas(ReadOnlySpan<ShapedRun> shapedRuns, ReadOnlySpan<ShapedGlyph> shapedGlyphs)
+    {
+        // Group glyphs by fontId for batch processing
+        glyphsByFontBuffer.Clear();
+
+        for (int i = 0; i < shapedRuns.Length; i++)
+        {
+            ref readonly var run = ref shapedRuns[i];
+            int fontId = run.fontId;
+
+            if (!glyphsByFontBuffer.TryGetValue(fontId, out var glyphList))
+            {
+                glyphList = glyphListPool.Count > 0 ? glyphListPool.Pop() : new List<uint>(64);
+                glyphsByFontBuffer[fontId] = glyphList;
+            }
+
+            // Add all glyph indices from this run
+            int end = run.glyphStart + run.glyphCount;
+            for (int g = run.glyphStart; g < end; g++)
+            {
+                uint glyphIndex = (uint)shapedGlyphs[g].glyphId;
+                if (glyphIndex != 0)
+                    glyphList.Add(glyphIndex);
+            }
+        }
+
+        // Add glyphs to atlas for each font
+        foreach (var kvp in glyphsByFontBuffer)
+        {
+            int fontId = kvp.Key;
+            var glyphList = kvp.Value;
+
+            var fontAsset = GetFontAsset(fontId);
+            if (fontAsset != null && glyphList.Count > 0)
+            {
+                int added = fontAsset.TryAddGlyphsByIndex(glyphList);
+
+                if (DebugLogging && added > 0)
+                    Debug.Log($"[UniTextFontProvider.EnsureGlyphsInAtlas] Added {added} glyphs to fontId={fontId}");
+            }
+
+            // Return list to pool
+            glyphList.Clear();
+            glyphListPool.Push(glyphList);
+        }
+    }
+
+    // Buffers for EnsureGlyphsInAtlas (reused to avoid allocations)
+    private readonly Dictionary<int, List<uint>> glyphsByFontBuffer = new();
+    private readonly Stack<List<uint>> glyphListPool = new();
 }

@@ -78,6 +78,11 @@ public class UniTextFontAssetEditor : Editor
         // Fallback Fonts
         DrawFallbacksSection();
 
+        EditorGUILayout.Space();
+
+        // Dynamic Data
+        DrawDynamicDataSection(fontAsset);
+
         serializedObject.ApplyModifiedProperties();
     }
 
@@ -202,6 +207,81 @@ public class UniTextFontAssetEditor : Editor
             EditorGUILayout.PropertyField(fallbackFontAssetTableProp, true);
             EditorGUI.indentLevel--;
         }
+    }
+
+    private bool showDynamicData;
+
+    private void DrawDynamicDataSection(UniTextFontAsset fontAsset)
+    {
+        showDynamicData = EditorGUILayout.Foldout(showDynamicData, "Dynamic Data", true);
+        if (!showDynamicData) return;
+
+        EditorGUI.indentLevel++;
+
+        // Show current dynamic data stats
+        var glyphTableProp = serializedObject.FindProperty("glyphTable");
+        var characterTableProp = serializedObject.FindProperty("characterTable");
+        var clearDynamicDataOnBuildProp = serializedObject.FindProperty("clearDynamicDataOnBuild");
+
+        int glyphCount = glyphTableProp?.arraySize ?? 0;
+        int charCount = characterTableProp?.arraySize ?? 0;
+        int atlasCount = atlasTexturesProp?.arraySize ?? 0;
+
+        EditorGUILayout.LabelField("Statistics", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField($"Glyphs in atlas: {glyphCount}");
+        EditorGUILayout.LabelField($"Characters mapped: {charCount}");
+        EditorGUILayout.LabelField($"Atlas textures: {atlasCount}");
+
+        // Show atlas texture size
+        if (fontAsset.AtlasTexture != null)
+        {
+            var tex = fontAsset.AtlasTexture;
+            long sizeBytes = tex.width * tex.height;
+            if (tex.format == TextureFormat.RGBA32)
+                sizeBytes *= 4;
+            string sizeStr = sizeBytes > 1024 * 1024
+                ? $"{sizeBytes / (1024f * 1024f):F1} MB"
+                : $"{sizeBytes / 1024f:F1} KB";
+            EditorGUILayout.LabelField($"Atlas size: {tex.width}x{tex.height} ({sizeStr})");
+        }
+
+        EditorGUILayout.Space(5);
+
+        // Clear on build toggle
+        if (clearDynamicDataOnBuildProp != null)
+        {
+            EditorGUILayout.PropertyField(clearDynamicDataOnBuildProp,
+                new GUIContent("Clear Dynamic Data On Build",
+                    "When enabled, all dynamically generated glyphs and atlas data will be cleared before build. " +
+                    "The atlas will regenerate at runtime as characters are needed. " +
+                    "This significantly reduces build size."));
+        }
+
+        EditorGUILayout.Space(5);
+
+        // Clear button
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Space(EditorGUI.indentLevel * 15);
+
+        GUI.backgroundColor = new Color(1f, 0.7f, 0.7f);
+        if (GUILayout.Button("Clear Dynamic Data", GUILayout.Height(25)))
+        {
+            if (EditorUtility.DisplayDialog("Clear Dynamic Data",
+                $"This will clear {glyphCount} glyphs, {charCount} characters, and reset the atlas texture.\n\n" +
+                "The atlas will regenerate at runtime as characters are requested.\n\n" +
+                "Are you sure?", "Clear", "Cancel"))
+            {
+                Undo.RecordObject(fontAsset, "Clear Dynamic Data");
+                fontAsset.ClearDynamicData();
+                EditorUtility.SetDirty(fontAsset);
+                AssetDatabase.SaveAssets();
+            }
+        }
+        GUI.backgroundColor = Color.white;
+
+        EditorGUILayout.EndHorizontal();
+
+        EditorGUI.indentLevel--;
     }
 
     private void ExtractFontBytes(UniTextFontAsset fontAsset, Font font)
