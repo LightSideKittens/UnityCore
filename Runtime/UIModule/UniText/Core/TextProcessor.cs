@@ -9,7 +9,6 @@ public struct TextProcessSettings
     public float maxHeight;
     public float fontSize;
     public TextDirection baseDirection;
-    public bool enableRichText;
     public bool enableWordWrap;
     public HorizontalAlignment horizontalAlignment;
     public VerticalAlignment verticalAlignment;
@@ -21,7 +20,6 @@ public struct TextProcessSettings
         maxHeight = float.MaxValue,
         fontSize = 36f,
         baseDirection = TextDirection.LeftToRight,
-        enableRichText = true,
         enableWordWrap = true,
         horizontalAlignment = HorizontalAlignment.Left,
         verticalAlignment = VerticalAlignment.Top,
@@ -31,7 +29,6 @@ public struct TextProcessSettings
 
 public sealed class TextProcessor
 {
-    private readonly RichTextParser parser;
     private readonly BidiEngine bidiEngine;
     private readonly ScriptAnalyzer scriptAnalyzer;
     private readonly IShapingEngine shapingEngine;
@@ -46,15 +43,14 @@ public sealed class TextProcessor
     // DEBUG: Enable detailed logging for Arabic text issues
     public static bool DebugLogging = false;
 
-    public TextProcessor(TagRegistry tagRegistry = null)
-        : this(new HybridShapingEngine(new HarfBuzzShapingEngine()), tagRegistry) { }
+    public TextProcessor()
+        : this(new HybridShapingEngine(new HarfBuzzShapingEngine())) { }
 
-    public TextProcessor(IShapingEngine shapingEngine, TagRegistry tagRegistry = null)
+    public TextProcessor(IShapingEngine shapingEngine)
     {
         if (UnicodeData.Provider == null)
             throw new InvalidOperationException("UnicodeData not initialized.");
-
-        parser = new RichTextParser(tagRegistry ?? TagRegistry.CreateDefault());
+        
         bidiEngine = new BidiEngine();
         scriptAnalyzer = new ScriptAnalyzer();
         this.shapingEngine = shapingEngine ?? throw new ArgumentNullException(nameof(shapingEngine));
@@ -78,12 +74,9 @@ public sealed class TextProcessor
             return ReadOnlySpan<PositionedGlyph>.Empty;
 
         fontProvider?.SetFontSize(settings.fontSize);
-
-        if (settings.enableRichText)
-            Parse(text);
-        else
-            ParsePlain(text);
-
+        
+        Parse(text);
+        
         if (SharedTextBuffers.codepointCount == 0)
             return ReadOnlySpan<PositionedGlyph>.Empty;
 
@@ -103,71 +96,10 @@ public sealed class TextProcessor
     public Vector2 ResultSize => new(resultWidth, resultHeight);
     public ReadOnlySpan<PositionedGlyph> PositionedGlyphs => SharedTextBuffers.positionedGlyphs.AsSpan(0, SharedTextBuffers.positionedGlyphCount);
     public ReadOnlySpan<int> Codepoints => SharedTextBuffers.codepoints.AsSpan(0, SharedTextBuffers.codepointCount);
-    public IReadOnlyList<TextAttributeBase> Attributes => SharedTextBuffers.attributes;
 
     private void Parse(ReadOnlySpan<char> text)
     {
         SharedTextBuffers.codepointCount = 0;
-        SharedTextBuffers.attributes.Clear();
-
-        SharedTextBuffers.EnsureCodepointCapacity(text.Length);
-
-        int i = 0;
-        bool inNoparse = false;
-
-        while (i < text.Length)
-        {
-            char c = text[i];
-
-            if (c == '<' && !inNoparse)
-            {
-                int tagEnd = FindTagEnd(text, i);
-                if (tagEnd > i)
-                {
-                    var tagContent = text.Slice(i + 1, tagEnd - i - 1);
-                    if (parser.ProcessTagDirect(tagContent, SharedTextBuffers.codepointCount, SharedTextBuffers.attributes, AddCodepoint, out bool isNoparseOpen))
-                    {
-                        if (isNoparseOpen) inNoparse = true;
-                        i = tagEnd + 1;
-                        continue;
-                    }
-                }
-            }
-            else if (c == '<' && inNoparse)
-            {
-                if (MatchesClosingTag(text, i, "noparse"))
-                {
-                    inNoparse = false;
-                    i = SkipToTagEnd(text, i) + 1;
-                    continue;
-                }
-            }
-
-            AddCharacter(text, ref i);
-        }
-
-        // DEBUG: Log parsed codepoints
-        if (DebugLogging && SharedTextBuffers.codepointCount > 0)
-        {
-            var sb = new System.Text.StringBuilder();
-            sb.Append("[TextProcessor.Parse] Parsed ");
-            sb.Append(SharedTextBuffers.codepointCount);
-            sb.Append(" codepoints: ");
-            for (int j = 0; j < SharedTextBuffers.codepointCount && j < 50; j++)
-            {
-                int cp = SharedTextBuffers.codepoints[j];
-                sb.Append($"U+{cp:X4} ");
-            }
-            if (SharedTextBuffers.codepointCount > 50)
-                sb.Append("...");
-            UnityEngine.Debug.Log(sb.ToString());
-        }
-    }
-
-    private void ParsePlain(ReadOnlySpan<char> text)
-    {
-        SharedTextBuffers.codepointCount = 0;
-        SharedTextBuffers.attributes.Clear();
 
         SharedTextBuffers.EnsureCodepointCapacity(text.Length);
 

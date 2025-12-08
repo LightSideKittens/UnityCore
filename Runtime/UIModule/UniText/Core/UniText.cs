@@ -34,9 +34,6 @@ public class UniText : MaskableGraphic
     [SerializeField]
     private bool enableWordWrap = true;
 
-    [SerializeField]
-    private bool enableRichText = true;
-
     [Header("Alignment")]
     [SerializeField]
     private HorizontalAlignment horizontalAlignment = HorizontalAlignment.Left;
@@ -132,19 +129,6 @@ public class UniText : MaskableGraphic
             if (enableWordWrap != value)
             {
                 enableWordWrap = value;
-                SetDirty();
-            }
-        }
-    }
-
-    public bool EnableRichText
-    {
-        get => enableRichText;
-        set
-        {
-            if (enableRichText != value)
-            {
-                enableRichText = value;
                 SetDirty();
             }
         }
@@ -621,7 +605,6 @@ public class UniText : MaskableGraphic
                 maxHeight = rect.height,
                 fontSize = fontSize,
                 baseDirection = baseDirection,
-                enableRichText = enableRichText,
                 enableWordWrap = enableWordWrap,
                 horizontalAlignment = horizontalAlignment,
                 verticalAlignment = verticalAlignment

@@ -12,7 +12,6 @@ public static class SharedTextBuffers
     // Most UI text is 100-500 characters, so 1024 is a good starting point
     public static int[] codepoints = new int[1024];
     public static int codepointCount;
-    public static readonly List<TextAttributeBase> attributes = new(32);
 
     public static byte[] bidiLevels = new byte[1024];
     public static BidiParagraph[] bidiParagraphs = Array.Empty<BidiParagraph>();
@@ -47,7 +46,6 @@ public static class SharedTextBuffers
         positionedGlyphCount = 0;
         bidiParagraphs = Array.Empty<BidiParagraph>();
         baseDirection = TextDirection.LeftToRight;
-        attributes.Clear();
     }
 
     public static void EnsureCodepointCapacity(int required)
@@ -117,7 +115,6 @@ public static class SharedTextBuffers
         orderedRuns = new ShapedRun[64];
         positionedGlyphs = new PositionedGlyph[1024];
         bidiParagraphs = Array.Empty<BidiParagraph>();
-        attributes.Clear();
         Reset();
     }
 }
