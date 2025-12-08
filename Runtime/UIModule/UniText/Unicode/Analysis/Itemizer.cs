@@ -65,8 +65,7 @@ public sealed class Itemizer
                     range = new TextRange(runStart, i - runStart),
                     bidiLevel = currentLevel,
                     script = currentScript,
-                    fontId = currentFontId,
-                    attributeSnapshot = 0
+                    fontId = currentFontId
                 };
 
                 runStart = i;
@@ -83,8 +82,7 @@ public sealed class Itemizer
             range = new TextRange(runStart, codepoints.Length - runStart),
             bidiLevel = currentLevel,
             script = currentScript,
-            fontId = currentFontId,
-            attributeSnapshot = 0
+            fontId = currentFontId
         };
     }
 

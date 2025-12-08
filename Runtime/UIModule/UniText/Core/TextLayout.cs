@@ -146,7 +146,6 @@ public sealed class TextLayout
                 Debug.Assert(glyphStart >= 0 && glyphStart + glyphLen <= glyphs.Length);
 
                 int fontId = run.fontId;
-                int attrSnapshot = run.attributeSnapshot;
                 int glyphEnd = glyphStart + glyphLen;
 
                 for (int g = glyphStart; g < glyphEnd; g++)
@@ -155,12 +154,12 @@ public sealed class TextLayout
                     result[glyphCount++] = new PositionedGlyph
                     {
                         glyphId = glyph.glyphId,
+                        cluster = glyph.cluster,
                         x = x + glyph.offsetX,
                         // HarfBuzz uses typographic coordinates (Y up), but our layout uses Y down
                         // So we need to subtract offsetY to move diacritics up
                         y = y - glyph.offsetY,
-                        fontId = fontId,
-                        attributeSnapshot = attrSnapshot
+                        fontId = fontId
                     };
                     x += glyph.advanceX;
                 }

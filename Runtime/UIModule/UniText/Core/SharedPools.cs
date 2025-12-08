@@ -43,6 +43,10 @@ public static class SharedTextBuffers
     public static PositionedGlyph[] positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
     public static int positionedGlyphCount;
 
+    // Mapping: logical index (codepoint) → glyph index in positionedGlyphs
+    // Used by modifiers to efficiently find glyphs for a character range
+    public static int[] logicalToGlyph = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
+
     // Track peak usage for diagnostics
     public static int peakCodepointCount;
     public static int peakRunCount;
@@ -102,6 +106,10 @@ public static class SharedTextBuffers
         scripts.AsSpan(0, Math.Min(codepointCount, scripts.Length)).CopyTo(newScripts);
         ArrayPool<UnicodeScript>.Shared.Return(scripts);
         scripts = newScripts;
+
+        var newLogicalToGlyph = ArrayPool<int>.Shared.Rent(newSize);
+        ArrayPool<int>.Shared.Return(logicalToGlyph);
+        logicalToGlyph = newLogicalToGlyph;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -256,6 +264,7 @@ public static class SharedTextBuffers
         lines = ArrayPool<TextLine>.Shared.Rent(MinLineCapacity);
         orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
         positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
+        logicalToGlyph = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
         bidiParagraphs = Array.Empty<BidiParagraph>();
         peakCodepointCount = 0;
         peakRunCount = 0;
@@ -277,6 +286,27 @@ public static class SharedTextBuffers
         if (lines != null) { ArrayPool<TextLine>.Shared.Return(lines); lines = null; }
         if (orderedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(orderedRuns); orderedRuns = null; }
         if (positionedGlyphs != null) { ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs); positionedGlyphs = null; }
+        if (logicalToGlyph != null) { ArrayPool<int>.Shared.Return(logicalToGlyph); logicalToGlyph = null; }
+    }
+
+    /// <summary>
+    /// Build mapping from logical codepoint index to positioned glyph index.
+    /// Must be called after Layout.
+    /// </summary>
+    public static void BuildLogicalToGlyphMapping()
+    {
+        var glyphs = positionedGlyphs;
+        var map = logicalToGlyph;
+        int glyphCount = positionedGlyphCount;
+
+        for (int i = 0; i < glyphCount; i++)
+        {
+            int cluster = glyphs[i].cluster;
+            if ((uint)cluster < (uint)map.Length)
+            {
+                map[cluster] = i;
+            }
+        }
     }
 }
 

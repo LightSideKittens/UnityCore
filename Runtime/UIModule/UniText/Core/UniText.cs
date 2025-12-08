@@ -36,7 +36,6 @@ public enum UniTextDirtyFlags
 /// - BiDi (правильное отображение RTL текста)
 /// - Line breaking по Unicode правилам
 /// - Script detection
-/// - Rich text parsing
 /// </summary>
 [RequireComponent(typeof(CanvasRenderer))]
 [RequireComponent(typeof(RectTransform))]

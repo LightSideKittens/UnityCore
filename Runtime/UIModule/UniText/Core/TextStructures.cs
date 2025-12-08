@@ -65,7 +65,6 @@ public struct TextRun
     public byte bidiLevel;
     public UnicodeScript script;
     public int fontId; // ID шрифта (для font fallback)
-    public int attributeSnapshot; // Индекс снимка атрибутов
 
     public TextDirection Direction => (bidiLevel & 1) == 0
         ? TextDirection.LeftToRight
@@ -84,7 +83,6 @@ public struct ShapedRun
     public TextDirection direction;
     public byte bidiLevel; // BiDi level для reordering (UAX #9)
     public int fontId;
-    public int attributeSnapshot;
 }
 
 /// <summary>
@@ -107,10 +105,10 @@ public struct TextLine
 public struct PositionedGlyph
 {
     public int glyphId;
+    public int cluster; // Индекс исходного символа в clean text (для атрибутов)
     public float x;
     public float y;
     public int fontId;
-    public int attributeSnapshot; // Для получения цвета и других атрибутов
     public UnityEngine.Color32 color; // Цвет глифа
 }
 

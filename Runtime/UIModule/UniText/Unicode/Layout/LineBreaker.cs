@@ -298,8 +298,7 @@ public sealed class LineBreaker
                 width = partialWidth,
                 direction = run.direction,
                 bidiLevel = run.bidiLevel,
-                fontId = run.fontId,
-                attributeSnapshot = run.attributeSnapshot
+                fontId = run.fontId
             };
             lineRunCount++;
         }

@@ -124,6 +124,9 @@ public sealed class TextProcessor
         BreakLines(settings.enableWordWrap ? settings.maxWidth : float.MaxValue);
         LayoutText(settings);
 
+        // Build mapping for modifiers
+        SharedTextBuffers.BuildLogicalToGlyphMapping();
+
         return SharedTextBuffers.positionedGlyphs.AsSpan(0, SharedTextBuffers.positionedGlyphCount);
     }
 
@@ -359,8 +362,7 @@ public sealed class TextProcessor
             range = new TextRange(start, length),
             bidiLevel = bidiLevel,
             script = script,
-            fontId = fontId,
-            attributeSnapshot = 0
+            fontId = fontId
         };
         SharedTextBuffers.runCount = count + 1;
     }
@@ -416,8 +418,7 @@ public sealed class TextProcessor
                 width = result.TotalAdvance,
                 direction = run.Direction,
                 bidiLevel = run.bidiLevel,
-                fontId = run.fontId,
-                attributeSnapshot = run.attributeSnapshot
+                fontId = run.fontId
             });
         }
 
