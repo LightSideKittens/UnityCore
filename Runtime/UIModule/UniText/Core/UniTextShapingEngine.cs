@@ -3,11 +3,10 @@ using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Simple 1:1 shaping for scripts without complex shaping requirements.
+/// Uses shared static buffer to avoid per-instance allocations.
 /// </summary>
 public sealed class UniTextShapingEngine : IShapingEngine
 {
-    private ShapedGlyph[] outputBuffer = new ShapedGlyph[256];
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ShapingResult Shape(
         ReadOnlySpan<int> codepoints,
@@ -20,11 +19,10 @@ public sealed class UniTextShapingEngine : IShapingEngine
         if (length == 0)
             return new ShapingResult(ReadOnlySpan<ShapedGlyph>.Empty, 0);
 
-        if (outputBuffer.Length < length)
-            outputBuffer = new ShapedGlyph[Math.Max(length, outputBuffer.Length * 2)];
+        SharedPipelineComponents.EnsureShapingOutputCapacity(length);
 
-        // Cache locals for faster access in loop
-        var buffer = outputBuffer;
+        // Use shared static buffer
+        var buffer = SharedPipelineComponents.ShapingOutputBuffer;
         float totalAdvance = 0;
 
         // Split into two paths: RTL (rare) and LTR (common)
@@ -78,7 +76,7 @@ public sealed class UniTextShapingEngine : IShapingEngine
             }
         }
 
-        return new ShapingResult(buffer.AsSpan(0, length), totalAdvance);
+        return new ShapingResult(SharedPipelineComponents.ShapingOutputBuffer.AsSpan(0, length), totalAdvance);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -129,10 +127,12 @@ public sealed class UniTextShapingEngine : IShapingEngine
 
 /// <summary>
 /// Hybrid engine: simple shaping for basic scripts, HarfBuzz for complex scripts.
+/// Uses shared static UniTextShapingEngine to avoid allocations.
 /// </summary>
 public sealed class HybridShapingEngine : IShapingEngine
 {
-    private readonly UniTextShapingEngine simpleEngine = new();
+    // Shared static simple engine - no state, safe to share
+    private static readonly UniTextShapingEngine simpleEngine = new();
     private readonly IShapingEngine complexEngine;
 
     // DEBUG: Enable detailed logging

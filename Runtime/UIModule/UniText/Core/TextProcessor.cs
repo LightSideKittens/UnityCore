@@ -29,11 +29,12 @@ public struct TextProcessSettings
 
 public sealed class TextProcessor
 {
-    private readonly BidiEngine bidiEngine;
-    private readonly ScriptAnalyzer scriptAnalyzer;
-    private readonly IShapingEngine shapingEngine;
-    private readonly LineBreaker lineBreaker;
-    private readonly TextLayout layout;
+    // Use shared static components to avoid per-instance allocations
+    private BidiEngine BidiEngine => SharedPipelineComponents.BidiEngine;
+    private ScriptAnalyzer ScriptAnalyzer => SharedPipelineComponents.ScriptAnalyzer;
+    private IShapingEngine ShapingEngine => SharedPipelineComponents.ShapingEngine;
+    private LineBreaker LineBreaker => SharedPipelineComponents.LineBreaker;
+    private TextLayout Layout => SharedPipelineComponents.Layout;
 
     private UniTextFontProvider fontProvider;
     private int baseFontId;
@@ -47,18 +48,9 @@ public sealed class TextProcessor
     public static bool DebugLogging = false;
 
     public TextProcessor()
-        : this(new HybridShapingEngine(new HarfBuzzShapingEngine())) { }
-
-    public TextProcessor(IShapingEngine shapingEngine)
     {
         if (UnicodeData.Provider == null)
             throw new InvalidOperationException("UnicodeData not initialized.");
-        
-        bidiEngine = new BidiEngine();
-        scriptAnalyzer = new ScriptAnalyzer();
-        this.shapingEngine = shapingEngine ?? throw new ArgumentNullException(nameof(shapingEngine));
-        lineBreaker = new LineBreaker();
-        layout = new TextLayout();
     }
 
     public void SetFontProvider(UniTextFontProvider provider, int defaultFontId = 0)
@@ -208,7 +200,7 @@ public sealed class TextProcessor
         };
 
         // Use ProcessPooled for zero-allocation fast path - we copy immediately so pooled buffer is safe
-        var result = bidiEngine.ProcessPooled(SharedTextBuffers.codepoints.AsSpan(0, cpCount), direction);
+        var result = BidiEngine.ProcessPooled(SharedTextBuffers.codepoints.AsSpan(0, cpCount), direction);
 
         if (result.levels != null && result.levels.Length > 0)
         {
@@ -244,7 +236,7 @@ public sealed class TextProcessor
     {
         int cpCount = SharedTextBuffers.codepointCount;
         SharedTextBuffers.EnsureScriptCapacity(cpCount);
-        scriptAnalyzer.Analyze(SharedTextBuffers.codepoints.AsSpan(0, cpCount), SharedTextBuffers.scripts);
+        ScriptAnalyzer.Analyze(SharedTextBuffers.codepoints.AsSpan(0, cpCount), SharedTextBuffers.scripts);
 
         // DEBUG: Log script analysis results
         if (DebugLogging)
@@ -388,7 +380,7 @@ public sealed class TextProcessor
             ref readonly var run = ref runs[i];
             var runCodepoints = cp.Slice(run.range.start, run.range.length);
 
-            var result = shapingEngine.Shape(
+            var result = ShapingEngine.Shape(
                 runCodepoints,
                 fontProvider,
                 run.fontId,
@@ -483,7 +475,7 @@ public sealed class TextProcessor
         int lineCnt = SharedTextBuffers.lineCount;
         int orderedRunCnt = SharedTextBuffers.orderedRunCount;
 
-        lineBreaker.BreakLines(
+        LineBreaker.BreakLines(
             SharedTextBuffers.codepoints.AsSpan(0, SharedTextBuffers.codepointCount),
             SharedTextBuffers.shapedRuns.AsSpan(0, SharedTextBuffers.shapedRunCount),
             SharedTextBuffers.shapedGlyphs.AsSpan(0, SharedTextBuffers.shapedGlyphCount),
@@ -507,7 +499,7 @@ public sealed class TextProcessor
         {
             fontProvider.GetLineMetrics(settings.fontSize, out float ascender, out float descender, out float lineHeight);
             float scale = fontProvider.GetScale(baseFontId, settings.fontSize);
-            layout.SetFontMetrics(ascender, descender, lineHeight, scale);
+            Layout.SetFontMetrics(ascender, descender, lineHeight, scale);
         }
 
         var layoutSettings = new LayoutSettings
@@ -518,10 +510,10 @@ public sealed class TextProcessor
             horizontalAlignment = settings.horizontalAlignment,
             verticalAlignment = settings.verticalAlignment
         };
-        layout.SetLayoutSettings(layoutSettings);
+        Layout.SetLayoutSettings(layoutSettings);
 
         int glyphCnt = SharedTextBuffers.positionedGlyphCount;
-        layout.Layout(
+        Layout.Layout(
             SharedTextBuffers.lines.AsSpan(0, SharedTextBuffers.lineCount),
             SharedTextBuffers.orderedRuns.AsSpan(0, SharedTextBuffers.orderedRunCount),
             SharedTextBuffers.shapedGlyphs.AsSpan(0, SharedTextBuffers.shapedGlyphCount),

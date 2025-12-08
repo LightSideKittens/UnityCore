@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.TextCore;
 
 /// <summary>
 /// Pair of mesh and material for rendering.
@@ -21,7 +20,7 @@ public struct UniTextMeshPair
 /// <summary>
 /// Generates meshes for text rendering.
 /// Based on TMP mesh generation logic.
-/// Zero-allocation design (after warmup).
+/// Zero-allocation design using shared static buffers.
 /// </summary>
 public class UniTextMeshGenerator
 {
@@ -41,25 +40,14 @@ public class UniTextMeshGenerator
     // Rect offset for positioning
     private Rect rectOffset;
 
-    // Working buffers (reused, grow as needed)
-    private Vector3[] vertices = new Vector3[256];
-    private Vector4[] uvs0 = new Vector4[256];
-    private Vector2[] uvs2 = new Vector2[256];
-    private Color32[] colors32 = new Color32[256];
-    private Vector3[] normals = new Vector3[256];
-    private Vector4[] tangents = new Vector4[256];
-    private int[] triangles = new int[384];
-
-    // Glyph grouping (reused, zero-allocation after warmup)
-    private readonly Dictionary<int, List<PositionedGlyph>> glyphsByFont = new();
-    private readonly Stack<List<PositionedGlyph>> glyphListPool = new();
-    private readonly List<UniTextMeshPair> resultBuffer = new(4);
-
-    private static readonly Vector3 defaultNormal = new(0f, 0f, -1f);
-    private static readonly Vector4 defaultTangent = new(-1f, 0f, 0f, 1f);
-
-    // Static UV2 pattern for quad corners (BL, TL, TR, BR)
-    private static readonly Vector2[] quadUV2 = { new(0, 0), new(0, 1), new(1, 1), new(1, 0) };
+    // Use shared static buffers from SharedPipelineComponents
+    private static Vector3[] vertices => SharedPipelineComponents.MeshVertices;
+    private static Vector4[] uvs0 => SharedPipelineComponents.MeshUvs0;
+    private static Vector2[] uvs2 => SharedPipelineComponents.MeshUvs2;
+    private static Color32[] colors32 => SharedPipelineComponents.MeshColors32;
+    private static Vector3[] normals => SharedPipelineComponents.MeshNormals;
+    private static Vector4[] tangents => SharedPipelineComponents.MeshTangents;
+    private static int[] triangles => SharedPipelineComponents.MeshTriangles;
 
     public UniTextMeshGenerator(UniTextFontProvider fontProvider)
     {
@@ -76,18 +64,16 @@ public class UniTextMeshGenerator
 
     /// <summary>
     /// Generates meshes from positioned glyphs.
-    /// Zero-allocation after warmup.
+    /// Zero-allocation using shared static buffers.
     /// </summary>
     public List<UniTextMeshPair> GenerateMeshes(ReadOnlySpan<PositionedGlyph> glyphs, Func<Mesh> meshProvider)
     {
+        // Use shared static collections
+        var glyphsByFont = SharedPipelineComponents.GlyphsByFont;
+        var resultBuffer = SharedPipelineComponents.MeshResultBuffer;
+
         // Return pooled lists to pool before clearing dictionary
-        foreach (var kvp in glyphsByFont)
-        {
-            var list = kvp.Value;
-            list.Clear();
-            glyphListPool.Push(list);
-        }
-        glyphsByFont.Clear();
+        SharedPipelineComponents.ClearGlyphsByFont();
         resultBuffer.Clear();
 
         if (DebugLogging)
@@ -104,8 +90,8 @@ public class UniTextMeshGenerator
             int fontId = glyph.fontId;
             if (!glyphsByFont.TryGetValue(fontId, out var list))
             {
-                // Get from pool or create new
-                list = glyphListPool.Count > 0 ? glyphListPool.Pop() : new List<PositionedGlyph>(64);
+                // Get from shared pool
+                list = SharedPipelineComponents.AcquireGlyphList();
                 glyphsByFont[fontId] = list;
             }
             list.Add(glyph);
@@ -337,30 +323,9 @@ public class UniTextMeshGenerator
         }
     }
 
-    private void EnsureBufferCapacity(int vertexCount, int triangleCount)
+    private static void EnsureBufferCapacity(int vertexCount, int triangleCount)
     {
-        if (vertices.Length < vertexCount)
-        {
-            int newSize = Mathf.NextPowerOfTwo(vertexCount);
-            vertices = new Vector3[newSize];
-            uvs0 = new Vector4[newSize];
-            uvs2 = new Vector2[newSize];
-            colors32 = new Color32[newSize];
-            normals = new Vector3[newSize];
-            tangents = new Vector4[newSize];
-
-            // Pre-fill static values
-            Array.Fill(normals, defaultNormal);
-            Array.Fill(tangents, defaultTangent);
-
-            // Pre-fill UV2 pattern (repeating quad corners)
-            for (int i = 0; i < newSize; i++)
-                uvs2[i] = quadUV2[i & 3];
-        }
-        if (triangles.Length < triangleCount)
-        {
-            triangles = new int[Mathf.NextPowerOfTwo(triangleCount)];
-        }
+        SharedPipelineComponents.EnsureMeshCapacity(vertexCount, triangleCount);
     }
 
     private float CalculateXScale(float scale)

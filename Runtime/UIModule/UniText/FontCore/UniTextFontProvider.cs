@@ -485,7 +485,12 @@ public sealed class UniTextFontProvider
     /// </summary>
     public void EnsureGlyphsInAtlas(ReadOnlySpan<ShapedRun> shapedRuns, ReadOnlySpan<ShapedGlyph> shapedGlyphs)
     {
-        // Group glyphs by fontId for batch processing
+        // Return pooled lists before clearing
+        foreach (var kvp in glyphsByFontBuffer)
+        {
+            kvp.Value.Clear();
+            glyphListPool.Push(kvp.Value);
+        }
         glyphsByFontBuffer.Clear();
 
         for (int i = 0; i < shapedRuns.Length; i++)
@@ -495,7 +500,7 @@ public sealed class UniTextFontProvider
 
             if (!glyphsByFontBuffer.TryGetValue(fontId, out var glyphList))
             {
-                glyphList = glyphListPool.Count > 0 ? glyphListPool.Pop() : new List<uint>(64);
+                glyphList = AcquireGlyphList();
                 glyphsByFontBuffer[fontId] = glyphList;
             }
 
@@ -523,14 +528,26 @@ public sealed class UniTextFontProvider
                 if (DebugLogging && added > 0)
                     Debug.Log($"[UniTextFontProvider.EnsureGlyphsInAtlas] Added {added} glyphs to fontId={fontId}");
             }
-
-            // Return list to pool
-            glyphList.Clear();
-            glyphListPool.Push(glyphList);
         }
     }
 
-    // Buffers for EnsureGlyphsInAtlas (reused to avoid allocations)
-    private readonly Dictionary<int, List<uint>> glyphsByFontBuffer = new();
-    private readonly Stack<List<uint>> glyphListPool = new();
+    // Static shared buffers for EnsureGlyphsInAtlas (avoids per-instance allocations)
+    private static readonly Dictionary<int, List<uint>> glyphsByFontBuffer = new();
+    private static readonly Stack<List<uint>> glyphListPool = new();
+
+    // Acquire list with reasonable initial capacity
+    private static List<uint> AcquireGlyphList()
+    {
+        if (glyphListPool.Count > 0)
+            return glyphListPool.Pop();
+        return new List<uint>(256); // Larger initial capacity to reduce growth
+    }
+
+    // Clear static buffers (called on domain reload)
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void OnDomainReload()
+    {
+        glyphsByFontBuffer.Clear();
+        glyphListPool.Clear();
+    }
 }

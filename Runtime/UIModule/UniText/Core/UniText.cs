@@ -334,6 +334,9 @@ public class UniText : MaskableGraphic
         return mesh;
     }
 
+    // Non-capturing method for Func<Mesh> delegate - avoids lambda allocation
+    private Mesh GetPooledMeshForText() => GetPooledMesh("UniText Mesh");
+
     private void Initialize()
     {
         if (!UnicodeData.IsInitialized)
@@ -357,7 +360,7 @@ public class UniText : MaskableGraphic
         try
         {
             processor = new TextProcessor();
-            cachedMeshProvider = () => GetPooledMesh("UniText Mesh");
+            cachedMeshProvider = GetPooledMeshForText;
             RebuildFontProvider();
         }
         catch (Exception ex)
