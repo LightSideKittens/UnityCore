@@ -44,6 +44,7 @@ public sealed class UniTextFontProvider
         {
             fontSize = value;
             UpdateFontScale();
+            cachedFontId = -1; // Invalidate cache when font size changes
         }
     }
 

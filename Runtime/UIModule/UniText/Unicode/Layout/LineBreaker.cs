@@ -10,6 +10,9 @@ public sealed class LineBreaker
 {
     private readonly LineBreakAlgorithm lineBreakAlgorithm;
 
+    // DEBUG
+    public static bool DebugLogging = false;
+
     // Internal buffers for break opportunities
     private bool[] breakOpportunities = new bool[257];
 
@@ -18,6 +21,7 @@ public sealed class LineBreaker
     private int tempLineCount;
     private ShapedRun[] tempOrderedRuns;
     private int tempOrderedRunCount;
+    private int searchStartRunIdx; // Optimization: skip fully processed runs
 
     public LineBreaker(LineBreakAlgorithm lineBreakAlgorithm)
     {
@@ -118,164 +122,165 @@ public sealed class LineBreaker
     {
         if (runs.IsEmpty) return;
 
-        int lineStartRun = 0;
-        int lineStartGlyph = 0;
-        float lineWidth = 0;
+        // Reset run search position for new wrapping pass
+        searchStartRunIdx = 0;
 
-        int lastBreakRun = -1;
-        int lastBreakGlyph = -1;
-        float widthAtLastBreak = 0;
-        int runsLen = runs.Length;
+        // Build codepoint-to-width mapping for logical order iteration
+        // For each codepoint, accumulate width from all glyphs that reference it
+        int cpCount = codepoints.Length;
+        Span<float> cpWidths = cpCount <= 256 ? stackalloc float[cpCount] : new float[cpCount];
+        cpWidths.Clear();
 
-        for (int runIdx = 0; runIdx < runsLen; runIdx++)
+        for (int runIdx = 0; runIdx < runs.Length; runIdx++)
         {
             var run = runs[runIdx];
-            int runGlyphCount = run.glyphCount;
-            int glyphStart = run.glyphStart;
             int rangeStart = run.range.start;
-
-            for (int g = 0; g < runGlyphCount; g++)
+            for (int g = 0; g < run.glyphCount; g++)
             {
-                var glyph = glyphs[glyphStart + g];
-                int codepointIndex = rangeStart + glyph.cluster;
+                var glyph = glyphs[run.glyphStart + g];
+                int cpIdx = rangeStart + glyph.cluster;
+                if ((uint)cpIdx < (uint)cpCount)
+                    cpWidths[cpIdx] += glyph.advanceX;
+            }
+        }
 
-                // Check mandatory break first (cheaper than array lookup most of the time)
-                int cp = (uint)codepointIndex < (uint)codepoints.Length ? codepoints[codepointIndex] : 0;
-                if (IsMandatoryBreak(cp))
+        // Now iterate in logical order
+        int lineStartCp = 0;
+        float lineWidth = 0;
+        int lastBreakCp = -1;
+        float widthAtLastBreak = 0;
+
+        for (int cpIdx = 0; cpIdx < cpCount; cpIdx++)
+        {
+            int cp = codepoints[cpIdx];
+
+            // Mandatory break
+            if (IsMandatoryBreak(cp))
+            {
+                CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx, lineWidth);
+                lineStartCp = cpIdx + 1;
+                lineWidth = 0;
+                lastBreakCp = -1;
+                continue;
+            }
+
+            lineWidth += cpWidths[cpIdx];
+
+            if (CanBreakAfter(cpIdx))
+            {
+                lastBreakCp = cpIdx;
+                widthAtLastBreak = lineWidth;
+            }
+
+            if (DebugLogging)
+            {
+                UnityEngine.Debug.Log($"[LineBreaker] cpIdx={cpIdx} cp=U+{cp:X4} width={cpWidths[cpIdx]:F1} canBreak={CanBreakAfter(cpIdx)} lineWidth={lineWidth:F1}");
+            }
+
+            if (lineWidth > maxWidth && lastBreakCp >= 0)
+            {
+                if (DebugLogging)
                 {
-                    CreateLineFromGlyphs(runs, glyphs, lineStartRun, lineStartGlyph, runIdx, g, lineWidth);
-
-                    lineStartRun = runIdx;
-                    lineStartGlyph = g + 1;
-                    if (lineStartGlyph >= runGlyphCount)
-                    {
-                        lineStartRun = runIdx + 1;
-                        lineStartGlyph = 0;
-                    }
-                    lineWidth = 0;
-                    lastBreakRun = -1;
-                    lastBreakGlyph = -1;
-                    continue;
+                    UnityEngine.Debug.Log($"[LineBreaker] BREAK at cpIdx={lastBreakCp}, lineWidth={lineWidth:F1} > maxWidth={maxWidth:F1}");
                 }
-
-                lineWidth += glyph.advanceX;
-
-                if (CanBreakAfter(codepointIndex))
-                {
-                    lastBreakRun = runIdx;
-                    lastBreakGlyph = g;
-                    widthAtLastBreak = lineWidth;
-                }
-
-                if (lineWidth > maxWidth && lastBreakRun >= 0)
-                {
-                    CreateLineFromGlyphs(runs, glyphs, lineStartRun, lineStartGlyph,
-                        lastBreakRun, lastBreakGlyph, widthAtLastBreak);
-
-                    lineStartRun = lastBreakRun;
-                    lineStartGlyph = lastBreakGlyph + 1;
-                    int breakRunGlyphCount = runs[lastBreakRun].glyphCount;
-                    if (lineStartGlyph >= breakRunGlyphCount)
-                    {
-                        lineStartRun = lastBreakRun + 1;
-                        lineStartGlyph = 0;
-                    }
-                    lineWidth -= widthAtLastBreak;
-                    lastBreakRun = -1;
-                    lastBreakGlyph = -1;
-                }
+                CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, lastBreakCp, widthAtLastBreak);
+                lineStartCp = lastBreakCp + 1;
+                lineWidth -= widthAtLastBreak;
+                lastBreakCp = -1;
             }
         }
 
         // Last line
-        if (lineStartRun < runsLen)
+        if (lineStartCp < cpCount)
         {
-            int lastRun = runsLen - 1;
-            int lastGlyph = runs[lastRun].glyphCount - 1;
-            if (lastGlyph >= 0 || lineStartRun < lastRun)
-            {
-                CreateLineFromGlyphs(runs, glyphs, lineStartRun, lineStartGlyph, lastRun, lastGlyph, lineWidth);
-            }
+            CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpCount - 1, lineWidth);
         }
     }
 
-    private void CreateLineFromGlyphs(
+    private void CreateLineFromCodepoints(
         ReadOnlySpan<ShapedRun> runs,
         ReadOnlySpan<ShapedGlyph> glyphs,
-        int startRun, int startGlyph,
-        int endRun, int endGlyph,
+        ReadOnlySpan<int> codepoints,
+        int startCp, int endCp,
         float width)
     {
-        if (startRun > endRun || (startRun == endRun && startGlyph > endGlyph))
-            return;
+        if (startCp > endCp) return;
 
-        var firstRun = runs[startRun];
-        var lastRun = runs[endRun];
-
-        int rangeStart = firstRun.range.start;
-        if (startGlyph > 0 && startGlyph < firstRun.glyphCount)
+        if (DebugLogging)
         {
-            var g = glyphs[firstRun.glyphStart + startGlyph];
-            rangeStart = firstRun.range.start + g.cluster;
+            UnityEngine.Debug.Log($"[LineBreaker.CreateLineFromCodepoints] Creating line for codepoints [{startCp}, {endCp}]");
         }
 
-        int rangeEnd = lastRun.range.End;
-        if (endGlyph >= 0 && endGlyph < lastRun.glyphCount)
-        {
-            var g = glyphs[lastRun.glyphStart + endGlyph];
-            rangeEnd = lastRun.range.start + g.cluster + 1;
-        }
-
+        // Find runs that overlap with [startCp, endCp]
         int lineRunStart = tempOrderedRunCount;
         int lineRunCount = 0;
 
-        for (int r = startRun; r <= endRun; r++)
+        // Start from last known position - runs are in logical order
+        for (int runIdx = searchStartRunIdx; runIdx < runs.Length; runIdx++)
         {
-            var originalRun = runs[r];
+            var run = runs[runIdx];
+            int runStart = run.range.start;
+            int runEnd = run.range.End - 1;
 
-            int runGlyphStart, runGlyphEnd;
-
-            if (r == startRun && r == endRun)
+            // Run is completely before our range - skip (and advance start for next line)
+            if (runEnd < startCp)
             {
-                runGlyphStart = startGlyph;
-                runGlyphEnd = endGlyph;
-            }
-            else if (r == startRun)
-            {
-                runGlyphStart = startGlyph;
-                runGlyphEnd = originalRun.glyphCount - 1;
-            }
-            else if (r == endRun)
-            {
-                runGlyphStart = 0;
-                runGlyphEnd = endGlyph;
-            }
-            else
-            {
-                runGlyphStart = 0;
-                runGlyphEnd = originalRun.glyphCount - 1;
+                searchStartRunIdx = runIdx + 1;
+                continue;
             }
 
-            int glyphCount = runGlyphEnd - runGlyphStart + 1;
-            if (glyphCount <= 0) continue;
+            // Run is completely after our range - done with this line
+            if (runStart > endCp)
+                break;
 
+            if (DebugLogging)
+            {
+                UnityEngine.Debug.Log($"  Checking run {runIdx}: range=[{runStart}, {runEnd}], glyphStart={run.glyphStart}, glyphCount={run.glyphCount}, dir={run.direction}");
+            }
+
+            // Find glyph range for this run that falls within [startCp, endCp]
+            int glyphFirst = -1, glyphLast = -1;
             float partialWidth = 0;
-            for (int g = runGlyphStart; g <= runGlyphEnd; g++)
+
+            for (int g = 0; g < run.glyphCount; g++)
             {
-                partialWidth += glyphs[originalRun.glyphStart + g].advanceX;
+                var glyph = glyphs[run.glyphStart + g];
+                int cpIdx = runStart + glyph.cluster;
+                bool inRange = cpIdx >= startCp && cpIdx <= endCp;
+
+                if (DebugLogging)
+                {
+                    UnityEngine.Debug.Log($"    g={g}: cluster={glyph.cluster}, cpIdx={cpIdx}, glyphId={glyph.glyphId}, inRange={inRange}");
+                }
+
+                if (inRange)
+                {
+                    if (glyphFirst < 0) glyphFirst = g;
+                    glyphLast = g;
+                    partialWidth += glyph.advanceX;
+                }
+            }
+
+            if (glyphFirst < 0) continue;
+
+            int glyphCount = glyphLast - glyphFirst + 1;
+
+            if (DebugLogging)
+            {
+                UnityEngine.Debug.Log($"  Selected: glyphFirst={glyphFirst}, glyphLast={glyphLast}, newGlyphStart={run.glyphStart + glyphFirst}, count={glyphCount}");
             }
 
             EnsureOrderedRunCapacity(tempOrderedRunCount + 1);
             tempOrderedRuns[tempOrderedRunCount++] = new ShapedRun
             {
-                range = originalRun.range,
-                glyphStart = originalRun.glyphStart + runGlyphStart,
+                range = run.range,
+                glyphStart = run.glyphStart + glyphFirst,
                 glyphCount = glyphCount,
                 width = partialWidth,
-                direction = originalRun.direction,
-                bidiLevel = originalRun.bidiLevel,
-                fontId = originalRun.fontId,
-                attributeSnapshot = originalRun.attributeSnapshot
+                direction = run.direction,
+                bidiLevel = run.bidiLevel,
+                fontId = run.fontId,
+                attributeSnapshot = run.attributeSnapshot
             };
             lineRunCount++;
         }
@@ -283,7 +288,7 @@ public sealed class LineBreaker
         EnsureLineCapacity(tempLineCount + 1);
         tempLines[tempLineCount++] = new TextLine
         {
-            range = new TextRange(rangeStart, rangeEnd - rangeStart),
+            range = new TextRange(startCp, endCp - startCp + 1),
             runStart = lineRunStart,
             runCount = lineRunCount,
             width = width,

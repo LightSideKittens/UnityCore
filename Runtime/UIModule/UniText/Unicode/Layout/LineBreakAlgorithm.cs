@@ -26,10 +26,13 @@ public sealed class LineBreakAlgorithm
     /// <summary>
     /// Get break opportunities for a sequence of codepoints.
     /// </summary>
+    // DEBUG: временный флаг для отладки line breaking
+    public static bool DebugLogging = false;
+
     public void GetBreakOpportunities(ReadOnlySpan<int> codePoints, Span<bool> breaks)
     {
         int length = codePoints.Length;
-        
+
         if (breaks.Length < length + 1)
             throw new ArgumentException($"breaks array must have length at least {length + 1}");
 
@@ -43,7 +46,18 @@ public sealed class LineBreakAlgorithm
         breaks[length] = true;    // LB3
 
         for (int i = 0; i < length - 1; i++)
+        {
             breaks[i + 1] = CanBreakBetween(codePoints, i);
+
+            if (DebugLogging)
+            {
+                int beforeCp = codePoints[i];
+                int afterCp = codePoints[i + 1];
+                var beforeClass = dataProvider.GetLineBreakClass(beforeCp);
+                var afterClass = dataProvider.GetLineBreakClass(afterCp);
+                UnityEngine.Debug.Log($"[LineBreak] {i}: U+{beforeCp:X4} ({beforeClass}) | U+{afterCp:X4} ({afterClass}) -> break={breaks[i + 1]}");
+            }
+        }
     }
 
     public bool[] GetBreakOpportunities(ReadOnlySpan<int> codePoints)
