@@ -84,26 +84,41 @@ public static class CustomBuilder
     private class NavigationPopup : PopupWindowContent
     {
         private VersionImportance importance;
-        
+
+        private string fileName
+        {
+            get => SessionState.GetString("build_file_name", string.Empty);
+            set => SessionState.SetString("build_file_name", value);
+        }
+
+        public override Vector2 GetWindowSize()
+        {
+            return new Vector2(350, 220);
+        }
+
         public override void OnGUI(Rect rect)
         {
+            EditorGUILayout.LabelField("Build Settings");
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Override File Name");
+            fileName = EditorGUILayout.TextField(fileName);
+            EditorGUILayout.Space();
             EditorUserBuildSettings.buildAppBundle = GUILayout.Toggle(EditorUserBuildSettings.buildAppBundle, "Build App Bundle (Google Play)");
             GUILayout.Space(5);
-            
             DrawButton(BuildMode.Release);
             DrawButton(BuildMode.Debug);
         }
 
         private void DrawButton(BuildMode mode)
         {
-            if (GUILayout.Button(mode.ToString(), GUILayout.MaxWidth(200)))
+            if (GUILayout.Button(mode.ToString(), GUILayout.MinWidth(1000), GUILayout.MinHeight(40)))
             {
                 Popup.Draw(() =>
                 {
                     var values = Enum.GetValues(typeof(VersionImportance));
                     foreach (var v in values)
                     {
-                        if (GUILayout.Button(v.ToString(), GUILayout.MaxWidth(200)))
+                        if (GUILayout.Button(v.ToString(), GUILayout.MinWidth(1000), GUILayout.MinHeight(40)))
                         {
                             importance = (VersionImportance)v;
                             PerformBuild(mode);
@@ -166,6 +181,11 @@ public static class CustomBuilder
                 }
             }
 
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                buildName = fileName;
+            }
+            
             string buildFilePath = $"{buildPath}/{buildName}{extension}";
             
             Defines.Apply();

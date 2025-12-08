@@ -1223,7 +1223,7 @@ public class UniTextFontAsset : ScriptableObject
     /// Source font (Editor only - for extracting bytes).
     /// </summary>
     [SerializeField]
-    internal Font sourceFont;
+    public Font sourceFont;
 
     /// <summary>
     /// Set raw font data from bytes (called by Editor).

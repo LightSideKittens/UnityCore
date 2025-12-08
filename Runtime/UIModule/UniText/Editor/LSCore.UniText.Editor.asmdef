@@ -1,0 +1,16 @@
+{
+    "name": "LSCore.UniText.Editor",
+    "rootNamespace": "",
+    "references": ["GUID:6572381e8157783499bf6ce8f56b9292"],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
