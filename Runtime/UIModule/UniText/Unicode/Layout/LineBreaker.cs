@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 
 /// <summary>
@@ -13,8 +14,9 @@ public sealed class LineBreaker
     // DEBUG
     public static bool DebugLogging = false;
 
-    // Internal buffers for break opportunities
+    // Internal buffers
     private bool[] breakOpportunities = new bool[257];
+    private float[] cpWidthsBuffer = new float[257];
 
     // Temporary state during line breaking
     private TextLine[] tempLines;
@@ -128,72 +130,86 @@ public sealed class LineBreaker
         // Build codepoint-to-width mapping for logical order iteration
         // For each codepoint, accumulate width from all glyphs that reference it
         int cpCount = codepoints.Length;
-        Span<float> cpWidths = cpCount <= 256 ? stackalloc float[cpCount] : new float[cpCount];
+
+        // Use stackalloc for small texts (up to 4KB), ArrayPool for larger
+        const int StackAllocThreshold = 1024;
+        float[] rentedArray = null;
+        Span<float> cpWidths = cpCount <= StackAllocThreshold
+            ? stackalloc float[cpCount]
+            : (rentedArray = ArrayPool<float>.Shared.Rent(cpCount)).AsSpan(0, cpCount);
         cpWidths.Clear();
 
-        for (int runIdx = 0; runIdx < runs.Length; runIdx++)
+        try
         {
-            var run = runs[runIdx];
-            int rangeStart = run.range.start;
-            for (int g = 0; g < run.glyphCount; g++)
+            for (int runIdx = 0; runIdx < runs.Length; runIdx++)
             {
-                var glyph = glyphs[run.glyphStart + g];
-                int cpIdx = rangeStart + glyph.cluster;
-                if ((uint)cpIdx < (uint)cpCount)
-                    cpWidths[cpIdx] += glyph.advanceX;
-            }
-        }
-
-        // Now iterate in logical order
-        int lineStartCp = 0;
-        float lineWidth = 0;
-        int lastBreakCp = -1;
-        float widthAtLastBreak = 0;
-
-        for (int cpIdx = 0; cpIdx < cpCount; cpIdx++)
-        {
-            int cp = codepoints[cpIdx];
-
-            // Mandatory break
-            if (IsMandatoryBreak(cp))
-            {
-                CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx, lineWidth);
-                lineStartCp = cpIdx + 1;
-                lineWidth = 0;
-                lastBreakCp = -1;
-                continue;
+                var run = runs[runIdx];
+                int rangeStart = run.range.start;
+                for (int g = 0; g < run.glyphCount; g++)
+                {
+                    var glyph = glyphs[run.glyphStart + g];
+                    int cpIdx = rangeStart + glyph.cluster;
+                    if ((uint)cpIdx < (uint)cpCount)
+                        cpWidths[cpIdx] += glyph.advanceX;
+                }
             }
 
-            lineWidth += cpWidths[cpIdx];
+            // Now iterate in logical order
+            int lineStartCp = 0;
+            float lineWidth = 0;
+            int lastBreakCp = -1;
+            float widthAtLastBreak = 0;
 
-            if (CanBreakAfter(cpIdx))
+            for (int cpIdx = 0; cpIdx < cpCount; cpIdx++)
             {
-                lastBreakCp = cpIdx;
-                widthAtLastBreak = lineWidth;
-            }
+                int cp = codepoints[cpIdx];
 
-            if (DebugLogging)
-            {
-                UnityEngine.Debug.Log($"[LineBreaker] cpIdx={cpIdx} cp=U+{cp:X4} width={cpWidths[cpIdx]:F1} canBreak={CanBreakAfter(cpIdx)} lineWidth={lineWidth:F1}");
-            }
+                // Mandatory break
+                if (IsMandatoryBreak(cp))
+                {
+                    CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx, lineWidth);
+                    lineStartCp = cpIdx + 1;
+                    lineWidth = 0;
+                    lastBreakCp = -1;
+                    continue;
+                }
 
-            if (lineWidth > maxWidth && lastBreakCp >= 0)
-            {
+                lineWidth += cpWidths[cpIdx];
+
+                if (CanBreakAfter(cpIdx))
+                {
+                    lastBreakCp = cpIdx;
+                    widthAtLastBreak = lineWidth;
+                }
+
                 if (DebugLogging)
                 {
-                    UnityEngine.Debug.Log($"[LineBreaker] BREAK at cpIdx={lastBreakCp}, lineWidth={lineWidth:F1} > maxWidth={maxWidth:F1}");
+                    UnityEngine.Debug.Log($"[LineBreaker] cpIdx={cpIdx} cp=U+{cp:X4} width={cpWidths[cpIdx]:F1} canBreak={CanBreakAfter(cpIdx)} lineWidth={lineWidth:F1}");
                 }
-                CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, lastBreakCp, widthAtLastBreak);
-                lineStartCp = lastBreakCp + 1;
-                lineWidth -= widthAtLastBreak;
-                lastBreakCp = -1;
+
+                if (lineWidth > maxWidth && lastBreakCp >= 0)
+                {
+                    if (DebugLogging)
+                    {
+                        UnityEngine.Debug.Log($"[LineBreaker] BREAK at cpIdx={lastBreakCp}, lineWidth={lineWidth:F1} > maxWidth={maxWidth:F1}");
+                    }
+                    CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, lastBreakCp, widthAtLastBreak);
+                    lineStartCp = lastBreakCp + 1;
+                    lineWidth -= widthAtLastBreak;
+                    lastBreakCp = -1;
+                }
+            }
+
+            // Last line
+            if (lineStartCp < cpCount)
+            {
+                CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpCount - 1, lineWidth);
             }
         }
-
-        // Last line
-        if (lineStartCp < cpCount)
+        finally
         {
-            CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpCount - 1, lineWidth);
+            if (rentedArray != null)
+                ArrayPool<float>.Shared.Return(rentedArray);
         }
     }
 
