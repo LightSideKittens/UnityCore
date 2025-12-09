@@ -11,8 +11,7 @@ using UnityEngine;
 public class StrikethroughModifier : BaseLineModifier
 {
     // Статические буферы для этого модификатора
-    private static byte[] flags = RentCleared(256);
-    private static int flagsCapacity = 256;
+    private static ArrayPoolBuffer<byte> flagsBuffer = new(256);
     private static LineSegment[] lineSegments = ArrayPool<LineSegment>.Shared.Rent(64);
     private static int lineSegmentsCapacity = 64;
     private static int lineSegmentCount;
@@ -21,8 +20,7 @@ public class StrikethroughModifier : BaseLineModifier
     private static bool hasActiveLine;
 
     // Реализация abstract свойств
-    protected override ref byte[] Flags => ref flags;
-    protected override ref int FlagsCapacity => ref flagsCapacity;
+    protected override ref ArrayPoolBuffer<byte> FlagsBuffer => ref flagsBuffer;
     protected override ref LineSegment[] LineSegments => ref lineSegments;
     protected override ref int LineSegmentsCapacity => ref lineSegmentsCapacity;
     protected override ref int LineSegmentCount => ref lineSegmentCount;
@@ -47,24 +45,18 @@ public class StrikethroughModifier : BaseLineModifier
 
     public static void ResetStatic()
     {
-        flags.AsSpan(0, flagsCapacity).Clear();
+        flagsBuffer.Clear();
         lineSegmentCount = 0;
         hasActiveLine = false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasStrikethrough(int cluster)
-    {
-        return cluster >= 0 && cluster < flagsCapacity && flags[cluster] != 0;
-    }
+    public static bool HasStrikethrough(int cluster) => flagsBuffer.HasFlag(cluster);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
-        if (flags != null)
-            ArrayPool<byte>.Shared.Return(flags);
-        flags = RentCleared(256);
-        flagsCapacity = 256;
+        flagsBuffer.Reset();
 
         if (lineSegments != null)
             ArrayPool<LineSegment>.Shared.Return(lineSegments);

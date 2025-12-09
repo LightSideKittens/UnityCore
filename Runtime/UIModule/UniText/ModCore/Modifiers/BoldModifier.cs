@@ -1,51 +1,22 @@
 using System;
-using System.Buffers;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
 /// <summary>
 /// Модификатор Bold текста.
 /// Устанавливает stylePadding для расширения глифа в SDF рендеринге.
-/// Данные хранятся в статическом буфере. Подписывается на OnGlyph для модификации UV.w.
+/// Подписывается на OnGlyph для модификации UV.w.
 /// </summary>
 [Serializable]
 public class BoldModifier : IRenderModifier
 {
-    // Статический буфер stylePadding per-cluster (индексируется по codepoint)
-    // ВАЖНО: ArrayPool.Rent() НЕ гарантирует очищенный массив — очищаем сразу
-    private static float[] stylePadding = RentCleared(256);
-    private static int capacity = 256;
-
-    private static float[] RentCleared(int size)
-    {
-        var arr = ArrayPool<float>.Shared.Rent(size);
-        arr.AsSpan(0, size).Clear();
-        return arr;
-    }
+    private static ArrayPoolBuffer<float> buffer = new(256);
 
     void IModifier.Apply(int start, int end, string parameter)
     {
         int cpCount = SharedTextBuffers.codepointCount;
-
-        // Ensure capacity
-        if (cpCount > capacity)
-        {
-            var newBuffer = ArrayPool<float>.Shared.Rent(cpCount);
-            stylePadding.AsSpan(0, capacity).CopyTo(newBuffer);
-            // ВАЖНО: очищаем новую часть буфера (ArrayPool не гарантирует нули)
-            newBuffer.AsSpan(capacity, cpCount - capacity).Clear();
-            ArrayPool<float>.Shared.Return(stylePadding);
-            stylePadding = newBuffer;
-            capacity = cpCount;
-        }
-
-        // Clamp to valid range
-        if (start < 0) start = 0;
-        if (end > cpCount) end = cpCount;
-
-        // Set bold flag for range
-        for (int i = start; i < end; i++)
-            stylePadding[i] = 1f; // any non-zero value = bold
+        buffer.EnsureCapacity(cpCount);
+        buffer.SetValueRange(start, Math.Min(end, cpCount), 1f);
     }
 
     void IModifier.Initialize(UniText uniText)
@@ -62,13 +33,13 @@ public class BoldModifier : IRenderModifier
 
     private static void OnGlyph()
     {
-        int cluster = UniTextMeshGenerator.CurrentCluster;
-        if (cluster < 0 || cluster >= capacity || stylePadding[cluster] == 0)
+        int cluster = UniTextMeshGenerator.currentCluster;
+        if (!buffer.HasValue(cluster))
             return;
 
         // Bold: set UV.w to negative xScale for last 4 vertices
-        float negXScale = -UniTextMeshGenerator.XScale;
-        int baseIdx = UniTextMeshGenerator.VertexCount - 4;
+        float negXScale = -UniTextMeshGenerator.xScale;
+        int baseIdx = UniTextMeshGenerator.vertexCount - 4;
         var uvs = UniTextMeshGenerator.Uvs0;
 
         uvs[baseIdx].w = negXScale;
@@ -77,29 +48,13 @@ public class BoldModifier : IRenderModifier
         uvs[baseIdx + 3].w = negXScale;
     }
 
-    /// <summary>
-    /// Сброс буфера. Вызывается перед новым текстом.
-    /// </summary>
-    public static void ResetStatic()
-    {
-        stylePadding.AsSpan(0, capacity).Clear();
-    }
+    public static void ResetStatic() => buffer.Clear();
 
     void IModifier.Reset() => ResetStatic();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsBold(int cluster)
-    {
-        return cluster >= 0 && cluster < capacity && stylePadding[cluster] != 0;
-    }
+    public static bool IsBold(int cluster) => buffer.HasValue(cluster);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        if (stylePadding != null)
-            ArrayPool<float>.Shared.Return(stylePadding);
-        stylePadding = ArrayPool<float>.Shared.Rent(256);
-        stylePadding.AsSpan(0, 256).Clear(); // ArrayPool doesn't guarantee zeroed arrays
-        capacity = 256;
-    }
+    private static void OnDomainReload() => buffer.Reset();
 }

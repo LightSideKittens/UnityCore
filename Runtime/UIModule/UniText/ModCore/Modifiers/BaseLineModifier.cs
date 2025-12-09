@@ -19,8 +19,7 @@ public abstract class BaseLineModifier : IRenderModifier
     }
 
     // Каждый наследник должен предоставить свои статические буферы
-    protected abstract ref byte[] Flags { get; }
-    protected abstract ref int FlagsCapacity { get; }
+    protected abstract ref ArrayPoolBuffer<byte> FlagsBuffer { get; }
     protected abstract ref LineSegment[] LineSegments { get; }
     protected abstract ref int LineSegmentsCapacity { get; }
     protected abstract ref int LineSegmentCount { get; }
@@ -38,28 +37,9 @@ public abstract class BaseLineModifier : IRenderModifier
     void IModifier.Apply(int start, int end, string parameter)
     {
         int cpCount = SharedTextBuffers.codepointCount;
-
-        ref var flags = ref Flags;
-        ref int flagsCap = ref FlagsCapacity;
-
-        // Ensure capacity
-        if (cpCount > flagsCap)
-        {
-            var newBuffer = ArrayPool<byte>.Shared.Rent(cpCount);
-            flags.AsSpan(0, flagsCap).CopyTo(newBuffer);
-            newBuffer.AsSpan(flagsCap, cpCount - flagsCap).Clear();
-            ArrayPool<byte>.Shared.Return(flags);
-            flags = newBuffer;
-            flagsCap = cpCount;
-        }
-
-        // Clamp to valid range
-        if (start < 0) start = 0;
-        if (end > cpCount) end = cpCount;
-
-        // Set flag for range
-        for (int i = start; i < end; i++)
-            flags[i] = 1;
+        ref var buffer = ref FlagsBuffer;
+        buffer.EnsureCapacity(cpCount);
+        buffer.SetFlagRange(start, Math.Min(end, cpCount));
     }
 
     void IModifier.Initialize(UniText uniText)
@@ -83,7 +63,7 @@ public abstract class BaseLineModifier : IRenderModifier
 
     protected void ResetState()
     {
-        Flags.AsSpan(0, FlagsCapacity).Clear();
+        FlagsBuffer.Clear();
         LineSegmentCount = 0;
         HasActiveLine = false;
     }
@@ -96,17 +76,14 @@ public abstract class BaseLineModifier : IRenderModifier
 
     private void OnGlyph()
     {
-        int cluster = UniTextMeshGenerator.CurrentCluster;
-        ref var flags = ref Flags;
-        int flagsCap = FlagsCapacity;
-        bool hasFlag = cluster >= 0 && cluster < flagsCap && flags[cluster] != 0;
+        int cluster = UniTextMeshGenerator.currentCluster;
+        bool hasFlag = FlagsBuffer.HasFlag(cluster);
 
-        // Get glyph bounds from vertices (last 4 vertices: BL, TL, TR, BR)
-        int baseIdx = UniTextMeshGenerator.VertexCount - 4;
+        int baseIdx = UniTextMeshGenerator.vertexCount - 4;
         var verts = UniTextMeshGenerator.Vertices;
         float left = verts[baseIdx].x;
         float right = verts[baseIdx + 2].x;
-        float baselineY = UniTextMeshGenerator.CurrentBaselineY;
+        float baselineY = UniTextMeshGenerator.currentBaselineY;
 
         if (hasFlag)
         {
@@ -139,7 +116,7 @@ public abstract class BaseLineModifier : IRenderModifier
         ref int segmentsCap = ref LineSegmentsCapacity;
         ref int segmentCount = ref LineSegmentCount;
 
-        // Ensure capacity
+        // Ensure capacity for line segments
         if (segmentCount >= segmentsCap)
         {
             int newCap = segmentsCap * 2;
@@ -169,12 +146,12 @@ public abstract class BaseLineModifier : IRenderModifier
         if (segmentCount == 0)
             return;
 
-        var fontAsset = UniTextMeshGenerator.CurrentFontAsset;
+        var fontAsset = UniTextMeshGenerator.currentFontAsset;
         if (fontAsset == null)
             return;
 
-        float scale = UniTextMeshGenerator.Scale;
-        Color32 defaultColor = UniTextMeshGenerator.CurrentDefaultColor;
+        float scale = UniTextMeshGenerator.scale;
+        Color32 defaultColor = UniTextMeshGenerator.currentDefaultColor;
         float lineOffset = GetLineOffset(fontAsset.FaceInfo, scale);
 
         var segments = LineSegments;
@@ -188,12 +165,5 @@ public abstract class BaseLineModifier : IRenderModifier
 
             LineRenderHelper.DrawLine(seg.startX, seg.endX, seg.baselineY, lineOffset, color);
         }
-    }
-
-    protected static byte[] RentCleared(int size)
-    {
-        var arr = ArrayPool<byte>.Shared.Rent(size);
-        arr.AsSpan(0, size).Clear();
-        return arr;
     }
 }

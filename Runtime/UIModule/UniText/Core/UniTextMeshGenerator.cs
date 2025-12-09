@@ -61,62 +61,55 @@ public class UniTextMeshGenerator
     // ═══════════════════════════════════════════════════════════════════
 
     /// <summary>Cluster текущего глифа (codepoint index)</summary>
-    public static int CurrentCluster;
+    public static int currentCluster;
 
     /// <summary>X позиция текущего глифа</summary>
-    public static float CurrentX;
+    public static float currentX;
 
     /// <summary>Y позиция текущего глифа</summary>
-    public static float CurrentY;
+    public static float currentY;
 
     /// <summary>Ширина текущего глифа (scaled)</summary>
-    public static float CurrentWidth;
+    public static float currentWidth;
 
     /// <summary>Высота текущего глифа (scaled)</summary>
-    public static float CurrentHeight;
+    public static float currentHeight;
 
     /// <summary>Baseline Y позиция текущего глифа</summary>
-    public static float CurrentBaselineY;
+    public static float currentBaselineY;
 
     /// <summary>Scale для текущего шрифта (fontSize / pointSize)</summary>
-    public static float Scale;
+    public static float scale;
 
     /// <summary>XScale для SDF рендеринга (для Bold используется отрицательное значение)</summary>
-    public static float XScale;
+    public static float xScale;
 
     /// <summary>Цвет по умолчанию</summary>
-    public static Color32 CurrentDefaultColor;
+    public static Color32 currentDefaultColor;
 
     /// <summary>Текущий FontAsset</summary>
-    public static UniTextFontAsset CurrentFontAsset;
+    public static UniTextFontAsset currentFontAsset;
 
     /// <summary>Offset по X (rectOffset.xMin)</summary>
-    public static float OffsetX;
+    public static float offsetX;
 
     /// <summary>Offset по Y (rectOffset.yMax)</summary>
-    public static float OffsetY;
+    public static float offsetY;
 
+    /// <summary>Текущее количество вершин в буфере</summary>
+    public static int vertexCount;
+
+    /// <summary>Текущее количество индексов треугольников в буфере</summary>
+    public static int triangleCount;
+    
     // Буферы для записи геометрии (модификаторы могут добавлять вершины)
     public static Vector3[] Vertices => SharedPipelineComponents.MeshVertices;
     public static Vector4[] Uvs0 => SharedPipelineComponents.MeshUvs0;
     public static Vector2[] Uvs2 => SharedPipelineComponents.MeshUvs2;
     public static Color32[] Colors => SharedPipelineComponents.MeshColors32;
     public static int[] Triangles => SharedPipelineComponents.MeshTriangles;
-
-    /// <summary>Текущее количество вершин в буфере</summary>
-    public static int VertexCount;
-
-    /// <summary>Текущее количество индексов треугольников в буфере</summary>
-    public static int TriangleCount;
-
-    // Private buffer references for faster access
-    private static Vector3[] vertices => SharedPipelineComponents.MeshVertices;
-    private static Vector4[] uvs0 => SharedPipelineComponents.MeshUvs0;
-    private static Vector2[] uvs2 => SharedPipelineComponents.MeshUvs2;
-    private static Color32[] colors32 => SharedPipelineComponents.MeshColors32;
-    private static Vector3[] normals => SharedPipelineComponents.MeshNormals;
-    private static Vector4[] tangents => SharedPipelineComponents.MeshTangents;
-    private static int[] triangles => SharedPipelineComponents.MeshTriangles;
+    public static Vector3[] Normals => SharedPipelineComponents.MeshNormals;
+    public static Vector4[] Tangents => SharedPipelineComponents.MeshTangents;
 
     public UniTextMeshGenerator(UniTextFontProvider fontProvider)
     {
@@ -230,14 +223,14 @@ public class UniTextMeshGenerator
         // ═══════════════════════════════════════════════════════════════════
         // Set static state for modifiers
         // ═══════════════════════════════════════════════════════════════════
-        Scale = scale;
-        XScale = xScale;
-        OffsetX = offsetX;
-        OffsetY = offsetY;
-        CurrentDefaultColor = DefaultColor;
-        CurrentFontAsset = fontAsset;
-        VertexCount = 0;
-        TriangleCount = 0;
+        UniTextMeshGenerator.scale = scale;
+        UniTextMeshGenerator.xScale = xScale;
+        UniTextMeshGenerator.offsetX = offsetX;
+        UniTextMeshGenerator.offsetY = offsetY;
+        currentDefaultColor = DefaultColor;
+        currentFontAsset = fontAsset;
+        vertexCount = 0;
+        triangleCount = 0;
 
         // Invoke OnBeforeMesh - modifiers can prepare
         OnBeforeMesh?.Invoke();
@@ -257,10 +250,10 @@ public class UniTextMeshGenerator
         }
 
         // Cache local references for faster access
-        var verts = vertices;
-        var uvData = uvs0;
-        var cols = colors32;
-        var tris = triangles;
+        var verts = Vertices;
+        var uvData = Uvs0;
+        var cols = Colors;
+        var tris = Triangles;
 
         for (int i = 0; i < glyphCount; i++)
         {
@@ -307,10 +300,10 @@ public class UniTextMeshGenerator
             float uvTLy = (glyphRect.y + glyphRect.height + padding) * invAtlasHeight;
             float uvTRx = (glyphRect.x + glyphRect.width + padding) * invAtlasWidth;
 
-            int i0 = VertexCount;
-            int i1 = VertexCount + 1;
-            int i2 = VertexCount + 2;
-            int i3 = VertexCount + 3;
+            int i0 = vertexCount;
+            int i1 = vertexCount + 1;
+            int i2 = vertexCount + 2;
+            int i3 = vertexCount + 3;
 
             // Vertices (BL, TL, TR, BR) - base positions
             ref var v0 = ref verts[i0];
@@ -339,25 +332,25 @@ public class UniTextMeshGenerator
             cols[i3] = defaultColor;
 
             // Triangles
-            tris[TriangleCount] = i0;
-            tris[TriangleCount + 1] = i1;
-            tris[TriangleCount + 2] = i2;
-            tris[TriangleCount + 3] = i2;
-            tris[TriangleCount + 4] = i3;
-            tris[TriangleCount + 5] = i0;
+            tris[triangleCount] = i0;
+            tris[triangleCount + 1] = i1;
+            tris[triangleCount + 2] = i2;
+            tris[triangleCount + 3] = i2;
+            tris[triangleCount + 4] = i3;
+            tris[triangleCount + 5] = i0;
 
             // ═══════════════════════════════════════════════════════════════════
             // Set current glyph state for modifiers
             // ═══════════════════════════════════════════════════════════════════
-            CurrentCluster = cluster;
-            CurrentX = glyph.x;
-            CurrentY = glyph.y;
-            CurrentWidth = widthScaled;
-            CurrentHeight = heightScaled;
-            CurrentBaselineY = offsetY - glyph.y;
+            currentCluster = cluster;
+            currentX = glyph.x;
+            currentY = glyph.y;
+            currentWidth = widthScaled;
+            currentHeight = heightScaled;
+            currentBaselineY = offsetY - glyph.y;
 
-            VertexCount += 4;
-            TriangleCount += 6;
+            vertexCount += 4;
+            triangleCount += 6;
 
             // Invoke OnGlyph - modifiers can modify last 4 vertices
             OnGlyph?.Invoke();
@@ -400,19 +393,19 @@ public class UniTextMeshGenerator
         // Apply to mesh using SetXxx with count parameter (no allocation)
         mesh.Clear();
 
-        if (VertexCount > 0)
+        if (vertexCount > 0)
         {
-            mesh.SetVertices(vertices, 0, VertexCount);
-            mesh.SetNormals(normals, 0, VertexCount);
-            mesh.SetTangents(tangents, 0, VertexCount);
-            mesh.SetUVs(0, uvs0, 0, VertexCount);
-            mesh.SetUVs(1, uvs2, 0, VertexCount);
-            mesh.SetColors(colors32, 0, VertexCount);
-            mesh.SetTriangles(triangles, 0, TriangleCount, 0);
+            mesh.SetVertices(Vertices, 0, vertexCount);
+            mesh.SetNormals(Normals, 0, vertexCount);
+            mesh.SetTangents(Tangents, 0, vertexCount);
+            mesh.SetUVs(0, Uvs0, 0, vertexCount);
+            mesh.SetUVs(1, Uvs2, 0, vertexCount);
+            mesh.SetColors(Colors, 0, vertexCount);
+            mesh.SetTriangles(Triangles, 0, triangleCount, 0);
             mesh.RecalculateBounds();
 
             if (DebugLogging)
-                Debug.Log($"[UniTextMeshGenerator.GenerateMeshForFont] Created mesh with {VertexCount} vertices, {TriangleCount} triangle indices");
+                Debug.Log($"[UniTextMeshGenerator.GenerateMeshForFont] Created mesh with {vertexCount} vertices, {triangleCount} triangle indices");
         }
         else
         {

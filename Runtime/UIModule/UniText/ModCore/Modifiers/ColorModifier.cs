@@ -1,28 +1,16 @@
 using System;
-using System.Buffers;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
 /// <summary>
 /// Модификатор цвета текста.
 /// Подписывается на OnGlyph и применяет цвет к последним 4 вершинам.
-/// Данные хранятся в статическом буфере.
 /// </summary>
 [Serializable]
 public class ColorModifier : IRenderModifier
 {
-    // Статический буфер цветов per-cluster (индексируется по codepoint)
     // Color32 packed как uint для экономии памяти, 0 = нет кастомного цвета
-    // ВАЖНО: ArrayPool.Rent() НЕ гарантирует очищенный массив — очищаем сразу
-    private static uint[] colorData = RentCleared(256);
-    private static int capacity = 256;
-
-    private static uint[] RentCleared(int size)
-    {
-        var arr = ArrayPool<uint>.Shared.Rent(size);
-        arr.AsSpan(0, size).Clear();
-        return arr;
-    }
+    private static ArrayPoolBuffer<uint> buffer = new(256);
 
     void IModifier.Apply(int start, int end, string parameter)
     {
@@ -33,30 +21,10 @@ public class ColorModifier : IRenderModifier
             return;
 
         int cpCount = SharedTextBuffers.codepointCount;
+        buffer.EnsureCapacity(cpCount);
 
-        // Ensure capacity
-        if (cpCount > capacity)
-        {
-            var newBuffer = ArrayPool<uint>.Shared.Rent(cpCount);
-            colorData.AsSpan(0, capacity).CopyTo(newBuffer);
-            // ВАЖНО: очищаем новую часть буфера (ArrayPool не гарантирует нули)
-            newBuffer.AsSpan(capacity, cpCount - capacity).Clear();
-            ArrayPool<uint>.Shared.Return(colorData);
-            colorData = newBuffer;
-            capacity = cpCount;
-        }
-
-        // Clamp to valid range
-        if (start < 0) start = 0;
-        if (end > cpCount) end = cpCount;
-
-        // Pack Color32 into uint with alpha in high byte to distinguish from 0
-        // Format: ARGB (alpha always non-zero even for transparent colors)
         uint packed = PackColor(color);
-
-        // Set color for range
-        for (int i = start; i < end; i++)
-            colorData[i] = packed;
+        buffer.SetValueRange(start, Math.Min(end, cpCount), packed);
     }
 
     void IModifier.Initialize(UniText uniText)
@@ -73,18 +41,14 @@ public class ColorModifier : IRenderModifier
 
     private static void OnGlyph()
     {
-        int cluster = UniTextMeshGenerator.CurrentCluster;
-        if (cluster < 0 || cluster >= capacity)
-            return;
-
-        uint packed = colorData[cluster];
+        int cluster = UniTextMeshGenerator.currentCluster;
+        uint packed = buffer.GetValueOrDefault(cluster);
         if (packed == 0)
-            return; // No custom color
+            return;
 
         Color32 color = UnpackColor(packed);
 
-        // Apply color to last 4 vertices
-        int baseIdx = UniTextMeshGenerator.VertexCount - 4;
+        int baseIdx = UniTextMeshGenerator.vertexCount - 4;
         var colors = UniTextMeshGenerator.Colors;
 
         colors[baseIdx] = color;
@@ -93,13 +57,7 @@ public class ColorModifier : IRenderModifier
         colors[baseIdx + 3] = color;
     }
 
-    /// <summary>
-    /// Сброс буфера. Вызывается перед новым текстом.
-    /// </summary>
-    public static void ResetStatic()
-    {
-        colorData.AsSpan(0, capacity).Clear();
-    }
+    public static void ResetStatic() => buffer.Clear();
 
     void IModifier.Reset() => ResetStatic();
 
@@ -115,35 +73,25 @@ public class ColorModifier : IRenderModifier
     private static Color32 UnpackColor(uint packed)
     {
         return new Color32(
-            (byte)((packed >> 16) & 0xFF), // R
-            (byte)((packed >> 8) & 0xFF),  // G
-            (byte)(packed & 0xFF),         // B
-            (byte)((packed >> 24) & 0xFF)  // A
+            (byte)((packed >> 16) & 0xFF),
+            (byte)((packed >> 8) & 0xFF),
+            (byte)(packed & 0xFF),
+            (byte)((packed >> 24) & 0xFF)
         );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasColor(int cluster)
-    {
-        return cluster >= 0 && cluster < capacity && colorData[cluster] != 0;
-    }
+    public static bool HasColor(int cluster) => buffer.HasValue(cluster);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color32 GetColor(int cluster)
     {
-        if (cluster < 0 || cluster >= capacity || colorData[cluster] == 0)
-            return new Color32(255, 255, 255, 255);
-        return UnpackColor(colorData[cluster]);
+        uint packed = buffer.GetValueOrDefault(cluster);
+        return packed == 0 ? new Color32(255, 255, 255, 255) : UnpackColor(packed);
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        if (colorData != null)
-            ArrayPool<uint>.Shared.Return(colorData);
-        colorData = ArrayPool<uint>.Shared.Rent(256);
-        capacity = 256;
-    }
+    private static void OnDomainReload() => buffer.Reset();
 
     private static bool TryParseColor(string value, out Color32 color)
     {
@@ -152,23 +100,19 @@ public class ColorModifier : IRenderModifier
         if (string.IsNullOrEmpty(value))
             return false;
 
-        // Hex: #RGB, #RRGGBB, #RRGGBBAA
         if (value[0] == '#')
             return TryParseHexColor(value, out color);
 
-        // Именованные цвета
         return TryParseNamedColor(value, out color);
     }
 
     private static bool TryParseHexColor(string hex, out Color32 color)
     {
         color = new Color32(255, 255, 255, 255);
-
-        int len = hex.Length - 1; // Без #
+        int len = hex.Length - 1;
 
         if (len == 3)
         {
-            // #RGB → #RRGGBB
             byte r = ParseHexDigit(hex[1]);
             byte g = ParseHexDigit(hex[2]);
             byte b = ParseHexDigit(hex[3]);
@@ -178,7 +122,6 @@ public class ColorModifier : IRenderModifier
 
         if (len == 6)
         {
-            // #RRGGBB
             byte r = ParseHexByte(hex[1], hex[2]);
             byte g = ParseHexByte(hex[3], hex[4]);
             byte b = ParseHexByte(hex[5], hex[6]);
@@ -188,7 +131,6 @@ public class ColorModifier : IRenderModifier
 
         if (len == 8)
         {
-            // #RRGGBBAA
             byte r = ParseHexByte(hex[1], hex[2]);
             byte g = ParseHexByte(hex[3], hex[4]);
             byte b = ParseHexByte(hex[5], hex[6]);

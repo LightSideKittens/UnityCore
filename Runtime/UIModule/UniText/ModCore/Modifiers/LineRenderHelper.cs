@@ -23,7 +23,7 @@ public static class LineRenderHelper
     /// <param name="color">Цвет линии</param>
     public static void DrawLine(float startX, float endX, float baselineY, float lineYOffset, Color32 color)
     {
-        var fontAsset = UniTextMeshGenerator.CurrentFontAsset;
+        var fontAsset = UniTextMeshGenerator.currentFontAsset;
         if (fontAsset == null)
             return;
 
@@ -32,8 +32,8 @@ public static class LineRenderHelper
         if (underscoreGlyph == null || underscoreGlyph.glyphRect.width == 0)
             return;
 
-        float scale = UniTextMeshGenerator.Scale;
-        float xScale = UniTextMeshGenerator.XScale;
+        float scale = UniTextMeshGenerator.scale;
+        float xScale = UniTextMeshGenerator.xScale;
         float padding = fontAsset.AtlasPadding;
         float atlasWidth = fontAsset.AtlasWidth;
         float atlasHeight = fontAsset.AtlasHeight;
@@ -68,8 +68,8 @@ public static class LineRenderHelper
         var colors = UniTextMeshGenerator.Colors;
         var tris = UniTextMeshGenerator.Triangles;
 
-        int vertIdx = UniTextMeshGenerator.VertexCount;
-        int triIdx = UniTextMeshGenerator.TriangleCount;
+        int vertIdx = UniTextMeshGenerator.vertexCount;
+        int triIdx = UniTextMeshGenerator.triangleCount;
 
         #region VERTICES (12 vertices = 3 quads)
 
@@ -216,8 +216,8 @@ public static class LineRenderHelper
 
         #endregion
 
-        UniTextMeshGenerator.VertexCount += 12;
-        UniTextMeshGenerator.TriangleCount += 18;
+        UniTextMeshGenerator.vertexCount += 12;
+        UniTextMeshGenerator.triangleCount += 18;
     }
 
     /// <summary>
