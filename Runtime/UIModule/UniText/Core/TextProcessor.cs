@@ -47,6 +47,22 @@ public sealed class TextProcessor
     // DEBUG: Enable detailed logging for Arabic text issues
     public static bool DebugLogging = false;
 
+    // Events for modifier application
+    /// <summary>
+    /// Called before Itemize(). For modifiers that affect run splitting (font, bold, size).
+    /// </summary>
+    public Action OnBeforeItemize;
+
+    /// <summary>
+    /// Called after Layout() and BuildLogicalToGlyphMapping(). For modifiers that affect positions (superscript, subscript).
+    /// </summary>
+    public Action OnAfterLayout;
+
+    /// <summary>
+    /// Called after Layout(). For modifiers that affect visual properties (color, underline).
+    /// </summary>
+    public Action OnBeforeRender;
+
     public TextProcessor()
     {
         if (UnicodeData.Provider == null)
@@ -64,13 +80,13 @@ public sealed class TextProcessor
     /// </summary>
     /// <param name="text">Text to process</param>
     /// <param name="settings">Processing settings</param>
-    /// <param name="dirtyFlags">Which parts need rebuilding. Full = everything.</param>
+    /// <param name="dirtyFlags">Which parts need rebuilding.</param>
     public ReadOnlySpan<PositionedGlyph> Process(
         ReadOnlySpan<char> text,
         TextProcessSettings settings,
-        UniTextDirtyFlags dirtyFlags = UniTextDirtyFlags.Full)
+        UniTextDirtyFlags dirtyFlags = UniTextDirtyFlags.FullRebuild)
     {
-        bool fullRebuild = (dirtyFlags & UniTextDirtyFlags.Full) != 0 ||
+        bool fullRebuild = (dirtyFlags & UniTextDirtyFlags.FullRebuild) != 0 ||
                            (dirtyFlags & UniTextDirtyFlags.FontSize) != 0 ||
                            !hasValidShapingData;
 
@@ -112,6 +128,10 @@ public sealed class TextProcessor
 
             AnalyzeBidi(settings.baseDirection);
             AnalyzeScripts();
+
+            // Apply itemization modifiers before splitting into runs
+            OnBeforeItemize?.Invoke();
+
             Itemize();
             Shape();
             EnsureGlyphsInAtlas();
@@ -126,6 +146,12 @@ public sealed class TextProcessor
 
         // Build mapping for modifiers
         SharedTextBuffers.BuildLogicalToGlyphMapping();
+
+        // Apply layout modifiers (superscript, subscript)
+        OnAfterLayout?.Invoke();
+
+        // Apply render modifiers (color, underline)
+        OnBeforeRender?.Invoke();
 
         return SharedTextBuffers.positionedGlyphs.AsSpan(0, SharedTextBuffers.positionedGlyphCount);
     }

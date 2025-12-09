@@ -292,20 +292,47 @@ public static class SharedTextBuffers
     /// <summary>
     /// Build mapping from logical codepoint index to positioned glyph index.
     /// Must be called after Layout.
+    /// Handles ligatures where multiple characters map to one glyph.
     /// </summary>
     public static void BuildLogicalToGlyphMapping()
     {
+        int cpCount = codepointCount;
+        if (cpCount == 0)
+            return;
+
         var glyphs = positionedGlyphs;
         var map = logicalToGlyph;
         int glyphCount = positionedGlyphCount;
 
+        // Ensure map is large enough
+        if (map.Length < cpCount)
+        {
+            var newMap = ArrayPool<int>.Shared.Rent(cpCount);
+            ArrayPool<int>.Shared.Return(map);
+            logicalToGlyph = newMap;
+            map = newMap;
+        }
+
+        // Pass 1: Initialize to -1 (unmapped) and set direct mappings
+        for (int i = 0; i < cpCount; i++)
+            map[i] = -1;
+
         for (int i = 0; i < glyphCount; i++)
         {
             int cluster = glyphs[i].cluster;
-            if ((uint)cluster < (uint)map.Length)
-            {
+            if ((uint)cluster < (uint)cpCount)
                 map[cluster] = i;
-            }
+        }
+
+        // Pass 2: Fill gaps for ligatures
+        // Characters absorbed into ligatures inherit the glyph of their cluster owner
+        int lastValid = 0;
+        for (int i = 0; i < cpCount; i++)
+        {
+            if (map[i] >= 0)
+                lastValid = map[i];
+            else
+                map[i] = lastValid;
         }
     }
 }

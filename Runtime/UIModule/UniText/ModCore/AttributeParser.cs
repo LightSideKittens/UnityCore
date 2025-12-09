@@ -1,3 +1,5 @@
+using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 
@@ -22,6 +24,9 @@ public sealed class AttributeParser
 
     // Временный буфер для ParsedRange от каждого правила
     private readonly List<ParsedRange> tempRanges = new();
+
+    // Reusable buffer for tag removals (avoids allocation per Parse call)
+    private readonly List<(int start, int end)> tagRemovals = new();
 
     // Clean text после удаления тегов
     private readonly StringBuilder cleanTextBuilder = new();
@@ -69,6 +74,7 @@ public sealed class AttributeParser
         itemizationSpans.Clear();
         layoutSpans.Clear();
         renderSpans.Clear();
+        tagRemovals.Clear();
         cleanTextBuilder.Clear();
 
         foreach (var rule in allRules)
@@ -79,9 +85,6 @@ public sealed class AttributeParser
             CleanText = string.Empty;
             return CleanText;
         }
-
-        // Собираем все удаляемые диапазоны (теги)
-        var tagRemovals = new List<(int start, int end)>();
 
         // Single-pass парсинг
         int index = 0;
@@ -203,40 +206,48 @@ public sealed class AttributeParser
         // Сортируем удаления по позиции
         tagRemovals.Sort((a, b) => a.start.CompareTo(b.start));
 
-        // Строим clean text и карту индексов
-        // indexMap[oldIndex] = newIndex
-        var indexMap = new int[text.Length + 1];
-        int offset = 0;
-        int removalIndex = 0;
+        // Строим clean text и карту индексов (используем ArrayPool)
+        int mapSize = text.Length + 1;
+        var indexMap = ArrayPool<int>.Shared.Rent(mapSize);
 
-        for (int i = 0; i <= text.Length; i++)
+        try
         {
-            // Проверяем, попадаем ли в удаляемый диапазон
-            while (removalIndex < tagRemovals.Count && i >= tagRemovals[removalIndex].end)
+            int offset = 0;
+            int removalIndex = 0;
+
+            for (int i = 0; i <= text.Length; i++)
             {
-                removalIndex++;
+                // Проверяем, попадаем ли в удаляемый диапазон
+                while (removalIndex < tagRemovals.Count && i >= tagRemovals[removalIndex].end)
+                {
+                    removalIndex++;
+                }
+
+                if (removalIndex < tagRemovals.Count && i >= tagRemovals[removalIndex].start && i < tagRemovals[removalIndex].end)
+                {
+                    // Внутри тега — увеличиваем offset
+                    offset++;
+                    indexMap[i] = -1; // Помечаем как удалённый
+                }
+                else
+                {
+                    indexMap[i] = i - offset;
+                    if (i < text.Length)
+                        cleanTextBuilder.Append(text[i]);
+                }
             }
 
-            if (removalIndex < tagRemovals.Count && i >= tagRemovals[removalIndex].start && i < tagRemovals[removalIndex].end)
-            {
-                // Внутри тега — увеличиваем offset
-                offset++;
-                indexMap[i] = -1; // Помечаем как удалённый
-            }
-            else
-            {
-                indexMap[i] = i - offset;
-                if (i < text.Length)
-                    cleanTextBuilder.Append(text[i]);
-            }
+            CleanText = cleanTextBuilder.ToString();
+
+            // Пересчитываем индексы во всех spans
+            RemapSpanIndices(itemizationSpans, indexMap);
+            RemapSpanIndices(layoutSpans, indexMap);
+            RemapSpanIndices(renderSpans, indexMap);
         }
-
-        CleanText = cleanTextBuilder.ToString();
-
-        // Пересчитываем индексы во всех spans
-        RemapSpanIndices(itemizationSpans, indexMap);
-        RemapSpanIndices(layoutSpans, indexMap);
-        RemapSpanIndices(renderSpans, indexMap);
+        finally
+        {
+            ArrayPool<int>.Shared.Return(indexMap);
+        }
     }
 
     private static void RemapSpanIndices(List<AttributeSpan> spans, int[] indexMap)

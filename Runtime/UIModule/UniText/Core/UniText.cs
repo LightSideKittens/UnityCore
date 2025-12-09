@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 /// <summary>
 /// Flags indicating what needs to be rebuilt.
-/// Lower flags require less work, higher flags trigger more processing.
+/// Each flag represents a specific change type for precise rebuild control.
 /// </summary>
 [Flags]
 public enum UniTextDirtyFlags
@@ -21,13 +21,22 @@ public enum UniTextDirtyFlags
     /// <summary>Re-layout needed (rect size changed with word wrap)</summary>
     Layout = 1 << 2,
 
-    /// <summary>Font size changed - re-layout + mesh</summary>
+    /// <summary>Font size changed</summary>
     FontSize = 1 << 3,
 
-    /// <summary>Full rebuild (text, font, direction changed)</summary>
-    Full = 1 << 4,
+    /// <summary>Font asset changed</summary>
+    Font = 1 << 4,
 
-    All = Color | Alignment | Layout | FontSize | Full
+    /// <summary>Base direction changed</summary>
+    Direction = 1 << 5,
+
+    /// <summary>Text content changed - requires attribute parsing</summary>
+    Text = 1 << 6,
+
+    /// <summary>Flags requiring full rebuild (text, font, direction)</summary>
+    FullRebuild = Text | Font | Direction,
+
+    All = Color | Alignment | Layout | FontSize | FullRebuild
 }
 
 /// <summary>
@@ -66,13 +75,15 @@ public class UniText : MaskableGraphic
 
     [SerializeField]
     private VerticalAlignment verticalAlignment = VerticalAlignment.Top;
+    
+    [SerializeReference] private BaseModRegister[] modRegisters;
 
     // Runtime components
     private TextProcessor processor;
     private UniTextFontProvider fontProvider;
     private UniTextMeshGenerator meshGenerator;
 
-    private UniTextDirtyFlags dirtyFlags = UniTextDirtyFlags.Full;
+    private UniTextDirtyFlags dirtyFlags = UniTextDirtyFlags.All;
 
     // Cached settings for change detection
     private float cachedRectWidth;
@@ -97,6 +108,10 @@ public class UniText : MaskableGraphic
 
     // Cached Canvas reference (avoid GetComponentInParent every frame)
     private Canvas cachedCanvas;
+    private AttributeParser parser;
+
+    // Cached clean text to avoid re-parsing when only layout changed
+    private string cachedCleanText;
 
     public string Text
     {
@@ -106,7 +121,7 @@ public class UniText : MaskableGraphic
             if (text != value)
             {
                 text = value;
-                SetDirty(UniTextDirtyFlags.Full);
+                SetDirty(UniTextDirtyFlags.Text);
             }
         }
     }
@@ -120,7 +135,7 @@ public class UniText : MaskableGraphic
             {
                 font = value;
                 RebuildFontProvider();
-                SetDirty(UniTextDirtyFlags.Full);
+                SetDirty(UniTextDirtyFlags.Font);
             }
         }
     }
@@ -146,7 +161,7 @@ public class UniText : MaskableGraphic
             if (baseDirection != value)
             {
                 baseDirection = value;
-                SetDirty(UniTextDirtyFlags.Full);
+                SetDirty(UniTextDirtyFlags.Direction);
             }
         }
     }
@@ -219,7 +234,7 @@ public class UniText : MaskableGraphic
         base.OnEnable();
 
         // Re-initialize after Domain Reload (runtime data not serialized)
-        dirtyFlags = UniTextDirtyFlags.Full;
+        dirtyFlags = UniTextDirtyFlags.All;
         processor = null;
         fontProvider = null;
         meshGenerator = null;
@@ -258,7 +273,7 @@ public class UniText : MaskableGraphic
     protected override void OnValidate()
     {
         base.OnValidate();
-        SetDirty(UniTextDirtyFlags.Full);
+        SetDirty(UniTextDirtyFlags.All);
     }
 #endif
 
@@ -274,7 +289,7 @@ public class UniText : MaskableGraphic
         base.OnTransformParentChanged();
         cachedCanvas = null;
         shaderChannelsConfigured = false;
-        SetDirty(UniTextDirtyFlags.Full);
+        SetDirty(UniTextDirtyFlags.Layout);
     }
 
     protected override void OnDestroy()
@@ -358,7 +373,25 @@ public class UniText : MaskableGraphic
 
         try
         {
+            if (modRegisters != null && modRegisters.Length > 0)
+            {
+                parser = new AttributeParser();
+                for (int i = 0; i < modRegisters.Length; i++)
+                {
+                    modRegisters[i].Register(parser);
+                }
+            }
+
             processor = new TextProcessor();
+
+            // Wire up parser events
+            if (parser != null)
+            {
+                processor.OnBeforeItemize = parser.ApplyItemizationModifiers;
+                processor.OnAfterLayout = parser.ApplyLayoutModifiers;
+                processor.OnBeforeRender = parser.ApplyRenderModifiers;
+            }
+
             cachedMeshProvider = GetPooledMeshForText;
             RebuildFontProvider();
         }
@@ -386,7 +419,7 @@ public class UniText : MaskableGraphic
     /// Помечает текст как требующий перестройки с указанным уровнем.
     /// Перестройка произойдёт через систему CanvasUpdateRegistry (Graphic.Rebuild).
     /// </summary>
-    public void SetDirty(UniTextDirtyFlags flags = UniTextDirtyFlags.Full)
+    public void SetDirty(UniTextDirtyFlags flags = UniTextDirtyFlags.All)
     {
         if (flags == UniTextDirtyFlags.None) return;
 
@@ -431,10 +464,10 @@ public class UniText : MaskableGraphic
             dirtyFlags = UniTextDirtyFlags.None;
 
             // Determine what level of rebuild is needed
-            if ((flags & UniTextDirtyFlags.Full) != 0)
+            if ((flags & UniTextDirtyFlags.FullRebuild) != 0)
             {
                 // Full rebuild: text, font, or direction changed
-                RebuildText(UniTextDirtyFlags.Full);
+                RebuildText(flags);
             }
             else if ((flags & UniTextDirtyFlags.FontSize) != 0)
             {
@@ -473,7 +506,7 @@ public class UniText : MaskableGraphic
     {
         if (processor == null || fontProvider == null || string.IsNullOrEmpty(text))
         {
-            RebuildText(UniTextDirtyFlags.Full);
+            RebuildText(UniTextDirtyFlags.FullRebuild);
             return;
         }
 
@@ -693,7 +726,7 @@ public class UniText : MaskableGraphic
         shaderChannelsConfigured = true;
     }
 
-    private void RebuildText(UniTextDirtyFlags dirtyFlags = UniTextDirtyFlags.Full)
+    private void RebuildText(UniTextDirtyFlags dirtyFlags = UniTextDirtyFlags.FullRebuild)
     {
         if (processor == null || fontProvider == null || meshGenerator == null)
         {
@@ -723,6 +756,20 @@ public class UniText : MaskableGraphic
             cachedRectWidth = rect.width;
             cachedRectHeight = rect.height;
 
+            // Only parse attributes when text changed
+            string textToProcess;
+            if ((dirtyFlags & UniTextDirtyFlags.Text) != 0 || cachedCleanText == null)
+            {
+                // Text changed - need to re-parse attributes
+                textToProcess = parser != null ? parser.Parse(text) : text;
+                cachedCleanText = textToProcess;
+            }
+            else
+            {
+                // Use cached clean text (font/direction/layout change - no re-parsing needed)
+                textToProcess = cachedCleanText;
+            }
+
             var settings = new TextProcessSettings
             {
                 maxWidth = enableWordWrap ? rect.width : float.MaxValue,
@@ -734,7 +781,7 @@ public class UniText : MaskableGraphic
                 verticalAlignment = verticalAlignment
             };
 
-            var glyphs = processor.Process(text.AsSpan(), settings, dirtyFlags);
+            var glyphs = processor.Process(textToProcess.AsSpan(), settings, dirtyFlags);
             lastResultWidth = processor.ResultWidth;
             lastResultHeight = processor.ResultHeight;
 

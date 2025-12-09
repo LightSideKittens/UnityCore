@@ -148,13 +148,16 @@ public sealed class TextLayout
                 int fontId = run.fontId;
                 int glyphEnd = glyphStart + glyphLen;
 
+                // Convert run-local cluster to global codepoint index
+                int clusterOffset = run.range.start;
+
                 for (int g = glyphStart; g < glyphEnd; g++)
                 {
                     ref readonly var glyph = ref glyphs[g];
                     result[glyphCount++] = new PositionedGlyph
                     {
                         glyphId = glyph.glyphId,
-                        cluster = glyph.cluster,
+                        cluster = glyph.cluster + clusterOffset,
                         x = x + glyph.offsetX,
                         // HarfBuzz uses typographic coordinates (Y up), but our layout uses Y down
                         // So we need to subtract offsetY to move diacritics up
