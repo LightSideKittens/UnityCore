@@ -18,7 +18,7 @@ public enum UniTextDirtyFlags
     /// <summary>Alignment offset only</summary>
     Alignment = 1 << 1,
 
-    /// <summary>Re-layout needed (rect size changed with word wrap)</summary>
+    /// <summary>Re-layout needed (rect size changed)</summary>
     Layout = 1 << 2,
 
     /// <summary>Font size changed</summary>
@@ -280,8 +280,8 @@ public class UniText : MaskableGraphic
     protected override void OnRectTransformDimensionsChange()
     {
         base.OnRectTransformDimensionsChange();
-        // Layout only needed if word wrap is enabled, otherwise just alignment
-        SetDirty(enableWordWrap ? UniTextDirtyFlags.Layout : UniTextDirtyFlags.Alignment);
+        // Always need layout when rect changes - alignment positions depend on rect size
+        SetDirty(UniTextDirtyFlags.Layout);
     }
 
     protected override void OnTransformParentChanged()
@@ -772,7 +772,8 @@ public class UniText : MaskableGraphic
 
             var settings = new TextProcessSettings
             {
-                maxWidth = enableWordWrap ? rect.width : float.MaxValue,
+                // Always use real rect width for alignment; LineBreaker will use FloatMax when word wrap is disabled
+                maxWidth = rect.width,
                 maxHeight = rect.height,
                 fontSize = fontSize,
                 baseDirection = baseDirection,

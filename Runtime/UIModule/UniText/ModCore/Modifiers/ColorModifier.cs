@@ -1,9 +1,11 @@
+using System;
 using UnityEngine;
 
 /// <summary>
 /// Модификатор цвета текста.
 /// Использует logicalToGlyph для эффективного применения цвета к диапазону символов.
 /// </summary>
+[Serializable]
 public sealed class ColorModifier : IRenderModifier
 {
     void IModifier.Apply(int start, int end, string parameter)

@@ -5,6 +5,12 @@ using UnityEngine;
 
 public struct TextProcessSettings
 {
+    /// <summary>
+    /// Safe maximum value for UI dimensions. Using float.MaxValue causes integer overflow in Unity UI batching.
+    /// This matches TMP_Math.FLOAT_MAX convention.
+    /// </summary>
+    public const float FloatMax = 32767f;
+
     public float maxWidth;
     public float maxHeight;
     public float fontSize;
@@ -16,8 +22,8 @@ public struct TextProcessSettings
 
     public static TextProcessSettings Default => new()
     {
-        maxWidth = float.MaxValue,
-        maxHeight = float.MaxValue,
+        maxWidth = FloatMax,
+        maxHeight = FloatMax,
         fontSize = 36f,
         baseDirection = TextDirection.LeftToRight,
         enableWordWrap = true,
@@ -141,7 +147,7 @@ public sealed class TextProcessor
         // else: use existing shaping data from SharedTextBuffers
 
         // Always do layout (depends on width/height/alignment)
-        BreakLines(settings.enableWordWrap ? settings.maxWidth : float.MaxValue);
+        BreakLines(settings.enableWordWrap ? settings.maxWidth : TextProcessSettings.FloatMax);
         LayoutText(settings);
 
         // Build mapping for modifiers

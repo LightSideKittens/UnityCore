@@ -5,6 +5,7 @@ using System.Collections.Generic;
 /// Базовый класс для правил парсинга HTML-подобных тегов.
 /// Обрабатывает открывающие/закрывающие теги и вложенность.
 /// </summary>
+[Serializable]
 public abstract class TagParseRule : IParseRule
 {
     private readonly Stack<OpenTag> openTags = new();

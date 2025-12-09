@@ -16,8 +16,8 @@ public struct LayoutSettings
 
     public static LayoutSettings Default => new()
     {
-        maxWidth = float.MaxValue,
-        maxHeight = float.MaxValue,
+        maxWidth = TextProcessSettings.FloatMax,
+        maxHeight = TextProcessSettings.FloatMax,
         lineSpacing = 0,
         defaultLineHeight = 20,
         horizontalAlignment = HorizontalAlignment.Left,
