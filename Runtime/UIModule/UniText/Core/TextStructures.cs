@@ -100,7 +100,9 @@ public struct TextLine
 }
 
 /// <summary>
-/// Финальная позиция глифа для рендеринга
+/// Финальная позиция глифа для рендеринга.
+/// Содержит только базовые данные. Атрибуты (color, stylePadding и т.д.)
+/// хранятся в отдельных буферах SharedTextBuffers или внутри модификаторов.
 /// </summary>
 public struct PositionedGlyph
 {
@@ -109,11 +111,6 @@ public struct PositionedGlyph
     public float x;
     public float y;
     public int fontId;
-    public UnityEngine.Color32 color; // Цвет глифа
-    public float stylePadding; // Дополнительный padding для Bold (расширяет UV и vertex)
-    public float italicAngle; // Угол наклона для Italic (в градусах, 0 = нет наклона)
-    public bool hasUnderline; // Флаг подчёркивания
-    public bool hasStrikethrough; // Флаг зачёркивания
 }
 
 /// <summary>

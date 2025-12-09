@@ -11,6 +11,26 @@ public interface IModifier
     /// <param name="end">Конец диапазона (не включительно)</param>
     /// <param name="parameter">Параметр из тега (например, "#FF0000")</param>
     void Apply(int start, int end, string parameter);
+
+    /// <summary>
+    /// Инициализация модификатора. Вызывается при регистрации в UniText.
+    /// Модификатор может подписаться на события MeshGenerator.
+    /// Default implementation: do nothing.
+    /// </summary>
+    void Initialize(UniText uniText) { }
+
+    /// <summary>
+    /// Деинициализация модификатора. Вызывается при удалении из списка или в OnValidate.
+    /// Модификатор должен отписаться от событий MeshGenerator.
+    /// Default implementation: do nothing.
+    /// </summary>
+    void Deinitialize(UniText uniText) { }
+
+    /// <summary>
+    /// Сброс буферов модификатора перед обработкой нового текста.
+    /// Default implementation: do nothing.
+    /// </summary>
+    void Reset() { }
 }
 
 /// <summary>

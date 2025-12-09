@@ -1,12 +1,29 @@
 using System;
+using System.Buffers;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 /// <summary>
 /// Модификатор цвета текста.
+/// Подписывается на OnGlyph и применяет цвет к последним 4 вершинам.
+/// Данные хранятся в статическом буфере.
 /// </summary>
 [Serializable]
 public class ColorModifier : IRenderModifier
 {
+    // Статический буфер цветов per-cluster (индексируется по codepoint)
+    // Color32 packed как uint для экономии памяти, 0 = нет кастомного цвета
+    // ВАЖНО: ArrayPool.Rent() НЕ гарантирует очищенный массив — очищаем сразу
+    private static uint[] colorData = RentCleared(256);
+    private static int capacity = 256;
+
+    private static uint[] RentCleared(int size)
+    {
+        var arr = ArrayPool<uint>.Shared.Rent(size);
+        arr.AsSpan(0, size).Clear();
+        return arr;
+    }
+
     void IModifier.Apply(int start, int end, string parameter)
     {
         if (string.IsNullOrEmpty(parameter))
@@ -15,7 +32,117 @@ public class ColorModifier : IRenderModifier
         if (!TryParseColor(parameter, out Color32 color))
             return;
 
-        ModifierHelper.ForEachGlyphInRange(start, end, (ref PositionedGlyph g) => g.color = color);
+        int cpCount = SharedTextBuffers.codepointCount;
+
+        // Ensure capacity
+        if (cpCount > capacity)
+        {
+            var newBuffer = ArrayPool<uint>.Shared.Rent(cpCount);
+            colorData.AsSpan(0, capacity).CopyTo(newBuffer);
+            // ВАЖНО: очищаем новую часть буфера (ArrayPool не гарантирует нули)
+            newBuffer.AsSpan(capacity, cpCount - capacity).Clear();
+            ArrayPool<uint>.Shared.Return(colorData);
+            colorData = newBuffer;
+            capacity = cpCount;
+        }
+
+        // Clamp to valid range
+        if (start < 0) start = 0;
+        if (end > cpCount) end = cpCount;
+
+        // Pack Color32 into uint with alpha in high byte to distinguish from 0
+        // Format: ARGB (alpha always non-zero even for transparent colors)
+        uint packed = PackColor(color);
+
+        // Set color for range
+        for (int i = start; i < end; i++)
+            colorData[i] = packed;
+    }
+
+    void IModifier.Initialize(UniText uniText)
+    {
+        uniText.MeshGenerator.OnGlyph += OnGlyph;
+    }
+
+    void IModifier.Deinitialize(UniText uniText)
+    {
+        var gen = uniText.MeshGenerator;
+        if (gen == null) return;
+        gen.OnGlyph -= OnGlyph;
+    }
+
+    private static void OnGlyph()
+    {
+        int cluster = UniTextMeshGenerator.CurrentCluster;
+        if (cluster < 0 || cluster >= capacity)
+            return;
+
+        uint packed = colorData[cluster];
+        if (packed == 0)
+            return; // No custom color
+
+        Color32 color = UnpackColor(packed);
+
+        // Apply color to last 4 vertices
+        int baseIdx = UniTextMeshGenerator.VertexCount - 4;
+        var colors = UniTextMeshGenerator.Colors;
+
+        colors[baseIdx] = color;
+        colors[baseIdx + 1] = color;
+        colors[baseIdx + 2] = color;
+        colors[baseIdx + 3] = color;
+    }
+
+    /// <summary>
+    /// Сброс буфера. Вызывается перед новым текстом.
+    /// </summary>
+    public static void ResetStatic()
+    {
+        colorData.AsSpan(0, capacity).Clear();
+    }
+
+    void IModifier.Reset() => ResetStatic();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static uint PackColor(Color32 c)
+    {
+        // Pack as ARGB, ensure alpha is at least 1 to distinguish from "no color"
+        byte a = c.a == 0 ? (byte)1 : c.a;
+        return ((uint)a << 24) | ((uint)c.r << 16) | ((uint)c.g << 8) | c.b;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Color32 UnpackColor(uint packed)
+    {
+        return new Color32(
+            (byte)((packed >> 16) & 0xFF), // R
+            (byte)((packed >> 8) & 0xFF),  // G
+            (byte)(packed & 0xFF),         // B
+            (byte)((packed >> 24) & 0xFF)  // A
+        );
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool HasColor(int cluster)
+    {
+        return cluster >= 0 && cluster < capacity && colorData[cluster] != 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Color32 GetColor(int cluster)
+    {
+        if (cluster < 0 || cluster >= capacity || colorData[cluster] == 0)
+            return new Color32(255, 255, 255, 255);
+        return UnpackColor(colorData[cluster]);
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void OnDomainReload()
+    {
+        if (colorData != null)
+            ArrayPool<uint>.Shared.Return(colorData);
+        colorData = ArrayPool<uint>.Shared.Rent(256);
+        capacity = 256;
     }
 
     private static bool TryParseColor(string value, out Color32 color)

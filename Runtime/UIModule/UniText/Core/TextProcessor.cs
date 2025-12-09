@@ -53,21 +53,30 @@ public sealed class TextProcessor
     // DEBUG: Enable detailed logging for Arabic text issues
     public static bool DebugLogging = false;
 
-    // Events for modifier application
+    // ═══════════════════════════════════════════════════════════════════
+    // EVENTS - точки расширения для модификаторов
+    // ═══════════════════════════════════════════════════════════════════
+
     /// <summary>
-    /// Called before Itemize(). For modifiers that affect run splitting (font, bold, size).
+    /// После парсинга. Codepoints готовы в SharedTextBuffers.
+    /// </summary>
+    public Action OnAfterParse;
+
+    /// <summary>
+    /// Перед Itemize(). Для модификаторов влияющих на разбиение runs (font, bold, size).
     /// </summary>
     public Action OnBeforeItemize;
 
     /// <summary>
-    /// Called after Layout() and BuildLogicalToGlyphMapping(). For modifiers that affect positions (superscript, subscript).
+    /// После Shaping. ShapedGlyphs готовы.
     /// </summary>
-    public Action OnAfterLayout;
+    public Action OnAfterShape;
 
     /// <summary>
-    /// Called after Layout(). For modifiers that affect visual properties (color, underline).
+    /// После Layout() и BuildLogicalToGlyphMapping().
+    /// Для модификаторов меняющих атрибуты глифов (color, italic, scale, offset).
     /// </summary>
-    public Action OnBeforeRender;
+    public Action OnAfterLayout;
 
     public TextProcessor()
     {
@@ -132,14 +141,18 @@ public sealed class TextProcessor
                 return ReadOnlySpan<PositionedGlyph>.Empty;
             }
 
+            OnAfterParse?.Invoke();
+
             AnalyzeBidi(settings.baseDirection);
             AnalyzeScripts();
 
-            // Apply itemization modifiers before splitting into runs
             OnBeforeItemize?.Invoke();
 
             Itemize();
             Shape();
+
+            OnAfterShape?.Invoke();
+
             EnsureGlyphsInAtlas();
 
             hasValidShapingData = true;
@@ -153,11 +166,7 @@ public sealed class TextProcessor
         // Build mapping for modifiers
         SharedTextBuffers.BuildLogicalToGlyphMapping();
 
-        // Apply layout modifiers (superscript, subscript)
         OnAfterLayout?.Invoke();
-
-        // Apply render modifiers (color, underline)
-        OnBeforeRender?.Invoke();
 
         return SharedTextBuffers.positionedGlyphs.AsSpan(0, SharedTextBuffers.positionedGlyphCount);
     }

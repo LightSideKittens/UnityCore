@@ -64,6 +64,53 @@ public sealed class AttributeParser
     }
 
     /// <summary>
+    /// Инициализировать все модификаторы. Вызывается после создания MeshGenerator.
+    /// Модификаторы подписываются на события MeshGenerator.
+    /// </summary>
+    public void InitializeModifiers(UniText uniText)
+    {
+        foreach (var (_, modifier) in itemizationRules)
+            modifier.Initialize(uniText);
+
+        foreach (var (_, modifier) in layoutRules)
+            modifier.Initialize(uniText);
+
+        foreach (var (_, modifier) in renderRules)
+            modifier.Initialize(uniText);
+    }
+
+    /// <summary>
+    /// Деинициализировать все модификаторы. Вызывается при удалении или в OnValidate.
+    /// Модификаторы отписываются от событий MeshGenerator.
+    /// </summary>
+    public void DeinitializeModifiers(UniText uniText)
+    {
+        foreach (var (_, modifier) in itemizationRules)
+            modifier.Deinitialize(uniText);
+
+        foreach (var (_, modifier) in layoutRules)
+            modifier.Deinitialize(uniText);
+
+        foreach (var (_, modifier) in renderRules)
+            modifier.Deinitialize(uniText);
+    }
+
+    /// <summary>
+    /// Сбросить буферы всех модификаторов перед новым текстом.
+    /// </summary>
+    public void ResetModifiers()
+    {
+        foreach (var (_, modifier) in itemizationRules)
+            modifier.Reset();
+
+        foreach (var (_, modifier) in layoutRules)
+            modifier.Reset();
+
+        foreach (var (_, modifier) in renderRules)
+            modifier.Reset();
+    }
+
+    /// <summary>
     /// Парсить текст и собрать все атрибуты
     /// </summary>
     /// <param name="text">Исходный текст с разметкой</param>

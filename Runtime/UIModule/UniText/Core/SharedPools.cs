@@ -43,6 +43,17 @@ public static class SharedTextBuffers
     public static PositionedGlyph[] positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
     public static int positionedGlyphCount;
 
+    // ═══════════════════════════════════════════════════════════════════
+    // GLYPH ATTRIBUTES - общие буферы для модификаторов
+    // Индексируются по glyph index (параллельно positionedGlyphs)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Цвета глифов. Используется ColorModifier, GradientModifier и т.д.
+    /// Общий буфер, т.к. цвет — универсальный атрибут для многих эффектов.
+    /// </summary>
+    public static Color32[] glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
+
     // Mapping: logical index (codepoint) → glyph index in positionedGlyphs
     // Used by modifiers to efficiently find glyphs for a character range
     public static int[] logicalToGlyph = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
@@ -242,10 +253,17 @@ public static class SharedTextBuffers
     private static void GrowPositionedGlyphs(int required)
     {
         int newSize = Math.Max(required, positionedGlyphs.Length * 2);
+
         var newBuffer = ArrayPool<PositionedGlyph>.Shared.Rent(newSize);
         positionedGlyphs.AsSpan(0, positionedGlyphCount).CopyTo(newBuffer);
         ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs);
         positionedGlyphs = newBuffer;
+
+        // Grow glyphColors together (parallel array)
+        var newColors = ArrayPool<Color32>.Shared.Rent(newSize);
+        glyphColors.AsSpan(0, positionedGlyphCount).CopyTo(newColors);
+        ArrayPool<Color32>.Shared.Return(glyphColors);
+        glyphColors = newColors;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -264,6 +282,7 @@ public static class SharedTextBuffers
         lines = ArrayPool<TextLine>.Shared.Rent(MinLineCapacity);
         orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
         positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
+        glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
         logicalToGlyph = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
         bidiParagraphs = Array.Empty<BidiParagraph>();
         peakCodepointCount = 0;
@@ -286,6 +305,7 @@ public static class SharedTextBuffers
         if (lines != null) { ArrayPool<TextLine>.Shared.Return(lines); lines = null; }
         if (orderedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(orderedRuns); orderedRuns = null; }
         if (positionedGlyphs != null) { ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs); positionedGlyphs = null; }
+        if (glyphColors != null) { ArrayPool<Color32>.Shared.Return(glyphColors); glyphColors = null; }
         if (logicalToGlyph != null) { ArrayPool<int>.Shared.Return(logicalToGlyph); logicalToGlyph = null; }
     }
 
