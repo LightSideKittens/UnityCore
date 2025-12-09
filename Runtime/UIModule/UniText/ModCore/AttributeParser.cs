@@ -131,6 +131,26 @@ public sealed class AttributeParser
             }
         }
 
+        // Финализируем все правила — закрываем незакрытые теги
+        foreach (var rule in allRules)
+        {
+            tempRanges.Clear();
+            rule.Finalize(text.Length, tempRanges);
+
+            foreach (var range in tempRanges)
+            {
+                if (range.HasTags)
+                {
+                    tagRemovals.Add((range.tagStart, range.tagEnd));
+                    // closeTagStart == closeTagEnd для незакрытых тегов — пустой диапазон
+                    if (range.closeTagStart != range.closeTagEnd)
+                        tagRemovals.Add((range.closeTagStart, range.closeTagEnd));
+                }
+
+                CreateSpanForRule(rule, range);
+            }
+        }
+
         // Строим clean text и пересчитываем индексы
         BuildCleanTextAndRemapIndices(text, tagRemovals);
 
@@ -142,8 +162,10 @@ public sealed class AttributeParser
     /// </summary>
     public void ApplyItemizationModifiers()
     {
-        foreach (var span in itemizationSpans)
+        // Обратный порядок: внутренние теги применяются последними и переопределяют внешние
+        for (int i = itemizationSpans.Count - 1; i >= 0; i--)
         {
+            var span = itemizationSpans[i];
             span.modifier.Apply(span.start, span.end, span.parameter);
         }
     }
@@ -153,8 +175,10 @@ public sealed class AttributeParser
     /// </summary>
     public void ApplyLayoutModifiers()
     {
-        foreach (var span in layoutSpans)
+        // Обратный порядок: внутренние теги применяются последними и переопределяют внешние
+        for (int i = layoutSpans.Count - 1; i >= 0; i--)
         {
+            var span = layoutSpans[i];
             span.modifier.Apply(span.start, span.end, span.parameter);
         }
     }
@@ -164,8 +188,10 @@ public sealed class AttributeParser
     /// </summary>
     public void ApplyRenderModifiers()
     {
-        foreach (var span in renderSpans)
+        // Обратный порядок: внутренние теги применяются последними и переопределяют внешние
+        for (int i = renderSpans.Count - 1; i >= 0; i--)
         {
+            var span = renderSpans[i];
             span.modifier.Apply(span.start, span.end, span.parameter);
         }
     }
@@ -240,9 +266,10 @@ public sealed class AttributeParser
             CleanText = cleanTextBuilder.ToString();
 
             // Пересчитываем индексы во всех spans
-            RemapSpanIndices(itemizationSpans, indexMap);
-            RemapSpanIndices(layoutSpans, indexMap);
-            RemapSpanIndices(renderSpans, indexMap);
+            int cleanLen = CleanText.Length;
+            RemapSpanIndices(itemizationSpans, indexMap, mapSize, cleanLen);
+            RemapSpanIndices(layoutSpans, indexMap, mapSize, cleanLen);
+            RemapSpanIndices(renderSpans, indexMap, mapSize, cleanLen);
         }
         finally
         {
@@ -250,29 +277,57 @@ public sealed class AttributeParser
         }
     }
 
-    private static void RemapSpanIndices(List<AttributeSpan> spans, int[] indexMap)
+    private static void RemapSpanIndices(List<AttributeSpan> spans, int[] indexMap, int mapLength, int cleanTextLength)
     {
         for (int i = 0; i < spans.Count; i++)
         {
             var span = spans[i];
-            int newStart = indexMap[span.start];
-            int newEnd = indexMap[span.end];
+
+            // Clamp indices to valid range
+            int startIdx = span.start < 0 ? 0 : (span.start >= mapLength ? mapLength - 1 : span.start);
+            int endIdx = span.end < 0 ? 0 : (span.end >= mapLength ? mapLength - 1 : span.end);
+
+            int newStart = indexMap[startIdx];
+            int newEnd = indexMap[endIdx];
 
             // Если индекс попал на удалённый символ, ищем ближайший валидный
             if (newStart < 0)
             {
-                for (int j = span.start; j < indexMap.Length; j++)
+                for (int j = startIdx; j < mapLength; j++)
                 {
                     if (indexMap[j] >= 0) { newStart = indexMap[j]; break; }
                 }
+                // Если не нашли вперёд, ищем назад
+                if (newStart < 0)
+                {
+                    for (int j = startIdx - 1; j >= 0; j--)
+                    {
+                        if (indexMap[j] >= 0) { newStart = indexMap[j]; break; }
+                    }
+                }
             }
+
             if (newEnd < 0)
             {
-                for (int j = span.end; j < indexMap.Length; j++)
+                for (int j = endIdx; j < mapLength; j++)
                 {
                     if (indexMap[j] >= 0) { newEnd = indexMap[j]; break; }
                 }
+                // Если не нашли вперёд, ищем назад
+                if (newEnd < 0)
+                {
+                    for (int j = endIdx - 1; j >= 0; j--)
+                    {
+                        if (indexMap[j] >= 0) { newEnd = indexMap[j]; break; }
+                    }
+                }
             }
+
+            // Final safety clamp to clean text bounds
+            if (newStart < 0) newStart = 0;
+            if (newEnd < 0) newEnd = cleanTextLength;
+            if (newEnd > cleanTextLength) newEnd = cleanTextLength;
+            if (newStart > newEnd) newStart = newEnd;
 
             spans[i] = new AttributeSpan(newStart, newEnd, span.modifier, span.parameter);
         }

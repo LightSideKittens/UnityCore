@@ -18,6 +18,13 @@ public interface IParseRule
     int TryMatch(string text, int index, List<ParsedRange> results);
 
     /// <summary>
+    /// Завершает парсинг: закрывает незакрытые теги до конца текста.
+    /// </summary>
+    /// <param name="textLength">Длина исходного текста</param>
+    /// <param name="results">Список для записи диапазонов</param>
+    void Finalize(int textLength, List<ParsedRange> results);
+
+    /// <summary>
     /// Сброс внутреннего состояния перед новым парсингом
     /// </summary>
     void Reset();

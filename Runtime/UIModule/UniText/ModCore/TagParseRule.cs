@@ -31,6 +31,22 @@ public abstract class TagParseRule : IParseRule
         openTags.Clear();
     }
 
+    public void Finalize(int textLength, List<ParsedRange> results)
+    {
+        // Закрываем все незакрытые теги — их действие распространяется до конца текста
+        while (openTags.Count > 0)
+        {
+            var open = openTags.Pop();
+            results.Add(new ParsedRange(
+                tagStart: open.tagStart,
+                tagEnd: open.tagEnd,
+                closeTagStart: textLength, // Нет закрывающего тега
+                closeTagEnd: textLength,   // Пустой диапазон = ничего не удаляем
+                parameter: open.parameter
+            ));
+        }
+    }
+
     public int TryMatch(string text, int index, List<ParsedRange> results)
     {
         if (text[index] != '<')

@@ -16,11 +16,30 @@ public sealed class ColorModifier : IRenderModifier
 
         var glyphs = SharedTextBuffers.positionedGlyphs;
         var map = SharedTextBuffers.logicalToGlyph;
+        int cpCount = SharedTextBuffers.codepointCount;
+        int glyphCount = SharedTextBuffers.positionedGlyphCount;
 
-        for (int i = start; i < end; i++)
+        // Clamp end to valid range
+        if (end > cpCount) end = cpCount;
+
+        for (int cp = start; cp < end; cp++)
         {
-            int glyphIndex = map[i];
+            if (cp < 0 || cp >= cpCount)
+                continue;
+
+            int glyphIndex = map[cp];
+            if (glyphIndex < 0 || glyphIndex >= glyphCount)
+                continue;
+
+            // Окрасить основной глиф
             glyphs[glyphIndex].color = color;
+
+            // Окрасить соседние глифы с тем же cluster (для combining marks/diacritics)
+            // Глифы с одним cluster обычно расположены рядом после shaping
+            for (int g = glyphIndex - 1; g >= 0 && glyphs[g].cluster == cp; g--)
+                glyphs[g].color = color;
+            for (int g = glyphIndex + 1; g < glyphCount && glyphs[g].cluster == cp; g++)
+                glyphs[g].color = color;
         }
     }
 
