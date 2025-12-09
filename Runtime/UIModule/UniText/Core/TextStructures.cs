@@ -111,6 +111,7 @@ public struct PositionedGlyph
     public int fontId;
     public UnityEngine.Color32 color; // Цвет глифа
     public float stylePadding; // Дополнительный padding для Bold (расширяет UV и vertex)
+    public float italicAngle; // Угол наклона для Italic (в градусах, 0 = нет наклона)
 }
 
 /// <summary>

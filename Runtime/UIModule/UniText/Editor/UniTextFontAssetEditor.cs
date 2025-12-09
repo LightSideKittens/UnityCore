@@ -23,6 +23,7 @@ public class UniTextFontAssetEditor : Editor
     private SerializedProperty fallbackFontAssetTableProp;
     private SerializedProperty normalStyleProp;
     private SerializedProperty boldStyleProp;
+    private SerializedProperty italicStyleProp;
 
     private bool showFaceInfo;
     private bool showAtlasSettings = true;
@@ -45,6 +46,7 @@ public class UniTextFontAssetEditor : Editor
         fallbackFontAssetTableProp = serializedObject.FindProperty("fallbackFontAssetTable");
         normalStyleProp = serializedObject.FindProperty("normalStyle");
         boldStyleProp = serializedObject.FindProperty("boldStyle");
+        italicStyleProp = serializedObject.FindProperty("italicStyle");
     }
 
     public override void OnInspectorGUI()
@@ -222,6 +224,9 @@ public class UniTextFontAssetEditor : Editor
 
             EditorGUILayout.PropertyField(boldStyleProp,
                 new GUIContent("Bold Weight", "Weight value for bold text (<b> tag). Typical value: 0.75"));
+
+            EditorGUILayout.PropertyField(italicStyleProp,
+                new GUIContent("Italic Angle", "Slant angle in degrees for italic text (<i> tag). Typical value: 12"));
 
             if (EditorGUI.EndChangeCheck())
             {

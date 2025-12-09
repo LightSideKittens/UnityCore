@@ -148,6 +148,14 @@ public class UniTextFontAsset : ScriptableObject
     [SerializeField]
     internal float boldStyle = 0.75f;
 
+    /// <summary>
+    /// Italic angle in degrees for italic text rendering.
+    /// Controls the shear/slant of italic glyphs.
+    /// Typical value: 12 degrees.
+    /// </summary>
+    [SerializeField]
+    internal float italicStyle = 12f;
+
     #endregion
 
     #region Runtime Fields
@@ -316,6 +324,15 @@ public class UniTextFontAsset : ScriptableObject
             boldStyle = value;
             UpdateMaterialProperties();
         }
+    }
+
+    /// <summary>
+    /// Italic angle in degrees for italic text rendering.
+    /// </summary>
+    public float ItalicStyle
+    {
+        get => italicStyle;
+        set => italicStyle = value;
     }
 
     #endregion

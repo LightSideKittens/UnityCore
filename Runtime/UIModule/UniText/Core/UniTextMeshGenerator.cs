@@ -222,6 +222,20 @@ public class UniTextMeshGenerator
             float blY = tlY - heightScaled;
             float trX = tlX + widthScaled;
 
+            // Italic shear: shift top vertices right, bottom vertices left
+            float topShearX = 0f;
+            float bottomShearX = 0f;
+            if (glyph.italicAngle != 0)
+            {
+                float italicAngle = fontAsset.ItalicStyle;
+                float shearValue = italicAngle * 0.01f;
+
+                // midPoint - центр глифа по высоте (относительно baseline)
+                float midY = (tlY + blY) * 0.5f;
+                topShearX = shearValue * (tlY - midY);
+                bottomShearX = shearValue * (blY - midY);
+            }
+
             // UV coordinates
             float uvBLx = (glyphRect.x - padding) * invAtlasWidth;
             float uvBLy = (glyphRect.y - padding) * invAtlasHeight;
@@ -234,14 +248,15 @@ public class UniTextMeshGenerator
             int i3 = vertIdx + 3;
 
             // Vertices (BL, TL, TR, BR) - direct field assignment avoids struct construction
+            // Apply italic shear to X positions
             ref var v0 = ref verts[i0];
-            v0.x = tlX; v0.y = blY; v0.z = 0;
+            v0.x = tlX + bottomShearX; v0.y = blY; v0.z = 0;
             ref var v1 = ref verts[i1];
-            v1.x = tlX; v1.y = tlY; v1.z = 0;
+            v1.x = tlX + topShearX; v1.y = tlY; v1.z = 0;
             ref var v2 = ref verts[i2];
-            v2.x = trX; v2.y = tlY; v2.z = 0;
+            v2.x = trX + topShearX; v2.y = tlY; v2.z = 0;
             ref var v3 = ref verts[i3];
-            v3.x = trX; v3.y = blY; v3.z = 0;
+            v3.x = trX + bottomShearX; v3.y = blY; v3.z = 0;
 
             // UV0 (xy = texture coords, w = xScale for SDF; negative w = bold)
             ref var uv0 = ref uvData[i0];
