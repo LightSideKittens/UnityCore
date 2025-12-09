@@ -206,6 +206,11 @@ public class UniTextMeshGenerator
 
             foundCount++;
 
+            // Bold flag: if stylePadding > 0, glyph is bold
+            // Shader uses UV0.w sign: negative = bold, positive = normal
+            bool isBold = glyph.stylePadding > 0;
+            float glyphXScale = isBold ? -xScale : xScale;
+
             // Vertex positions
             float bearingXScaled = (metrics.horizontalBearingX - padding) * scale;
             float bearingYScaled = (metrics.horizontalBearingY + padding) * scale;
@@ -238,15 +243,15 @@ public class UniTextMeshGenerator
             ref var v3 = ref verts[i3];
             v3.x = trX; v3.y = blY; v3.z = 0;
 
-            // UV0 (xy = texture coords, w = xScale for SDF) - direct field assignment
+            // UV0 (xy = texture coords, w = xScale for SDF; negative w = bold)
             ref var uv0 = ref uvData[i0];
-            uv0.x = uvBLx; uv0.y = uvBLy; uv0.z = 0; uv0.w = xScale;
+            uv0.x = uvBLx; uv0.y = uvBLy; uv0.z = 0; uv0.w = glyphXScale;
             ref var uv1 = ref uvData[i1];
-            uv1.x = uvBLx; uv1.y = uvTLy; uv1.z = 0; uv1.w = xScale;
+            uv1.x = uvBLx; uv1.y = uvTLy; uv1.z = 0; uv1.w = glyphXScale;
             ref var uv2 = ref uvData[i2];
-            uv2.x = uvTRx; uv2.y = uvTLy; uv2.z = 0; uv2.w = xScale;
+            uv2.x = uvTRx; uv2.y = uvTLy; uv2.z = 0; uv2.w = glyphXScale;
             ref var uv3 = ref uvData[i3];
-            uv3.x = uvTRx; uv3.y = uvBLy; uv3.z = 0; uv3.w = xScale;
+            uv3.x = uvTRx; uv3.y = uvBLy; uv3.z = 0; uv3.w = glyphXScale;
 
             // Colors
             Color32 color = glyph.color.a > 0 ? glyph.color : defaultColor;

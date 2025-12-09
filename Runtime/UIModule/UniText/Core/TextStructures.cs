@@ -110,6 +110,7 @@ public struct PositionedGlyph
     public float y;
     public int fontId;
     public UnityEngine.Color32 color; // Цвет глифа
+    public float stylePadding; // Дополнительный padding для Bold (расширяет UV и vertex)
 }
 
 /// <summary>

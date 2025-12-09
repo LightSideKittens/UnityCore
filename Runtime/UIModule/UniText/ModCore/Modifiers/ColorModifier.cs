@@ -3,10 +3,9 @@ using UnityEngine;
 
 /// <summary>
 /// Модификатор цвета текста.
-/// Использует logicalToGlyph для эффективного применения цвета к диапазону символов.
 /// </summary>
 [Serializable]
-public sealed class ColorModifier : IRenderModifier
+public class ColorModifier : IRenderModifier
 {
     void IModifier.Apply(int start, int end, string parameter)
     {
@@ -16,33 +15,7 @@ public sealed class ColorModifier : IRenderModifier
         if (!TryParseColor(parameter, out Color32 color))
             return;
 
-        var glyphs = SharedTextBuffers.positionedGlyphs;
-        var map = SharedTextBuffers.logicalToGlyph;
-        int cpCount = SharedTextBuffers.codepointCount;
-        int glyphCount = SharedTextBuffers.positionedGlyphCount;
-
-        // Clamp end to valid range
-        if (end > cpCount) end = cpCount;
-
-        for (int cp = start; cp < end; cp++)
-        {
-            if (cp < 0 || cp >= cpCount)
-                continue;
-
-            int glyphIndex = map[cp];
-            if (glyphIndex < 0 || glyphIndex >= glyphCount)
-                continue;
-
-            // Окрасить основной глиф
-            glyphs[glyphIndex].color = color;
-
-            // Окрасить соседние глифы с тем же cluster (для combining marks/diacritics)
-            // Глифы с одним cluster обычно расположены рядом после shaping
-            for (int g = glyphIndex - 1; g >= 0 && glyphs[g].cluster == cp; g--)
-                glyphs[g].color = color;
-            for (int g = glyphIndex + 1; g < glyphCount && glyphs[g].cluster == cp; g++)
-                glyphs[g].color = color;
-        }
+        ModifierHelper.ForEachGlyphInRange(start, end, (ref PositionedGlyph g) => g.color = color);
     }
 
     private static bool TryParseColor(string value, out Color32 color)

@@ -21,9 +21,12 @@ public class UniTextFontAssetEditor : Editor
     private SerializedProperty atlasTexturesProp;
     private SerializedProperty materialProp;
     private SerializedProperty fallbackFontAssetTableProp;
+    private SerializedProperty normalStyleProp;
+    private SerializedProperty boldStyleProp;
 
     private bool showFaceInfo;
     private bool showAtlasSettings = true;
+    private bool showFontStyles = true;
     private bool showFallbacks;
 
     private void OnEnable()
@@ -40,6 +43,8 @@ public class UniTextFontAssetEditor : Editor
         atlasTexturesProp = serializedObject.FindProperty("atlasTextures");
         materialProp = serializedObject.FindProperty("material");
         fallbackFontAssetTableProp = serializedObject.FindProperty("fallbackFontAssetTable");
+        normalStyleProp = serializedObject.FindProperty("normalStyle");
+        boldStyleProp = serializedObject.FindProperty("boldStyle");
     }
 
     public override void OnInspectorGUI()
@@ -67,6 +72,11 @@ public class UniTextFontAssetEditor : Editor
 
         // Atlas Settings
         DrawAtlasSettingsSection();
+
+        EditorGUILayout.Space();
+
+        // Font Styles (Bold/Normal weights)
+        DrawFontStylesSection();
 
         EditorGUILayout.Space();
 
@@ -194,6 +204,35 @@ public class UniTextFontAssetEditor : Editor
             EditorGUILayout.PropertyField(atlasPaddingProp);
             EditorGUILayout.PropertyField(atlasRenderModeProp);
             EditorGUILayout.PropertyField(atlasTexturesProp, true);
+            EditorGUI.indentLevel--;
+        }
+    }
+
+    private void DrawFontStylesSection()
+    {
+        showFontStyles = EditorGUILayout.Foldout(showFontStyles, "Font Styles", true);
+        if (showFontStyles)
+        {
+            EditorGUI.indentLevel++;
+
+            EditorGUI.BeginChangeCheck();
+
+            EditorGUILayout.PropertyField(normalStyleProp,
+                new GUIContent("Normal Weight", "Weight value for normal text. Typical value: 0"));
+
+            EditorGUILayout.PropertyField(boldStyleProp,
+                new GUIContent("Bold Weight", "Weight value for bold text (<b> tag). Typical value: 0.75"));
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                serializedObject.ApplyModifiedProperties();
+
+                // Update material properties immediately
+                var fontAsset = (UniTextFontAsset)target;
+                fontAsset.UpdateMaterialProperties();
+                EditorUtility.SetDirty(fontAsset);
+            }
+
             EditorGUI.indentLevel--;
         }
     }

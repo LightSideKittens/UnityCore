@@ -132,6 +132,22 @@ public class UniTextFontAsset : ScriptableObject
     [SerializeField]
     internal bool clearDynamicDataOnBuild = true;
 
+    /// <summary>
+    /// Normal style weight for SDF rendering.
+    /// This value is written to shader's _WeightNormal property.
+    /// </summary>
+    [SerializeField]
+    internal float normalStyle = 0f;
+
+    /// <summary>
+    /// Bold style weight for SDF rendering.
+    /// This value is written to shader's _WeightBold property.
+    /// Controls how thick bold text appears.
+    /// Typical value: 0.75 for atlasPadding=9.
+    /// </summary>
+    [SerializeField]
+    internal float boldStyle = 0.75f;
+
     #endregion
 
     #region Runtime Fields
@@ -276,6 +292,52 @@ public class UniTextFontAsset : ScriptableObject
         set => fallbackFontAssetTable = value;
     }
 
+    /// <summary>
+    /// Normal style weight for SDF rendering.
+    /// </summary>
+    public float NormalStyle
+    {
+        get => normalStyle;
+        set
+        {
+            normalStyle = value;
+            UpdateMaterialProperties();
+        }
+    }
+
+    /// <summary>
+    /// Bold style weight for SDF rendering.
+    /// </summary>
+    public float BoldStyle
+    {
+        get => boldStyle;
+        set
+        {
+            boldStyle = value;
+            UpdateMaterialProperties();
+        }
+    }
+
+    #endregion
+
+    #region Material Properties
+
+    // Shader property IDs (cached for performance)
+    private static readonly int s_WeightNormal = Shader.PropertyToID("_WeightNormal");
+    private static readonly int s_WeightBold = Shader.PropertyToID("_WeightBold");
+
+    /// <summary>
+    /// Updates material properties for style weights.
+    /// Called automatically when NormalStyle or BoldStyle changes.
+    /// </summary>
+    public void UpdateMaterialProperties()
+    {
+        if (material == null) return;
+
+        material.SetFloat(s_WeightNormal, normalStyle);
+        material.SetFloat(s_WeightBold, boldStyle);
+    }
+
     #endregion
 
     #region Initialization
@@ -288,6 +350,7 @@ public class UniTextFontAsset : ScriptableObject
         InitializeGlyphLookupDictionary();
         InitializeCharacterLookupDictionary();
         AddSynthesizedCharacters();
+        UpdateMaterialProperties();
     }
 
     private void InitializeGlyphLookupDictionary()
@@ -1125,6 +1188,8 @@ public class UniTextFontAsset : ScriptableObject
             fontAsset.material.SetFloat("_TextureWidth", atlasWidth);
             fontAsset.material.SetFloat("_TextureHeight", atlasHeight);
             fontAsset.material.SetFloat("_GradientScale", atlasPadding + 1);
+            fontAsset.material.SetFloat(s_WeightNormal, fontAsset.normalStyle);
+            fontAsset.material.SetFloat(s_WeightBold, fontAsset.boldStyle);
         }
 
         // Initialize free rects
