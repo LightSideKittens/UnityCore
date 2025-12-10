@@ -132,9 +132,3 @@ public enum VerticalAlignment : byte
     Middle = 1,
     Bottom = 2
 }
-
-[Serializable]
-public struct FontStyles
-{
-    
-}

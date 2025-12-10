@@ -7,7 +7,7 @@ using UnityEngine;
 /// Подписывается на OnGlyph и применяет цвет к последним 4 вершинам.
 /// </summary>
 [Serializable]
-public class ColorModifier : IRenderModifier
+public class ColorModifier : IModifier
 {
     // Color32 packed как uint для экономии памяти, 0 = нет кастомного цвета
     private static ArrayPoolBuffer<uint> buffer = new(256);
@@ -81,7 +81,7 @@ public class ColorModifier : IRenderModifier
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasColor(int cluster) => ArrayPoolBufferUintExtensions.HasValue(ref buffer, cluster);
+    public static bool HasColor(int cluster) => buffer.HasValue(cluster);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color32 GetColor(int cluster)

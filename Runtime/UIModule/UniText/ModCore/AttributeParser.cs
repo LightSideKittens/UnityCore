@@ -8,66 +8,13 @@ using LSCore;
 /// Generic контейнер для правил и модификаторов одного уровня.
 /// Инкапсулирует повторяющуюся логику Register/Initialize/Reset/Apply.
 /// </summary>
-internal sealed class ModifierLevel<TModifier> where TModifier : IModifier
-{
-    public readonly List<(IParseRule rule, TModifier modifier)> ruleModPairs = new();
-    // Using LSList for ref access to AttributeSpan (avoids struct copying in RemapSpanIndices)
-    public readonly LSList<AttributeSpan> spans = new();
+internal sealed class ModifierLevel
+{ 
 
-    public void Register(IParseRule rule, TModifier modifier, List<IParseRule> allRules)
-    {
-        ruleModPairs.Add((rule, modifier));
-        allRules.Add(rule);
-    }
-    
-    public void Initialize(UniText uniText)
-    {
-        for (int i = 0; i < ruleModPairs.Count; i++)
-        {
-            ruleModPairs[i].modifier.Initialize(uniText);
-        }
-    }
 
-    public void Deinitialize(UniText uniText)
+    public void CreateSpan(IParseRule rule, ParsedRange range)
     {
-        for (int i = 0; i < ruleModPairs.Count; i++)
-        {
-            ruleModPairs[i].modifier.Deinitialize(uniText);
-        }
-    }
 
-    public void Reset()
-    {
-        for (int i = 0; i < ruleModPairs.Count; i++)
-        {
-            ruleModPairs[i].modifier.Reset();
-        }
-    }
-
-    public void ClearSpans() => spans.Clear();
-
-    public void Apply()
-    {
-        // Обратный порядок: внутренние теги применяются последними и переопределяют внешние
-        for (int i = spans.Count - 1; i >= 0; i--)
-        {
-            // Use ref to avoid struct copy
-            ref readonly var span = ref spans[i];
-            span.modifier.Apply(span.start, span.end, span.parameter);
-        }
-    }
-
-    public bool TryCreateSpan(IParseRule rule, ParsedRange range)
-    {
-        for (int i = 0; i < ruleModPairs.Count; i++)
-        {
-            if (ReferenceEquals(ruleModPairs[i].rule, rule))
-            {
-                spans.Add(new AttributeSpan(range.start, range.end, ruleModPairs[i].modifier, range.parameter));
-                return true;
-            }
-        }
-        return false;
     }
 }
 
@@ -78,9 +25,9 @@ internal sealed class ModifierLevel<TModifier> where TModifier : IModifier
 public sealed class AttributeParser
 {
     // Уровни модификаторов
-    private readonly ModifierLevel<IItemizationModifier> itemization = new();
-    private readonly ModifierLevel<ILayoutModifier> layout = new();
-    private readonly ModifierLevel<IRenderModifier> render = new();
+    public readonly List<(IParseRule rule, IModifier modifier)> ruleModPairs = new();
+    // Using LSList for ref access to AttributeSpan (avoids struct copying in RemapSpanIndices)
+    internal readonly LSList<AttributeSpan> spans = new();
 
     // Все правила для итерации (кешируем для производительности)
     private readonly List<IParseRule> allRules = new();
@@ -103,17 +50,11 @@ public sealed class AttributeParser
     /// <summary>
     /// Зарегистрировать правило с модификатором уровня Itemization
     /// </summary>
-    public void Register(IParseRule rule, IItemizationModifier modifier) => itemization.Register(rule, modifier, allRules);
-
-    /// <summary>
-    /// Зарегистрировать правило с модификатором уровня Layout
-    /// </summary>
-    public void Register(IParseRule rule, ILayoutModifier modifier) => layout.Register(rule, modifier, allRules);
-
-    /// <summary>
-    /// Зарегистрировать правило с модификатором уровня Render
-    /// </summary>
-    public void Register(IParseRule rule, IRenderModifier modifier) => render.Register(rule, modifier, allRules);
+    public void Register(IParseRule rule, IModifier modifier)
+    {
+        ruleModPairs.Add((rule, modifier));
+        allRules.Add(rule);
+    }
 
     /// <summary>
     /// Инициализировать все модификаторы. Вызывается после создания MeshGenerator.
@@ -121,9 +62,10 @@ public sealed class AttributeParser
     /// </summary>
     public void InitializeModifiers(UniText uniText)
     {
-        itemization.Initialize(uniText);
-        layout.Initialize(uniText);
-        render.Initialize(uniText);
+        for (int i = 0; i < ruleModPairs.Count; i++)
+        {
+            ruleModPairs[i].modifier.Initialize(uniText);
+        }
     }
 
     /// <summary>
@@ -132,9 +74,10 @@ public sealed class AttributeParser
     /// </summary>
     public void DeinitializeModifiers(UniText uniText)
     {
-        itemization.Deinitialize(uniText);
-        layout.Deinitialize(uniText);
-        render.Deinitialize(uniText);
+        for (int i = 0; i < ruleModPairs.Count; i++)
+        {
+            ruleModPairs[i].modifier.Deinitialize(uniText);
+        }
     }
 
     /// <summary>
@@ -142,11 +85,23 @@ public sealed class AttributeParser
     /// </summary>
     public void ResetModifiers()
     {
-        itemization.Reset();
-        layout.Reset();
-        render.Reset();
+        for (int i = 0; i < ruleModPairs.Count; i++)
+        {
+            ruleModPairs[i].modifier.Reset();
+        }
     }
 
+    private void Apply()
+    {
+        // Обратный порядок: внутренние теги применяются последними и переопределяют внешние
+        for (int i = spans.Count - 1; i >= 0; i--)
+        {
+            // Use ref to avoid struct copy
+            ref readonly var span = ref spans[i];
+            span.modifier.Apply(span.start, span.end, span.parameter);
+        }
+    }
+    
     /// <summary>
     /// Парсить текст и собрать все атрибуты
     /// </summary>
@@ -155,10 +110,8 @@ public sealed class AttributeParser
     public string Parse(string text)
     {
         // Сброс состояния
-        itemization.ClearSpans();
-        layout.ClearSpans();
-        render.ClearSpans();
         // FakeClear is safe for (int, int) tuple - pure value type
+        spans.Clear();
         tagRemovals.FakeClear();
         cleanTextBuilder.Clear();
 
@@ -241,30 +194,20 @@ public sealed class AttributeParser
         // Строим clean text и пересчитываем индексы
         BuildCleanTextAndRemapIndices(text, tagRemovals);
 
+        Apply();
         return CleanText;
     }
 
-    /// <summary>
-    /// Применить все модификаторы уровня Itemization
-    /// </summary>
-    public void ApplyItemizationModifiers() => itemization.Apply();
-
-    /// <summary>
-    /// Применить все модификаторы уровня Layout
-    /// </summary>
-    public void ApplyLayoutModifiers() => layout.Apply();
-
-    /// <summary>
-    /// Применить все модификаторы уровня Render
-    /// </summary>
-    public void ApplyRenderModifiers() => render.Apply();
-
     private void CreateSpanForRule(IParseRule rule, ParsedRange range)
     {
-        // Ищем правило в каждом уровне и создаём span с соответствующим модификатором
-        if (itemization.TryCreateSpan(rule, range)) return;
-        if (layout.TryCreateSpan(rule, range)) return;
-        render.TryCreateSpan(rule, range);
+        for (int i = 0; i < ruleModPairs.Count; i++)
+        {
+            if (ReferenceEquals(ruleModPairs[i].rule, rule))
+            {
+                spans.Add(new AttributeSpan(range.start, range.end, ruleModPairs[i].modifier, range.parameter));
+                return;
+            }
+        }
     }
 
     private void BuildCleanTextAndRemapIndices(string text, LSList<(int start, int end)> tagRemovals)
@@ -307,9 +250,7 @@ public sealed class AttributeParser
 
             // Пересчитываем индексы во всех spans
             int cleanLen = CleanText.Length;
-            RemapSpanIndices(itemization.spans, indexMap, mapSize, cleanLen);
-            RemapSpanIndices(layout.spans, indexMap, mapSize, cleanLen);
-            RemapSpanIndices(render.spans, indexMap, mapSize, cleanLen);
+            RemapSpanIndices(spans, indexMap, mapSize, cleanLen);
         }
         finally
         {

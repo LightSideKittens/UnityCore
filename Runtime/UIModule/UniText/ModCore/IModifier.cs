@@ -32,27 +32,3 @@ public interface IModifier
     /// </summary>
     void Reset() { }
 }
-
-/// <summary>
-/// Модификатор уровня Itemization — влияет на разбиение на runs (font, bold, italic, size).
-/// Вызывается перед Itemize().
-/// </summary>
-public interface IItemizationModifier : IModifier
-{
-}
-
-/// <summary>
-/// Модификатор уровня Layout — влияет на позиции глифов (superscript, subscript, baseline).
-/// Вызывается после BreakLines(), перед Layout().
-/// </summary>
-public interface ILayoutModifier : IModifier
-{
-}
-
-/// <summary>
-/// Модификатор уровня Render — визуальные эффекты (color, underline, shadow).
-/// Вызывается после Layout(), перед MeshGenerator.
-/// </summary>
-public interface IRenderModifier : IModifier
-{
-}

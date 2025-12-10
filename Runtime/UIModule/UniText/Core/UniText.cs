@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using LSCore;
-using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,7 +16,6 @@ using UnityEngine.UI;
 [ExecuteAlways]
 public class UniText : MaskableGraphic
 {
-    
     /// <summary>
     /// Flags indicating what needs to be rebuilt.
     /// Each flag represents a specific change type for precise rebuild control.
@@ -83,10 +81,7 @@ public class UniText : MaskableGraphic
     private VerticalAlignment verticalAlignment = VerticalAlignment.Top;
 
     [SerializeReference]
-    private List<BaseModRegister> modRegisters;
-    
-    [SerializeReference]
-    private BaseModRegister[] textStyles;
+    private List<ModRegister> modRegisters;
     
     #endregion
 
@@ -350,16 +345,6 @@ public class UniText : MaskableGraphic
     private void CreateProcessor()
     {
         processor = new TextProcessor();
-
-        if (parser != null)
-        {
-            processor.OnBeforeItemize = parser.ApplyItemizationModifiers;
-            processor.OnAfterLayout = () =>
-            {
-                parser.ApplyLayoutModifiers();
-                parser.ApplyRenderModifiers();
-            };
-        }
     }
 
     private void RebuildFontProvider()

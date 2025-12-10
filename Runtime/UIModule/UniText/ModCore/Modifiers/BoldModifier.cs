@@ -8,7 +8,7 @@ using UnityEngine;
 /// Подписывается на OnGlyph для модификации UV.w.
 /// </summary>
 [Serializable]
-public class BoldModifier : IRenderModifier
+public class BoldModifier : IModifier
 {
     private static ArrayPoolBuffer<float> buffer = new(256);
 
@@ -35,7 +35,7 @@ public class BoldModifier : IRenderModifier
     {
         int cluster = UniTextMeshGenerator.currentCluster;
         // Use extension method for fast check (no EqualityComparer overhead)
-        if (!ArrayPoolBufferFloatExtensions.HasValue(ref buffer, cluster))
+        if (!buffer.HasValue(cluster))
             return;
 
         // Bold: set UV.w to negative xScale for last 4 vertices
@@ -54,7 +54,7 @@ public class BoldModifier : IRenderModifier
     void IModifier.Reset() => ResetStatic();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsBold(int cluster) => ArrayPoolBufferFloatExtensions.HasValue(ref buffer, cluster);
+    public static bool IsBold(int cluster) => buffer.HasValue(cluster);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload() => buffer.Reset();

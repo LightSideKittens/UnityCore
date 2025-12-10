@@ -7,7 +7,7 @@ using UnityEngine;
 /// Помечает глифы как italic. Подписывается на OnGlyph для применения shear к вершинам.
 /// </summary>
 [Serializable]
-public class ItalicModifier : IRenderModifier
+public class ItalicModifier : IModifier
 {
     private static ArrayPoolBuffer<float> buffer = new(256);
 
@@ -33,7 +33,7 @@ public class ItalicModifier : IRenderModifier
     private static void OnGlyph()
     {
         int cluster = UniTextMeshGenerator.currentCluster;
-        if (!ArrayPoolBufferFloatExtensions.HasValue(ref buffer, cluster))
+        if (!buffer.HasValue(cluster))
             return;
 
         // Get italic style from current font
@@ -64,7 +64,7 @@ public class ItalicModifier : IRenderModifier
     void IModifier.Reset() => ResetStatic();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsItalic(int cluster) => ArrayPoolBufferFloatExtensions.HasValue(ref buffer, cluster);
+    public static bool IsItalic(int cluster) => buffer.HasValue(cluster);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload() => buffer.Reset();

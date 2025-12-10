@@ -8,7 +8,7 @@ using UnityEngine;
 /// Каждый наследник имеет свой статический буфер флагов.
 /// </summary>
 [Serializable]
-public abstract class BaseLineModifier : IRenderModifier
+public abstract class BaseLineModifier : IModifier
 {
     protected struct LineSegment
     {

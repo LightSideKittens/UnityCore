@@ -53,31 +53,6 @@ public sealed class TextProcessor
     // DEBUG: Enable detailed logging for Arabic text issues
     public static bool DebugLogging = false;
 
-    // ═══════════════════════════════════════════════════════════════════
-    // EVENTS - точки расширения для модификаторов
-    // ═══════════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// После парсинга. Codepoints готовы в SharedTextBuffers.
-    /// </summary>
-    public Action OnAfterParse;
-
-    /// <summary>
-    /// Перед Itemize(). Для модификаторов влияющих на разбиение runs (font, bold, size).
-    /// </summary>
-    public Action OnBeforeItemize;
-
-    /// <summary>
-    /// После Shaping. ShapedGlyphs готовы.
-    /// </summary>
-    public Action OnAfterShape;
-
-    /// <summary>
-    /// После Layout() и BuildLogicalToGlyphMapping().
-    /// Для модификаторов меняющих атрибуты глифов (color, italic, scale, offset).
-    /// </summary>
-    public Action OnAfterLayout;
-
     public TextProcessor()
     {
         if (UnicodeData.Provider == null)
@@ -140,18 +115,11 @@ public sealed class TextProcessor
                 hasValidShapingData = false;
                 return ReadOnlySpan<PositionedGlyph>.Empty;
             }
-
-            OnAfterParse?.Invoke();
-
             AnalyzeBidi(settings.baseDirection);
             AnalyzeScripts();
 
-            OnBeforeItemize?.Invoke();
-
             Itemize();
             Shape();
-
-            OnAfterShape?.Invoke();
 
             EnsureGlyphsInAtlas();
 
@@ -165,8 +133,6 @@ public sealed class TextProcessor
 
         // Build mapping for modifiers
         SharedTextBuffers.BuildLogicalToGlyphMapping();
-
-        OnAfterLayout?.Invoke();
 
         return SharedTextBuffers.positionedGlyphs.AsSpan(0, SharedTextBuffers.positionedGlyphCount);
     }
