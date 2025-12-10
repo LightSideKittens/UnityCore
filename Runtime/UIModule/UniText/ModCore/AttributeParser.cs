@@ -1,22 +1,7 @@
-using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using LSCore;
-
-/// <summary>
-/// Generic контейнер для правил и модификаторов одного уровня.
-/// Инкапсулирует повторяющуюся логику Register/Initialize/Reset/Apply.
-/// </summary>
-internal sealed class ModifierLevel
-{ 
-
-
-    public void CreateSpan(IParseRule rule, ParsedRange range)
-    {
-
-    }
-}
 
 /// <summary>
 /// Парсер атрибутов текста.

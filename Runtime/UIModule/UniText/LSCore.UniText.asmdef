@@ -1,4 +1,4 @@
 {
 	"name": "LSCore.UniText",
-	"references":[ "GUID:7d47bdd0b4734221a4f1a8d8b153ebb3" ]
+	"references":[ "GUID:7d47bdd0b4734221a4f1a8d8b153ebb3", "GUID:3dd2cb52eff6e5743bdb8fcc64baed91", "GUID:9c38c981acbf419b9287676bf57791e2", "GUID:1b6b29427dc85403c316475c7068fc50" ]
 }

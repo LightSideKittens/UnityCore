@@ -54,10 +54,6 @@ public static class SharedTextBuffers
     /// </summary>
     public static Color32[] glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
 
-    // Mapping: logical index (codepoint) → glyph index in positionedGlyphs
-    // Used by modifiers to efficiently find glyphs for a character range
-    public static int[] logicalToGlyph = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
-
     // Track peak usage for diagnostics
     public static int peakCodepointCount;
     public static int peakRunCount;
@@ -118,9 +114,6 @@ public static class SharedTextBuffers
         ArrayPool<UnicodeScript>.Shared.Return(scripts);
         scripts = newScripts;
 
-        var newLogicalToGlyph = ArrayPool<int>.Shared.Rent(newSize);
-        ArrayPool<int>.Shared.Return(logicalToGlyph);
-        logicalToGlyph = newLogicalToGlyph;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -283,7 +276,6 @@ public static class SharedTextBuffers
         orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
         positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
         glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
-        logicalToGlyph = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
         bidiParagraphs = Array.Empty<BidiParagraph>();
         peakCodepointCount = 0;
         peakRunCount = 0;
@@ -306,54 +298,6 @@ public static class SharedTextBuffers
         if (orderedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(orderedRuns); orderedRuns = null; }
         if (positionedGlyphs != null) { ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs); positionedGlyphs = null; }
         if (glyphColors != null) { ArrayPool<Color32>.Shared.Return(glyphColors); glyphColors = null; }
-        if (logicalToGlyph != null) { ArrayPool<int>.Shared.Return(logicalToGlyph); logicalToGlyph = null; }
-    }
-
-    /// <summary>
-    /// Build mapping from logical codepoint index to positioned glyph index.
-    /// Must be called after Layout.
-    /// Handles ligatures where multiple characters map to one glyph.
-    /// </summary>
-    public static void BuildLogicalToGlyphMapping()
-    {
-        int cpCount = codepointCount;
-        if (cpCount == 0)
-            return;
-
-        var glyphs = positionedGlyphs;
-        var map = logicalToGlyph;
-        int glyphCount = positionedGlyphCount;
-
-        // Ensure map is large enough
-        if (map.Length < cpCount)
-        {
-            var newMap = ArrayPool<int>.Shared.Rent(cpCount);
-            ArrayPool<int>.Shared.Return(map);
-            logicalToGlyph = newMap;
-            map = newMap;
-        }
-
-        // Pass 1: Initialize to -1 (unmapped) and set direct mappings
-        for (int i = 0; i < cpCount; i++)
-            map[i] = -1;
-
-        for (int i = 0; i < glyphCount; i++)
-        {
-            int cluster = glyphs[i].cluster;
-            if ((uint)cluster < (uint)cpCount)
-                map[cluster] = i;
-        }
-
-        // Pass 2: Fill gaps for ligatures
-        // Characters absorbed into ligatures inherit the glyph of their cluster owner
-        int lastValid = 0;
-        for (int i = 0; i < cpCount; i++)
-        {
-            if (map[i] >= 0)
-                lastValid = map[i];
-            else
-                map[i] = lastValid;
-        }
     }
 }
 

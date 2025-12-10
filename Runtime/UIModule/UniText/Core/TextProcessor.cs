@@ -134,9 +134,6 @@ public sealed class TextProcessor
         BreakLines(settings.enableWordWrap ? settings.maxWidth : TextProcessSettings.FloatMax);
         LayoutText(settings);
 
-        // Build mapping for modifiers
-        SharedTextBuffers.BuildLogicalToGlyphMapping();
-
         return SharedTextBuffers.positionedGlyphs.AsSpan(0, SharedTextBuffers.positionedGlyphCount);
     }
 

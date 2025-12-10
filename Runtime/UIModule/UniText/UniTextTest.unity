@@ -1497,8 +1497,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 27.9, y: 14}
-  m_SizeDelta: {x: 1009.1, y: 2053.5}
+  m_AnchoredPosition: {x: -23.3, y: 14}
+  m_SizeDelta: {x: 906.9, y: 2053.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2023444739
 MonoBehaviour:
@@ -1581,7 +1581,7 @@ MonoBehaviour:
     controls  \u0639\u0631\u0628\u064A \u0645\u0639  EN  \u062F\u0627\u062E\u0644 
     done."
   font: {fileID: 11400000, guid: cdf5a293da49e2a459e6b5ec953395c4, type: 2}
-  fontSize: 23.91
+  fontSize: 30
   baseDirection: 2
   enableWordWrap: 1
   horizontalAlignment: 0
