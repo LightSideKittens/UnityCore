@@ -91,7 +91,7 @@ public sealed class AttributeParser
         }
     }
 
-    private void Apply()
+    public void Apply()
     {
         // Обратный порядок: внутренние теги применяются последними и переопределяют внешние
         for (int i = spans.Count - 1; i >= 0; i--)
@@ -193,8 +193,7 @@ public sealed class AttributeParser
 
         // Строим clean text и пересчитываем индексы
         BuildCleanTextAndRemapIndices(text, tagRemovals);
-
-        Apply();
+        
         return CleanText;
     }
 

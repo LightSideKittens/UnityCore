@@ -52,6 +52,7 @@ public sealed class TextProcessor
 
     // DEBUG: Enable detailed logging for Arabic text issues
     public static bool DebugLogging = false;
+    public event Action Parsed;
 
     public TextProcessor()
     {
@@ -109,12 +110,14 @@ public sealed class TextProcessor
         {
             // Full pipeline
             Parse(text);
-
+            Parsed?.Invoke();
+            
             if (SharedTextBuffers.codepointCount == 0)
             {
                 hasValidShapingData = false;
                 return ReadOnlySpan<PositionedGlyph>.Empty;
             }
+            
             AnalyzeBidi(settings.baseDirection);
             AnalyzeScripts();
 

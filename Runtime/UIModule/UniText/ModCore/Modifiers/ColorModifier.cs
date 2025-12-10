@@ -26,7 +26,7 @@ public class ColorModifier : IModifier
         uint packed = PackColor(color);
         buffer.SetValueRange(start, Math.Min(end, cpCount), packed);
     }
-
+    
     void IModifier.Initialize(UniText uniText)
     {
         uniText.MeshGenerator.OnGlyph += OnGlyph;

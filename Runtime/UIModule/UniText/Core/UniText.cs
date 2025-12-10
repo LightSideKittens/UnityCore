@@ -295,8 +295,7 @@ public class UniText : MaskableGraphic
     {
         if (isInitialized) return;
         if (!ValidatePrerequisites()) return;
-
-        CreateParser();
+        
         CreateProcessor();
         RebuildFontProvider();
         InitializeModifiers();
@@ -327,10 +326,12 @@ public class UniText : MaskableGraphic
         return true;
     }
 
-    private void CreateParser()
+    private void CreateProcessor()
     {
+        processor = new TextProcessor();
+        
         if (modRegisters == null || modRegisters.Count == 0) return;
-
+        
         parser = new AttributeParser();
         for (int i = 0; i < modRegisters.Count; i++)
         {
@@ -340,11 +341,8 @@ public class UniText : MaskableGraphic
                 mod.Register(parser);
             }
         }
-    }
-
-    private void CreateProcessor()
-    {
-        processor = new TextProcessor();
+        
+        processor.Parsed += parser.Apply;
     }
 
     private void RebuildFontProvider()
