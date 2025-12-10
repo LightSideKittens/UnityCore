@@ -1,43 +1,9 @@
 using System;
 using System.Collections.Generic;
+using LSCore;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
-
-/// <summary>
-/// Flags indicating what needs to be rebuilt.
-/// Each flag represents a specific change type for precise rebuild control.
-/// </summary>
-[Flags]
-public enum UniTextDirtyFlags
-{
-    None = 0,
-
-    /// <summary>Mesh colors only (cheapest)</summary>
-    Color = 1 << 0,
-
-    /// <summary>Alignment offset only</summary>
-    Alignment = 1 << 1,
-
-    /// <summary>Re-layout needed (rect size changed)</summary>
-    Layout = 1 << 2,
-
-    /// <summary>Font size changed</summary>
-    FontSize = 1 << 3,
-
-    /// <summary>Font asset changed</summary>
-    Font = 1 << 4,
-
-    /// <summary>Base direction changed</summary>
-    Direction = 1 << 5,
-
-    /// <summary>Text content changed - requires attribute parsing</summary>
-    Text = 1 << 6,
-
-    /// <summary>Flags requiring full rebuild (text, font, direction)</summary>
-    FullRebuild = Text | Font | Direction,
-
-    All = Color | Alignment | Layout | FontSize | FullRebuild
-}
 
 /// <summary>
 /// Компонент для отображения текста с полной Unicode поддержкой.
@@ -51,6 +17,44 @@ public enum UniTextDirtyFlags
 [ExecuteAlways]
 public class UniText : MaskableGraphic
 {
+    
+    /// <summary>
+    /// Flags indicating what needs to be rebuilt.
+    /// Each flag represents a specific change type for precise rebuild control.
+    /// </summary>
+    [Flags]
+    public enum DirtyFlags
+    {
+        None = 0,
+
+        /// <summary>Mesh colors only (cheapest)</summary>
+        Color = 1 << 0,
+
+        /// <summary>Alignment offset only</summary>
+        Alignment = 1 << 1,
+
+        /// <summary>Re-layout needed (rect size changed)</summary>
+        Layout = 1 << 2,
+
+        /// <summary>Font size changed</summary>
+        FontSize = 1 << 3,
+
+        /// <summary>Font asset changed</summary>
+        Font = 1 << 4,
+
+        /// <summary>Base direction changed</summary>
+        Direction = 1 << 5,
+
+        /// <summary>Text content changed - requires attribute parsing</summary>
+        Text = 1 << 6,
+
+        /// <summary>Flags requiring full rebuild (text, font, direction)</summary>
+        FullRebuild = Text | Font | Direction,
+
+        All = Color | Alignment | Layout | FontSize | FullRebuild
+    }
+    
+    
     #region Serialized Fields
 
     [TextArea(3, 10)]
@@ -79,8 +83,11 @@ public class UniText : MaskableGraphic
     private VerticalAlignment verticalAlignment = VerticalAlignment.Top;
 
     [SerializeReference]
-    private BaseModRegister[] modRegisters;
-
+    private List<BaseModRegister> modRegisters;
+    
+    [SerializeReference]
+    private BaseModRegister[] textStyles;
+    
     #endregion
 
     #region Runtime Components
@@ -98,7 +105,7 @@ public class UniText : MaskableGraphic
     private bool isRebuilding;
     private bool shaderChannelsConfigured;
 
-    private UniTextDirtyFlags dirtyFlags = UniTextDirtyFlags.All;
+    private DirtyFlags dirtyFlags = DirtyFlags.All;
 
     // Cached rect size for change detection
     private float cachedRectWidth;
@@ -111,7 +118,7 @@ public class UniText : MaskableGraphic
 
     // Sub-mesh renderers для fallback шрифтов
     private readonly List<CanvasRenderer> subMeshRenderers = new();
-    private List<UniTextMeshPair> lastMeshPairs;
+    private LSList<UniTextMeshPair> lastMeshPairs;
 
     // Mesh tracking - mesh'и из SharedMeshPool
     private readonly List<Mesh> acquiredMeshes = new();
@@ -150,11 +157,9 @@ public class UniText : MaskableGraphic
         get => text;
         set
         {
-            if (text != value)
-            {
-                text = value;
-                SetDirty(UniTextDirtyFlags.Text);
-            }
+            if (text == value) return;
+            text = value;
+            SetDirty(DirtyFlags.Text);
         }
     }
 
@@ -163,12 +168,10 @@ public class UniText : MaskableGraphic
         get => font;
         set
         {
-            if (font != value)
-            {
-                font = value;
-                RebuildFontProvider();
-                SetDirty(UniTextDirtyFlags.Font);
-            }
+            if (font == value) return;
+            font = value;
+            RebuildFontProvider();
+            SetDirty(DirtyFlags.Font);
         }
     }
 
@@ -177,11 +180,9 @@ public class UniText : MaskableGraphic
         get => fontSize;
         set
         {
-            if (!Mathf.Approximately(fontSize, value))
-            {
-                fontSize = Mathf.Max(1f, value);
-                SetDirty(UniTextDirtyFlags.FontSize);
-            }
+            if (Mathf.Approximately(fontSize, value)) return;
+            fontSize = Mathf.Max(1f, value);
+            SetDirty(DirtyFlags.FontSize);
         }
     }
 
@@ -190,11 +191,9 @@ public class UniText : MaskableGraphic
         get => baseDirection;
         set
         {
-            if (baseDirection != value)
-            {
-                baseDirection = value;
-                SetDirty(UniTextDirtyFlags.Direction);
-            }
+            if (baseDirection == value) return;
+            baseDirection = value;
+            SetDirty(DirtyFlags.Direction);
         }
     }
 
@@ -203,11 +202,9 @@ public class UniText : MaskableGraphic
         get => enableWordWrap;
         set
         {
-            if (enableWordWrap != value)
-            {
-                enableWordWrap = value;
-                SetDirty(UniTextDirtyFlags.Layout);
-            }
+            if (enableWordWrap == value) return;
+            enableWordWrap = value;
+            SetDirty(DirtyFlags.Layout);
         }
     }
 
@@ -216,11 +213,9 @@ public class UniText : MaskableGraphic
         get => horizontalAlignment;
         set
         {
-            if (horizontalAlignment != value)
-            {
-                horizontalAlignment = value;
-                SetDirty(UniTextDirtyFlags.Alignment);
-            }
+            if (horizontalAlignment == value) return;
+            horizontalAlignment = value;
+            SetDirty(DirtyFlags.Alignment);
         }
     }
 
@@ -229,11 +224,9 @@ public class UniText : MaskableGraphic
         get => verticalAlignment;
         set
         {
-            if (verticalAlignment != value)
-            {
-                verticalAlignment = value;
-                SetDirty(UniTextDirtyFlags.Alignment);
-            }
+            if (verticalAlignment == value) return;
+            verticalAlignment = value;
+            SetDirty(DirtyFlags.Alignment);
         }
     }
 
@@ -281,14 +274,14 @@ public class UniText : MaskableGraphic
     {
         base.OnValidate();
         ForceFullReinitialization();
-        SetDirty(UniTextDirtyFlags.All);
+        SetDirty(DirtyFlags.All);
     }
 #endif
 
     protected override void OnRectTransformDimensionsChange()
     {
         base.OnRectTransformDimensionsChange();
-        SetDirty(UniTextDirtyFlags.Layout);
+        SetDirty(DirtyFlags.Layout);
     }
 
     protected override void OnTransformParentChanged()
@@ -296,7 +289,7 @@ public class UniText : MaskableGraphic
         base.OnTransformParentChanged();
         cachedCanvas = null;
         shaderChannelsConfigured = false;
-        SetDirty(UniTextDirtyFlags.Layout);
+        SetDirty(DirtyFlags.Layout);
     }
 
     #endregion
@@ -308,20 +301,12 @@ public class UniText : MaskableGraphic
         if (isInitialized) return;
         if (!ValidatePrerequisites()) return;
 
-        try
-        {
-            CreateParser();
-            CreateProcessor();
-            RebuildFontProvider();
-            InitializeModifiers();
-            cachedMeshProvider = GetPooledMeshForText;
-            isInitialized = true;
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError($"UniText: Failed to initialize: {ex.Message}");
-            enabled = false;
-        }
+        CreateParser();
+        CreateProcessor();
+        RebuildFontProvider();
+        InitializeModifiers();
+        cachedMeshProvider = GetPooledMeshForText;
+        isInitialized = true;
     }
 
     private bool ValidatePrerequisites()
@@ -349,12 +334,16 @@ public class UniText : MaskableGraphic
 
     private void CreateParser()
     {
-        if (modRegisters == null || modRegisters.Length == 0) return;
+        if (modRegisters == null || modRegisters.Count == 0) return;
 
         parser = new AttributeParser();
-        for (int i = 0; i < modRegisters.Length; i++)
+        for (int i = 0; i < modRegisters.Count; i++)
         {
-            modRegisters[i]?.Register(parser);
+            var mod = modRegisters[i];
+            if (mod is { IsValid: true })
+            { 
+                mod.Register(parser);
+            }
         }
     }
 
@@ -413,7 +402,7 @@ public class UniText : MaskableGraphic
         shaderChannelsConfigured = false;
         cachedRectWidth = 0;
         cachedRectHeight = 0;
-        dirtyFlags = UniTextDirtyFlags.All;
+        dirtyFlags = DirtyFlags.All;
     }
 
 #if UNITY_EDITOR
@@ -435,14 +424,14 @@ public class UniText : MaskableGraphic
     /// <summary>
     /// Помечает текст как требующий перестройки.
     /// </summary>
-    public void SetDirty(UniTextDirtyFlags flags = UniTextDirtyFlags.All)
+    public void SetDirty(DirtyFlags flags = DirtyFlags.All)
     {
-        if (flags == UniTextDirtyFlags.None) return;
+        if (flags == DirtyFlags.None) return;
 
         var oldFlags = dirtyFlags;
         dirtyFlags |= flags;
 
-        if (oldFlags == UniTextDirtyFlags.None)
+        if (oldFlags == DirtyFlags.None)
         {
             SetVerticesDirty();
         }
@@ -460,7 +449,7 @@ public class UniText : MaskableGraphic
         base.Rebuild(update);
 
         if (update != CanvasUpdate.PreRender) return;
-        if (dirtyFlags == UniTextDirtyFlags.None) return;
+        if (dirtyFlags == DirtyFlags.None) return;
         if (isRebuilding) return;
 
         EnsureInitialized();
@@ -475,7 +464,7 @@ public class UniText : MaskableGraphic
         try
         {
             var flags = dirtyFlags;
-            dirtyFlags = UniTextDirtyFlags.None;
+            dirtyFlags = DirtyFlags.None;
 
             if (RequiresFullRebuild(flags))
                 RebuildFull(flags);
@@ -492,16 +481,16 @@ public class UniText : MaskableGraphic
         }
     }
 
-    private static bool RequiresFullRebuild(UniTextDirtyFlags flags)
-        => (flags & UniTextDirtyFlags.FullRebuild) != 0;
+    private static bool RequiresFullRebuild(DirtyFlags flags)
+        => (flags & DirtyFlags.FullRebuild) != 0;
 
-    private static bool RequiresLayoutRebuild(UniTextDirtyFlags flags)
-        => (flags & (UniTextDirtyFlags.Layout | UniTextDirtyFlags.FontSize)) != 0;
+    private static bool RequiresLayoutRebuild(DirtyFlags flags)
+        => (flags & (DirtyFlags.Layout | DirtyFlags.FontSize)) != 0;
 
     /// <summary>
     /// Полная перестройка текста (text/font/direction изменились).
     /// </summary>
-    private void RebuildFull(UniTextDirtyFlags flags)
+    private void RebuildFull(DirtyFlags flags)
     {
         var rt = GetComponent<RectTransform>();
         if (rt == null) return;
@@ -524,7 +513,7 @@ public class UniText : MaskableGraphic
 
             // Parse attributes only when text changed
             string textToProcess;
-            if ((flags & UniTextDirtyFlags.Text) != 0 || cachedCleanText == null)
+            if ((flags & DirtyFlags.Text) != 0 || cachedCleanText == null)
             {
                 parser?.ResetModifiers();
                 textToProcess = parser != null ? parser.Parse(text) : text;
@@ -569,7 +558,7 @@ public class UniText : MaskableGraphic
         }
 
         // Full rebuild with layout flag
-        RebuildFull(UniTextDirtyFlags.Layout);
+        RebuildFull(DirtyFlags.Layout);
     }
 
     /// <summary>

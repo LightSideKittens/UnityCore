@@ -34,7 +34,8 @@ public class BoldModifier : IRenderModifier
     private static void OnGlyph()
     {
         int cluster = UniTextMeshGenerator.currentCluster;
-        if (!buffer.HasValue(cluster))
+        // Use extension method for fast check (no EqualityComparer overhead)
+        if (!ArrayPoolBufferFloatExtensions.HasValue(ref buffer, cluster))
             return;
 
         // Bold: set UV.w to negative xScale for last 4 vertices
@@ -53,7 +54,7 @@ public class BoldModifier : IRenderModifier
     void IModifier.Reset() => ResetStatic();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsBold(int cluster) => buffer.HasValue(cluster);
+    public static bool IsBold(int cluster) => ArrayPoolBufferFloatExtensions.HasValue(ref buffer, cluster);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload() => buffer.Reset();

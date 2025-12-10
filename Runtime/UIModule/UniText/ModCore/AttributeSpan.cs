@@ -4,17 +4,17 @@ using System;
 /// Результат парсинга — диапазон с привязанным модификатором.
 /// Индексы указывают на clean text (после удаления тегов).
 /// </summary>
-internal readonly struct AttributeSpan : IEquatable<AttributeSpan>
+internal struct AttributeSpan : IEquatable<AttributeSpan>
 {
     /// <summary>
-    /// Начальный индекс в clean text
+    /// Начальный индекс в clean text (mutable for remapping)
     /// </summary>
-    public readonly int start;
+    public int start;
 
     /// <summary>
-    /// Конечный индекс (не включительно)
+    /// Конечный индекс (не включительно, mutable for remapping)
     /// </summary>
-    public readonly int end;
+    public int end;
 
     /// <summary>
     /// Модификатор, применяемый к этому диапазону

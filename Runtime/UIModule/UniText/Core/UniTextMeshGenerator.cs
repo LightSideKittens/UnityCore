@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using LSCore;
 using UnityEngine;
 
 /// <summary>
@@ -46,6 +47,9 @@ public class UniTextMeshGenerator
     // ═══════════════════════════════════════════════════════════════════
     // EVENTS (instance) - точки расширения для модификаторов
     // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>Один раз в начале rebuild, до обработки шрифтов. Модификаторы сбрасывают per-rebuild состояние.</summary>
+    public Action OnRebuildStart;
 
     /// <summary>Перед началом генерации mesh для шрифта. Устанавливает контекст.</summary>
     public Action OnBeforeMesh;
@@ -101,7 +105,7 @@ public class UniTextMeshGenerator
 
     /// <summary>Текущее количество индексов треугольников в буфере</summary>
     public static int triangleCount;
-    
+
     // Буферы для записи геометрии (модификаторы могут добавлять вершины)
     public static Vector3[] Vertices => SharedPipelineComponents.MeshVertices;
     public static Vector4[] Uvs0 => SharedPipelineComponents.MeshUvs0;
@@ -128,14 +132,18 @@ public class UniTextMeshGenerator
     /// Generates meshes from positioned glyphs.
     /// Zero-allocation using shared static buffers.
     /// </summary>
-    public List<UniTextMeshPair> GenerateMeshes(ReadOnlySpan<PositionedGlyph> glyphs, Func<Mesh> meshProvider)
+    public LSList<UniTextMeshPair> GenerateMeshes(ReadOnlySpan<PositionedGlyph> glyphs, Func<Mesh> meshProvider)
     {
+        // Notify modifiers that rebuild is starting (once per rebuild, before any fonts)
+        OnRebuildStart?.Invoke();
+
         // Use shared static collections
         var glyphsByFont = SharedPipelineComponents.GlyphsByFont;
         var resultBuffer = SharedPipelineComponents.MeshResultBuffer;
 
         // Return pooled lists to pool before clearing dictionary
         SharedPipelineComponents.ClearGlyphsByFont();
+        // UniTextMeshPair contains reference types (Mesh, Material) - use regular Clear
         resultBuffer.Clear();
 
         if (DebugLogging)
@@ -195,7 +203,7 @@ public class UniTextMeshGenerator
         return resultBuffer;
     }
 
-    private void GenerateMeshForFont(Mesh mesh, List<PositionedGlyph> glyphs, UniTextFontAsset fontAsset)
+    private void GenerateMeshForFont(Mesh mesh, LSList<PositionedGlyph> glyphs, UniTextFontAsset fontAsset)
     {
         int glyphCount = glyphs.Count;
         // Base: 4 vertices per glyph + extra for modifiers (underline, strikethrough, etc.)

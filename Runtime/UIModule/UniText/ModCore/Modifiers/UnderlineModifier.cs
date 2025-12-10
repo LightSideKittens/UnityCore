@@ -15,20 +15,14 @@ public class UnderlineModifier : BaseLineModifier
     private static LineSegment[] lineSegments = ArrayPool<LineSegment>.Shared.Rent(64);
     private static int lineSegmentsCapacity = 64;
     private static int lineSegmentCount;
-    private static float lineStartX, lineEndX, lineBaselineY;
-    private static int lineStartCluster;
-    private static bool hasActiveLine;
+    private static bool linesDrawnThisFrame;
 
     // Реализация abstract свойств
     protected override ref ArrayPoolBuffer<byte> FlagsBuffer => ref flagsBuffer;
     protected override ref LineSegment[] LineSegments => ref lineSegments;
     protected override ref int LineSegmentsCapacity => ref lineSegmentsCapacity;
     protected override ref int LineSegmentCount => ref lineSegmentCount;
-    protected override ref float LineStartX => ref lineStartX;
-    protected override ref float LineEndX => ref lineEndX;
-    protected override ref float LineBaselineY => ref lineBaselineY;
-    protected override ref int LineStartCluster => ref lineStartCluster;
-    protected override ref bool HasActiveLine => ref hasActiveLine;
+    protected override ref bool LinesDrawnThisFrame => ref linesDrawnThisFrame;
 
     protected override float GetLineOffset(UnityEngine.TextCore.FaceInfo faceInfo, float scale)
     {
@@ -39,7 +33,7 @@ public class UnderlineModifier : BaseLineModifier
     {
         flagsBuffer.Clear();
         lineSegmentCount = 0;
-        hasActiveLine = false;
+        linesDrawnThisFrame = false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -55,6 +49,6 @@ public class UnderlineModifier : BaseLineModifier
         lineSegments = ArrayPool<LineSegment>.Shared.Rent(64);
         lineSegmentsCapacity = 64;
         lineSegmentCount = 0;
-        hasActiveLine = false;
+        linesDrawnThisFrame = false;
     }
 }

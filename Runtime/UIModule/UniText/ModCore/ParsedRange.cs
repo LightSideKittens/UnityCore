@@ -43,7 +43,7 @@ public struct ParsedRange
     /// </summary>
     public bool HasTags => tagStart >= 0;
 
-    public ParsedRange(int start, int end)
+    public ParsedRange(int start, int end, string parameter)
     {
         this.start = start;
         this.end = end;
@@ -51,7 +51,7 @@ public struct ParsedRange
         tagEnd = -1;
         closeTagStart = -1;
         closeTagEnd = -1;
-        parameter = null;
+        this.parameter = parameter;
     }
 
     public ParsedRange(int tagStart, int tagEnd, int closeTagStart, int closeTagEnd, string parameter = null)

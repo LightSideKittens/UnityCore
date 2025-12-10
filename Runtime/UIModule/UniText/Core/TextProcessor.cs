@@ -99,10 +99,10 @@ public sealed class TextProcessor
     public ReadOnlySpan<PositionedGlyph> Process(
         ReadOnlySpan<char> text,
         TextProcessSettings settings,
-        UniTextDirtyFlags dirtyFlags = UniTextDirtyFlags.FullRebuild)
+        UniText.DirtyFlags dirtyFlags = UniText.DirtyFlags.FullRebuild)
     {
-        bool fullRebuild = (dirtyFlags & UniTextDirtyFlags.FullRebuild) != 0 ||
-                           (dirtyFlags & UniTextDirtyFlags.FontSize) != 0 ||
+        bool fullRebuild = (dirtyFlags & UniText.DirtyFlags.FullRebuild) != 0 ||
+                           (dirtyFlags & UniText.DirtyFlags.FontSize) != 0 ||
                            !hasValidShapingData;
 
         if (fullRebuild)

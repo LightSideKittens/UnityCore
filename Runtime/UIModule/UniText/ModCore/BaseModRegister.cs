@@ -4,6 +4,7 @@ using UnityEngine;
 [Serializable]
 public abstract class BaseModRegister
 {
+    public virtual bool IsValid => ParseRule != null;
     public abstract IParseRule ParseRule { get; }
     public abstract void Register(AttributeParser parser);
 }
@@ -11,6 +12,7 @@ public abstract class BaseModRegister
 [Serializable]
 public abstract class BaseRendererModRegister: BaseModRegister
 {
+    public override bool IsValid => base.IsValid && Modifier != null;
     public abstract IRenderModifier Modifier { get; }
     
     public override void Register(AttributeParser parser) => parser.Register(ParseRule, Modifier);

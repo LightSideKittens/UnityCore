@@ -182,6 +182,14 @@ public class UniTextFontAsset : ScriptableObject
     // Static tracking of currently loaded font in FontEngine (FontEngine is global!)
     private static int currentlyLoadedFontInstanceId = 0;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void OnDomainReload()
+    {
+        // Reset static state after domain reload
+        // FontEngine state is lost, so we must re-validate font loading
+        currentlyLoadedFontInstanceId = 0;
+    }
+
     #endregion
 
     #region Properties
@@ -806,11 +814,14 @@ public class UniTextFontAsset : ScriptableObject
             usedGlyphRects.Clear();
         }
 
-        // Resize if needed
+        // Resize if needed - this means atlas was cleared/reset, so glyph data is invalid
         if (atlasTextures[atlasTextureIndex].width <= 1 || atlasTextures[atlasTextureIndex].height <= 1)
         {
             atlasTextures[atlasTextureIndex].Reinitialize(atlasWidth, atlasHeight);
             UniTextFontEngine.ResetAtlasTexture(atlasTextures[atlasTextureIndex]);
+
+            // CRITICAL: Clear glyph data since atlas was reset - UV coords are now invalid
+            ClearGlyphDataOnly();
         }
 
         // Try to add glyph
@@ -1023,11 +1034,14 @@ public class UniTextFontAsset : ScriptableObject
             usedGlyphRects.Clear();
         }
 
-        // Resize if needed
+        // Resize if needed - this means atlas was cleared/reset, so glyph data is invalid
         if (atlasTextures[atlasTextureIndex].width <= 1 || atlasTextures[atlasTextureIndex].height <= 1)
         {
             atlasTextures[atlasTextureIndex].Reinitialize(atlasWidth, atlasHeight);
             UniTextFontEngine.ResetAtlasTexture(atlasTextures[atlasTextureIndex]);
+
+            // CRITICAL: Clear glyph data since atlas was reset - UV coords are now invalid
+            ClearGlyphDataOnly();
         }
 
         // Try to add glyph (FontEngine uses currently loaded font)
@@ -1229,6 +1243,27 @@ public class UniTextFontAsset : ScriptableObject
     {
         get => clearDynamicDataOnBuild;
         set => clearDynamicDataOnBuild = value;
+    }
+
+    /// <summary>
+    /// Clears only glyph and character data (not atlas texture).
+    /// Called when atlas is reinitialized and UV coords become invalid.
+    /// </summary>
+    private void ClearGlyphDataOnly()
+    {
+        glyphTable?.Clear();
+        characterTable?.Clear();
+        glyphLookupDictionary?.Clear();
+        characterLookupDictionary?.Clear();
+        glyphIndexList?.Clear();
+        glyphIndexListNewlyAdded?.Clear();
+        charactersToAdd?.Clear();
+        charactersToAddLookup?.Clear();
+        usedGlyphRects?.Clear();
+        freeGlyphRects?.Clear();
+        freeGlyphRects?.Add(new GlyphRect(0, 0, atlasWidth - 1, atlasHeight - 1));
+
+        Debug.Log($"UniTextFontAsset [{name}]: Glyph data cleared due to atlas reset. Glyphs will be re-rendered.");
     }
 
     /// <summary>

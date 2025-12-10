@@ -33,7 +33,7 @@ public class ItalicModifier : IRenderModifier
     private static void OnGlyph()
     {
         int cluster = UniTextMeshGenerator.currentCluster;
-        if (!buffer.HasValue(cluster))
+        if (!ArrayPoolBufferFloatExtensions.HasValue(ref buffer, cluster))
             return;
 
         // Get italic style from current font
@@ -64,7 +64,7 @@ public class ItalicModifier : IRenderModifier
     void IModifier.Reset() => ResetStatic();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsItalic(int cluster) => buffer.HasValue(cluster);
+    public static bool IsItalic(int cluster) => ArrayPoolBufferFloatExtensions.HasValue(ref buffer, cluster);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload() => buffer.Reset();

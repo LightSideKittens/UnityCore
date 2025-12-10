@@ -96,18 +96,11 @@ public struct ArrayPoolBuffer<T> where T : struct
         capacity = initialCapacity;
     }
 
-    /// <summary>
-    /// Проверяет есть ли ненулевое значение по индексу.
-    /// Безопасно для индексов вне диапазона.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool HasValue(int index)
-    {
-        if ((uint)index >= (uint)capacity)
-            return false;
-        // Для примитивных типов != default работает
-        return !EqualityComparer<T>.Default.Equals(data[index], default);
-    }
+    // NOTE: HasValue removed - use specialized extension methods instead:
+    // - ArrayPoolBufferByteExtensions.HasFlag() for byte buffers
+    // - ArrayPoolBufferUintExtensions.HasValue() for uint buffers
+    // - ArrayPoolBufferFloatExtensions.HasValue() for float buffers
+    // Generic EqualityComparer<T>.Default.Equals() is slow for primitives!
 
     /// <summary>
     /// Получает значение по индексу или default если вне диапазона.
@@ -142,6 +135,29 @@ public static class ArrayPoolBufferByteExtensions
     public static bool HasFlag(this ref ArrayPoolBuffer<byte> buffer, int index)
     {
         return (uint)index < (uint)buffer.Capacity && buffer.Data[index] != 0;
+    }
+
+    /// <summary>Проверяет есть ли хотя бы один установленный флаг в буфере.</summary>
+    public static bool HasAnyFlags(this ref ArrayPoolBuffer<byte> buffer)
+    {
+        var data = buffer.Data;
+        int cap = buffer.Capacity;
+        // Check in chunks of 8 bytes for better performance
+        int i = 0;
+        int limit = cap - 7;
+        for (; i < limit; i += 8)
+        {
+            if (data[i] != 0 || data[i + 1] != 0 || data[i + 2] != 0 || data[i + 3] != 0 ||
+                data[i + 4] != 0 || data[i + 5] != 0 || data[i + 6] != 0 || data[i + 7] != 0)
+                return true;
+        }
+        // Check remaining bytes
+        for (; i < cap; i++)
+        {
+            if (data[i] != 0)
+                return true;
+        }
+        return false;
     }
 
     /// <summary>Устанавливает флаг для диапазона.</summary>

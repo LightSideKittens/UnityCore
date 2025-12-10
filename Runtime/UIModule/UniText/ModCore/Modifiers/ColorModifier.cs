@@ -81,13 +81,51 @@ public class ColorModifier : IRenderModifier
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasColor(int cluster) => buffer.HasValue(cluster);
+    public static bool HasColor(int cluster) => ArrayPoolBufferUintExtensions.HasValue(ref buffer, cluster);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color32 GetColor(int cluster)
     {
-        uint packed = buffer.GetValueOrDefault(cluster);
-        return packed == 0 ? new Color32(255, 255, 255, 255) : UnpackColor(packed);
+        // Fast path: check bounds and get value inline
+        if ((uint)cluster >= (uint)buffer.Capacity)
+            return new Color32(255, 255, 255, 255);
+        uint packed = buffer.Data[cluster];
+        if (packed == 0)
+            return new Color32(255, 255, 255, 255);
+        // Inline unpack to avoid method call
+        return new Color32(
+            (byte)((packed >> 16) & 0xFF),
+            (byte)((packed >> 8) & 0xFF),
+            (byte)(packed & 0xFF),
+            (byte)((packed >> 24) & 0xFF)
+        );
+    }
+
+    /// <summary>
+    /// Attempts to get color for cluster. Returns false if no custom color set.
+    /// More efficient than HasColor + GetColor since it checks and unpacks in one call.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryGetColor(int cluster, out Color32 color)
+    {
+        if ((uint)cluster >= (uint)buffer.Capacity)
+        {
+            color = default;
+            return false;
+        }
+        uint packed = buffer.Data[cluster];
+        if (packed == 0)
+        {
+            color = default;
+            return false;
+        }
+        color = new Color32(
+            (byte)((packed >> 16) & 0xFF),
+            (byte)((packed >> 8) & 0xFF),
+            (byte)(packed & 0xFF),
+            (byte)((packed >> 24) & 0xFF)
+        );
+        return true;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
