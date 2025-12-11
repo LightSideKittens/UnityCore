@@ -573,6 +573,7 @@ public class UniText : MaskableGraphic
         meshGenerator.DefaultColor = color;
         meshGenerator.SetCanvasParameters(transform, cachedCanvas);
         meshGenerator.SetRectOffset(rect);
+        meshGenerator.SetHorizontalAlignment(horizontalAlignment);
 
         lastMeshPairs = meshGenerator.GenerateMeshes(glyphs, cachedMeshProvider);
     }

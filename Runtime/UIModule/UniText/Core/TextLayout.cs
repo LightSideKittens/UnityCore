@@ -136,9 +136,42 @@ public sealed class TextLayout
             }
 
             // Apply startMargin for hanging indent (lists, etc.)
-            if (line.startMargin > 0)
+            // Margin создаёт "зону" слева (LTR) или справа (RTL) от текста.
+            // LineBreaker уже учёл margin при расчёте line breaking (effectiveMaxWidth = maxWidth - margin).
+            // Здесь корректируем x для правильного визуального позиционирования.
+            if (line.startMargin > 0 && hasFiniteWidth)
             {
-                x += isRtlLine ? -line.startMargin : line.startMargin;
+                float margin = line.startMargin;
+                if (isRtlLine)
+                {
+                    // RTL: start margin означает отступ справа (начало RTL текста)
+                    if (hAlign == HorizontalAlignment.Left)
+                    {
+                        // RTL Left: текст слева, margin справа → сдвигаем текст влево
+                        x -= margin;
+                    }
+                    else if (hAlign == HorizontalAlignment.Center)
+                    {
+                        // Центрируем в зоне [0, width - margin]
+                        x = (availableWidth - margin - lineWidth) * 0.5f;
+                    }
+                    // Right: текст у правого края → margin уже учтён в line breaking
+                }
+                else
+                {
+                    // LTR: start margin означает отступ слева
+                    if (hAlign == HorizontalAlignment.Left)
+                    {
+                        // LTR Left: текст начинается после margin
+                        x += margin;
+                    }
+                    else if (hAlign == HorizontalAlignment.Center)
+                    {
+                        // Центрируем в зоне [margin, width]
+                        x = margin + (availableWidth - margin - lineWidth) * 0.5f;
+                    }
+                    // Right: margin слева (пустая зона) → x не меняем
+                }
             }
 
             // Позиционируем каждый run в строке

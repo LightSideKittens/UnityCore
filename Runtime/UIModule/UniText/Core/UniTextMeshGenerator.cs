@@ -103,6 +103,9 @@ public class UniTextMeshGenerator
     /// <summary>Ширина rect для RTL позиционирования</summary>
     public static float rectWidth;
 
+    /// <summary>Горизонтальное выравнивание для модификаторов</summary>
+    public static HorizontalAlignment horizontalAlignment;
+
     /// <summary>Текущее количество вершин в буфере</summary>
     public static int vertexCount;
 
@@ -133,6 +136,11 @@ public class UniTextMeshGenerator
     {
         rectOffset = rect;
         rectWidth = rect.width;
+    }
+
+    public void SetHorizontalAlignment(HorizontalAlignment alignment)
+    {
+        horizontalAlignment = alignment;
     }
 
     /// <summary>

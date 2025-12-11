@@ -164,7 +164,7 @@ public class ListModifier : IModifier
     private float MeasureMarkerWidthForLayout(ListItemInfo item)
     {
         if (item.displayNumber < 0)
-            return bulletMarkerWidth;
+            return bulletMarkerWidth + markerToTextGap;
 
         // Ordered: измерить реальную ширину через font
         var fontAsset = fontProviderRef?.GetFontAsset(0);
@@ -266,8 +266,11 @@ public class ListModifier : IModifier
 
     private void RenderMarker(ListItemInfo item)
     {
-        // Получить baseline Y позицию первого символа item
-        float baselineY = GetItemBaselineY(item.start);
+        // Направление каждого item определяется по его контенту (как в Google Docs)
+        bool isRtl = IsItemRtl(item.start);
+
+        // Получить baseline Y и X позицию первого глифа
+        float baselineY = GetItemBaselineY(item.start, out float firstGlyphX);
         if (float.IsNaN(baselineY))
         {
             if (DebugLogging)
@@ -275,32 +278,26 @@ public class ListModifier : IModifier
             return;
         }
 
-        // Направление каждого item определяется по его контенту (как в Google Docs)
-        bool isRtl = IsItemRtl(item.start);
-
-        // Определить X позицию маркера
-        float baseIndent = item.nestingLevel * indentPerLevel;
-        float offsetX = UniTextMeshGenerator.offsetX;
-
         string markerText = GetMarkerText(item, isRtl);
-        float measuredMarkerWidth = MeasureMarkerWidth(markerText);
-        float markerZoneWidth = MeasureMarkerWidthForLayout(item); // Та же ширина что использовалась для margins
 
         float markerX;
         if (isRtl)
         {
             // RTL: маркер справа от текста
-            float availableWidth = GetAvailableWidth();
-            markerX = offsetX + availableWidth - baseIndent - markerZoneWidth + markerToTextGap;
+            // Находим правый край строки: firstGlyphX + lineWidth
+            float lineWidth = GetLineWidth(item.start);
+            float textRightEdge = firstGlyphX + lineWidth;
+            markerX = textRightEdge + markerToTextGap;
         }
         else
         {
-            // LTR: маркер слева, выравнен по правому краю зоны маркера
-            markerX = offsetX + baseIndent + markerZoneWidth - measuredMarkerWidth - markerToTextGap;
+            // LTR: маркер слева от текста
+            float measuredMarkerWidth = MeasureMarkerWidth(markerText);
+            markerX = firstGlyphX - measuredMarkerWidth - markerToTextGap;
         }
 
         if (DebugLogging)
-            UnityEngine.Debug.Log($"[ListModifier.RenderMarker] level={item.nestingLevel}, marker='{markerText}', x={markerX:F1}, y={baselineY:F1}, zoneWidth={markerZoneWidth:F1}");
+            UnityEngine.Debug.Log($"[ListModifier.RenderMarker] level={item.nestingLevel}, marker='{markerText}', x={markerX:F1}, y={baselineY:F1}, isRtl={isRtl}");
 
         // Рендерить маркер как глифы
         RenderMarkerGlyphs(markerText, markerX, baselineY);
@@ -320,33 +317,44 @@ public class ListModifier : IModifier
         return (bidiLevels[startCluster] & 1) == 1;
     }
 
-    /// <summary>
-    /// Получить доступную ширину для layout.
-    /// Используется для RTL позиционирования.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static float GetAvailableWidth()
+    private float GetItemBaselineY(int startCluster, out float firstGlyphX)
     {
-        return UniTextMeshGenerator.rectWidth;
-    }
-
-    private float GetItemBaselineY(int startCluster)
-    {
-        // Найти baseline Y позицию первого глифа с cluster >= startCluster
+        // Найти baseline Y и X позицию первого глифа
         var glyphs = SharedTextBuffers.positionedGlyphs;
         int count = SharedTextBuffers.positionedGlyphCount;
+        float offsetX = UniTextMeshGenerator.offsetX;
         float offsetY = UniTextMeshGenerator.offsetY;
 
         for (int i = 0; i < count; i++)
         {
             if (glyphs[i].cluster >= startCluster)
             {
-                // baselineY = offsetY - glyph.y (как в UniTextMeshGenerator)
+                firstGlyphX = offsetX + glyphs[i].x;
                 return offsetY - glyphs[i].y;
             }
         }
 
+        firstGlyphX = 0;
         return float.NaN;
+    }
+
+    /// <summary>
+    /// Получить ширину строки, содержащей указанный cluster.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static float GetLineWidth(int cluster)
+    {
+        var lines = SharedTextBuffers.lines;
+        int lineCount = SharedTextBuffers.lineCount;
+
+        for (int i = 0; i < lineCount; i++)
+        {
+            ref readonly var line = ref lines[i];
+            if (cluster >= line.range.start && cluster < line.range.start + line.range.length)
+                return line.width;
+        }
+
+        return 0f;
     }
 
     private string GetMarkerText(ListItemInfo item, bool isRtl)
