@@ -135,11 +135,13 @@ public static class LineRenderHelper
         uvs0[vertIdx + 2] = uv2;
         uvs0[vertIdx + 3] = uv3;
 
-        // Middle quad UVs - sample center point (tiny UV range for stretch)
-        uvs0[vertIdx + 4] = new Vector4(uv2.x - uv2.x * 0.001f, uv0.y, 0, xScale);
-        uvs0[vertIdx + 5] = new Vector4(uv2.x - uv2.x * 0.001f, uv1.y, 0, xScale);
-        uvs0[vertIdx + 6] = new Vector4(uv2.x + uv2.x * 0.001f, uv1.y, 0, xScale);
-        uvs0[vertIdx + 7] = new Vector4(uv2.x + uv2.x * 0.001f, uv0.y, 0, xScale);
+        // Middle quad UVs - sample exact center of underscore glyph with half-pixel offset
+        float centerU = (underscoreRect.x + underscoreRect.width * 0.5f) / atlasWidth;
+        float halfPixelOffset = 0.5f / atlasWidth;
+        uvs0[vertIdx + 4] = new Vector4(centerU - halfPixelOffset, uv0.y, 0, xScale);
+        uvs0[vertIdx + 5] = new Vector4(centerU - halfPixelOffset, uv1.y, 0, xScale);
+        uvs0[vertIdx + 6] = new Vector4(centerU + halfPixelOffset, uv1.y, 0, xScale);
+        uvs0[vertIdx + 7] = new Vector4(centerU + halfPixelOffset, uv0.y, 0, xScale);
 
         // Right quad UVs
         uvs0[vertIdx + 8] = uv5;
