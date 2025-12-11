@@ -2,20 +2,39 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-/// <summary>
-/// Модификатор цвета текста.
-/// Подписывается на OnGlyph и применяет цвет к последним 4 вершинам.
-/// </summary>
 [Serializable]
-public class ColorModifier : IModifier
+public class ColorModifier : BaseModifier
 {
-    // Instance буфер для этого модификатора (per-UniText)
     private ArrayPoolBuffer<uint> instanceBuffer;
-
-    // Статический указатель на текущий активный буфер
     private static ArrayPoolBuffer<uint> buffer;
 
-    void IModifier.Apply(int start, int end, string parameter)
+    protected override void CreateBuffers()
+    {
+        instanceBuffer = new ArrayPoolBuffer<uint>(256);
+        buffer = instanceBuffer;
+    }
+
+    protected override void Subscribe()
+    {
+        cachedUniText.Rebuilding += OnRebuilding;
+        cachedUniText.MeshGenerator.OnGlyph += OnGlyph;
+    }
+
+    protected override void Unsubscribe()
+    {
+        cachedUniText.Rebuilding -= OnRebuilding;
+        cachedUniText.MeshGenerator.OnGlyph -= OnGlyph;
+    }
+
+    protected override void ReleaseBuffers()
+    {
+        instanceBuffer.ReturnToPool();
+        instanceBuffer = null;
+    }
+
+    protected override void ClearBuffers() => instanceBuffer.Clear();
+
+    protected override void ApplyModifier(int start, int end, string parameter)
     {
         if (string.IsNullOrEmpty(parameter))
             return;
@@ -30,27 +49,7 @@ public class ColorModifier : IModifier
         buffer.SetValueRange(start, Math.Min(end, cpCount), packed);
     }
 
-    void IModifier.Initialize(UniText uniText)
-    {
-        instanceBuffer = new ArrayPoolBuffer<uint>(256);
-        uniText.Rebuilding += OnRebuilding;
-        uniText.MeshGenerator.OnGlyph += OnGlyph;
-    }
-
-    void IModifier.Deinitialize(UniText uniText)
-    {
-        uniText.Rebuilding -= OnRebuilding;
-        var gen = uniText.MeshGenerator;
-        if (gen != null)
-            gen.OnGlyph -= OnGlyph;
-        instanceBuffer?.ReturnToPool();
-        instanceBuffer = null;
-    }
-
-    private void OnRebuilding()
-    {
-        buffer = instanceBuffer;
-    }
+    private void OnRebuilding() => buffer = instanceBuffer;
 
     private static void OnGlyph()
     {
@@ -69,8 +68,6 @@ public class ColorModifier : IModifier
         colors[baseIdx + 2] = color;
         colors[baseIdx + 3] = color;
     }
-
-    void IModifier.Reset() => buffer.Clear();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint PackColor(Color32 c)
@@ -91,28 +88,23 @@ public class ColorModifier : IModifier
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasColor(int cluster) => buffer.HasValue(cluster);
+    public static bool HasColor(int cluster) => buffer != null && buffer.HasValue(cluster);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color32 GetColor(int cluster)
     {
-        if ((uint)cluster >= (uint)buffer.Capacity)
+        if (buffer == null || (uint)cluster >= (uint)buffer.Capacity)
             return new Color32(255, 255, 255, 255);
         uint packed = buffer.Data[cluster];
         if (packed == 0)
             return new Color32(255, 255, 255, 255);
-        return new Color32(
-            (byte)((packed >> 16) & 0xFF),
-            (byte)((packed >> 8) & 0xFF),
-            (byte)(packed & 0xFF),
-            (byte)((packed >> 24) & 0xFF)
-        );
+        return UnpackColor(packed);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryGetColor(int cluster, out Color32 color)
     {
-        if ((uint)cluster >= (uint)buffer.Capacity)
+        if (buffer == null || (uint)cluster >= (uint)buffer.Capacity)
         {
             color = default;
             return false;
@@ -123,12 +115,7 @@ public class ColorModifier : IModifier
             color = default;
             return false;
         }
-        color = new Color32(
-            (byte)((packed >> 16) & 0xFF),
-            (byte)((packed >> 8) & 0xFF),
-            (byte)(packed & 0xFF),
-            (byte)((packed >> 24) & 0xFF)
-        );
+        color = UnpackColor(packed);
         return true;
     }
 
@@ -138,13 +125,10 @@ public class ColorModifier : IModifier
     private static bool TryParseColor(string value, out Color32 color)
     {
         color = new Color32(255, 255, 255, 255);
-
         if (string.IsNullOrEmpty(value))
             return false;
-
         if (value[0] == '#')
             return TryParseHexColor(value, out color);
-
         return TryParseNamedColor(value, out color);
     }
 
@@ -161,26 +145,16 @@ public class ColorModifier : IModifier
             color = new Color32((byte)(r * 17), (byte)(g * 17), (byte)(b * 17), 255);
             return true;
         }
-
         if (len == 6)
         {
-            byte r = ParseHexByte(hex[1], hex[2]);
-            byte g = ParseHexByte(hex[3], hex[4]);
-            byte b = ParseHexByte(hex[5], hex[6]);
-            color = new Color32(r, g, b, 255);
+            color = new Color32(ParseHexByte(hex[1], hex[2]), ParseHexByte(hex[3], hex[4]), ParseHexByte(hex[5], hex[6]), 255);
             return true;
         }
-
         if (len == 8)
         {
-            byte r = ParseHexByte(hex[1], hex[2]);
-            byte g = ParseHexByte(hex[3], hex[4]);
-            byte b = ParseHexByte(hex[5], hex[6]);
-            byte a = ParseHexByte(hex[7], hex[8]);
-            color = new Color32(r, g, b, a);
+            color = new Color32(ParseHexByte(hex[1], hex[2]), ParseHexByte(hex[3], hex[4]), ParseHexByte(hex[5], hex[6]), ParseHexByte(hex[7], hex[8]));
             return true;
         }
-
         return false;
     }
 
@@ -192,10 +166,7 @@ public class ColorModifier : IModifier
         return 0;
     }
 
-    private static byte ParseHexByte(char high, char low)
-    {
-        return (byte)(ParseHexDigit(high) * 16 + ParseHexDigit(low));
-    }
+    private static byte ParseHexByte(char high, char low) => (byte)(ParseHexDigit(high) * 16 + ParseHexDigit(low));
 
     private static bool TryParseNamedColor(string name, out Color32 color)
     {
@@ -223,7 +194,6 @@ public class ColorModifier : IModifier
             "gold" => new Color32(255, 215, 0, 255),
             _ => new Color32(255, 255, 255, 255)
         };
-
         return name.ToLowerInvariant() is "white" or "black" or "red" or "green" or "blue"
             or "yellow" or "cyan" or "magenta" or "orange" or "purple"
             or "gray" or "grey" or "lime" or "brown" or "pink"

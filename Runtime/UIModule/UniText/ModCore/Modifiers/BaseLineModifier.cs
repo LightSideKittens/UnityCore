@@ -2,12 +2,8 @@ using System;
 using System.Buffers;
 using UnityEngine;
 
-/// <summary>
-/// Базовый класс для модификаторов, рисующих горизонтальные линии (underline, strikethrough).
-/// Наследники переопределяют GetLineOffset для указания вертикального смещения линии.
-/// </summary>
 [Serializable]
-public abstract class BaseLineModifier : IModifier
+public abstract class BaseLineModifier : BaseModifier
 {
     protected struct LineSegment
     {
@@ -19,7 +15,6 @@ public abstract class BaseLineModifier : IModifier
 
     private const float LineBreakThreshold = 5f;
 
-    // Наследник предоставляет доступ к статическим указателям (установленным через SetStaticBuffers)
     protected abstract ArrayPoolBuffer<byte> FlagsBuffer { get; }
     protected abstract LineSegment[] LineSegments { get; set; }
     protected abstract int LineSegmentsCapacity { get; set; }
@@ -27,17 +22,43 @@ public abstract class BaseLineModifier : IModifier
     protected abstract bool LinesDrawnThisFrame { get; set; }
 
     protected abstract float GetLineOffset(UnityEngine.TextCore.FaceInfo faceInfo, float scale);
-
-    // Наследник создаёт instance буферы
-    protected abstract void CreateInstanceBuffers();
-    // Наследник записывает instance буферы в static поля
-    protected abstract void SetStaticBuffers();
-    // Наследник возвращает буферы в пул
-    protected abstract void ReturnBuffersToPool();
+    protected abstract void CreateBuffersInternal();
+    protected abstract void SetStaticBuffer();
+    protected abstract void ReturnBuffersInternal();
 
     public static bool DebugLogging = false;
 
-    void IModifier.Apply(int start, int end, string parameter)
+    protected sealed override void CreateBuffers() => CreateBuffersInternal();
+
+    protected sealed override void Subscribe()
+    {
+        cachedUniText.Rebuilding += OnRebuilding;
+        var gen = cachedUniText.MeshGenerator;
+        gen.OnRebuildStart += OnRebuildStart;
+        gen.OnAfterGlyphs += OnAfterGlyphs;
+    }
+
+    protected sealed override void Unsubscribe()
+    {
+        cachedUniText.Rebuilding -= OnRebuilding;
+        var gen = cachedUniText.MeshGenerator;
+        if (gen != null)
+        {
+            gen.OnRebuildStart -= OnRebuildStart;
+            gen.OnAfterGlyphs -= OnAfterGlyphs;
+        }
+    }
+
+    protected sealed override void ReleaseBuffers() => ReturnBuffersInternal();
+
+    protected sealed override void ClearBuffers()
+    {
+        FlagsBuffer.Clear();
+        LineSegmentCount = 0;
+        LinesDrawnThisFrame = false;
+    }
+
+    protected sealed override void ApplyModifier(int start, int end, string parameter)
     {
         int cpCount = SharedTextBuffers.Current.codepointCount;
         var buffer = FlagsBuffer;
@@ -48,45 +69,9 @@ public abstract class BaseLineModifier : IModifier
             UnityEngine.Debug.Log($"[{GetType().Name}.Apply] start={start}, end={end}, cpCount={cpCount}");
     }
 
-    void IModifier.Initialize(UniText uniText)
-    {
-        CreateInstanceBuffers();
-        uniText.Rebuilding += OnRebuilding;
-        var gen = uniText.MeshGenerator;
-        gen.OnRebuildStart += OnRebuildStart;
-        gen.OnAfterGlyphs += OnAfterGlyphs;
-    }
+    private void OnRebuilding() => SetStaticBuffer();
 
-    void IModifier.Deinitialize(UniText uniText)
-    {
-        uniText.Rebuilding -= OnRebuilding;
-        var gen = uniText.MeshGenerator;
-        if (gen != null)
-        {
-            gen.OnRebuildStart -= OnRebuildStart;
-            gen.OnAfterGlyphs -= OnAfterGlyphs;
-        }
-        ReturnBuffersToPool();
-    }
-
-    private void OnRebuilding()
-    {
-        SetStaticBuffers();
-    }
-
-    private void OnRebuildStart()
-    {
-        LinesDrawnThisFrame = false;
-    }
-
-    void IModifier.Reset() => ResetState();
-
-    protected void ResetState()
-    {
-        FlagsBuffer.Clear();
-        LineSegmentCount = 0;
-        LinesDrawnThisFrame = false;
-    }
+    private void OnRebuildStart() => LinesDrawnThisFrame = false;
 
     private void AddSegment(float startX, float endX, float baselineY, int cluster)
     {
@@ -117,17 +102,15 @@ public abstract class BaseLineModifier : IModifier
 
     private void OnAfterGlyphs()
     {
-        if (LinesDrawnThisFrame)
-            return;
+        if (!isInitialized) return;
+        if (LinesDrawnThisFrame) return;
         LinesDrawnThisFrame = true;
 
         var fontAsset = UniTextMeshGenerator.currentFontAsset;
-        if (fontAsset == null)
-            return;
+        if (fontAsset == null) return;
 
         var flagsBuffer = FlagsBuffer;
-        if (!flagsBuffer.HasAnyFlags())
-            return;
+        if (!flagsBuffer.HasAnyFlags()) return;
 
         LineSegmentCount = 0;
 
@@ -139,8 +122,7 @@ public abstract class BaseLineModifier : IModifier
         var allGlyphs = buf.positionedGlyphs;
         int glyphCount = buf.positionedGlyphCount;
 
-        if (glyphCount == 0)
-            return;
+        if (glyphCount == 0) return;
 
         float lineStartX = 0, lineEndX = 0, lineBaselineY = 0;
         int lineStartCluster = 0;
@@ -153,8 +135,7 @@ public abstract class BaseLineModifier : IModifier
             int cluster = glyph.cluster;
             bool hasFlag = flagsBuffer.HasFlag(cluster);
 
-            if (!hasFlag && !hasActiveLine)
-                continue;
+            if (!hasFlag && !hasActiveLine) continue;
 
             float glyphX = offsetX + glyph.x;
             float baselineY = offsetY - glyph.y;
@@ -215,13 +196,10 @@ public abstract class BaseLineModifier : IModifier
         }
 
         if (hasActiveLine)
-        {
             AddSegment(lineStartX, lineEndX, lineBaselineY, lineStartCluster);
-        }
 
         int segmentCount = LineSegmentCount;
-        if (segmentCount == 0)
-            return;
+        if (segmentCount == 0) return;
 
         Color32 defaultColor = UniTextMeshGenerator.currentDefaultColor;
         float lineOffset = GetLineOffset(fontAsset.FaceInfo, scale);
@@ -230,11 +208,7 @@ public abstract class BaseLineModifier : IModifier
         for (int i = 0; i < segmentCount; i++)
         {
             ref var seg = ref segments[i];
-
-            Color32 color = ColorModifier.TryGetColor(seg.cluster, out var customColor)
-                ? customColor
-                : defaultColor;
-
+            Color32 color = ColorModifier.TryGetColor(seg.cluster, out var customColor) ? customColor : defaultColor;
             LineRenderHelper.DrawLine(seg.startX, seg.endX, seg.baselineY, lineOffset, color);
         }
     }

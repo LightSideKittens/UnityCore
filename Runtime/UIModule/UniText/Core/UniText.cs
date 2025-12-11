@@ -253,14 +253,6 @@ public class UniText : MaskableGraphic
     {
         base.OnEnable();
         ResetAfterDomainReload();
-
-        // Create and rent buffers (если ещё не созданы через EnsureInitialized)
-        if (textBuffers == null)
-        {
-            textBuffers = new SharedTextBuffers();
-            textBuffers.RentBuffers();
-        }
-
         CollectExistingSubMeshRenderers();
         EnsureCanvasShaderChannels();
         EnsureMaterialAssigned();
@@ -270,8 +262,6 @@ public class UniText : MaskableGraphic
     {
         base.OnDisable();
         Cleanup();
-
-        // Return buffers to pool
         textBuffers?.ReturnBuffers();
     }
 
@@ -320,6 +310,7 @@ public class UniText : MaskableGraphic
         isInitialized = true;
     }
 
+    
     private bool ValidatePrerequisites()
     {
         if (!UnicodeData.IsInitialized)
@@ -345,6 +336,8 @@ public class UniText : MaskableGraphic
 
     private void CreateProcessor()
     {
+        textBuffers = new SharedTextBuffers();
+        textBuffers.RentBuffers();
         processor = new TextProcessor();
         
         if (modRegisters == null || modRegisters.Count == 0) return;
@@ -379,13 +372,6 @@ public class UniText : MaskableGraphic
 
     private void EnsureInitialized()
     {
-        // Гарантируем что textBuffers создан
-        if (textBuffers == null)
-        {
-            textBuffers = new SharedTextBuffers();
-            textBuffers.RentBuffers();
-        }
-
         if (!isInitialized)
             InitializeComponents();
     }
@@ -420,11 +406,13 @@ public class UniText : MaskableGraphic
     private void ForceFullReinitialization()
     {
         parser?.DeinitializeModifiers(this);
+        textBuffers?.ReturnBuffers();
         isInitialized = false;
         parser = null;
         processor = null;
         fontProvider = null;
         meshGenerator = null;
+        textBuffers = null;
         cachedCleanText = null;
     }
 #endif

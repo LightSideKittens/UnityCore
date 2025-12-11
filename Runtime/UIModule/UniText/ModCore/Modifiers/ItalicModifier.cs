@@ -2,44 +2,46 @@ using System;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-/// <summary>
-/// Модификатор Italic текста.
-/// Помечает глифы как italic. Подписывается на OnGlyph для применения shear к вершинам.
-/// </summary>
 [Serializable]
-public class ItalicModifier : IModifier
+public class ItalicModifier : BaseModifier
 {
     private ArrayPoolBuffer<float> instanceBuffer;
     private static ArrayPoolBuffer<float> buffer;
 
-    void IModifier.Apply(int start, int end, string parameter)
+    protected override void CreateBuffers()
+    {
+        instanceBuffer = new ArrayPoolBuffer<float>(256);
+        buffer = instanceBuffer;
+    }
+
+    protected override void Subscribe()
+    {
+        cachedUniText.Rebuilding += OnRebuilding;
+        cachedUniText.MeshGenerator.OnGlyph += OnGlyph;
+    }
+
+    protected override void Unsubscribe()
+    {
+        cachedUniText.Rebuilding -= OnRebuilding;
+        cachedUniText.MeshGenerator.OnGlyph -= OnGlyph;
+    }
+
+    protected override void ReleaseBuffers()
+    {
+        instanceBuffer.ReturnToPool();
+        instanceBuffer = null;
+    }
+
+    protected override void ClearBuffers() => instanceBuffer.Clear();
+
+    protected override void ApplyModifier(int start, int end, string parameter)
     {
         int cpCount = SharedTextBuffers.Current.codepointCount;
         buffer.EnsureCapacity(cpCount);
         buffer.SetValueRange(start, Math.Min(end, cpCount), 1f);
     }
 
-    void IModifier.Initialize(UniText uniText)
-    {
-        instanceBuffer = new ArrayPoolBuffer<float>(256);
-        uniText.Rebuilding += OnRebuilding;
-        uniText.MeshGenerator.OnGlyph += OnGlyph;
-    }
-
-    void IModifier.Deinitialize(UniText uniText)
-    {
-        uniText.Rebuilding -= OnRebuilding;
-        var gen = uniText.MeshGenerator;
-        if (gen != null)
-            gen.OnGlyph -= OnGlyph;
-        instanceBuffer?.ReturnToPool();
-        instanceBuffer = null;
-    }
-
-    private void OnRebuilding()
-    {
-        buffer = instanceBuffer;
-    }
+    private void OnRebuilding() => buffer = instanceBuffer;
 
     private static void OnGlyph()
     {
@@ -66,10 +68,8 @@ public class ItalicModifier : IModifier
         verts[baseIdx + 3].x += bottomShearX;
     }
 
-    void IModifier.Reset() => buffer.Clear();
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsItalic(int cluster) => buffer.HasValue(cluster);
+    public static bool IsItalic(int cluster) => buffer != null && buffer.HasValue(cluster);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload() => buffer = null;

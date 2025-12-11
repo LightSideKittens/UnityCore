@@ -169,6 +169,7 @@ public sealed class TextProcessor
             AddCharacter(text, ref i, buf);
         }
     }
+    
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddCharacter(ReadOnlySpan<char> text, ref int i, SharedTextBuffers buf)

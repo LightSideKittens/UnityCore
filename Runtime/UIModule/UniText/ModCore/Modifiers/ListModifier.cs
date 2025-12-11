@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-/// <summary>
-/// Информация об элементе списка.
-/// </summary>
 public struct ListItemInfo
 {
     public int start;
@@ -14,9 +11,6 @@ public struct ListItemInfo
     public int displayNumber;
 }
 
-/// <summary>
-/// Стиль нумерации для ordered lists.
-/// </summary>
 public enum OrderedMarkerStyle
 {
     Decimal,
@@ -26,19 +20,13 @@ public enum OrderedMarkerStyle
     UpperRoman
 }
 
-/// <summary>
-/// Модификатор для списков (bullet и ordered).
-/// Применяет hanging indent и рендерит маркеры.
-/// </summary>
 [Serializable]
-public class ListModifier : IModifier
+public class ListModifier : BaseModifier
 {
-    // Instance буферы
     private List<ListItemInfo> instanceItems;
     private bool instanceMarkersDrawnThisFrame;
     private UniTextFontProvider instanceFontProvider;
 
-    // Статические указатели на текущие буферы
     private static List<ListItemInfo> items;
     private static bool markersDrawnThisFrame;
     private static UniTextFontProvider fontProviderRef;
@@ -48,17 +36,40 @@ public class ListModifier : IModifier
     public float indentPerLevel = 20f;
     public float markerToTextGap = 8f;
     public float bulletMarkerWidth = 24f;
-
     public string[] bulletMarkers = { "•", "-", "·" };
+    public OrderedMarkerStyle[] orderedStyles = { OrderedMarkerStyle.Decimal, OrderedMarkerStyle.LowerAlpha, OrderedMarkerStyle.LowerRoman };
 
-    public OrderedMarkerStyle[] orderedStyles =
+    protected override void CreateBuffers()
     {
-        OrderedMarkerStyle.Decimal,
-        OrderedMarkerStyle.LowerAlpha,
-        OrderedMarkerStyle.LowerRoman
-    };
+        instanceItems = new List<ListItemInfo>(32);
+        instanceFontProvider = cachedUniText.FontProvider;
+        items = instanceItems;
+        fontProviderRef = instanceFontProvider;
+    }
 
-    void IModifier.Apply(int start, int end, string parameter)
+    protected override void Subscribe()
+    {
+        cachedUniText.Rebuilding += OnRebuilding;
+        cachedUniText.MeshGenerator.OnRebuildStart += OnRebuildStart;
+        cachedUniText.MeshGenerator.OnAfterGlyphs += OnAfterGlyphs;
+    }
+
+    protected override void Unsubscribe()
+    {
+        cachedUniText.Rebuilding -= OnRebuilding;
+        cachedUniText.MeshGenerator.OnRebuildStart -= OnRebuildStart;
+        cachedUniText.MeshGenerator.OnAfterGlyphs -= OnAfterGlyphs;
+    }
+
+    protected override void ReleaseBuffers()
+    {
+        instanceItems = null;
+        instanceFontProvider = null;
+    }
+
+    protected override void ClearBuffers() => instanceItems.Clear();
+
+    protected override void ApplyModifier(int start, int end, string parameter)
     {
         var item = ParseParameter(start, end, parameter);
         items.Add(item);
@@ -67,30 +78,6 @@ public class ListModifier : IModifier
             UnityEngine.Debug.Log($"[ListModifier.Apply] start={start}, end={end}, param={parameter}, level={item.nestingLevel}, displayNum={item.displayNumber}");
 
         ApplyMargins(item);
-    }
-
-    void IModifier.Initialize(UniText uniText)
-    {
-        instanceItems = new List<ListItemInfo>(32);
-        instanceFontProvider = uniText.FontProvider;
-
-        uniText.Rebuilding += OnRebuilding;
-        var gen = uniText.MeshGenerator;
-        gen.OnRebuildStart += OnRebuildStart;
-        gen.OnAfterGlyphs += OnAfterGlyphs;
-    }
-
-    void IModifier.Deinitialize(UniText uniText)
-    {
-        uniText.Rebuilding -= OnRebuilding;
-        var gen = uniText.MeshGenerator;
-        if (gen != null)
-        {
-            gen.OnRebuildStart -= OnRebuildStart;
-            gen.OnAfterGlyphs -= OnAfterGlyphs;
-        }
-        instanceItems = null;
-        instanceFontProvider = null;
     }
 
     private void OnRebuilding()
@@ -106,189 +93,101 @@ public class ListModifier : IModifier
         instanceMarkersDrawnThisFrame = false;
     }
 
-    void IModifier.Reset()
-    {
-        items.Clear();
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ListItemInfo ParseParameter(int start, int end, string parameter)
     {
-        var item = new ListItemInfo
-        {
-            start = start,
-            end = end,
-            displayNumber = -1
-        };
-
-        if (string.IsNullOrEmpty(parameter))
-            return item;
+        var item = new ListItemInfo { start = start, end = end, displayNumber = -1 };
+        if (string.IsNullOrEmpty(parameter)) return item;
 
         int colonIndex = parameter.IndexOf(':');
         if (colonIndex < 0)
         {
-            if (int.TryParse(parameter, out int level))
-                item.nestingLevel = level;
+            if (int.TryParse(parameter, out int level)) item.nestingLevel = level;
         }
         else
         {
-            if (int.TryParse(parameter.AsSpan(0, colonIndex), out int level))
-                item.nestingLevel = level;
-            if (int.TryParse(parameter.AsSpan(colonIndex + 1), out int number))
-                item.displayNumber = number;
+            if (int.TryParse(parameter.AsSpan(0, colonIndex), out int level)) item.nestingLevel = level;
+            if (int.TryParse(parameter.AsSpan(colonIndex + 1), out int number)) item.displayNumber = number;
         }
-
         return item;
     }
 
     private float MeasureMarkerWidthForLayout(ListItemInfo item)
     {
-        if (item.displayNumber < 0)
-            return bulletMarkerWidth + markerToTextGap;
-
+        if (item.displayNumber < 0) return bulletMarkerWidth + markerToTextGap;
         var fontAsset = fontProviderRef?.GetFontAsset(0);
-        if (fontAsset == null)
-            return bulletMarkerWidth;
-
-        float fontSize = fontProviderRef.FontSize;
-        float scale = fontSize / fontAsset.FaceInfo.pointSize;
-
-        string markerText = GetMarkerTextForMeasure(item);
-        return MeasureStringWithScale(markerText, fontAsset, scale) + markerToTextGap;
+        if (fontAsset == null) return bulletMarkerWidth;
+        float scale = fontProviderRef.FontSize / fontAsset.FaceInfo.pointSize;
+        return MeasureStringWithScale(GetMarkerTextForMeasure(item), fontAsset, scale) + markerToTextGap;
     }
 
     private string GetMarkerTextForMeasure(ListItemInfo item)
     {
-        int level = Math.Min(item.nestingLevel, orderedStyles.Length - 1);
-        if (level < 0) level = 0;
-        string number = FormatOrderedNumber(item.displayNumber, orderedStyles[level]);
-        return $"{number}.";
+        int level = Math.Max(0, Math.Min(item.nestingLevel, orderedStyles.Length - 1));
+        return $"{FormatOrderedNumber(item.displayNumber, orderedStyles[level])}.";
     }
 
     private static float MeasureStringWithScale(string text, UniTextFontAsset fontAsset, float scale)
     {
-        if (string.IsNullOrEmpty(text))
-            return 0f;
-
-        float totalWidth = 0f;
+        if (string.IsNullOrEmpty(text)) return 0f;
         var charTable = fontAsset.CharacterLookupTable;
-        if (charTable == null)
-            return 0f;
-
+        if (charTable == null) return 0f;
+        float totalWidth = 0f;
         for (int i = 0; i < text.Length; i++)
-        {
-            uint codepoint = text[i];
-            if (charTable.TryGetValue(codepoint, out var character) && character?.glyph != null)
-            {
-                totalWidth += character.glyph.metrics.horizontalAdvance * scale;
-            }
-        }
+            if (charTable.TryGetValue(text[i], out var ch) && ch?.glyph != null)
+                totalWidth += ch.glyph.metrics.horizontalAdvance * scale;
         return totalWidth;
     }
 
     private void ApplyMargins(ListItemInfo item)
     {
-        float baseIndent = item.nestingLevel * indentPerLevel;
-        float markerWidth = MeasureMarkerWidthForLayout(item);
-        float contentIndent = baseIndent + markerWidth;
-
+        float contentIndent = item.nestingLevel * indentPerLevel + MeasureMarkerWidthForLayout(item);
         var buf = SharedTextBuffers.Current;
-        int cpCount = buf.codepointCount;
+        if (item.end > buf.startMargins.Length) buf.EnsureCodepointCapacity(item.end);
         var margins = buf.startMargins;
-
-        if (item.end > margins.Length)
-            buf.EnsureCodepointCapacity(item.end);
-
-        margins = buf.startMargins;
-
-        int safeEnd = Math.Min(item.end, cpCount);
-
+        int safeEnd = Math.Min(item.end, buf.codepointCount);
         for (int i = item.start; i < safeEnd; i++)
-        {
-            if (contentIndent > margins[i])
-                margins[i] = contentIndent;
-        }
+            if (contentIndent > margins[i]) margins[i] = contentIndent;
     }
 
     private void OnAfterGlyphs()
     {
-        if (markersDrawnThisFrame)
-            return;
+        if (items == null || items.Count == 0 || markersDrawnThisFrame) return;
         markersDrawnThisFrame = true;
         instanceMarkersDrawnThisFrame = true;
-
-        if (DebugLogging)
-            UnityEngine.Debug.Log($"[ListModifier.OnAfterGlyphs] items.Count={items.Count}");
-
-        if (items.Count == 0)
-            return;
-
-        foreach (var item in items)
-        {
-            RenderMarker(item);
-        }
+        foreach (var item in items) RenderMarker(item);
     }
 
     private void RenderMarker(ListItemInfo item)
     {
         bool isRtl = IsItemRtl(item.start);
-
         float baselineY = GetItemBaselineY(item.start, out float firstGlyphX);
-        if (float.IsNaN(baselineY))
-        {
-            if (DebugLogging)
-                UnityEngine.Debug.LogWarning($"[ListModifier.RenderMarker] baselineY is NaN for item.start={item.start}, level={item.nestingLevel}");
-            return;
-        }
+        if (float.IsNaN(baselineY)) return;
 
         string markerText = GetMarkerText(item, isRtl);
+        float markerX = isRtl
+            ? firstGlyphX + GetLineWidth(item.start) + markerToTextGap
+            : firstGlyphX - GlyphRenderHelper.MeasureString(markerText) - markerToTextGap;
 
-        float markerX;
-        if (isRtl)
-        {
-            float lineWidth = GetLineWidth(item.start);
-            float textRightEdge = firstGlyphX + lineWidth;
-            markerX = textRightEdge + markerToTextGap;
-        }
-        else
-        {
-            float measuredMarkerWidth = MeasureMarkerWidth(markerText);
-            markerX = firstGlyphX - measuredMarkerWidth - markerToTextGap;
-        }
-
-        if (DebugLogging)
-            UnityEngine.Debug.Log($"[ListModifier.RenderMarker] level={item.nestingLevel}, marker='{markerText}', x={markerX:F1}, y={baselineY:F1}, isRtl={isRtl}");
-
-        RenderMarkerGlyphs(markerText, markerX, baselineY);
+        GlyphRenderHelper.DrawString(markerText, markerX, baselineY, UniTextMeshGenerator.currentDefaultColor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool IsItemRtl(int startCluster)
+    private static bool IsItemRtl(int cluster)
     {
-        var bidiLevels = SharedTextBuffers.Current.bidiLevels;
-        if ((uint)startCluster >= (uint)bidiLevels.Length)
-            return false;
-
-        return (bidiLevels[startCluster] & 1) == 1;
+        var levels = SharedTextBuffers.Current.bidiLevels;
+        return (uint)cluster < (uint)levels.Length && (levels[cluster] & 1) == 1;
     }
 
-    private static float GetItemBaselineY(int startCluster, out float firstGlyphX)
+    private static float GetItemBaselineY(int cluster, out float firstGlyphX)
     {
         var buf = SharedTextBuffers.Current;
-        var glyphs = buf.positionedGlyphs;
-        int count = buf.positionedGlyphCount;
-        float offsetX = UniTextMeshGenerator.offsetX;
-        float offsetY = UniTextMeshGenerator.offsetY;
-
-        for (int i = 0; i < count; i++)
-        {
-            if (glyphs[i].cluster >= startCluster)
+        for (int i = 0; i < buf.positionedGlyphCount; i++)
+            if (buf.positionedGlyphs[i].cluster >= cluster)
             {
-                firstGlyphX = offsetX + glyphs[i].x;
-                return offsetY - glyphs[i].y;
+                firstGlyphX = UniTextMeshGenerator.offsetX + buf.positionedGlyphs[i].x;
+                return UniTextMeshGenerator.offsetY - buf.positionedGlyphs[i].y;
             }
-        }
-
         firstGlyphX = 0;
         return float.NaN;
     }
@@ -297,97 +196,44 @@ public class ListModifier : IModifier
     private static float GetLineWidth(int cluster)
     {
         var buf = SharedTextBuffers.Current;
-        var lines = buf.lines;
-        int lineCount = buf.lineCount;
-
-        for (int i = 0; i < lineCount; i++)
+        for (int i = 0; i < buf.lineCount; i++)
         {
-            ref readonly var line = ref lines[i];
+            ref readonly var line = ref buf.lines[i];
             if (cluster >= line.range.start && cluster < line.range.start + line.range.length)
                 return line.width;
         }
-
         return 0f;
     }
 
     private string GetMarkerText(ListItemInfo item, bool isRtl)
     {
         if (item.displayNumber < 0)
-        {
-            int level = Math.Min(item.nestingLevel, bulletMarkers.Length - 1);
-            if (level < 0) level = 0;
-            return bulletMarkers[level];
-        }
-        else
-        {
-            int level = Math.Min(item.nestingLevel, orderedStyles.Length - 1);
-            if (level < 0) level = 0;
-            string number = FormatOrderedNumber(item.displayNumber, orderedStyles[level]);
-            return isRtl ? $".{number}" : $"{number}.";
-        }
+            return bulletMarkers[Math.Max(0, Math.Min(item.nestingLevel, bulletMarkers.Length - 1))];
+        int level = Math.Max(0, Math.Min(item.nestingLevel, orderedStyles.Length - 1));
+        string num = FormatOrderedNumber(item.displayNumber, orderedStyles[level]);
+        return isRtl ? $".{num}" : $"{num}.";
     }
 
-    private static string FormatOrderedNumber(int number, OrderedMarkerStyle style)
+    private static string FormatOrderedNumber(int n, OrderedMarkerStyle style) => style switch
     {
-        return style switch
-        {
-            OrderedMarkerStyle.Decimal => number.ToString(),
-            OrderedMarkerStyle.LowerAlpha => ToLowerAlpha(number),
-            OrderedMarkerStyle.UpperAlpha => ToUpperAlpha(number),
-            OrderedMarkerStyle.LowerRoman => ToRoman(number).ToLowerInvariant(),
-            OrderedMarkerStyle.UpperRoman => ToRoman(number),
-            _ => number.ToString()
-        };
-    }
+        OrderedMarkerStyle.Decimal => n.ToString(),
+        OrderedMarkerStyle.LowerAlpha => n > 0 ? ((char)('a' + (n - 1) % 26)).ToString() : "?",
+        OrderedMarkerStyle.UpperAlpha => n > 0 ? ((char)('A' + (n - 1) % 26)).ToString() : "?",
+        OrderedMarkerStyle.LowerRoman => ToRoman(n).ToLowerInvariant(),
+        OrderedMarkerStyle.UpperRoman => ToRoman(n),
+        _ => n.ToString()
+    };
 
-    private static string ToLowerAlpha(int n)
+    private static string ToRoman(int n)
     {
-        if (n <= 0) return "?";
-        return ((char)('a' + (n - 1) % 26)).ToString();
-    }
-
-    private static string ToUpperAlpha(int n)
-    {
-        if (n <= 0) return "?";
-        return ((char)('A' + (n - 1) % 26)).ToString();
-    }
-
-    private static string ToRoman(int number)
-    {
-        if (number <= 0 || number > 3999)
-            return number.ToString();
-
-        ReadOnlySpan<int> values = stackalloc int[] { 1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1 };
-        ReadOnlySpan<string> numerals = new[] { "M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I" };
-
-        var result = new System.Text.StringBuilder(15);
-        for (int i = 0; i < values.Length; i++)
-        {
-            while (number >= values[i])
-            {
-                number -= values[i];
-                result.Append(numerals[i]);
-            }
-        }
-        return result.ToString();
-    }
-
-    private static float MeasureMarkerWidth(string markerText)
-    {
-        return GlyphRenderHelper.MeasureString(markerText);
-    }
-
-    private static void RenderMarkerGlyphs(string markerText, float x, float baselineY)
-    {
-        Color32 color = UniTextMeshGenerator.currentDefaultColor;
-        GlyphRenderHelper.DrawString(markerText, x, baselineY, color);
+        if (n <= 0 || n > 3999) return n.ToString();
+        ReadOnlySpan<int> v = stackalloc int[] { 1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1 };
+        ReadOnlySpan<string> s = new[] { "M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I" };
+        var r = new System.Text.StringBuilder(15);
+        for (int i = 0; i < v.Length; i++) while (n >= v[i]) { n -= v[i]; r.Append(s[i]); }
+        return r.ToString();
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        items = null;
-        markersDrawnThisFrame = false;
-        fontProviderRef = null;
-    }
+    private static void OnDomainReload() { items = null; markersDrawnThisFrame = false; fontProviderRef = null; }
 }
