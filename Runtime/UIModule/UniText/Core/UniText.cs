@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using LSCore;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 /// <summary>
 /// Компонент для отображения текста с полной Unicode поддержкой.
@@ -91,6 +92,9 @@ public class UniText : MaskableGraphic
     private UniTextFontProvider fontProvider;
     private UniTextMeshGenerator meshGenerator;
     private AttributeParser parser;
+
+    /// <summary>Font provider для доступа к fontAsset и метрикам.</summary>
+    public UniTextFontProvider FontProvider => fontProvider;
 
     #endregion
 

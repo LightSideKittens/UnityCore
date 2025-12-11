@@ -142,6 +142,9 @@ public sealed class LineBreaker
             : (rentedArray = ArrayPool<float>.Shared.Rent(cpCount)).AsSpan(0, cpCount);
         cpWidths.Clear();
 
+        // Get margins from SharedTextBuffers
+        var margins = SharedTextBuffers.startMargins;
+
         try
         {
             for (int runIdx = 0; runIdx < runs.Length; runIdx++)
@@ -163,6 +166,10 @@ public sealed class LineBreaker
             int lastBreakCp = -1;
             float widthAtLastBreak = 0;
 
+            // Get margin for first line
+            float currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
+            float effectiveMaxWidth = maxWidth - currentLineMargin;
+
             for (int cpIdx = 0; cpIdx < cpCount; cpIdx++)
             {
                 int cp = codepoints[cpIdx];
@@ -170,10 +177,13 @@ public sealed class LineBreaker
                 // Mandatory break
                 if (IsMandatoryBreak(cp))
                 {
-                    CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx, lineWidth);
+                    CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx, lineWidth, currentLineMargin);
                     lineStartCp = cpIdx + 1;
                     lineWidth = 0;
                     lastBreakCp = -1;
+                    // Update margin for next line
+                    currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
+                    effectiveMaxWidth = maxWidth - currentLineMargin;
                     continue;
                 }
 
@@ -187,26 +197,29 @@ public sealed class LineBreaker
 
                 if (DebugLogging)
                 {
-                    UnityEngine.Debug.Log($"[LineBreaker] cpIdx={cpIdx} cp=U+{cp:X4} width={cpWidths[cpIdx]:F1} canBreak={CanBreakAfter(cpIdx)} lineWidth={lineWidth:F1}");
+                    UnityEngine.Debug.Log($"[LineBreaker] cpIdx={cpIdx} cp=U+{cp:X4} width={cpWidths[cpIdx]:F1} canBreak={CanBreakAfter(cpIdx)} lineWidth={lineWidth:F1} margin={currentLineMargin:F1}");
                 }
 
-                if (lineWidth > maxWidth && lastBreakCp >= 0)
+                if (lineWidth > effectiveMaxWidth && lastBreakCp >= 0)
                 {
                     if (DebugLogging)
                     {
-                        UnityEngine.Debug.Log($"[LineBreaker] BREAK at cpIdx={lastBreakCp}, lineWidth={lineWidth:F1} > maxWidth={maxWidth:F1}");
+                        UnityEngine.Debug.Log($"[LineBreaker] BREAK at cpIdx={lastBreakCp}, lineWidth={lineWidth:F1} > effectiveMaxWidth={effectiveMaxWidth:F1}");
                     }
-                    CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, lastBreakCp, widthAtLastBreak);
+                    CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, lastBreakCp, widthAtLastBreak, currentLineMargin);
                     lineStartCp = lastBreakCp + 1;
                     lineWidth -= widthAtLastBreak;
                     lastBreakCp = -1;
+                    // Update margin for next line
+                    currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
+                    effectiveMaxWidth = maxWidth - currentLineMargin;
                 }
             }
 
             // Last line
             if (lineStartCp < cpCount)
             {
-                CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpCount - 1, lineWidth);
+                CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpCount - 1, lineWidth, currentLineMargin);
             }
         }
         finally
@@ -221,13 +234,13 @@ public sealed class LineBreaker
         ReadOnlySpan<ShapedGlyph> glyphs,
         ReadOnlySpan<int> codepoints,
         int startCp, int endCp,
-        float width)
+        float width, float startMargin = 0f)
     {
         if (startCp > endCp) return;
 
         if (DebugLogging)
         {
-            UnityEngine.Debug.Log($"[LineBreaker.CreateLineFromCodepoints] Creating line for codepoints [{startCp}, {endCp}]");
+            UnityEngine.Debug.Log($"[LineBreaker.CreateLineFromCodepoints] Creating line for codepoints [{startCp}, {endCp}], margin={startMargin:F1}");
         }
 
         // Find runs that overlap with [startCp, endCp]
@@ -311,7 +324,8 @@ public sealed class LineBreaker
             runCount = lineRunCount,
             width = width,
             height = 0,
-            baseline = 0
+            baseline = 0,
+            startMargin = startMargin
         };
     }
 

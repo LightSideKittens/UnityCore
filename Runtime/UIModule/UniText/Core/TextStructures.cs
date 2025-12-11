@@ -97,6 +97,7 @@ public struct TextLine
     public float height; // Высота строки
     public float baseline; // Позиция baseline
     public byte paragraphBaseLevel; // Base level параграфа (0=LTR, 1=RTL) для alignment
+    public float startMargin; // Hanging indent: LTR — слева, RTL — справа
 }
 
 /// <summary>

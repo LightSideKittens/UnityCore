@@ -125,14 +125,20 @@ public sealed class TextLayout
 
             // Начальная X позиция
             float x;
+            bool isRtlLine = (line.paragraphBaseLevel & 1) == 1;
             if (hasFiniteWidth)
             {
-                bool isRtlLine = (line.paragraphBaseLevel & 1) == 1;
                 x = ComputeLineStartX(lineWidth, isRtlLine, availableWidth, hAlign);
             }
             else
             {
                 x = 0;
+            }
+
+            // Apply startMargin for hanging indent (lists, etc.)
+            if (line.startMargin > 0)
+            {
+                x += isRtlLine ? -line.startMargin : line.startMargin;
             }
 
             // Позиционируем каждый run в строке

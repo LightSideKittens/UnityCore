@@ -100,6 +100,9 @@ public class UniTextMeshGenerator
     /// <summary>Offset по Y (rectOffset.yMax)</summary>
     public static float offsetY;
 
+    /// <summary>Ширина rect для RTL позиционирования</summary>
+    public static float rectWidth;
+
     /// <summary>Текущее количество вершин в буфере</summary>
     public static int vertexCount;
 
@@ -126,7 +129,11 @@ public class UniTextMeshGenerator
         lossyScale = transform?.lossyScale.x ?? 1f;
     }
 
-    public void SetRectOffset(Rect rect) => rectOffset = rect;
+    public void SetRectOffset(Rect rect)
+    {
+        rectOffset = rect;
+        rectWidth = rect.width;
+    }
 
     /// <summary>
     /// Generates meshes from positioned glyphs.

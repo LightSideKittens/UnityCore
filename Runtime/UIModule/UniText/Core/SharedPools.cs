@@ -54,6 +54,18 @@ public static class SharedTextBuffers
     /// </summary>
     public static Color32[] glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
 
+    // ═══════════════════════════════════════════════════════════════════
+    // LAYOUT MARGINS - для hanging indent, blockquotes и т.д.
+    // Индексируются по codepoint index (параллельно codepoints)
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Start margin для каждого codepoint.
+    /// LineBreaker использует margin первого codepoint строки.
+    /// При LTR — отступ слева, при RTL — справа.
+    /// </summary>
+    public static float[] startMargins = ArrayPool<float>.Shared.Rent(MinCodepointCapacity);
+
     // Track peak usage for diagnostics
     public static int peakCodepointCount;
     public static int peakRunCount;
@@ -75,6 +87,9 @@ public static class SharedTextBuffers
         positionedGlyphCount = 0;
         bidiParagraphs = Array.Empty<BidiParagraph>();
         baseDirection = TextDirection.LeftToRight;
+
+        // Clear margins (модификаторы заполняют заново каждый кадр)
+        startMargins.AsSpan().Clear();
     }
 
     /// <summary>
@@ -114,6 +129,10 @@ public static class SharedTextBuffers
         ArrayPool<UnicodeScript>.Shared.Return(scripts);
         scripts = newScripts;
 
+        var newMargins = ArrayPool<float>.Shared.Rent(newSize);
+        startMargins.AsSpan(0, Math.Min(codepointCount, startMargins.Length)).CopyTo(newMargins);
+        ArrayPool<float>.Shared.Return(startMargins);
+        startMargins = newMargins;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -269,6 +288,7 @@ public static class SharedTextBuffers
         codepoints = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
         bidiLevels = ArrayPool<byte>.Shared.Rent(MinCodepointCapacity);
         scripts = ArrayPool<UnicodeScript>.Shared.Rent(MinCodepointCapacity);
+        startMargins = ArrayPool<float>.Shared.Rent(MinCodepointCapacity);
         runs = ArrayPool<TextRun>.Shared.Rent(MinRunCapacity);
         shapedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
         shapedGlyphs = ArrayPool<ShapedGlyph>.Shared.Rent(MinGlyphCapacity);
@@ -291,6 +311,7 @@ public static class SharedTextBuffers
         if (codepoints != null) { ArrayPool<int>.Shared.Return(codepoints); codepoints = null; }
         if (bidiLevels != null) { ArrayPool<byte>.Shared.Return(bidiLevels); bidiLevels = null; }
         if (scripts != null) { ArrayPool<UnicodeScript>.Shared.Return(scripts); scripts = null; }
+        if (startMargins != null) { ArrayPool<float>.Shared.Return(startMargins); startMargins = null; }
         if (runs != null) { ArrayPool<TextRun>.Shared.Return(runs); runs = null; }
         if (shapedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(shapedRuns); shapedRuns = null; }
         if (shapedGlyphs != null) { ArrayPool<ShapedGlyph>.Shared.Return(shapedGlyphs); shapedGlyphs = null; }
