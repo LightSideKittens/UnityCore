@@ -180,26 +180,6 @@ public class UnicodeDataGeneratorData : ScriptableObject
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Testing", EditorStyles.boldLabel);
         testing.OnGui();
-        
-        if (GUILayout.Button("Copy", GUILayout.Height(30)))
-        {
-            var instance = ScriptableObject.CreateInstance<UnicodeDataGeneratorData>();
-            instance.derivedBidiClassAsset = instance.derivedBidiClassAsset;
-            instance.derivedJoiningTypeAsset = instance.derivedJoiningTypeAsset;
-            instance.arabicShapingAsset = instance.arabicShapingAsset;
-            instance.bidiBracketsAsset = instance.bidiBracketsAsset;
-            instance.bidiMirroringAsset = instance.bidiMirroringAsset;
-            instance.scriptsAsset = instance.scriptsAsset;
-            instance.lineBreakAsset = instance.lineBreakAsset;
-            instance.emojiDataAsset = instance.emojiDataAsset;
-            instance.generalCategoryAsset = instance.generalCategoryAsset;
-            instance.eastAsianWidthAsset = instance.eastAsianWidthAsset;
-            instance.graphemeBreakPropertyAsset = instance.graphemeBreakPropertyAsset;
-            instance.testing = testing;
-            
-            AssetDatabase.CreateAsset(instance, "Assets/UnicodeDataGeneratorData.asset");
-
-        }
     }
 
     private void GenerateUnicodeData()

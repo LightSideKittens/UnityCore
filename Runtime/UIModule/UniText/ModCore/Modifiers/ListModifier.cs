@@ -8,10 +8,10 @@ using UnityEngine;
 /// </summary>
 public struct ListItemInfo
 {
-    public int start;           // Начало контента в clean text
-    public int end;             // Конец контента (не включительно)
-    public int nestingLevel;    // Уровень вложенности (0, 1, 2...)
-    public int displayNumber;   // Для ordered: отображаемый номер (1, 2, 3...), для bullet: -1
+    public int start;
+    public int end;
+    public int nestingLevel;
+    public int displayNumber;
 }
 
 /// <summary>
@@ -19,11 +19,11 @@ public struct ListItemInfo
 /// </summary>
 public enum OrderedMarkerStyle
 {
-    Decimal,      // 1. 2. 3.
-    LowerAlpha,   // a. b. c.
-    UpperAlpha,   // A. B. C.
-    LowerRoman,   // i. ii. iii.
-    UpperRoman    // I. II. III.
+    Decimal,
+    LowerAlpha,
+    UpperAlpha,
+    LowerRoman,
+    UpperRoman
 }
 
 /// <summary>
@@ -33,40 +33,30 @@ public enum OrderedMarkerStyle
 [Serializable]
 public class ListModifier : IModifier
 {
-    // ═══════════════════════════════════════════════════════════════
-    // Статические буферы
-    // ═══════════════════════════════════════════════════════════════
+    // Instance буферы
+    private List<ListItemInfo> instanceItems;
+    private bool instanceMarkersDrawnThisFrame;
+    private UniTextFontProvider instanceFontProvider;
 
-    private static readonly List<ListItemInfo> items = new(32);
+    // Статические указатели на текущие буферы
+    private static List<ListItemInfo> items;
     private static bool markersDrawnThisFrame;
     private static UniTextFontProvider fontProviderRef;
 
-    // DEBUG
     public static bool DebugLogging = false;
 
-    // ═══════════════════════════════════════════════════════════════
-    // Настройки (настраиваются в Inspector)
-    // ═══════════════════════════════════════════════════════════════
+    public float indentPerLevel = 20f;
+    public float markerToTextGap = 8f;
+    public float bulletMarkerWidth = 24f;
 
-    public float indentPerLevel = 20f;       // Отступ на уровень вложенности
-    public float markerToTextGap = 8f;       // Расстояние от маркера до текста
-    public float bulletMarkerWidth = 24f;    // Ширина зоны для bullet маркера
-
-    // Маркеры bullet list по уровням
-    // Используем символы которые есть в большинстве шрифтов
     public string[] bulletMarkers = { "•", "-", "·" };
 
-    // Стили ordered list по уровням
     public OrderedMarkerStyle[] orderedStyles =
     {
         OrderedMarkerStyle.Decimal,
         OrderedMarkerStyle.LowerAlpha,
         OrderedMarkerStyle.LowerRoman
     };
-
-    // ═══════════════════════════════════════════════════════════════
-    // IModifier
-    // ═══════════════════════════════════════════════════════════════
 
     void IModifier.Apply(int start, int end, string parameter)
     {
@@ -76,13 +66,15 @@ public class ListModifier : IModifier
         if (DebugLogging)
             UnityEngine.Debug.Log($"[ListModifier.Apply] start={start}, end={end}, param={parameter}, level={item.nestingLevel}, displayNum={item.displayNumber}");
 
-        // Установить margins в SharedTextBuffers для hanging indent
         ApplyMargins(item);
     }
 
     void IModifier.Initialize(UniText uniText)
     {
-        fontProviderRef = uniText.FontProvider;
+        instanceItems = new List<ListItemInfo>(32);
+        instanceFontProvider = uniText.FontProvider;
+
+        uniText.Rebuilding += OnRebuilding;
         var gen = uniText.MeshGenerator;
         gen.OnRebuildStart += OnRebuildStart;
         gen.OnAfterGlyphs += OnAfterGlyphs;
@@ -90,15 +82,28 @@ public class ListModifier : IModifier
 
     void IModifier.Deinitialize(UniText uniText)
     {
+        uniText.Rebuilding -= OnRebuilding;
         var gen = uniText.MeshGenerator;
-        if (gen == null) return;
-        gen.OnRebuildStart -= OnRebuildStart;
-        gen.OnAfterGlyphs -= OnAfterGlyphs;
+        if (gen != null)
+        {
+            gen.OnRebuildStart -= OnRebuildStart;
+            gen.OnAfterGlyphs -= OnAfterGlyphs;
+        }
+        instanceItems = null;
+        instanceFontProvider = null;
     }
 
-    private static void OnRebuildStart()
+    private void OnRebuilding()
+    {
+        items = instanceItems;
+        fontProviderRef = instanceFontProvider;
+        markersDrawnThisFrame = instanceMarkersDrawnThisFrame;
+    }
+
+    private void OnRebuildStart()
     {
         markersDrawnThisFrame = false;
+        instanceMarkersDrawnThisFrame = false;
     }
 
     void IModifier.Reset()
@@ -106,20 +111,6 @@ public class ListModifier : IModifier
         items.Clear();
     }
 
-    public static void ResetStatic()
-    {
-        items.Clear();
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // Парсинг параметра
-    // ═══════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Парсит parameter строку.
-    /// Bullet: "0", "1", "2" (только level)
-    /// Ordered: "0:1", "1:5" (level:number)
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ListItemInfo ParseParameter(int start, int end, string parameter)
     {
@@ -136,13 +127,11 @@ public class ListModifier : IModifier
         int colonIndex = parameter.IndexOf(':');
         if (colonIndex < 0)
         {
-            // Bullet: "0", "1", "2"
             if (int.TryParse(parameter, out int level))
                 item.nestingLevel = level;
         }
         else
         {
-            // Ordered: "0:1", "1:5"
             if (int.TryParse(parameter.AsSpan(0, colonIndex), out int level))
                 item.nestingLevel = level;
             if (int.TryParse(parameter.AsSpan(colonIndex + 1), out int number))
@@ -152,24 +141,14 @@ public class ListModifier : IModifier
         return item;
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // Margins для hanging indent
-    // ═══════════════════════════════════════════════════════════════
-
-    /// <summary>
-    /// Измеряет ширину маркера через fontAsset.
-    /// Для bullets возвращает фиксированную ширину.
-    /// Для ordered измеряет реальную ширину через font metrics.
-    /// </summary>
     private float MeasureMarkerWidthForLayout(ListItemInfo item)
     {
         if (item.displayNumber < 0)
             return bulletMarkerWidth + markerToTextGap;
 
-        // Ordered: измерить реальную ширину через font
         var fontAsset = fontProviderRef?.GetFontAsset(0);
         if (fontAsset == null)
-            return bulletMarkerWidth; // fallback
+            return bulletMarkerWidth;
 
         float fontSize = fontProviderRef.FontSize;
         float scale = fontSize / fontAsset.FaceInfo.pointSize;
@@ -178,9 +157,6 @@ public class ListModifier : IModifier
         return MeasureStringWithScale(markerText, fontAsset, scale) + markerToTextGap;
     }
 
-    /// <summary>
-    /// Получить текст маркера для измерения (без RTL, т.к. ширина одинаковая).
-    /// </summary>
     private string GetMarkerTextForMeasure(ListItemInfo item)
     {
         int level = Math.Min(item.nestingLevel, orderedStyles.Length - 1);
@@ -189,9 +165,6 @@ public class ListModifier : IModifier
         return $"{number}.";
     }
 
-    /// <summary>
-    /// Измеряет ширину строки с заданным fontAsset и scale.
-    /// </summary>
     private static float MeasureStringWithScale(string text, UniTextFontAsset fontAsset, float scale)
     {
         if (string.IsNullOrEmpty(text))
@@ -219,21 +192,17 @@ public class ListModifier : IModifier
         float markerWidth = MeasureMarkerWidthForLayout(item);
         float contentIndent = baseIndent + markerWidth;
 
-        int cpCount = SharedTextBuffers.codepointCount;
-        var margins = SharedTextBuffers.startMargins;
+        var buf = SharedTextBuffers.Current;
+        int cpCount = buf.codepointCount;
+        var margins = buf.startMargins;
 
-        // Убедимся что буфер достаточно большой
         if (item.end > margins.Length)
-            SharedTextBuffers.EnsureCodepointCapacity(item.end);
+            buf.EnsureCodepointCapacity(item.end);
 
-        margins = SharedTextBuffers.startMargins; // Перезагрузить после возможного resize
+        margins = buf.startMargins;
 
         int safeEnd = Math.Min(item.end, cpCount);
 
-        // Для list item: весь диапазон получает contentIndent (hanging indent)
-        // Первая строка будет иметь margin = contentIndent, но маркер рисуется отдельно
-        // в зоне [baseIndent, baseIndent + fixedMarkerWidth]
-        // ВАЖНО: не перезаписываем если уже есть больший margin (вложенные items)
         for (int i = item.start; i < safeEnd; i++)
         {
             if (contentIndent > margins[i])
@@ -241,16 +210,12 @@ public class ListModifier : IModifier
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // Рендеринг маркеров
-    // ═══════════════════════════════════════════════════════════════
-
     private void OnAfterGlyphs()
     {
-        // Рисуем маркеры только один раз за rebuild (OnAfterGlyphs вызывается для каждого шрифта)
         if (markersDrawnThisFrame)
             return;
         markersDrawnThisFrame = true;
+        instanceMarkersDrawnThisFrame = true;
 
         if (DebugLogging)
             UnityEngine.Debug.Log($"[ListModifier.OnAfterGlyphs] items.Count={items.Count}");
@@ -266,10 +231,8 @@ public class ListModifier : IModifier
 
     private void RenderMarker(ListItemInfo item)
     {
-        // Направление каждого item определяется по его контенту (как в Google Docs)
         bool isRtl = IsItemRtl(item.start);
 
-        // Получить baseline Y и X позицию первого глифа
         float baselineY = GetItemBaselineY(item.start, out float firstGlyphX);
         if (float.IsNaN(baselineY))
         {
@@ -283,15 +246,12 @@ public class ListModifier : IModifier
         float markerX;
         if (isRtl)
         {
-            // RTL: маркер справа от текста
-            // Находим правый край строки: firstGlyphX + lineWidth
             float lineWidth = GetLineWidth(item.start);
             float textRightEdge = firstGlyphX + lineWidth;
             markerX = textRightEdge + markerToTextGap;
         }
         else
         {
-            // LTR: маркер слева от текста
             float measuredMarkerWidth = MeasureMarkerWidth(markerText);
             markerX = firstGlyphX - measuredMarkerWidth - markerToTextGap;
         }
@@ -299,29 +259,24 @@ public class ListModifier : IModifier
         if (DebugLogging)
             UnityEngine.Debug.Log($"[ListModifier.RenderMarker] level={item.nestingLevel}, marker='{markerText}', x={markerX:F1}, y={baselineY:F1}, isRtl={isRtl}");
 
-        // Рендерить маркер как глифы
         RenderMarkerGlyphs(markerText, markerX, baselineY);
     }
 
-    /// <summary>
-    /// Определить RTL по bidiLevel первого символа item.
-    /// RTL если (bidiLevel & 1) == 1
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsItemRtl(int startCluster)
     {
-        var bidiLevels = SharedTextBuffers.bidiLevels;
+        var bidiLevels = SharedTextBuffers.Current.bidiLevels;
         if ((uint)startCluster >= (uint)bidiLevels.Length)
             return false;
 
         return (bidiLevels[startCluster] & 1) == 1;
     }
 
-    private float GetItemBaselineY(int startCluster, out float firstGlyphX)
+    private static float GetItemBaselineY(int startCluster, out float firstGlyphX)
     {
-        // Найти baseline Y и X позицию первого глифа
-        var glyphs = SharedTextBuffers.positionedGlyphs;
-        int count = SharedTextBuffers.positionedGlyphCount;
+        var buf = SharedTextBuffers.Current;
+        var glyphs = buf.positionedGlyphs;
+        int count = buf.positionedGlyphCount;
         float offsetX = UniTextMeshGenerator.offsetX;
         float offsetY = UniTextMeshGenerator.offsetY;
 
@@ -338,14 +293,12 @@ public class ListModifier : IModifier
         return float.NaN;
     }
 
-    /// <summary>
-    /// Получить ширину строки, содержащей указанный cluster.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float GetLineWidth(int cluster)
     {
-        var lines = SharedTextBuffers.lines;
-        int lineCount = SharedTextBuffers.lineCount;
+        var buf = SharedTextBuffers.Current;
+        var lines = buf.lines;
+        int lineCount = buf.lineCount;
 
         for (int i = 0; i < lineCount; i++)
         {
@@ -361,19 +314,15 @@ public class ListModifier : IModifier
     {
         if (item.displayNumber < 0)
         {
-            // Bullet
             int level = Math.Min(item.nestingLevel, bulletMarkers.Length - 1);
             if (level < 0) level = 0;
             return bulletMarkers[level];
         }
         else
         {
-            // Ordered
             int level = Math.Min(item.nestingLevel, orderedStyles.Length - 1);
             if (level < 0) level = 0;
             string number = FormatOrderedNumber(item.displayNumber, orderedStyles[level]);
-
-            // В RTL точка идёт перед числом
             return isRtl ? $".{number}" : $"{number}.";
         }
     }
@@ -408,7 +357,6 @@ public class ListModifier : IModifier
         if (number <= 0 || number > 3999)
             return number.ToString();
 
-        // Стандартная реализация римских цифр
         ReadOnlySpan<int> values = stackalloc int[] { 1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1 };
         ReadOnlySpan<string> numerals = new[] { "M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I" };
 
@@ -424,12 +372,12 @@ public class ListModifier : IModifier
         return result.ToString();
     }
 
-    private float MeasureMarkerWidth(string markerText)
+    private static float MeasureMarkerWidth(string markerText)
     {
         return GlyphRenderHelper.MeasureString(markerText);
     }
 
-    private void RenderMarkerGlyphs(string markerText, float x, float baselineY)
+    private static void RenderMarkerGlyphs(string markerText, float x, float baselineY)
     {
         Color32 color = UniTextMeshGenerator.currentDefaultColor;
         GlyphRenderHelper.DrawString(markerText, x, baselineY, color);
@@ -438,7 +386,7 @@ public class ListModifier : IModifier
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
-        items.Clear();
+        items = null;
         markersDrawnThisFrame = false;
         fontProviderRef = null;
     }

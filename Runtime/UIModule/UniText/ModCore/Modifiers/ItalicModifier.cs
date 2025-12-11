@@ -9,25 +9,36 @@ using UnityEngine;
 [Serializable]
 public class ItalicModifier : IModifier
 {
-    private static ArrayPoolBuffer<float> buffer = new(256);
+    private ArrayPoolBuffer<float> instanceBuffer;
+    private static ArrayPoolBuffer<float> buffer;
 
     void IModifier.Apply(int start, int end, string parameter)
     {
-        int cpCount = SharedTextBuffers.codepointCount;
+        int cpCount = SharedTextBuffers.Current.codepointCount;
         buffer.EnsureCapacity(cpCount);
         buffer.SetValueRange(start, Math.Min(end, cpCount), 1f);
     }
 
     void IModifier.Initialize(UniText uniText)
     {
+        instanceBuffer = new ArrayPoolBuffer<float>(256);
+        uniText.Rebuilding += OnRebuilding;
         uniText.MeshGenerator.OnGlyph += OnGlyph;
     }
 
     void IModifier.Deinitialize(UniText uniText)
     {
+        uniText.Rebuilding -= OnRebuilding;
         var gen = uniText.MeshGenerator;
-        if (gen == null) return;
-        gen.OnGlyph -= OnGlyph;
+        if (gen != null)
+            gen.OnGlyph -= OnGlyph;
+        instanceBuffer?.ReturnToPool();
+        instanceBuffer = null;
+    }
+
+    private void OnRebuilding()
+    {
+        buffer = instanceBuffer;
     }
 
     private static void OnGlyph()
@@ -36,15 +47,12 @@ public class ItalicModifier : IModifier
         if (!buffer.HasValue(cluster))
             return;
 
-        // Get italic style from current font
         float italicStyle = UniTextMeshGenerator.currentFontAsset?.ItalicStyle ?? 12f;
         float shearValue = italicStyle * 0.01f;
 
-        // Get last 4 vertices
         int baseIdx = UniTextMeshGenerator.vertexCount - 4;
         var verts = UniTextMeshGenerator.Vertices;
 
-        // BL=0, TL=1, TR=2, BR=3
         float blY = verts[baseIdx].y;
         float tlY = verts[baseIdx + 1].y;
         float midY = (tlY + blY) * 0.5f;
@@ -52,20 +60,17 @@ public class ItalicModifier : IModifier
         float topShearX = shearValue * (tlY - midY);
         float bottomShearX = shearValue * (blY - midY);
 
-        // Apply shear to vertices
-        verts[baseIdx].x += bottomShearX;     // BL
-        verts[baseIdx + 1].x += topShearX;    // TL
-        verts[baseIdx + 2].x += topShearX;    // TR
-        verts[baseIdx + 3].x += bottomShearX; // BR
+        verts[baseIdx].x += bottomShearX;
+        verts[baseIdx + 1].x += topShearX;
+        verts[baseIdx + 2].x += topShearX;
+        verts[baseIdx + 3].x += bottomShearX;
     }
 
-    public static void ResetStatic() => buffer.Clear();
-
-    void IModifier.Reset() => ResetStatic();
+    void IModifier.Reset() => buffer.Clear();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsItalic(int cluster) => buffer.HasValue(cluster);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload() => buffer.Reset();
+    private static void OnDomainReload() => buffer = null;
 }

@@ -92,6 +92,7 @@ public class UniText : MaskableGraphic
     private UniTextFontProvider fontProvider;
     private UniTextMeshGenerator meshGenerator;
     private AttributeParser parser;
+    private SharedTextBuffers textBuffers;
 
     /// <summary>Font provider для доступа к fontAsset и метрикам.</summary>
     public UniTextFontProvider FontProvider => fontProvider;
@@ -122,6 +123,7 @@ public class UniText : MaskableGraphic
     // Mesh tracking - mesh'и из SharedMeshPool
     private readonly List<Mesh> acquiredMeshes = new();
 
+    public event Action Rebuilding;
     // Cached delegate to avoid lambda allocation
     private Func<Mesh> cachedMeshProvider;
 
@@ -251,6 +253,14 @@ public class UniText : MaskableGraphic
     {
         base.OnEnable();
         ResetAfterDomainReload();
+
+        // Create and rent buffers (если ещё не созданы через EnsureInitialized)
+        if (textBuffers == null)
+        {
+            textBuffers = new SharedTextBuffers();
+            textBuffers.RentBuffers();
+        }
+
         CollectExistingSubMeshRenderers();
         EnsureCanvasShaderChannels();
         EnsureMaterialAssigned();
@@ -260,6 +270,9 @@ public class UniText : MaskableGraphic
     {
         base.OnDisable();
         Cleanup();
+
+        // Return buffers to pool
+        textBuffers?.ReturnBuffers();
     }
 
     protected override void OnDestroy()
@@ -349,6 +362,7 @@ public class UniText : MaskableGraphic
         processor.Parsed += parser.Apply;
     }
 
+    
     private void RebuildFontProvider()
     {
         if (font == null) return;
@@ -365,6 +379,13 @@ public class UniText : MaskableGraphic
 
     private void EnsureInitialized()
     {
+        // Гарантируем что textBuffers создан
+        if (textBuffers == null)
+        {
+            textBuffers = new SharedTextBuffers();
+            textBuffers.RentBuffers();
+        }
+
         if (!isInitialized)
             InitializeComponents();
     }
@@ -442,12 +463,17 @@ public class UniText : MaskableGraphic
         EnsureInitialized();
         if (!isInitialized) return;
 
+        // Устанавливаем Current и вызываем Rebuilding ПОСЛЕ инициализации
+        SharedTextBuffers.Current = textBuffers;
+        Rebuilding?.Invoke();
+
         ExecuteRebuild();
     }
 
     private void ExecuteRebuild()
     {
         isRebuilding = true;
+
         try
         {
             var flags = dirtyFlags;
@@ -521,11 +547,12 @@ public class UniText : MaskableGraphic
         }
         catch (Exception ex)
         {
-            Debug.LogError($"UniText: RebuildFull failed: {ex.Message}");
+            Debug.LogException(ex);
             lastMeshPairs = null;
         }
     }
 
+    
     /// <summary>
     /// Перестройка layout (rect size изменился).
     /// </summary>

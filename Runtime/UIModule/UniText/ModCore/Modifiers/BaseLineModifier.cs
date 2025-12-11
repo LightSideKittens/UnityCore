@@ -5,7 +5,6 @@ using UnityEngine;
 /// <summary>
 /// Базовый класс для модификаторов, рисующих горизонтальные линии (underline, strikethrough).
 /// Наследники переопределяют GetLineOffset для указания вертикального смещения линии.
-/// Каждый наследник имеет свой статический буфер флагов.
 /// </summary>
 [Serializable]
 public abstract class BaseLineModifier : IModifier
@@ -18,28 +17,30 @@ public abstract class BaseLineModifier : IModifier
         public int cluster;
     }
 
-    // Threshold for detecting line break (Y position change)
     private const float LineBreakThreshold = 5f;
 
-    // Каждый наследник должен предоставить свои статические буферы
-    protected abstract ref ArrayPoolBuffer<byte> FlagsBuffer { get; }
-    protected abstract ref LineSegment[] LineSegments { get; }
-    protected abstract ref int LineSegmentsCapacity { get; }
-    protected abstract ref int LineSegmentCount { get; }
-    protected abstract ref bool LinesDrawnThisFrame { get; }
+    // Наследник предоставляет доступ к статическим указателям (установленным через SetStaticBuffers)
+    protected abstract ArrayPoolBuffer<byte> FlagsBuffer { get; }
+    protected abstract LineSegment[] LineSegments { get; set; }
+    protected abstract int LineSegmentsCapacity { get; set; }
+    protected abstract int LineSegmentCount { get; set; }
+    protected abstract bool LinesDrawnThisFrame { get; set; }
 
-    /// <summary>
-    /// Возвращает вертикальное смещение линии относительно baseline.
-    /// </summary>
     protected abstract float GetLineOffset(UnityEngine.TextCore.FaceInfo faceInfo, float scale);
 
-    // Debug flag - set to true to see underline/strikethrough processing
+    // Наследник создаёт instance буферы
+    protected abstract void CreateInstanceBuffers();
+    // Наследник записывает instance буферы в static поля
+    protected abstract void SetStaticBuffers();
+    // Наследник возвращает буферы в пул
+    protected abstract void ReturnBuffersToPool();
+
     public static bool DebugLogging = false;
 
     void IModifier.Apply(int start, int end, string parameter)
     {
-        int cpCount = SharedTextBuffers.codepointCount;
-        ref var buffer = ref FlagsBuffer;
+        int cpCount = SharedTextBuffers.Current.codepointCount;
+        var buffer = FlagsBuffer;
         buffer.EnsureCapacity(cpCount);
         buffer.SetFlagRange(start, Math.Min(end, cpCount));
 
@@ -49,6 +50,8 @@ public abstract class BaseLineModifier : IModifier
 
     void IModifier.Initialize(UniText uniText)
     {
+        CreateInstanceBuffers();
+        uniText.Rebuilding += OnRebuilding;
         var gen = uniText.MeshGenerator;
         gen.OnRebuildStart += OnRebuildStart;
         gen.OnAfterGlyphs += OnAfterGlyphs;
@@ -56,15 +59,23 @@ public abstract class BaseLineModifier : IModifier
 
     void IModifier.Deinitialize(UniText uniText)
     {
+        uniText.Rebuilding -= OnRebuilding;
         var gen = uniText.MeshGenerator;
-        if (gen == null) return;
-        gen.OnRebuildStart -= OnRebuildStart;
-        gen.OnAfterGlyphs -= OnAfterGlyphs;
+        if (gen != null)
+        {
+            gen.OnRebuildStart -= OnRebuildStart;
+            gen.OnAfterGlyphs -= OnAfterGlyphs;
+        }
+        ReturnBuffersToPool();
+    }
+
+    private void OnRebuilding()
+    {
+        SetStaticBuffers();
     }
 
     private void OnRebuildStart()
     {
-        // Reset the flag once per rebuild (before any fonts are processed)
         LinesDrawnThisFrame = false;
     }
 
@@ -79,33 +90,33 @@ public abstract class BaseLineModifier : IModifier
 
     private void AddSegment(float startX, float endX, float baselineY, int cluster)
     {
-        ref var segments = ref LineSegments;
-        ref int segmentsCap = ref LineSegmentsCapacity;
-        ref int segmentCount = ref LineSegmentCount;
+        var segments = LineSegments;
+        int segmentsCap = LineSegmentsCapacity;
+        int segmentCount = LineSegmentCount;
 
-        // Ensure capacity for line segments
         if (segmentCount >= segmentsCap)
         {
             int newCap = segmentsCap * 2;
             var newBuffer = ArrayPool<LineSegment>.Shared.Rent(newCap);
             segments.AsSpan(0, segmentCount).CopyTo(newBuffer);
             ArrayPool<LineSegment>.Shared.Return(segments);
+            LineSegments = newBuffer;
+            LineSegmentsCapacity = newCap;
             segments = newBuffer;
-            segmentsCap = newCap;
         }
 
-        segments[segmentCount++] = new LineSegment
+        segments[segmentCount] = new LineSegment
         {
             startX = startX,
             endX = endX,
             baselineY = baselineY,
             cluster = cluster
         };
+        LineSegmentCount = segmentCount + 1;
     }
 
     private void OnAfterGlyphs()
     {
-        // Only draw lines once per text rebuild (OnAfterGlyphs is called for each font)
         if (LinesDrawnThisFrame)
             return;
         LinesDrawnThisFrame = true;
@@ -114,27 +125,23 @@ public abstract class BaseLineModifier : IModifier
         if (fontAsset == null)
             return;
 
-        ref var flagsBuffer = ref FlagsBuffer;
-
-        // Early exit if no flags are set at all
+        var flagsBuffer = FlagsBuffer;
         if (!flagsBuffer.HasAnyFlags())
             return;
 
-        // Reset segment count for this pass
         LineSegmentCount = 0;
 
         float scale = UniTextMeshGenerator.scale;
         float offsetX = UniTextMeshGenerator.offsetX;
         float offsetY = UniTextMeshGenerator.offsetY;
 
-        // Get ALL positioned glyphs from SharedTextBuffers (in logical order)
-        var allGlyphs = SharedTextBuffers.positionedGlyphs;
-        int glyphCount = SharedTextBuffers.positionedGlyphCount;
+        var buf = SharedTextBuffers.Current;
+        var allGlyphs = buf.positionedGlyphs;
+        int glyphCount = buf.positionedGlyphCount;
 
         if (glyphCount == 0)
             return;
 
-        // Build line segments by iterating through ALL glyphs in logical order
         float lineStartX = 0, lineEndX = 0, lineBaselineY = 0;
         int lineStartCluster = 0;
         bool hasActiveLine = false;
@@ -146,20 +153,16 @@ public abstract class BaseLineModifier : IModifier
             int cluster = glyph.cluster;
             bool hasFlag = flagsBuffer.HasFlag(cluster);
 
-            // Skip expensive calculations if no flag and no active line
             if (!hasFlag && !hasActiveLine)
                 continue;
 
-            // Calculate glyph bounds
             float glyphX = offsetX + glyph.x;
             float baselineY = offsetY - glyph.y;
 
-            // Estimate glyph width - use advance from next glyph or fixed estimate
             float glyphWidth = defaultWidth;
             if (i + 1 < glyphCount)
             {
                 ref readonly var nextGlyph = ref allGlyphs[i + 1];
-                // Only use if on same line (similar Y) - inline abs
                 float yDiffNext = nextGlyph.y - glyph.y;
                 if (yDiffNext < 0) yDiffNext = -yDiffNext;
                 if (yDiffNext < LineBreakThreshold)
@@ -178,7 +181,6 @@ public abstract class BaseLineModifier : IModifier
             {
                 if (!hasActiveLine)
                 {
-                    // Start new line segment
                     lineStartX = left;
                     lineEndX = right;
                     lineBaselineY = baselineY;
@@ -187,12 +189,10 @@ public abstract class BaseLineModifier : IModifier
                 }
                 else
                 {
-                    // Check for line break (Y position changed significantly) - inline abs
                     float yDiff = baselineY - lineBaselineY;
                     if (yDiff < 0) yDiff = -yDiff;
                     if (yDiff > LineBreakThreshold)
                     {
-                        // Line break detected - finish current segment and start new one
                         AddSegment(lineStartX, lineEndX, lineBaselineY, lineStartCluster);
                         lineStartX = left;
                         lineEndX = right;
@@ -201,8 +201,6 @@ public abstract class BaseLineModifier : IModifier
                     }
                     else
                     {
-                        // Same line - extend current segment
-                        // Handle RTL: line might extend to the left
                         if (left < lineStartX) lineStartX = left;
                         if (right > lineEndX) lineEndX = right;
                         if (baselineY < lineBaselineY) lineBaselineY = baselineY;
@@ -216,13 +214,11 @@ public abstract class BaseLineModifier : IModifier
             }
         }
 
-        // Finish last segment if active
         if (hasActiveLine)
         {
             AddSegment(lineStartX, lineEndX, lineBaselineY, lineStartCluster);
         }
 
-        // Now draw all segments
         int segmentCount = LineSegmentCount;
         if (segmentCount == 0)
             return;
@@ -235,7 +231,6 @@ public abstract class BaseLineModifier : IModifier
         {
             ref var seg = ref segments[i];
 
-            // TryGetColor is more efficient than HasColor + GetColor
             Color32 color = ColorModifier.TryGetColor(seg.cluster, out var customColor)
                 ? customColor
                 : defaultColor;

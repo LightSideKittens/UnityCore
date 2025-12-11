@@ -6,10 +6,11 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Shared static буферы для TextProcessor.
+/// Instance-based буферы для TextProcessor.
+/// Каждый UniText имеет свой экземпляр. Static Current указывает на текущий активный.
 /// Использует ArrayPool для zero-allocation при resize.
 /// </summary>
-public static class SharedTextBuffers
+public sealed class SharedTextBuffers
 {
     // Minimum sizes - ArrayPool will return at least this
     private const int MinCodepointCapacity = 256;
@@ -17,31 +18,36 @@ public static class SharedTextBuffers
     private const int MinGlyphCapacity = 256;
     private const int MinLineCapacity = 32;
 
+    /// <summary>
+    /// Текущий активный буфер. Устанавливается перед Rebuild.
+    /// </summary>
+    public static SharedTextBuffers Current { get; set; }
+
     // Current buffers (from ArrayPool or initial allocation)
-    public static int[] codepoints = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
-    public static int codepointCount;
+    public int[] codepoints;
+    public int codepointCount;
 
-    public static byte[] bidiLevels = ArrayPool<byte>.Shared.Rent(MinCodepointCapacity);
-    public static BidiParagraph[] bidiParagraphs = Array.Empty<BidiParagraph>();
-    public static TextDirection baseDirection;
+    public byte[] bidiLevels;
+    public BidiParagraph[] bidiParagraphs = Array.Empty<BidiParagraph>();
+    public TextDirection baseDirection;
 
-    public static UnicodeScript[] scripts = ArrayPool<UnicodeScript>.Shared.Rent(MinCodepointCapacity);
+    public UnicodeScript[] scripts;
 
-    public static TextRun[] runs = ArrayPool<TextRun>.Shared.Rent(MinRunCapacity);
-    public static int runCount;
+    public TextRun[] runs;
+    public int runCount;
 
-    public static ShapedRun[] shapedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
-    public static int shapedRunCount;
-    public static ShapedGlyph[] shapedGlyphs = ArrayPool<ShapedGlyph>.Shared.Rent(MinGlyphCapacity);
-    public static int shapedGlyphCount;
+    public ShapedRun[] shapedRuns;
+    public int shapedRunCount;
+    public ShapedGlyph[] shapedGlyphs;
+    public int shapedGlyphCount;
 
-    public static TextLine[] lines = ArrayPool<TextLine>.Shared.Rent(MinLineCapacity);
-    public static int lineCount;
-    public static ShapedRun[] orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
-    public static int orderedRunCount;
+    public TextLine[] lines;
+    public int lineCount;
+    public ShapedRun[] orderedRuns;
+    public int orderedRunCount;
 
-    public static PositionedGlyph[] positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
-    public static int positionedGlyphCount;
+    public PositionedGlyph[] positionedGlyphs;
+    public int positionedGlyphCount;
 
     // ═══════════════════════════════════════════════════════════════════
     // GLYPH ATTRIBUTES - общие буферы для модификаторов
@@ -52,7 +58,7 @@ public static class SharedTextBuffers
     /// Цвета глифов. Используется ColorModifier, GradientModifier и т.д.
     /// Общий буфер, т.к. цвет — универсальный атрибут для многих эффектов.
     /// </summary>
-    public static Color32[] glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
+    public Color32[] glyphColors;
 
     // ═══════════════════════════════════════════════════════════════════
     // LAYOUT MARGINS - для hanging indent, blockquotes и т.д.
@@ -64,14 +70,69 @@ public static class SharedTextBuffers
     /// LineBreaker использует margin первого codepoint строки.
     /// При LTR — отступ слева, при RTL — справа.
     /// </summary>
-    public static float[] startMargins = ArrayPool<float>.Shared.Rent(MinCodepointCapacity);
+    public float[] startMargins;
 
     // Track peak usage for diagnostics
-    public static int peakCodepointCount;
-    public static int peakRunCount;
-    public static int peakGlyphCount;
+    public int peakCodepointCount;
+    public int peakRunCount;
+    public int peakGlyphCount;
 
-    public static void Reset()
+    // Track if buffers are rented
+    private bool isRented;
+
+    public SharedTextBuffers() { }
+
+    /// <summary>
+    /// Взять массивы из пулов. Вызывать в OnEnable.
+    /// </summary>
+    public void RentBuffers()
+    {
+        if (isRented) return;
+
+        codepoints = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
+        bidiLevels = ArrayPool<byte>.Shared.Rent(MinCodepointCapacity);
+        scripts = ArrayPool<UnicodeScript>.Shared.Rent(MinCodepointCapacity);
+        startMargins = ArrayPool<float>.Shared.Rent(MinCodepointCapacity);
+        runs = ArrayPool<TextRun>.Shared.Rent(MinRunCapacity);
+        shapedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
+        shapedGlyphs = ArrayPool<ShapedGlyph>.Shared.Rent(MinGlyphCapacity);
+        lines = ArrayPool<TextLine>.Shared.Rent(MinLineCapacity);
+        orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
+        positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
+        glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
+        bidiParagraphs = Array.Empty<BidiParagraph>();
+
+        isRented = true;
+        Reset();
+    }
+
+    /// <summary>
+    /// Вернуть массивы обратно в пулы. Вызывать в OnDisable.
+    /// </summary>
+    public void ReturnBuffers()
+    {
+        if (!isRented) return;
+
+        if (codepoints != null) { ArrayPool<int>.Shared.Return(codepoints); codepoints = null; }
+        if (bidiLevels != null) { ArrayPool<byte>.Shared.Return(bidiLevels); bidiLevels = null; }
+        if (scripts != null) { ArrayPool<UnicodeScript>.Shared.Return(scripts); scripts = null; }
+        if (startMargins != null) { ArrayPool<float>.Shared.Return(startMargins); startMargins = null; }
+        if (runs != null) { ArrayPool<TextRun>.Shared.Return(runs); runs = null; }
+        if (shapedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(shapedRuns); shapedRuns = null; }
+        if (shapedGlyphs != null) { ArrayPool<ShapedGlyph>.Shared.Return(shapedGlyphs); shapedGlyphs = null; }
+        if (lines != null) { ArrayPool<TextLine>.Shared.Return(lines); lines = null; }
+        if (orderedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(orderedRuns); orderedRuns = null; }
+        if (positionedGlyphs != null) { ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs); positionedGlyphs = null; }
+        if (glyphColors != null) { ArrayPool<Color32>.Shared.Return(glyphColors); glyphColors = null; }
+
+        isRented = false;
+
+        // Clear Current if it points to this instance
+        if (Current == this)
+            Current = null;
+    }
+
+    public void Reset()
     {
         // Track peak usage before reset (for diagnostics)
         if (codepointCount > peakCodepointCount) peakCodepointCount = codepointCount;
@@ -89,27 +150,28 @@ public static class SharedTextBuffers
         baseDirection = TextDirection.LeftToRight;
 
         // Clear margins (модификаторы заполняют заново каждый кадр)
-        startMargins.AsSpan().Clear();
+        if (startMargins != null)
+            startMargins.AsSpan().Clear();
     }
 
     /// <summary>
     /// Log peak usage for tuning initial buffer sizes.
     /// </summary>
-    public static void LogPeakUsage()
+    public void LogPeakUsage()
     {
         UnityEngine.Debug.Log($"[SharedTextBuffers] Peak usage: codepoints={peakCodepointCount}, runs={peakRunCount}, glyphs={peakGlyphCount}");
-        UnityEngine.Debug.Log($"[SharedTextBuffers] Buffer sizes: codepoints={codepoints.Length}, runs={runs.Length}, glyphs={shapedGlyphs.Length}");
+        UnityEngine.Debug.Log($"[SharedTextBuffers] Buffer sizes: codepoints={codepoints?.Length ?? 0}, runs={runs?.Length ?? 0}, glyphs={shapedGlyphs?.Length ?? 0}");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void EnsureCodepointCapacity(int required)
+    public void EnsureCodepointCapacity(int required)
     {
         if (codepoints.Length < required)
             GrowCodepoints(required);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void GrowCodepoints(int required)
+    private void GrowCodepoints(int required)
     {
         int newSize = Math.Max(required, codepoints.Length * 2);
 
@@ -136,14 +198,14 @@ public static class SharedTextBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void EnsureBidiCapacity(int required)
+    public void EnsureBidiCapacity(int required)
     {
         if (bidiLevels.Length < required)
             GrowBidiLevels(required);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void GrowBidiLevels(int required)
+    private void GrowBidiLevels(int required)
     {
         int newSize = Math.Max(required, bidiLevels.Length * 2);
         var newBuffer = ArrayPool<byte>.Shared.Rent(newSize);
@@ -153,14 +215,14 @@ public static class SharedTextBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void EnsureScriptCapacity(int required)
+    public void EnsureScriptCapacity(int required)
     {
         if (scripts.Length < required)
             GrowScripts(required);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void GrowScripts(int required)
+    private void GrowScripts(int required)
     {
         int newSize = Math.Max(required, scripts.Length * 2);
         var newBuffer = ArrayPool<UnicodeScript>.Shared.Rent(newSize);
@@ -170,14 +232,14 @@ public static class SharedTextBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void EnsureRunCapacity(int required)
+    public void EnsureRunCapacity(int required)
     {
         if (runs.Length < required)
             GrowRuns(required);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void GrowRuns(int required)
+    private void GrowRuns(int required)
     {
         int newSize = Math.Max(required, runs.Length * 2);
         var newBuffer = ArrayPool<TextRun>.Shared.Rent(newSize);
@@ -187,14 +249,14 @@ public static class SharedTextBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void EnsureShapedRunCapacity(int required)
+    public void EnsureShapedRunCapacity(int required)
     {
         if (shapedRuns.Length < required)
             GrowShapedRuns(required);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void GrowShapedRuns(int required)
+    private void GrowShapedRuns(int required)
     {
         int newSize = Math.Max(required, shapedRuns.Length * 2);
         var newBuffer = ArrayPool<ShapedRun>.Shared.Rent(newSize);
@@ -204,14 +266,14 @@ public static class SharedTextBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void EnsureShapedGlyphCapacity(int required)
+    public void EnsureShapedGlyphCapacity(int required)
     {
         if (shapedGlyphs.Length < required)
             GrowShapedGlyphs(required);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void GrowShapedGlyphs(int required)
+    private void GrowShapedGlyphs(int required)
     {
         int newSize = Math.Max(required, shapedGlyphs.Length * 2);
         var newBuffer = ArrayPool<ShapedGlyph>.Shared.Rent(newSize);
@@ -221,14 +283,14 @@ public static class SharedTextBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void EnsureLineCapacity(int required)
+    public void EnsureLineCapacity(int required)
     {
         if (lines.Length < required)
             GrowLines(required);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void GrowLines(int required)
+    private void GrowLines(int required)
     {
         int newSize = Math.Max(required, lines.Length * 2);
         var newBuffer = ArrayPool<TextLine>.Shared.Rent(newSize);
@@ -238,14 +300,14 @@ public static class SharedTextBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void EnsureOrderedRunCapacity(int required)
+    public void EnsureOrderedRunCapacity(int required)
     {
         if (orderedRuns.Length < required)
             GrowOrderedRuns(required);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void GrowOrderedRuns(int required)
+    private void GrowOrderedRuns(int required)
     {
         int newSize = Math.Max(required, orderedRuns.Length * 2);
         var newBuffer = ArrayPool<ShapedRun>.Shared.Rent(newSize);
@@ -255,14 +317,14 @@ public static class SharedTextBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void EnsurePositionedGlyphCapacity(int required)
+    public void EnsurePositionedGlyphCapacity(int required)
     {
         if (positionedGlyphs.Length < required)
             GrowPositionedGlyphs(required);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void GrowPositionedGlyphs(int required)
+    private void GrowPositionedGlyphs(int required)
     {
         int newSize = Math.Max(required, positionedGlyphs.Length * 2);
 
@@ -281,44 +343,7 @@ public static class SharedTextBuffers
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
-        // Return old buffers to pool (if they exist and are valid)
-        ReturnAllBuffers();
-
-        // Rent new buffers
-        codepoints = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
-        bidiLevels = ArrayPool<byte>.Shared.Rent(MinCodepointCapacity);
-        scripts = ArrayPool<UnicodeScript>.Shared.Rent(MinCodepointCapacity);
-        startMargins = ArrayPool<float>.Shared.Rent(MinCodepointCapacity);
-        runs = ArrayPool<TextRun>.Shared.Rent(MinRunCapacity);
-        shapedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
-        shapedGlyphs = ArrayPool<ShapedGlyph>.Shared.Rent(MinGlyphCapacity);
-        lines = ArrayPool<TextLine>.Shared.Rent(MinLineCapacity);
-        orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
-        positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
-        glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
-        bidiParagraphs = Array.Empty<BidiParagraph>();
-        peakCodepointCount = 0;
-        peakRunCount = 0;
-        peakGlyphCount = 0;
-        Reset();
-    }
-
-    /// <summary>
-    /// Return all buffers to ArrayPool. Call when shutting down.
-    /// </summary>
-    public static void ReturnAllBuffers()
-    {
-        if (codepoints != null) { ArrayPool<int>.Shared.Return(codepoints); codepoints = null; }
-        if (bidiLevels != null) { ArrayPool<byte>.Shared.Return(bidiLevels); bidiLevels = null; }
-        if (scripts != null) { ArrayPool<UnicodeScript>.Shared.Return(scripts); scripts = null; }
-        if (startMargins != null) { ArrayPool<float>.Shared.Return(startMargins); startMargins = null; }
-        if (runs != null) { ArrayPool<TextRun>.Shared.Return(runs); runs = null; }
-        if (shapedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(shapedRuns); shapedRuns = null; }
-        if (shapedGlyphs != null) { ArrayPool<ShapedGlyph>.Shared.Return(shapedGlyphs); shapedGlyphs = null; }
-        if (lines != null) { ArrayPool<TextLine>.Shared.Return(lines); lines = null; }
-        if (orderedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(orderedRuns); orderedRuns = null; }
-        if (positionedGlyphs != null) { ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs); positionedGlyphs = null; }
-        if (glyphColors != null) { ArrayPool<Color32>.Shared.Return(glyphColors); glyphColors = null; }
+        Current = null;
     }
 }
 

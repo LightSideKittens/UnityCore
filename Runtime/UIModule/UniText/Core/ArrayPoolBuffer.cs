@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 /// <summary>
-/// Хелпер для управления статическими буферами из ArrayPool.
+/// Хелпер для управления буферами из ArrayPool.
 /// Инкапсулирует логику Rent/Return/Grow/Clear.
 ///
 /// Использование:
-/// private static ArrayPoolBuffer&lt;float&gt; buffer = new(256);
+/// private ArrayPoolBuffer&lt;float&gt; buffer = new(256);
 ///
 /// // В Apply():
 /// buffer.EnsureCapacity(cpCount);
@@ -17,10 +17,10 @@ using System.Runtime.CompilerServices;
 /// // В Reset():
 /// buffer.Clear();
 ///
-/// // В OnDomainReload():
-/// buffer.Reset();
+/// // В Deinitialize():
+/// buffer.ReturnToPool();
 /// </summary>
-public struct ArrayPoolBuffer<T> where T : struct
+public sealed class ArrayPoolBuffer<T> where T : struct
 {
     private T[] data;
     private int capacity;
@@ -96,6 +96,32 @@ public struct ArrayPoolBuffer<T> where T : struct
         capacity = initialCapacity;
     }
 
+    /// <summary>
+    /// Возвращает массив в пул и обнуляет буфер.
+    /// Вызывать в Deinitialize модификатора.
+    /// </summary>
+    public void ReturnToPool()
+    {
+        if (data != null)
+        {
+            ArrayPool<T>.Shared.Return(data);
+            data = null;
+        }
+        capacity = 0;
+    }
+
+    /// <summary>
+    /// Инициализирует буфер заново после ReturnToPool.
+    /// </summary>
+    public void RentFromPool()
+    {
+        if (data != null)
+            ArrayPool<T>.Shared.Return(data);
+        data = ArrayPool<T>.Shared.Rent(initialCapacity);
+        data.AsSpan(0, initialCapacity).Clear();
+        capacity = initialCapacity;
+    }
+
     // NOTE: HasValue removed - use specialized extension methods instead:
     // - ArrayPoolBufferByteExtensions.HasFlag() for byte buffers
     // - ArrayPoolBufferUintExtensions.HasValue() for uint buffers
@@ -132,17 +158,16 @@ public static class ArrayPoolBufferByteExtensions
 {
     /// <summary>Проверяет установлен ли флаг.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasFlag(this ref ArrayPoolBuffer<byte> buffer, int index)
+    public static bool HasFlag(this ArrayPoolBuffer<byte> buffer, int index)
     {
         return (uint)index < (uint)buffer.Capacity && buffer.Data[index] != 0;
     }
 
     /// <summary>Проверяет есть ли хотя бы один установленный флаг в буфере.</summary>
-    public static bool HasAnyFlags(this ref ArrayPoolBuffer<byte> buffer)
+    public static bool HasAnyFlags(this ArrayPoolBuffer<byte> buffer)
     {
         var data = buffer.Data;
         int cap = buffer.Capacity;
-        // Check in chunks of 8 bytes for better performance
         int i = 0;
         int limit = cap - 7;
         for (; i < limit; i += 8)
@@ -151,7 +176,6 @@ public static class ArrayPoolBufferByteExtensions
                 data[i + 4] != 0 || data[i + 5] != 0 || data[i + 6] != 0 || data[i + 7] != 0)
                 return true;
         }
-        // Check remaining bytes
         for (; i < cap; i++)
         {
             if (data[i] != 0)
@@ -161,7 +185,7 @@ public static class ArrayPoolBufferByteExtensions
     }
 
     /// <summary>Устанавливает флаг для диапазона.</summary>
-    public static void SetFlagRange(this ref ArrayPoolBuffer<byte> buffer, int start, int end)
+    public static void SetFlagRange(this ArrayPoolBuffer<byte> buffer, int start, int end)
     {
         var data = buffer.Data;
         int cap = buffer.Capacity;
@@ -179,13 +203,13 @@ public static class ArrayPoolBufferFloatExtensions
 {
     /// <summary>Проверяет есть ли ненулевое значение.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasValue(this ref ArrayPoolBuffer<float> buffer, int index)
+    public static bool HasValue(this ArrayPoolBuffer<float> buffer, int index)
     {
         return (uint)index < (uint)buffer.Capacity && buffer.Data[index] != 0f;
     }
 
     /// <summary>Устанавливает значение для диапазона.</summary>
-    public static void SetValueRange(this ref ArrayPoolBuffer<float> buffer, int start, int end, float value)
+    public static void SetValueRange(this ArrayPoolBuffer<float> buffer, int start, int end, float value)
     {
         var data = buffer.Data;
         int cap = buffer.Capacity;
@@ -203,13 +227,13 @@ public static class ArrayPoolBufferUintExtensions
 {
     /// <summary>Проверяет есть ли ненулевое значение.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasValue(this ref ArrayPoolBuffer<uint> buffer, int index)
+    public static bool HasValue(this ArrayPoolBuffer<uint> buffer, int index)
     {
         return (uint)index < (uint)buffer.Capacity && buffer.Data[index] != 0;
     }
 
     /// <summary>Устанавливает значение для диапазона.</summary>
-    public static void SetValueRange(this ref ArrayPoolBuffer<uint> buffer, int start, int end, uint value)
+    public static void SetValueRange(this ArrayPoolBuffer<uint> buffer, int start, int end, uint value)
     {
         var data = buffer.Data;
         int cap = buffer.Capacity;

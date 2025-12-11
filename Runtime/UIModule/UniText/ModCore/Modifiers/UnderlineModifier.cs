@@ -10,45 +10,60 @@ using UnityEngine;
 [Serializable]
 public class UnderlineModifier : BaseLineModifier
 {
-    // Статические буферы для этого модификатора
-    private static ArrayPoolBuffer<byte> flagsBuffer = new(256);
-    private static LineSegment[] lineSegments = ArrayPool<LineSegment>.Shared.Rent(64);
-    private static int lineSegmentsCapacity = 64;
-    private static int lineSegmentCount;
-    private static bool linesDrawnThisFrame;
+    // Instance буферы (реальные данные)
+    private ArrayPoolBuffer<byte> instanceFlagsBuffer;
+    private LineSegment[] instanceLineSegments;
+    private int instanceLineSegmentsCapacity;
+    private int instanceLineSegmentCount;
+    private bool instanceLinesDrawnThisFrame;
 
-    // Реализация abstract свойств
-    protected override ref ArrayPoolBuffer<byte> FlagsBuffer => ref flagsBuffer;
-    protected override ref LineSegment[] LineSegments => ref lineSegments;
-    protected override ref int LineSegmentsCapacity => ref lineSegmentsCapacity;
-    protected override ref int LineSegmentCount => ref lineSegmentCount;
-    protected override ref bool LinesDrawnThisFrame => ref linesDrawnThisFrame;
+    // Статический указатель только для HasUnderline (внешний API)
+    private static ArrayPoolBuffer<byte> currentFlagsBuffer;
+
+    // Свойства работают с INSTANCE полями
+    protected override ArrayPoolBuffer<byte> FlagsBuffer => instanceFlagsBuffer;
+    protected override LineSegment[] LineSegments { get => instanceLineSegments; set => instanceLineSegments = value; }
+    protected override int LineSegmentsCapacity { get => instanceLineSegmentsCapacity; set => instanceLineSegmentsCapacity = value; }
+    protected override int LineSegmentCount { get => instanceLineSegmentCount; set => instanceLineSegmentCount = value; }
+    protected override bool LinesDrawnThisFrame { get => instanceLinesDrawnThisFrame; set => instanceLinesDrawnThisFrame = value; }
 
     protected override float GetLineOffset(UnityEngine.TextCore.FaceInfo faceInfo, float scale)
     {
         return faceInfo.underlineOffset * scale;
     }
 
-    public static void ResetStatic()
+    protected override void CreateInstanceBuffers()
     {
-        flagsBuffer.Clear();
-        lineSegmentCount = 0;
-        linesDrawnThisFrame = false;
+        instanceFlagsBuffer = new ArrayPoolBuffer<byte>(256);
+        instanceLineSegments = ArrayPool<LineSegment>.Shared.Rent(64);
+        instanceLineSegmentsCapacity = 64;
+        instanceLineSegmentCount = 0;
+        instanceLinesDrawnThisFrame = false;
+    }
+
+    protected override void SetStaticBuffers()
+    {
+        // Только для внешнего API (HasUnderline)
+        currentFlagsBuffer = instanceFlagsBuffer;
+    }
+
+    protected override void ReturnBuffersToPool()
+    {
+        instanceFlagsBuffer?.ReturnToPool();
+        instanceFlagsBuffer = null;
+        if (instanceLineSegments != null)
+        {
+            ArrayPool<LineSegment>.Shared.Return(instanceLineSegments);
+            instanceLineSegments = null;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasUnderline(int cluster) => flagsBuffer.HasFlag(cluster);
+    public static bool HasUnderline(int cluster) => currentFlagsBuffer != null && currentFlagsBuffer.HasFlag(cluster);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
-        flagsBuffer.Reset();
-
-        if (lineSegments != null)
-            ArrayPool<LineSegment>.Shared.Return(lineSegments);
-        lineSegments = ArrayPool<LineSegment>.Shared.Rent(64);
-        lineSegmentsCapacity = 64;
-        lineSegmentCount = 0;
-        linesDrawnThisFrame = false;
+        currentFlagsBuffer = null;
     }
 }

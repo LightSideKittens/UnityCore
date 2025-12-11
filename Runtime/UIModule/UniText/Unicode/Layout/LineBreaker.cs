@@ -142,8 +142,8 @@ public sealed class LineBreaker
             : (rentedArray = ArrayPool<float>.Shared.Rent(cpCount)).AsSpan(0, cpCount);
         cpWidths.Clear();
 
-        // Get margins from SharedTextBuffers
-        var margins = SharedTextBuffers.startMargins;
+        // Get margins from SharedTextBuffers.Current
+        var margins = SharedTextBuffers.Current.startMargins;
 
         try
         {

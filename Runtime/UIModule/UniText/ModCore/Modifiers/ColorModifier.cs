@@ -9,8 +9,11 @@ using UnityEngine;
 [Serializable]
 public class ColorModifier : IModifier
 {
-    // Color32 packed как uint для экономии памяти, 0 = нет кастомного цвета
-    private static ArrayPoolBuffer<uint> buffer = new(256);
+    // Instance буфер для этого модификатора (per-UniText)
+    private ArrayPoolBuffer<uint> instanceBuffer;
+
+    // Статический указатель на текущий активный буфер
+    private static ArrayPoolBuffer<uint> buffer;
 
     void IModifier.Apply(int start, int end, string parameter)
     {
@@ -20,23 +23,33 @@ public class ColorModifier : IModifier
         if (!TryParseColor(parameter, out Color32 color))
             return;
 
-        int cpCount = SharedTextBuffers.codepointCount;
+        int cpCount = SharedTextBuffers.Current.codepointCount;
         buffer.EnsureCapacity(cpCount);
 
         uint packed = PackColor(color);
         buffer.SetValueRange(start, Math.Min(end, cpCount), packed);
     }
-    
+
     void IModifier.Initialize(UniText uniText)
     {
+        instanceBuffer = new ArrayPoolBuffer<uint>(256);
+        uniText.Rebuilding += OnRebuilding;
         uniText.MeshGenerator.OnGlyph += OnGlyph;
     }
 
     void IModifier.Deinitialize(UniText uniText)
     {
+        uniText.Rebuilding -= OnRebuilding;
         var gen = uniText.MeshGenerator;
-        if (gen == null) return;
-        gen.OnGlyph -= OnGlyph;
+        if (gen != null)
+            gen.OnGlyph -= OnGlyph;
+        instanceBuffer?.ReturnToPool();
+        instanceBuffer = null;
+    }
+
+    private void OnRebuilding()
+    {
+        buffer = instanceBuffer;
     }
 
     private static void OnGlyph()
@@ -57,14 +70,11 @@ public class ColorModifier : IModifier
         colors[baseIdx + 3] = color;
     }
 
-    public static void ResetStatic() => buffer.Clear();
-
-    void IModifier.Reset() => ResetStatic();
+    void IModifier.Reset() => buffer.Clear();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint PackColor(Color32 c)
     {
-        // Pack as ARGB, ensure alpha is at least 1 to distinguish from "no color"
         byte a = c.a == 0 ? (byte)1 : c.a;
         return ((uint)a << 24) | ((uint)c.r << 16) | ((uint)c.g << 8) | c.b;
     }
@@ -86,13 +96,11 @@ public class ColorModifier : IModifier
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color32 GetColor(int cluster)
     {
-        // Fast path: check bounds and get value inline
         if ((uint)cluster >= (uint)buffer.Capacity)
             return new Color32(255, 255, 255, 255);
         uint packed = buffer.Data[cluster];
         if (packed == 0)
             return new Color32(255, 255, 255, 255);
-        // Inline unpack to avoid method call
         return new Color32(
             (byte)((packed >> 16) & 0xFF),
             (byte)((packed >> 8) & 0xFF),
@@ -101,10 +109,6 @@ public class ColorModifier : IModifier
         );
     }
 
-    /// <summary>
-    /// Attempts to get color for cluster. Returns false if no custom color set.
-    /// More efficient than HasColor + GetColor since it checks and unpacks in one call.
-    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryGetColor(int cluster, out Color32 color)
     {
@@ -129,7 +133,7 @@ public class ColorModifier : IModifier
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload() => buffer.Reset();
+    private static void OnDomainReload() => buffer = null;
 
     private static bool TryParseColor(string value, out Color32 color)
     {
