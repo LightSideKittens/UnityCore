@@ -111,11 +111,14 @@ public sealed class TextProcessor
         }
         // else: canReuseLayout - keep all buffers intact
 
-        resultWidth = 0;
-        resultHeight = 0;
+        // НЕ сбрасываем resultWidth/resultHeight безусловно!
+        // - Если canReuseLayout=true → сохраняем предыдущие значения
+        // - Если canReuseLayout=false → LayoutText() перезапишет их
 
         if (text.IsEmpty)
         {
+            resultWidth = 0;
+            resultHeight = 0;
             hasValidShapingData = false;
             hasValidLayoutData = false;
             return ReadOnlySpan<PositionedGlyph>.Empty;
@@ -242,9 +245,17 @@ public sealed class TextProcessor
     public float GetHeightForWidth(float width, TextProcessSettings settings)
     {
         if (CommonData.DebugPipelineLogging)
-            UnityEngine.Debug.Log($"[GetHeightForWidth] width={width}, hasValidShapingData={hasValidShapingData}");
+            UnityEngine.Debug.Log($"[GetHeightForWidth] width={width}, hasValidShapingData={hasValidShapingData}, hasValidLayoutData={hasValidLayoutData}");
 
         if (!hasValidShapingData) return 0;
+
+        // Кэш: если layout уже сделан для этой ширины, вернуть результат
+        if (hasValidLayoutData && Math.Abs(lastLayoutWidth - settings.maxWidth) < 0.001f)
+        {
+            if (CommonData.DebugPipelineLogging)
+                UnityEngine.Debug.Log("[GetHeightForWidth] REUSING CACHED LAYOUT");
+            return resultHeight;
+        }
 
         if (CommonData.DebugPipelineLogging)
             UnityEngine.Debug.Log("[GetHeightForWidth] DOING LAYOUT");

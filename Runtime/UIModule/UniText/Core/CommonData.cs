@@ -15,7 +15,7 @@ public sealed class CommonData
     /// <summary>
     /// Enable pipeline logging to trace Layout/Rebuild flow.
     /// </summary>
-    public static bool DebugPipelineLogging = true;
+    public static bool DebugPipelineLogging = false;
 
     // Minimum sizes - ArrayPool will return at least this
     private const int MinCodepointCapacity = 256;
