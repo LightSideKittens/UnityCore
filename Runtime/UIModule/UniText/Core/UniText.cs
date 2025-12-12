@@ -15,7 +15,7 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(CanvasRenderer))]
 [RequireComponent(typeof(RectTransform))]
 [ExecuteAlways]
-public class UniText : MaskableGraphic
+public partial class UniText : MaskableGraphic
 {
     /// <summary>
     /// Flags indicating what needs to be rebuilt.
@@ -430,6 +430,7 @@ public class UniText : MaskableGraphic
         EnsureCanvasShaderChannels();
         EnsureMaterialAssigned();
         SetVerticesDirty();
+        LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
     }
 
     /// <summary>
@@ -490,9 +491,22 @@ public class UniText : MaskableGraphic
         var oldFlags = dirtyFlags;
         dirtyFlags |= flags;
 
+        // Invalidate shaping when text/font/direction changes
+        if ((flags & DirtyFlags.FullRebuild) != 0)
+        {
+            processor?.InvalidateShapingData();
+            cachedCleanText = null;
+        }
+
         if (oldFlags == DirtyFlags.None)
         {
             SetVerticesDirty();
+        }
+
+        // Notify layout system when text properties affecting size change
+        if ((flags & (DirtyFlags.Text | DirtyFlags.Font | DirtyFlags.FontSize | DirtyFlags.Layout)) != 0)
+        {
+            LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
         }
     }
 
@@ -510,6 +524,9 @@ public class UniText : MaskableGraphic
         if (update != CanvasUpdate.PreRender) return;
         if (dirtyFlags == DirtyFlags.None) return;
         if (isRebuilding) return;
+
+        if (CommonData.DebugPipelineLogging)
+            UnityEngine.Debug.Log($"[Rebuild] dirtyFlags={dirtyFlags}");
 
         EnsureInitialized();
         if (!isInitialized) return;
@@ -572,9 +589,9 @@ public class UniText : MaskableGraphic
             cachedRectWidth = rect.width;
             cachedRectHeight = rect.height;
 
-            // Parse attributes only when text changed
+            // Parse attributes only if not already cached (EnsureShapingForLayout may have done it)
             string textToProcess;
-            if ((flags & DirtyFlags.Text) != 0 || cachedCleanText == null)
+            if (cachedCleanText == null)
             {
                 parser?.ResetModifiers();
                 textToProcess = parser != null ? parser.Parse(text) : text;

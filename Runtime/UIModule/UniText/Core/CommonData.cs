@@ -12,6 +12,11 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public sealed class CommonData
 {
+    /// <summary>
+    /// Enable pipeline logging to trace Layout/Rebuild flow.
+    /// </summary>
+    public static bool DebugPipelineLogging = true;
+
     // Minimum sizes - ArrayPool will return at least this
     private const int MinCodepointCapacity = 256;
     private const int MinRunCapacity = 64;

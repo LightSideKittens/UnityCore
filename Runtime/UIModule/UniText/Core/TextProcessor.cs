@@ -50,6 +50,10 @@ public sealed class TextProcessor
     // Track if shaping data is valid for layout-only rebuilds
     private bool hasValidShapingData;
 
+    // Track last layout width to skip redundant layout
+    private float lastLayoutWidth = -1;
+    private bool hasValidLayoutData;
+
     // DEBUG: Enable detailed logging for Arabic text issues
     public static bool DebugLogging = false;
     public event Action Parsed;
@@ -77,23 +81,35 @@ public sealed class TextProcessor
         TextProcessSettings settings,
         UniText.DirtyFlags dirtyFlags = UniText.DirtyFlags.FullRebuild)
     {
-        bool fullRebuild = (dirtyFlags & UniText.DirtyFlags.FullRebuild) != 0 ||
-                           !hasValidShapingData;
+        // hasValidShapingData has priority - if shaping was done in EnsureShaping(), reuse it
+        bool fullRebuild = !hasValidShapingData;
 
         var buf = CommonData.Current;
+
+        // Check if layout can be reused BEFORE resetting buffers
+        bool canReuseLayout = !fullRebuild &&
+                              hasValidLayoutData &&
+                              Math.Abs(lastLayoutWidth - settings.maxWidth) < 0.001f &&
+                              buf.positionedGlyphCount > 0;
+
+        if (CommonData.DebugPipelineLogging)
+            UnityEngine.Debug.Log($"[Process] fullRebuild={fullRebuild}, canReuseLayout={canReuseLayout}, hasValidShapingData={hasValidShapingData}, hasValidLayoutData={hasValidLayoutData}");
+
         if (fullRebuild)
         {
             // Full rebuild - reset everything
             buf.Reset();
             hasValidShapingData = false;
+            hasValidLayoutData = false;
         }
-        else
+        else if (!canReuseLayout)
         {
             // Partial rebuild - only reset layout buffers
             buf.lineCount = 0;
             buf.orderedRunCount = 0;
             buf.positionedGlyphCount = 0;
         }
+        // else: canReuseLayout - keep all buffers intact
 
         resultWidth = 0;
         resultHeight = 0;
@@ -101,6 +117,7 @@ public sealed class TextProcessor
         if (text.IsEmpty)
         {
             hasValidShapingData = false;
+            hasValidLayoutData = false;
             return ReadOnlySpan<PositionedGlyph>.Empty;
         }
 
@@ -115,6 +132,7 @@ public sealed class TextProcessor
             if (buf.codepointCount == 0)
             {
                 hasValidShapingData = false;
+                hasValidLayoutData = false;
                 return ReadOnlySpan<PositionedGlyph>.Empty;
             }
 
@@ -131,11 +149,13 @@ public sealed class TextProcessor
         }
         // else: use existing shaping data from SharedTextBuffers.Current
 
-        // Always do layout (depends on width/height/alignment)
-        float glyphScale = buf.shapingFontSize > 0 ? settings.fontSize / buf.shapingFontSize : 1f;
-        float effectiveMaxWidth = settings.enableWordWrap ? settings.maxWidth / glyphScale : TextProcessSettings.FloatMax;
-        BreakLines(effectiveMaxWidth);
-        LayoutText(settings);
+        if (!canReuseLayout)
+        {
+            float glyphScale = buf.shapingFontSize > 0 ? settings.fontSize / buf.shapingFontSize : 1f;
+            float effectiveMaxWidth = settings.enableWordWrap ? settings.maxWidth / glyphScale : TextProcessSettings.FloatMax;
+            BreakLines(effectiveMaxWidth);
+            LayoutText(settings);
+        }
 
         return buf.positionedGlyphs.AsSpan(0, buf.positionedGlyphCount);
     }
@@ -151,6 +171,96 @@ public sealed class TextProcessor
     public void InvalidateShapingData()
     {
         hasValidShapingData = false;
+        hasValidLayoutData = false;
+        lastLayoutWidth = -1;
+    }
+
+    /// <summary>
+    /// Ensure shaping is done without layout (for ILayoutElement.preferredWidth).
+    /// This caches the shaping result for subsequent GetUnwrappedWidth() and GetHeightForWidth() calls.
+    /// </summary>
+    public void EnsureShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
+    {
+        if (CommonData.DebugPipelineLogging)
+            UnityEngine.Debug.Log($"[EnsureShaping] hasValidShapingData={hasValidShapingData}");
+
+        if (hasValidShapingData) return;
+
+        if (CommonData.DebugPipelineLogging)
+            UnityEngine.Debug.Log("[EnsureShaping] DOING SHAPING");
+
+        var buf = CommonData.Current;
+        buf.Reset();
+
+        if (text.IsEmpty)
+        {
+            hasValidShapingData = false;
+            return;
+        }
+
+        fontProvider?.SetFontSize(settings.fontSize);
+
+        Parse(text);
+        Parsed?.Invoke();  // Apply modifiers (colors, margins, etc.)
+
+        if (buf.codepointCount == 0)
+        {
+            hasValidShapingData = false;
+            return;
+        }
+
+        AnalyzeBidi(settings.baseDirection);
+        AnalyzeScripts();
+        Itemize();
+        Shape();
+        EnsureGlyphsInAtlas();
+
+        hasValidShapingData = true;
+        buf.shapingFontSize = settings.fontSize;
+    }
+
+    /// <summary>
+    /// Get text width without word wrap (sum of all run widths).
+    /// Call EnsureShaping() first.
+    /// </summary>
+    public float GetUnwrappedWidth()
+    {
+        if (!hasValidShapingData) return 0;
+
+        var buf = CommonData.Current;
+        float total = 0;
+        int count = buf.shapedRunCount;
+        for (int i = 0; i < count; i++)
+            total += buf.shapedRuns[i].width;
+        return total;
+    }
+
+    /// <summary>
+    /// Get text height for a given width (performs line breaking and layout).
+    /// Call EnsureShaping() first. Caches result for same width.
+    /// </summary>
+    public float GetHeightForWidth(float width, TextProcessSettings settings)
+    {
+        if (CommonData.DebugPipelineLogging)
+            UnityEngine.Debug.Log($"[GetHeightForWidth] width={width}, hasValidShapingData={hasValidShapingData}");
+
+        if (!hasValidShapingData) return 0;
+
+        if (CommonData.DebugPipelineLogging)
+            UnityEngine.Debug.Log("[GetHeightForWidth] DOING LAYOUT");
+
+        var buf = CommonData.Current;
+        float glyphScale = buf.shapingFontSize > 0 ? settings.fontSize / buf.shapingFontSize : 1f;
+        float effectiveMaxWidth = settings.enableWordWrap ? width / glyphScale : TextProcessSettings.FloatMax;
+
+        BreakLines(effectiveMaxWidth);
+        LayoutText(settings);
+
+        // Cache layout for Process() to reuse
+        lastLayoutWidth = settings.maxWidth;
+        hasValidLayoutData = true;
+
+        return resultHeight;
     }
 
     public float ResultWidth => resultWidth;
