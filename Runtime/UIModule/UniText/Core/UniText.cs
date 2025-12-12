@@ -134,6 +134,11 @@ public class UniText : MaskableGraphic
     // Cached Canvas reference
     private Canvas cachedCanvas;
 
+    // Cached clip parameters for SubMesh
+    private Rect cachedClipRect;
+    private bool cachedValidClip;
+    private Vector4 cachedClipSoftness;
+
     #endregion
 
     #region Properties (Public API)
@@ -744,6 +749,56 @@ public class UniText : MaskableGraphic
 
     private Texture GetActiveTexture() => GetActiveMaterial()?.mainTexture;
 
+    public override void SetClipRect(Rect clipRect, bool validRect)
+    {
+        base.SetClipRect(clipRect, validRect);
+
+        cachedClipRect = clipRect;
+        cachedValidClip = validRect;
+
+        int count = subMeshRenderers.Count;
+        for (int i = 0; i < count; i++)
+        {
+            var renderer = subMeshRenderers[i];
+            if (renderer == null) continue;
+            if (validRect)
+                renderer.EnableRectClipping(clipRect);
+            else
+                renderer.DisableRectClipping();
+        }
+    }
+
+    public override void SetClipSoftness(Vector2 clipSoftness)
+    {
+        base.SetClipSoftness(clipSoftness);
+
+        cachedClipSoftness = new Vector4(clipSoftness.x, clipSoftness.y, 0, 0);
+
+        int count = subMeshRenderers.Count;
+        for (int i = 0; i < count; i++)
+        {
+            var renderer = subMeshRenderers[i];
+            if (renderer != null)
+                renderer.clippingSoftness = cachedClipSoftness;
+        }
+    }
+
+    public override void Cull(Rect clipRect, bool validRect)
+    {
+        base.Cull(clipRect, validRect);
+
+        var cr = canvasRenderer;
+        bool cull = cr != null && cr.cull;
+
+        int count = subMeshRenderers.Count;
+        for (int i = 0; i < count; i++)
+        {
+            var renderer = subMeshRenderers[i];
+            if (renderer != null)
+                renderer.cull = cull;
+        }
+    }
+
     #endregion
 
     #region Sub-mesh Management
@@ -836,6 +891,16 @@ public class UniText : MaskableGraphic
 
         var renderer = go.AddComponent<CanvasRenderer>();
         SetSubMeshRendererData(renderer, mesh, material);
+
+        // Apply current clip state
+        if (cachedValidClip)
+            renderer.EnableRectClipping(cachedClipRect);
+        renderer.clippingSoftness = cachedClipSoftness;
+
+        // Apply current cull state
+        var cr = canvasRenderer;
+        if (cr != null)
+            renderer.cull = cr.cull;
 
         return renderer;
     }
