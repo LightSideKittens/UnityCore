@@ -47,6 +47,7 @@ public class UniText : MaskableGraphic
         /// <summary>Text content changed - requires attribute parsing</summary>
         Text = 1 << 6,
 
+        LayoutRebuild = Layout | FontSize | Alignment,
         /// <summary>Flags requiring full rebuild (text, font, direction)</summary>
         FullRebuild = Text | Font | Direction,
 
@@ -246,6 +247,17 @@ public class UniText : MaskableGraphic
             if (verticalAlignment == value) return;
             verticalAlignment = value;
             SetDirty(DirtyFlags.Alignment);
+        }
+    }
+
+    public override Color color
+    {
+        get => base.color;
+        set
+        {
+            if (base.color == value) return;
+            base.color = value;
+            SetDirty(DirtyFlags.Color);
         }
     }
 
@@ -513,12 +525,9 @@ public class UniText : MaskableGraphic
             var flags = dirtyFlags;
             dirtyFlags = DirtyFlags.None;
 
-            if (RequiresFullRebuild(flags))
-                RebuildFull(flags);
-            else if (RequiresLayoutRebuild(flags))
-                RebuildLayout(flags);
-            else
-                RebuildMeshOnly();
+            if (RequiresFullRebuild(flags)) RebuildFull(flags);
+            else if (RequiresLayoutRebuild(flags)) RebuildLayout(flags);
+            else RebuildMeshOnly();
 
             UpdateRendering();
         }
@@ -532,7 +541,7 @@ public class UniText : MaskableGraphic
         => (flags & DirtyFlags.FullRebuild) != 0;
 
     private static bool RequiresLayoutRebuild(DirtyFlags flags)
-        => (flags & (DirtyFlags.Layout | DirtyFlags.FontSize)) != 0;
+        => (flags & DirtyFlags.LayoutRebuild) != 0;
 
     /// <summary>
     /// Полная перестройка текста (text/font/direction изменились).
@@ -588,7 +597,7 @@ public class UniText : MaskableGraphic
 
     
     /// <summary>
-    /// Перестройка layout (rect size или fontSize изменились).
+    /// Перестройка layout (rect size, fontSize или layout settings изменились).
     /// </summary>
     private void RebuildLayout(DirtyFlags flags)
     {
@@ -596,16 +605,6 @@ public class UniText : MaskableGraphic
         if (rt == null) return;
 
         var rect = rt.rect;
-        bool rectChanged = !Mathf.Approximately(rect.width, cachedRectWidth) ||
-                           !Mathf.Approximately(rect.height, cachedRectHeight);
-        bool fontSizeChanged = (flags & DirtyFlags.FontSize) != 0;
-
-        if (!rectChanged && !fontSizeChanged)
-        {
-            RebuildMeshOnly();
-            return;
-        }
-
         cachedRectWidth = rect.width;
         cachedRectHeight = rect.height;
 
