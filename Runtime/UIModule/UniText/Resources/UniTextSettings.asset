@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: UniTextSettings
   m_EditorClassIdentifier: 
   unicodeDataAsset: {fileID: 4900000, guid: 86e6445c93d99a7478cd8b8d74dc2ad5, type: 3}
+  defaultFontAsset: {fileID: 11400000, guid: cdf5a293da49e2a459e6b5ec953395c4, type: 2}
   fallbackFontAssets:
   - {fileID: 11400000, guid: 68168684cdac32e4da1329778a4afa8b, type: 2}
   - {fileID: 11400000, guid: bdea0be7d32f8f444b6824484a797823, type: 2}
