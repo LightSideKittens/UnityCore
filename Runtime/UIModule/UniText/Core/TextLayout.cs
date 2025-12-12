@@ -39,6 +39,7 @@ public sealed class TextLayout
     private float fontDescender;
     private float fontLineHeight;
     private float fontScale = 1f;
+    private float glyphScale = 1f;
 
     public TextLayout()
     {
@@ -54,12 +55,14 @@ public sealed class TextLayout
     /// Установить метрики шрифта для расчёта высоты строки.
     /// Должен быть вызван перед Layout().
     /// </summary>
-    public void SetFontMetrics(float ascender, float descender, float lineHeight, float scale)
+    /// <param name="glyphScaleFactor">Коэффициент масштабирования для advance/offset глифов (currentFontSize / shapingFontSize)</param>
+    public void SetFontMetrics(float ascender, float descender, float lineHeight, float scale, float glyphScaleFactor = 1f)
     {
         fontAscender = ascender;
         fontDescender = descender;
         fontLineHeight = lineHeight;
         fontScale = scale;
+        glyphScale = glyphScaleFactor;
     }
 
     /// <summary>
@@ -117,11 +120,11 @@ public sealed class TextLayout
             int runStart = line.runStart;
             int runCount = line.runCount;
 
-            // Вычисляем реальную ширину строки
+            // Вычисляем реальную ширину строки (масштабируем если fontSize изменился)
             float lineWidth = 0;
             int runEnd = runStart + runCount;
             for (int r = runStart; r < runEnd; r++)
-                lineWidth += runs[r].width;
+                lineWidth += runs[r].width * glyphScale;
 
             // Начальная X позиция
             float x;
@@ -197,13 +200,13 @@ public sealed class TextLayout
                     {
                         glyphId = glyph.glyphId,
                         cluster = glyph.cluster + clusterOffset,
-                        x = x + glyph.offsetX,
+                        x = x + glyph.offsetX * glyphScale,
                         // HarfBuzz uses typographic coordinates (Y up), but our layout uses Y down
                         // So we need to subtract offsetY to move diacritics up
-                        y = y - glyph.offsetY,
+                        y = y - glyph.offsetY * glyphScale,
                         fontId = fontId
                     };
-                    x += glyph.advanceX;
+                    x += glyph.advanceX * glyphScale;
                 }
             }
 

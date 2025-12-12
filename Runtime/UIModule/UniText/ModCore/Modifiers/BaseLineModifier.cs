@@ -60,7 +60,7 @@ public abstract class BaseLineModifier : BaseModifier
 
     protected sealed override void ApplyModifier(int start, int end, string parameter)
     {
-        int cpCount = SharedTextBuffers.Current.codepointCount;
+        int cpCount = CommonData.Current.codepointCount;
         var buffer = FlagsBuffer;
         buffer.EnsureCapacity(cpCount);
         buffer.SetFlagRange(start, Math.Min(end, cpCount));
@@ -118,7 +118,7 @@ public abstract class BaseLineModifier : BaseModifier
         float offsetX = UniTextMeshGenerator.offsetX;
         float offsetY = UniTextMeshGenerator.offsetY;
 
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         var allGlyphs = buf.positionedGlyphs;
         int glyphCount = buf.positionedGlyphCount;
 

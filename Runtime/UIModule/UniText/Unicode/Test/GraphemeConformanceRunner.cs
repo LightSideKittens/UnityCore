@@ -35,7 +35,7 @@ public sealed class GraphemeConformanceRunner
         int failureCount = 0;
 
         using var reader = new System.IO.StringReader(testFileContent);
-        string? line;
+        string line;
         int lineNumber = 0;
 
         while ((line = reader.ReadLine()) != null)
@@ -161,5 +161,5 @@ public struct GraphemeConformanceSummary
     public int passedTests;
     public int failedTests;
     public int skippedTests;
-    public string? sampleFailures;
+    public string sampleFailures;
 }

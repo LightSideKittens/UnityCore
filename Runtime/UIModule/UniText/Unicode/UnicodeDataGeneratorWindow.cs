@@ -163,7 +163,7 @@ public class TestData
             Debug.Log("=== All Tests Complete ===");
         }
 
-        private void LogSummary(string testName, int passed, int failed, int skipped, string? sampleFailures)
+        private void LogSummary(string testName, int passed, int failed, int skipped, string sampleFailures)
         {
             string log = $"{testName}: Passed={passed}, Failed={failed}, Skipped={skipped}";
             

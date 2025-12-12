@@ -10,7 +10,7 @@ using UnityEngine.SceneManagement;
 /// Каждый UniText имеет свой экземпляр. Static Current указывает на текущий активный.
 /// Использует ArrayPool для zero-allocation при resize.
 /// </summary>
-public sealed class SharedTextBuffers
+public sealed class CommonData
 {
     // Minimum sizes - ArrayPool will return at least this
     private const int MinCodepointCapacity = 256;
@@ -21,7 +21,7 @@ public sealed class SharedTextBuffers
     /// <summary>
     /// Текущий активный буфер. Устанавливается перед Rebuild.
     /// </summary>
-    public static SharedTextBuffers Current { get; set; }
+    public static CommonData Current { get; set; }
 
     // Current buffers (from ArrayPool or initial allocation)
     public int[] codepoints;
@@ -40,6 +40,7 @@ public sealed class SharedTextBuffers
     public int shapedRunCount;
     public ShapedGlyph[] shapedGlyphs;
     public int shapedGlyphCount;
+    public float shapingFontSize;
 
     public TextLine[] lines;
     public int lineCount;
@@ -80,7 +81,7 @@ public sealed class SharedTextBuffers
     // Track if buffers are rented
     private bool isRented;
 
-    public SharedTextBuffers() { }
+    public CommonData() { }
 
     /// <summary>
     /// Взять массивы из пулов. Вызывать в OnEnable.

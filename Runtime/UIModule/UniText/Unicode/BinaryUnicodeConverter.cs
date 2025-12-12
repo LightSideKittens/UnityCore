@@ -70,7 +70,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -97,7 +97,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -132,7 +132,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -159,7 +159,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -186,7 +186,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -216,7 +216,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -249,7 +249,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -279,7 +279,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -309,7 +309,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -340,7 +340,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -382,7 +382,7 @@ public class UnicodeDataBuilder
     {
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -421,7 +421,7 @@ public class UnicodeDataBuilder
         
         using var reader = new StreamReader(path);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             // Strip comment
@@ -1169,7 +1169,7 @@ public class UnicodeDataBuilder
 
         using var reader = new StreamReader(bidiMirroringPath);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);
@@ -1211,7 +1211,7 @@ public class UnicodeDataBuilder
 
         using var reader = new StreamReader(bidiBracketsPath);
 
-        string? line;
+        string line;
         while ((line = reader.ReadLine()) != null)
         {
             line = StripComment(line);

@@ -143,7 +143,7 @@ public sealed class LineBreaker
         cpWidths.Clear();
 
         // Get margins from SharedTextBuffers.Current
-        var margins = SharedTextBuffers.Current.startMargins;
+        var margins = CommonData.Current.startMargins;
 
         try
         {

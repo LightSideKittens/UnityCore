@@ -12,6 +12,11 @@ public sealed class UniTextSettings : ScriptableObject
     [SerializeField]
     private TextAsset unicodeDataAsset;
 
+    [Header("Default Font")]
+    [SerializeField]
+    [Tooltip("Default font used when UniText has no font assigned")]
+    private UniTextFontAsset defaultFontAsset;
+
     [Header("Font Fallback")]
     [SerializeField]
     [Tooltip("Global fallback font assets used when character is not found in primary font or its fallbacks")]
@@ -21,6 +26,11 @@ public sealed class UniTextSettings : ScriptableObject
     /// Бинарные данные Unicode.
     /// </summary>
     public TextAsset UnicodeDataAsset => unicodeDataAsset;
+
+    /// <summary>
+    /// Default font asset used when UniText has no font assigned.
+    /// </summary>
+    public static UniTextFontAsset DefaultFontAsset => Instance?.defaultFontAsset;
 
     /// <summary>
     /// Global fallback font assets.

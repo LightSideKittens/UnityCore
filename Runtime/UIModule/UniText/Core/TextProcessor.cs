@@ -78,10 +78,9 @@ public sealed class TextProcessor
         UniText.DirtyFlags dirtyFlags = UniText.DirtyFlags.FullRebuild)
     {
         bool fullRebuild = (dirtyFlags & UniText.DirtyFlags.FullRebuild) != 0 ||
-                           (dirtyFlags & UniText.DirtyFlags.FontSize) != 0 ||
                            !hasValidShapingData;
 
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         if (fullRebuild)
         {
             // Full rebuild - reset everything
@@ -128,11 +127,14 @@ public sealed class TextProcessor
             EnsureGlyphsInAtlas();
 
             hasValidShapingData = true;
+            buf.shapingFontSize = settings.fontSize;
         }
         // else: use existing shaping data from SharedTextBuffers.Current
 
         // Always do layout (depends on width/height/alignment)
-        BreakLines(settings.enableWordWrap ? settings.maxWidth : TextProcessSettings.FloatMax);
+        float glyphScale = buf.shapingFontSize > 0 ? settings.fontSize / buf.shapingFontSize : 1f;
+        float effectiveMaxWidth = settings.enableWordWrap ? settings.maxWidth / glyphScale : TextProcessSettings.FloatMax;
+        BreakLines(effectiveMaxWidth);
         LayoutText(settings);
 
         return buf.positionedGlyphs.AsSpan(0, buf.positionedGlyphCount);
@@ -154,12 +156,12 @@ public sealed class TextProcessor
     public float ResultWidth => resultWidth;
     public float ResultHeight => resultHeight;
     public Vector2 ResultSize => new(resultWidth, resultHeight);
-    public ReadOnlySpan<PositionedGlyph> PositionedGlyphs { get { var b = SharedTextBuffers.Current; return b.positionedGlyphs.AsSpan(0, b.positionedGlyphCount); } }
-    public ReadOnlySpan<int> Codepoints { get { var b = SharedTextBuffers.Current; return b.codepoints.AsSpan(0, b.codepointCount); } }
+    public ReadOnlySpan<PositionedGlyph> PositionedGlyphs { get { var b = CommonData.Current; return b.positionedGlyphs.AsSpan(0, b.positionedGlyphCount); } }
+    public ReadOnlySpan<int> Codepoints { get { var b = CommonData.Current; return b.codepoints.AsSpan(0, b.codepointCount); } }
 
     private void Parse(ReadOnlySpan<char> text)
     {
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         buf.codepointCount = 0;
         buf.EnsureCodepointCapacity(text.Length);
 
@@ -172,7 +174,7 @@ public sealed class TextProcessor
     
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void AddCharacter(ReadOnlySpan<char> text, ref int i, SharedTextBuffers buf)
+    private void AddCharacter(ReadOnlySpan<char> text, ref int i, CommonData buf)
     {
         char c = text[i];
 
@@ -190,7 +192,7 @@ public sealed class TextProcessor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void AddCodepoint(int cp, SharedTextBuffers buf)
+    private static void AddCodepoint(int cp, CommonData buf)
     {
         int count = buf.codepointCount;
         if (count >= buf.codepoints.Length)
@@ -201,7 +203,7 @@ public sealed class TextProcessor
 
     private void AnalyzeBidi(TextDirection requestedDirection)
     {
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         int cpCount = buf.codepointCount;
         buf.EnsureBidiCapacity(cpCount);
 
@@ -247,7 +249,7 @@ public sealed class TextProcessor
 
     private void AnalyzeScripts()
     {
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         int cpCount = buf.codepointCount;
         buf.EnsureScriptCapacity(cpCount);
         ScriptAnalyzer.Analyze(buf.codepoints.AsSpan(0, cpCount), buf.scripts);
@@ -275,7 +277,7 @@ public sealed class TextProcessor
 
     private void Itemize()
     {
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         buf.runCount = 0;
 
         int cpCount = buf.codepointCount;
@@ -339,7 +341,7 @@ public sealed class TextProcessor
         AddRun(runStart, cpCount - runStart, currentLevel, currentScript, currentFontId, buf);
     }
 
-    private static void ItemizeWithoutFontLookup(int cpCount, Span<byte> lvlSpan, Span<UnicodeScript> scrSpan, int fontId, SharedTextBuffers buf)
+    private static void ItemizeWithoutFontLookup(int cpCount, Span<byte> lvlSpan, Span<UnicodeScript> scrSpan, int fontId, CommonData buf)
     {
         int runStart = 0;
         byte currentLevel = lvlSpan[0];
@@ -363,7 +365,7 @@ public sealed class TextProcessor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void AddRun(int start, int length, byte bidiLevel, UnicodeScript script, int fontId, SharedTextBuffers buf)
+    private static void AddRun(int start, int length, byte bidiLevel, UnicodeScript script, int fontId, CommonData buf)
     {
         int count = buf.runCount;
         if (count >= buf.runs.Length)
@@ -381,7 +383,7 @@ public sealed class TextProcessor
 
     private void Shape()
     {
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         buf.shapedRunCount = 0;
         buf.shapedGlyphCount = 0;
 
@@ -443,7 +445,7 @@ public sealed class TextProcessor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void AddShapedGlyphs(ReadOnlySpan<ShapedGlyph> glyphs, SharedTextBuffers buf)
+    private static void AddShapedGlyphs(ReadOnlySpan<ShapedGlyph> glyphs, CommonData buf)
     {
         int count = buf.shapedGlyphCount;
         int required = count + glyphs.Length;
@@ -455,7 +457,7 @@ public sealed class TextProcessor
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void AddShapedRun(ShapedRun run, SharedTextBuffers buf)
+    private static void AddShapedRun(ShapedRun run, CommonData buf)
     {
         int count = buf.shapedRunCount;
         if (count >= buf.shapedRuns.Length)
@@ -474,7 +476,7 @@ public sealed class TextProcessor
         if (fontProvider == null)
             return;
 
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         fontProvider.EnsureGlyphsInAtlas(
             buf.shapedRuns.AsSpan(0, buf.shapedRunCount),
             buf.shapedGlyphs.AsSpan(0, buf.shapedGlyphCount));
@@ -482,7 +484,7 @@ public sealed class TextProcessor
 
     private void BreakLines(float maxWidth)
     {
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         buf.lineCount = 0;
         buf.orderedRunCount = 0;
 
@@ -508,7 +510,7 @@ public sealed class TextProcessor
 
     private void LayoutText(TextProcessSettings settings)
     {
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         buf.positionedGlyphCount = 0;
         buf.EnsurePositionedGlyphCapacity(buf.shapedGlyphCount);
 
@@ -516,7 +518,8 @@ public sealed class TextProcessor
         {
             fontProvider.GetLineMetrics(settings.fontSize, out float ascender, out float descender, out float lineHeight);
             float scale = fontProvider.GetScale(baseFontId, settings.fontSize);
-            Layout.SetFontMetrics(ascender, descender, lineHeight, scale);
+            float glyphScale = buf.shapingFontSize > 0 ? settings.fontSize / buf.shapingFontSize : 1f;
+            Layout.SetFontMetrics(ascender, descender, lineHeight, scale, glyphScale);
         }
 
         var layoutSettings = new LayoutSettings

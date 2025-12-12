@@ -42,7 +42,7 @@ public sealed class LineBreakConformanceRunner
         var failures = new List<LineBreakConformanceFailure>();
 
         using var reader = new System.IO.StringReader(fileContent);
-        string? line;
+        string line;
         int lineNumber = 0;
 
         while ((line = reader.ReadLine()) != null)
@@ -59,7 +59,7 @@ public sealed class LineBreakConformanceRunner
                 continue;
 
             // Parse test case
-            if (!TryParseTestCase(line, out int[] codePoints, out bool[] expectedBreaks, out string? parseError))
+            if (!TryParseTestCase(line, out int[] codePoints, out bool[] expectedBreaks, out string parseError))
             {
                 summary.skippedTests++;
                 if (parseError != null)
@@ -100,7 +100,7 @@ public sealed class LineBreakConformanceRunner
     /// <summary>
     /// Parse a test line like: ÷ 0020 × 0041 ÷
     /// </summary>
-    private bool TryParseTestCase(string line, out int[] codePoints, out bool[] breaks, out string? error)
+    private bool TryParseTestCase(string line, out int[] codePoints, out bool[] breaks, out string error)
     {
         codePoints = Array.Empty<int>();
         breaks = Array.Empty<bool>();
@@ -234,8 +234,8 @@ public sealed class LineBreakConformanceRunner
 internal sealed class LineBreakConformanceFailure
 {
     public int lineNumber;
-    public string? rawInput;
-    public string? message;
+    public string rawInput;
+    public string message;
 }
 
 public struct LineBreakConformanceSummary
@@ -244,5 +244,5 @@ public struct LineBreakConformanceSummary
     public int passedTests;
     public int failedTests;
     public int skippedTests;
-    public string? sampleFailures;
+    public string sampleFailures;
 }

@@ -36,7 +36,7 @@ public class BoldModifier : BaseModifier
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
-        int cpCount = SharedTextBuffers.Current.codepointCount;
+        int cpCount = CommonData.Current.codepointCount;
         buffer.EnsureCapacity(cpCount);
         buffer.SetValueRange(start, Math.Min(end, cpCount), 1f);
     }

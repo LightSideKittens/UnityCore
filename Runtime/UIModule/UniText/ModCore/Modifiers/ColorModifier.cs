@@ -42,7 +42,7 @@ public class ColorModifier : BaseModifier
         if (!TryParseColor(parameter, out Color32 color))
             return;
 
-        int cpCount = SharedTextBuffers.Current.codepointCount;
+        int cpCount = CommonData.Current.codepointCount;
         buffer.EnsureCapacity(cpCount);
 
         uint packed = PackColor(color);

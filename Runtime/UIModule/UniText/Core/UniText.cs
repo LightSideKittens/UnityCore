@@ -92,7 +92,7 @@ public class UniText : MaskableGraphic
     private UniTextFontProvider fontProvider;
     private UniTextMeshGenerator meshGenerator;
     private AttributeParser parser;
-    private SharedTextBuffers textBuffers;
+    private CommonData textBuffers;
 
     /// <summary>Font provider для доступа к fontAsset и метрикам.</summary>
     public UniTextFontProvider FontProvider => fontProvider;
@@ -159,8 +159,24 @@ public class UniText : MaskableGraphic
         set
         {
             if (text == value) return;
+
+            bool wasEmpty = string.IsNullOrEmpty(text);
+            bool willBeEmpty = string.IsNullOrEmpty(value);
+
             text = value;
-            SetDirty(DirtyFlags.Text);
+
+            if (wasEmpty && !willBeEmpty)
+            {
+                OnTextAppeared();
+            }
+            else if (!wasEmpty && willBeEmpty)
+            {
+                OnTextDisappeared();
+            }
+            else
+            {
+                SetDirty(DirtyFlags.Text);
+            }
         }
     }
 
@@ -169,6 +185,8 @@ public class UniText : MaskableGraphic
         get => font;
         set
         {
+            if (value == null)
+                value = UniTextSettings.DefaultFontAsset;
             if (font == value) return;
             font = value;
             RebuildFontProvider();
@@ -326,9 +344,13 @@ public class UniText : MaskableGraphic
 
         if (font == null)
         {
-            Debug.LogError("UniText: Font not assigned.");
-            enabled = false;
-            return false;
+            font = UniTextSettings.DefaultFontAsset;
+            if (font == null)
+            {
+                Debug.LogError("UniText: Font not assigned and no default font in UniTextSettings.");
+                enabled = false;
+                return false;
+            }
         }
 
         return true;
@@ -336,7 +358,7 @@ public class UniText : MaskableGraphic
 
     private void CreateProcessor()
     {
-        textBuffers = new SharedTextBuffers();
+        textBuffers = new CommonData();
         textBuffers.RentBuffers();
         processor = new TextProcessor();
         
@@ -379,6 +401,30 @@ public class UniText : MaskableGraphic
     #endregion
 
     #region State Management
+
+    /// <summary>
+    /// Вызывается когда текст появляется (был пустым, стал непустым).
+    /// Эквивалент OnEnable.
+    /// </summary>
+    private void OnTextAppeared()
+    {
+        ResetAfterDomainReload();
+        CollectExistingSubMeshRenderers();
+        EnsureCanvasShaderChannels();
+        EnsureMaterialAssigned();
+        SetVerticesDirty();
+    }
+
+    /// <summary>
+    /// Вызывается когда текст исчезает (был непустым, стал пустым).
+    /// Эквивалент OnDisable.
+    /// </summary>
+    private void OnTextDisappeared()
+    {
+        Cleanup();
+        textBuffers?.ReturnBuffers();
+        SetDirty(DirtyFlags.Text);
+    }
 
     /// <summary>
     /// Сброс runtime состояния после Domain Reload.
@@ -452,7 +498,7 @@ public class UniText : MaskableGraphic
         if (!isInitialized) return;
 
         // Устанавливаем Current и вызываем Rebuilding ПОСЛЕ инициализации
-        SharedTextBuffers.Current = textBuffers;
+        CommonData.Current = textBuffers;
         Rebuilding?.Invoke();
 
         ExecuteRebuild();
@@ -470,7 +516,7 @@ public class UniText : MaskableGraphic
             if (RequiresFullRebuild(flags))
                 RebuildFull(flags);
             else if (RequiresLayoutRebuild(flags))
-                RebuildLayout();
+                RebuildLayout(flags);
             else
                 RebuildMeshOnly();
 
@@ -542,25 +588,42 @@ public class UniText : MaskableGraphic
 
     
     /// <summary>
-    /// Перестройка layout (rect size изменился).
+    /// Перестройка layout (rect size или fontSize изменились).
     /// </summary>
-    private void RebuildLayout()
+    private void RebuildLayout(DirtyFlags flags)
     {
         var rt = GetComponent<RectTransform>();
         if (rt == null) return;
 
         var rect = rt.rect;
+        bool rectChanged = !Mathf.Approximately(rect.width, cachedRectWidth) ||
+                           !Mathf.Approximately(rect.height, cachedRectHeight);
+        bool fontSizeChanged = (flags & DirtyFlags.FontSize) != 0;
 
-        // Check if rect actually changed
-        if (Mathf.Approximately(rect.width, cachedRectWidth) &&
-            Mathf.Approximately(rect.height, cachedRectHeight))
+        if (!rectChanged && !fontSizeChanged)
         {
             RebuildMeshOnly();
             return;
         }
 
-        // Full rebuild with layout flag
-        RebuildFull(DirtyFlags.Layout);
+        cachedRectWidth = rect.width;
+        cachedRectHeight = rect.height;
+
+        ReleaseMeshes();
+
+        if (string.IsNullOrEmpty(text) || processor == null)
+        {
+            lastMeshPairs = null;
+            return;
+        }
+
+        var settings = CreateProcessSettings(rect);
+        var glyphs = processor.Process(cachedCleanText.AsSpan(), settings, flags);
+
+        lastResultWidth = processor.ResultWidth;
+        lastResultHeight = processor.ResultHeight;
+
+        GenerateMeshes(glyphs, rect);
     }
 
     /// <summary>

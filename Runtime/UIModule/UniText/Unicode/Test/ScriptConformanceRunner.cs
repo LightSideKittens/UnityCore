@@ -200,7 +200,7 @@ public sealed class ScriptConformanceRunner
     private IEnumerable<(int lineNumber, string field1, string field2)> ParseDataFile(string content)
     {
         using var reader = new System.IO.StringReader(content);
-        string? line;
+        string line;
         int lineNumber = 0;
         
         while ((line = reader.ReadLine()) != null)
@@ -341,7 +341,7 @@ public struct ScriptConformanceSummary
     public int passedTests;
     public int failedTests;
     public int skippedTests;
-    public string? sampleFailures;
+    public string sampleFailures;
 }
 
 public struct ScriptAnalyzerTestSummary
@@ -349,7 +349,7 @@ public struct ScriptAnalyzerTestSummary
     public int totalTests;
     public int passedTests;
     public int failedTests;
-    public string? sampleFailures;
+    public string sampleFailures;
 }
 
 #endregion

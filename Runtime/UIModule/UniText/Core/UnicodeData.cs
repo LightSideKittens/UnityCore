@@ -102,7 +102,7 @@ public static class UnicodeData
     /// <summary>
     /// Проверка инициализации без автоматической загрузки.
     /// </summary>
-    public static bool IsInitialized => initialized && provider != null;
+    public static bool IsInitialized => initialized && !initializationFailed && provider != null;
 
     /// <summary>
     /// Инициализировать с данными из UniTextSettings.

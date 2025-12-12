@@ -142,7 +142,7 @@ public class ListModifier : BaseModifier
     private void ApplyMargins(ListItemInfo item)
     {
         float contentIndent = item.nestingLevel * indentPerLevel + MeasureMarkerWidthForLayout(item);
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         if (item.end > buf.startMargins.Length) buf.EnsureCodepointCapacity(item.end);
         var margins = buf.startMargins;
         int safeEnd = Math.Min(item.end, buf.codepointCount);
@@ -175,13 +175,13 @@ public class ListModifier : BaseModifier
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsItemRtl(int cluster)
     {
-        var levels = SharedTextBuffers.Current.bidiLevels;
+        var levels = CommonData.Current.bidiLevels;
         return (uint)cluster < (uint)levels.Length && (levels[cluster] & 1) == 1;
     }
 
     private static float GetItemBaselineY(int cluster, out float firstGlyphX)
     {
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         for (int i = 0; i < buf.positionedGlyphCount; i++)
             if (buf.positionedGlyphs[i].cluster >= cluster)
             {
@@ -195,7 +195,7 @@ public class ListModifier : BaseModifier
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static float GetLineWidth(int cluster)
     {
-        var buf = SharedTextBuffers.Current;
+        var buf = CommonData.Current;
         for (int i = 0; i < buf.lineCount; i++)
         {
             ref readonly var line = ref buf.lines[i];
