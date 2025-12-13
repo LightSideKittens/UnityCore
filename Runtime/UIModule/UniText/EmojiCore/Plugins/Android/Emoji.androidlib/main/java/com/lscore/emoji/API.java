@@ -90,25 +90,25 @@ public class API {
         if (text == null || text.isEmpty()) {
             return new EmojiRange[0];
         }
-        
+
         List<EmojiRange> result = new ArrayList<>();
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setTextSize(64);
-    
+
         BreakIterator bi = BreakIterator.getCharacterInstance(Locale.getDefault());
         bi.setText(text);
-    
+
         int start = bi.first();
         for (int end = bi.next(); end != BreakIterator.DONE; start = end, end = bi.next()) {
             int length = end - start;
             String cluster = text.substring(start, end);
-    
+
             if (isEmojiCluster(cluster)) {
                 if (!paint.hasGlyph(cluster)) {
                     String zwj = "\u200D";
                     int localOffset = start;
                     String[] parts = cluster.split(zwj);
-    
+
                     for (String part : parts) {
                         int partLen = part.length();
                         if (paint.hasGlyph(part)) {
@@ -130,8 +130,53 @@ public class API {
                 }
             }
         }
-    
+
         return result.toArray(new EmojiRange[result.size()]);
+    }
+
+    // New API: Process a single emoji cluster (grapheme determined by C#)
+    // Returns array of EmojiRange - either [whole cluster] or [split parts] if platform doesn't support
+    public static EmojiRange[] processEmojiCluster(String cluster) {
+        if (cluster == null || cluster.isEmpty()) {
+            return new EmojiRange[0];
+        }
+
+        List<EmojiRange> result = new ArrayList<>();
+
+        if (!paint.hasGlyph(cluster)) {
+            // Platform doesn't support this cluster - split by ZWJ
+            String zwj = "\u200D";
+            String[] parts = cluster.split(zwj);
+            int offset = 0;
+
+            for (String part : parts) {
+                int partLen = part.length();
+                if (part.isEmpty()) {
+                    offset += zwj.length();
+                    continue;
+                }
+
+                if (paint.hasGlyph(part)) {
+                    result.add(new EmojiRange(offset, partLen, part));
+                } else {
+                    // Even the part isn't supported - split to individual codepoints
+                    int local = 0;
+                    while (local < partLen) {
+                        int cp = part.codePointAt(local);
+                        int cpLen = Character.charCount(cp);
+                        String cpStr = new String(Character.toChars(cp));
+                        result.add(new EmojiRange(offset + local, cpLen, cpStr));
+                        local += cpLen;
+                    }
+                }
+                offset += partLen + zwj.length();
+            }
+        } else {
+            // Platform supports this cluster - return as single emoji
+            result.add(new EmojiRange(0, cluster.length(), cluster));
+        }
+
+        return result.toArray(new EmojiRange[0]);
     }
 
 

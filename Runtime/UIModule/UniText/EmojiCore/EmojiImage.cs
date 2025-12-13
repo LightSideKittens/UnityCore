@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿//НЕ ЧИТАТЬ И НЕ ИСПОЛЬЗОВАТЬ!!!
+
+/*using System.Reflection;
 using LSCore;
 using LSCore.NativeUtils;
 using UnityEngine;
@@ -209,4 +211,4 @@ public class EmojiImage : RawImage
         vh.AddTriangle(0, 1, 2);
         vh.AddTriangle(2, 3, 0);
     }
-}
+}*/

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using LSCore.ConfigModule;
 using LSCore.DataStructs;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -11,23 +10,18 @@ namespace LSCore.NativeUtils
 {
     public static partial class Emoji
     {
-        public class ConfigManager : 
-#if UNITY_EDITOR
-            EditorConfigManager<Config>
-#else
-            LocalDynamicConfigManager<Config>
-#endif
-        {
-            protected override string DefaultPath => "EmojiConfig";
-        }
-        
-        public class Config : LocalDynamicConfig
+        public class Config
         {
             private static Config instance;
-            public static ConfigManager Manager => ConfigMaster<ConfigManager>.Default;
-            public static Config Instance => instance ??= Manager.Config;
+            public static Config Instance => instance ??= JsonUtility.FromJson<Config>(PlayerPrefs.GetString("Emoji.Config", "{}"));
+
             public Dictionary<string, Sprite> sprites = new();
             public List<Atlas> atlases = new();
+            
+            public static void Save()
+            {
+                PlayerPrefs.SetString("Emoji.Config", JsonUtility.ToJson(Instance));
+            }
         }
         
         public struct Range
@@ -112,7 +106,7 @@ namespace LSCore.NativeUtils
                         {
                             bytes = null;
                         }
-                        Config.Manager.Save();
+                        Config.Save();
                         isDirty = false;
                     }
                     
