@@ -3,36 +3,12 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 
 [Serializable]
-public class BoldModifier : BaseModifier
+public class BoldModifier : GlyphModifier<float>
 {
-    private ArrayPoolBuffer<float> instanceBuffer;
     private static ArrayPoolBuffer<float> buffer;
 
-    protected override void CreateBuffers()
-    {
-        instanceBuffer = new ArrayPoolBuffer<float>(256);
-        buffer = instanceBuffer;
-    }
-
-    protected override void Subscribe()
-    {
-        cachedUniText.Rebuilding += OnRebuilding;
-        cachedUniText.MeshGenerator.OnGlyph += OnGlyph;
-    }
-
-    protected override void Unsubscribe()
-    {
-        cachedUniText.Rebuilding -= OnRebuilding;
-        cachedUniText.MeshGenerator.OnGlyph -= OnGlyph;
-    }
-
-    protected override void ReleaseBuffers()
-    {
-        instanceBuffer.ReturnToPool();
-        instanceBuffer = null;
-    }
-
-    protected override void ClearBuffers() => instanceBuffer.Clear();
+    protected override Action GetOnGlyphCallback() => OnGlyph;
+    protected override void SetStaticBuffer(ArrayPoolBuffer<float> buf) => buffer = buf;
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
@@ -40,8 +16,6 @@ public class BoldModifier : BaseModifier
         buffer.EnsureCapacity(cpCount);
         buffer.SetValueRange(start, Math.Min(end, cpCount), 1f);
     }
-
-    private void OnRebuilding() => buffer = instanceBuffer;
 
     private static void OnGlyph()
     {

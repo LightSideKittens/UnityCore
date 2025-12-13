@@ -681,13 +681,16 @@ public partial class UniText : MaskableGraphic
     {
         return new TextProcessSettings
         {
-            maxWidth = rect.width,
-            maxHeight = rect.height,
+            layout = new LayoutSettings
+            {
+                maxWidth = rect.width,
+                maxHeight = rect.height,
+                horizontalAlignment = horizontalAlignment,
+                verticalAlignment = verticalAlignment
+            },
             fontSize = fontSize,
             baseDirection = baseDirection,
-            enableWordWrap = enableWordWrap,
-            horizontalAlignment = horizontalAlignment,
-            verticalAlignment = verticalAlignment
+            enableWordWrap = enableWordWrap
         };
     }
 

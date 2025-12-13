@@ -11,25 +11,24 @@ public struct TextProcessSettings
     /// </summary>
     public const float FloatMax = 32767f;
 
-    public float maxWidth;
-    public float maxHeight;
+    public LayoutSettings layout;
     public float fontSize;
     public TextDirection baseDirection;
     public bool enableWordWrap;
-    public HorizontalAlignment horizontalAlignment;
-    public VerticalAlignment verticalAlignment;
-    public float lineSpacing;
+
+    // Convenience accessors for common layout properties
+    public float maxWidth { get => layout.maxWidth; set => layout.maxWidth = value; }
+    public float maxHeight { get => layout.maxHeight; set => layout.maxHeight = value; }
+    public HorizontalAlignment horizontalAlignment { get => layout.horizontalAlignment; set => layout.horizontalAlignment = value; }
+    public VerticalAlignment verticalAlignment { get => layout.verticalAlignment; set => layout.verticalAlignment = value; }
+    public float lineSpacing { get => layout.lineSpacing; set => layout.lineSpacing = value; }
 
     public static TextProcessSettings Default => new()
     {
-        maxWidth = FloatMax,
-        maxHeight = FloatMax,
+        layout = LayoutSettings.Default,
         fontSize = 36f,
         baseDirection = TextDirection.LeftToRight,
-        enableWordWrap = true,
-        horizontalAlignment = HorizontalAlignment.Left,
-        verticalAlignment = VerticalAlignment.Top,
-        lineSpacing = 0
+        enableWordWrap = true
     };
 }
 
@@ -128,27 +127,8 @@ public sealed class TextProcessor
 
         if (fullRebuild)
         {
-            // Full pipeline
-            Parse(text);
-            Parsed?.Invoke();
-
-            if (buf.codepointCount == 0)
-            {
-                hasValidShapingData = false;
-                hasValidLayoutData = false;
+            if (!DoFullShaping(text, settings))
                 return ReadOnlySpan<PositionedGlyph>.Empty;
-            }
-
-            AnalyzeBidi(settings.baseDirection);
-            AnalyzeScripts();
-
-            Itemize();
-            Shape();
-
-            EnsureGlyphsInAtlas();
-
-            hasValidShapingData = true;
-            buf.shapingFontSize = settings.fontSize;
         }
         // else: use existing shaping data from SharedTextBuffers.Current
 
@@ -202,14 +182,25 @@ public sealed class TextProcessor
         }
 
         fontProvider?.SetFontSize(settings.fontSize);
+        DoFullShaping(text, settings);
+    }
+
+    /// <summary>
+    /// Full shaping pipeline: Parse → BiDi → Scripts → Itemize → Shape → Atlas.
+    /// Returns false if no codepoints to process.
+    /// </summary>
+    private bool DoFullShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
+    {
+        var buf = CommonData.Current;
 
         Parse(text);
-        Parsed?.Invoke();  // Apply modifiers (colors, margins, etc.)
+        Parsed?.Invoke();
 
         if (buf.codepointCount == 0)
         {
             hasValidShapingData = false;
-            return;
+            hasValidLayoutData = false;
+            return false;
         }
 
         AnalyzeBidi(settings.baseDirection);
@@ -220,6 +211,7 @@ public sealed class TextProcessor
 
         hasValidShapingData = true;
         buf.shapingFontSize = settings.fontSize;
+        return true;
     }
 
     /// <summary>
@@ -643,15 +635,7 @@ public sealed class TextProcessor
             Layout.SetFontMetrics(ascender, descender, lineHeight, scale, glyphScale);
         }
 
-        var layoutSettings = new LayoutSettings
-        {
-            maxWidth = settings.maxWidth,
-            maxHeight = settings.maxHeight,
-            lineSpacing = settings.lineSpacing,
-            horizontalAlignment = settings.horizontalAlignment,
-            verticalAlignment = settings.verticalAlignment
-        };
-        Layout.SetLayoutSettings(layoutSettings);
+        Layout.SetLayoutSettings(settings.layout);
 
         int glyphCnt = buf.positionedGlyphCount;
         Layout.Layout(

@@ -1,6 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
+using LSCore;
 using UnityEngine;
 
 public struct ListItemInfo
@@ -23,13 +24,16 @@ public enum OrderedMarkerStyle
 [Serializable]
 public class ListModifier : BaseModifier
 {
-    private List<ListItemInfo> instanceItems;
+    private LSList<ListItemInfo> instanceItems;
     private bool instanceMarkersDrawnThisFrame;
     private UniTextFontProvider instanceFontProvider;
 
-    private static List<ListItemInfo> items;
+    private static LSList<ListItemInfo> items;
     private static bool markersDrawnThisFrame;
     private static UniTextFontProvider fontProviderRef;
+
+    // Shared StringBuilder for zero-allocation string formatting
+    private static readonly StringBuilder sharedBuilder = new(32);
 
     public static bool DebugLogging = false;
 
@@ -41,7 +45,7 @@ public class ListModifier : BaseModifier
 
     protected override void CreateBuffers()
     {
-        instanceItems = new List<ListItemInfo>(32);
+        instanceItems = new LSList<ListItemInfo>(32);
         instanceFontProvider = cachedUniText.FontProvider;
         items = instanceItems;
         fontProviderRef = instanceFontProvider;
@@ -67,7 +71,7 @@ public class ListModifier : BaseModifier
         instanceFontProvider = null;
     }
 
-    protected override void ClearBuffers() => instanceItems.Clear();
+    protected override void ClearBuffers() => instanceItems.FakeClear();
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
@@ -118,23 +122,25 @@ public class ListModifier : BaseModifier
         var fontAsset = fontProviderRef?.GetFontAsset(0);
         if (fontAsset == null) return bulletMarkerWidth;
         float scale = fontProviderRef.FontSize / fontAsset.FaceInfo.pointSize;
-        return MeasureStringWithScale(GetMarkerTextForMeasure(item), fontAsset, scale) + markerToTextGap;
-    }
 
-    private string GetMarkerTextForMeasure(ListItemInfo item)
-    {
+        // Use shared builder for measurement
+        sharedBuilder.Clear();
         int level = Math.Max(0, Math.Min(item.nestingLevel, orderedStyles.Length - 1));
-        return $"{FormatOrderedNumber(item.displayNumber, orderedStyles[level])}.";
+        AppendOrderedNumber(sharedBuilder, item.displayNumber, orderedStyles[level]);
+        sharedBuilder.Append('.');
+
+        return MeasureStringWithScale(sharedBuilder, fontAsset, scale) + markerToTextGap;
     }
 
-    private static float MeasureStringWithScale(string text, UniTextFontAsset fontAsset, float scale)
+    private static float MeasureStringWithScale(StringBuilder sb, UniTextFontAsset fontAsset, float scale)
     {
-        if (string.IsNullOrEmpty(text)) return 0f;
+        if (sb == null || sb.Length == 0) return 0f;
         var charTable = fontAsset.CharacterLookupTable;
         if (charTable == null) return 0f;
         float totalWidth = 0f;
-        for (int i = 0; i < text.Length; i++)
-            if (charTable.TryGetValue(text[i], out var ch) && ch?.glyph != null)
+        int len = sb.Length;
+        for (int i = 0; i < len; i++)
+            if (charTable.TryGetValue(sb[i], out var ch) && ch?.glyph != null)
                 totalWidth += ch.glyph.metrics.horizontalAdvance * scale;
         return totalWidth;
     }
@@ -164,12 +170,14 @@ public class ListModifier : BaseModifier
         float baselineY = GetItemBaselineY(item.start, out float firstGlyphX);
         if (float.IsNaN(baselineY)) return;
 
-        string markerText = GetMarkerText(item, isRtl);
+        // Build marker text into shared builder (zero-allocation)
+        GetMarkerText(item, isRtl, sharedBuilder);
+
         float markerX = isRtl
             ? firstGlyphX + GetLineWidth(item.start) + markerToTextGap
-            : firstGlyphX - GlyphRenderHelper.MeasureString(markerText) - markerToTextGap;
+            : firstGlyphX - GlyphRenderHelper.MeasureString(sharedBuilder) - markerToTextGap;
 
-        GlyphRenderHelper.DrawString(markerText, markerX, baselineY, UniTextMeshGenerator.currentDefaultColor);
+        GlyphRenderHelper.DrawString(sharedBuilder, markerX, baselineY, UniTextMeshGenerator.currentDefaultColor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -205,35 +213,106 @@ public class ListModifier : BaseModifier
         return 0f;
     }
 
-    private string GetMarkerText(ListItemInfo item, bool isRtl)
+    private void GetMarkerText(ListItemInfo item, bool isRtl, StringBuilder sb)
     {
+        sb.Clear();
         if (item.displayNumber < 0)
-            return bulletMarkers[Math.Max(0, Math.Min(item.nestingLevel, bulletMarkers.Length - 1))];
+        {
+            sb.Append(bulletMarkers[Math.Max(0, Math.Min(item.nestingLevel, bulletMarkers.Length - 1))]);
+            return;
+        }
         int level = Math.Max(0, Math.Min(item.nestingLevel, orderedStyles.Length - 1));
-        string num = FormatOrderedNumber(item.displayNumber, orderedStyles[level]);
-        return isRtl ? $".{num}" : $"{num}.";
+        if (isRtl) sb.Append('.');
+        AppendOrderedNumber(sb, item.displayNumber, orderedStyles[level]);
+        if (!isRtl) sb.Append('.');
     }
 
-    private static string FormatOrderedNumber(int n, OrderedMarkerStyle style) => style switch
+    private static void AppendOrderedNumber(StringBuilder sb, int n, OrderedMarkerStyle style)
     {
-        OrderedMarkerStyle.Decimal => n.ToString(),
-        OrderedMarkerStyle.LowerAlpha => n > 0 ? ((char)('a' + (n - 1) % 26)).ToString() : "?",
-        OrderedMarkerStyle.UpperAlpha => n > 0 ? ((char)('A' + (n - 1) % 26)).ToString() : "?",
-        OrderedMarkerStyle.LowerRoman => ToRoman(n).ToLowerInvariant(),
-        OrderedMarkerStyle.UpperRoman => ToRoman(n),
-        _ => n.ToString()
-    };
+        switch (style)
+        {
+            case OrderedMarkerStyle.Decimal:
+                AppendInt(sb, n);
+                break;
+            case OrderedMarkerStyle.LowerAlpha:
+                sb.Append(n > 0 ? (char)('a' + (n - 1) % 26) : '?');
+                break;
+            case OrderedMarkerStyle.UpperAlpha:
+                sb.Append(n > 0 ? (char)('A' + (n - 1) % 26) : '?');
+                break;
+            case OrderedMarkerStyle.LowerRoman:
+                AppendRoman(sb, n, true);
+                break;
+            case OrderedMarkerStyle.UpperRoman:
+                AppendRoman(sb, n, false);
+                break;
+            default:
+                AppendInt(sb, n);
+                break;
+        }
+    }
 
-    private static string ToRoman(int n)
+    private static void AppendInt(StringBuilder sb, int n)
     {
-        if (n <= 0 || n > 3999) return n.ToString();
-        ReadOnlySpan<int> v = stackalloc int[] { 1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1 };
-        ReadOnlySpan<string> s = new[] { "M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I" };
-        var r = new System.Text.StringBuilder(15);
-        for (int i = 0; i < v.Length; i++) while (n >= v[i]) { n -= v[i]; r.Append(s[i]); }
-        return r.ToString();
+        if (n == 0) { sb.Append('0'); return; }
+        if (n < 0) { sb.Append('-'); n = -n; }
+        int start = sb.Length;
+        while (n > 0) { sb.Append((char)('0' + n % 10)); n /= 10; }
+        // Reverse digits
+        int end = sb.Length - 1;
+        while (start < end)
+        {
+            char tmp = sb[start];
+            sb[start] = sb[end];
+            sb[end] = tmp;
+            start++;
+            end--;
+        }
+    }
+
+    private static void AppendRoman(StringBuilder sb, int n, bool lower)
+    {
+        if (n <= 0 || n > 3999)
+        {
+            AppendInt(sb, n);
+            return;
+        }
+        // Roman numeral values and symbols
+        ReadOnlySpan<int> values = stackalloc int[] { 1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1 };
+        if (lower)
+        {
+            while (n >= 1000) { sb.Append('m'); n -= 1000; }
+            if (n >= 900) { sb.Append("cm"); n -= 900; }
+            if (n >= 500) { sb.Append('d'); n -= 500; }
+            if (n >= 400) { sb.Append("cd"); n -= 400; }
+            while (n >= 100) { sb.Append('c'); n -= 100; }
+            if (n >= 90) { sb.Append("xc"); n -= 90; }
+            if (n >= 50) { sb.Append('l'); n -= 50; }
+            if (n >= 40) { sb.Append("xl"); n -= 40; }
+            while (n >= 10) { sb.Append('x'); n -= 10; }
+            if (n >= 9) { sb.Append("ix"); n -= 9; }
+            if (n >= 5) { sb.Append('v'); n -= 5; }
+            if (n >= 4) { sb.Append("iv"); n -= 4; }
+            while (n >= 1) { sb.Append('i'); n -= 1; }
+        }
+        else
+        {
+            while (n >= 1000) { sb.Append('M'); n -= 1000; }
+            if (n >= 900) { sb.Append("CM"); n -= 900; }
+            if (n >= 500) { sb.Append('D'); n -= 500; }
+            if (n >= 400) { sb.Append("CD"); n -= 400; }
+            while (n >= 100) { sb.Append('C'); n -= 100; }
+            if (n >= 90) { sb.Append("XC"); n -= 90; }
+            if (n >= 50) { sb.Append('L'); n -= 50; }
+            if (n >= 40) { sb.Append("XL"); n -= 40; }
+            while (n >= 10) { sb.Append('X'); n -= 10; }
+            if (n >= 9) { sb.Append("IX"); n -= 9; }
+            if (n >= 5) { sb.Append('V'); n -= 5; }
+            if (n >= 4) { sb.Append("IV"); n -= 4; }
+            while (n >= 1) { sb.Append('I'); n -= 1; }
+        }
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload() { items = null; markersDrawnThisFrame = false; fontProviderRef = null; }
+    private static void OnDomainReload() { items = null; markersDrawnThisFrame = false; fontProviderRef = null; sharedBuilder.Clear(); }
 }

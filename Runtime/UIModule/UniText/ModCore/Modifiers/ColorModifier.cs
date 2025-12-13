@@ -1,38 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
 [Serializable]
-public class ColorModifier : BaseModifier
+public class ColorModifier : GlyphModifier<uint>
 {
-    private ArrayPoolBuffer<uint> instanceBuffer;
     private static ArrayPoolBuffer<uint> buffer;
 
-    protected override void CreateBuffers()
-    {
-        instanceBuffer = new ArrayPoolBuffer<uint>(256);
-        buffer = instanceBuffer;
-    }
-
-    protected override void Subscribe()
-    {
-        cachedUniText.Rebuilding += OnRebuilding;
-        cachedUniText.MeshGenerator.OnGlyph += OnGlyph;
-    }
-
-    protected override void Unsubscribe()
-    {
-        cachedUniText.Rebuilding -= OnRebuilding;
-        cachedUniText.MeshGenerator.OnGlyph -= OnGlyph;
-    }
-
-    protected override void ReleaseBuffers()
-    {
-        instanceBuffer.ReturnToPool();
-        instanceBuffer = null;
-    }
-
-    protected override void ClearBuffers() => instanceBuffer.Clear();
+    protected override Action GetOnGlyphCallback() => OnGlyph;
+    protected override void SetStaticBuffer(ArrayPoolBuffer<uint> buf) => buffer = buf;
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
@@ -48,8 +25,6 @@ public class ColorModifier : BaseModifier
         uint packed = PackColor(color);
         buffer.SetValueRange(start, Math.Min(end, cpCount), packed);
     }
-
-    private void OnRebuilding() => buffer = instanceBuffer;
 
     private static void OnGlyph()
     {
@@ -168,35 +143,31 @@ public class ColorModifier : BaseModifier
 
     private static byte ParseHexByte(char high, char low) => (byte)(ParseHexDigit(high) * 16 + ParseHexDigit(low));
 
-    private static bool TryParseNamedColor(string name, out Color32 color)
+    private static readonly Dictionary<string, Color32> namedColors = new(System.StringComparer.OrdinalIgnoreCase)
     {
-        color = name.ToLowerInvariant() switch
-        {
-            "white" => new Color32(255, 255, 255, 255),
-            "black" => new Color32(0, 0, 0, 255),
-            "red" => new Color32(255, 0, 0, 255),
-            "green" => new Color32(0, 128, 0, 255),
-            "blue" => new Color32(0, 0, 255, 255),
-            "yellow" => new Color32(255, 255, 0, 255),
-            "cyan" => new Color32(0, 255, 255, 255),
-            "magenta" => new Color32(255, 0, 255, 255),
-            "orange" => new Color32(255, 165, 0, 255),
-            "purple" => new Color32(128, 0, 128, 255),
-            "gray" or "grey" => new Color32(128, 128, 128, 255),
-            "lime" => new Color32(0, 255, 0, 255),
-            "brown" => new Color32(165, 42, 42, 255),
-            "pink" => new Color32(255, 192, 203, 255),
-            "navy" => new Color32(0, 0, 128, 255),
-            "teal" => new Color32(0, 128, 128, 255),
-            "olive" => new Color32(128, 128, 0, 255),
-            "maroon" => new Color32(128, 0, 0, 255),
-            "silver" => new Color32(192, 192, 192, 255),
-            "gold" => new Color32(255, 215, 0, 255),
-            _ => new Color32(255, 255, 255, 255)
-        };
-        return name.ToLowerInvariant() is "white" or "black" or "red" or "green" or "blue"
-            or "yellow" or "cyan" or "magenta" or "orange" or "purple"
-            or "gray" or "grey" or "lime" or "brown" or "pink"
-            or "navy" or "teal" or "olive" or "maroon" or "silver" or "gold";
-    }
+        ["white"] = new Color32(255, 255, 255, 255),
+        ["black"] = new Color32(0, 0, 0, 255),
+        ["red"] = new Color32(255, 0, 0, 255),
+        ["green"] = new Color32(0, 128, 0, 255),
+        ["blue"] = new Color32(0, 0, 255, 255),
+        ["yellow"] = new Color32(255, 255, 0, 255),
+        ["cyan"] = new Color32(0, 255, 255, 255),
+        ["magenta"] = new Color32(255, 0, 255, 255),
+        ["orange"] = new Color32(255, 165, 0, 255),
+        ["purple"] = new Color32(128, 0, 128, 255),
+        ["gray"] = new Color32(128, 128, 128, 255),
+        ["grey"] = new Color32(128, 128, 128, 255),
+        ["lime"] = new Color32(0, 255, 0, 255),
+        ["brown"] = new Color32(165, 42, 42, 255),
+        ["pink"] = new Color32(255, 192, 203, 255),
+        ["navy"] = new Color32(0, 0, 128, 255),
+        ["teal"] = new Color32(0, 128, 128, 255),
+        ["olive"] = new Color32(128, 128, 0, 255),
+        ["maroon"] = new Color32(128, 0, 0, 255),
+        ["silver"] = new Color32(192, 192, 192, 255),
+        ["gold"] = new Color32(255, 215, 0, 255)
+    };
+
+    private static bool TryParseNamedColor(string name, out Color32 color)
+        => namedColors.TryGetValue(name, out color);
 }

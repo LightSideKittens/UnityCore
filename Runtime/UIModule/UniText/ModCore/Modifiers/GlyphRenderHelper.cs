@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Text;
 using UnityEngine;
 using UnityEngine.TextCore;
 
@@ -179,6 +180,74 @@ public static class GlyphRenderHelper
             if (char.IsHighSurrogate((char)codepoint) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
             {
                 codepoint = (uint)char.ConvertToUtf32((char)codepoint, text[i + 1]);
+                i++;
+            }
+
+            var glyph = GetGlyph(fontAsset, codepoint);
+            if (glyph != null)
+            {
+                totalWidth += glyph.metrics.horizontalAdvance * scale;
+            }
+        }
+
+        return totalWidth;
+    }
+
+    /// <summary>
+    /// Рендерит StringBuilder в указанной позиции (zero-allocation).
+    /// </summary>
+    public static float DrawString(StringBuilder sb, float x, float baselineY, Color32 color)
+    {
+        if (sb == null || sb.Length == 0)
+            return 0f;
+
+        float totalWidth = 0f;
+        float currentX = x;
+        int len = sb.Length;
+
+        for (int i = 0; i < len; i++)
+        {
+            uint codepoint = sb[i];
+
+            // Handle surrogate pairs
+            if (char.IsHighSurrogate((char)codepoint) && i + 1 < len && char.IsLowSurrogate(sb[i + 1]))
+            {
+                codepoint = (uint)char.ConvertToUtf32((char)codepoint, sb[i + 1]);
+                i++;
+            }
+
+            float advance = DrawGlyph(codepoint, currentX, baselineY, color);
+            currentX += advance;
+            totalWidth += advance;
+        }
+
+        return totalWidth;
+    }
+
+    /// <summary>
+    /// Измеряет ширину StringBuilder без рендеринга (zero-allocation).
+    /// </summary>
+    public static float MeasureString(StringBuilder sb)
+    {
+        if (sb == null || sb.Length == 0)
+            return 0f;
+
+        var fontAsset = UniTextMeshGenerator.currentFontAsset;
+        if (fontAsset == null)
+            return 0f;
+
+        float scale = UniTextMeshGenerator.scale;
+        float totalWidth = 0f;
+        int len = sb.Length;
+
+        for (int i = 0; i < len; i++)
+        {
+            uint codepoint = sb[i];
+
+            // Handle surrogate pairs
+            if (char.IsHighSurrogate((char)codepoint) && i + 1 < len && char.IsLowSurrogate(sb[i + 1]))
+            {
+                codepoint = (uint)char.ConvertToUtf32((char)codepoint, sb[i + 1]);
                 i++;
             }
 

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using LSCore.DataStructs;
 
@@ -166,6 +167,7 @@ namespace LSCore
             return true;
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(in T item)
         {
             if (size == items.Length)
@@ -177,6 +179,7 @@ namespace LSCore
             ++version;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(T item)
         {
             if (size == items.Length)

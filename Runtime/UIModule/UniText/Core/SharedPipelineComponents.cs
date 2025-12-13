@@ -10,7 +10,8 @@ using UnityEngine;
 /// </summary>
 public static class SharedPipelineComponents
 {
-    // Pipeline components (lazy initialized)
+    #region Pipeline Components (lazy initialized)
+
     private static BidiEngine bidiEngine;
     private static ScriptAnalyzer scriptAnalyzer;
     private static LineBreaker lineBreaker;
@@ -38,7 +39,10 @@ public static class SharedPipelineComponents
 
     public static HarfBuzzShapingEngine HarfBuzzEngine => harfBuzzEngine;
 
-    // Shared shaping output buffer (used by UniTextShapingEngine)
+    #endregion
+
+    #region Shaping Output Buffer
+
     private static ShapedGlyph[] shapingOutputBuffer = new ShapedGlyph[256];
 
     public static ShapedGlyph[] ShapingOutputBuffer => shapingOutputBuffer;
@@ -49,8 +53,12 @@ public static class SharedPipelineComponents
             shapingOutputBuffer = new ShapedGlyph[Math.Max(required, shapingOutputBuffer.Length * 2)];
     }
 
-    // Shared mesh generator buffers
-    private const int InitialMeshCapacity = 256;
+    #endregion
+
+    #region Mesh Generator Buffers
+
+    // 4 vertices per glyph, match MinGlyphCapacity (256) from CommonData
+    private const int InitialMeshCapacity = 256 * 4;
 
     private static Vector3[] meshVertices = new Vector3[InitialMeshCapacity];
     private static Vector4[] meshUvs0 = new Vector4[InitialMeshCapacity];
@@ -98,9 +106,10 @@ public static class SharedPipelineComponents
         }
     }
 
-    // Shared glyph grouping for mesh generator
-    // Using LSList<PositionedGlyph> for ref access and FakeClear optimization
-    // PositionedGlyph is a pure value type (int, float, int) - FakeClear is safe
+    #endregion
+
+    #region Glyph Grouping (for mesh generator)
+
     private static Dictionary<int, LSList<PositionedGlyph>> glyphsByFont;
     private static Stack<LSList<PositionedGlyph>> glyphListPool;
     private static LSList<UniTextMeshPair> meshResultBuffer;
@@ -140,6 +149,10 @@ public static class SharedPipelineComponents
         dict.Clear();
     }
 
+    #endregion
+
+    #region Domain Reload
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
@@ -168,4 +181,6 @@ public static class SharedPipelineComponents
         glyphListPool = null;
         meshResultBuffer = null;
     }
+
+    #endregion
 }

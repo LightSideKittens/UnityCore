@@ -24,6 +24,7 @@ public sealed class ArrayPoolBuffer<T> where T : struct
 {
     private T[] data;
     private int capacity;
+    private int usedCount;  // отслеживаем максимальный использованный индекс
     private readonly int initialCapacity;
 
     /// <summary>Текущий массив данных.</summary>
@@ -38,6 +39,13 @@ public sealed class ArrayPoolBuffer<T> where T : struct
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => capacity;
+    }
+
+    /// <summary>Максимальный использованный индекс с последнего Clear.</summary>
+    public int UsedCount
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => usedCount;
     }
 
     /// <summary>
@@ -75,12 +83,16 @@ public sealed class ArrayPoolBuffer<T> where T : struct
     }
 
     /// <summary>
-    /// Очищает буфер (заполняет нулями).
+    /// Очищает только использованную часть буфера.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()
     {
-        data.AsSpan(0, capacity).Clear();
+        if (usedCount > 0)
+        {
+            data.AsSpan(0, usedCount).Clear();
+            usedCount = 0;
+        }
     }
 
     /// <summary>
@@ -148,6 +160,18 @@ public sealed class ArrayPoolBuffer<T> where T : struct
         if (end > capacity) end = capacity;
         for (int i = start; i < end; i++)
             data[i] = value;
+        if (end > usedCount) usedCount = end;
+    }
+
+    /// <summary>
+    /// Обновляет usedCount если index >= usedCount.
+    /// Вызывается при записи отдельного элемента.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void MarkUsed(int index)
+    {
+        int next = index + 1;
+        if (next > usedCount) usedCount = next;
     }
 }
 
@@ -193,6 +217,7 @@ public static class ArrayPoolBufferByteExtensions
         if (end > cap) end = cap;
         for (int i = start; i < end; i++)
             data[i] = 1;
+        if (end > 0) buffer.MarkUsed(end - 1);
     }
 }
 
@@ -217,6 +242,7 @@ public static class ArrayPoolBufferFloatExtensions
         if (end > cap) end = cap;
         for (int i = start; i < end; i++)
             data[i] = value;
+        if (end > 0) buffer.MarkUsed(end - 1);
     }
 }
 
@@ -241,5 +267,6 @@ public static class ArrayPoolBufferUintExtensions
         if (end > cap) end = cap;
         for (int i = start; i < end; i++)
             data[i] = value;
+        if (end > 0) buffer.MarkUsed(end - 1);
     }
 }
