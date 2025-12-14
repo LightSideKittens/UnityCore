@@ -119,12 +119,11 @@ public sealed class TextLayout
             ref readonly var line = ref lines[i];
             int runStart = line.runStart;
             int runCount = line.runCount;
-
-            // Вычисляем реальную ширину строки (масштабируем если fontSize изменился)
-            float lineWidth = 0;
             int runEnd = runStart + runCount;
-            for (int r = runStart; r < runEnd; r++)
-                lineWidth += runs[r].width * glyphScale;
+
+            // Используем ширину строки из LineBreaker (уже корректно посчитана)
+            // Масштабируем если fontSize изменился
+            float lineWidth = line.width * glyphScale;
 
             // Начальная X позиция
             float x;

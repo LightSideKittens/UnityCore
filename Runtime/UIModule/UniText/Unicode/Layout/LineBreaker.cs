@@ -163,7 +163,7 @@ public sealed class LineBreaker
             // Now iterate in logical order
             int lineStartCp = 0;
             float lineWidth = 0;
-            int lastBreakCp = -1;
+            int lastBreakCp = -1;      // последняя break opportunity которая помещается
             float widthAtLastBreak = 0;
 
             // Get margin for first line
@@ -181,38 +181,73 @@ public sealed class LineBreaker
                     lineStartCp = cpIdx + 1;
                     lineWidth = 0;
                     lastBreakCp = -1;
+                    widthAtLastBreak = 0;
                     // Update margin for next line
                     currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
                     effectiveMaxWidth = maxWidth - currentLineMargin;
                     continue;
                 }
 
+                // Сначала проверяем — если можно сделать break ДО добавления текущего символа, запоминаем
+                // (т.е. break ПОСЛЕ предыдущего символа, если он был canBreak)
+                // Это уже сделано на предыдущей итерации
+
                 lineWidth += cpWidths[cpIdx];
 
+                if (DebugLogging)
+                {
+                    UnityEngine.Debug.Log($"[LineBreaker] cpIdx={cpIdx} cp=U+{cp:X4} width={cpWidths[cpIdx]:F1} canBreak={CanBreakAfter(cpIdx)} lineWidth={lineWidth:F1} lastBreakCp={lastBreakCp} margin={currentLineMargin:F1}");
+                }
+
+                // Проверяем переполнение ПЕРЕД обновлением lastBreakCp
+                while (lineWidth > effectiveMaxWidth)
+                {
+                    if (lastBreakCp >= 0 && lastBreakCp >= lineStartCp)
+                    {
+                        // Normal break: есть break opportunity — используем её
+                        if (DebugLogging)
+                        {
+                            UnityEngine.Debug.Log($"[LineBreaker] BREAK at cpIdx={lastBreakCp}, lineWidth={lineWidth:F1} > effectiveMaxWidth={effectiveMaxWidth:F1}");
+                        }
+                        CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, lastBreakCp, widthAtLastBreak, currentLineMargin);
+                        lineStartCp = lastBreakCp + 1;
+                        lineWidth -= widthAtLastBreak;
+                        lastBreakCp = -1;
+                        widthAtLastBreak = 0;
+                        // Update margin for next line
+                        currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
+                        effectiveMaxWidth = maxWidth - currentLineMargin;
+                    }
+                    else if (cpIdx > lineStartCp)
+                    {
+                        // Emergency break: слово слишком длинное, нет break opportunity
+                        float widthBeforeCurrent = lineWidth - cpWidths[cpIdx];
+                        if (DebugLogging)
+                        {
+                            UnityEngine.Debug.Log($"[LineBreaker] EMERGENCY BREAK before cpIdx={cpIdx}, width={widthBeforeCurrent:F1}");
+                        }
+                        CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx - 1, widthBeforeCurrent, currentLineMargin);
+                        lineStartCp = cpIdx;
+                        lineWidth = cpWidths[cpIdx];
+                        lastBreakCp = -1;
+                        widthAtLastBreak = 0;
+                        // Update margin for next line
+                        currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
+                        effectiveMaxWidth = maxWidth - currentLineMargin;
+                    }
+                    else
+                    {
+                        // Первый символ в строке уже не влезает — оставляем его
+                        break;
+                    }
+                }
+
+                // Обновляем lastBreakCp ПОСЛЕ проверки переполнения
+                // Так lastBreakCp всегда указывает на символ который помещается
                 if (CanBreakAfter(cpIdx))
                 {
                     lastBreakCp = cpIdx;
                     widthAtLastBreak = lineWidth;
-                }
-
-                if (DebugLogging)
-                {
-                    UnityEngine.Debug.Log($"[LineBreaker] cpIdx={cpIdx} cp=U+{cp:X4} width={cpWidths[cpIdx]:F1} canBreak={CanBreakAfter(cpIdx)} lineWidth={lineWidth:F1} margin={currentLineMargin:F1}");
-                }
-
-                if (lineWidth > effectiveMaxWidth && lastBreakCp >= 0)
-                {
-                    if (DebugLogging)
-                    {
-                        UnityEngine.Debug.Log($"[LineBreaker] BREAK at cpIdx={lastBreakCp}, lineWidth={lineWidth:F1} > effectiveMaxWidth={effectiveMaxWidth:F1}");
-                    }
-                    CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, lastBreakCp, widthAtLastBreak, currentLineMargin);
-                    lineStartCp = lastBreakCp + 1;
-                    lineWidth -= widthAtLastBreak;
-                    lastBreakCp = -1;
-                    // Update margin for next line
-                    currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
-                    effectiveMaxWidth = maxWidth - currentLineMargin;
                 }
             }
 
@@ -272,7 +307,6 @@ public sealed class LineBreaker
 
             // Find glyph range for this run that falls within [startCp, endCp]
             int glyphFirst = -1, glyphLast = -1;
-            float partialWidth = 0;
 
             for (int g = 0; g < run.glyphCount; g++)
             {
@@ -289,13 +323,20 @@ public sealed class LineBreaker
                 {
                     if (glyphFirst < 0) glyphFirst = g;
                     glyphLast = g;
-                    partialWidth += glyph.advanceX;
                 }
             }
 
             if (glyphFirst < 0) continue;
 
             int glyphCount = glyphLast - glyphFirst + 1;
+
+            // Считаем реальную ширину ВСЕХ глифов в диапазоне [glyphFirst, glyphLast]
+            // потому что именно они будут отрисованы в Layout
+            float partialWidth = 0;
+            for (int g = glyphFirst; g <= glyphLast; g++)
+            {
+                partialWidth += glyphs[run.glyphStart + g].advanceX;
+            }
 
             if (DebugLogging)
             {
@@ -316,13 +357,27 @@ public sealed class LineBreaker
             lineRunCount++;
         }
 
+        // Вычисляем реальную ширину строки как сумму partialWidth всех runs
+        // Это точнее чем cpWidths, т.к. учитывает все глифы которые будут отрисованы
+        float actualLineWidth = 0;
+        for (int i = lineRunStart; i < tempOrderedRunCount; i++)
+        {
+            actualLineWidth += tempOrderedRuns[i].width;
+        }
+
+        // DEBUG: проверяем что ширина не превышает ожидаемую
+        if (DebugLogging)
+        {
+            UnityEngine.Debug.Log($"[LineBreaker] Created line [{startCp}, {endCp}]: width={width:F2}, actualWidth={actualLineWidth:F2}, margin={startMargin:F2}");
+        }
+
         EnsureLineCapacity(tempLineCount + 1);
         tempLines[tempLineCount++] = new TextLine
         {
             range = new TextRange(startCp, endCp - startCp + 1),
             runStart = lineRunStart,
             runCount = lineRunCount,
-            width = width,
+            width = actualLineWidth,  // используем реальную ширину
             height = 0,
             baseline = 0,
             startMargin = startMargin
