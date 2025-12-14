@@ -6,10 +6,10 @@ public class UniTextInteractiveTest : MonoBehaviour
     [SerializeField] private UniText target;
 
     [Header("Text Tests")]
-    [SerializeField] private string testText = "Hello World!";
-    [SerializeField] private string rtlText = "مرحبا بالعالم";
-    [SerializeField] private string mixedText = "Hello مرحبا World عالم";
-    [SerializeField] private string longText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+    [SerializeField] [TextArea(5, 10)] private string testText = "Hello World!";
+    [SerializeField] [TextArea(5, 10)] private string rtlText = "مرحبا بالعالم";
+    [SerializeField] [TextArea(5, 10)] private string mixedText = "Hello مرحبا World عالم";
+    [SerializeField] [TextArea(5, 10)] private string longText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 
     [Header("Font Tests")]
     [SerializeField] private UniTextFontAsset alternateFont;

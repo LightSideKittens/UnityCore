@@ -182,6 +182,9 @@ public class UniTextFontAsset : ScriptableObject
     // Static tracking of currently loaded font in FontEngine (FontEngine is global!)
     private static int currentlyLoadedFontInstanceId = 0;
 
+    // Cached materials for multi-atlas support (atlas index -> material)
+    private Material[] atlasMaterials;
+
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
@@ -361,6 +364,60 @@ public class UniTextFontAsset : ScriptableObject
 
         material.SetFloat(s_WeightNormal, normalStyle);
         material.SetFloat(s_WeightBold, boldStyle);
+    }
+
+    private static readonly int s_MainTex = Shader.PropertyToID("_MainTex");
+
+    /// <summary>
+    /// Gets material for specific atlas index. Creates and caches runtime materials for additional atlases.
+    /// </summary>
+    public Material GetMaterialForAtlas(int atlasIndex)
+    {
+        if (material == null || atlasTextures == null || atlasTextures.Length == 0)
+            return material;
+
+        if (atlasIndex < 0 || atlasIndex >= atlasTextures.Length)
+            return material;
+
+        // Atlas 0 uses main material
+        if (atlasIndex == 0)
+            return material;
+
+        // Ensure cache array is sized correctly
+        if (atlasMaterials == null || atlasMaterials.Length < atlasTextures.Length)
+        {
+            var newMaterials = new Material[atlasTextures.Length];
+            if (atlasMaterials != null)
+                Array.Copy(atlasMaterials, newMaterials, atlasMaterials.Length);
+            atlasMaterials = newMaterials;
+        }
+
+        var tex = atlasTextures[atlasIndex];
+
+        // Check if texture exists
+        if (tex == null)
+        {
+            Debug.LogWarning($"[UniTextFontAsset.GetMaterialForAtlas] Atlas texture {atlasIndex} is null! atlasTextures.Length={atlasTextures.Length}");
+            return material;
+        }
+
+        // Create material for this atlas if not cached OR if texture changed
+        var cachedMat = atlasMaterials[atlasIndex];
+        if (cachedMat == null || cachedMat.mainTexture != tex)
+        {
+            var mat = new Material(material);
+            mat.mainTexture = tex;
+            mat.SetTexture(s_MainTex, tex);
+            mat.hideFlags = HideFlags.HideAndDontSave;
+            #if UNITY_EDITOR
+            mat.name = material.name + " [Atlas " + atlasIndex + "]";
+            #endif
+            atlasMaterials[atlasIndex] = mat;
+
+            Debug.Log($"[UniTextFontAsset.GetMaterialForAtlas] Created/updated material for atlas {atlasIndex}: tex={tex?.name} ({tex?.width}x{tex?.height}), mat.mainTex={mat.mainTexture?.name}");
+        }
+
+        return atlasMaterials[atlasIndex];
     }
 
     #endregion
@@ -879,12 +936,13 @@ public class UniTextFontAsset : ScriptableObject
         var texFormat = atlasRenderMode == GlyphRenderMode.COLOR || atlasRenderMode == GlyphRenderMode.COLOR_HINTED
             ? TextureFormat.RGBA32
             : TextureFormat.Alpha8;
-        atlasTextures[atlasTextureIndex] = new Texture2D(atlasWidth, atlasHeight, texFormat, false);
+        atlasTextures[atlasTextureIndex] 
+            = new Texture2D(atlasWidth, atlasHeight, texFormat, false);
         UniTextFontEngine.ResetAtlasTexture(atlasTextures[atlasTextureIndex]);
-
-        // Reset free rects for new atlas
+        // CRITICAL: Clear BOTH rect lists for new atlas!
         freeGlyphRects.Clear();
         freeGlyphRects.Add(new GlyphRect(0, 0, atlasWidth - 1, atlasHeight - 1));
+        usedGlyphRects.Clear();
 
         // Try again with new atlas
         bool success = UniTextFontEngine.TryAddGlyphToTexture(
@@ -928,8 +986,12 @@ public class UniTextFontAsset : ScriptableObject
         if (atlasPopulationMode != UniTextAtlasPopulationMode.Dynamic)
             return false;
 
+        // Ensure lookup dictionary is initialized from serialized data (critical after domain reload!)
+        if (glyphLookupDictionary == null)
+            ReadFontAssetDefinition();
+
         // Already in atlas?
-        if (glyphLookupDictionary != null && glyphLookupDictionary.ContainsKey(glyphIndex))
+        if (glyphLookupDictionary.ContainsKey(glyphIndex))
             return true;
 
         // Need to load font for atlas operations
@@ -947,6 +1009,10 @@ public class UniTextFontAsset : ScriptableObject
         if (atlasPopulationMode != UniTextAtlasPopulationMode.Dynamic)
             return 0;
 
+        // Ensure lookup dictionary is initialized from serialized data (critical after domain reload!)
+        if (glyphLookupDictionary == null)
+            ReadFontAssetDefinition();
+
         if (LoadFontFace() != FontEngineError.Success)
             return 0;
 
@@ -959,7 +1025,7 @@ public class UniTextFontAsset : ScriptableObject
             if (glyphIndex == 0)
                 continue;
 
-            if (glyphLookupDictionary != null && glyphLookupDictionary.ContainsKey(glyphIndex))
+            if (glyphLookupDictionary.ContainsKey(glyphIndex))
                 continue;
 
             if (TryAddGlyphToAtlasByIndex(glyphIndex))
@@ -980,6 +1046,10 @@ public class UniTextFontAsset : ScriptableObject
         if (atlasPopulationMode != UniTextAtlasPopulationMode.Dynamic)
             return 0;
 
+        // Ensure lookup dictionary is initialized from serialized data (critical after domain reload!)
+        if (glyphLookupDictionary == null)
+            ReadFontAssetDefinition();
+
         if (LoadFontFace() != FontEngineError.Success)
             return 0;
 
@@ -992,7 +1062,7 @@ public class UniTextFontAsset : ScriptableObject
             if (glyphIndex == 0)
                 continue;
 
-            if (glyphLookupDictionary != null && glyphLookupDictionary.ContainsKey(glyphIndex))
+            if (glyphLookupDictionary.ContainsKey(glyphIndex))
                 continue;
 
             if (TryAddGlyphToAtlasByIndex(glyphIndex))
@@ -1059,7 +1129,11 @@ public class UniTextFontAsset : ScriptableObject
         {
             // Try multi-atlas if enabled
             if (isMultiAtlasTexturesEnabled)
+            {
+                Debug.Log($"[UniTextFontAsset] Atlas {atlasTextureIndex} full, creating new atlas for glyph {glyphIndex}. freeRects={freeGlyphRects.Count}, usedRects={usedGlyphRects.Count}");
                 return TryAddGlyphToNewAtlasByIndex(glyphIndex);
+            }
+            Debug.LogWarning($"[UniTextFontAsset] Failed to add glyph {glyphIndex} - atlas full and multi-atlas disabled!");
             return false;
         }
 
@@ -1084,19 +1158,39 @@ public class UniTextFontAsset : ScriptableObject
     {
         // CRITICAL: Ensure correct font is loaded before rendering
         if (LoadFontFace() != FontEngineError.Success)
+        {
+            Debug.LogError($"[UniTextFontAsset] TryAddGlyphToNewAtlasByIndex: LoadFontFace failed!");
             return false;
+        }
 
-        atlasTextureIndex++;
+        int newAtlasIndex = atlasTextureIndex + 1;
+        Debug.Log($"[UniTextFontAsset] Creating new atlas #{newAtlasIndex} ({atlasWidth}x{atlasHeight}) for glyph {glyphIndex}");
+
+        atlasTextureIndex = newAtlasIndex;
         Array.Resize(ref atlasTextures, atlasTextureIndex + 1);
 
         var texFormat = atlasRenderMode == GlyphRenderMode.COLOR || atlasRenderMode == GlyphRenderMode.COLOR_HINTED
             ? TextureFormat.RGBA32
             : TextureFormat.Alpha8;
-        atlasTextures[atlasTextureIndex] = new Texture2D(atlasWidth, atlasHeight, texFormat, false);
-        UniTextFontEngine.ResetAtlasTexture(atlasTextures[atlasTextureIndex]);
+        var newAtlasTexture = new Texture2D(atlasWidth, atlasHeight, texFormat, false);
+        newAtlasTexture.name = name + " Atlas " + atlasTextureIndex;
+        atlasTextures[atlasTextureIndex] = newAtlasTexture;
+        UniTextFontEngine.ResetAtlasTexture(newAtlasTexture);
 
+#if UNITY_EDITOR
+        // Add as sub asset so it's saved with the font asset
+        if (!Application.isPlaying)
+        {
+            UnityEditor.AssetDatabase.AddObjectToAsset(newAtlasTexture, this);
+            UnityEditor.EditorUtility.SetDirty(this);
+        }
+#endif
+
+        // CRITICAL: Clear BOTH rect lists for new atlas!
+        // usedGlyphRects from previous atlas would make FontEngine think space is occupied
         freeGlyphRects.Clear();
         freeGlyphRects.Add(new GlyphRect(0, 0, atlasWidth - 1, atlasHeight - 1));
+        usedGlyphRects.Clear();
 
         bool success = UniTextFontEngine.TryAddGlyphToTexture(
             glyphIndex,
@@ -1109,9 +1203,13 @@ public class UniTextFontAsset : ScriptableObject
             out var glyph);
 
         if (!success || glyph == null)
+        {
+            Debug.LogError($"[UniTextFontAsset] Failed to add glyph {glyphIndex} even to new atlas #{atlasTextureIndex}!");
             return false;
+        }
 
         glyph.atlasIndex = atlasTextureIndex;
+        Debug.Log($"[UniTextFontAsset] Successfully added glyph {glyphIndex} to new atlas #{atlasTextureIndex}");
 
         glyphTable.Add(glyph);
         glyphLookupDictionary ??= new Dictionary<uint, Glyph>();

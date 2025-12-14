@@ -108,10 +108,6 @@ public partial class UniText : MaskableGraphic
 
     private DirtyFlags dirtyFlags = DirtyFlags.All;
 
-    // Cached rect size for change detection
-    private float cachedRectWidth;
-    private float cachedRectHeight;
-
     // Cached results
     private float lastResultWidth;
     private float lastResultHeight;
@@ -456,8 +452,6 @@ public partial class UniText : MaskableGraphic
         cachedMeshProvider = null;
         cachedCleanText = null;
         shaderChannelsConfigured = false;
-        cachedRectWidth = 0;
-        cachedRectHeight = 0;
         dirtyFlags = DirtyFlags.All;
     }
 
@@ -584,8 +578,6 @@ public partial class UniText : MaskableGraphic
         try
         {
             var rect = rt.rect;
-            cachedRectWidth = rect.width;
-            cachedRectHeight = rect.height;
 
             // Parse attributes only if not already cached (EnsureShapingForLayout may have done it)
             string textToProcess;
@@ -614,7 +606,7 @@ public partial class UniText : MaskableGraphic
             lastMeshPairs = null;
         }
     }
-
+    
     
     /// <summary>
     /// Перестройка layout (rect size, fontSize или layout settings изменились).
@@ -625,8 +617,6 @@ public partial class UniText : MaskableGraphic
         if (rt == null) return;
 
         var rect = rt.rect;
-        cachedRectWidth = rect.width;
-        cachedRectHeight = rect.height;
 
         ReleaseMeshes();
 
@@ -893,8 +883,14 @@ public partial class UniText : MaskableGraphic
 
         renderer.SetMesh(mesh);
         renderer.materialCount = 1;
-        renderer.SetMaterial(GetModifiedMaterial(material), 0);
-        renderer.SetTexture(material.mainTexture);
+        var modMat = GetModifiedMaterial(material);
+        renderer.SetMaterial(modMat, 0);
+        // Use texture from material (important for multi-atlas)
+        var tex = material != null ? material.mainTexture : null;
+        renderer.SetTexture(tex);
+
+        if (UniTextMeshGenerator.DebugLogging)
+            Debug.Log($"[UniText.SetSubMeshRendererData] mesh={mesh.name}, verts={mesh.vertexCount}, mat={material?.name}, tex={tex?.name}");
     }
 
     private CanvasRenderer CreateSubMeshRenderer(int index, Mesh mesh, Material material)

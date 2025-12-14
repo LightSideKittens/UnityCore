@@ -143,9 +143,13 @@ public class UniTextMeshGenerator
         horizontalAlignment = alignment;
     }
 
+    // Temp dictionary for grouping by atlas (reused to avoid allocation)
+    private static Dictionary<int, LSList<PositionedGlyph>> glyphsByAtlas;
+
     /// <summary>
     /// Generates meshes from positioned glyphs.
     /// Zero-allocation using shared static buffers.
+    /// Supports multi-atlas fonts - creates separate mesh for each atlas.
     /// </summary>
     public LSList<UniTextMeshPair> GenerateMeshes(ReadOnlySpan<PositionedGlyph> glyphs, Func<Mesh> meshProvider)
     {
@@ -191,7 +195,7 @@ public class UniTextMeshGenerator
             Debug.Log(sb.ToString());
         }
 
-        // Generate mesh for each font
+        // Generate mesh for each font (with multi-atlas support)
         foreach (var kvp in glyphsByFont)
         {
             int fontId = kvp.Key;
@@ -205,11 +209,61 @@ public class UniTextMeshGenerator
                 continue;
             }
 
-            var mesh = meshProvider?.Invoke() ?? new Mesh();
+            // Check if multi-atlas - group by atlasIndex
+            var glyphLookup = fontAsset.GlyphLookupTable;
+            bool hasMultipleAtlases = fontAsset.AtlasTextures != null && fontAsset.AtlasTextures.Length > 1;
 
-            GenerateMeshForFont(mesh, fontGlyphs, fontAsset);
+            if (!hasMultipleAtlases)
+            {
+                // Single atlas - simple path
+                var mesh = meshProvider?.Invoke() ?? new Mesh();
+                GenerateMeshForFont(mesh, fontGlyphs, fontAsset, 0);
+                resultBuffer.Add(new UniTextMeshPair(mesh, fontAsset.Material));
+            }
+            else
+            {
+                // Multi-atlas - group by atlasIndex
+                glyphsByAtlas ??= new Dictionary<int, LSList<PositionedGlyph>>();
+                glyphsByAtlas.Clear();
 
-            resultBuffer.Add(new UniTextMeshPair(mesh, fontAsset.Material));
+                int count = fontGlyphs.Count;
+                for (int i = 0; i < count; i++)
+                {
+                    var glyph = fontGlyphs[i];
+                    int atlasIndex = 0;
+                    if (glyphLookup.TryGetValue((uint)glyph.glyphId, out var glyphData) && glyphData != null)
+                        atlasIndex = glyphData.atlasIndex;
+
+                    if (!glyphsByAtlas.TryGetValue(atlasIndex, out var atlasList))
+                    {
+                        atlasList = SharedPipelineComponents.AcquireGlyphList();
+                        glyphsByAtlas[atlasIndex] = atlasList;
+                    }
+                    atlasList.Add(glyph);
+                }
+
+                if (DebugLogging)
+                    Debug.Log($"[UniTextMeshGenerator] Font {fontId} has {glyphsByAtlas.Count} atlases");
+
+                // Create mesh for each atlas
+                foreach (var atlasKvp in glyphsByAtlas)
+                {
+                    int atlasIndex = atlasKvp.Key;
+                    var atlasGlyphs = atlasKvp.Value;
+
+                    var mesh = meshProvider?.Invoke() ?? new Mesh();
+                    GenerateMeshForFont(mesh, atlasGlyphs, fontAsset, atlasIndex);
+                    var atlasMat = fontAsset.GetMaterialForAtlas(atlasIndex);
+                    resultBuffer.Add(new UniTextMeshPair(mesh, atlasMat));
+
+                    if (DebugLogging)
+                        Debug.Log($"[UniTextMeshGenerator] Atlas {atlasIndex}: {atlasGlyphs.Count} glyphs, mat={atlasMat?.name}, tex={atlasMat?.mainTexture?.name}");
+
+                    // Return to pool
+                    SharedPipelineComponents.ReleaseGlyphList(atlasGlyphs);
+                }
+                glyphsByAtlas.Clear();
+            }
         }
 
         if (DebugLogging)
@@ -218,7 +272,7 @@ public class UniTextMeshGenerator
         return resultBuffer;
     }
 
-    private void GenerateMeshForFont(Mesh mesh, LSList<PositionedGlyph> glyphs, UniTextFontAsset fontAsset)
+    private void GenerateMeshForFont(Mesh mesh, LSList<PositionedGlyph> glyphs, UniTextFontAsset fontAsset, int atlasIndex)
     {
         int glyphCount = glyphs.Count;
         // Base: 4 vertices per glyph + extra for modifiers (underline, strikethrough, etc.)
@@ -448,5 +502,11 @@ public class UniTextMeshGenerator
 
         float absLossyScale = Mathf.Abs(lossyScale);
         return scale * (canvas.worldCamera != null ? absLossyScale : 1f);
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void OnDomainReload()
+    {
+        glyphsByAtlas = null;
     }
 }
