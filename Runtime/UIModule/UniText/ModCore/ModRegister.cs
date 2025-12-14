@@ -4,7 +4,7 @@ using UnityEngine;
 [Serializable]
 public class ModRegister
 {
-    [SerializeReference] public IModifier modifier;
+    [SerializeReference] public BaseModifier modifier;
     [SerializeReference] public IParseRule rule;
     public bool IsValid => modifier != null && rule != null;
 

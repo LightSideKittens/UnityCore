@@ -10,7 +10,7 @@ using LSCore;
 public sealed class AttributeParser
 {
     // Уровни модификаторов
-    public readonly List<(IParseRule rule, IModifier modifier)> ruleModPairs = new();
+    public readonly List<(IParseRule rule, BaseModifier modifier)> ruleModPairs = new();
     // Using LSList for ref access to AttributeSpan (avoids struct copying in RemapSpanIndices)
     internal readonly LSList<AttributeSpan> spans = new();
 
@@ -21,8 +21,9 @@ public sealed class AttributeParser
     private readonly List<ParsedRange> tempRanges = new();
 
     // Reusable buffer for tag removals (avoids allocation per Parse call)
-    // Using LSList for FakeClear optimization - (int, int) is pure value type
     private readonly LSList<(int start, int end)> tagRemovals = new();
+    // Buffer for self-closing tag insertions: (tagStart, tagEnd, insertString)
+    private readonly LSList<(int start, int end, string insert)> tagInsertions = new();
 
     // Clean text после удаления тегов
     private readonly StringBuilder cleanTextBuilder = new();
@@ -35,7 +36,7 @@ public sealed class AttributeParser
     /// <summary>
     /// Зарегистрировать правило с модификатором уровня Itemization
     /// </summary>
-    public void Register(IParseRule rule, IModifier modifier)
+    public void Register(IParseRule rule, BaseModifier modifier)
     {
         ruleModPairs.Add((rule, modifier));
         allRules.Add(rule);
@@ -57,11 +58,19 @@ public sealed class AttributeParser
     /// Деинициализировать все модификаторы. Вызывается при удалении или в OnValidate.
     /// Модификаторы отписываются от событий MeshGenerator.
     /// </summary>
-    public void DeinitializeModifiers(UniText uniText)
+    public void DeinitializeModifiers()
     {
         for (int i = 0; i < ruleModPairs.Count; i++)
         {
-            ruleModPairs[i].modifier.Deinitialize(uniText);
+            ruleModPairs[i].modifier.Deinitialize();
+        }
+    }
+    
+    public void DestroyModifiers()
+    {
+        for (int i = 0; i < ruleModPairs.Count; i++)
+        {
+            ruleModPairs[i].modifier.Destroy();
         }
     }
 
@@ -94,16 +103,13 @@ public sealed class AttributeParser
     /// <returns>Clean text без тегов</returns>
     public string Parse(string text)
     {
-        // Сброс состояния
-        // FakeClear is safe for (int, int) tuple - pure value type
         spans.Clear();
         tagRemovals.FakeClear();
+        tagInsertions.FakeClear();
         cleanTextBuilder.Clear();
 
         foreach (var rule in allRules)
-        {
             rule.Reset();
-        }
 
         if (string.IsNullOrEmpty(text))
         {
@@ -111,13 +117,11 @@ public sealed class AttributeParser
             return CleanText;
         }
 
-        // Single-pass парсинг
         int index = 0;
         while (index < text.Length)
         {
             int newIndex = index;
 
-            // Пробуем каждое правило
             foreach (var rule in allRules)
             {
                 tempRanges.Clear();
@@ -125,38 +129,22 @@ public sealed class AttributeParser
 
                 if (result > index)
                 {
-                    // Правило нашло что-то
                     newIndex = result;
-
-                    // Обрабатываем найденные диапазоны
                     foreach (var range in tempRanges)
                     {
-                        // Запоминаем теги для удаления
-                        if (range.HasTags)
-                        {
-                            tagRemovals.Add((range.tagStart, range.tagEnd));
-                            tagRemovals.Add((range.closeTagStart, range.closeTagEnd));
-                        }
-
-                        // Находим модификатор для этого правила и создаём span
+                        ProcessRange(range);
                         CreateSpanForRule(rule, range);
                     }
-
-                    break; // Правило сматчило — переходим к новой позиции
+                    break;
                 }
             }
 
             if (newIndex > index)
-            {
                 index = newIndex;
-            }
             else
-            {
                 index++;
-            }
         }
 
-        // Финализируем все правила — закрываем незакрытые теги
         foreach (var rule in allRules)
         {
             tempRanges.Clear();
@@ -164,22 +152,29 @@ public sealed class AttributeParser
 
             foreach (var range in tempRanges)
             {
-                if (range.HasTags)
-                {
-                    tagRemovals.Add((range.tagStart, range.tagEnd));
-                    // closeTagStart == closeTagEnd для незакрытых тегов — пустой диапазон
-                    if (range.closeTagStart != range.closeTagEnd)
-                        tagRemovals.Add((range.closeTagStart, range.closeTagEnd));
-                }
-
+                ProcessRange(range);
                 CreateSpanForRule(rule, range);
             }
         }
 
-        // Строим clean text и пересчитываем индексы
-        BuildCleanTextAndRemapIndices(text, tagRemovals);
-        
+        BuildCleanTextAndRemapIndices(text);
         return CleanText;
+    }
+
+    private void ProcessRange(ParsedRange range)
+    {
+        if (!range.HasTags) return;
+
+        if (range.IsSelfClosing)
+        {
+            tagInsertions.Add((range.tagStart, range.tagEnd, range.insertString));
+        }
+        else
+        {
+            tagRemovals.Add((range.tagStart, range.tagEnd));
+            if (range.closeTagStart != range.closeTagEnd)
+                tagRemovals.Add((range.closeTagStart, range.closeTagEnd));
+        }
     }
 
     private void CreateSpanForRule(IParseRule rule, ParsedRange range)
@@ -194,33 +189,42 @@ public sealed class AttributeParser
         }
     }
 
-    private void BuildCleanTextAndRemapIndices(string text, LSList<(int start, int end)> tagRemovals)
+    private void BuildCleanTextAndRemapIndices(string text)
     {
-        // Сортируем удаления по позиции
         tagRemovals.Sort((a, b) => a.start.CompareTo(b.start));
+        tagInsertions.Sort((a, b) => a.start.CompareTo(b.start));
 
-        // Строим clean text и карту индексов (используем ArrayPool)
         int mapSize = text.Length + 1;
         var indexMap = ArrayPool<int>.Shared.Rent(mapSize);
 
         try
         {
             int offset = 0;
-            int removalIndex = 0;
+            int removalIdx = 0;
+            int insertionIdx = 0;
 
             for (int i = 0; i <= text.Length; i++)
             {
-                // Проверяем, попадаем ли в удаляемый диапазон
-                while (removalIndex < tagRemovals.Count && i >= tagRemovals[removalIndex].end)
+                while (removalIdx < tagRemovals.Count && i >= tagRemovals[removalIdx].end)
+                    removalIdx++;
+
+                // Check insertion at this position (self-closing tag replaces tag with insertString)
+                if (insertionIdx < tagInsertions.Count && i == tagInsertions[insertionIdx].start)
                 {
-                    removalIndex++;
+                    var ins = tagInsertions[insertionIdx];
+                    indexMap[i] = cleanTextBuilder.Length;
+                    cleanTextBuilder.Append(ins.insert);
+                    offset += ins.end - ins.start - ins.insert.Length;
+                    i = ins.end - 1; // loop will increment
+                    insertionIdx++;
+                    continue;
                 }
 
-                if (removalIndex < tagRemovals.Count && i >= tagRemovals[removalIndex].start && i < tagRemovals[removalIndex].end)
+                // Check removal
+                if (removalIdx < tagRemovals.Count && i >= tagRemovals[removalIdx].start && i < tagRemovals[removalIdx].end)
                 {
-                    // Внутри тега — увеличиваем offset
                     offset++;
-                    indexMap[i] = -1; // Помечаем как удалённый
+                    indexMap[i] = -1;
                 }
                 else
                 {
@@ -231,10 +235,7 @@ public sealed class AttributeParser
             }
 
             CleanText = cleanTextBuilder.ToString();
-
-            // Пересчитываем индексы во всех spans
-            int cleanLen = CleanText.Length;
-            RemapSpanIndices(spans, indexMap, mapSize, cleanLen);
+            RemapSpanIndices(spans, indexMap, mapSize, CleanText.Length);
         }
         finally
         {

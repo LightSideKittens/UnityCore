@@ -5,12 +5,12 @@ using System;
 /// Буферы и подписки создаются только при первом Apply.
 /// </summary>
 [Serializable]
-public abstract class BaseModifier : IModifier
+public abstract class BaseModifier
 {
     protected UniText cachedUniText;
     protected bool isInitialized;
 
-    void IModifier.Apply(int start, int end, string parameter)
+    public void Apply(int start, int end, string parameter)
     {
         if (!isInitialized)
         {
@@ -21,12 +21,12 @@ public abstract class BaseModifier : IModifier
         ApplyModifier(start, end, parameter);
     }
 
-    void IModifier.Initialize(UniText uniText)
+    public void Initialize(UniText uniText)
     {
         cachedUniText = uniText;
     }
 
-    void IModifier.Deinitialize(UniText uniText)
+    public void Deinitialize()
     {
         if (isInitialized)
         {
@@ -37,12 +37,14 @@ public abstract class BaseModifier : IModifier
         cachedUniText = null;
     }
 
-    void IModifier.Reset()
+    public void Reset()
     {
         if (isInitialized)
             ClearBuffers();
     }
-
+    
+    public virtual void Destroy() { }
+    
     /// <summary>Создать буферы и установить static указатели.</summary>
     protected abstract void CreateBuffers();
 

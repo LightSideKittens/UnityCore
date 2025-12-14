@@ -27,6 +27,16 @@ public abstract class TagParseRule : IParseRule
     /// </summary>
     protected virtual bool HasParameter => false;
 
+    /// <summary>
+    /// Self-closing тег (не требует закрывающего тега, вставляет InsertString)
+    /// </summary>
+    protected virtual bool IsSelfClosing => false;
+
+    /// <summary>
+    /// Строка для вставки вместо тега (только для self-closing)
+    /// </summary>
+    protected virtual string InsertString => "\uFFFC";
+
     public void Reset()
     {
         openTags.Clear();
@@ -53,74 +63,96 @@ public abstract class TagParseRule : IParseRule
         if (text[index] != '<')
             return index;
 
-        // Пробуем открывающий тег
-        int openResult = TryMatchOpenTag(text, index);
+        int openResult = TryMatchOpenTag(text, index, results);
         if (openResult > index)
             return openResult;
 
-        // Пробуем закрывающий тег
-        int closeResult = TryMatchCloseTag(text, index, results);
-        if (closeResult > index)
-            return closeResult;
+        if (!IsSelfClosing)
+        {
+            int closeResult = TryMatchCloseTag(text, index, results);
+            if (closeResult > index)
+                return closeResult;
+        }
 
         return index;
     }
 
-    private int TryMatchOpenTag(string text, int index)
+    private int TryMatchOpenTag(string text, int index, List<ParsedRange> results)
     {
         int tagNameLen = TagName.Length;
-
-        // Минимум: <tag> или <tag=x>
         int minLen = HasParameter ? tagNameLen + 4 : tagNameLen + 2;
         if (index + minLen > text.Length)
             return index;
 
-        // Проверяем "<tagname"
         if (!MatchesIgnoreCase(text, index + 1, TagName))
             return index;
 
         int afterName = index + 1 + tagNameLen;
-
         string parameter = null;
+        int tagEnd;
 
         if (HasParameter)
         {
-            // Ожидаем "=" после имени тега
             if (afterName >= text.Length || text[afterName] != '=')
                 return index;
 
             int paramStart = afterName + 1;
-            int tagEnd = text.IndexOf('>', paramStart);
-            if (tagEnd < 0)
+            int closePos = FindTagClose(text, paramStart);
+            if (closePos < 0)
                 return index;
 
-            // Извлекаем параметр
-            parameter = ExtractParameter(text, paramStart, tagEnd);
+            bool selfClose = closePos > paramStart && text[closePos - 1] == '/';
+            int paramEnd = selfClose ? closePos - 1 : closePos;
+            parameter = ExtractParameter(text, paramStart, paramEnd);
+            tagEnd = closePos + 1;
 
-            openTags.Push(new OpenTag
+            if (IsSelfClosing || selfClose)
             {
-                tagStart = index,
-                tagEnd = tagEnd + 1,
-                parameter = parameter
-            });
-
-            return tagEnd + 1;
+                results.Add(ParsedRange.SelfClosing(index, tagEnd, InsertString, parameter));
+                return tagEnd;
+            }
         }
         else
         {
-            // Простой тег без параметра: <tag>
-            if (afterName >= text.Length || text[afterName] != '>')
+            if (afterName >= text.Length)
                 return index;
 
-            openTags.Push(new OpenTag
+            char c = text[afterName];
+            if (c == '/')
             {
-                tagStart = index,
-                tagEnd = afterName + 1,
-                parameter = null
-            });
-
-            return afterName + 1;
+                if (afterName + 1 >= text.Length || text[afterName + 1] != '>')
+                    return index;
+                tagEnd = afterName + 2;
+                if (IsSelfClosing)
+                {
+                    results.Add(ParsedRange.SelfClosing(index, tagEnd, InsertString, null));
+                    return tagEnd;
+                }
+            }
+            else if (c == '>')
+            {
+                tagEnd = afterName + 1;
+                if (IsSelfClosing)
+                {
+                    results.Add(ParsedRange.SelfClosing(index, tagEnd, InsertString, null));
+                    return tagEnd;
+                }
+            }
+            else
+            {
+                return index;
+            }
         }
+
+        openTags.Push(new OpenTag { tagStart = index, tagEnd = tagEnd, parameter = parameter });
+        return tagEnd;
+    }
+
+    private static int FindTagClose(string text, int start)
+    {
+        for (int i = start; i < text.Length; i++)
+            if (text[i] == '>') return i;
+        return -1;
     }
 
     private int TryMatchCloseTag(string text, int index, List<ParsedRange> results)

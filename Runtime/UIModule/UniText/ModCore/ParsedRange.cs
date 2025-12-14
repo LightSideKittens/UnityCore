@@ -3,45 +3,20 @@
 /// </summary>
 public struct ParsedRange
 {
-    /// <summary>
-    /// Начало контента в исходном тексте (после открывающего тега)
-    /// </summary>
     public int start;
-
-    /// <summary>
-    /// Конец контента в исходном тексте (перед закрывающим тегом)
-    /// </summary>
     public int end;
-
-    /// <summary>
-    /// Начало открывающего тега (для удаления)
-    /// </summary>
     public int tagStart;
-
-    /// <summary>
-    /// Конец открывающего тега (не включительно)
-    /// </summary>
     public int tagEnd;
-
-    /// <summary>
-    /// Начало закрывающего тега (для удаления)
-    /// </summary>
     public int closeTagStart;
-
-    /// <summary>
-    /// Конец закрывающего тега (не включительно)
-    /// </summary>
     public int closeTagEnd;
-
-    /// <summary>
-    /// Параметр из тега (например, "#FF0000" из color=#FF0000)
-    /// </summary>
     public string parameter;
-
     /// <summary>
-    /// Есть ли теги для удаления
+    /// Строка для вставки вместо тега (self-closing). null = обычный тег.
     /// </summary>
+    public string insertString;
+
     public bool HasTags => tagStart >= 0;
+    public bool IsSelfClosing => insertString != null;
 
     public ParsedRange(int start, int end, string parameter)
     {
@@ -52,6 +27,7 @@ public struct ParsedRange
         closeTagStart = -1;
         closeTagEnd = -1;
         this.parameter = parameter;
+        insertString = null;
     }
 
     public ParsedRange(int tagStart, int tagEnd, int closeTagStart, int closeTagEnd, string parameter = null)
@@ -61,9 +37,23 @@ public struct ParsedRange
         this.closeTagStart = closeTagStart;
         this.closeTagEnd = closeTagEnd;
         this.parameter = parameter;
-
-        // Контент между тегами
+        insertString = null;
         start = tagEnd;
         end = closeTagStart;
+    }
+
+    public static ParsedRange SelfClosing(int tagStart, int tagEnd, string insertString, string parameter)
+    {
+        return new ParsedRange
+        {
+            tagStart = tagStart,
+            tagEnd = tagEnd,
+            closeTagStart = tagEnd,
+            closeTagEnd = tagEnd,
+            start = tagStart,
+            end = tagStart,
+            parameter = parameter,
+            insertString = insertString
+        };
     }
 }

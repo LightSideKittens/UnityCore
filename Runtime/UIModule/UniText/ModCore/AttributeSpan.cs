@@ -19,7 +19,7 @@ internal struct AttributeSpan : IEquatable<AttributeSpan>
     /// <summary>
     /// Модификатор, применяемый к этому диапазону
     /// </summary>
-    public readonly IModifier modifier;
+    public readonly BaseModifier modifier;
 
     /// <summary>
     /// Параметр из тега (например, "#FF0000")
@@ -28,7 +28,7 @@ internal struct AttributeSpan : IEquatable<AttributeSpan>
 
     public int Length => end - start;
 
-    public AttributeSpan(int start, int end, IModifier modifier, string parameter = null)
+    public AttributeSpan(int start, int end, BaseModifier modifier, string parameter = null)
     {
         this.start = start;
         this.end = end;

@@ -146,6 +146,7 @@ public partial class UniText : MaskableGraphic
     /// <summary>
     /// Mesh generator instance. Used by modifiers to subscribe to events.
     /// </summary>
+    public TextProcessor TextProcessor => processor;
     public UniTextMeshGenerator MeshGenerator => meshGenerator;
 
     /// <summary>
@@ -340,7 +341,7 @@ public partial class UniText : MaskableGraphic
         
         CreateProcessor();
         RebuildFontProvider();
-        InitializeModifiers();
+        parser?.InitializeModifiers(this);
         cachedMeshProvider = GetPooledMeshForText;
         isInitialized = true;
     }
@@ -403,16 +404,13 @@ public partial class UniText : MaskableGraphic
         meshGenerator = new UniTextMeshGenerator(fontProvider);
         processor?.SetFontProvider(fontProvider);
     }
-    
-    private void InitializeModifiers()
-    {
-        parser?.InitializeModifiers(this);
-    }
 
     private void EnsureInitialized()
     {
         if (!isInitialized)
+        {
             InitializeComponents();
+        }
     }
 
     #endregion
@@ -469,7 +467,7 @@ public partial class UniText : MaskableGraphic
     /// </summary>
     private void ForceFullReinitialization()
     {
-        parser?.DeinitializeModifiers(this);
+        parser?.DeinitializeModifiers();
         textBuffers?.ReturnBuffers();
         isInitialized = false;
         parser = null;
@@ -868,6 +866,10 @@ public partial class UniText : MaskableGraphic
                 {
                     if (!renderer.gameObject.activeSelf)
                         renderer.gameObject.SetActive(true);
+                    // Sync pivot with parent in case it changed
+                    var subRT = renderer.GetComponent<RectTransform>();
+                    if (subRT != null)
+                        subRT.pivot = rectTransform.pivot;
                     SetSubMeshRendererData(renderer, pair.mesh, pair.material);
                     continue;
                 }
@@ -904,6 +906,8 @@ public partial class UniText : MaskableGraphic
         go.transform.SetParent(transform, false);
 
         var rt = go.AddComponent<RectTransform>();
+        var parentRT = GetComponent<RectTransform>();
+        rt.pivot = parentRT.pivot; // Match parent pivot for correct mesh coordinate interpretation
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
@@ -956,7 +960,7 @@ public partial class UniText : MaskableGraphic
     /// </summary>
     private void Cleanup()
     {
-        parser?.DeinitializeModifiers(this);
+        parser?.DeinitializeModifiers();
         ClearAllRenderers();
         ReleaseMeshes();
     }
@@ -966,7 +970,8 @@ public partial class UniText : MaskableGraphic
     /// </summary>
     private void CleanupResources()
     {
-        parser?.DeinitializeModifiers(this);
+        parser?.DeinitializeModifiers();
+        parser?.DestroyModifiers();
         DestroySubMeshObjects();
         ReleaseMeshes();
         lastMeshPairs = null;

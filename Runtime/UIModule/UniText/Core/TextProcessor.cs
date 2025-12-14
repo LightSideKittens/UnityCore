@@ -56,6 +56,7 @@ public sealed class TextProcessor
     // DEBUG: Enable detailed logging for Arabic text issues
     public static bool DebugLogging = false;
     public event Action Parsed;
+    public event Action Shaped;
 
     public TextProcessor()
     {
@@ -207,6 +208,7 @@ public sealed class TextProcessor
         AnalyzeScripts();
         Itemize();
         Shape();
+        Shaped?.Invoke();
         EnsureGlyphsInAtlas();
 
         hasValidShapingData = true;

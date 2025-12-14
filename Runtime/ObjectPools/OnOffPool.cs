@@ -48,6 +48,11 @@ namespace LSCore
             pool.Parent = parent;
             return pool;
         }
+
+        public static bool RemovePool(T prefab)
+        {
+            return _poolsByPrefab.Remove(prefab);
+        }
         
         private readonly T prefab;
         private Transform parent;

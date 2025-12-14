@@ -6,6 +6,8 @@ using System.Reflection;
 using System.Threading;
 using DG.Tweening;
 using LSCore.Extensions;
+using UnityEditor.Compilation;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 #if UNITY_EDITOR
@@ -97,6 +99,7 @@ namespace LSCore
         public static event Action Destroyed;
         public static event Action Building;
         public static event Action Built;
+        public static event Action Recompiled;
         private static int lastInstanceId; 
         public static int instanceId; 
         public static bool IsPlaying { get; private set; }
@@ -111,6 +114,11 @@ namespace LSCore
             Camera.onPreRender += OnPreRendering;
             Canvas.preWillRenderCanvases += OnCanvasPreRendering;
 #if UNITY_EDITOR
+            CompilationPipeline.compilationFinished += x =>
+            {
+                Recompiled?.Invoke();
+            };
+            
             EditorApplication.playModeStateChanged += change =>
             {
                 if (change == PlayModeStateChange.ExitingPlayMode)
