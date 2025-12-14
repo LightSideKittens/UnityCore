@@ -65,6 +65,7 @@ public static class BufferUtils
 
         var newMargins = ArrayPool<float>.Shared.Rent(newSize);
         startMargins.AsSpan(0, Math.Min(count, startMargins.Length)).CopyTo(newMargins);
+        startMargins.AsSpan().Clear();
         ArrayPool<float>.Shared.Return(startMargins);
         startMargins = newMargins;
     }

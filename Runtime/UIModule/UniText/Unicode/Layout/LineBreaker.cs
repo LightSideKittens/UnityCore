@@ -482,9 +482,7 @@ public sealed class LineBreaker
         int end = start + count - 1;
         while (start < end)
         {
-            var temp = arr[start];
-            arr[start] = arr[end];
-            arr[end] = temp;
+            (arr[start], arr[end]) = (arr[end], arr[start]);
             start++;
             end--;
         }

@@ -75,11 +75,9 @@ public sealed class TextProcessor
     /// </summary>
     /// <param name="text">Text to process</param>
     /// <param name="settings">Processing settings</param>
-    /// <param name="dirtyFlags">Which parts need rebuilding.</param>
     public ReadOnlySpan<PositionedGlyph> Process(
         ReadOnlySpan<char> text,
-        TextProcessSettings settings,
-        UniText.DirtyFlags dirtyFlags = UniText.DirtyFlags.FullRebuild)
+        TextProcessSettings settings)
     {
         // hasValidShapingData has priority - if shaping was done in EnsureShaping(), reuse it
         bool fullRebuild = !hasValidShapingData;
@@ -647,51 +645,5 @@ public sealed class TextProcessor
             buf.positionedGlyphs, ref glyphCnt,
             out resultWidth, out resultHeight);
         buf.positionedGlyphCount = glyphCnt;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int FindTagEnd(ReadOnlySpan<char> text, int start)
-    {
-        int end = Math.Min(text.Length, start + 128);
-        for (int i = start + 1; i < end; i++)
-        {
-            if (text[i] == '>')
-                return i;
-        }
-        return -1;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int SkipToTagEnd(ReadOnlySpan<char> text, int start)
-    {
-        for (int i = start; i < text.Length; i++)
-        {
-            if (text[i] == '>')
-                return i;
-        }
-        return text.Length - 1;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool MatchesClosingTag(ReadOnlySpan<char> text, int start, string tagName)
-    {
-        int tagLen = tagName.Length;
-        int required = 3 + tagLen;
-        if (start + required > text.Length)
-            return false;
-
-        if (text[start] != '<' || text[start + 1] != '/')
-            return false;
-
-        int offset = start + 2;
-        for (int i = 0; i < tagLen; i++)
-        {
-            char c = text[offset + i];
-            char t = tagName[i];
-            if (c != t && (c | 0x20) != (t | 0x20))
-                return false;
-        }
-
-        return text[offset + tagLen] == '>';
     }
 }

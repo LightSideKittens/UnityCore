@@ -107,7 +107,7 @@ public sealed class CommonData
         positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
         glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
         bidiParagraphs = Array.Empty<BidiParagraph>();
-
+        
         isRented = true;
         Reset();
     }
@@ -122,7 +122,13 @@ public sealed class CommonData
         if (codepoints != null) { ArrayPool<int>.Shared.Return(codepoints); codepoints = null; }
         if (bidiLevels != null) { ArrayPool<byte>.Shared.Return(bidiLevels); bidiLevels = null; }
         if (scripts != null) { ArrayPool<UnicodeScript>.Shared.Return(scripts); scripts = null; }
-        if (startMargins != null) { ArrayPool<float>.Shared.Return(startMargins); startMargins = null; }
+
+        if (startMargins != null)
+        {
+            startMargins.AsSpan().Clear();
+            ArrayPool<float>.Shared.Return(startMargins); startMargins = null;
+        }
+        
         if (runs != null) { ArrayPool<TextRun>.Shared.Return(runs); runs = null; }
         if (shapedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(shapedRuns); shapedRuns = null; }
         if (shapedGlyphs != null) { ArrayPool<ShapedGlyph>.Shared.Return(shapedGlyphs); shapedGlyphs = null; }

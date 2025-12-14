@@ -545,8 +545,8 @@ public partial class UniText : MaskableGraphic
             var flags = dirtyFlags;
             dirtyFlags = DirtyFlags.None;
 
-            if (RequiresFullRebuild(flags)) RebuildFull(flags);
-            else if (RequiresLayoutRebuild(flags)) RebuildLayout(flags);
+            if (RequiresFullRebuild(flags)) RebuildFull();
+            else if (RequiresLayoutRebuild(flags)) RebuildLayout();
             else RebuildMeshOnly();
 
             UpdateRendering();
@@ -566,7 +566,7 @@ public partial class UniText : MaskableGraphic
     /// <summary>
     /// Полная перестройка текста (text/font/direction изменились).
     /// </summary>
-    private void RebuildFull(DirtyFlags flags)
+    private void RebuildFull()
     {
         var rt = GetComponent<RectTransform>();
         if (rt == null) return;
@@ -601,7 +601,7 @@ public partial class UniText : MaskableGraphic
             }
 
             var settings = CreateProcessSettings(rect);
-            var glyphs = processor.Process(textToProcess.AsSpan(), settings, flags);
+            var glyphs = processor.Process(textToProcess.AsSpan(), settings);
 
             lastResultWidth = processor.ResultWidth;
             lastResultHeight = processor.ResultHeight;
@@ -619,7 +619,7 @@ public partial class UniText : MaskableGraphic
     /// <summary>
     /// Перестройка layout (rect size, fontSize или layout settings изменились).
     /// </summary>
-    private void RebuildLayout(DirtyFlags flags)
+    private void RebuildLayout()
     {
         var rt = GetComponent<RectTransform>();
         if (rt == null) return;
@@ -637,7 +637,7 @@ public partial class UniText : MaskableGraphic
         }
 
         var settings = CreateProcessSettings(rect);
-        var glyphs = processor.Process(cachedCleanText.AsSpan(), settings, flags);
+        var glyphs = processor.Process(cachedCleanText.AsSpan(), settings);
 
         lastResultWidth = processor.ResultWidth;
         lastResultHeight = processor.ResultHeight;
