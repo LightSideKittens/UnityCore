@@ -18,8 +18,12 @@ public class RectTransformWrapper
     public Vector2 pivot;
     public Vector2 sizeDelta;
     private bool created;
+    public bool isDirty;
+    
     public void Setup()
     {
+        if(!isDirty) return;
+        isDirty = false;
         if (!created)
         {
             created = true;
@@ -50,7 +54,6 @@ public class RectTransformWrapper
     
     public void Destroy()
     {
-        Debug.Log("Destroy");
         if(Application.isPlaying) Object.Destroy(instance.gameObject);
         else Object.DestroyImmediate(instance.gameObject);
     }
@@ -83,7 +86,6 @@ public class InlineObject
         wrapper.prefab = prefab;
         wrapper.parent = parent;
         instances.Add(wrapper);
-        Debug.Log("Added");
         return wrapper;
     }
     
@@ -265,7 +267,7 @@ public class ObjModifier : BaseModifier
         if (cachedUniText == null) return;
         
         var wrapper = obj.GetOrCreate(cachedUniText.transform);
-
+        wrapper.isDirty = true;
         wrapper.localScale = Vector3.one;
 
         wrapper.anchorMin = new Vector2(0, 1);
