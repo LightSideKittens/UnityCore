@@ -6,12 +6,15 @@ namespace LSCore
 {
     public class OnOffPool<T> : LSObjectPool<T> where T : Component
     {
-#if UNITY_EDITOR
+
         static OnOffPool()
         {
+#if UNITY_EDITOR
             World.Destroyed += _poolsByPrefab.Clear;
-        }
 #endif
+            World.PreRendering += OnPrerender;
+        }
+
         private static readonly Dictionary<T, OnOffPool<T>> _poolsByPrefab = new();
 
         public static bool TryCreatePool(
@@ -89,14 +92,31 @@ namespace LSCore
             Parent = parent;
             Released += OnRelease;
         }
-        
+
+        private static void OnPrerender()
+        {
+            foreach (var (target, data) in batches)
+            {
+                if (target)
+                {
+                    target.gameObject.SetActive(data.active);
+                    target.transform.SetParent(data.parent);
+                }
+            }
+            
+            batches.Clear();
+        }
+
         private T InstantiatePrefabWithParent()
         {
-            return Object.Instantiate(prefab, parent);
+            prefab.gameObject.SetActive(false);
+            var result=  Object.Instantiate(prefab, parent);
+            return result;
         }
 
         private T InstantiatePrefab()
         {
+            prefab.gameObject.SetActive(false);
             return Object.Instantiate(prefab);
         }
 
@@ -107,20 +127,21 @@ namespace LSCore
             return obj;
         }
         
+        private static Dictionary<T, (bool active, Transform parent)> batches = new();
+        
         private void OnGetWithParent(T obj)
         {
-            obj.gameObject.SetActive(true);
-            obj.transform.SetParent(parent, false);
+            batches[obj] = (true, parent);
         }
 
         private  void OnGet(T obj)
         {
-            obj.gameObject.SetActive(true);
+            batches[obj] = (true, parent);
         }
         
-        private void OnRelease(T element)
+        private void OnRelease(T obj)
         {
-            element.gameObject.SetActive(false);
+            batches[obj] = (false, parent);
         }
     }
 }

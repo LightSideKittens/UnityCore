@@ -6,18 +6,18 @@ namespace LSCore
 {
     [ExecuteAlways]
     [DisallowMultipleComponent]
-    public class PoolTracker : MonoBehaviour
+    public class ObjTracker : MonoBehaviour
     {
-        public object pool;
+        public object obj;
 
-        public static void Track(GameObject go, object pool)
+        public static void Track(GameObject go, object obj)
         {
-            if (!go.TryGetComponent(out PoolTracker tracker))
+            if (!go.TryGetComponent(out ObjTracker tracker))
             {
-                tracker = go.AddComponent<PoolTracker>();
+                tracker = go.AddComponent<ObjTracker>();
             }
             
-            tracker.pool = pool;
+            tracker.obj = obj;
         }
         
         private void OnEnable()
@@ -29,7 +29,7 @@ namespace LSCore
         void OnUpdate()
         {
             EditorApplication.update -= OnUpdate;
-            if (this != null && pool == null)
+            if (this != null && obj == null)
             {
                 if (Application.isPlaying)
                 {
