@@ -489,8 +489,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 1189.4, y: -103}
-  m_SizeDelta: {x: 912, y: 0}
+  m_AnchoredPosition: {x: 1610.4, y: -372}
+  m_SizeDelta: {x: 1363.9, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &769616321
 MonoBehaviour:
@@ -524,7 +524,7 @@ MonoBehaviour:
     m_Top: 0
     m_Bottom: 0
   m_ChildAlignment: 0
-  m_Spacing: 34.45
+  m_Spacing: 190.03
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
   m_ChildControlWidth: 1
@@ -587,7 +587,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &788223750
 RectTransform:
   m_ObjectHideFlags: 0
@@ -602,10 +602,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 769616320}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 966.0204, y: -2358.355}
+  m_SizeDelta: {x: 1213.7, y: 1618.9656}
   m_Pivot: {x: 0.79593015, y: 0.66504484}
 --- !u!114 &788223751
 MonoBehaviour:
@@ -859,8 +859,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 486.65, y: -1014.975}
-  m_SizeDelta: {x: 973.3, y: 2029.95}
+  m_AnchoredPosition: {x: 456, y: -1071.835}
+  m_SizeDelta: {x: 912, y: 2143.67}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &793427667
 CanvasRenderer:
@@ -1047,16 +1047,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 933978094}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 90}
+  m_LocalScale: {x: 0.0046296297, y: 0.0046296297, z: 0.0046296297}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2035672421}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.00002670288, y: 0}
+  m_AnchoredPosition: {x: 0.005714416, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &933978096
@@ -1122,16 +1122,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1481001210}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 90}
+  m_LocalScale: {x: 0.0046296297, y: 0.0046296297, z: 0.0046296297}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2035672421}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.00002670288, y: 0}
+  m_AnchoredPosition: {x: 0.005714416, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1481001212
@@ -1467,7 +1467,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  text: "1223232. \u0644\u0644\u0644\u0644\u0644shaping  faksjd fhak<obj=\"log\"/>lsjdfhaklsjdhafalskjdh
+  text: "1223232. \u0644\u0644\u0644\u0644\u0644shaping  faksjd fhak<obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/>lsjdfhaklsjdhafalskjdh
     aksldjha ksl jfha skldaskjhaskdjh\n  1. \u0644\u0644\u0644\u0644\u0644shaping\n-
     \u0644\u0644\u0644\u0644\u0644shaping  faksjd fhak lsjdfhaklsjdha falskjdh aksldjha
     ksl jfha skldaskjhaskdjh\n  - \u0644\u0644\u0644\u0644\u0644shaping\n      -
@@ -1771,8 +1771,6 @@ RectTransform:
   m_Children:
   - {fileID: 1715923863}
   - {fileID: 769616320}
-  - {fileID: 1481001211}
-  - {fileID: 933978095}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1820,8 +1818,72 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 413d952e2e458694795e2a5d7f9a93ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: LSCore.UniText::UniTextInteractiveTest
-  target: {fileID: 1715923864}
-  testText: Hello World!
+  target: {fileID: 2023444739}
+  testText: "1223232. \u0644\u0644\u0644\u0644\u0644shaping  faksjd fhak<obj=\"log\"/>lsjdfhaklsjdhafalskjdh
+    aksldjha ksl jfha skldaskjhaskdjh\n  1. \u0644\u0644\u0644\u0644\u0644shaping\n-
+    \u0644\u0644\u0644\u0644\u0644shaping  faksjd fhak lsjdfhaklsjdha falskjdh aksldjha
+    ksl jfha skldaskjhaskdjh\n  - \u0644\u0644\u0644\u0644\u0644shaping\n      -
+    \u0644\u0644\u0644\u0644\u0644shaping\n- sdfsdf\n  - sdfjslkdfs\n    - dfskldfj\n1.
+    <b>Test numbered</b>\n  1. <s>Test nested numbered</s>\n\n<color=#98f>\u0627\u0644\u0639\u0631\u0628\u064A\u0629:
+    \u0645\u0631\u062D\u0628\u0627\u064B \u0628\u0627\u0644\u0639\u0627\u0644\u0645!
+    <obj=\"logo\"/> \u0647\u0630\u0627 \u0646\u064E\u0635\u0651\u064C \u0644\u0627\u062E\u062A\u0628\u0627\u0631
+    \u0627\u0644\u0627\u062A\u062C\u0627\u0647\u061B \u0639\u0631\u0628\u0649\u060C
+    \u0639\u0631\u0628\u064A\u060C \u0639\u0631\u0628\u064A\u061F\n\u0623\u0631\u0642\u0627\u0645
+    \u0639\u0631\u0628\u064A\u0629-\u0647\u0646\u062F\u064A\u0629: \u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669\u0660,
+    Arabic digits: 1234567890.\n\u0639\u0644\u0627\u0645\u0627\u062A \u0627\u0644\u062A\u0631\u0642\u064A\u0645:
+    \u060C \u061B \u061F ! : \u060C \u2026 \u2014 (\u0634\u0631\u0637\u0629 \u0637\u0648\u064A\u0644\u0629)\u060C
+    \"\u0627\u0642\u062A\u0628\u0627\u0633\"\u060C \xAB\u0627\u0642\u062A\u0628\u0627\u0633\xBB.\n\n\u0644\u0627\u0645-\u0623\u0644\u0641:
+    \u0644\u0627 \u0644\u064E\u0627 \u0644\u0651\u064E\u0627 \u0644\u064E\u200D\u0627
+    (LAM + FATHA + ZWJ + ALEF).\n\u0633\u0644\u0633\u0644\u0629 \u0645\u0634\u0643\u0648\u0644\u0629:
+    \u0627\u064E\u0644\u0644\u0651\u0670\u0647\u064F \u0631\u064E\u0628\u0651\u064F
+    \u0627\u0644\u0652\u0639\u064E\u0627\u0644\u064E\u0645\u0650\u064A\u0646\u064E\u060C
+    \u0628\u0650\u0633\u0652\u0645\u0650 \u0627\u0644\u0644\u0651\u0670\u0647\u0650
+    \u0627\u0644\u0631\u0651\u064E\u062D\u0652\u0645\u0670\u0646\u0650 \u0627\u0644\u0631\u0651\u064E\u062D\u0650\u064A\u0645\u0650.\n\n\u0641\u0627\u0631\u0633\u06CC:
+    \u0633\u0644\u0627\u0645 \u062F\u0646\u06CC\u0627! \u062D\u0631\u0648\u0641 \u0627\u0636\u0627\u0641\u06CC:
+    \u067E \u0686 \u0698 \u06AF \u06CC.\n\u0641\u0627\u0635\u0644\u0647\u0654 \u0645\u062C\u0627\u0632\u06CC
+    (ZWNJ): \u0645\u06CC\u200C\u0631\u0648\u0645\u060C \u062E\u0627\u0646\u0647\u200C\u0647\u0627\u060C
+    \u06A9\u062A\u0627\u0628\u200C\u0647\u0627\u060C \u0646\u0645\u06CC\u200C\u062E\u0648\u0627\u0647\u0645.\n\n\u0627\u064F\u0631\u062F\u0648:
+    \u06CC\u06C1 \u0627\u06CC\u06A9 \u062C\u0627\u0645\u0639 \u0679\u06CC\u0633\u0679
+    \u0679\u06CC\u06A9\u0633\u0679 \u06C1\u06D2\u061B \u062D\u0631\u0648\u0641: \u0679\u060C
+    \u0688\u060C \u0691\u060C \u06BA\u060C \u06C1\u060C \u06BE\u060C \u06D2\u060C
+    \u06BA\u060C \u06AF\u060C \u06A9\u060C \u06CC.\n\u0645\u062E\u0644\u0648\u0637
+    \u062C\u0645\u0644\u06C1: \u0627\u0631\u062F\u0648 (Urdu) + English + \u0627\u0639\u062F\u0627\u062F
+    \u06F1\u06F2\u06F3\u06F4.\n\n\u05E2\u05D1\u05E8\u05D9\u05EA: \u05E9\u05DC\u05D5\u05DD
+    \u05E2\u05D5\u05DC\u05DD, \u05D8\u05E7\u05E1\u05D8 \u05D1\u05D3\u05D9\u05E7\u05D4,
+    \u05DE\u05E1\u05E4\u05E8\u05D9\u05DD 1234 \u05D5-\u0665\u0666\u0667\u0668.\nMixed
+    Hebrew/English: \u05E9\u05DC\u05D5\u05DD (shalom) world 2025-12-01, test-\u05DE\u05E1\u05E4\u05E8.\n\nNested
+    brackets: (AR: \u0645\u0631\u062D\u0628\u0627 [\u0646\u0635 {\u062A\u062C\u0631\u064A\u0628\u064A}
+    \u0645\u0639 \u0623\u0642\u0648\u0627\u0633]!) and (EN: (nested [brackets] {here})).\nQuotes:
+    \"plain quotes\", \u2018single\u2019, \u201Cdouble smart\u201D, \xABguillemets\xBB,
+    \u201Elow-high\u201C.\n\nRichText: <i><b>\u063A\u0627\u0645\u0642 \u0639\u0631\u0628\u064A
+    \u0645\u0631\u062D\u0628\u0627</b></i>, <i>\u05E9\u05DC\u05D5\u05DD \u05DE\u05D5\u05D3\u05D2\u05E9</i>,
+    <color=#FF0000>red English text</color>, <size=150%>\u0646\u0635 \u0645\u0643\u0628\u0631</size>,
+    <u>\u062E\u0637 \u0633\u0641\u0644\u064A</u>.\n\nZWJ forms (for shaping): \u200D\u0628
+    (forced final), \u0628\u200D (forced initial), \u200D\u0628\u200D (forced medial).\nMix
+    with diacritics + ZWJ: \u200D\u0628\u064E\u200D\u060C \u200D\u0646\u0651\u064E\u200D.\nZWNJ
+    breaking join: \u0628\u0627\u200C\u0628\u060C \u0644\u0627\u200C\u0627\u060C
+    \u0645\u06CC\u200C\u0631\u0648\u062F.\n\nBidi controls (LRE/RLE/PDF, LRM/RLM):\nEnglish
+    before  \u0645\u0631\u062D\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645 
+    after [RLE ... PDF].\nLRM/LRM: EN\u200E-\u200Etag, AR\u200F-\u200F\u0639\u0644\u0627\u0645\u0629.\n\nMixed
+    run: \u0645\u0631\u062D\u0628\u0627 (hello) 123 in [EN], \u062B\u0645 \u0646\u0635
+    \u0639\u0631\u0628\u064A\u060C then Hebrew \u05E9\u05DC\u05D5\u05DD, \u05D5\u05D0\u05D6
+    again \u0639\u0631\u0628\u0649.\nRight-to-left with inner English: \u0647\u0630\u0627
+    \"test\" \u062F\u0627\u062E\u0644 \u062C\u0645\u0644\u0629 \u0639\u0631\u0628\u064A\u0629
+    (with brackets).\u061F\n\nBrackets around RTL: (\u0645\u0631\u062D\u0628\u0627)\u060C
+    [\u0633\u0644\u0627\u0645]\u060C {\u0634\u06A9\u0631\u06CC\u06C1} and around
+    mixed [hello \u0645\u0631\u062D\u0628\u0627 123].</color>\n\nEmojis: \U0001F600
+    \U0001F603 \U0001F601 \U0001F602 \U0001F914 \U0001F44D \u2764.\nRTL with emojis:
+    \u0645\u0631\u062D\u0628\u0627 \U0001F600 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\u060C
+    \u0631\u0642\u0645 \u0661\u0662\u0663\u060C \u0646\u0635 \U0001F603 \u0645\u062E\u062A\u0644\u0637
+    \U0001F44D.\nFamily ZWJ emoji: \U0001F468\u200D\U0001F469\u200D\U0001F467, flags:
+    \U0001F1EE\U0001F1F7 (IL), \U0001F1EA\U0001F1F8 (ES), \U0001F1FA\U0001F1F8 (US).\n\nBig
+    mixed line: \u0644\u0627 + \u0644\u064E\u0627 + \u0644\u0651\u064E\u0627 + \u0641\u0627\u0631\u0633\u06CC
+    \u067E\u0686\u0698\u06AF + \u0627\u064F\u0631\u062F\u0648 \u0679\u060C\u0688\u060C\u0691
+    + \u05E2\u05D1\u05E8\u05D9\u05EA \u05E9\u05DC\u05D5\u05DD + English TEXT 1234
+    ++ emoji \U0001F600 + brackets (\u0639\u0631\u0628\u064A [EN {\u05E2\u05D1\u05E8\u05D9\u05EA}
+    42]) + ZWNJ \u0645\u06CC\u200C\u0631\u0648\u0645 + ZWJ \u200D\u0628\u200D + bidi
+    controls  \u0639\u0631\u0628\u064A \u0645\u0639  EN  \u062F\u0627\u062E\u0644 
+    done."
   rtlText: "\u0645\u0631\u062D\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645"
   mixedText: "Hello \u0645\u0631\u062D\u0628\u0627 World \u0639\u0627\u0644\u0645"
   longText: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
@@ -1851,3 +1913,5 @@ SceneRoots:
   - {fileID: 2035672421}
   - {fileID: 1963862379}
   - {fileID: 364512956}
+  - {fileID: 1481001211}
+  - {fileID: 933978095}

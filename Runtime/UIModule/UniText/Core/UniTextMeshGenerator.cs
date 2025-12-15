@@ -217,7 +217,7 @@ public class UniTextMeshGenerator
             {
                 // Single atlas - simple path
                 var mesh = meshProvider?.Invoke() ?? new Mesh();
-                GenerateMeshForFont(mesh, fontGlyphs, fontAsset, 0);
+                GenerateMeshForFont(mesh, fontGlyphs, fontAsset);
                 resultBuffer.Add(new UniTextMeshPair(mesh, fontAsset.Material));
             }
             else
@@ -252,8 +252,8 @@ public class UniTextMeshGenerator
                     var atlasGlyphs = atlasKvp.Value;
 
                     var mesh = meshProvider?.Invoke() ?? new Mesh();
-                    GenerateMeshForFont(mesh, atlasGlyphs, fontAsset, atlasIndex);
-                    var atlasMat = fontAsset.GetMaterialForAtlas(atlasIndex);
+                    GenerateMeshForFont(mesh, atlasGlyphs, fontAsset);
+                    var atlasMat = fontAsset.material;
                     resultBuffer.Add(new UniTextMeshPair(mesh, atlasMat));
 
                     if (DebugLogging)
@@ -272,7 +272,7 @@ public class UniTextMeshGenerator
         return resultBuffer;
     }
 
-    private void GenerateMeshForFont(Mesh mesh, LSList<PositionedGlyph> glyphs, UniTextFontAsset fontAsset, int atlasIndex)
+    private void GenerateMeshForFont(Mesh mesh, LSList<PositionedGlyph> glyphs, UniTextFontAsset fontAsset)
     {
         int glyphCount = glyphs.Count;
         // Base: 4 vertices per glyph + extra for modifiers (underline, strikethrough, etc.)

@@ -3,24 +3,24 @@ using System.Runtime.CompilerServices;
 using UnityEngine;
 
 [Serializable]
-public class ItalicModifier : GlyphModifier<float>
+public class ItalicModifier : GlyphModifier<byte>
 {
-    private static ArrayPoolBuffer<float> buffer;
+    private static ArrayPoolBuffer<byte> buffer;
 
     protected override Action GetOnGlyphCallback() => OnGlyph;
-    protected override void SetStaticBuffer(ArrayPoolBuffer<float> buf) => buffer = buf;
+    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf) => buffer = buf;
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
         int cpCount = CommonData.Current.codepointCount;
         buffer.EnsureCapacity(cpCount);
-        buffer.SetValueRange(start, Math.Min(end, cpCount), 1f);
+        buffer.SetFlagRange(start, Math.Min(end, cpCount));
     }
 
     private static void OnGlyph()
     {
         int cluster = UniTextMeshGenerator.currentCluster;
-        if (!buffer.HasValue(cluster))
+        if (!buffer.HasFlag(cluster))
             return;
 
         float italicStyle = UniTextMeshGenerator.currentFontAsset?.ItalicStyle ?? 12f;
@@ -43,7 +43,7 @@ public class ItalicModifier : GlyphModifier<float>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsItalic(int cluster) => buffer != null && buffer.HasValue(cluster);
+    public static bool IsItalic(int cluster) => buffer != null && buffer.HasFlag(cluster);
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload() => buffer = null;

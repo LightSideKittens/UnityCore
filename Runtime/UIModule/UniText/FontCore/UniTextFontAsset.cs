@@ -182,9 +182,6 @@ public class UniTextFontAsset : ScriptableObject
     // Static tracking of currently loaded font in FontEngine (FontEngine is global!)
     private static int currentlyLoadedFontInstanceId = 0;
 
-    // Cached materials for multi-atlas support (atlas index -> material)
-    private Material[] atlasMaterials;
-
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
@@ -367,58 +364,6 @@ public class UniTextFontAsset : ScriptableObject
     }
 
     private static readonly int s_MainTex = Shader.PropertyToID("_MainTex");
-
-    /// <summary>
-    /// Gets material for specific atlas index. Creates and caches runtime materials for additional atlases.
-    /// </summary>
-    public Material GetMaterialForAtlas(int atlasIndex)
-    {
-        if (material == null || atlasTextures == null || atlasTextures.Length == 0)
-            return material;
-
-        if (atlasIndex < 0 || atlasIndex >= atlasTextures.Length)
-            return material;
-
-        // Atlas 0 uses main material
-        if (atlasIndex == 0)
-            return material;
-
-        // Ensure cache array is sized correctly
-        if (atlasMaterials == null || atlasMaterials.Length < atlasTextures.Length)
-        {
-            var newMaterials = new Material[atlasTextures.Length];
-            if (atlasMaterials != null)
-                Array.Copy(atlasMaterials, newMaterials, atlasMaterials.Length);
-            atlasMaterials = newMaterials;
-        }
-
-        var tex = atlasTextures[atlasIndex];
-
-        // Check if texture exists
-        if (tex == null)
-        {
-            Debug.LogWarning($"[UniTextFontAsset.GetMaterialForAtlas] Atlas texture {atlasIndex} is null! atlasTextures.Length={atlasTextures.Length}");
-            return material;
-        }
-
-        // Create material for this atlas if not cached OR if texture changed
-        var cachedMat = atlasMaterials[atlasIndex];
-        if (cachedMat == null || cachedMat.mainTexture != tex)
-        {
-            var mat = new Material(material);
-            mat.mainTexture = tex;
-            mat.SetTexture(s_MainTex, tex);
-            mat.hideFlags = HideFlags.HideAndDontSave;
-            #if UNITY_EDITOR
-            mat.name = material.name + " [Atlas " + atlasIndex + "]";
-            #endif
-            atlasMaterials[atlasIndex] = mat;
-
-            Debug.Log($"[UniTextFontAsset.GetMaterialForAtlas] Created/updated material for atlas {atlasIndex}: tex={tex?.name} ({tex?.width}x{tex?.height}), mat.mainTex={mat.mainTexture?.name}");
-        }
-
-        return atlasMaterials[atlasIndex];
-    }
 
     #endregion
 
