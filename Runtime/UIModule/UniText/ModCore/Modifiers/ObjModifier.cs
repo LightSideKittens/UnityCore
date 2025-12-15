@@ -11,9 +11,6 @@ public class RectTransformWrapper
     public RectTransform instance;
     public RectTransform prefab;
     public Transform parent;
-    public Vector3 localScale;
-    public Vector2 anchorMin;
-    public Vector2 anchorMax;
     public Vector2 anchoredPosition;
     public Vector2 pivot;
     public Vector2 sizeDelta;
@@ -28,15 +25,15 @@ public class RectTransformWrapper
         {
             created = true;
             instance = Object.Instantiate(prefab, parent);
-            instance.gameObject.hideFlags = HideFlags.HideAndDontSave;
 #if UNITY_EDITOR
+            instance.gameObject.hideFlags = HideFlags.HideAndDontSave;
             ObjTracker.Track(instance.gameObject, this);
 #endif
         }
         
-        instance.localScale = localScale;
-        instance.anchorMin = anchorMin;
-        instance.anchorMax = anchorMax;
+        instance.localScale = Vector3.one;
+        instance.anchorMin = new Vector2(0, 1);
+        instance.anchorMax = new Vector2(0, 1);
         instance.anchoredPosition = anchoredPosition;
         instance.pivot = pivot;
         instance.sizeDelta = sizeDelta;
@@ -135,7 +132,7 @@ public class ObjModifier : BaseModifier
 
     protected override void Subscribe()
     {
-        Canvas.willRenderCanvases += OnPrerender;
+        CanvasUpdateRegistry.Updated += OnPrerender;
         uniText.TextProcessor.Shaped += OnShaped;
         uniText.MeshGenerator.OnRebuildStart += OnRebuildStart;
         uniText.MeshGenerator.OnRebuildEnd += OnRebuildEnd;
@@ -143,7 +140,7 @@ public class ObjModifier : BaseModifier
 
     protected override void Unsubscribe()
     {
-        Canvas.willRenderCanvases -= OnPrerender;
+        CanvasUpdateRegistry.Updated -= OnPrerender;
         uniText.TextProcessor.Shaped -= OnShaped;
         uniText.MeshGenerator.OnRebuildStart -= OnRebuildStart;
         uniText.MeshGenerator.OnRebuildEnd -= OnRebuildEnd;
@@ -246,10 +243,6 @@ public class ObjModifier : BaseModifier
         
         var wrapper = obj.GetOrCreate(uniText.transform);
         wrapper.isDirty = true;
-        wrapper.localScale = Vector3.one;
-
-        wrapper.anchorMin = new Vector2(0, 1);
-        wrapper.anchorMax = new Vector2(0, 1);
         Vector2 pivot = wrapper.pivot;
         wrapper.anchoredPosition = new Vector2(x + w * pivot.x, y + h * pivot.y);
         wrapper.sizeDelta = new Vector2(w, h);
@@ -263,11 +256,11 @@ public class ObjModifier : BaseModifier
             var obj = objects[i];
             obj.activeCount = 0;
         }
-        Canvas.willRenderCanvases += Destro;
+        CanvasUpdateRegistry.Updated += Destro;
         
         void Destro()
         {
-            Canvas.willRenderCanvases -= Destro;
+            CanvasUpdateRegistry.Updated -= Destro;
             if(uniText == null) return;
             for (var i = 0; i < objects.Count; i++)
             {
