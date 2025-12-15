@@ -7,7 +7,7 @@ using System;
 [Serializable]
 public abstract class BaseModifier
 {
-    protected UniText cachedUniText;
+    protected UniText uniText;
     protected bool isInitialized;
 
     public void Apply(int start, int end, string parameter)
@@ -23,7 +23,7 @@ public abstract class BaseModifier
 
     public void Initialize(UniText uniText)
     {
-        cachedUniText = uniText;
+        this.uniText = uniText;
     }
 
     public void Deinitialize()
@@ -34,7 +34,7 @@ public abstract class BaseModifier
             ReleaseBuffers();
             isInitialized = false;
         }
-        cachedUniText = null;
+        uniText = null;
     }
 
     public void Reset()

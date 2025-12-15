@@ -32,20 +32,20 @@ public abstract class BaseLineModifier : BaseModifier
 
     protected sealed override void Subscribe()
     {
-        cachedUniText.Rebuilding += OnRebuilding;
-        var gen = cachedUniText.MeshGenerator;
+        uniText.Rebuilding += OnRebuilding;
+        var gen = uniText.MeshGenerator;
         gen.OnRebuildStart += OnRebuildStart;
-        gen.OnAfterGlyphs += OnAfterGlyphs;
+        gen.OnAfterGlyphsPerFont += OnAfterGlyphs;
     }
 
     protected sealed override void Unsubscribe()
     {
-        cachedUniText.Rebuilding -= OnRebuilding;
-        var gen = cachedUniText.MeshGenerator;
+        uniText.Rebuilding -= OnRebuilding;
+        var gen = uniText.MeshGenerator;
         if (gen != null)
         {
             gen.OnRebuildStart -= OnRebuildStart;
-            gen.OnAfterGlyphs -= OnAfterGlyphs;
+            gen.OnAfterGlyphsPerFont -= OnAfterGlyphs;
         }
     }
 

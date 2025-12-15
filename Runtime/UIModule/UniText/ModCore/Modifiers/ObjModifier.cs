@@ -119,7 +119,6 @@ public class ObjModifier : BaseModifier
 
     private Dictionary<int, InlineObject> clusterToObj;
     private Dictionary<string, InlineObject> objLookup;
-    private bool objectsPositioned;
 
 
     protected override void CreateBuffers()
@@ -137,17 +136,17 @@ public class ObjModifier : BaseModifier
     protected override void Subscribe()
     {
         Canvas.willRenderCanvases += OnPrerender;
-        cachedUniText.TextProcessor.Shaped += OnShaped;
-        cachedUniText.MeshGenerator.OnRebuildStart += OnRebuildStart;
-        cachedUniText.MeshGenerator.OnAfterGlyphs += OnAfterGlyphs;
+        uniText.TextProcessor.Shaped += OnShaped;
+        uniText.MeshGenerator.OnRebuildStart += OnRebuildStart;
+        uniText.MeshGenerator.OnRebuildEnd += OnRebuildEnd;
     }
 
     protected override void Unsubscribe()
     {
         Canvas.willRenderCanvases -= OnPrerender;
-        cachedUniText.TextProcessor.Shaped -= OnShaped;
-        cachedUniText.MeshGenerator.OnRebuildStart -= OnRebuildStart;
-        cachedUniText.MeshGenerator.OnAfterGlyphs -= OnAfterGlyphs;
+        uniText.TextProcessor.Shaped -= OnShaped;
+        uniText.MeshGenerator.OnRebuildStart -= OnRebuildStart;
+        uniText.MeshGenerator.OnRebuildEnd -= OnRebuildEnd;
     }
 
     private void OnPrerender()
@@ -180,30 +179,29 @@ public class ObjModifier : BaseModifier
 
     private void OnRebuildStart()
     {
-        objectsPositioned = false;
+        for (int i = 0; i < objects.Count; i++)
+            objects[i].activeCount = 0;
     }
 
     private void OnShaped()
     {
         if (clusterToObj == null || clusterToObj.Count == 0) return;
 
-        float fontSize = cachedUniText.FontSize;
+        float fontSize = uniText.FontSize;
         var buf = CommonData.Current;
         var glyphs = buf.shapedGlyphs;
         var runs = buf.shapedRuns;
         int runCount = buf.shapedRunCount;
 
-        // Iterate through runs to properly convert run-local cluster to global cluster
         for (int r = 0; r < runCount; r++)
         {
             ref var run = ref runs[r];
-            int clusterOffset = run.range.start; // Global offset for this run
+            int clusterOffset = run.range.start;
             int glyphEnd = run.glyphStart + run.glyphCount;
             float width = 0;
 
             for (int g = run.glyphStart; g < glyphEnd; g++)
             {
-                // Convert run-local cluster to global cluster index
                 int globalCluster = glyphs[g].cluster + clusterOffset;
 
                 if (clusterToObj.TryGetValue(globalCluster, out var obj))
@@ -220,53 +218,33 @@ public class ObjModifier : BaseModifier
         }
     }
 
-    private void OnAfterGlyphs()
+    private void OnRebuildEnd()
     {
-        if (objectsPositioned) return;
-        objectsPositioned = true;
+        if (clusterToObj == null || clusterToObj.Count == 0) return;
 
-        if (cachedUniText == null) return;
-
-        var glyphs = cachedUniText.LastResultGlyphs;
+        var glyphs = uniText.LastResultGlyphs;
         float scale = UniTextMeshGenerator.scale;
 
-        for (int i = 0; i < objects.Count; i++)
-        {
-            objects[i].activeCount = 0;
-        }
-        
-        // Create or update objects
-        foreach (var kvp in clusterToObj)
-        {
-            int cluster = kvp.Key;
-            var obj = kvp.Value;
-            if (obj.prefab == null) continue;
-
-            int idx = FindGlyphByCluster(glyphs, cluster);
-            if (idx < 0) continue;
-
-            var glyph = glyphs[idx];
-            float w = obj.width * scale;
-            float h = obj.height * scale;
-            float x = glyph.x + obj.bearingX * scale;
-            float y = -glyph.y + obj.bearingY * scale;
-            CreateObjectInstance(obj, x, y, w, h);
-        }
-    }
-
-    private static int FindGlyphByCluster(ReadOnlySpan<PositionedGlyph> glyphs, int cluster)
-    {
         for (int i = 0; i < glyphs.Length; i++)
-            if (glyphs[i].cluster == cluster)
-                return i;
-        return -1;
+        {
+            if (clusterToObj.TryGetValue(glyphs[i].cluster, out var obj))
+            {
+                if (obj.prefab == null) continue;
+                var glyph = glyphs[i];
+                CreateObjectInstance(obj,
+                    glyph.x + obj.bearingX * scale,
+                    -glyph.y + obj.bearingY * scale,
+                    obj.width * scale,
+                    obj.height * scale);
+            }
+        }
     }
 
     private void CreateObjectInstance(InlineObject obj, float x, float y, float w, float h)
     {
-        if (cachedUniText == null) return;
+        if (uniText == null) return;
         
-        var wrapper = obj.GetOrCreate(cachedUniText.transform);
+        var wrapper = obj.GetOrCreate(uniText.transform);
         wrapper.isDirty = true;
         wrapper.localScale = Vector3.one;
 
@@ -279,7 +257,7 @@ public class ObjModifier : BaseModifier
 
     private void DestroyAllObjects()
     {
-        if(cachedUniText == null) return;
+        if(uniText == null) return;
         for (var i = 0; i < objects.Count; i++)
         {
             var obj = objects[i];
@@ -290,7 +268,7 @@ public class ObjModifier : BaseModifier
         void Destro()
         {
             Canvas.willRenderCanvases -= Destro;
-            if(cachedUniText == null) return;
+            if(uniText == null) return;
             for (var i = 0; i < objects.Count; i++)
             {
                 var obj = objects[i];

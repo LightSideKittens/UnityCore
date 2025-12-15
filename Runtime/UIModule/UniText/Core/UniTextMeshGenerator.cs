@@ -57,8 +57,11 @@ public class UniTextMeshGenerator
     /// <summary>После генерации каждого глифа. Модификаторы могут модифицировать последние 4 вершины.</summary>
     public Action OnGlyph;
 
-    /// <summary>После всех глифов, перед применением к mesh. Модификаторы могут добавить геометрию.</summary>
-    public Action OnAfterGlyphs;
+    /// <summary>После глифов текущего шрифта, перед применением к mesh. Модификаторы могут добавить геометрию.</summary>
+    public Action OnAfterGlyphsPerFont;
+
+    /// <summary>Один раз в конце rebuild, после всех шрифтов. Модификаторы выполняют финальную обработку.</summary>
+    public Action OnRebuildEnd;
 
     // ═══════════════════════════════════════════════════════════════════
     // PUBLIC STATE - доступно модификаторам для чтения/записи
@@ -269,6 +272,8 @@ public class UniTextMeshGenerator
         if (DebugLogging)
             Debug.Log($"[UniTextMeshGenerator.GenerateMeshes] Result: {resultBuffer.Count} mesh pairs");
 
+        OnRebuildEnd?.Invoke();
+
         return resultBuffer;
     }
 
@@ -434,7 +439,7 @@ public class UniTextMeshGenerator
         }
 
         // Invoke OnAfterGlyphs - modifiers can add geometry (underline, strikethrough)
-        OnAfterGlyphs?.Invoke();
+        OnAfterGlyphsPerFont?.Invoke();
 
         // DEBUG: Log glyph lookup statistics
         if (DebugLogging)

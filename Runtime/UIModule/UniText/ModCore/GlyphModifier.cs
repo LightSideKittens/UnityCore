@@ -22,14 +22,14 @@ public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
 
     protected sealed override void Subscribe()
     {
-        cachedUniText.Rebuilding += OnRebuilding;
-        cachedUniText.MeshGenerator.OnGlyph += GetOnGlyphCallback();
+        uniText.Rebuilding += OnRebuilding;
+        uniText.MeshGenerator.OnGlyph += GetOnGlyphCallback();
     }
 
     protected sealed override void Unsubscribe()
     {
-        cachedUniText.Rebuilding -= OnRebuilding;
-        cachedUniText.MeshGenerator.OnGlyph -= GetOnGlyphCallback();
+        uniText.Rebuilding -= OnRebuilding;
+        uniText.MeshGenerator.OnGlyph -= GetOnGlyphCallback();
     }
 
     protected sealed override void ReleaseBuffers()

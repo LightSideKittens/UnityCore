@@ -46,23 +46,23 @@ public class ListModifier : BaseModifier
     protected override void CreateBuffers()
     {
         instanceItems = new LSList<ListItemInfo>(32);
-        instanceFontProvider = cachedUniText.FontProvider;
+        instanceFontProvider = uniText.FontProvider;
         items = instanceItems;
         fontProviderRef = instanceFontProvider;
     }
 
     protected override void Subscribe()
     {
-        cachedUniText.Rebuilding += OnRebuilding;
-        cachedUniText.MeshGenerator.OnRebuildStart += OnRebuildStart;
-        cachedUniText.MeshGenerator.OnAfterGlyphs += OnAfterGlyphs;
+        uniText.Rebuilding += OnRebuilding;
+        uniText.MeshGenerator.OnRebuildStart += OnRebuildStart;
+        uniText.MeshGenerator.OnAfterGlyphsPerFont += OnAfterGlyphs;
     }
 
     protected override void Unsubscribe()
     {
-        cachedUniText.Rebuilding -= OnRebuilding;
-        cachedUniText.MeshGenerator.OnRebuildStart -= OnRebuildStart;
-        cachedUniText.MeshGenerator.OnAfterGlyphs -= OnAfterGlyphs;
+        uniText.Rebuilding -= OnRebuilding;
+        uniText.MeshGenerator.OnRebuildStart -= OnRebuildStart;
+        uniText.MeshGenerator.OnAfterGlyphsPerFont -= OnAfterGlyphs;
     }
 
     protected override void ReleaseBuffers()
