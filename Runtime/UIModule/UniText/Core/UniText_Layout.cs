@@ -42,7 +42,7 @@ public partial class UniText : ILayoutElement
             EnsureShapingForLayout();
 
             float glyphScale = GetGlyphScaleForLayout();
-            return processor.GetUnwrappedWidth() * glyphScale;
+            return processor.GetMaxLineWidth() * glyphScale;
         }
     }
 
@@ -66,7 +66,44 @@ public partial class UniText : ILayoutElement
 
             EnsureShapingForLayout();
 
-            var settings = CreateProcessSettingsForLayout(width);
+            // When Auto Size is enabled without Word Wrap, font size is limited by width
+            // We need to calculate height at the actual font size that will be used
+            float effectiveFontSize;
+            if (enableAutoSize && !enableWordWrap)
+            {
+                // Use layout cache if valid for this width
+                if (hasValidLayoutCache && Mathf.Approximately(layoutCachedWidth, width))
+                {
+                    effectiveFontSize = layoutCachedFontSize;
+                }
+                else
+                {
+                    // Calculate what font size Auto Size would choose based on width
+                    var tempSettings = CreateProcessSettingsForLayout(width);
+                    // Use FloatMax for height since we only want width-limited size
+                    effectiveFontSize = processor.FindOptimalFontSize(minFontSize, maxFontSize, width, TextProcessSettings.FloatMax, tempSettings);
+
+                    // Cache for layout (width-only)
+                    layoutCachedFontSize = effectiveFontSize;
+                    layoutCachedWidth = width;
+                    hasValidLayoutCache = true;
+                }
+            }
+            else
+            {
+                effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
+            }
+
+            var settings = new TextProcessSettings
+            {
+                maxWidth = width,
+                maxHeight = TextProcessSettings.FloatMax,
+                fontSize = effectiveFontSize,
+                baseDirection = baseDirection,
+                enableWordWrap = enableWordWrap,
+                horizontalAlignment = horizontalAlignment,
+                verticalAlignment = verticalAlignment
+            };
             return processor.GetHeightForWidth(width, settings);
         }
     }

@@ -136,7 +136,7 @@ public sealed class TextProcessor
 
         if (!canReuseLayout)
         {
-            float glyphScale = buf.shapingFontSize > 0 ? settings.fontSize / buf.shapingFontSize : 1f;
+            float glyphScale = buf.GetGlyphScale(settings.fontSize);
             float effectiveMaxWidth = settings.enableWordWrap ? settings.maxWidth / glyphScale : TextProcessSettings.FloatMax;
             BreakLines(effectiveMaxWidth, glyphScale);
             LayoutText(settings);
@@ -238,6 +238,45 @@ public sealed class TextProcessor
     }
 
     /// <summary>
+    /// Get max line width (accounting for explicit line breaks).
+    /// Returns the width of the widest line. Call EnsureShaping() first.
+    /// </summary>
+    public float GetMaxLineWidth()
+    {
+        if (!hasValidShapingData) return 0;
+
+        var buf = CommonData.Current;
+        float maxWidth = 0f;
+        float currentWidth = 0f;
+        var codepoints = buf.codepoints.AsSpan(0, buf.codepointCount);
+        var glyphs = buf.shapedGlyphs.AsSpan(0, buf.shapedGlyphCount);
+        int glyphIdx = 0;
+
+        for (int i = 0; i < codepoints.Length; i++)
+        {
+            int cp = codepoints[i];
+            if (UnicodeData.IsLineBreak(cp))
+            {
+                if (currentWidth > maxWidth) maxWidth = currentWidth;
+                currentWidth = 0f;
+                if (glyphIdx < glyphs.Length && glyphs[glyphIdx].advanceX == 0f) glyphIdx++;
+            }
+            else if (cp == '\r')
+            {
+                if (glyphIdx < glyphs.Length && glyphs[glyphIdx].advanceX == 0f) glyphIdx++;
+            }
+            else if (glyphIdx < glyphs.Length)
+            {
+                currentWidth += glyphs[glyphIdx].advanceX;
+                glyphIdx++;
+            }
+        }
+        if (currentWidth > maxWidth) maxWidth = currentWidth;
+
+        return maxWidth > 0 ? maxWidth : GetUnwrappedWidth();
+    }
+
+    /// <summary>
     /// Get text height for a given width (performs line breaking and layout).
     /// Call EnsureShaping() first. Caches result for same width.
     /// </summary>
@@ -260,7 +299,7 @@ public sealed class TextProcessor
             UnityEngine.Debug.Log("[GetHeightForWidth] DOING LAYOUT");
 
         var buf = CommonData.Current;
-        float glyphScale = buf.shapingFontSize > 0 ? settings.fontSize / buf.shapingFontSize : 1f;
+        float glyphScale = buf.GetGlyphScale(settings.fontSize);
         float effectiveMaxWidth = settings.enableWordWrap ? width / glyphScale : TextProcessSettings.FloatMax;
 
         BreakLines(effectiveMaxWidth, glyphScale);
@@ -317,7 +356,7 @@ public sealed class TextProcessor
             for (int i = 0; i < codepoints.Length; i++)
             {
                 int cp = codepoints[i];
-                if (cp == '\n' || cp == 0x2028 || cp == 0x2029)
+                if (UnicodeData.IsLineBreak(cp))
                 {
                     // Explicit line break - always count as new line
                     if (currentLineWidth > maxLineWidth) maxLineWidth = currentLineWidth;
@@ -419,7 +458,7 @@ public sealed class TextProcessor
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private float GetHeightForFontSize(float fontSize, float targetWidth, TextProcessSettings baseSettings, CommonData buf)
     {
-        float glyphScale = fontSize / buf.shapingFontSize;
+        float glyphScale = buf.GetGlyphScale(fontSize);
         float effectiveMaxWidth = baseSettings.enableWordWrap ? targetWidth / glyphScale : TextProcessSettings.FloatMax;
 
         // Reset layout buffers for new calculation
@@ -433,8 +472,7 @@ public sealed class TextProcessor
         if (fontProvider != null)
         {
             fontProvider.GetLineMetrics(fontSize, out float ascender, out _, out float lineHeight);
-            float lineSpacing = baseSettings.lineSpacing;
-            return ascender + (buf.lineCount - 1) * (lineHeight + lineSpacing);
+            return UniTextFontProvider.CalculateTextHeight(ascender, buf.lineCount, lineHeight, baseSettings.lineSpacing);
         }
 
         // Fallback: estimate based on line count
@@ -816,8 +854,7 @@ public sealed class TextProcessor
         {
             fontProvider.GetLineMetrics(settings.fontSize, out float ascender, out float descender, out float lineHeight);
             float scale = fontProvider.GetScale(baseFontId, settings.fontSize);
-            float glyphScale = buf.shapingFontSize > 0 ? settings.fontSize / buf.shapingFontSize : 1f;
-            Layout.SetFontMetrics(ascender, descender, lineHeight, scale, glyphScale);
+            Layout.SetFontMetrics(ascender, descender, lineHeight, scale, buf.GetGlyphScale(settings.fontSize));
         }
 
         Layout.SetLayoutSettings(settings.layout);

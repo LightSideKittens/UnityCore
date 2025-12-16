@@ -189,7 +189,7 @@ public class ListModifier : BaseModifier
 
         // Calculate glyphScale for proper gap scaling during auto size
         var buf = CommonData.Current;
-        float glyphScale = buf.shapingFontSize > 0 ? uniText.CurrentFontSize / buf.shapingFontSize : 1f;
+        float glyphScale = buf.GetGlyphScale(uniText.CurrentFontSize);
         float scaledGap = markerToTextGap * glyphScale;
 
         float markerX = isRtl

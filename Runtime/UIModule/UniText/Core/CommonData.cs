@@ -90,6 +90,10 @@ public sealed class CommonData
 
     public CommonData() { }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public float GetGlyphScale(float targetFontSize)
+        => shapingFontSize > 0 ? targetFontSize / shapingFontSize : 1f;
+
     /// <summary>
     /// Взять массивы из пулов. Вызывать в OnEnable.
     /// </summary>

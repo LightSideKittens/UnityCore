@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 /// <summary>
@@ -38,6 +39,14 @@ public static class UnicodeData
     // Separators
     public const int LineSeparator = 0x2028;
     public const int ParagraphSeparator = 0x2029;
+
+    /// <summary>
+    /// Check if codepoint is a line break character (LF, LS, PS).
+    /// Does not include CR (handled separately for CRLF).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsLineBreak(int cp)
+        => cp == LineFeed || cp == LineSeparator || cp == ParagraphSeparator;
 
     // Brackets (for BiDi pairing)
     public const int LeftParenthesis = 0x0028;

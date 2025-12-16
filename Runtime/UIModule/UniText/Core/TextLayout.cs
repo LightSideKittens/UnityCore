@@ -104,7 +104,7 @@ public sealed class TextLayout
         if (ascender <= 0) ascender = computedLineHeight * 0.8f;
 
         float lineSpacing = settings.lineSpacing;
-        float totalTextHeight = ascender + (lineCount - 1) * (computedLineHeight + lineSpacing);
+        float totalTextHeight = UniTextFontProvider.CalculateTextHeight(ascender, lineCount, computedLineHeight, lineSpacing);
 
         float y = ComputeTextStartY(totalTextHeight, settings) + ascender;
         float maxLineWidth = 0;

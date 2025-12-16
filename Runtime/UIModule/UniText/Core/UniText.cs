@@ -130,6 +130,11 @@ public partial class UniText : MaskableGraphic
     private float lastAutoSizeHeight;
     private bool hasValidAutoSize;
 
+    // Layout cache (for preferredHeight with width-only constraint)
+    private float layoutCachedFontSize;
+    private float layoutCachedWidth;
+    private bool hasValidLayoutCache;
+
     // Sub-mesh renderers для fallback шрифтов
     private readonly List<CanvasRenderer> subMeshRenderers = new();
     private LSList<UniTextMeshPair> lastMeshPairs;
@@ -277,6 +282,7 @@ public partial class UniText : MaskableGraphic
             if (enableAutoSize == value) return;
             enableAutoSize = value;
             hasValidAutoSize = false;
+            hasValidLayoutCache = false;
             SetDirty(DirtyFlags.Layout);
         }
     }
@@ -292,6 +298,7 @@ public partial class UniText : MaskableGraphic
             if (enableAutoSize)
             {
                 hasValidAutoSize = false;
+                hasValidLayoutCache = false;
                 SetDirty(DirtyFlags.Layout);
             }
         }
@@ -308,6 +315,7 @@ public partial class UniText : MaskableGraphic
             if (enableAutoSize)
             {
                 hasValidAutoSize = false;
+                hasValidLayoutCache = false;
                 SetDirty(DirtyFlags.Layout);
             }
         }
@@ -516,6 +524,7 @@ public partial class UniText : MaskableGraphic
         textIsParsed = false;
         shaderChannelsConfigured = false;
         hasValidAutoSize = false;
+        hasValidLayoutCache = false;
         dirtyFlags = DirtyFlags.All;
     }
 
@@ -535,6 +544,7 @@ public partial class UniText : MaskableGraphic
         textBuffers = null;
         textIsParsed = false;
         hasValidAutoSize = false;
+        hasValidLayoutCache = false;
     }
 #endif
 
@@ -632,6 +642,7 @@ public partial class UniText : MaskableGraphic
 
         ReleaseMeshes();
         hasValidAutoSize = false; // Text changed, need to recalculate auto size
+        hasValidLayoutCache = false;
 
         if (string.IsNullOrEmpty(text))
         {

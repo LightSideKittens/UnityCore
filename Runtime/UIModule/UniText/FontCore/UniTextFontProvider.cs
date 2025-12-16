@@ -303,6 +303,14 @@ public sealed class UniTextFontProvider
     }
 
     /// <summary>
+    /// Calculate total text height for given line count and font metrics.
+    /// Formula: ascender + (lineCount - 1) * (lineHeight + lineSpacing)
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float CalculateTextHeight(float ascender, int lineCount, float lineHeight, float lineSpacing = 0f)
+        => ascender + (lineCount - 1) * (lineHeight + lineSpacing);
+
+    /// <summary>
     /// Find which font supports the given codepoint.
     /// Only checks cmap (via HarfBuzz), does NOT add to atlas.
     /// Atlas population happens after shaping, by glyph indices.
