@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Парсит списки в стиле Markdown (близко к CommonMark):
@@ -19,7 +20,13 @@ public sealed class MarkdownListParseRule : IParseRule
     // Bullet markers по CommonMark: -, *, +
     private static readonly char[] BulletChars = { '-', '*', '+' };
 
-    public int TryMatch(string text, int index, List<ParsedRange> results)
+    // Cached level strings to avoid allocation
+    private static readonly string[] LevelStrings = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+
+    // Cache for ordered list parameters "level:number"
+    private static readonly Dictionary<(int level, int number), string> OrderedParamCache = new(64);
+
+    public int TryMatch(string text, int index, IList<ParsedRange> results)
     {
         // Должны быть в начале строки (после \n или index=0)
         if (index > 0 && text[index - 1] != '\n')
@@ -53,7 +60,7 @@ public sealed class MarkdownListParseRule : IParseRule
             {
                 start = contentStart,
                 end = contentEnd,
-                parameter = nestingLevel.ToString(),  // "0", "1", "2"
+                parameter = GetLevelString(nestingLevel),
                 tagStart = index,
                 tagEnd = contentStart,
                 closeTagStart = contentEnd,
@@ -78,7 +85,7 @@ public sealed class MarkdownListParseRule : IParseRule
             {
                 start = contentStart,
                 end = contentEnd,
-                parameter = $"{nestingLevel}:{number}",  // "0:1", "1:5"
+                parameter = GetOrderedParam(nestingLevel, number),
                 tagStart = index,
                 tagEnd = contentStart,
                 closeTagStart = contentEnd,
@@ -186,7 +193,7 @@ public sealed class MarkdownListParseRule : IParseRule
         return textLen;
     }
 
-    public void Finalize(int textLength, List<ParsedRange> results)
+    public void Finalize(int textLength, IList<ParsedRange> results)
     {
         // Списки не требуют финализации (нет unclosed tags)
     }
@@ -194,5 +201,23 @@ public sealed class MarkdownListParseRule : IParseRule
     public void Reset()
     {
         // Нет состояния для сброса
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string GetLevelString(int level)
+    {
+        return (uint)level < (uint)LevelStrings.Length ? LevelStrings[level] : level.ToString();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string GetOrderedParam(int level, int number)
+    {
+        var key = (level, number);
+        if (OrderedParamCache.TryGetValue(key, out var cached))
+            return cached;
+
+        var result = $"{level}:{number}";
+        OrderedParamCache[key] = result;
+        return result;
     }
 }

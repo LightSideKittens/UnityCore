@@ -43,18 +43,38 @@ public readonly struct BidiResult
 {
     public readonly byte[] levels;
     public readonly BidiParagraph[] paragraphs;
+    public readonly int paragraphCount;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BidiResult(byte[] levels, BidiParagraph[] paragraphs)
     {
         this.levels = levels;
         this.paragraphs = paragraphs;
+        this.paragraphCount = paragraphs?.Length ?? 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public BidiResult(byte[] levels, BidiParagraph[] paragraphs, int paragraphCount)
+    {
+        this.levels = levels;
+        this.paragraphs = paragraphs;
+        this.paragraphCount = paragraphCount;
     }
 
     public BidiDirection Direction
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => paragraphs.Length > 0 ? paragraphs[0].Direction : BidiDirection.LeftToRight;
+        get => paragraphCount > 0 ? paragraphs[0].Direction : BidiDirection.LeftToRight;
+    }
+
+    /// <summary>
+    /// Get paragraphs as span. Use this instead of paragraphs array directly
+    /// since the array may be larger than the actual paragraph count.
+    /// </summary>
+    public ReadOnlySpan<BidiParagraph> ParagraphsSpan
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => paragraphs != null ? paragraphs.AsSpan(0, paragraphCount) : ReadOnlySpan<BidiParagraph>.Empty;
     }
 
     public bool HasRtlContent
@@ -537,7 +557,21 @@ public sealed class BidiEngine
         for (int i = 0; i < paragraphCount; i++)
             paragraphsResultBuffer![i] = paragraphList[i];
 
-        return new BidiResult(resultLevels, paragraphsResultBuffer!.AsSpan(0, paragraphCount).ToArray());
+        // When copyLevels is true (public API), also copy paragraphs for safety
+        // When copyLevels is false (internal pooled API), return pooled buffer directly
+        BidiParagraph[] resultParagraphs;
+        if (copyLevels)
+        {
+            resultParagraphs = new BidiParagraph[paragraphCount];
+            Array.Copy(paragraphsResultBuffer!, 0, resultParagraphs, 0, paragraphCount);
+            return new BidiResult(resultLevels, resultParagraphs);
+        }
+        else
+        {
+            // Fast path: return pooled buffer directly
+            // WARNING: Caller must copy immediately before next BidiEngine call!
+            return new BidiResult(resultLevels, paragraphsResultBuffer!, paragraphCount);
+        }
     }
 
 

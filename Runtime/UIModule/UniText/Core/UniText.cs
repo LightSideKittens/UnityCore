@@ -4,6 +4,7 @@ using LSCore;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.Profiling;
 
 /// <summary>
 /// Компонент для отображения текста с полной Unicode поддержкой.
@@ -111,7 +112,7 @@ public partial class UniText : MaskableGraphic
     // Cached results
     private float lastResultWidth;
     private float lastResultHeight;
-    private string cachedCleanText;
+    private bool textIsParsed;
 
     // Sub-mesh renderers для fallback шрифтов
     private readonly List<CanvasRenderer> subMeshRenderers = new();
@@ -450,7 +451,7 @@ public partial class UniText : MaskableGraphic
         meshGenerator = null;
         cachedCanvas = null;
         cachedMeshProvider = null;
-        cachedCleanText = null;
+        textIsParsed = false;
         shaderChannelsConfigured = false;
         dirtyFlags = DirtyFlags.All;
     }
@@ -469,7 +470,7 @@ public partial class UniText : MaskableGraphic
         fontProvider = null;
         meshGenerator = null;
         textBuffers = null;
-        cachedCleanText = null;
+        textIsParsed = false;
     }
 #endif
 
@@ -487,7 +488,7 @@ public partial class UniText : MaskableGraphic
         if ((flags & DirtyFlags.FullRebuild) != 0)
         {
             processor?.InvalidateShapingData();
-            cachedCleanText = null;
+            textIsParsed = false;
         }
 
         if (oldFlags == DirtyFlags.None)
@@ -579,25 +580,23 @@ public partial class UniText : MaskableGraphic
         {
             var rect = rt.rect;
 
-            // Parse attributes only if not already cached (EnsureShapingForLayout may have done it)
-            string textToProcess;
-            if (cachedCleanText == null)
+            // Parse attributes only if not already parsed
+            if (!textIsParsed)
             {
                 parser?.ResetModifiers();
-                textToProcess = parser != null ? parser.Parse(text) : text;
-                cachedCleanText = textToProcess;
-            }
-            else
-            {
-                textToProcess = cachedCleanText;
+                parser?.Parse(text);
+                textIsParsed = true;
             }
 
+            // Get text span: from parser if available, otherwise original text
+            var textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
+
             var settings = CreateProcessSettings(rect);
-            var glyphs = processor.Process(textToProcess.AsSpan(), settings);
+            var glyphs = processor.Process(textSpan, settings);
 
             lastResultWidth = processor.ResultWidth;
             lastResultHeight = processor.ResultHeight;
-
+            
             GenerateMeshes(glyphs, rect);
         }
         catch (Exception ex)
@@ -626,8 +625,11 @@ public partial class UniText : MaskableGraphic
             return;
         }
 
+        // Get text span: from parser if available, otherwise original text
+        var textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
+
         var settings = CreateProcessSettings(rect);
-        var glyphs = processor.Process(cachedCleanText.AsSpan(), settings);
+        var glyphs = processor.Process(textSpan, settings);
 
         lastResultWidth = processor.ResultWidth;
         lastResultHeight = processor.ResultHeight;

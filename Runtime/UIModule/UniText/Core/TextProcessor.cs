@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public struct TextProcessSettings
 {
@@ -191,7 +192,7 @@ public sealed class TextProcessor
     private bool DoFullShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
         var buf = CommonData.Current;
-
+        
         Parse(text);
         Parsed?.Invoke();
 
@@ -201,11 +202,12 @@ public sealed class TextProcessor
             hasValidLayoutData = false;
             return false;
         }
-
+        
         AnalyzeBidi(settings.baseDirection);
         AnalyzeScripts();
         Itemize();
         Shape();
+        
         Shaped?.Invoke();
         EnsureGlyphsInAtlas();
 
@@ -340,7 +342,15 @@ public sealed class TextProcessor
             buf.bidiLevels.AsSpan(0, cpCount).Fill(0);
         }
 
-        buf.bidiParagraphs = result.paragraphs ?? Array.Empty<BidiParagraph>();
+        // Copy paragraphs to our own buffer (pooled source will be reused)
+        int paragraphCount = result.paragraphCount;
+        if (paragraphCount > 0)
+        {
+            buf.EnsureBidiParagraphCapacity(paragraphCount);
+            result.ParagraphsSpan.CopyTo(buf.bidiParagraphs);
+        }
+        buf.bidiParagraphCount = paragraphCount;
+
         buf.baseDirection = result.Direction == BidiDirection.RightToLeft
             ? TextDirection.RightToLeft
             : TextDirection.LeftToRight;
@@ -349,7 +359,7 @@ public sealed class TextProcessor
         if (DebugLogging)
         {
             var sb = new System.Text.StringBuilder();
-            sb.Append($"[TextProcessor.AnalyzeBidi] baseDirection={buf.baseDirection}, paragraphs={buf.bidiParagraphs.Length}, levels: ");
+            sb.Append($"[TextProcessor.AnalyzeBidi] baseDirection={buf.baseDirection}, paragraphs={buf.bidiParagraphCount}, levels: ");
             for (int j = 0; j < cpCount && j < 30; j++)
             {
                 sb.Append(buf.bidiLevels[j]);
@@ -612,6 +622,7 @@ public sealed class TextProcessor
             buf.shapedGlyphs.AsSpan(0, buf.shapedGlyphCount),
             maxWidth,
             buf.bidiParagraphs,
+            buf.bidiParagraphCount,
             ref linesArr, ref lineCnt,
             ref orderedRunsArr, ref orderedRunCnt);
 

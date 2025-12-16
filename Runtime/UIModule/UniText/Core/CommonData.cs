@@ -22,6 +22,7 @@ public sealed class CommonData
     private const int MinRunCapacity = 64;
     private const int MinGlyphCapacity = 256;
     private const int MinLineCapacity = 32;
+    private const int MinParagraphCapacity = 8;
 
     /// <summary>
     /// Текущий активный буфер. Устанавливается перед Rebuild.
@@ -33,7 +34,8 @@ public sealed class CommonData
     public int codepointCount;
 
     public byte[] bidiLevels;
-    public BidiParagraph[] bidiParagraphs = Array.Empty<BidiParagraph>();
+    public BidiParagraph[] bidiParagraphs;
+    public int bidiParagraphCount;
     public TextDirection baseDirection;
 
     public UnicodeScript[] scripts;
@@ -97,6 +99,7 @@ public sealed class CommonData
 
         codepoints = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
         bidiLevels = ArrayPool<byte>.Shared.Rent(MinCodepointCapacity);
+        bidiParagraphs = ArrayPool<BidiParagraph>.Shared.Rent(MinParagraphCapacity);
         scripts = ArrayPool<UnicodeScript>.Shared.Rent(MinCodepointCapacity);
         startMargins = ArrayPool<float>.Shared.Rent(MinCodepointCapacity);
         runs = ArrayPool<TextRun>.Shared.Rent(MinRunCapacity);
@@ -106,7 +109,6 @@ public sealed class CommonData
         orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
         positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
         glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
-        bidiParagraphs = Array.Empty<BidiParagraph>();
         
         isRented = true;
         Reset();
@@ -121,6 +123,7 @@ public sealed class CommonData
 
         if (codepoints != null) { ArrayPool<int>.Shared.Return(codepoints); codepoints = null; }
         if (bidiLevels != null) { ArrayPool<byte>.Shared.Return(bidiLevels); bidiLevels = null; }
+        if (bidiParagraphs != null) { ArrayPool<BidiParagraph>.Shared.Return(bidiParagraphs); bidiParagraphs = null; }
         if (scripts != null) { ArrayPool<UnicodeScript>.Shared.Return(scripts); scripts = null; }
 
         if (startMargins != null)
@@ -157,13 +160,13 @@ public sealed class CommonData
             startMargins.AsSpan(0, cpCount).Clear();
 
         codepointCount = 0;
+        bidiParagraphCount = 0;
         runCount = 0;
         shapedRunCount = 0;
         shapedGlyphCount = 0;
         lineCount = 0;
         orderedRunCount = 0;
         positionedGlyphCount = 0;
-        bidiParagraphs = Array.Empty<BidiParagraph>();
         baseDirection = TextDirection.LeftToRight;
     }
 
@@ -188,6 +191,13 @@ public sealed class CommonData
     {
         if (bidiLevels.Length < required)
             BufferUtils.Grow(ref bidiLevels, bidiLevels.Length, required);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EnsureBidiParagraphCapacity(int required)
+    {
+        if (bidiParagraphs.Length < required)
+            BufferUtils.Grow(ref bidiParagraphs, bidiParagraphCount, required);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

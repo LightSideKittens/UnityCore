@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 /// <summary>
 /// Базовый класс для правил парсинга HTML-подобных тегов.
@@ -8,7 +9,11 @@ using System.Collections.Generic;
 [Serializable]
 public abstract class TagParseRule : IParseRule
 {
-    private readonly Stack<OpenTag> openTags = new();
+    // Pre-sized stack to avoid growth allocations (most tags have <8 nesting levels)
+    private readonly Stack<OpenTag> openTags = new(8);
+
+    // String interning cache for parameters - most parameters repeat (colors, sizes, etc.)
+    private static readonly Dictionary<int, string> parameterCache = new(128);
 
     private struct OpenTag
     {
@@ -42,7 +47,7 @@ public abstract class TagParseRule : IParseRule
         openTags.Clear();
     }
 
-    public void Finalize(int textLength, List<ParsedRange> results)
+    public void Finalize(int textLength, IList<ParsedRange> results)
     {
         // Закрываем все незакрытые теги — их действие распространяется до конца текста
         while (openTags.Count > 0)
@@ -58,7 +63,7 @@ public abstract class TagParseRule : IParseRule
         }
     }
 
-    public int TryMatch(string text, int index, List<ParsedRange> results)
+    public int TryMatch(string text, int index, IList<ParsedRange> results)
     {
         if (text[index] != '<')
             return index;
@@ -77,7 +82,7 @@ public abstract class TagParseRule : IParseRule
         return index;
     }
 
-    private int TryMatchOpenTag(string text, int index, List<ParsedRange> results)
+    private int TryMatchOpenTag(string text, int index, IList<ParsedRange> results)
     {
         int tagNameLen = TagName.Length;
         int minLen = HasParameter ? tagNameLen + 4 : tagNameLen + 2;
@@ -155,7 +160,7 @@ public abstract class TagParseRule : IParseRule
         return -1;
     }
 
-    private int TryMatchCloseTag(string text, int index, List<ParsedRange> results)
+    private int TryMatchCloseTag(string text, int index, IList<ParsedRange> results)
     {
         int tagNameLen = TagName.Length;
 
@@ -211,7 +216,46 @@ public abstract class TagParseRule : IParseRule
             }
         }
 
-        return span.ToString();
+        // Use string interning - most parameters repeat (colors, sizes, etc.)
+        return GetOrCreateCachedString(span);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string GetOrCreateCachedString(ReadOnlySpan<char> span)
+    {
+        if (span.IsEmpty) return string.Empty;
+
+        // Compute hash of the span content
+        int hash = ComputeSpanHash(span);
+
+        // Check cache first
+        if (parameterCache.TryGetValue(hash, out var cached))
+        {
+            // Verify it's actually the same string (hash collision protection)
+            if (cached.Length == span.Length && span.SequenceEqual(cached.AsSpan()))
+                return cached;
+        }
+
+        // Not in cache - create new string and cache it
+        var result = span.ToString();
+        parameterCache[hash] = result;
+        return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int ComputeSpanHash(ReadOnlySpan<char> span)
+    {
+        // Simple FNV-1a hash
+        unchecked
+        {
+            int hash = -2128831035;
+            for (int i = 0; i < span.Length; i++)
+            {
+                hash ^= span[i];
+                hash *= 16777619;
+            }
+            return hash;
+        }
     }
 
     private static bool MatchesIgnoreCase(string text, int index, string pattern)

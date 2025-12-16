@@ -96,20 +96,18 @@ public partial class UniText : ILayoutElement
         if (processor.HasValidShapingData) return;
 
         // Use same text processing as Rebuild - parse tags first
-        string textToProcess;
-        if (cachedCleanText == null)
+        if (!textIsParsed)
         {
             parser?.ResetModifiers();
-            textToProcess = parser != null ? parser.Parse(text) : text;
-            cachedCleanText = textToProcess;
-        }
-        else
-        {
-            textToProcess = cachedCleanText;
+            parser?.Parse(text);
+            textIsParsed = true;
         }
 
+        // Get text span: from parser if available, otherwise original text
+        var textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
+
         var settings = CreateProcessSettingsForLayout(TextProcessSettings.FloatMax);
-        processor.EnsureShaping(textToProcess.AsSpan(), settings);
+        processor.EnsureShaping(textSpan, settings);
     }
 
     /// <summary>

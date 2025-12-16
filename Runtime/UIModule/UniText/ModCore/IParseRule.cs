@@ -15,14 +15,14 @@ public interface IParseRule
     /// <returns>
     /// Новый индекс после обработанного признака, или тот же index если ничего не найдено
     /// </returns>
-    int TryMatch(string text, int index, List<ParsedRange> results);
+    int TryMatch(string text, int index, IList<ParsedRange> results);
 
     /// <summary>
     /// Завершает парсинг: закрывает незакрытые теги до конца текста.
     /// </summary>
     /// <param name="textLength">Длина исходного текста</param>
     /// <param name="results">Список для записи диапазонов</param>
-    void Finalize(int textLength, List<ParsedRange> results);
+    void Finalize(int textLength, IList<ParsedRange> results);
 
     /// <summary>
     /// Сброс внутреннего состояния перед новым парсингом

@@ -9,12 +9,12 @@ public class RangeRule : IParseRule
     public string parameter;
     private Range currentRange;
     
-    public int TryMatch(string text, int index, List<ParsedRange> results)
+    public int TryMatch(string text, int index, IList<ParsedRange> results)
     {
         return index;
     }
 
-    public void Finalize(int textLength, List<ParsedRange> results)
+    public void Finalize(int textLength, IList<ParsedRange> results)
     {
         if (!RangeEx.TryParse(range, out currentRange))
         {

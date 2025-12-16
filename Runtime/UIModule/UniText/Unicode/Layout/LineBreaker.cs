@@ -25,6 +25,10 @@ public sealed class LineBreaker
     private int tempOrderedRunCount;
     private int searchStartRunIdx; // Optimization: skip fully processed runs
 
+    // Temporary paragraph reference for BiDi reordering
+    private BidiParagraph[] tempParagraphs;
+    private int tempParagraphCount;
+
     public LineBreaker(LineBreakAlgorithm lineBreakAlgorithm)
     {
         this.lineBreakAlgorithm = lineBreakAlgorithm ?? throw new ArgumentNullException(nameof(lineBreakAlgorithm));
@@ -47,6 +51,7 @@ public sealed class LineBreaker
         ReadOnlySpan<ShapedGlyph> glyphs,
         float maxWidth,
         BidiParagraph[] paragraphs,
+        int paragraphCount,
         ref TextLine[] linesOut,
         ref int lineCount,
         ref ShapedRun[] orderedRunsOut,
@@ -57,6 +62,8 @@ public sealed class LineBreaker
         tempLineCount = 0;
         tempOrderedRuns = orderedRunsOut;
         tempOrderedRunCount = 0;
+        tempParagraphs = paragraphs;
+        tempParagraphCount = paragraphCount;
 
         if (runs.IsEmpty)
         {
@@ -73,7 +80,7 @@ public sealed class LineBreaker
 
         // Step 3: BiDi reorder runs within each line (UAX #9, rule L2)
         // Each line uses the baseLevel of its containing paragraph
-        ReorderRunsPerLine(paragraphs);
+        ReorderRunsPerLine();
 
         // Return potentially resized buffers
         linesOut = tempLines;
@@ -384,14 +391,14 @@ public sealed class LineBreaker
         };
     }
 
-    private void ReorderRunsPerLine(BidiParagraph[] paragraphs)
+    private void ReorderRunsPerLine()
     {
         for (int i = 0; i < tempLineCount; i++)
         {
             var line = tempLines[i];
 
             // Find the paragraph that contains this line
-            byte paragraphBaseLevel = FindParagraphBaseLevel(line.range.start, paragraphs);
+            byte paragraphBaseLevel = FindParagraphBaseLevel(line.range.start);
 
             // UAX #9 Rule L2: Reorder runs based on BiDi levels
             ReorderRunsInLine(line.runStart, line.runCount, paragraphBaseLevel);
@@ -406,24 +413,24 @@ public sealed class LineBreaker
     /// Find the base level of the paragraph containing the given codepoint index.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static byte FindParagraphBaseLevel(int codepointIndex, BidiParagraph[] paragraphs)
+    private byte FindParagraphBaseLevel(int codepointIndex)
     {
-        if (paragraphs == null || paragraphs.Length == 0)
+        if (tempParagraphs == null || tempParagraphCount == 0)
             return 0; // Default LTR
 
         // Most common case: single paragraph
-        if (paragraphs.Length == 1)
-            return paragraphs[0].baseLevel;
+        if (tempParagraphCount == 1)
+            return tempParagraphs[0].baseLevel;
 
         // Multiple paragraphs: search
-        for (int i = 0; i < paragraphs.Length; i++)
+        for (int i = 0; i < tempParagraphCount; i++)
         {
-            var para = paragraphs[i];
+            var para = tempParagraphs[i];
             if (codepointIndex >= para.startIndex && codepointIndex <= para.endIndex)
                 return para.baseLevel;
         }
 
-        return paragraphs[0].baseLevel;
+        return tempParagraphs[0].baseLevel;
     }
 
     /// <summary>
