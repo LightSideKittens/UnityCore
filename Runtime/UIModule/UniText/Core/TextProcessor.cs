@@ -52,6 +52,7 @@ public sealed class TextProcessor
 
     // Track last layout width to skip redundant layout
     private float lastLayoutWidth = -1;
+    private float lastLayoutFontSize = -1;
     private bool hasValidLayoutData;
 
     // DEBUG: Enable detailed logging for Arabic text issues
@@ -89,6 +90,7 @@ public sealed class TextProcessor
         bool canReuseLayout = !fullRebuild &&
                               hasValidLayoutData &&
                               Math.Abs(lastLayoutWidth - settings.maxWidth) < 0.001f &&
+                              Math.Abs(lastLayoutFontSize - settings.fontSize) < 0.001f &&
                               buf.positionedGlyphCount > 0;
 
         if (CommonData.DebugPipelineLogging)
@@ -136,7 +138,7 @@ public sealed class TextProcessor
         {
             float glyphScale = buf.shapingFontSize > 0 ? settings.fontSize / buf.shapingFontSize : 1f;
             float effectiveMaxWidth = settings.enableWordWrap ? settings.maxWidth / glyphScale : TextProcessSettings.FloatMax;
-            BreakLines(effectiveMaxWidth);
+            BreakLines(effectiveMaxWidth, glyphScale);
             LayoutText(settings);
         }
 
@@ -156,6 +158,7 @@ public sealed class TextProcessor
         hasValidShapingData = false;
         hasValidLayoutData = false;
         lastLayoutWidth = -1;
+        lastLayoutFontSize = -1;
     }
 
     /// <summary>
@@ -192,7 +195,10 @@ public sealed class TextProcessor
     private bool DoFullShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
         var buf = CommonData.Current;
-        
+
+        // Set shapingFontSize BEFORE Parsed event so modifiers can use it
+        buf.shapingFontSize = settings.fontSize;
+
         Parse(text);
         Parsed?.Invoke();
 
@@ -202,17 +208,16 @@ public sealed class TextProcessor
             hasValidLayoutData = false;
             return false;
         }
-        
+
         AnalyzeBidi(settings.baseDirection);
         AnalyzeScripts();
         Itemize();
         Shape();
-        
+
         Shaped?.Invoke();
         EnsureGlyphsInAtlas();
 
         hasValidShapingData = true;
-        buf.shapingFontSize = settings.fontSize;
         return true;
     }
 
@@ -258,14 +263,135 @@ public sealed class TextProcessor
         float glyphScale = buf.shapingFontSize > 0 ? settings.fontSize / buf.shapingFontSize : 1f;
         float effectiveMaxWidth = settings.enableWordWrap ? width / glyphScale : TextProcessSettings.FloatMax;
 
-        BreakLines(effectiveMaxWidth);
+        BreakLines(effectiveMaxWidth, glyphScale);
         LayoutText(settings);
 
         // Cache layout for Process() to reuse
         lastLayoutWidth = settings.maxWidth;
+        lastLayoutFontSize = settings.fontSize;
         hasValidLayoutData = true;
 
         return resultHeight;
+    }
+
+    /// <summary>
+    /// Find optimal font size that fits text within target dimensions.
+    /// Call EnsureShaping() first with base fontSize.
+    /// Uses binary search - shaping is done once, only line breaking + layout per iteration.
+    /// </summary>
+    /// <param name="minSize">Minimum font size</param>
+    /// <param name="maxSize">Maximum font size</param>
+    /// <param name="targetWidth">Target width constraint</param>
+    /// <param name="targetHeight">Target height constraint</param>
+    /// <param name="baseSettings">Base settings (fontSize will be modified during search)</param>
+    /// <returns>Optimal font size that fits, or minSize if text doesn't fit even at minimum</returns>
+    public float FindOptimalFontSize(
+        float minSize,
+        float maxSize,
+        float targetWidth,
+        float targetHeight,
+        TextProcessSettings baseSettings)
+    {
+        if (!hasValidShapingData) return minSize;
+        if (targetWidth <= 0 || targetHeight <= 0) return minSize;
+
+        var buf = CommonData.Current;
+        if (buf.shapingFontSize <= 0) return minSize;
+
+        // Fast path: check if text fits at maxSize without word wrap (single line)
+        float unwrappedWidth = GetUnwrappedWidth();
+        float maxGlyphScale = maxSize / buf.shapingFontSize;
+        float scaledUnwrappedWidth = unwrappedWidth * maxGlyphScale;
+
+        if (!baseSettings.enableWordWrap || scaledUnwrappedWidth <= targetWidth)
+        {
+            // Single line case - analytical solution
+            float widthLimitedSize = (targetWidth / unwrappedWidth) * buf.shapingFontSize;
+
+            // Get line height ratio (approximate)
+            float lineHeightRatio = fontProvider != null ? GetLineHeightRatio() : 1.2f;
+            float heightLimitedSize = targetHeight / lineHeightRatio;
+
+            float optimalSize = Math.Min(widthLimitedSize, heightLimitedSize);
+
+            // Invalidate layout cache - fontSize may have changed
+            hasValidLayoutData = false;
+            lastLayoutWidth = -1;
+            lastLayoutFontSize = -1;
+
+            return Math.Clamp(optimalSize, minSize, maxSize);
+        }
+
+        // Multi-line case - binary search
+        // Invalidate layout cache since we'll be testing different sizes
+        hasValidLayoutData = false;
+        lastLayoutWidth = -1;
+        lastLayoutFontSize = -1;
+
+        const float tolerance = 0.5f;
+        float lo = minSize;
+        float hi = maxSize;
+
+        // First check if even minSize fits
+        float minHeight = GetHeightForFontSize(lo, targetWidth, baseSettings, buf);
+        if (minHeight > targetHeight)
+            return minSize; // Text doesn't fit even at minimum size
+
+        // Check if maxSize fits
+        float maxHeight = GetHeightForFontSize(hi, targetWidth, baseSettings, buf);
+        if (maxHeight <= targetHeight)
+            return maxSize; // Text fits at maximum size
+
+        // Binary search
+        while (hi - lo > tolerance)
+        {
+            float mid = (lo + hi) * 0.5f;
+            float height = GetHeightForFontSize(mid, targetWidth, baseSettings, buf);
+
+            if (height <= targetHeight)
+                lo = mid; // Can increase
+            else
+                hi = mid; // Need to decrease
+        }
+
+        // Invalidate layout cache - final layout will be done with actual fontSize
+        hasValidLayoutData = false;
+        lastLayoutWidth = -1;
+        lastLayoutFontSize = -1;
+
+        return lo;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private float GetHeightForFontSize(float fontSize, float targetWidth, TextProcessSettings baseSettings, CommonData buf)
+    {
+        float glyphScale = fontSize / buf.shapingFontSize;
+        float effectiveMaxWidth = baseSettings.enableWordWrap ? targetWidth / glyphScale : TextProcessSettings.FloatMax;
+
+        // Reset layout buffers for new calculation
+        buf.lineCount = 0;
+        buf.orderedRunCount = 0;
+        buf.positionedGlyphCount = 0;
+
+        BreakLines(effectiveMaxWidth, glyphScale);
+
+        // Calculate height from line count and font metrics
+        if (fontProvider != null)
+        {
+            fontProvider.GetLineMetrics(fontSize, out float ascender, out _, out float lineHeight);
+            float lineSpacing = baseSettings.lineSpacing;
+            return ascender + (buf.lineCount - 1) * (lineHeight + lineSpacing);
+        }
+
+        // Fallback: estimate based on line count
+        return buf.lineCount * fontSize * 1.2f;
+    }
+
+    private float GetLineHeightRatio()
+    {
+        if (fontProvider == null) return 1.2f;
+        fontProvider.GetLineMetrics(100f, out float ascender, out _, out float lineHeight);
+        return lineHeight / 100f;
     }
 
     public float ResultWidth => resultWidth;
@@ -605,7 +731,7 @@ public sealed class TextProcessor
             buf.shapedGlyphs.AsSpan(0, buf.shapedGlyphCount));
     }
 
-    private void BreakLines(float maxWidth)
+    private void BreakLines(float maxWidth, float glyphScale = 1f)
     {
         var buf = CommonData.Current;
         buf.lineCount = 0;
@@ -624,7 +750,8 @@ public sealed class TextProcessor
             buf.bidiParagraphs,
             buf.bidiParagraphCount,
             ref linesArr, ref lineCnt,
-            ref orderedRunsArr, ref orderedRunCnt);
+            ref orderedRunsArr, ref orderedRunCnt,
+            glyphScale);
 
         buf.lines = linesArr;
         buf.orderedRuns = orderedRunsArr;

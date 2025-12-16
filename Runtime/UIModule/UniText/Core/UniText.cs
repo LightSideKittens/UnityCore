@@ -83,6 +83,16 @@ public partial class UniText : MaskableGraphic
     [SerializeField]
     private VerticalAlignment verticalAlignment = VerticalAlignment.Top;
 
+    [Header("Auto Size")]
+    [SerializeField]
+    private bool enableAutoSize;
+
+    [SerializeField]
+    private float minFontSize = 10f;
+
+    [SerializeField]
+    private float maxFontSize = 72f;
+
     [SerializeReference]
     private List<ModRegister> modRegisters;
     
@@ -113,6 +123,12 @@ public partial class UniText : MaskableGraphic
     private float lastResultWidth;
     private float lastResultHeight;
     private bool textIsParsed;
+
+    // Auto size cache
+    private float autoSizedFontSize;
+    private float lastAutoSizeWidth;
+    private float lastAutoSizeHeight;
+    private bool hasValidAutoSize;
 
     // Sub-mesh renderers для fallback шрифтов
     private readonly List<CanvasRenderer> subMeshRenderers = new();
@@ -252,6 +268,52 @@ public partial class UniText : MaskableGraphic
             SetDirty(DirtyFlags.Alignment);
         }
     }
+
+    public bool EnableAutoSize
+    {
+        get => enableAutoSize;
+        set
+        {
+            if (enableAutoSize == value) return;
+            enableAutoSize = value;
+            hasValidAutoSize = false;
+            SetDirty(DirtyFlags.Layout);
+        }
+    }
+
+    public float MinFontSize
+    {
+        get => minFontSize;
+        set
+        {
+            value = Mathf.Max(1f, value);
+            if (Mathf.Approximately(minFontSize, value)) return;
+            minFontSize = value;
+            if (enableAutoSize)
+            {
+                hasValidAutoSize = false;
+                SetDirty(DirtyFlags.Layout);
+            }
+        }
+    }
+
+    public float MaxFontSize
+    {
+        get => maxFontSize;
+        set
+        {
+            value = Mathf.Max(1f, value);
+            if (Mathf.Approximately(maxFontSize, value)) return;
+            maxFontSize = value;
+            if (enableAutoSize)
+            {
+                hasValidAutoSize = false;
+                SetDirty(DirtyFlags.Layout);
+            }
+        }
+    }
+
+    public float CurrentFontSize => enableAutoSize ? autoSizedFontSize : fontSize;
 
     public override Color color
     {
@@ -453,6 +515,7 @@ public partial class UniText : MaskableGraphic
         cachedMeshProvider = null;
         textIsParsed = false;
         shaderChannelsConfigured = false;
+        hasValidAutoSize = false;
         dirtyFlags = DirtyFlags.All;
     }
 
@@ -471,6 +534,7 @@ public partial class UniText : MaskableGraphic
         meshGenerator = null;
         textBuffers = null;
         textIsParsed = false;
+        hasValidAutoSize = false;
     }
 #endif
 
@@ -567,12 +631,14 @@ public partial class UniText : MaskableGraphic
         if (rt == null) return;
 
         ReleaseMeshes();
+        hasValidAutoSize = false; // Text changed, need to recalculate auto size
 
         if (string.IsNullOrEmpty(text))
         {
             lastMeshPairs = null;
             lastResultWidth = 0;
             lastResultHeight = 0;
+            autoSizedFontSize = fontSize;
             return;
         }
 
@@ -591,13 +657,24 @@ public partial class UniText : MaskableGraphic
             // Get text span: from parser if available, otherwise original text
             var textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
 
-            var settings = CreateProcessSettings(rect);
+            // Calculate auto size if enabled
+            float effectiveFontSize = fontSize;
+            if (enableAutoSize)
+            {
+                effectiveFontSize = CalculateAutoSize(textSpan, rect);
+            }
+            else
+            {
+                autoSizedFontSize = fontSize;
+            }
+
+            var settings = CreateProcessSettings(rect, effectiveFontSize);
             var glyphs = processor.Process(textSpan, settings);
 
             lastResultWidth = processor.ResultWidth;
             lastResultHeight = processor.ResultHeight;
-            
-            GenerateMeshes(glyphs, rect);
+
+            GenerateMeshes(glyphs, rect, effectiveFontSize);
         }
         catch (Exception ex)
         {
@@ -628,13 +705,36 @@ public partial class UniText : MaskableGraphic
         // Get text span: from parser if available, otherwise original text
         var textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
 
-        var settings = CreateProcessSettings(rect);
+        // Determine effective font size
+        float effectiveFontSize = fontSize;
+        if (enableAutoSize)
+        {
+            // Check if we can reuse cached auto size
+            bool canReuseAutoSize = hasValidAutoSize &&
+                                    Mathf.Approximately(lastAutoSizeWidth, rect.width) &&
+                                    Mathf.Approximately(lastAutoSizeHeight, rect.height);
+
+            if (canReuseAutoSize)
+            {
+                effectiveFontSize = autoSizedFontSize;
+            }
+            else
+            {
+                effectiveFontSize = CalculateAutoSize(textSpan, rect);
+            }
+        }
+        else
+        {
+            autoSizedFontSize = fontSize;
+        }
+
+        var settings = CreateProcessSettings(rect, effectiveFontSize);
         var glyphs = processor.Process(textSpan, settings);
 
         lastResultWidth = processor.ResultWidth;
         lastResultHeight = processor.ResultHeight;
 
-        GenerateMeshes(glyphs, rect);
+        GenerateMeshes(glyphs, rect, effectiveFontSize);
     }
 
     /// <summary>
@@ -656,9 +756,9 @@ public partial class UniText : MaskableGraphic
         GenerateMeshes(glyphs, rt.rect);
     }
 
-    private void GenerateMeshes(ReadOnlySpan<PositionedGlyph> glyphs, Rect rect)
+    private void GenerateMeshes(ReadOnlySpan<PositionedGlyph> glyphs, Rect rect, float effectiveFontSize = -1)
     {
-        meshGenerator.FontSize = fontSize;
+        meshGenerator.FontSize = effectiveFontSize > 0 ? effectiveFontSize : fontSize;
         meshGenerator.DefaultColor = color;
         meshGenerator.SetCanvasParameters(transform, cachedCanvas);
         meshGenerator.SetRectOffset(rect);
@@ -667,7 +767,7 @@ public partial class UniText : MaskableGraphic
         lastMeshPairs = meshGenerator.GenerateMeshes(glyphs, cachedMeshProvider);
     }
 
-    private TextProcessSettings CreateProcessSettings(Rect rect)
+    private TextProcessSettings CreateProcessSettings(Rect rect, float effectiveFontSize = -1)
     {
         return new TextProcessSettings
         {
@@ -678,10 +778,40 @@ public partial class UniText : MaskableGraphic
                 horizontalAlignment = horizontalAlignment,
                 verticalAlignment = verticalAlignment
             },
-            fontSize = fontSize,
+            fontSize = effectiveFontSize > 0 ? effectiveFontSize : fontSize,
             baseDirection = baseDirection,
             enableWordWrap = enableWordWrap
         };
+    }
+
+    /// <summary>
+    /// Calculate optimal font size for auto sizing.
+    /// Shaping is done once, then binary search over font sizes.
+    /// </summary>
+    private float CalculateAutoSize(ReadOnlySpan<char> textSpan, Rect rect)
+    {
+        if (processor == null || fontProvider == null)
+            return fontSize;
+
+        // Ensure shaping is done with maxFontSize for best precision
+        var baseSettings = CreateProcessSettings(rect, maxFontSize);
+        processor.EnsureShaping(textSpan, baseSettings);
+
+        // Find optimal size
+        float optimalSize = processor.FindOptimalFontSize(
+            minFontSize,
+            maxFontSize,
+            rect.width,
+            rect.height,
+            baseSettings);
+
+        // Cache result
+        autoSizedFontSize = optimalSize;
+        lastAutoSizeWidth = rect.width;
+        lastAutoSizeHeight = rect.height;
+        hasValidAutoSize = true;
+
+        return optimalSize;
     }
 
     #endregion

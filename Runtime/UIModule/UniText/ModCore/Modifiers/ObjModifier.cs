@@ -184,8 +184,10 @@ public class ObjModifier : BaseModifier
     {
         if (clusterToObj == null || clusterToObj.Count == 0) return;
 
-        float fontSize = uniText.FontSize;
         var buf = CommonData.Current;
+        // Use shapingFontSize - the fontSize used during shaping phase
+        // This is critical for auto size where shaping is done with maxFontSize
+        float fontSize = buf.shapingFontSize > 0 ? buf.shapingFontSize : uniText.FontSize;
         var glyphs = buf.shapedGlyphs;
         var runs = buf.shapedRuns;
         int runCount = buf.shapedRunCount;

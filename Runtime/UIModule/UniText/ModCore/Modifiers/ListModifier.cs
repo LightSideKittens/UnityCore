@@ -121,7 +121,12 @@ public class ListModifier : BaseModifier
         if (item.displayNumber < 0) return bulletMarkerWidth + markerToTextGap;
         var fontAsset = fontProviderRef?.GetFontAsset(0);
         if (fontAsset == null) return bulletMarkerWidth;
-        float scale = fontProviderRef.FontSize / fontAsset.FaceInfo.pointSize;
+
+        // Use shapingFontSize for consistent margin calculation during auto size
+        // Margins are applied during shaping phase, so they must use shapingFontSize
+        var buf = CommonData.Current;
+        float fontSize = buf.shapingFontSize > 0 ? buf.shapingFontSize : fontProviderRef.FontSize;
+        float scale = fontSize / fontAsset.FaceInfo.pointSize;
 
         // Use shared builder for measurement
         sharedBuilder.Clear();
@@ -152,8 +157,12 @@ public class ListModifier : BaseModifier
 
     private void ApplyMargins(ListItemInfo item)
     {
-        float contentIndent = item.nestingLevel * indentPerLevel + MeasureMarkerWidthForLayout(item);
         var buf = CommonData.Current;
+
+        // Calculate margin in absolute pixels at shapingFontSize
+        // Margins are stored in pixels (at shapingFontSize) and will be scaled by LineBreaker
+        float contentIndent = item.nestingLevel * indentPerLevel + MeasureMarkerWidthForLayout(item);
+
         if (item.end > buf.startMargins.Length) buf.EnsureCodepointCapacity(item.end);
         var margins = buf.startMargins;
         int safeEnd = Math.Min(item.end, buf.codepointCount);
@@ -178,9 +187,14 @@ public class ListModifier : BaseModifier
         // Build marker text into shared builder (zero-allocation)
         GetMarkerText(item, isRtl, sharedBuilder);
 
+        // Calculate glyphScale for proper gap scaling during auto size
+        var buf = CommonData.Current;
+        float glyphScale = buf.shapingFontSize > 0 ? uniText.CurrentFontSize / buf.shapingFontSize : 1f;
+        float scaledGap = markerToTextGap * glyphScale;
+
         float markerX = isRtl
-            ? firstGlyphX + GetLineWidth(item.start) + markerToTextGap
-            : firstGlyphX - GlyphRenderHelper.MeasureString(sharedBuilder) - markerToTextGap;
+            ? firstGlyphX + GetLineWidth(item.start) * glyphScale + scaledGap
+            : firstGlyphX - GlyphRenderHelper.MeasureString(sharedBuilder) - scaledGap;
 
         GlyphRenderHelper.DrawString(sharedBuilder, markerX, baselineY, UniTextMeshGenerator.currentDefaultColor);
     }

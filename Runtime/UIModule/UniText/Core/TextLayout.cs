@@ -141,9 +141,10 @@ public sealed class TextLayout
             // Margin создаёт "зону" слева (LTR) или справа (RTL) от текста.
             // LineBreaker уже учёл margin при расчёте line breaking (effectiveMaxWidth = maxWidth - margin).
             // Здесь корректируем x для правильного визуального позиционирования.
+            // Margins are stored in pixels at shapingFontSize, scale to current fontSize.
             if (line.startMargin > 0 && hasFiniteWidth)
             {
-                float margin = line.startMargin;
+                float margin = line.startMargin * glyphScale;
                 if (isRtlLine)
                 {
                     // RTL: start margin означает отступ справа (начало RTL текста)

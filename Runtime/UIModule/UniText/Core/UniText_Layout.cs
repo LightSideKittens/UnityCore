@@ -112,14 +112,18 @@ public partial class UniText : ILayoutElement
 
     /// <summary>
     /// Create settings for layout calculations.
+    /// Uses maxFontSize when auto size is enabled for preferred size calculation.
     /// </summary>
     private TextProcessSettings CreateProcessSettingsForLayout(float width)
     {
+        // For auto size, use maxFontSize to calculate preferred dimensions
+        float effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
+
         return new TextProcessSettings
         {
             maxWidth = width,
             maxHeight = TextProcessSettings.FloatMax,
-            fontSize = fontSize,
+            fontSize = effectiveFontSize,
             baseDirection = baseDirection,
             enableWordWrap = enableWordWrap,
             horizontalAlignment = horizontalAlignment,
@@ -129,10 +133,12 @@ public partial class UniText : ILayoutElement
 
     /// <summary>
     /// Get glyph scale for layout calculations.
+    /// Uses maxFontSize when auto size is enabled.
     /// </summary>
     private float GetGlyphScaleForLayout()
     {
         var buf = CommonData.Current;
-        return buf.shapingFontSize > 0 ? fontSize / buf.shapingFontSize : 1f;
+        float targetFontSize = enableAutoSize ? maxFontSize : fontSize;
+        return buf.shapingFontSize > 0 ? targetFontSize / buf.shapingFontSize : 1f;
     }
 }

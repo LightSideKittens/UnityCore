@@ -42,9 +42,11 @@ public sealed class LineBreaker
         lineBreakAlgorithm = new LineBreakAlgorithm();
     }
 
+
     /// <summary>
     /// Разбить текст на строки и записать результат в предоставленные буферы.
     /// </summary>
+    /// <param name="glyphScale">Scale factor for margins (fontSize / shapingFontSize). Default 1.0 for no scaling.</param>
     public void BreakLines(
         ReadOnlySpan<int> codepoints,
         ReadOnlySpan<ShapedRun> runs,
@@ -55,7 +57,8 @@ public sealed class LineBreaker
         ref TextLine[] linesOut,
         ref int lineCount,
         ref ShapedRun[] orderedRunsOut,
-        ref int orderedRunCount)
+        ref int orderedRunCount,
+        float glyphScale = 1f)
     {
         // Store references to output buffers
         tempLines = linesOut;
@@ -174,8 +177,9 @@ public sealed class LineBreaker
             float widthAtLastBreak = 0;
 
             // Get margin for first line
-            float currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
-            float effectiveMaxWidth = maxWidth - currentLineMargin;
+            // Margins are in glyph space (same units as maxWidth), no scaling needed
+            float rawMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
+            float effectiveMaxWidth = maxWidth - rawMargin;
 
             for (int cpIdx = 0; cpIdx < cpCount; cpIdx++)
             {
@@ -184,14 +188,14 @@ public sealed class LineBreaker
                 // Mandatory break
                 if (IsMandatoryBreak(cp))
                 {
-                    CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx, lineWidth, currentLineMargin);
+                    CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx, lineWidth, rawMargin);
                     lineStartCp = cpIdx + 1;
                     lineWidth = 0;
                     lastBreakCp = -1;
                     widthAtLastBreak = 0;
                     // Update margin for next line
-                    currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
-                    effectiveMaxWidth = maxWidth - currentLineMargin;
+                    rawMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
+                    effectiveMaxWidth = maxWidth - rawMargin;
                     continue;
                 }
 
@@ -203,7 +207,7 @@ public sealed class LineBreaker
 
                 if (DebugLogging)
                 {
-                    UnityEngine.Debug.Log($"[LineBreaker] cpIdx={cpIdx} cp=U+{cp:X4} width={cpWidths[cpIdx]:F1} canBreak={CanBreakAfter(cpIdx)} lineWidth={lineWidth:F1} lastBreakCp={lastBreakCp} margin={currentLineMargin:F1}");
+                    UnityEngine.Debug.Log($"[LineBreaker] cpIdx={cpIdx} cp=U+{cp:X4} width={cpWidths[cpIdx]:F1} canBreak={CanBreakAfter(cpIdx)} lineWidth={lineWidth:F1} lastBreakCp={lastBreakCp} margin={rawMargin:F1}");
                 }
 
                 // Проверяем переполнение ПЕРЕД обновлением lastBreakCp
@@ -216,14 +220,14 @@ public sealed class LineBreaker
                         {
                             UnityEngine.Debug.Log($"[LineBreaker] BREAK at cpIdx={lastBreakCp}, lineWidth={lineWidth:F1} > effectiveMaxWidth={effectiveMaxWidth:F1}");
                         }
-                        CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, lastBreakCp, widthAtLastBreak, currentLineMargin);
+                        CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, lastBreakCp, widthAtLastBreak, rawMargin);
                         lineStartCp = lastBreakCp + 1;
                         lineWidth -= widthAtLastBreak;
                         lastBreakCp = -1;
                         widthAtLastBreak = 0;
                         // Update margin for next line
-                        currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
-                        effectiveMaxWidth = maxWidth - currentLineMargin;
+                        rawMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
+                        effectiveMaxWidth = maxWidth - rawMargin;
                     }
                     else if (cpIdx > lineStartCp)
                     {
@@ -233,14 +237,14 @@ public sealed class LineBreaker
                         {
                             UnityEngine.Debug.Log($"[LineBreaker] EMERGENCY BREAK before cpIdx={cpIdx}, width={widthBeforeCurrent:F1}");
                         }
-                        CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx - 1, widthBeforeCurrent, currentLineMargin);
+                        CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx - 1, widthBeforeCurrent, rawMargin);
                         lineStartCp = cpIdx;
                         lineWidth = cpWidths[cpIdx];
                         lastBreakCp = -1;
                         widthAtLastBreak = 0;
                         // Update margin for next line
-                        currentLineMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
-                        effectiveMaxWidth = maxWidth - currentLineMargin;
+                        rawMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
+                        effectiveMaxWidth = maxWidth - rawMargin;
                     }
                     else
                     {
@@ -261,7 +265,7 @@ public sealed class LineBreaker
             // Last line
             if (lineStartCp < cpCount)
             {
-                CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpCount - 1, lineWidth, currentLineMargin);
+                CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpCount - 1, lineWidth, rawMargin);
             }
         }
         finally
