@@ -6,11 +6,10 @@ using System.Reflection;
 using System.Threading;
 using DG.Tweening;
 using LSCore.Extensions;
-using UnityEditor.Compilation;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 #if UNITY_EDITOR
+using UnityEditor.Compilation;
 using UnityEditor.Build.Reporting;
 using UnityEditor;
 using UnityEditor.Build;
