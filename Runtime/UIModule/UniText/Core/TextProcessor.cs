@@ -305,14 +305,62 @@ public sealed class TextProcessor
 
         if (!baseSettings.enableWordWrap || scaledUnwrappedWidth <= targetWidth)
         {
-            // Single line case - analytical solution
-            float widthLimitedSize = (targetWidth / unwrappedWidth) * buf.shapingFontSize;
+            // Count explicit line breaks and find max line width
+            // Use codepoints for accurate line counting (handles empty lines)
+            int lineCount = 1;
+            float maxLineWidth = 0f;
+            float currentLineWidth = 0f;
+            var codepoints = buf.codepoints.AsSpan(0, buf.codepointCount);
+            var glyphs = buf.shapedGlyphs.AsSpan(0, buf.shapedGlyphCount);
+            int glyphIdx = 0;
 
-            // Get line height ratio (approximate)
+            for (int i = 0; i < codepoints.Length; i++)
+            {
+                int cp = codepoints[i];
+                if (cp == '\n' || cp == 0x2028 || cp == 0x2029)
+                {
+                    // Explicit line break - always count as new line
+                    if (currentLineWidth > maxLineWidth) maxLineWidth = currentLineWidth;
+                    currentLineWidth = 0f;
+                    lineCount++;
+                    // Skip corresponding zero-advance glyph if any
+                    if (glyphIdx < glyphs.Length && glyphs[glyphIdx].advanceX == 0f)
+                        glyphIdx++;
+                }
+                else if (cp == '\r')
+                {
+                    // Skip \r (part of \r\n on Windows, handled by \n)
+                    if (glyphIdx < glyphs.Length && glyphs[glyphIdx].advanceX == 0f)
+                        glyphIdx++;
+                }
+                else
+                {
+                    // Regular character - add glyph advance
+                    if (glyphIdx < glyphs.Length)
+                    {
+                        currentLineWidth += glyphs[glyphIdx].advanceX;
+                        glyphIdx++;
+                    }
+                }
+            }
+            // Don't forget last line
+            if (currentLineWidth > maxLineWidth) maxLineWidth = currentLineWidth;
+
+            // Fallback: if maxLineWidth is 0 (all empty lines), use minimal width
+            if (maxLineWidth <= 0f) maxLineWidth = 1f;
+
+            // Width: use max line width (not total width)
+            float widthLimitedSize = (targetWidth / maxLineWidth) * buf.shapingFontSize;
+
+            // Height: account for actual line count
             float lineHeightRatio = fontProvider != null ? GetLineHeightRatio() : 1.2f;
-            float heightLimitedSize = targetHeight / lineHeightRatio;
+            float ascenderRatio = fontProvider != null ? GetAscenderRatio() : lineHeightRatio * 0.8f;
+            float heightLimitedSize = targetHeight / (ascenderRatio + (lineCount - 1) * lineHeightRatio);
 
             float optimalSize = Math.Min(widthLimitedSize, heightLimitedSize);
+
+            if (DebugLogging)
+                UnityEngine.Debug.Log($"[FindOptimalFontSize] FAST PATH: lineCount={lineCount}, maxLineWidth={maxLineWidth:F1}, widthLimited={widthLimitedSize:F1}, heightLimited={heightLimitedSize:F1}, optimal={optimalSize:F1}, clamped=[{minSize},{maxSize}]");
 
             // Invalidate layout cache - fontSize may have changed
             hasValidLayoutData = false;
@@ -362,6 +410,7 @@ public sealed class TextProcessor
         return lo;
     }
 
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private float GetHeightForFontSize(float fontSize, float targetWidth, TextProcessSettings baseSettings, CommonData buf)
     {
@@ -392,6 +441,13 @@ public sealed class TextProcessor
         if (fontProvider == null) return 1.2f;
         fontProvider.GetLineMetrics(100f, out float ascender, out _, out float lineHeight);
         return lineHeight / 100f;
+    }
+
+    private float GetAscenderRatio()
+    {
+        if (fontProvider == null) return 0.96f;
+        fontProvider.GetLineMetrics(100f, out float ascender, out _, out _);
+        return ascender / 100f;
     }
 
     public float ResultWidth => resultWidth;
