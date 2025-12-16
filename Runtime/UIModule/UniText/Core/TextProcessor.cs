@@ -298,7 +298,7 @@ public sealed class TextProcessor
         var buf = CommonData.Current;
         if (buf.shapingFontSize <= 0) return minSize;
 
-        // Fast path: check if text fits at maxSize without word wrap (single line)
+        // Fast path: no word wrap or text fits without wrapping
         float unwrappedWidth = GetUnwrappedWidth();
         float maxGlyphScale = maxSize / buf.shapingFontSize;
         float scaledUnwrappedWidth = unwrappedWidth * maxGlyphScale;
@@ -353,8 +353,18 @@ public sealed class TextProcessor
             float widthLimitedSize = (targetWidth / maxLineWidth) * buf.shapingFontSize;
 
             // Height: account for actual line count
-            float lineHeightRatio = fontProvider != null ? GetLineHeightRatio() : 1.2f;
-            float ascenderRatio = fontProvider != null ? GetAscenderRatio() : lineHeightRatio * 0.8f;
+            float lineHeightRatio, ascenderRatio;
+            if (fontProvider != null)
+            {
+                fontProvider.GetLineMetrics(1f, out float asc, out _, out float lh);
+                lineHeightRatio = lh;
+                ascenderRatio = asc;
+            }
+            else
+            {
+                lineHeightRatio = 1.2f;
+                ascenderRatio = lineHeightRatio * 0.8f;
+            }
             float heightLimitedSize = targetHeight / (ascenderRatio + (lineCount - 1) * lineHeightRatio);
 
             float optimalSize = Math.Min(widthLimitedSize, heightLimitedSize);
@@ -402,11 +412,6 @@ public sealed class TextProcessor
                 hi = mid; // Need to decrease
         }
 
-        // Invalidate layout cache - final layout will be done with actual fontSize
-        hasValidLayoutData = false;
-        lastLayoutWidth = -1;
-        lastLayoutFontSize = -1;
-
         return lo;
     }
 
@@ -434,20 +439,6 @@ public sealed class TextProcessor
 
         // Fallback: estimate based on line count
         return buf.lineCount * fontSize * 1.2f;
-    }
-
-    private float GetLineHeightRatio()
-    {
-        if (fontProvider == null) return 1.2f;
-        fontProvider.GetLineMetrics(100f, out float ascender, out _, out float lineHeight);
-        return lineHeight / 100f;
-    }
-
-    private float GetAscenderRatio()
-    {
-        if (fontProvider == null) return 0.96f;
-        fontProvider.GetLineMetrics(100f, out float ascender, out _, out _);
-        return ascender / 100f;
     }
 
     public float ResultWidth => resultWidth;
