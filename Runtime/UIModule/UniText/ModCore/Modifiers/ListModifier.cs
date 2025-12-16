@@ -140,8 +140,13 @@ public class ListModifier : BaseModifier
         float totalWidth = 0f;
         int len = sb.Length;
         for (int i = 0; i < len; i++)
-            if (charTable.TryGetValue(sb[i], out var ch) && ch?.glyph != null)
+        {
+            uint codepoint = sb[i];
+            if (charTable.TryGetValue(codepoint, out var ch) && ch?.glyph != null)
                 totalWidth += ch.glyph.metrics.horizontalAdvance * scale;
+            else if (fontAsset.TryAddCharacter(codepoint, out var addedCh) && addedCh?.glyph != null)
+                totalWidth += addedCh.glyph.metrics.horizontalAdvance * scale;
+        }
         return totalWidth;
     }
 

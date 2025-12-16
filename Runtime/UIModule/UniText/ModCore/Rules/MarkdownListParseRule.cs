@@ -69,9 +69,7 @@ public sealed class MarkdownListParseRule : IParseRule
 
             if (DebugLogging)
                 UnityEngine.Debug.Log($"[MarkdownListParseRule] BULLET: indent={indent}, level={nestingLevel}, contentStart={contentStart}, contentEnd={contentEnd}");
-
-            // Возвращаем contentStart чтобы парсер продолжил парсить внутри контента
-            // (найдёт вложенные теги типа <b>, <i> и т.д.)
+            
             return contentStart;
         }
 
