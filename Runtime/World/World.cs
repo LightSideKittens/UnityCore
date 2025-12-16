@@ -35,6 +35,7 @@ namespace LSCore
         public ResetStaticAttribute(Type specifiedType) => this.specifiedType = specifiedType;
     }
     
+    
     [DefaultExecutionOrder(-999)]
     public class World : MonoBehaviour
     {
