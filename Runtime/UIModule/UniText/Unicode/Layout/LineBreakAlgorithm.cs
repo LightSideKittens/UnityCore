@@ -47,8 +47,7 @@ public sealed class LineBreakAlgorithm
 
         breaks[0] = false;        // LB2
         breaks[length] = true;    // LB3
-
-        Profiler.BeginSample("LineBreakAlgorithm.MainLoop");
+        
         for (int i = 0; i < length - 1; i++)
         {
             breaks[i + 1] = CanBreakBetween(codePoints, i);
@@ -62,7 +61,6 @@ public sealed class LineBreakAlgorithm
                 UnityEngine.Debug.Log($"[LineBreak] {i}: U+{beforeCp:X4} ({beforeClass}) | U+{afterCp:X4} ({afterClass}) -> break={breaks[i + 1]}");
             }
         }
-        Profiler.EndSample();
     }
 
     public bool[] GetBreakOpportunities(ReadOnlySpan<int> codePoints)

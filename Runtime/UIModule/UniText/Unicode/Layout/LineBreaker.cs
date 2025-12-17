@@ -74,24 +74,11 @@ public sealed class LineBreaker
             orderedRunCount = 0;
             return;
         }
-
-        Profiler.BeginSample("LineBreaker.GetBreakOpportunities");
-        // Step 1: Get break opportunities
-        GetBreakOpportunities(codepoints);
-        Profiler.EndSample();
-
-        Profiler.BeginSample("LineBreaker.WrapLines");
-        // Step 2: Wrap lines
-        WrapLines(codepoints, runs, glyphs, maxWidth);
-        Profiler.EndSample();
         
-        Profiler.BeginSample("LineBreaker.ReorderRunsPerLine");
-        // Step 3: BiDi reorder runs within each line (UAX #9, rule L2)
-        // Each line uses the baseLevel of its containing paragraph
+        GetBreakOpportunities(codepoints);
+        WrapLines(codepoints, runs, glyphs, maxWidth);
         ReorderRunsPerLine();
-        Profiler.EndSample();
-
-        // Return potentially resized buffers
+        
         linesOut = tempLines;
         orderedRunsOut = tempOrderedRuns;
         lineCount = tempLineCount;

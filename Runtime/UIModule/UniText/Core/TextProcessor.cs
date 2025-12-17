@@ -203,7 +203,7 @@ public sealed class TextProcessor
         Parse(text);
         Profiler.EndSample();
         
-        Profiler.BeginSample("TextProcessor.Parse");
+        Profiler.BeginSample("TextProcessor.Parsed?.Invoke()");
         Parsed?.Invoke();
         Profiler.EndSample();
 
@@ -227,7 +227,7 @@ public sealed class TextProcessor
         Shape();
         Profiler.EndSample();
 
-        Profiler.BeginSample("TextProcessor.Shaped");
+        Profiler.BeginSample("TextProcessor.Shaped?.Invoke()");
         Shaped?.Invoke();
         Profiler.EndSample();
         
