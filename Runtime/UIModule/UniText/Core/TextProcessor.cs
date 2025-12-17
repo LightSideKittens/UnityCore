@@ -272,10 +272,12 @@ public sealed class TextProcessor
         var buf = CommonData.Current;
         var codepoints = buf.codepoints.AsSpan(0, buf.codepointCount);
         var glyphs = buf.shapedGlyphs.AsSpan(0, buf.shapedGlyphCount);
+        var margins = buf.startMargins;
 
         float maxWidth = 0f;
         float currentWidth = 0f;
         int lastCluster = -1;
+        int lineStartCluster = 0;
 
         // Iterate over glyphs, not codepoints - HarfBuzz may produce different glyph count
         for (int i = 0; i < glyphs.Length; i++)
@@ -288,8 +290,13 @@ public sealed class TextProcessor
                 int cp = codepoints[cluster];
                 if (UnicodeData.IsLineBreak(cp))
                 {
-                    if (currentWidth > maxWidth) maxWidth = currentWidth;
+                    // Add margin to line width (for list markers, etc.)
+                    float lineMargin = lineStartCluster < margins.Length ? margins[lineStartCluster] : 0;
+                    float totalLineWidth = currentWidth + lineMargin;
+                    if (totalLineWidth > maxWidth) maxWidth = totalLineWidth;
+
                     currentWidth = 0f;
+                    lineStartCluster = cluster + 1;
                     lastCluster = cluster;
                     continue;
                 }
@@ -299,7 +306,11 @@ public sealed class TextProcessor
             lastCluster = cluster;
         }
 
-        if (currentWidth > maxWidth) maxWidth = currentWidth;
+        // Account for margin on last line
+        float lastLineMargin = lineStartCluster < margins.Length ? margins[lineStartCluster] : 0;
+        float lastLineWidth = currentWidth + lastLineMargin;
+        if (lastLineWidth > maxWidth) maxWidth = lastLineWidth;
+
         return maxWidth > 0 ? maxWidth : GetUnwrappedWidth();
     }
     
