@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using LSCore;
 using UnityEngine;
+using UnityEngine.Profiling;
+using UnityEngine.TextCore.LowLevel;
 
 /// <summary>
 /// Pair of mesh and material for rendering.
@@ -272,6 +274,11 @@ public class UniTextMeshGenerator
         if (DebugLogging)
             Debug.Log($"[UniTextMeshGenerator.GenerateMeshes] Result: {resultBuffer.Count} mesh pairs");
 
+        // Mark glyph cache as valid for Layout Rebuild optimization
+        var buf = CommonData.Current;
+        if (buf != null)
+            buf.hasValidGlyphCache = true;
+
         OnRebuildEnd?.Invoke();
 
         return resultBuffer;
@@ -283,8 +290,7 @@ public class UniTextMeshGenerator
         // Base: 4 vertices per glyph + extra for modifiers (underline, strikethrough, etc.)
         int maxVertexCount = glyphCount * 4 + glyphCount * 8;
         int maxTriangleCount = glyphCount * 6 + glyphCount * 12;
-
-        // Ensure buffer capacity
+        
         EnsureBufferCapacity(maxVertexCount, maxTriangleCount);
 
         float pointSize = fontAsset.FaceInfo.pointSize;
@@ -320,6 +326,12 @@ public class UniTextMeshGenerator
         var glyphLookup = fontAsset.GlyphLookupTable;
         Color32 defaultColor = DefaultColor;
 
+        // Get glyph cache from CommonData
+        var buf = CommonData.Current;
+        buf.EnsureGlyphCacheCapacity(buf.shapedGlyphCount);
+        var glyphCache = buf.glyphDataCache;
+        bool useCache = buf.hasValidGlyphCache; // false = Full Rebuild, true = Layout Rebuild
+
         // DEBUG: Track glyph lookup statistics
         int foundCount = 0;
         int notFoundCount = 0;
@@ -328,7 +340,7 @@ public class UniTextMeshGenerator
 
         if (DebugLogging)
         {
-            Debug.Log($"[UniTextMeshGenerator.GenerateMeshForFont] Processing {glyphCount} glyphs, glyphLookup has {glyphLookup?.Count ?? 0} entries");
+            Debug.Log($"[UniTextMeshGenerator.GenerateMeshForFont] Processing {glyphCount} glyphs, glyphLookup has {glyphLookup?.Count ?? 0} entries, useCache={useCache}");
         }
 
         // Cache local references for faster access
@@ -340,22 +352,37 @@ public class UniTextMeshGenerator
         for (int i = 0; i < glyphCount; i++)
         {
             var glyph = glyphs[i];
-            uint glyphIndex = (uint)glyph.glyphId;
+            int cacheIndex = glyph.shapedGlyphIndex;
 
-            // Lookup по glyph index
-            if (!glyphLookup.TryGetValue(glyphIndex, out var glyphData) || glyphData == null)
+            ref var cachedData = ref glyphCache[cacheIndex];
+            // Use cache only on Layout Rebuild (useCache=true) AND if data is valid
+            if (!useCache || !cachedData.isValid)
             {
-                notFoundCount++;
-                if (DebugLogging && notFoundGlyphs != null && notFoundGlyphs.Count < 50)
-                    notFoundGlyphs.Add((int)glyphIndex);
-                continue;
+                // Full Rebuild or cache miss - do dictionary lookup and populate cache
+                uint glyphIndex = (uint)glyph.glyphId;
+                if (!glyphLookup.TryGetValue(glyphIndex, out var glyphData) || glyphData == null)
+                {
+                    notFoundCount++;
+                    if (DebugLogging && notFoundGlyphs != null && notFoundGlyphs.Count < 50)
+                        notFoundGlyphs.Add((int)glyphIndex);
+                    continue;
+                }
+                // Copy needed values from Glyph to CachedGlyphData (eliminates pointer indirection)
+                var rect = glyphData.glyphRect;
+                var metrics = glyphData.metrics;
+                cachedData.rectX = rect.x;
+                cachedData.rectY = rect.y;
+                cachedData.rectWidth = rect.width;
+                cachedData.rectHeight = rect.height;
+                cachedData.bearingX = metrics.horizontalBearingX;
+                cachedData.bearingY = metrics.horizontalBearingY;
+                cachedData.width = metrics.width;
+                cachedData.height = metrics.height;
+                cachedData.isValid = true;
             }
 
-            var glyphRect = glyphData.glyphRect;
-            var metrics = glyphData.metrics;
-
             // Skip whitespace (zero-size glyphs)
-            if (glyphRect.width == 0 || glyphRect.height == 0)
+            if (cachedData.rectWidth == 0 || cachedData.rectHeight == 0)
             {
                 whitespaceCount++;
                 continue;
@@ -365,23 +392,23 @@ public class UniTextMeshGenerator
 
             int cluster = glyph.cluster;
 
-            // Vertex positions (base, without modifier effects)
-            float bearingXScaled = (metrics.horizontalBearingX - padding) * scale;
-            float bearingYScaled = (metrics.horizontalBearingY + padding) * scale;
-            float heightScaled = (metrics.height + padding2) * scale;
-            float widthScaled = (metrics.width + padding2) * scale;
+            // Vertex positions (base, without modifier effects) - direct field access
+            float bearingXScaled = (cachedData.bearingX - padding) * scale;
+            float bearingYScaled = (cachedData.bearingY + padding) * scale;
+            float heightScaled = (cachedData.height + padding2) * scale;
+            float widthScaled = (cachedData.width + padding2) * scale;
 
             float tlX = offsetX + glyph.x + bearingXScaled;
             float tlY = offsetY - glyph.y + bearingYScaled;
             float blY = tlY - heightScaled;
             float trX = tlX + widthScaled;
 
-            // UV coordinates
-            float uvBLx = (glyphRect.x - padding) * invAtlasWidth;
-            float uvBLy = (glyphRect.y - padding) * invAtlasHeight;
-            float uvTLy = (glyphRect.y + glyphRect.height + padding) * invAtlasHeight;
-            float uvTRx = (glyphRect.x + glyphRect.width + padding) * invAtlasWidth;
-
+            // UV coordinates - direct field access from cached struct
+            float uvBLx = (cachedData.rectX - padding) * invAtlasWidth;
+            float uvBLy = (cachedData.rectY - padding) * invAtlasHeight;
+            float uvTLy = (cachedData.rectY + cachedData.rectHeight + padding) * invAtlasHeight;
+            float uvTRx = (cachedData.rectX + cachedData.rectWidth + padding) * invAtlasWidth;
+            
             int i0 = vertexCount;
             int i1 = vertexCount + 1;
             int i2 = vertexCount + 2;
@@ -437,8 +464,7 @@ public class UniTextMeshGenerator
             // Invoke OnGlyph - modifiers can modify last 4 vertices
             OnGlyph?.Invoke();
         }
-
-        // Invoke OnAfterGlyphs - modifiers can add geometry (underline, strikethrough)
+        
         OnAfterGlyphsPerFont?.Invoke();
 
         // DEBUG: Log glyph lookup statistics
@@ -471,8 +497,7 @@ public class UniTextMeshGenerator
             }
             Debug.Log(sb.ToString());
         }
-
-        // Apply to mesh using SetXxx with count parameter (no allocation)
+        
         mesh.Clear();
 
         if (vertexCount > 0)
@@ -484,7 +509,6 @@ public class UniTextMeshGenerator
             mesh.SetUVs(1, Uvs2, 0, vertexCount);
             mesh.SetColors(Colors, 0, vertexCount);
             mesh.SetTriangles(Triangles, 0, triangleCount, 0);
-            mesh.RecalculateBounds();
 
             if (DebugLogging)
                 Debug.Log($"[UniTextMeshGenerator.GenerateMeshForFont] Created mesh with {vertexCount} vertices, {triangleCount} triangle indices");

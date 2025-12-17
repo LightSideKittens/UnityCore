@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.TextCore;
+using UnityEngine.TextCore.LowLevel;
 
 /// <summary>
 /// Instance-based буферы для TextProcessor.
@@ -48,6 +50,11 @@ public sealed class CommonData
     public ShapedGlyph[] shapedGlyphs;
     public int shapedGlyphCount;
     public float shapingFontSize;
+
+    // Glyph data cache - parallel to shapedGlyphs, filled on first mesh generation
+    // Uses CachedGlyphData struct for direct field access (no pointer indirection)
+    public CachedGlyphData[] glyphDataCache;
+    public bool hasValidGlyphCache;
 
     public TextLine[] lines;
     public int lineCount;
@@ -109,6 +116,7 @@ public sealed class CommonData
         runs = ArrayPool<TextRun>.Shared.Rent(MinRunCapacity);
         shapedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
         shapedGlyphs = ArrayPool<ShapedGlyph>.Shared.Rent(MinGlyphCapacity);
+        glyphDataCache = ArrayPool<CachedGlyphData>.Shared.Rent(MinGlyphCapacity);
         lines = ArrayPool<TextLine>.Shared.Rent(MinLineCapacity);
         orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
         positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
@@ -139,6 +147,8 @@ public sealed class CommonData
         if (runs != null) { ArrayPool<TextRun>.Shared.Return(runs); runs = null; }
         if (shapedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(shapedRuns); shapedRuns = null; }
         if (shapedGlyphs != null) { ArrayPool<ShapedGlyph>.Shared.Return(shapedGlyphs); shapedGlyphs = null; }
+        if (glyphDataCache != null) { ArrayPool<CachedGlyphData>.Shared.Return(glyphDataCache); glyphDataCache = null; }
+        hasValidGlyphCache = false;
         if (lines != null) { ArrayPool<TextLine>.Shared.Return(lines); lines = null; }
         if (orderedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(orderedRuns); orderedRuns = null; }
         if (positionedGlyphs != null) { ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs); positionedGlyphs = null; }
@@ -168,6 +178,7 @@ public sealed class CommonData
         runCount = 0;
         shapedRunCount = 0;
         shapedGlyphCount = 0;
+        hasValidGlyphCache = false;
         lineCount = 0;
         orderedRunCount = 0;
         positionedGlyphCount = 0;
@@ -222,6 +233,13 @@ public sealed class CommonData
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureShapedGlyphCapacity(int required) =>
         BufferUtils.EnsureCapacity(ref shapedGlyphs, shapedGlyphCount, required);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EnsureGlyphCacheCapacity(int required)
+    {
+        if (glyphDataCache == null || glyphDataCache.Length < required)
+            BufferUtils.Grow(ref glyphDataCache, glyphDataCache?.Length ?? 0, required);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureLineCapacity(int required) =>

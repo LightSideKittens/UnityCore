@@ -183,20 +183,23 @@ public sealed class GraphemeBreaker
     private bool HasPrecedingLinkerAndConsonant(ReadOnlySpan<int> codePoints, int index)
     {
         bool foundLinker = false;
-        
+
         for (int i = index; i >= 0; i--)
         {
             int cp = codePoints[i];
-            
-            if (IsInCBLinker(cp))
+
+            // Single call instead of 3 separate calls
+            var icb = dataProvider.GetIndicConjunctBreak(cp);
+
+            if (icb == IndicConjunctBreak.Linker)
             {
                 foundLinker = true;
             }
-            else if (IsInCBExtend(cp))
+            else if (icb == IndicConjunctBreak.Extend)
             {
                 // Continue looking back
             }
-            else if (IsInCBConsonant(cp))
+            else if (icb == IndicConjunctBreak.Consonant)
             {
                 // Found consonant - check if we saw a linker
                 return foundLinker;
@@ -207,7 +210,7 @@ public sealed class GraphemeBreaker
                 return false;
             }
         }
-        
+
         return false;
     }
 

@@ -637,7 +637,7 @@ public partial class UniText : MaskableGraphic
     /// </summary>
     private void RebuildFull()
     {
-        var rt = GetComponent<RectTransform>();
+        var rt = rectTransform;
         if (rt == null) return;
 
         ReleaseMeshes();
@@ -700,7 +700,7 @@ public partial class UniText : MaskableGraphic
     /// </summary>
     private void RebuildLayout()
     {
-        var rt = GetComponent<RectTransform>();
+        var rt = rectTransform;
         if (rt == null) return;
 
         var rect = rt.rect;
@@ -760,7 +760,7 @@ public partial class UniText : MaskableGraphic
             return;
         }
 
-        var rt = GetComponent<RectTransform>();
+        var rt = rectTransform;
         if (rt == null) return;
 
         ReleaseMeshes();
@@ -831,7 +831,7 @@ public partial class UniText : MaskableGraphic
 
     private void UpdateRendering()
     {
-        var cr = GetComponent<CanvasRenderer>();
+        var cr = canvasRenderer;
         if (cr == null) return;
 
         if (lastMeshPairs == null || lastMeshPairs.Count == 0)
@@ -859,7 +859,7 @@ public partial class UniText : MaskableGraphic
 
     private void ApplyMaterial()
     {
-        var cr = GetComponent<CanvasRenderer>();
+        var cr = canvasRenderer;
         if (cr == null || primaryMaterial == null)
         {
             cr?.Clear();
@@ -1045,8 +1045,7 @@ public partial class UniText : MaskableGraphic
         go.transform.SetParent(transform, false);
 
         var rt = go.AddComponent<RectTransform>();
-        var parentRT = GetComponent<RectTransform>();
-        rt.pivot = parentRT.pivot; // Match parent pivot for correct mesh coordinate interpretation
+        rt.pivot = rectTransform.pivot; // Match parent pivot for correct mesh coordinate interpretation
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
@@ -1118,8 +1117,7 @@ public partial class UniText : MaskableGraphic
 
     private void ClearAllRenderers()
     {
-        var cr = GetComponent<CanvasRenderer>();
-        cr?.Clear();
+        canvasRenderer?.Clear();
 
         int count = subMeshRenderers.Count;
         for (int i = 0; i < count; i++)

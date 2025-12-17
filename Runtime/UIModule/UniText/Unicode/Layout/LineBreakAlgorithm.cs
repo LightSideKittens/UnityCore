@@ -34,7 +34,9 @@ public sealed class LineBreakAlgorithm
         int length = codePoints.Length;
 
         if (breaks.Length < length + 1)
+        {
             throw new ArgumentException($"breaks array must have length at least {length + 1}");
+        }
 
         if (length == 0)
         {
@@ -379,7 +381,7 @@ public sealed class LineBreakAlgorithm
     {
         var prev = before;
         int i = effectiveIndex, quPos = -1;
-        
+
         while (prev == LineBreakClass.SP && i > 0)
         {
             i--;
@@ -388,13 +390,13 @@ public sealed class LineBreakAlgorithm
             prev = ResolveClass(cls);
             if (prev == LineBreakClass.QU) quPos = i;
         }
-        
-        if (prev != LineBreakClass.QU || quPos < 0 || 
+
+        if (prev != LineBreakClass.QU || quPos < 0 ||
             dataProvider.GetGeneralCategory(codePoints[quPos]) != GeneralCategory.Pi)
             return false;
-            
+
         if (quPos == 0) return true;
-        
+
         for (int j = quPos - 1; j >= 0; j--)
         {
             var cls = dataProvider.GetLineBreakClass(codePoints[j]);
@@ -447,7 +449,7 @@ public sealed class LineBreakAlgorithm
                 var c = dataProvider.GetLineBreakClass(codePoints[i]);
                 if (!IsCM(c)) { eot = false; break; }
             }
-            
+
             if (eot || nextCls == LineBreakClass.SP || nextCls == LineBreakClass.GL ||
                 nextCls == LineBreakClass.WJ || nextCls == LineBreakClass.CL ||
                 nextCls == LineBreakClass.QU || nextCls == LineBreakClass.CP ||
@@ -457,16 +459,16 @@ public sealed class LineBreakAlgorithm
                 nextCls == LineBreakClass.NL || nextCls == LineBreakClass.ZW)
                 return false;
         }
-        
+
         // LB15a: (context) (OP | QU_Pi) SP* ×
         for (int i = index - 1; i >= 0; i--)
         {
             var cls = dataProvider.GetLineBreakClass(codePoints[i]);
             if (cls == LineBreakClass.SP || IsCM(cls)) continue;
-            
+
             bool isOpOrQuPi = cls == LineBreakClass.OP ||
                 (cls == LineBreakClass.QU && dataProvider.GetGeneralCategory(codePoints[i]) == GeneralCategory.Pi);
-            
+
             if (isOpOrQuPi)
             {
                 if (i == 0) return false;
@@ -477,7 +479,7 @@ public sealed class LineBreakAlgorithm
                     return !(prevCls == LineBreakClass.BK || prevCls == LineBreakClass.CR ||
                              prevCls == LineBreakClass.LF || prevCls == LineBreakClass.NL ||
                              prevCls == LineBreakClass.OP || prevCls == LineBreakClass.QU ||
-                             prevCls == LineBreakClass.GL || prevCls == LineBreakClass.SP || 
+                             prevCls == LineBreakClass.GL || prevCls == LineBreakClass.SP ||
                              prevCls == LineBreakClass.ZW || prevCls == LineBreakClass.CB);
                 }
             }
@@ -490,7 +492,7 @@ public sealed class LineBreakAlgorithm
     {
         if (dataProvider.GetGeneralCategory(afterCp) != GeneralCategory.Pi) return false;
         if (!IsEastAsianForLB19a(dataProvider.GetEastAsianWidth(effectiveCp))) return false;
-        
+
         for (int i = index + 2; i < codePoints.Length; i++)
         {
             var cls = dataProvider.GetLineBreakClass(codePoints[i]);
@@ -504,7 +506,7 @@ public sealed class LineBreakAlgorithm
     {
         if (dataProvider.GetGeneralCategory(effectiveCp) != GeneralCategory.Pf) return false;
         if (!IsEastAsianForLB19a(dataProvider.GetEastAsianWidth(afterCp))) return false;
-        
+
         for (int i = effectiveIndex - 1; i >= 0; i--)
         {
             var cls = dataProvider.GetLineBreakClass(codePoints[i]);

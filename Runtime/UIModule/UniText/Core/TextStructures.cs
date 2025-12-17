@@ -112,6 +112,27 @@ public struct PositionedGlyph
     public float x;
     public float y;
     public int fontId;
+    public int shapedGlyphIndex; // Индекс в shapedGlyphs/glyphDataCache для O(1) lookup
+}
+
+/// <summary>
+/// Кэшированные данные глифа для быстрого доступа в mesh generation.
+/// Копирует нужные поля из Unity Glyph для устранения pointer indirection.
+/// </summary>
+public struct CachedGlyphData
+{
+    // GlyphRect
+    public int rectX;
+    public int rectY;
+    public int rectWidth;
+    public int rectHeight;
+    // GlyphMetrics
+    public float bearingX;
+    public float bearingY;
+    public float width;
+    public float height;
+    // Flag
+    public bool isValid;
 }
 
 /// <summary>

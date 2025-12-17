@@ -144,8 +144,8 @@ public sealed class LineBreaker
         // For each codepoint, accumulate width from all glyphs that reference it
         int cpCount = codepoints.Length;
 
-        // Use stackalloc for small texts (up to 4KB), ArrayPool for larger
-        const int StackAllocThreshold = 1024;
+        // Use stackalloc for small texts (up to 16KB), ArrayPool for larger
+        const int StackAllocThreshold = 4096;
         float[] rentedArray = null;
         Span<float> cpWidths = cpCount <= StackAllocThreshold
             ? stackalloc float[cpCount]
