@@ -50,9 +50,10 @@ public sealed class TextProcessor
     // Track if shaping data is valid for layout-only rebuilds
     private bool hasValidShapingData;
 
-    // Track last layout width to skip redundant layout
+    // Track last layout parameters to skip redundant layout
     private float lastLayoutWidth = -1;
     private float lastLayoutFontSize = -1;
+    private float lastLayoutMaxHeight = -1;
     private bool hasValidLayoutData;
 
     // DEBUG: Enable detailed logging for Arabic text issues
@@ -87,10 +88,14 @@ public sealed class TextProcessor
         var buf = CommonData.Current;
 
         // Check if layout can be reused BEFORE resetting buffers
+        // Note: maxHeight check handles infinity (FloatMax) specially
+        bool heightMatches = (float.IsInfinity(lastLayoutMaxHeight) && float.IsInfinity(settings.maxHeight)) ||
+                             Math.Abs(lastLayoutMaxHeight - settings.maxHeight) < 0.001f;
         bool canReuseLayout = !fullRebuild &&
                               hasValidLayoutData &&
                               Math.Abs(lastLayoutWidth - settings.maxWidth) < 0.001f &&
                               Math.Abs(lastLayoutFontSize - settings.fontSize) < 0.001f &&
+                              heightMatches &&
                               buf.positionedGlyphCount > 0;
 
         if (CommonData.DebugPipelineLogging)
@@ -159,6 +164,7 @@ public sealed class TextProcessor
         hasValidLayoutData = false;
         lastLayoutWidth = -1;
         lastLayoutFontSize = -1;
+        lastLayoutMaxHeight = -1;
     }
 
     /// <summary>
@@ -326,6 +332,7 @@ public sealed class TextProcessor
         // Cache layout for Process() to reuse
         lastLayoutWidth = settings.maxWidth;
         lastLayoutFontSize = settings.fontSize;
+        lastLayoutMaxHeight = settings.maxHeight;
         hasValidLayoutData = true;
 
         return resultHeight;
@@ -433,6 +440,7 @@ public sealed class TextProcessor
             hasValidLayoutData = false;
             lastLayoutWidth = -1;
             lastLayoutFontSize = -1;
+            lastLayoutMaxHeight = -1;
 
             return Math.Clamp(optimalSize, minSize, maxSize);
         }
@@ -442,6 +450,7 @@ public sealed class TextProcessor
         hasValidLayoutData = false;
         lastLayoutWidth = -1;
         lastLayoutFontSize = -1;
+        lastLayoutMaxHeight = -1;
 
         const float tolerance = 0.5f;
         float lo = minSize;
