@@ -775,7 +775,9 @@ public partial class UniText : MaskableGraphic
         meshGenerator.SetRectOffset(rect);
         meshGenerator.SetHorizontalAlignment(horizontalAlignment);
 
+        Profiler.BeginSample("TextProcessor.GenerateMeshes");
         lastMeshPairs = meshGenerator.GenerateMeshes(glyphs, cachedMeshProvider);
+        Profiler.EndSample();
     }
 
     private TextProcessSettings CreateProcessSettings(Rect rect, float effectiveFontSize = -1)

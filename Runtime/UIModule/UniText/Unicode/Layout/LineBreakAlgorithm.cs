@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using UnityEngine.Profiling;
 
 /// <summary>
 /// Implementation of UAX #14: Unicode Line Breaking Algorithm
@@ -47,6 +48,7 @@ public sealed class LineBreakAlgorithm
         breaks[0] = false;        // LB2
         breaks[length] = true;    // LB3
 
+        Profiler.BeginSample("LineBreakAlgorithm.MainLoop");
         for (int i = 0; i < length - 1; i++)
         {
             breaks[i + 1] = CanBreakBetween(codePoints, i);
@@ -60,6 +62,7 @@ public sealed class LineBreakAlgorithm
                 UnityEngine.Debug.Log($"[LineBreak] {i}: U+{beforeCp:X4} ({beforeClass}) | U+{afterCp:X4} ({afterClass}) -> break={breaks[i + 1]}");
             }
         }
+        Profiler.EndSample();
     }
 
     public bool[] GetBreakOpportunities(ReadOnlySpan<int> codePoints)
@@ -141,11 +144,29 @@ public sealed class LineBreakAlgorithm
         var beforeRaw = dataProvider.GetLineBreakClass(beforeCp);
         var afterRaw = dataProvider.GetLineBreakClass(afterCp);
 
-        // LB9: Do not break combining character sequence
+        // ═══════════════════════════════════════════════════════════════════
+        // FAST PATH: Handle most common cases without full rule evaluation
+        // Only safe optimizations that don't conflict with higher-priority rules
+        // ═══════════════════════════════════════════════════════════════════
+
+        // Fast: CM/ZWJ after non-exception base → no break (LB9)
+        if ((afterRaw == LineBreakClass.CM || afterRaw == LineBreakClass.ZWJ) && !IsLB9Exception(beforeRaw))
+            return false;
+
+        // Fast: AL × AL → no break (LB28, covers ~80% of typical text)
+        // Safe because AL is not involved in LB4-LB6 (mandatory breaks)
+        if (beforeRaw == LineBreakClass.AL && afterRaw == LineBreakClass.AL)
+            return false;
+
+        // ═══════════════════════════════════════════════════════════════════
+        // FULL PATH: Complex cases require full rule evaluation
+        // ═══════════════════════════════════════════════════════════════════
+
+        // LB9: Do not break combining character sequence (SA with Mn/Mc)
         var afterGc = dataProvider.GetGeneralCategory(afterCp);
-        bool afterIsCombining = afterRaw == LineBreakClass.CM || afterRaw == LineBreakClass.ZWJ ||
-            (afterRaw == LineBreakClass.SA && (afterGc == GeneralCategory.Mn || afterGc == GeneralCategory.Mc));
-        
+        bool afterIsCombining = afterRaw == LineBreakClass.SA &&
+            (afterGc == GeneralCategory.Mn || afterGc == GeneralCategory.Mc);
+
         if (afterIsCombining && !IsLB9Exception(beforeRaw))
             return false;
 
@@ -153,17 +174,17 @@ public sealed class LineBreakAlgorithm
         var effectiveBeforeRaw = beforeRaw;
         int effectiveIndex = index;
         int effectiveCp = beforeCp;
-        
+
         while (effectiveIndex > 0 && IsEffectivelyCombining(effectiveBeforeRaw, effectiveCp))
         {
             effectiveIndex--;
             effectiveCp = codePoints[effectiveIndex];
             effectiveBeforeRaw = dataProvider.GetLineBreakClass(effectiveCp);
         }
-        
+
         if (IsEffectivelyCombining(effectiveBeforeRaw, effectiveCp))
             effectiveBeforeRaw = LineBreakClass.AL;
-        
+
         if (IsLB9Exception(effectiveBeforeRaw) && IsEffectivelyCombining(beforeRaw, beforeCp))
             effectiveBeforeRaw = LineBreakClass.AL;
 

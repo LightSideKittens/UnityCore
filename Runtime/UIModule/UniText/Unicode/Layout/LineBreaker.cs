@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using UnityEngine.Profiling;
 
 /// <summary>
 /// Line Breaker — разбивает текст на строки.
@@ -57,8 +58,7 @@ public sealed class LineBreaker
         ref TextLine[] linesOut,
         ref int lineCount,
         ref ShapedRun[] orderedRunsOut,
-        ref int orderedRunCount,
-        float glyphScale = 1f)
+        ref int orderedRunCount)
     {
         // Store references to output buffers
         tempLines = linesOut;
@@ -75,15 +75,21 @@ public sealed class LineBreaker
             return;
         }
 
+        Profiler.BeginSample("LineBreaker.GetBreakOpportunities");
         // Step 1: Get break opportunities
         GetBreakOpportunities(codepoints);
+        Profiler.EndSample();
 
+        Profiler.BeginSample("LineBreaker.WrapLines");
         // Step 2: Wrap lines
         WrapLines(codepoints, runs, glyphs, maxWidth);
-
+        Profiler.EndSample();
+        
+        Profiler.BeginSample("LineBreaker.ReorderRunsPerLine");
         // Step 3: BiDi reorder runs within each line (UAX #9, rule L2)
         // Each line uses the baseLevel of its containing paragraph
         ReorderRunsPerLine();
+        Profiler.EndSample();
 
         // Return potentially resized buffers
         linesOut = tempLines;

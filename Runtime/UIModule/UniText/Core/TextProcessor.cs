@@ -138,7 +138,7 @@ public sealed class TextProcessor
         {
             float glyphScale = buf.GetGlyphScale(settings.fontSize);
             float effectiveMaxWidth = settings.enableWordWrap ? settings.maxWidth / glyphScale : TextProcessSettings.FloatMax;
-            BreakLines(effectiveMaxWidth, glyphScale);
+            BreakLines(effectiveMaxWidth);
             LayoutText(settings);
         }
 
@@ -199,8 +199,13 @@ public sealed class TextProcessor
         // Set shapingFontSize BEFORE Parsed event so modifiers can use it
         buf.shapingFontSize = settings.fontSize;
 
+        Profiler.BeginSample("TextProcessor.Parse");
         Parse(text);
+        Profiler.EndSample();
+        
+        Profiler.BeginSample("TextProcessor.Parse");
         Parsed?.Invoke();
+        Profiler.EndSample();
 
         if (buf.codepointCount == 0)
         {
@@ -209,13 +214,26 @@ public sealed class TextProcessor
             return false;
         }
 
+        Profiler.BeginSample("TextProcessor.AnalyzeBidi");
         AnalyzeBidi(settings.baseDirection);
+        Profiler.EndSample();
+        Profiler.BeginSample("TextProcessor.AnalyzeScripts");
         AnalyzeScripts();
+        Profiler.EndSample();
+        Profiler.BeginSample("TextProcessor.Itemize");
         Itemize();
+        Profiler.EndSample();
+        Profiler.BeginSample("TextProcessor.Shape");
         Shape();
+        Profiler.EndSample();
 
+        Profiler.BeginSample("TextProcessor.Shaped");
         Shaped?.Invoke();
+        Profiler.EndSample();
+        
+        Profiler.BeginSample("TextProcessor.EnsureGlyphsInAtlas");
         EnsureGlyphsInAtlas();
+        Profiler.EndSample();
 
         hasValidShapingData = true;
         return true;
@@ -302,7 +320,7 @@ public sealed class TextProcessor
         float glyphScale = buf.GetGlyphScale(settings.fontSize);
         float effectiveMaxWidth = settings.enableWordWrap ? width / glyphScale : TextProcessSettings.FloatMax;
 
-        BreakLines(effectiveMaxWidth, glyphScale);
+        BreakLines(effectiveMaxWidth);
         LayoutText(settings);
 
         // Cache layout for Process() to reuse
@@ -466,7 +484,7 @@ public sealed class TextProcessor
         buf.orderedRunCount = 0;
         buf.positionedGlyphCount = 0;
 
-        BreakLines(effectiveMaxWidth, glyphScale);
+        BreakLines(effectiveMaxWidth);
 
         // Calculate height from line count and font metrics
         if (fontProvider != null)
@@ -816,8 +834,9 @@ public sealed class TextProcessor
             buf.shapedGlyphs.AsSpan(0, buf.shapedGlyphCount));
     }
 
-    private void BreakLines(float maxWidth, float glyphScale = 1f)
+    private void BreakLines(float maxWidth)
     {
+        Profiler.BeginSample("TextProcessor.BreakLines");
         var buf = CommonData.Current;
         buf.lineCount = 0;
         buf.orderedRunCount = 0;
@@ -835,17 +854,18 @@ public sealed class TextProcessor
             buf.bidiParagraphs,
             buf.bidiParagraphCount,
             ref linesArr, ref lineCnt,
-            ref orderedRunsArr, ref orderedRunCnt,
-            glyphScale);
+            ref orderedRunsArr, ref orderedRunCnt);
 
         buf.lines = linesArr;
         buf.orderedRuns = orderedRunsArr;
         buf.lineCount = lineCnt;
         buf.orderedRunCount = orderedRunCnt;
+        Profiler.EndSample();
     }
 
     private void LayoutText(TextProcessSettings settings)
     {
+        Profiler.BeginSample("TextProcessor.LayoutText");
         var buf = CommonData.Current;
         buf.positionedGlyphCount = 0;
         buf.EnsurePositionedGlyphCapacity(buf.shapedGlyphCount);
@@ -867,5 +887,6 @@ public sealed class TextProcessor
             buf.positionedGlyphs, ref glyphCnt,
             out resultWidth, out resultHeight);
         buf.positionedGlyphCount = glyphCnt;
+        Profiler.EndSample();
     }
 }
