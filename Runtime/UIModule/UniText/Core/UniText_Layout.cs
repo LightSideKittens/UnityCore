@@ -42,7 +42,8 @@ public partial class UniText : ILayoutElement
             EnsureShapingForLayout();
 
             float glyphScale = GetGlyphScaleForLayout();
-            return processor.GetMaxLineWidth() * glyphScale;
+            // Ceil to prevent floating-point precision issues in nested layouts
+            return Mathf.Ceil(processor.GetMaxLineWidth() * glyphScale);
         }
     }
 

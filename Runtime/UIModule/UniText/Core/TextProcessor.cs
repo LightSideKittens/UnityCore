@@ -270,33 +270,36 @@ public sealed class TextProcessor
         if (!hasValidShapingData) return 0;
 
         var buf = CommonData.Current;
-        float maxWidth = 0f;
-        float currentWidth = 0f;
         var codepoints = buf.codepoints.AsSpan(0, buf.codepointCount);
         var glyphs = buf.shapedGlyphs.AsSpan(0, buf.shapedGlyphCount);
-        int glyphIdx = 0;
 
-        for (int i = 0; i < codepoints.Length; i++)
+        float maxWidth = 0f;
+        float currentWidth = 0f;
+        int lastCluster = -1;
+
+        // Iterate over glyphs, not codepoints - HarfBuzz may produce different glyph count
+        for (int i = 0; i < glyphs.Length; i++)
         {
-            int cp = codepoints[i];
-            if (UnicodeData.IsLineBreak(cp))
-            {
-                if (currentWidth > maxWidth) maxWidth = currentWidth;
-                currentWidth = 0f;
-                if (glyphIdx < glyphs.Length && glyphs[glyphIdx].advanceX == 0f) glyphIdx++;
-            }
-            else if (cp == '\r')
-            {
-                if (glyphIdx < glyphs.Length && glyphs[glyphIdx].advanceX == 0f) glyphIdx++;
-            }
-            else if (glyphIdx < glyphs.Length)
-            {
-                currentWidth += glyphs[glyphIdx].advanceX;
-                glyphIdx++;
-            }
-        }
-        if (currentWidth > maxWidth) maxWidth = currentWidth;
+            int cluster = glyphs[i].cluster;
 
+            // Check if this cluster's codepoint is a line break
+            if (cluster != lastCluster && cluster < codepoints.Length)
+            {
+                int cp = codepoints[cluster];
+                if (UnicodeData.IsLineBreak(cp))
+                {
+                    if (currentWidth > maxWidth) maxWidth = currentWidth;
+                    currentWidth = 0f;
+                    lastCluster = cluster;
+                    continue;
+                }
+            }
+
+            currentWidth += glyphs[i].advanceX;
+            lastCluster = cluster;
+        }
+
+        if (currentWidth > maxWidth) maxWidth = currentWidth;
         return maxWidth > 0 ? maxWidth : GetUnwrappedWidth();
     }
 
