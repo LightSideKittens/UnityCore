@@ -7,29 +7,23 @@ using Buffer = HarfBuzzSharp.Buffer;
 
 /// <summary>
 /// HarfBuzz shaping engine for OpenType complex script support.
+/// Cache keyed by pre-computed font data hash - handles multiple font providers with same fontId.
 /// </summary>
 public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 {
     private ShapedGlyph[] outputBuffer = new ShapedGlyph[256];
     private readonly Dictionary<int, HarfBuzzFontCache> fontCache = new();
-
-    // Buffer pool to avoid creating new Buffer for each Shape call
     private readonly Stack<Buffer> bufferPool = new(4);
 
-    private int lastClearedSessionId;
-
-    // DEBUG: Enable detailed logging
-    public static bool DebugLogging = false;
+    public static bool DebugLogging;
 
     /// <summary>
-    /// Cached HarfBuzz objects for a font. Blob/Face/Font are kept alive together.
-    /// Uses unmanaged memory to avoid GC relocation issues with Blob.FromStream.
-    /// See: https://github.com/mono/SkiaSharp/issues/2323
+    /// Cached HarfBuzz objects for a font.
+    /// Uses unmanaged memory to avoid GC relocation issues.
     /// </summary>
     private sealed class HarfBuzzFontCache : IDisposable
     {
         private readonly IntPtr unmanagedData;
-        private readonly int dataLength;
         public readonly Blob blob;
         public readonly Face face;
         public readonly Font font;
@@ -37,9 +31,7 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 
         public HarfBuzzFontCache(byte[] fontData)
         {
-            // Allocate unmanaged memory to prevent GC from moving the data
-            // This fixes the issue where Blob.FromStream uses fixed() incorrectly
-            dataLength = fontData.Length;
+            int dataLength = fontData.Length;
             unmanagedData = Marshal.AllocHGlobal(dataLength);
             Marshal.Copy(fontData, 0, unmanagedData, dataLength);
 
@@ -55,8 +47,6 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             font?.Dispose();
             face?.Dispose();
             blob?.Dispose();
-
-            // Free unmanaged memory after HarfBuzz objects are disposed
             if (unmanagedData != IntPtr.Zero)
                 Marshal.FreeHGlobal(unmanagedData);
         }
@@ -68,7 +58,6 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             entry.Dispose();
         fontCache.Clear();
 
-        // Dispose pooled buffers
         while (bufferPool.Count > 0)
             bufferPool.Pop().Dispose();
     }
@@ -88,69 +77,10 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ReleaseBuffer(Buffer buffer)
     {
-        if (buffer != null && bufferPool.Count < 8) // Keep max 8 buffers in pool
+        if (buffer != null && bufferPool.Count < 8)
             bufferPool.Push(buffer);
         else
             buffer?.Dispose();
-    }
-
-    public void RegisterFont(int fontId, byte[] fontData)
-    {
-        if (fontData == null || fontData.Length == 0)
-            throw new ArgumentException("Font data is empty", nameof(fontData));
-
-        // Dispose old entry if exists
-        if (fontCache.TryGetValue(fontId, out var oldEntry))
-            oldEntry.Dispose();
-
-        fontCache[fontId] = new HarfBuzzFontCache(fontData);
-
-        if (DebugLogging)
-        {
-            var entry = fontCache[fontId];
-            UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.RegisterFont] fontId={fontId}, dataSize={fontData.Length}, upem={entry.upem}");
-        }
-    }
-
-    public bool HasFont(int fontId) => fontCache.ContainsKey(fontId);
-
-    public void ClearFontCache()
-    {
-        foreach (var entry in fontCache.Values)
-            entry.Dispose();
-        fontCache.Clear();
-    }
-
-    private bool TryAutoRegisterFont(int fontId, UniTextFontProvider fontProvider)
-    {
-        if (fontProvider == null)
-        {
-            if (DebugLogging)
-                UnityEngine.Debug.LogWarning($"[HarfBuzzShapingEngine.TryAutoRegisterFont] fontProvider is null!");
-            return false;
-        }
-
-        byte[] fontData = fontProvider.GetFontData(fontId);
-        if (fontData == null || fontData.Length == 0)
-        {
-            if (DebugLogging)
-                UnityEngine.Debug.LogWarning($"[HarfBuzzShapingEngine.TryAutoRegisterFont] No font data for fontId={fontId}");
-            return false;
-        }
-
-        try
-        {
-            RegisterFont(fontId, fontData);
-            if (DebugLogging)
-                UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.TryAutoRegisterFont] Successfully registered fontId={fontId}");
-            return true;
-        }
-        catch (Exception ex)
-        {
-            if (DebugLogging)
-                UnityEngine.Debug.LogError($"[HarfBuzzShapingEngine.TryAutoRegisterFont] Failed to register fontId={fontId}: {ex.Message}");
-            return false;
-        }
     }
 
     public ShapingResult Shape(
@@ -164,109 +94,73 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
         if (length == 0)
             return new ShapingResult(ReadOnlySpan<ShapedGlyph>.Empty, 0);
 
+        // Get pre-computed hash from font asset (computed at Editor time)
+        int fontHash = fontProvider?.GetFontDataHash(fontId) ?? 0;
+        if (fontHash == 0)
+            return FallbackShape(codepoints, fontProvider, fontId, direction);
+
         if (DebugLogging)
         {
             var sb = new System.Text.StringBuilder();
-            sb.Append($"[HarfBuzzShapingEngine.Shape] fontId={fontId}, script={script}, dir={direction}, codepoints({length}): ");
-            for (int j = 0; j < length && j < 20; j++)
+            sb.Append($"[HarfBuzz] fontHash={fontHash:X8}, script={script}, dir={direction}, len={length}: ");
+            for (int j = 0; j < length && j < 10; j++)
                 sb.Append($"U+{codepoints[j]:X4} ");
-            if (length > 20) sb.Append("...");
+            if (length > 10) sb.Append("...");
             UnityEngine.Debug.Log(sb.ToString());
         }
 
-        // Get or create cached font
-        if (!fontCache.TryGetValue(fontId, out var fontEntry))
+        // Get or create cached font by hash
+        if (!fontCache.TryGetValue(fontHash, out var fontEntry))
         {
-            if (DebugLogging)
-                UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.Shape] Font not in cache, trying to auto-register fontId={fontId}");
-
-            if (!TryAutoRegisterFont(fontId, fontProvider))
-            {
-                if (DebugLogging)
-                    UnityEngine.Debug.LogWarning($"[HarfBuzzShapingEngine.Shape] Auto-register failed, using fallback shaping for fontId={fontId}");
+            byte[] fontData = fontProvider.GetFontData(fontId);
+            if (fontData == null || fontData.Length == 0)
                 return FallbackShape(codepoints, fontProvider, fontId, direction);
-            }
-            fontEntry = fontCache[fontId];
+
+            fontEntry = new HarfBuzzFontCache(fontData);
+            fontCache[fontHash] = fontEntry;
+
+            if (DebugLogging)
+                UnityEngine.Debug.Log($"[HarfBuzz] Registered font hash={fontHash:X8}, upem={fontEntry.upem}");
         }
 
-        // Use pooled buffer instead of creating new one each call
         var buffer = AcquireBuffer();
         try
         {
-            // Set properties BEFORE adding content for better performance
-            buffer.Direction = direction == TextDirection.RightToLeft
-                ? Direction.RightToLeft
-                : Direction.LeftToRight;
+            buffer.Direction = direction == TextDirection.RightToLeft ? Direction.RightToLeft : Direction.LeftToRight;
             buffer.Script = MapScript(script);
             buffer.ContentType = ContentType.Unicode;
-
-            // Batch add all codepoints at once (much faster than loop with Add())
-            // Cluster indices are automatically assigned as 0, 1, 2, ...
             buffer.AddCodepoints(codepoints);
-
-            // NOTE: GuessSegmentProperties() removed - we already set Direction and Script explicitly
-
-            if (DebugLogging)
-                UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.Shape] Calling HarfBuzz Shape with script={buffer.Script}, dir={buffer.Direction}");
 
             fontEntry.font.Shape(buffer);
 
-            // Use Span-based methods to avoid array allocations
             var glyphInfos = buffer.GetGlyphInfoSpan();
             var glyphPositions = buffer.GetGlyphPositionSpan();
             int glyphCount = glyphInfos.Length;
-
-            if (DebugLogging)
-                UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.Shape] HarfBuzz returned {glyphCount} glyphs, upem={fontEntry.upem}");
 
             if (outputBuffer.Length < glyphCount)
                 outputBuffer = new ShapedGlyph[Math.Max(glyphCount, outputBuffer.Length * 2)];
 
             float totalAdvance = 0;
-            bool hasFontProvider = fontProvider != null;
-            float fontSize = hasFontProvider ? fontProvider.FontSize : 36f;
+            float fontSize = fontProvider?.FontSize ?? 36f;
             float offsetScale = fontSize / fontEntry.upem;
-
-            if (DebugLogging)
-            {
-                var sb = new System.Text.StringBuilder();
-                sb.Append($"[HarfBuzzShapingEngine.Shape] Glyphs from HarfBuzz (fontSize={fontSize}, offsetScale={offsetScale:F4}):\n");
-                for (int j = 0; j < glyphCount && j < 30; j++)
-                {
-                    ref readonly var info = ref glyphInfos[j];
-                    ref readonly var pos = ref glyphPositions[j];
-                    sb.Append($"  [{j}] glyphId={info.Codepoint}, cluster={info.Cluster}, xAdv={pos.XAdvance}, yAdv={pos.YAdvance}, xOff={pos.XOffset}, yOff={pos.YOffset}\n");
-                }
-                if (glyphCount > 30) sb.Append("  ...\n");
-                UnityEngine.Debug.Log(sb.ToString());
-            }
 
             for (int i = 0; i < glyphCount; i++)
             {
                 ref readonly var info = ref glyphInfos[i];
                 ref readonly var pos = ref glyphPositions[i];
 
-                uint harfBuzzGlyphId = info.Codepoint;
-
-                // Use HarfBuzz advance values (properly scaled)
                 float advanceX = pos.XAdvance * offsetScale;
-                float advanceY = pos.YAdvance * offsetScale;
-
                 outputBuffer[i] = new ShapedGlyph
                 {
-                    glyphId = (int)harfBuzzGlyphId,
+                    glyphId = (int)info.Codepoint,
                     cluster = (int)info.Cluster,
                     advanceX = advanceX,
-                    advanceY = advanceY,
+                    advanceY = pos.YAdvance * offsetScale,
                     offsetX = pos.XOffset * offsetScale,
                     offsetY = pos.YOffset * offsetScale
                 };
-
                 totalAdvance += advanceX;
             }
-
-            if (DebugLogging)
-                UnityEngine.Debug.Log($"[HarfBuzzShapingEngine.Shape] Result: {glyphCount} glyphs, totalAdvance={totalAdvance:F2}");
 
             return new ShapingResult(outputBuffer.AsSpan(0, glyphCount), totalAdvance);
         }
@@ -289,7 +183,6 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
         float totalAdvance = 0;
         var unicodeData = UnicodeData.Provider;
         bool isRtl = direction == TextDirection.RightToLeft;
-        bool hasFontProvider = fontProvider != null;
         bool checkMirroring = isRtl && unicodeData != null;
 
         for (int i = 0; i < length; i++)
@@ -305,20 +198,15 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 
             uint glyphIndex = 0;
             float advance = 0;
-            if (hasFontProvider)
-                fontProvider.TryGetGlyphInfo(fontId, codepoint, out glyphIndex, out advance);
+            fontProvider?.TryGetGlyphInfo(fontId, codepoint, out glyphIndex, out advance);
 
             int outputIndex = isRtl ? (length - 1 - i) : i;
             outputBuffer[outputIndex] = new ShapedGlyph
             {
                 glyphId = (int)glyphIndex,
                 cluster = i,
-                advanceX = advance,
-                advanceY = 0,
-                offsetX = 0,
-                offsetY = 0
+                advanceX = advance
             };
-
             totalAdvance += advance;
         }
 

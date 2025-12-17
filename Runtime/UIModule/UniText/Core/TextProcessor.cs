@@ -302,7 +302,7 @@ public sealed class TextProcessor
         if (currentWidth > maxWidth) maxWidth = currentWidth;
         return maxWidth > 0 ? maxWidth : GetUnwrappedWidth();
     }
-
+    
     /// <summary>
     /// Get text height for a given width (performs line breaking and layout).
     /// Call EnsureShaping() first. Caches result for same width.

@@ -31,6 +31,13 @@ public class UniTextFontAsset : ScriptableObject
     private byte[] fontData;
 
     /// <summary>
+    /// Pre-computed hash of fontData for HarfBuzz cache key.
+    /// Computed at Editor time to avoid runtime overhead.
+    /// </summary>
+    [SerializeField]
+    private int fontDataHash;
+
+    /// <summary>
     /// Source font file path (for DynamicOS mode).
     /// </summary>
     [SerializeField]
@@ -200,9 +207,31 @@ public class UniTextFontAsset : ScriptableObject
     public byte[] FontData => fontData;
 
     /// <summary>
+    /// Pre-computed hash of font data (for HarfBuzz cache key).
+    /// </summary>
+    public int FontDataHash => fontDataHash;
+
+    /// <summary>
     /// Has raw font data available.
     /// </summary>
     public bool HasFontData => fontData != null && fontData.Length > 0;
+
+    /// <summary>
+    /// Compute hash from font data bytes. FNV-1a with sampling for large fonts.
+    /// </summary>
+    public static int ComputeFontDataHash(byte[] data)
+    {
+        if (data == null || data.Length == 0) return 0;
+        unchecked
+        {
+            int hash = -2128831035; // FNV-1a offset basis
+            int len = data.Length;
+            int step = len > 4096 ? len / 1024 : 1;
+            for (int i = 0; i < len; i += step)
+                hash = (hash ^ data[i]) * 16777619;
+            return (hash ^ len) * 16777619;
+        }
+    }
 
     /// <summary>
     /// Font face information.
@@ -1391,6 +1420,7 @@ public class UniTextFontAsset : ScriptableObject
     public void SetFontData(byte[] data)
     {
         fontData = data;
+        fontDataHash = ComputeFontDataHash(data);
 
         if (data != null && data.Length > 0)
         {

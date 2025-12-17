@@ -487,6 +487,18 @@ public sealed class UniTextFontProvider
     public bool HasFontData(int fontId)
         => (fontAssets.TryGetValue(fontId, out var f) ? f : mainFontAsset)?.HasFontData ?? false;
 
+    public int GetFontDataHash(int fontId)
+    {
+        var fontAsset = fontAssets.TryGetValue(fontId, out var f) ? f : mainFontAsset;
+        if (fontAsset == null) return 0;
+
+        int hash = fontAsset.FontDataHash;
+        // Fallback: if hash not pre-computed (old asset), compute at runtime
+        if (hash == 0 && fontAsset.HasFontData)
+            hash = UniTextFontAsset.ComputeFontDataHash(fontAsset.FontData);
+        return hash;
+    }
+
     /// <summary>
     /// Ensure all glyph indices from shaping results are in the atlas.
     /// This should be called AFTER shaping, before rendering.
