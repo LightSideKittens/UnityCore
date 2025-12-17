@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.Profiling;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// Компонент для отображения текста с полной Unicode поддержкой.
@@ -137,6 +138,7 @@ public partial class UniText : MaskableGraphic
 
     // Sub-mesh renderers для fallback шрифтов
     private readonly List<CanvasRenderer> subMeshRenderers = new();
+    private readonly List<Material> subMeshStencilMaterials = new(); // Cached stencil materials for sub-meshes
     private LSList<UniTextMeshPair> lastMeshPairs;
 
     // Mesh tracking - mesh'и из SharedMeshPool
@@ -863,10 +865,7 @@ public partial class UniText : MaskableGraphic
     {
         var cr = canvasRenderer;
         if (cr == null || primaryMaterial == null)
-        {
-            cr?.Clear();
-            return;
-        }
+            return; // Don't clear - mesh might already be set
 
         cr.materialCount = 1;
         cr.SetMaterial(materialForRendering, 0);
@@ -952,6 +951,15 @@ public partial class UniText : MaskableGraphic
         }
     }
 
+    public override void RecalculateMasking()
+    {
+        base.RecalculateMasking();
+        // Release old stencil materials - they will be recreated on next UpdateSubMeshes
+        ReleaseSubMeshStencilMaterials();
+        // Trigger rebuild to recreate sub-mesh materials with new stencil values
+        SetVerticesDirty();
+    }
+
     #endregion
 
     #region Sub-mesh Management
@@ -1005,7 +1013,7 @@ public partial class UniText : MaskableGraphic
                     var subRT = renderer.GetComponent<RectTransform>();
                     if (subRT != null)
                         subRT.pivot = rectTransform.pivot;
-                    SetSubMeshRendererData(renderer, pair.mesh, pair.material);
+                    SetSubMeshRendererData(renderer, pair.mesh, pair.material, i);
                     continue;
                 }
             }
@@ -1018,7 +1026,7 @@ public partial class UniText : MaskableGraphic
         }
     }
 
-    private void SetSubMeshRendererData(CanvasRenderer renderer, Mesh mesh, Material material)
+    private void SetSubMeshRendererData(CanvasRenderer renderer, Mesh mesh, Material material, int subMeshIndex)
     {
         if (mesh == null || mesh.vertexCount == 0)
         {
@@ -1028,9 +1036,31 @@ public partial class UniText : MaskableGraphic
 
         renderer.SetMesh(mesh);
         renderer.materialCount = 1;
-        var modMat = GetModifiedMaterial(material);
-        renderer.SetMaterial(modMat, 0);
-        // Use texture from material (important for multi-atlas)
+
+        // Create stencil material for sub-mesh (same logic as MaskableGraphic.GetModifiedMaterial)
+        var matToUse = material;
+        if (maskable && material != null)
+        {
+            var rootCanvas = MaskUtilities.FindRootSortOverrideCanvas(transform);
+            int stencilDepth = MaskUtilities.GetStencilDepth(transform, rootCanvas);
+            if (stencilDepth > 0)
+            {
+                int stencilId = (1 << stencilDepth) - 1;
+                var stencilMat = StencilMaterial.Add(material, stencilId, StencilOp.Keep, CompareFunction.Equal, ColorWriteMask.All, stencilId, 0);
+
+                // Release old stencil material if exists
+                while (subMeshStencilMaterials.Count <= subMeshIndex)
+                    subMeshStencilMaterials.Add(null);
+
+                if (subMeshStencilMaterials[subMeshIndex] != null)
+                    StencilMaterial.Remove(subMeshStencilMaterials[subMeshIndex]);
+
+                subMeshStencilMaterials[subMeshIndex] = stencilMat;
+                matToUse = stencilMat;
+            }
+        }
+
+        renderer.SetMaterial(matToUse, 0);
         var tex = material != null ? material.mainTexture : null;
         renderer.SetTexture(tex);
 
@@ -1054,7 +1084,7 @@ public partial class UniText : MaskableGraphic
         rt.offsetMax = Vector2.zero;
 
         var renderer = go.AddComponent<CanvasRenderer>();
-        SetSubMeshRendererData(renderer, mesh, material);
+        SetSubMeshRendererData(renderer, mesh, material, index - 1); // index is 1-based, convert to 0-based
 
         // Apply current clip state
         if (cachedValidClip)
@@ -1102,6 +1132,7 @@ public partial class UniText : MaskableGraphic
     {
         parser?.DeinitializeModifiers();
         ClearAllRenderers();
+        ReleaseSubMeshStencilMaterials();
         ReleaseMeshes();
     }
 
@@ -1128,8 +1159,23 @@ public partial class UniText : MaskableGraphic
         }
     }
 
+    private void ReleaseSubMeshStencilMaterials()
+    {
+        for (int i = 0; i < subMeshStencilMaterials.Count; i++)
+        {
+            if (subMeshStencilMaterials[i] != null)
+            {
+                StencilMaterial.Remove(subMeshStencilMaterials[i]);
+                subMeshStencilMaterials[i] = null;
+            }
+        }
+        subMeshStencilMaterials.Clear();
+    }
+
     private void DestroySubMeshObjects()
     {
+        ReleaseSubMeshStencilMaterials();
+
         foreach (var renderer in subMeshRenderers)
         {
             if (renderer != null)
