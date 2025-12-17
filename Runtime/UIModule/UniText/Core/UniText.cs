@@ -109,7 +109,8 @@ public partial class UniText : MaskableGraphic
 
     /// <summary>Font provider для доступа к fontAsset и метрикам.</summary>
     public UniTextFontProvider FontProvider => fontProvider;
-
+    public string CleanText => parser?.CleanText ?? text;
+    
     #endregion
 
     #region State & Caching
@@ -135,6 +136,13 @@ public partial class UniText : MaskableGraphic
     private float layoutCachedFontSize;
     private float layoutCachedWidth;
     private bool hasValidLayoutCache;
+
+    // Preferred size cache
+    private float cachedPreferredWidth;
+    private float cachedPreferredHeight;
+    private float cachedPreferredHeightForWidth;
+    private bool hasValidPreferredWidth;
+    private bool hasValidPreferredHeight;
 
     // Sub-mesh renderers для fallback шрифтов
     private readonly List<CanvasRenderer> subMeshRenderers = new();
@@ -527,6 +535,8 @@ public partial class UniText : MaskableGraphic
         shaderChannelsConfigured = false;
         hasValidAutoSize = false;
         hasValidLayoutCache = false;
+        hasValidPreferredWidth = false;
+        hasValidPreferredHeight = false;
         dirtyFlags = DirtyFlags.All;
     }
 
@@ -547,6 +557,8 @@ public partial class UniText : MaskableGraphic
         textIsParsed = false;
         hasValidAutoSize = false;
         hasValidLayoutCache = false;
+        hasValidPreferredWidth = false;
+        hasValidPreferredHeight = false;
     }
 #endif
 
@@ -566,6 +578,10 @@ public partial class UniText : MaskableGraphic
             processor?.InvalidateShapingData();
             textIsParsed = false;
         }
+
+        // Invalidate preferred size cache
+        hasValidPreferredWidth = false;
+        hasValidPreferredHeight = false;
 
         if (oldFlags == DirtyFlags.None)
         {
@@ -658,18 +674,9 @@ public partial class UniText : MaskableGraphic
         try
         {
             var rect = rt.rect;
-
-            // Parse attributes only if not already parsed
-            if (!textIsParsed)
-            {
-                parser?.ResetModifiers();
-                parser?.Parse(text);
-                textIsParsed = true;
-            }
-
-            // Get text span: from parser if available, otherwise original text
-            var textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
-
+            
+            ReadOnlySpan<char> textSpan = TryParseAttributes();
+            
             // Calculate auto size if enabled
             float effectiveFontSize = fontSize;
             if (enableAutoSize)
@@ -695,7 +702,19 @@ public partial class UniText : MaskableGraphic
             lastMeshPairs = null;
         }
     }
-    
+
+    private ReadOnlySpan<char> TryParseAttributes()
+    {
+        if (!textIsParsed)
+        {
+            parser?.ResetModifiers();
+            parser?.Parse(text);
+            textIsParsed = true;
+        }
+        
+        ReadOnlySpan<char> textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
+        return textSpan;
+    }
     
     /// <summary>
     /// Перестройка layout (rect size, fontSize или layout settings изменились).

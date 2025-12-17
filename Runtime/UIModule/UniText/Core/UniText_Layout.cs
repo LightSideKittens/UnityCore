@@ -39,11 +39,18 @@ public partial class UniText : ILayoutElement
             if (string.IsNullOrEmpty(text)) return 0;
             if (processor == null) return 0;
 
+            if (hasValidPreferredWidth)
+            {
+                return cachedPreferredWidth;
+            }
+            
             EnsureShapingForLayout();
 
             float glyphScale = GetGlyphScaleForLayout();
             // Ceil to prevent floating-point precision issues in nested layouts
-            return Mathf.Ceil(processor.GetMaxLineWidth() * glyphScale);
+            cachedPreferredWidth = Mathf.Ceil(processor.GetMaxLineWidth() * glyphScale);
+            hasValidPreferredWidth = true;
+            return cachedPreferredWidth;
         }
     }
 
@@ -65,6 +72,12 @@ public partial class UniText : ILayoutElement
             float width = rectTransform.rect.width;
             if (width <= 0) return 0;
 
+            // Check cache first
+            if (hasValidPreferredHeight && Mathf.Approximately(cachedPreferredHeightForWidth, width))
+            {
+                return cachedPreferredHeight;
+            }
+            
             EnsureShapingForLayout();
 
             // When Auto Size is enabled without Word Wrap, font size is limited by width
@@ -105,7 +118,11 @@ public partial class UniText : ILayoutElement
                 horizontalAlignment = horizontalAlignment,
                 verticalAlignment = verticalAlignment
             };
-            return processor.GetHeightForWidth(width, settings);
+
+            cachedPreferredHeight = processor.GetHeightForWidth(width, settings);
+            cachedPreferredHeightForWidth = width;
+            hasValidPreferredHeight = true;
+            return cachedPreferredHeight;
         }
     }
 
@@ -132,17 +149,8 @@ public partial class UniText : ILayoutElement
         CommonData.Current = textBuffers;
 
         if (processor.HasValidShapingData) return;
-
-        // Use same text processing as Rebuild - parse tags first
-        if (!textIsParsed)
-        {
-            parser?.ResetModifiers();
-            parser?.Parse(text);
-            textIsParsed = true;
-        }
-
-        // Get text span: from parser if available, otherwise original text
-        var textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
+        
+        var textSpan =  TryParseAttributes();
 
         var settings = CreateProcessSettingsForLayout(TextProcessSettings.FloatMax);
         processor.EnsureShaping(textSpan, settings);
