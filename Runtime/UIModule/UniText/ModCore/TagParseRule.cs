@@ -63,7 +63,7 @@ public abstract class TagParseRule : IParseRule
         }
     }
 
-    public int TryMatch(string text, int index, IList<ParsedRange> results)
+    public virtual int TryMatch(string text, int index, IList<ParsedRange> results)
     {
         if (text[index] != '<')
             return index;

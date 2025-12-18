@@ -4,6 +4,22 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 /// <summary>
+/// Интерфейс для возврата буфера в пул.
+/// </summary>
+public interface IPoolReturnable
+{
+    void ReturnToPool();
+}
+
+/// <summary>
+/// Интерфейс для очистки буфера.
+/// </summary>
+public interface IClearable
+{
+    void Clear();
+}
+
+/// <summary>
 /// Хелпер для управления буферами из ArrayPool.
 /// Инкапсулирует логику Rent/Return/Grow/Clear.
 ///
@@ -20,7 +36,7 @@ using System.Runtime.CompilerServices;
 /// // В Deinitialize():
 /// buffer.ReturnToPool();
 /// </summary>
-public sealed class ArrayPoolBuffer<T> where T : struct
+public sealed class ArrayPoolBuffer<T> : IPoolReturnable, IClearable where T : struct
 {
     private T[] data;
     private int capacity;

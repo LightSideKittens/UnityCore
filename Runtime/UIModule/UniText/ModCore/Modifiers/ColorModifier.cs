@@ -8,6 +8,7 @@ public class ColorModifier : GlyphModifier<uint>
 {
     private static ArrayPoolBuffer<uint> buffer;
 
+    protected override string AttributeKey => AttributeKeys.Color;
     protected override Action GetOnGlyphCallback() => OnGlyph;
     protected override void SetStaticBuffer(ArrayPoolBuffer<uint> buf) => buffer = buf;
 
@@ -26,6 +27,7 @@ public class ColorModifier : GlyphModifier<uint>
         buffer.SetValueRange(start, Math.Min(end, cpCount), packed);
     }
 
+    
     private static void OnGlyph()
     {
         int cluster = UniTextMeshGenerator.currentCluster;
@@ -64,6 +66,29 @@ public class ColorModifier : GlyphModifier<uint>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasColor(int cluster) => buffer != null && buffer.HasValue(cluster);
+
+    /// <summary>
+    /// Устанавливает цвет для кластера. Используется другими модификаторами (LinkModifier).
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void SetColor(int cluster, Color32 color)
+    {
+        if (buffer == null) return;
+        buffer.EnsureCapacity(cluster + 1);
+        buffer.Data[cluster] = PackColor(color);
+        buffer.MarkUsed(cluster);
+    }
+
+    /// <summary>
+    /// Устанавливает цвет для диапазона. Используется другими модификаторами (LinkModifier).
+    /// </summary>
+    public static void SetColorRange(int start, int end, Color32 color)
+    {
+        if (buffer == null) return;
+        buffer.EnsureCapacity(end);
+        uint packed = PackColor(color);
+        buffer.SetValueRange(start, end, packed);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color32 GetColor(int cluster)

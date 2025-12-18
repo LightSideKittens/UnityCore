@@ -7,6 +7,7 @@ public class ItalicModifier : GlyphModifier<byte>
 {
     private static ArrayPoolBuffer<byte> buffer;
 
+    protected override string AttributeKey => AttributeKeys.Italic;
     protected override Action GetOnGlyphCallback() => OnGlyph;
     protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf) => buffer = buf;
 

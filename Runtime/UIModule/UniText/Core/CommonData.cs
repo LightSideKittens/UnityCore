@@ -95,6 +95,97 @@ public sealed class CommonData
     // Track if buffers are rented
     private bool isRented;
 
+    // ═══════════════════════════════════════════════════════════════════
+    // SHARED ATTRIBUTES - буферы с reference counting для модификаторов
+    // Позволяет нескольким модификаторам одного типа использовать один буфер
+    // ═══════════════════════════════════════════════════════════════════
+
+    private class SharedAttribute
+    {
+        public object buffer;
+        public int refCount;
+    }
+
+    private Dictionary<string, SharedAttribute> sharedAttributes;
+
+    /// <summary>
+    /// Получить или создать shared буфер для атрибута. Увеличивает refCount.
+    /// Вызывать в CreateBuffers модификатора.
+    /// </summary>
+    public ArrayPoolBuffer<T> AcquireAttribute<T>(string key, int initialCapacity = 256) where T : struct
+    {
+        sharedAttributes ??= new Dictionary<string, SharedAttribute>(8);
+
+        if (!sharedAttributes.TryGetValue(key, out var attr))
+        {
+            attr = new SharedAttribute
+            {
+                buffer = new ArrayPoolBuffer<T>(initialCapacity),
+                refCount = 0
+            };
+            sharedAttributes[key] = attr;
+        }
+        attr.refCount++;
+        return (ArrayPoolBuffer<T>)attr.buffer;
+    }
+
+    /// <summary>
+    /// Получить существующий shared буфер без изменения refCount.
+    /// Вызывать в OnRebuilding для обновления кэшированной ссылки.
+    /// </summary>
+    public ArrayPoolBuffer<T> GetAttribute<T>(string key) where T : struct
+    {
+        if (sharedAttributes != null && sharedAttributes.TryGetValue(key, out var attr))
+            return (ArrayPoolBuffer<T>)attr.buffer;
+        return null;
+    }
+
+    /// <summary>
+    /// Освободить ссылку на shared буфер. Уменьшает refCount.
+    /// Когда refCount = 0, буфер возвращается в пул.
+    /// Вызывать в ReleaseBuffers модификатора.
+    /// </summary>
+    public void ReleaseAttribute(string key)
+    {
+        if (sharedAttributes == null || !sharedAttributes.TryGetValue(key, out var attr))
+            return;
+
+        attr.refCount--;
+        if (attr.refCount <= 0)
+        {
+            if (attr.buffer is IPoolReturnable poolable)
+                poolable.ReturnToPool();
+            sharedAttributes.Remove(key);
+        }
+    }
+
+    /// <summary>
+    /// Очистить все shared буферы. Вызывается в начале Rebuild.
+    /// </summary>
+    public void ClearAllAttributes()
+    {
+        if (sharedAttributes == null) return;
+        foreach (var attr in sharedAttributes.Values)
+        {
+            if (attr.buffer is IClearable clearable)
+                clearable.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Вернуть все shared буферы в пул. Вызывается при OnDisable.
+    /// </summary>
+    public void ReturnAllAttributes()
+    {
+        if (sharedAttributes == null) return;
+        foreach (var attr in sharedAttributes.Values)
+        {
+            if (attr.buffer is IPoolReturnable poolable)
+                poolable.ReturnToPool();
+        }
+        sharedAttributes.Clear();
+    }
+
     public CommonData() { }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -154,6 +245,9 @@ public sealed class CommonData
         if (positionedGlyphs != null) { ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs); positionedGlyphs = null; }
         if (glyphColors != null) { ArrayPool<Color32>.Shared.Return(glyphColors); glyphColors = null; }
 
+        // Return all shared attribute buffers
+        ReturnAllAttributes();
+
         isRented = false;
 
         // Clear Current if it points to this instance
@@ -172,6 +266,9 @@ public sealed class CommonData
         // Clear margins only for used portion (before resetting count)
         if (startMargins != null && cpCount > 0)
             startMargins.AsSpan(0, cpCount).Clear();
+
+        // Clear all shared attribute buffers
+        ClearAllAttributes();
 
         codepointCount = 0;
         bidiParagraphCount = 0;

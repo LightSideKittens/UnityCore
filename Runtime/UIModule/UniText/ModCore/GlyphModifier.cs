@@ -2,22 +2,30 @@ using System;
 
 /// <summary>
 /// Generic base class for modifiers that work on per-glyph level (Color, Bold, Italic).
-/// Handles instance + static buffer pattern, subscription to OnGlyph event.
+/// Uses shared buffers from CommonData with reference counting.
+/// Multiple modifiers of the same type share one buffer.
 ///
 /// Subclasses must implement:
-/// - OnGlyphStatic() - static callback for mesh generator
-/// - ApplyValue() - fill buffer with values
-/// - GetStaticBuffer/SetStaticBuffer - static buffer accessor
+/// - AttributeKey - unique key for shared buffer (use AttributeKeys constants)
+/// - GetOnGlyphCallback() - static callback for mesh generator
+/// - SetStaticBuffer() - set static buffer reference for callback
 /// </summary>
 [Serializable]
 public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
 {
-    protected ArrayPoolBuffer<T> instanceBuffer;
+    // Cached reference to shared buffer from CommonData
+    protected ArrayPoolBuffer<T> buffer;
+
+    /// <summary>
+    /// Unique key for this attribute type. Use AttributeKeys constants.
+    /// </summary>
+    protected abstract string AttributeKey { get; }
 
     protected sealed override void CreateBuffers()
     {
-        instanceBuffer = new ArrayPoolBuffer<T>(256);
-        SetStaticBuffer(instanceBuffer);
+        // Acquire shared buffer from CommonData (increases refCount)
+        buffer = CommonData.Current.AcquireAttribute<T>(AttributeKey);
+        SetStaticBuffer(buffer);
     }
 
     protected sealed override void Subscribe()
@@ -34,13 +42,21 @@ public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
 
     protected sealed override void ReleaseBuffers()
     {
-        instanceBuffer?.ReturnToPool();
-        instanceBuffer = null;
+        SetStaticBuffer(null);
+        // Release reference (decreases refCount, returns to pool when 0)
+        CommonData.Current?.ReleaseAttribute(AttributeKey);
+        buffer = null;
     }
 
-    protected sealed override void ClearBuffers() => instanceBuffer.Clear();
+    // Clear is handled by CommonData.ClearAllAttributes() in Reset()
+    protected sealed override void ClearBuffers() { }
 
-    private void OnRebuilding() => SetStaticBuffer(instanceBuffer);
+    private void OnRebuilding()
+    {
+        // Update cached reference (without changing refCount)
+        buffer = CommonData.Current.GetAttribute<T>(AttributeKey);
+        SetStaticBuffer(buffer);
+    }
 
     /// <summary>Return the static OnGlyph callback. Must be static method reference.</summary>
     protected abstract Action GetOnGlyphCallback();

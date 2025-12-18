@@ -1275,5 +1275,65 @@ public partial class UniText : MaskableGraphic
         return closestIndex;
     }
 
+    /// <summary>
+    /// Выполняет hit test по локальной позиции.
+    /// </summary>
+    /// <param name="localPosition">Позиция в локальных координатах RectTransform</param>
+    /// <param name="maxDistance">Максимальное расстояние для попадания (0 = без ограничения)</param>
+    public TextHitResult HitTest(Vector2 localPosition, float maxDistance = 0)
+    {
+        if (processor == null)
+            return TextHitResult.None;
+
+        var glyphs = processor.PositionedGlyphs;
+        int glyphCount = glyphs.Length;
+        if (glyphCount == 0)
+            return TextHitResult.None;
+
+        float closestDistSq = float.MaxValue;
+        int closestIndex = -1;
+        float localX = localPosition.x;
+        float localY = localPosition.y;
+
+        for (int i = 0; i < glyphCount; i++)
+        {
+            ref readonly var glyph = ref glyphs[i];
+            float dx = localX - glyph.x;
+            float dy = localY - glyph.y;
+            float distSq = dx * dx + dy * dy;
+
+            if (distSq < closestDistSq)
+            {
+                closestDistSq = distSq;
+                closestIndex = i;
+            }
+        }
+
+        if (closestIndex < 0)
+            return TextHitResult.None;
+
+        float distance = Mathf.Sqrt(closestDistSq);
+        if (maxDistance > 0 && distance > maxDistance)
+            return TextHitResult.None;
+
+        ref readonly var closestGlyph = ref glyphs[closestIndex];
+        int cluster = closestGlyph.cluster;
+        var position = new Vector2(closestGlyph.x, closestGlyph.y);
+
+        return new TextHitResult(closestIndex, cluster, position, distance);
+    }
+
+    /// <summary>
+    /// Выполняет hit test по screen position.
+    /// </summary>
+    public TextHitResult HitTestScreen(Vector2 screenPosition, Camera eventCamera, float maxDistance = 0)
+    {
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                rectTransform, screenPosition, eventCamera, out var localPos))
+            return TextHitResult.None;
+
+        return HitTest(localPos, maxDistance);
+    }
+
     #endregion
 }
