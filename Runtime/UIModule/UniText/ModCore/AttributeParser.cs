@@ -80,6 +80,22 @@ public sealed class AttributeParser
     }
 
     /// <summary>
+    /// Удалить модификатор из парсера
+    /// </summary>
+    public void Unregister(BaseModifier modifier)
+    {
+        for (int i = ruleModPairs.Count - 1; i >= 0; i--)
+        {
+            if (ruleModPairs[i].modifier == modifier)
+            {
+                allRules.Remove(ruleModPairs[i].rule);
+                ruleModPairs.RemoveAt(i);
+                break;
+            }
+        }
+    }
+
+    /// <summary>
     /// Инициализировать все модификаторы. Вызывается после создания MeshGenerator.
     /// Модификаторы подписываются на события MeshGenerator.
     /// </summary>
@@ -219,7 +235,7 @@ public sealed class AttributeParser
                 tagRemovals.Add((range.closeTagStart, range.closeTagEnd));
         }
     }
-
+    
     private void CreateSpanForRule(IParseRule rule, in ParsedRange range)
     {
         for (int i = 0; i < ruleModPairs.Count; i++)

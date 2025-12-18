@@ -103,23 +103,16 @@ public sealed class TextProcessor
 
         if (fullRebuild)
         {
-            // Full rebuild - reset everything
             buf.Reset();
             hasValidShapingData = false;
             hasValidLayoutData = false;
         }
         else if (!canReuseLayout)
         {
-            // Partial rebuild - only reset layout buffers
             buf.lineCount = 0;
             buf.orderedRunCount = 0;
             buf.positionedGlyphCount = 0;
         }
-        // else: canReuseLayout - keep all buffers intact
-
-        // НЕ сбрасываем resultWidth/resultHeight безусловно!
-        // - Если canReuseLayout=true → сохраняем предыдущие значения
-        // - Если canReuseLayout=false → LayoutText() перезапишет их
 
         if (text.IsEmpty)
         {
@@ -137,7 +130,6 @@ public sealed class TextProcessor
             if (!DoFullShaping(text, settings))
                 return ReadOnlySpan<PositionedGlyph>.Empty;
         }
-        // else: use existing shaping data from SharedTextBuffers.Current
 
         if (!canReuseLayout)
         {

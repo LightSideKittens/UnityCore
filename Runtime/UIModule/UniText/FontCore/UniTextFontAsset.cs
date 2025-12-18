@@ -161,7 +161,7 @@ public class UniTextFontAsset : ScriptableObject
     /// Typical value: 12 degrees.
     /// </summary>
     [SerializeField]
-    internal float italicStyle = 12f;
+    internal float italicStyle = 30f;
 
     #endregion
 

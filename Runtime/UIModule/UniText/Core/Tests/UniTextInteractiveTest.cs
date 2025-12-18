@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class UniTextInteractiveTest : MonoBehaviour
@@ -17,6 +18,8 @@ public class UniTextInteractiveTest : MonoBehaviour
 
     [Header("Color Tests")]
     [SerializeField] private Color testColor = Color.red;
+    
+    [SerializeReference] public List<ModRegister> modifiers = new();
 
     private UniTextFontAsset originalFont;
     private float originalFontSize;
@@ -566,8 +569,29 @@ public class UniTextInteractiveTest : MonoBehaviour
 
     #endregion
 
+    [ContextMenu("Modifiers/Add")]
+    public void AddMods()
+    {
+        RemovedMods();
+        
+        for (int i = 0; i < modifiers.Count; i++)
+        { 
+            target.RegisterModifier(modifiers[i]);
+        }
+    }
+    
+    [ContextMenu("Modifiers/Remove")]
+    public void RemovedMods()
+    {
+        for (int i = 0; i < modifiers.Count; i++)
+        { 
+            target.UnregisterModifier(modifiers[i]);
+        }
+    }
+
     private void Log(string message)
     {
         Debug.Log($"[UniTextTest] {message}");
     }
 }
+

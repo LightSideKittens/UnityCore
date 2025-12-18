@@ -56,7 +56,6 @@ public partial class UniText : MaskableGraphic
         All = Color | Alignment | Layout | FontSize | FullRebuild
     }
     
-    
     #region Serialized Fields
 
     [TextArea(3, 10)]
@@ -158,9 +157,6 @@ public partial class UniText : MaskableGraphic
 
     // Материал для основного mesh
     private Material primaryMaterial;
-
-    // Cached Canvas reference
-    private Canvas cachedCanvas;
 
     // Cached clip parameters for SubMesh
     private Rect cachedClipRect;
@@ -354,6 +350,43 @@ public partial class UniText : MaskableGraphic
 
     #endregion
 
+    public void RegisterModifier(ModRegister register)
+    {
+        if (register == null || !register.IsValid) return;
+
+        modRegisters ??= new List<ModRegister>();
+        modRegisters.Add(register);
+
+        if (isInitialized)
+        {
+            EnsureParser();
+            register.Register(parser);
+            register.modifier.Initialize(this);
+            SetDirty(DirtyFlags.Text);
+        }
+    }
+
+    public void UnregisterModifier(ModRegister register)
+    {
+        if (register == null) return;
+
+        modRegisters?.Remove(register);
+
+        if (isInitialized && parser != null)
+        {
+            register.modifier.Deinitialize();
+            parser.Unregister(register.modifier);
+            SetDirty(DirtyFlags.Text);
+        }
+    }
+
+    private void EnsureParser()
+    {
+        if (parser != null) return;
+        parser = new AttributeParser();
+        processor.Parsed += parser.Apply;
+    }
+
     #region Lifecycle
 
     protected override void Awake()
@@ -367,7 +400,6 @@ public partial class UniText : MaskableGraphic
         base.OnEnable();
         ResetAfterDomainReload();
         CollectExistingSubMeshRenderers();
-        EnsureCanvasShaderChannels();
         EnsureMaterialAssigned();
     }
 
@@ -389,7 +421,7 @@ public partial class UniText : MaskableGraphic
     {
         base.OnValidate();
         ForceFullReinitialization();
-        SetDirty(DirtyFlags.All);
+        SetDirtyAll();
     }
 #endif
 
@@ -402,7 +434,6 @@ public partial class UniText : MaskableGraphic
     protected override void OnTransformParentChanged()
     {
         base.OnTransformParentChanged();
-        cachedCanvas = null;
         shaderChannelsConfigured = false;
         SetDirty(DirtyFlags.Layout);
     }
@@ -502,7 +533,6 @@ public partial class UniText : MaskableGraphic
     {
         ResetAfterDomainReload();
         CollectExistingSubMeshRenderers();
-        EnsureCanvasShaderChannels();
         EnsureMaterialAssigned();
         SetVerticesDirty();
         LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
@@ -529,7 +559,6 @@ public partial class UniText : MaskableGraphic
         parser = null;
         fontProvider = null;
         meshGenerator = null;
-        cachedCanvas = null;
         cachedMeshProvider = null;
         textIsParsed = false;
         shaderChannelsConfigured = false;
@@ -565,7 +594,12 @@ public partial class UniText : MaskableGraphic
     /// <summary>
     /// Помечает текст как требующий перестройки.
     /// </summary>
-    public void SetDirty(DirtyFlags flags = DirtyFlags.All)
+    public void SetDirtyAll()
+    {
+        SetDirty(DirtyFlags.All);
+    }
+
+    public void SetDirty(DirtyFlags flags)
     {
         if (flags == DirtyFlags.None) return;
 
@@ -792,7 +826,7 @@ public partial class UniText : MaskableGraphic
     {
         meshGenerator.FontSize = effectiveFontSize > 0 ? effectiveFontSize : fontSize;
         meshGenerator.DefaultColor = color;
-        meshGenerator.SetCanvasParameters(transform, cachedCanvas);
+        meshGenerator.SetCanvasParameters(transform, canvas);
         meshGenerator.SetRectOffset(rect);
         meshGenerator.SetHorizontalAlignment(horizontalAlignment);
 
@@ -863,8 +897,6 @@ public partial class UniText : MaskableGraphic
             return;
         }
 
-        EnsureCanvasShaderChannels();
-
         var firstPair = lastMeshPairs[0];
         if (firstPair.mesh != null && firstPair.mesh.vertexCount > 0)
         {
@@ -900,20 +932,6 @@ public partial class UniText : MaskableGraphic
             primaryMaterial = font.material;
             ApplyMaterial();
         }
-    }
-
-    private void EnsureCanvasShaderChannels()
-    {
-        if (shaderChannelsConfigured) return;
-
-        cachedCanvas = GetComponentInParent<Canvas>();
-        if (cachedCanvas == null) return;
-
-        const AdditionalCanvasShaderChannels requiredChannels = AdditionalCanvasShaderChannels.TexCoord1;
-        if ((cachedCanvas.additionalShaderChannels & requiredChannels) != requiredChannels)
-            cachedCanvas.additionalShaderChannels |= requiredChannels;
-
-        shaderChannelsConfigured = true;
     }
 
     private Material GetActiveMaterial() => primaryMaterial ?? font?.material;

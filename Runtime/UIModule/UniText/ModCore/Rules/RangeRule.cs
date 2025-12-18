@@ -5,8 +5,14 @@ using LSCore.Extensions;
 [Serializable]
 public class RangeRule : IParseRule
 {
-    public string range;
-    public string parameter;
+    [Serializable]
+    public struct Data
+    {
+        public string range;
+        public string parameter;
+    }
+    
+    public List<Data> data;
     private Range currentRange;
     
     public int TryMatch(string text, int index, IList<ParsedRange> results)
@@ -16,15 +22,19 @@ public class RangeRule : IParseRule
 
     public void Finalize(int textLength, IList<ParsedRange> results)
     {
-        if (!RangeEx.TryParse(range, out currentRange))
+        for (int i = 0; i < data.Count; i++)
         {
-            RangeEx.TryParse("..", out currentRange);
-        }
+            var d = data[i];
+            if (!RangeEx.TryParse(d.range, out currentRange))
+            {
+                RangeEx.TryParse("..", out currentRange);
+            }
 
-        var r = currentRange.GetOffsetAndLength(textLength);
-        var start = r.Offset;
-        var end = r.Offset + r.Length;
-        results.Add(new ParsedRange(start, end, parameter));
+            var r = currentRange.GetOffsetAndLength(textLength);
+            var start = r.Offset;
+            var end = r.Offset + r.Length;
+            results.Add(new ParsedRange(start, end, d.parameter));
+        }
     }
 
     public void Reset() { }
