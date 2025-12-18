@@ -102,9 +102,11 @@ public sealed class TextLayout
 
         float ascender = fontAscender;
         if (ascender <= 0) ascender = computedLineHeight * 0.8f;
+        float descender = fontDescender;
+        if (descender >= 0) descender = -computedLineHeight * 0.2f; // descender should be negative
 
         float lineSpacing = settings.lineSpacing;
-        float totalTextHeight = UniTextFontProvider.CalculateTextHeight(ascender, lineCount, computedLineHeight, lineSpacing);
+        float totalTextHeight = UniTextFontProvider.CalculateTextHeight(ascender, descender, lineCount, computedLineHeight, lineSpacing);
 
         float y = ComputeTextStartY(totalTextHeight, settings) + ascender;
         float maxLineWidth = 0;

@@ -422,20 +422,22 @@ public sealed class TextProcessor
             // Width: use max line width (not total width)
             float widthLimitedSize = (targetWidth / maxLineWidth) * buf.shapingFontSize;
 
-            // Height: account for actual line count
-            float lineHeightRatio, ascenderRatio;
+            // Height: account for actual line count (include descender for accurate height)
+            float lineHeightRatio, ascenderRatio, descenderRatio;
             if (fontProvider != null)
             {
-                fontProvider.GetLineMetrics(1f, out float asc, out _, out float lh);
+                fontProvider.GetLineMetrics(1f, out float asc, out float desc, out float lh);
                 lineHeightRatio = lh;
                 ascenderRatio = asc;
+                descenderRatio = desc; // negative value
             }
             else
             {
                 lineHeightRatio = 1.2f;
                 ascenderRatio = lineHeightRatio * 0.8f;
+                descenderRatio = -lineHeightRatio * 0.2f;
             }
-            float heightLimitedSize = targetHeight / (ascenderRatio + (lineCount - 1) * lineHeightRatio);
+            float heightLimitedSize = targetHeight / ((ascenderRatio - descenderRatio) + (lineCount - 1) * lineHeightRatio);
 
             float optimalSize = Math.Min(widthLimitedSize, heightLimitedSize);
 
@@ -504,8 +506,8 @@ public sealed class TextProcessor
         // Calculate height from line count and font metrics
         if (fontProvider != null)
         {
-            fontProvider.GetLineMetrics(fontSize, out float ascender, out _, out float lineHeight);
-            return UniTextFontProvider.CalculateTextHeight(ascender, buf.lineCount, lineHeight, baseSettings.lineSpacing);
+            fontProvider.GetLineMetrics(fontSize, out float ascender, out float descender, out float lineHeight);
+            return UniTextFontProvider.CalculateTextHeight(ascender, descender, buf.lineCount, lineHeight, baseSettings.lineSpacing);
         }
 
         // Fallback: estimate based on line count
