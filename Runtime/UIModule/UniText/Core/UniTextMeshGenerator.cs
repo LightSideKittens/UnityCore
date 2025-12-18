@@ -365,6 +365,7 @@ public class UniTextMeshGenerator
                     notFoundCount++;
                     if (DebugLogging && notFoundGlyphs != null && notFoundGlyphs.Count < 50)
                         notFoundGlyphs.Add((int)glyphIndex);
+                    cachedData.isValid = false; // Mark as invalid to prevent ArrayPool garbage from being used on Layout Rebuild
                     continue;
                 }
                 // Copy needed values from Glyph to CachedGlyphData (eliminates pointer indirection)
