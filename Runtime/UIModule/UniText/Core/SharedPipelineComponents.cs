@@ -110,28 +110,27 @@ public static class SharedPipelineComponents
 
     #region Glyph Grouping (for mesh generator)
 
-    private static Dictionary<int, LSList<PositionedGlyph>> glyphsByFont;
-    private static Stack<LSList<PositionedGlyph>> glyphListPool;
+    private static Dictionary<int, LSList<int>> glyphsByFont;
+    private static Stack<LSList<int>> glyphListPool;
     private static LSList<UniTextMeshPair> meshResultBuffer;
 
-    public static Dictionary<int, LSList<PositionedGlyph>> GlyphsByFont
-        => glyphsByFont ??= new Dictionary<int, LSList<PositionedGlyph>>();
+    public static Dictionary<int, LSList<int>> GlyphsByFont
+        => glyphsByFont ??= new Dictionary<int, LSList<int>>();
 
-    public static Stack<LSList<PositionedGlyph>> GlyphListPool
-        => glyphListPool ??= new Stack<LSList<PositionedGlyph>>();
+    public static Stack<LSList<int>> GlyphListPool
+        => glyphListPool ??= new Stack<LSList<int>>();
 
     public static LSList<UniTextMeshPair> MeshResultBuffer
         => meshResultBuffer ??= new LSList<UniTextMeshPair>(4);
 
-    public static LSList<PositionedGlyph> AcquireGlyphList()
+    public static LSList<int> AcquireGlyphIndexList()
     {
         var pool = GlyphListPool;
-        return pool.Count > 0 ? pool.Pop() : new LSList<PositionedGlyph>(64);
+        return pool.Count > 0 ? pool.Pop() : new LSList<int>(64);
     }
 
-    public static void ReleaseGlyphList(LSList<PositionedGlyph> list)
+    public static void ReleaseGlyphIndexList(LSList<int> list)
     {
-        // FakeClear is safe for PositionedGlyph (pure value type)
         list.FakeClear();
         GlyphListPool.Push(list);
     }
@@ -142,7 +141,6 @@ public static class SharedPipelineComponents
         var pool = GlyphListPool;
         foreach (var kvp in dict)
         {
-            // FakeClear is safe for PositionedGlyph (pure value type)
             kvp.Value.FakeClear();
             pool.Push(kvp.Value);
         }

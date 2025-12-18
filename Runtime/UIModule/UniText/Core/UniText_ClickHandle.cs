@@ -113,4 +113,91 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
 
         lastHoverResult = result;
     }
+    
+    
+    public int GetCharacterIndexAtPosition(Vector2 localPosition)
+    {
+        var result = HitTest(localPosition);
+        return result.hit ? result.glyphIndex : -1;
+    }
+
+    /// <summary>
+    /// Выполняет bounds-based hit test по локальной позиции.
+    /// Проверяет попадание в визуальные границы глифов.
+    /// </summary>
+    /// <param name="localPosition">Позиция в локальных координатах RectTransform</param>
+    /// <param name="maxDistance">Максимальное расстояние для fallback (0 = без fallback)</param>
+    public TextHitResult HitTest(Vector2 localPosition, float maxDistance = 0)
+    {
+        if (processor == null)
+            return TextHitResult.None;
+
+        var glyphs = processor.PositionedGlyphs;
+        int glyphCount = glyphs.Length;
+        if (glyphCount == 0)
+            return TextHitResult.None;
+
+        float localX = localPosition.x;
+        float localY = localPosition.y;
+
+        // First pass: check if click is inside any glyph bounds
+        for (int i = 0; i < glyphCount; i++)
+        {
+            ref readonly var glyph = ref glyphs[i];
+
+            // Bounds check (left <= x <= right, bottom <= y <= top)
+            if (localX >= glyph.left && localX <= glyph.right &&
+                localY >= glyph.bottom && localY <= glyph.top)
+            {
+                return new TextHitResult(i, glyph.cluster, new Vector2(glyph.x, glyph.y), 0f);
+            }
+        }
+
+        // No direct hit - optionally find closest glyph center within maxDistance
+        if (maxDistance <= 0)
+            return TextHitResult.None;
+
+        float closestDistSq = float.MaxValue;
+        int closestIndex = -1;
+
+        for (int i = 0; i < glyphCount; i++)
+        {
+            ref readonly var glyph = ref glyphs[i];
+
+            // Distance to glyph center
+            float centerX = (glyph.left + glyph.right) * 0.5f;
+            float centerY = (glyph.top + glyph.bottom) * 0.5f;
+            float dx = localX - centerX;
+            float dy = localY - centerY;
+            float distSq = dx * dx + dy * dy;
+
+            if (distSq < closestDistSq)
+            {
+                closestDistSq = distSq;
+                closestIndex = i;
+            }
+        }
+
+        if (closestIndex < 0)
+            return TextHitResult.None;
+
+        float distance = Mathf.Sqrt(closestDistSq);
+        if (distance > maxDistance)
+            return TextHitResult.None;
+
+        ref readonly var closestGlyph = ref glyphs[closestIndex];
+        return new TextHitResult(closestIndex, closestGlyph.cluster, new Vector2(closestGlyph.x, closestGlyph.y), distance);
+    }
+
+    /// <summary>
+    /// Выполняет hit test по screen position.
+    /// </summary>
+    public TextHitResult HitTestScreen(Vector2 screenPosition, Camera eventCamera, float maxDistance = 0)
+    {
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                rectTransform, screenPosition, eventCamera, out var localPos))
+            return TextHitResult.None;
+
+        return HitTest(localPos, maxDistance);
+    }
 }

@@ -149,7 +149,7 @@ public class UniTextMeshGenerator
     }
 
     // Temp dictionary for grouping by atlas (reused to avoid allocation)
-    private static Dictionary<int, LSList<PositionedGlyph>> glyphsByAtlas;
+    private static Dictionary<int, LSList<int>> glyphsByAtlas;
 
     /// <summary>
     /// Generates meshes from positioned glyphs.
@@ -176,19 +176,17 @@ public class UniTextMeshGenerator
         if (glyphs.Length == 0)
             return resultBuffer;
 
-        // Group glyphs by fontId (each font needs its own mesh/material)
+        // Group glyph indices by fontId (each font needs its own mesh/material)
         int glyphLen = glyphs.Length;
         for (int i = 0; i < glyphLen; i++)
         {
-            ref readonly var glyph = ref glyphs[i];
-            int fontId = glyph.fontId;
+            int fontId = glyphs[i].fontId;
             if (!glyphsByFont.TryGetValue(fontId, out var list))
             {
-                // Get from shared pool
-                list = SharedPipelineComponents.AcquireGlyphList();
+                list = SharedPipelineComponents.AcquireGlyphIndexList();
                 glyphsByFont[fontId] = list;
             }
-            list.Add(glyph);
+            list.Add(i);
         }
 
         if (DebugLogging)
@@ -201,10 +199,11 @@ public class UniTextMeshGenerator
         }
 
         // Generate mesh for each font (with multi-atlas support)
+        var positionedGlyphs = CommonData.Current.positionedGlyphs;
         foreach (var kvp in glyphsByFont)
         {
             int fontId = kvp.Key;
-            var fontGlyphs = kvp.Value;
+            var glyphIndices = kvp.Value;
 
             var fontAsset = fontProvider.GetFontAsset(fontId);
             if (fontAsset == null)
@@ -222,29 +221,30 @@ public class UniTextMeshGenerator
             {
                 // Single atlas - simple path
                 var mesh = meshProvider?.Invoke() ?? new Mesh();
-                GenerateMeshForFont(mesh, fontGlyphs, fontAsset);
+                GenerateMeshForFont(mesh, glyphIndices, positionedGlyphs, fontAsset);
                 resultBuffer.Add(new UniTextMeshPair(mesh, fontAsset.Material));
             }
             else
             {
                 // Multi-atlas - group by atlasIndex
-                glyphsByAtlas ??= new Dictionary<int, LSList<PositionedGlyph>>();
+                glyphsByAtlas ??= new Dictionary<int, LSList<int>>();
                 glyphsByAtlas.Clear();
 
-                int count = fontGlyphs.Count;
+                int count = glyphIndices.Count;
                 for (int i = 0; i < count; i++)
                 {
-                    var glyph = fontGlyphs[i];
+                    int glyphIndex = glyphIndices[i];
+                    ref readonly var glyph = ref positionedGlyphs[glyphIndex];
                     int atlasIndex = 0;
                     if (glyphLookup.TryGetValue((uint)glyph.glyphId, out var glyphData) && glyphData != null)
                         atlasIndex = glyphData.atlasIndex;
 
                     if (!glyphsByAtlas.TryGetValue(atlasIndex, out var atlasList))
                     {
-                        atlasList = SharedPipelineComponents.AcquireGlyphList();
+                        atlasList = SharedPipelineComponents.AcquireGlyphIndexList();
                         glyphsByAtlas[atlasIndex] = atlasList;
                     }
-                    atlasList.Add(glyph);
+                    atlasList.Add(glyphIndex);
                 }
 
                 if (DebugLogging)
@@ -254,18 +254,18 @@ public class UniTextMeshGenerator
                 foreach (var atlasKvp in glyphsByAtlas)
                 {
                     int atlasIndex = atlasKvp.Key;
-                    var atlasGlyphs = atlasKvp.Value;
+                    var atlasIndices = atlasKvp.Value;
 
                     var mesh = meshProvider?.Invoke() ?? new Mesh();
-                    GenerateMeshForFont(mesh, atlasGlyphs, fontAsset);
+                    GenerateMeshForFont(mesh, atlasIndices, positionedGlyphs, fontAsset);
                     var atlasMat = fontAsset.material;
                     resultBuffer.Add(new UniTextMeshPair(mesh, atlasMat));
 
                     if (DebugLogging)
-                        Debug.Log($"[UniTextMeshGenerator] Atlas {atlasIndex}: {atlasGlyphs.Count} glyphs, mat={atlasMat?.name}, tex={atlasMat?.mainTexture?.name}");
+                        Debug.Log($"[UniTextMeshGenerator] Atlas {atlasIndex}: {atlasIndices.Count} glyphs, mat={atlasMat?.name}, tex={atlasMat?.mainTexture?.name}");
 
                     // Return to pool
-                    SharedPipelineComponents.ReleaseGlyphList(atlasGlyphs);
+                    SharedPipelineComponents.ReleaseGlyphIndexList(atlasIndices);
                 }
                 glyphsByAtlas.Clear();
             }
@@ -284,13 +284,13 @@ public class UniTextMeshGenerator
         return resultBuffer;
     }
 
-    private void GenerateMeshForFont(Mesh mesh, LSList<PositionedGlyph> glyphs, UniTextFontAsset fontAsset)
+    private void GenerateMeshForFont(Mesh mesh, LSList<int> glyphIndices, PositionedGlyph[] positionedGlyphs, UniTextFontAsset fontAsset)
     {
-        int glyphCount = glyphs.Count;
+        int glyphCount = glyphIndices.Count;
         // Base: 4 vertices per glyph + extra for modifiers (underline, strikethrough, etc.)
         int maxVertexCount = glyphCount * 4 + glyphCount * 8;
         int maxTriangleCount = glyphCount * 6 + glyphCount * 12;
-        
+
         EnsureBufferCapacity(maxVertexCount, maxTriangleCount);
 
         float pointSize = fontAsset.FaceInfo.pointSize;
@@ -351,7 +351,8 @@ public class UniTextMeshGenerator
 
         for (int i = 0; i < glyphCount; i++)
         {
-            var glyph = glyphs[i];
+            int glyphIndex = glyphIndices[i];
+            ref var glyph = ref positionedGlyphs[glyphIndex];
             int cacheIndex = glyph.shapedGlyphIndex;
 
             ref var cachedData = ref glyphCache[cacheIndex];
@@ -359,12 +360,12 @@ public class UniTextMeshGenerator
             if (!useCache || !cachedData.isValid)
             {
                 // Full Rebuild or cache miss - do dictionary lookup and populate cache
-                uint glyphIndex = (uint)glyph.glyphId;
-                if (!glyphLookup.TryGetValue(glyphIndex, out var glyphData) || glyphData == null)
+                uint glyphId = (uint)glyph.glyphId;
+                if (!glyphLookup.TryGetValue(glyphId, out var glyphData) || glyphData == null)
                 {
                     notFoundCount++;
                     if (DebugLogging && notFoundGlyphs != null && notFoundGlyphs.Count < 50)
-                        notFoundGlyphs.Add((int)glyphIndex);
+                        notFoundGlyphs.Add((int)glyphId);
                     cachedData.isValid = false; // Mark as invalid to prevent ArrayPool garbage from being used on Layout Rebuild
                     continue;
                 }
@@ -403,6 +404,12 @@ public class UniTextMeshGenerator
             float tlY = offsetY - glyph.y + bearingYScaled;
             float blY = tlY - heightScaled;
             float trX = tlX + widthScaled;
+
+            // Store screen bounds for hit testing
+            glyph.left = tlX;
+            glyph.top = tlY;
+            glyph.right = trX;
+            glyph.bottom = blY;
 
             // UV coordinates - direct field access from cached struct
             float uvBLx = (cachedData.rectX - padding) * invAtlasWidth;

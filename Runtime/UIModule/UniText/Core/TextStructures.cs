@@ -113,6 +113,12 @@ public struct PositionedGlyph
     public float y;
     public int fontId;
     public int shapedGlyphIndex; // Индекс в shapedGlyphs/glyphDataCache для O(1) lookup
+
+    // Screen bounds in local RectTransform space (filled during mesh generation)
+    public float left;
+    public float top;
+    public float right;
+    public float bottom;
 }
 
 /// <summary>
