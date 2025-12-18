@@ -15,7 +15,7 @@ public abstract class BaseLineModifier : BaseModifier
         public float startX;
         public float endX;
         public float baselineY;
-        public int cluster;
+        public Color32 color;
     }
 
     private const float LineBreakThreshold = 5f;
@@ -110,7 +110,7 @@ public abstract class BaseLineModifier : BaseModifier
 
     private void OnRebuildStart() => linesDrawnThisFrame = false;
 
-    private void AddSegment(float startX, float endX, float baselineY, int cluster)
+    private void AddSegment(float startX, float endX, float baselineY, Color32 color)
     {
         if (lineSegmentCount >= lineSegmentsCapacity)
         {
@@ -127,7 +127,7 @@ public abstract class BaseLineModifier : BaseModifier
             startX = startX,
             endX = endX,
             baselineY = baselineY,
-            cluster = cluster
+            color = color
         };
         lineSegmentCount++;
     }
@@ -148,6 +148,7 @@ public abstract class BaseLineModifier : BaseModifier
         float scale = UniTextMeshGenerator.scale;
         float offsetX = UniTextMeshGenerator.offsetX;
         float offsetY = UniTextMeshGenerator.offsetY;
+        Color32 defaultColor = UniTextMeshGenerator.currentDefaultColor;
 
         var buf = CommonData.Current;
         var allGlyphs = buf.positionedGlyphs;
@@ -156,7 +157,7 @@ public abstract class BaseLineModifier : BaseModifier
         if (glyphCount == 0) return;
 
         float lineStartX = 0, lineEndX = 0, lineBaselineY = 0;
-        int lineStartCluster = 0;
+        Color32 lineColor = default;
         bool hasActiveLine = false;
         float defaultWidth = 10f * scale;
 
@@ -170,6 +171,7 @@ public abstract class BaseLineModifier : BaseModifier
 
             float glyphX = offsetX + glyph.x;
             float baselineY = offsetY - glyph.y;
+            Color32 glyphColor = ColorModifier.TryGetColor(cluster, out var customColor) ? customColor : defaultColor;
 
             float glyphWidth = 0;
             if (i + 1 < glyphCount)
@@ -184,18 +186,18 @@ public abstract class BaseLineModifier : BaseModifier
                     if (glyphWidth < 0) glyphWidth = -glyphWidth;
                 }
             }
-            
+
             if (glyphWidth < 1f)
             {
                 int idx = glyph.shapedGlyphIndex;
-                
+
                 if ((uint)idx < (uint)buf.shapedGlyphCount && buf.glyphDataCache != null)
                 {
                     ref var cached = ref buf.glyphDataCache[idx];
                     if (cached.isValid)
                         glyphWidth = (cached.bearingX + cached.width) * scale;
                 }
-                
+
                 if (glyphWidth < 1f && (uint)idx < (uint)buf.shapedGlyphCount)
                     glyphWidth = buf.shapedGlyphs[idx].advanceX * scale;
                 if (glyphWidth < 1f)
@@ -212,20 +214,23 @@ public abstract class BaseLineModifier : BaseModifier
                     lineStartX = left;
                     lineEndX = right;
                     lineBaselineY = baselineY;
-                    lineStartCluster = cluster;
+                    lineColor = glyphColor;
                     hasActiveLine = true;
                 }
                 else
                 {
                     float yDiff = baselineY - lineBaselineY;
                     if (yDiff < 0) yDiff = -yDiff;
-                    if (yDiff > LineBreakThreshold)
+                    bool colorChanged = lineColor.r != glyphColor.r || lineColor.g != glyphColor.g ||
+                                        lineColor.b != glyphColor.b || lineColor.a != glyphColor.a;
+
+                    if (yDiff > LineBreakThreshold || colorChanged)
                     {
-                        AddSegment(lineStartX, lineEndX, lineBaselineY, lineStartCluster);
+                        AddSegment(lineStartX, lineEndX, lineBaselineY, lineColor);
                         lineStartX = left;
                         lineEndX = right;
                         lineBaselineY = baselineY;
-                        lineStartCluster = cluster;
+                        lineColor = glyphColor;
                     }
                     else
                     {
@@ -237,24 +242,22 @@ public abstract class BaseLineModifier : BaseModifier
             }
             else if (hasActiveLine)
             {
-                AddSegment(lineStartX, lineEndX, lineBaselineY, lineStartCluster);
+                AddSegment(lineStartX, lineEndX, lineBaselineY, lineColor);
                 hasActiveLine = false;
             }
         }
 
         if (hasActiveLine)
-            AddSegment(lineStartX, lineEndX, lineBaselineY, lineStartCluster);
+            AddSegment(lineStartX, lineEndX, lineBaselineY, lineColor);
 
         if (lineSegmentCount == 0) return;
 
-        Color32 defaultColor = UniTextMeshGenerator.currentDefaultColor;
         float lineOffset = GetLineOffset(fontAsset.FaceInfo, scale);
 
         for (int i = 0; i < lineSegmentCount; i++)
         {
             ref var seg = ref lineSegments[i];
-            Color32 color = ColorModifier.TryGetColor(seg.cluster, out var customColor) ? customColor : defaultColor;
-            LineRenderHelper.DrawLine(seg.startX, seg.endX, seg.baselineY, lineOffset, color);
+            LineRenderHelper.DrawLine(seg.startX, seg.endX, seg.baselineY, lineOffset, seg.color);
         }
     }
 }
