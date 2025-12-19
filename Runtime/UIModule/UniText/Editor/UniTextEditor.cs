@@ -11,6 +11,10 @@ public class UniTextEditor : Editor
     private UniText uniText;
     private PropertyTree propertyTree;
 
+    private static bool textAreaExpand;
+    private static int textAreaFontSize = 14;
+    private static GUIStyle textAreaStyle;
+
     private void OnEnable()
     {
         propertyTree = PropertyTree.Create(serializedObject);
@@ -26,32 +30,49 @@ public class UniTextEditor : Editor
     {
         uniText = (UniText)target;
 
-        DrawField("Text", uniText.Text, v => uniText.Text = v,
-            () => EditorGUILayout.TextArea(uniText.Text, GUILayout.MinHeight(60)));
+        BeginSection("Text");
+        EditorGUILayout.BeginHorizontal();
+        textAreaExpand = EditorGUILayout.ToggleLeft("Expand", textAreaExpand, GUILayout.Width(60));
+        EditorGUILayout.LabelField("Size", GUILayout.Width(30));
+        textAreaFontSize = EditorGUILayout.IntSlider(textAreaFontSize, 8, 24);
+        EditorGUILayout.EndHorizontal();
 
-        Header("Font");
+        if (textAreaStyle == null || textAreaStyle.fontSize != textAreaFontSize)
+            textAreaStyle = new GUIStyle(EditorStyles.textArea) { fontSize = textAreaFontSize };
+
+        DrawField(null, uniText.Text, v => uniText.Text = v, () =>
+        {
+            if (textAreaExpand)
+                return EditorGUILayout.TextArea(uniText.Text, textAreaStyle, GUILayout.ExpandHeight(true));
+            return EditorGUILayout.TextArea(uniText.Text, textAreaStyle, GUILayout.MinHeight(60));
+        });
+        EndSection();
+
+        BeginSection("Font");
         DrawField("Font Asset", uniText.Font, v => uniText.Font = v);
         DrawField("Font Size", uniText.FontSize, v => uniText.FontSize = v);
+        EndSection();
 
-        Header("Layout");
+        BeginSection("Layout");
         DrawField("Base Direction", uniText.BaseDirection, v => uniText.BaseDirection = v);
         DrawField("Word Wrap", uniText.EnableWordWrap, v => uniText.EnableWordWrap = v);
+        EndSection();
 
-        Header("Alignment");
+        BeginSection("Alignment");
         DrawField("Horizontal", uniText.HorizontalAlignment, v => uniText.HorizontalAlignment = v);
         DrawField("Vertical", uniText.VerticalAlignment, v => uniText.VerticalAlignment = v);
+        EndSection();
 
-        Header("Auto Size");
+        BeginSection("Auto Size");
         DrawField("Enable", uniText.EnableAutoSize, v => uniText.EnableAutoSize = v);
         if (uniText.EnableAutoSize)
         {
-            EditorGUI.indentLevel++;
             DrawField("Min Size", uniText.MinFontSize, v => uniText.MinFontSize = v);
             DrawField("Max Size", uniText.MaxFontSize, v => uniText.MaxFontSize = v);
-            EditorGUI.indentLevel--;
         }
+        EndSection();
 
-        Header("Modifiers");
+        BeginSection("Modifiers");
         serializedObject.Update();
         EditorGUI.BeginChangeCheck();
         propertyTree.BeginDraw(true);
@@ -68,12 +89,19 @@ public class UniTextEditor : Editor
             }
         }
         serializedObject.ApplyModifiedProperties();
+        EndSection();
     }
 
-    private void Header(string label)
+    private void BeginSection(string label)
     {
-        EditorGUILayout.Space();
+        EditorGUILayout.Space(4);
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+    }
+
+    private void EndSection()
+    {
+        EditorGUILayout.EndVertical();
     }
 
     private void DrawField<T>(string label, T value, Action<T> setter, Func<T> customDraw = null)
