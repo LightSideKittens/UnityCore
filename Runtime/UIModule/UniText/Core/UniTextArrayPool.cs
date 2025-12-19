@@ -7,12 +7,12 @@ public static class UniTextPoolStats
 {
     public static void LogAll()
     {
-        if (CommonData.instanceCount > 0 || CommonData.rentBuffersCallCount > 0)
+        if (UniTextBuffers.instanceCount > 0 || UniTextBuffers.rentBuffersCallCount > 0)
         {
             Debug.Log(
-                $"[CommonData] Instances:{CommonData.instanceCount} RentBuffers:{CommonData.rentBuffersCallCount}");
-            CommonData.instanceCount = 0;
-            CommonData.rentBuffersCallCount = 0;
+                $"[CommonData] Instances:{UniTextBuffers.instanceCount} RentBuffers:{UniTextBuffers.rentBuffersCallCount}");
+            UniTextBuffers.instanceCount = 0;
+            UniTextBuffers.rentBuffersCallCount = 0;
         }
 
         if (TextProcessor.processCallCount > 0)

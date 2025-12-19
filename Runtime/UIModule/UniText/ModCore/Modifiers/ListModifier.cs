@@ -121,7 +121,7 @@ public class ListModifier : BaseModifier
         var fontAsset = fontProviderRef?.GetFontAsset(0);
         if (fontAsset == null) return bulletMarkerWidth;
 
-        var buf = CommonData.Current;
+        var buf = buffers;
         var fontSize = buf.shapingFontSize > 0 ? buf.shapingFontSize : fontProviderRef.FontSize;
         var scale = fontSize / fontAsset.FaceInfo.pointSize;
 
@@ -154,7 +154,7 @@ public class ListModifier : BaseModifier
 
     private void ApplyMargins(ListItemInfo item)
     {
-        var buf = CommonData.Current;
+        var buf = buffers;
 
         var contentIndent = item.nestingLevel * indentPerLevel + MeasureMarkerWidthForLayout(item);
 
@@ -182,7 +182,7 @@ public class ListModifier : BaseModifier
 
         GetMarkerText(item, isRtl, sharedBuilder);
 
-        var buf = CommonData.Current;
+        var buf = buffers;
         var glyphScale = buf.GetGlyphScale(uniText.CurrentFontSize);
         var scaledGap = markerToTextGap * glyphScale;
 
@@ -194,15 +194,15 @@ public class ListModifier : BaseModifier
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool IsItemRtl(int cluster)
+    private bool IsItemRtl(int cluster)
     {
-        var levels = CommonData.Current.bidiLevels;
+        var levels = buffers.bidiLevels;
         return (uint)cluster < (uint)levels.Length && (levels[cluster] & 1) == 1;
     }
 
-    private static float GetItemBaselineY(int cluster, out float firstGlyphX)
+    private float GetItemBaselineY(int cluster, out float firstGlyphX)
     {
-        var buf = CommonData.Current;
+        var buf = buffers;
         for (var i = 0; i < buf.positionedGlyphCount; i++)
             if (buf.positionedGlyphs[i].cluster >= cluster)
             {
@@ -215,9 +215,9 @@ public class ListModifier : BaseModifier
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static float GetLineWidth(int cluster)
+    private float GetLineWidth(int cluster)
     {
-        var buf = CommonData.Current;
+        var buf = buffers;
         for (var i = 0; i < buf.lineCount; i++)
         {
             ref readonly var line = ref buf.lines[i];

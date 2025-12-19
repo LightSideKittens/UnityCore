@@ -28,7 +28,7 @@ public class ColorModifier : GlyphModifier<uint>
         if (!TryParseColor(parameter, out var color))
             return;
 
-        var cpCount = CommonData.Current.codepointCount;
+        var cpCount = buffers.codepointCount;
         buffer.EnsureCapacity(cpCount);
 
         var packed = PackColor(color);

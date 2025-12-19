@@ -41,7 +41,8 @@ public sealed class LineBreaker
         ref TextLine[] linesOut,
         ref int lineCount,
         ref ShapedRun[] orderedRunsOut,
-        ref int orderedRunCount)
+        ref int orderedRunCount,
+        float[] startMargins)
     {
         tempLines = linesOut;
         tempLineCount = 0;
@@ -58,7 +59,7 @@ public sealed class LineBreaker
         }
 
         GetBreakOpportunities(codepoints);
-        WrapLines(codepoints, runs, glyphs, maxWidth);
+        WrapLines(codepoints, runs, glyphs, maxWidth, startMargins);
         ReorderRunsPerLine();
 
         linesOut = tempLines;
@@ -101,11 +102,10 @@ public sealed class LineBreaker
                cp == UnicodeData.ParagraphSeparator;
     }
 
-    private void WrapLines(
-        ReadOnlySpan<int> codepoints,
+    private void WrapLines(ReadOnlySpan<int> codepoints,
         ReadOnlySpan<ShapedRun> runs,
         ReadOnlySpan<ShapedGlyph> glyphs,
-        float maxWidth)
+        float maxWidth, float[] startMargins)
     {
         if (runs.IsEmpty) return;
 
@@ -120,7 +120,7 @@ public sealed class LineBreaker
             : (rentedArray = UniTextArrayPool<float>.Rent(cpCount)).AsSpan(0, cpCount);
         cpWidths.Clear();
 
-        var margins = CommonData.Current.startMargins;
+        var margins = startMargins;
 
         try
         {

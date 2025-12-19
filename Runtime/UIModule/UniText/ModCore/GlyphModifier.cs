@@ -11,8 +11,8 @@ public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
 
     protected sealed override void CreateBuffers()
     {
-        var cpCount = CommonData.Current.codepointCount;
-        buffer = CommonData.Current.AcquireAttribute<T>(AttributeKey, cpCount);
+        var cpCount = buffers.codepointCount;
+        buffer = buffers.AcquireAttribute<T>(AttributeKey, cpCount);
         SetStaticBuffer(buffer);
     }
 
@@ -31,7 +31,7 @@ public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
     protected sealed override void ReleaseBuffers()
     {
         SetStaticBuffer(null);
-        CommonData.Current?.ReleaseAttribute(AttributeKey);
+        buffers.ReleaseAttribute(AttributeKey);
         buffer = null;
     }
 
@@ -41,7 +41,7 @@ public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
 
     private void OnRebuilding()
     {
-        buffer = CommonData.Current.GetAttribute<T>(AttributeKey);
+        buffer = buffers.GetAttribute<T>(AttributeKey);
         SetStaticBuffer(buffer);
     }
 

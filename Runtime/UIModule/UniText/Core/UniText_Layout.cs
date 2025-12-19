@@ -106,9 +106,7 @@ public partial class UniText : ILayoutElement
         EnsureInitialized();
 
         if (processor == null || fontProvider == null) return;
-
-        CommonData.Current = textBuffers;
-
+        
         if (processor.HasValidShapingData) return;
 
         var textSpan = TryParseAttributes();
@@ -137,7 +135,7 @@ public partial class UniText : ILayoutElement
 
     private float GetGlyphScaleForLayout()
     {
-        var buf = CommonData.Current;
+        var buf = buffers;
         var targetFontSize = enableAutoSize ? maxFontSize : fontSize;
         return buf.shapingFontSize > 0 ? targetFontSize / buf.shapingFontSize : 1f;
     }

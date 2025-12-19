@@ -181,7 +181,7 @@ public class ObjModifier : BaseModifier
     {
         if (clusterToObj == null || clusterToObj.Count == 0) return;
 
-        var buf = CommonData.Current;
+        var buf = buffers;
         var fontSize = buf.shapingFontSize > 0 ? buf.shapingFontSize : uniText.FontSize;
         var glyphs = buf.shapedGlyphs;
         var runs = buf.shapedRuns;

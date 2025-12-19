@@ -77,7 +77,7 @@ public partial class UniText : MaskableGraphic
     private UniTextFontProvider fontProvider;
     private UniTextMeshGenerator meshGenerator;
     private AttributeParser parser;
-    private CommonData textBuffers;
+    private UniTextBuffers buffers;
 
 
     public UniTextFontProvider FontProvider => fontProvider;
@@ -133,7 +133,7 @@ public partial class UniText : MaskableGraphic
 
     public TextProcessor TextProcessor => processor;
     public UniTextMeshGenerator MeshGenerator => meshGenerator;
-
+    public UniTextBuffers Buffers => buffers;
 
     public Vector2 LastResultSize => new(lastResultWidth, lastResultHeight);
 
@@ -352,7 +352,7 @@ public partial class UniText : MaskableGraphic
     {
         base.OnDisable();
         Cleanup();
-        textBuffers?.ReturnBuffers();
+        buffers?.ReturnBuffers();
     }
 
     protected override void OnDestroy()
@@ -421,9 +421,9 @@ public partial class UniText : MaskableGraphic
 
     private void CreateProcessor()
     {
-        textBuffers = new CommonData();
-        textBuffers.RentBuffers(text?.Length ?? 0);
-        processor = new TextProcessor();
+        buffers = new UniTextBuffers();
+        buffers.RentBuffers(text?.Length ?? 0);
+        processor = new TextProcessor(buffers);
 
         if (modRegisters == null || modRegisters.Count == 0) return;
 
@@ -443,7 +443,7 @@ public partial class UniText : MaskableGraphic
         if (font == null) return;
 
         fontProvider = new UniTextFontProvider(font);
-        meshGenerator = new UniTextMeshGenerator(fontProvider);
+        meshGenerator = new UniTextMeshGenerator(fontProvider, buffers);
         processor?.SetFontProvider(fontProvider);
     }
 
@@ -469,7 +469,7 @@ public partial class UniText : MaskableGraphic
     private void OnTextDisappeared()
     {
         Cleanup();
-        textBuffers?.ReturnBuffers();
+        buffers?.ReturnBuffers();
         SetDirty(DirtyFlags.Text);
     }
 
@@ -496,13 +496,13 @@ public partial class UniText : MaskableGraphic
     public void ForceFullReinitialization()
     {
         parser?.DeinitializeModifiers();
-        textBuffers?.ReturnBuffers();
+        buffers?.ReturnBuffers();
         isInitialized = false;
         parser = null;
         processor = null;
         fontProvider = null;
         meshGenerator = null;
-        textBuffers = null;
+        buffers = null;
         textIsParsed = false;
         hasValidAutoSize = false;
         hasValidLayoutCache = false;
@@ -566,8 +566,7 @@ public partial class UniText : MaskableGraphic
         
         EnsureInitialized();
         if (!isInitialized) return;
-
-        CommonData.Current = textBuffers;
+        
         Rebuilding?.Invoke();
 
         ExecuteRebuild();

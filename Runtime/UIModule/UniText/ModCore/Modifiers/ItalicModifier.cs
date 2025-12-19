@@ -21,7 +21,7 @@ public class ItalicModifier : GlyphModifier<byte>
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
-        var cpCount = CommonData.Current.codepointCount;
+        var cpCount = buffers.codepointCount;
         buffer.EnsureCapacity(cpCount);
         buffer.SetFlagRange(start, Math.Min(end, cpCount));
     }

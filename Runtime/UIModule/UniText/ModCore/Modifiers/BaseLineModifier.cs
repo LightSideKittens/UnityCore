@@ -30,8 +30,8 @@ public abstract class BaseLineModifier : BaseModifier
 
     protected sealed override void CreateBuffers()
     {
-        var cpCount = CommonData.Current.codepointCount;
-        flagsBuffer = CommonData.Current.AcquireAttribute<byte>(AttributeKey, cpCount);
+        var cpCount = buffers.codepointCount;
+        flagsBuffer = buffers.AcquireAttribute<byte>(AttributeKey, cpCount);
         SetStaticBuffer(flagsBuffer);
 
         lineSegments = UniTextArrayPool<LineSegment>.Rent(64);
@@ -62,7 +62,7 @@ public abstract class BaseLineModifier : BaseModifier
     protected sealed override void ReleaseBuffers()
     {
         SetStaticBuffer(null);
-        CommonData.Current?.ReleaseAttribute(AttributeKey);
+        buffers.ReleaseAttribute(AttributeKey);
         flagsBuffer = null;
 
         if (lineSegments != null)
@@ -80,14 +80,14 @@ public abstract class BaseLineModifier : BaseModifier
 
     protected sealed override void ApplyModifier(int start, int end, string parameter)
     {
-        var cpCount = CommonData.Current.codepointCount;
+        var cpCount = buffers.codepointCount;
         flagsBuffer.EnsureCapacity(cpCount);
         flagsBuffer.SetFlagRange(start, Math.Min(end, cpCount));
     }
 
     private void OnRebuilding()
     {
-        flagsBuffer = CommonData.Current.GetAttribute<byte>(AttributeKey);
+        flagsBuffer = buffers.GetAttribute<byte>(AttributeKey);
         SetStaticBuffer(flagsBuffer);
     }
 
@@ -136,7 +136,7 @@ public abstract class BaseLineModifier : BaseModifier
         var offsetY = UniTextMeshGenerator.offsetY;
         var defaultColor = UniTextMeshGenerator.currentDefaultColor;
 
-        var buf = CommonData.Current;
+        var buf = buffers;
         var allGlyphs = buf.positionedGlyphs;
         var glyphCount = buf.positionedGlyphCount;
 

@@ -5,6 +5,7 @@ using System;
 public abstract class BaseModifier
 {
     protected UniText uniText;
+    protected UniTextBuffers buffers;
     protected bool isInitialized;
 
     public void Apply(int start, int end, string parameter)
@@ -22,6 +23,7 @@ public abstract class BaseModifier
     public void Initialize(UniText uniText)
     {
         this.uniText = uniText;
+        buffers = uniText.Buffers;
     }
 
     public void Deinitialize()

@@ -35,6 +35,7 @@ public class UniTextMeshGenerator
     public static int triangleCount;
     private static Dictionary<int, LSList<int>> glyphsByAtlas;
     private readonly UniTextFontProvider fontProvider;
+    private readonly UniTextBuffers buf;
     private Canvas canvas;
     private float lossyScale = 1f;
     public Action OnAfterGlyphsPerFont;
@@ -44,9 +45,10 @@ public class UniTextMeshGenerator
     public Action OnRebuildStart;
     private Rect rectOffset;
 
-    public UniTextMeshGenerator(UniTextFontProvider fontProvider)
+    public UniTextMeshGenerator(UniTextFontProvider fontProvider, UniTextBuffers uniTextBuffers)
     {
         this.fontProvider = fontProvider ?? throw new ArgumentNullException(nameof(fontProvider));
+        buf = uniTextBuffers ?? throw new ArgumentNullException(nameof(uniTextBuffers));
     }
 
     public float FontSize { get; set; } = 36f;
@@ -104,7 +106,7 @@ public class UniTextMeshGenerator
             list.Add(i);
         }
 
-        var positionedGlyphs = CommonData.Current.positionedGlyphs;
+        var positionedGlyphs = buf.positionedGlyphs;
         foreach (var kvp in glyphsByFont)
         {
             var fontId = kvp.Key;
@@ -162,7 +164,6 @@ public class UniTextMeshGenerator
             }
         }
 
-        var buf = CommonData.Current;
         if (buf != null)
             buf.hasValidGlyphCache = true;
 
@@ -208,7 +209,6 @@ public class UniTextMeshGenerator
         var glyphLookup = fontAsset.GlyphLookupTable;
         var defaultColor = DefaultColor;
 
-        var buf = CommonData.Current;
         buf.EnsureGlyphCacheCapacity(buf.shapedGlyphCount);
         var glyphCache = buf.glyphDataCache;
         var useCache = buf.hasValidGlyphCache;

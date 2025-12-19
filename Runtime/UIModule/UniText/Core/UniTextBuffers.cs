@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 
-public sealed class CommonData
+public sealed class UniTextBuffers
 {
     public static int instanceCount;
     public static int rentBuffersCallCount;
@@ -15,9 +15,6 @@ public sealed class CommonData
     private const int MinGlyphCapacity = 32;
     private const int MinLineCapacity = 32;
     private const int MinParagraphCapacity = 8;
-
-
-    public static CommonData Current { get; set; }
 
     public int[] codepoints;
     public int codepointCount;
@@ -259,9 +256,6 @@ public sealed class CommonData
         ReturnAllAttributes();
 
         isRented = false;
-
-        if (Current == this)
-            Current = null;
     }
 
     public void Reset()
@@ -369,12 +363,6 @@ public sealed class CommonData
         if (positionedGlyphs.Length < required)
             BufferUtils.GrowPositionedGlyphBuffers(ref positionedGlyphs, ref glyphColors, positionedGlyphCount,
                 required);
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        Current = null;
     }
 }
 
