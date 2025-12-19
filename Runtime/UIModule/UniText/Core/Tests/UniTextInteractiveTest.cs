@@ -3,22 +3,25 @@ using UnityEngine;
 
 public class UniTextInteractiveTest : MonoBehaviour
 {
-    [Header("Target")]
-    [SerializeField] private UniText target;
+    [Header("Target")] [SerializeField] private UniText target;
 
-    [Header("Text Tests")]
-    [SerializeField] [TextArea(5, 10)] private string testText = "Hello World!";
+    [Header("Text Tests")] [SerializeField] [TextArea(5, 10)]
+    private string testText = "Hello World!";
+
     [SerializeField] [TextArea(5, 10)] private string rtlText = "مرحبا بالعالم";
     [SerializeField] [TextArea(5, 10)] private string mixedText = "Hello مرحبا World عالم";
-    [SerializeField] [TextArea(5, 10)] private string longText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 
-    [Header("Font Tests")]
-    [SerializeField] private UniTextFontAsset alternateFont;
+    [SerializeField] [TextArea(5, 10)] private string longText =
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+
+    [Header("Font Tests")] [SerializeField]
+    private UniTextFontAsset alternateFont;
+
     [SerializeField] private float testFontSize = 24f;
 
-    [Header("Color Tests")]
-    [SerializeField] private Color testColor = Color.red;
-    
+    [Header("Color Tests")] [SerializeField]
+    private Color testColor = Color.red;
+
     [SerializeReference] public List<ModRegister> modifiers = new();
 
     private UniTextFontAsset originalFont;
@@ -478,7 +481,7 @@ public class UniTextInteractiveTest : MonoBehaviour
         Debug.Log($"═══════════════════════════════════════\n" +
                   $"UniText State: {target.name}\n" +
                   $"───────────────────────────────────────\n" +
-                  $"Text: \"{target.Text}\" ({(target.Text?.Length ?? 0)} chars)\n" +
+                  $"Text: \"{target.Text}\" ({target.Text?.Length ?? 0} chars)\n" +
                   $"Font: {(target.Font != null ? target.Font.name : "null")}\n" +
                   $"FontSize: {target.FontSize}\n" +
                   $"Color: {target.color}\n" +
@@ -498,11 +501,12 @@ public class UniTextInteractiveTest : MonoBehaviour
         if (target == null) return;
         var glyphs = target.LastResultGlyphs;
         Debug.Log($"Glyphs ({glyphs.Length}):");
-        for (int i = 0; i < glyphs.Length && i < 50; i++)
+        for (var i = 0; i < glyphs.Length && i < 50; i++)
         {
             var g = glyphs[i];
             Debug.Log($"  [{i}] glyph={g.glyphId} cluster={g.cluster} pos=({g.x:F1}, {g.y:F1}) font={g.fontId}");
         }
+
         if (glyphs.Length > 50)
             Debug.Log($"  ... and {glyphs.Length - 50} more");
     }
@@ -531,10 +535,7 @@ public class UniTextInteractiveTest : MonoBehaviour
     {
         if (target == null) return;
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        for (int i = 0; i < 100; i++)
-        {
-            target.Text = $"Iteration {i}";
-        }
+        for (var i = 0; i < 100; i++) target.Text = $"Iteration {i}";
         sw.Stop();
         Log($"100 text changes in {sw.ElapsedMilliseconds}ms");
     }
@@ -544,12 +545,13 @@ public class UniTextInteractiveTest : MonoBehaviour
     {
         if (target == null) return;
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
-            target.FontSize = 20 + (i % 20);
+            target.FontSize = 20 + i % 20;
             target.color = Random.ColorHSV();
             target.HorizontalAlignment = (HorizontalAlignment)(i % 3);
         }
+
         sw.Stop();
         Log($"300 property changes in {sw.ElapsedMilliseconds}ms");
     }
@@ -559,10 +561,7 @@ public class UniTextInteractiveTest : MonoBehaviour
     {
         if (target == null) return;
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        for (int i = 0; i < 100; i++)
-        {
-            target.Text = (i % 2 == 0) ? "" : testText;
-        }
+        for (var i = 0; i < 100; i++) target.Text = i % 2 == 0 ? "" : testText;
         sw.Stop();
         Log($"100 empty toggles in {sw.ElapsedMilliseconds}ms");
     }
@@ -573,20 +572,14 @@ public class UniTextInteractiveTest : MonoBehaviour
     public void AddMods()
     {
         RemovedMods();
-        
-        for (int i = 0; i < modifiers.Count; i++)
-        { 
-            target.RegisterModifier(modifiers[i]);
-        }
+
+        for (var i = 0; i < modifiers.Count; i++) target.RegisterModifier(modifiers[i]);
     }
-    
+
     [ContextMenu("Modifiers/Remove")]
     public void RemovedMods()
     {
-        for (int i = 0; i < modifiers.Count; i++)
-        { 
-            target.UnregisterModifier(modifiers[i]);
-        }
+        for (var i = 0; i < modifiers.Count; i++) target.UnregisterModifier(modifiers[i]);
     }
 
     private void Log(string message)
@@ -594,4 +587,3 @@ public class UniTextInteractiveTest : MonoBehaviour
         Debug.Log($"[UniTextTest] {message}");
     }
 }
-

@@ -5,22 +5,14 @@ using System.Runtime.InteropServices;
 using HarfBuzzSharp;
 using Buffer = HarfBuzzSharp.Buffer;
 
-/// <summary>
-/// HarfBuzz shaping engine for OpenType complex script support.
-/// Cache keyed by pre-computed font data hash - handles multiple font providers with same fontId.
-/// </summary>
+
 public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 {
     private ShapedGlyph[] outputBuffer = new ShapedGlyph[256];
     private readonly Dictionary<int, HarfBuzzFontCache> fontCache = new();
     private readonly Stack<Buffer> bufferPool = new(4);
 
-    public static bool DebugLogging;
 
-    /// <summary>
-    /// Cached HarfBuzz objects for a font.
-    /// Uses unmanaged memory to avoid GC relocation issues.
-    /// </summary>
     private sealed class HarfBuzzFontCache : IDisposable
     {
         private readonly IntPtr unmanagedData;
@@ -31,7 +23,7 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 
         public HarfBuzzFontCache(byte[] fontData)
         {
-            int dataLength = fontData.Length;
+            var dataLength = fontData.Length;
             unmanagedData = Marshal.AllocHGlobal(dataLength);
             Marshal.Copy(fontData, 0, unmanagedData, dataLength);
 
@@ -71,6 +63,7 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             buffer.ClearContents();
             return buffer;
         }
+
         return new Buffer();
     }
 
@@ -90,37 +83,22 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
         UnicodeScript script,
         TextDirection direction)
     {
-        int length = codepoints.Length;
+        var length = codepoints.Length;
         if (length == 0)
             return new ShapingResult(ReadOnlySpan<ShapedGlyph>.Empty, 0);
 
-        // Get pre-computed hash from font asset (computed at Editor time)
-        int fontHash = fontProvider?.GetFontDataHash(fontId) ?? 0;
+        var fontHash = fontProvider?.GetFontDataHash(fontId) ?? 0;
         if (fontHash == 0)
             return FallbackShape(codepoints, fontProvider, fontId, direction);
 
-        if (DebugLogging)
-        {
-            var sb = new System.Text.StringBuilder();
-            sb.Append($"[HarfBuzz] fontHash={fontHash:X8}, script={script}, dir={direction}, len={length}: ");
-            for (int j = 0; j < length && j < 10; j++)
-                sb.Append($"U+{codepoints[j]:X4} ");
-            if (length > 10) sb.Append("...");
-            UnityEngine.Debug.Log(sb.ToString());
-        }
-
-        // Get or create cached font by hash
         if (!fontCache.TryGetValue(fontHash, out var fontEntry))
         {
-            byte[] fontData = fontProvider.GetFontData(fontId);
+            var fontData = fontProvider.GetFontData(fontId);
             if (fontData == null || fontData.Length == 0)
                 return FallbackShape(codepoints, fontProvider, fontId, direction);
 
             fontEntry = new HarfBuzzFontCache(fontData);
             fontCache[fontHash] = fontEntry;
-
-            if (DebugLogging)
-                UnityEngine.Debug.Log($"[HarfBuzz] Registered font hash={fontHash:X8}, upem={fontEntry.upem}");
         }
 
         var buffer = AcquireBuffer();
@@ -135,21 +113,21 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 
             var glyphInfos = buffer.GetGlyphInfoSpan();
             var glyphPositions = buffer.GetGlyphPositionSpan();
-            int glyphCount = glyphInfos.Length;
+            var glyphCount = glyphInfos.Length;
 
             if (outputBuffer.Length < glyphCount)
                 outputBuffer = new ShapedGlyph[Math.Max(glyphCount, outputBuffer.Length * 2)];
 
             float totalAdvance = 0;
-            float fontSize = fontProvider?.FontSize ?? 36f;
-            float offsetScale = fontSize / fontEntry.upem;
+            var fontSize = fontProvider?.FontSize ?? 36f;
+            var offsetScale = fontSize / fontEntry.upem;
 
-            for (int i = 0; i < glyphCount; i++)
+            for (var i = 0; i < glyphCount; i++)
             {
                 ref readonly var info = ref glyphInfos[i];
                 ref readonly var pos = ref glyphPositions[i];
 
-                float advanceX = pos.XAdvance * offsetScale;
+                var advanceX = pos.XAdvance * offsetScale;
                 outputBuffer[i] = new ShapedGlyph
                 {
                     glyphId = (int)info.Codepoint,
@@ -176,22 +154,22 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
         int fontId,
         TextDirection direction)
     {
-        int length = codepoints.Length;
+        var length = codepoints.Length;
         if (outputBuffer.Length < length)
             outputBuffer = new ShapedGlyph[Math.Max(length, outputBuffer.Length * 2)];
 
         float totalAdvance = 0;
         var unicodeData = UnicodeData.Provider;
-        bool isRtl = direction == TextDirection.RightToLeft;
-        bool checkMirroring = isRtl && unicodeData != null;
+        var isRtl = direction == TextDirection.RightToLeft;
+        var checkMirroring = isRtl && unicodeData != null;
 
-        for (int i = 0; i < length; i++)
+        for (var i = 0; i < length; i++)
         {
-            int codepoint = codepoints[i];
+            var codepoint = codepoints[i];
 
             if (checkMirroring && unicodeData.IsBidiMirrored(codepoint))
             {
-                int mirrored = unicodeData.GetBidiMirroringGlyph(codepoint);
+                var mirrored = unicodeData.GetBidiMirroringGlyph(codepoint);
                 if (mirrored != 0 && mirrored != codepoint)
                     codepoint = mirrored;
             }
@@ -200,7 +178,7 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             float advance = 0;
             fontProvider?.TryGetGlyphInfo(fontId, codepoint, out glyphIndex, out advance);
 
-            int outputIndex = isRtl ? (length - 1 - i) : i;
+            var outputIndex = isRtl ? length - 1 - i : i;
             outputBuffer[outputIndex] = new ShapedGlyph
             {
                 glyphId = (int)glyphIndex,

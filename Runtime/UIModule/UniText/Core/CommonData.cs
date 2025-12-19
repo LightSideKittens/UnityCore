@@ -1,37 +1,24 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.TextCore;
-using UnityEngine.TextCore.LowLevel;
 
-/// <summary>
-/// Instance-based буферы для TextProcessor.
-/// Каждый UniText имеет свой экземпляр. Static Current указывает на текущий активный.
-/// Использует ArrayPool для zero-allocation при resize.
-/// </summary>
+
 public sealed class CommonData
 {
-    /// <summary>
-    /// Enable pipeline logging to trace Layout/Rebuild flow.
-    /// </summary>
-    public static bool DebugPipelineLogging = false;
+    public static int instanceCount;
+    public static int rentBuffersCallCount;
 
-    // Minimum sizes - ArrayPool will return at least this
-    private const int MinCodepointCapacity = 256;
+    private const int MinCodepointCapacity = 32;
     private const int MinRunCapacity = 64;
-    private const int MinGlyphCapacity = 256;
+    private const int MinGlyphCapacity = 32;
     private const int MinLineCapacity = 32;
     private const int MinParagraphCapacity = 8;
 
-    /// <summary>
-    /// Текущий активный буфер. Устанавливается перед Rebuild.
-    /// </summary>
+
     public static CommonData Current { get; set; }
 
-    // Current buffers (from ArrayPool or initial allocation)
     public int[] codepoints;
     public int codepointCount;
 
@@ -51,8 +38,6 @@ public sealed class CommonData
     public int shapedGlyphCount;
     public float shapingFontSize;
 
-    // Glyph data cache - parallel to shapedGlyphs, filled on first mesh generation
-    // Uses CachedGlyphData struct for direct field access (no pointer indirection)
     public CachedGlyphData[] glyphDataCache;
     public bool hasValidGlyphCache;
 
@@ -64,41 +49,17 @@ public sealed class CommonData
     public PositionedGlyph[] positionedGlyphs;
     public int positionedGlyphCount;
 
-    // ═══════════════════════════════════════════════════════════════════
-    // GLYPH ATTRIBUTES - общие буферы для модификаторов
-    // Индексируются по glyph index (параллельно positionedGlyphs)
-    // ═══════════════════════════════════════════════════════════════════
 
-    /// <summary>
-    /// Цвета глифов. Используется ColorModifier, GradientModifier и т.д.
-    /// Общий буфер, т.к. цвет — универсальный атрибут для многих эффектов.
-    /// </summary>
     public Color32[] glyphColors;
 
-    // ═══════════════════════════════════════════════════════════════════
-    // LAYOUT MARGINS - для hanging indent, blockquotes и т.д.
-    // Индексируются по codepoint index (параллельно codepoints)
-    // ═══════════════════════════════════════════════════════════════════
 
-    /// <summary>
-    /// Start margin для каждого codepoint.
-    /// LineBreaker использует margin первого codepoint строки.
-    /// При LTR — отступ слева, при RTL — справа.
-    /// </summary>
     public float[] startMargins;
 
-    // Track peak usage for diagnostics
     public int peakCodepointCount;
     public int peakRunCount;
     public int peakGlyphCount;
 
-    // Track if buffers are rented
     private bool isRented;
-
-    // ═══════════════════════════════════════════════════════════════════
-    // SHARED ATTRIBUTES - буферы с reference counting для модификаторов
-    // Позволяет нескольким модификаторам одного типа использовать один буфер
-    // ═══════════════════════════════════════════════════════════════════
 
     private class SharedAttribute
     {
@@ -108,11 +69,8 @@ public sealed class CommonData
 
     private Dictionary<string, SharedAttribute> sharedAttributes;
 
-    /// <summary>
-    /// Получить или создать shared буфер для атрибута. Увеличивает refCount.
-    /// Вызывать в CreateBuffers модификатора.
-    /// </summary>
-    public ArrayPoolBuffer<T> AcquireAttribute<T>(string key, int initialCapacity = 256) where T : struct
+
+    public ArrayPoolBuffer<T> AcquireAttribute<T>(string key, int initialCapacity) where T : struct
     {
         sharedAttributes ??= new Dictionary<string, SharedAttribute>(8);
 
@@ -125,14 +83,12 @@ public sealed class CommonData
             };
             sharedAttributes[key] = attr;
         }
+
         attr.refCount++;
         return (ArrayPoolBuffer<T>)attr.buffer;
     }
 
-    /// <summary>
-    /// Получить существующий shared буфер без изменения refCount.
-    /// Вызывать в OnRebuilding для обновления кэшированной ссылки.
-    /// </summary>
+
     public ArrayPoolBuffer<T> GetAttribute<T>(string key) where T : struct
     {
         if (sharedAttributes != null && sharedAttributes.TryGetValue(key, out var attr))
@@ -140,11 +96,7 @@ public sealed class CommonData
         return null;
     }
 
-    /// <summary>
-    /// Освободить ссылку на shared буфер. Уменьшает refCount.
-    /// Когда refCount = 0, буфер возвращается в пул.
-    /// Вызывать в ReleaseBuffers модификатора.
-    /// </summary>
+
     public void ReleaseAttribute(string key)
     {
         if (sharedAttributes == null || !sharedAttributes.TryGetValue(key, out var attr))
@@ -159,115 +111,169 @@ public sealed class CommonData
         }
     }
 
-    /// <summary>
-    /// Очистить все shared буферы. Вызывается в начале Rebuild.
-    /// </summary>
+
     public void ClearAllAttributes()
     {
         if (sharedAttributes == null) return;
         foreach (var attr in sharedAttributes.Values)
-        {
             if (attr.buffer is IClearable clearable)
                 clearable.Clear();
-        }
     }
 
-    /// <summary>
-    /// Вернуть все shared буферы в пул. Вызывается при OnDisable.
-    /// </summary>
+
     public void ReturnAllAttributes()
     {
         if (sharedAttributes == null) return;
         foreach (var attr in sharedAttributes.Values)
-        {
             if (attr.buffer is IPoolReturnable poolable)
                 poolable.ReturnToPool();
-        }
         sharedAttributes.Clear();
     }
 
-    public CommonData() { }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public float GetGlyphScale(float targetFontSize)
-        => shapingFontSize > 0 ? targetFontSize / shapingFontSize : 1f;
+    {
+        return shapingFontSize > 0 ? targetFontSize / shapingFontSize : 1f;
+    }
 
-    /// <summary>
-    /// Взять массивы из пулов. Вызывать в OnEnable.
-    /// </summary>
-    public void RentBuffers()
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int EstimateCapacity(int textLength, int minCapacity)
+    {
+        if (textLength <= minCapacity) return minCapacity;
+        return Mathf.NextPowerOfTwo(textLength);
+    }
+
+
+    public void RentBuffers(int textLength)
     {
         if (isRented) return;
+        rentBuffersCallCount++;
 
-        codepoints = ArrayPool<int>.Shared.Rent(MinCodepointCapacity);
-        bidiLevels = ArrayPool<byte>.Shared.Rent(MinCodepointCapacity);
-        bidiParagraphs = ArrayPool<BidiParagraph>.Shared.Rent(MinParagraphCapacity);
-        scripts = ArrayPool<UnicodeScript>.Shared.Rent(MinCodepointCapacity);
-        startMargins = ArrayPool<float>.Shared.Rent(MinCodepointCapacity);
-        runs = ArrayPool<TextRun>.Shared.Rent(MinRunCapacity);
-        shapedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
-        shapedGlyphs = ArrayPool<ShapedGlyph>.Shared.Rent(MinGlyphCapacity);
-        glyphDataCache = ArrayPool<CachedGlyphData>.Shared.Rent(MinGlyphCapacity);
-        lines = ArrayPool<TextLine>.Shared.Rent(MinLineCapacity);
-        orderedRuns = ArrayPool<ShapedRun>.Shared.Rent(MinRunCapacity);
-        positionedGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(MinGlyphCapacity);
-        glyphColors = ArrayPool<Color32>.Shared.Rent(MinGlyphCapacity);
-        
+        var codepointCapacity = EstimateCapacity(textLength, MinCodepointCapacity);
+        var glyphCapacity = EstimateCapacity(textLength, MinGlyphCapacity);
+
+        codepoints = UniTextArrayPool<int>.Rent(codepointCapacity);
+        bidiLevels = UniTextArrayPool<byte>.Rent(codepointCapacity);
+        bidiParagraphs = UniTextArrayPool<BidiParagraph>.Rent(MinParagraphCapacity);
+        scripts = UniTextArrayPool<UnicodeScript>.Rent(codepointCapacity);
+        startMargins = UniTextArrayPool<float>.Rent(codepointCapacity);
+        runs = UniTextArrayPool<TextRun>.Rent(MinRunCapacity);
+        shapedRuns = UniTextArrayPool<ShapedRun>.Rent(MinRunCapacity);
+        shapedGlyphs = UniTextArrayPool<ShapedGlyph>.Rent(glyphCapacity);
+        glyphDataCache = UniTextArrayPool<CachedGlyphData>.Rent(glyphCapacity);
+        lines = UniTextArrayPool<TextLine>.Rent(MinLineCapacity);
+        orderedRuns = UniTextArrayPool<ShapedRun>.Rent(MinRunCapacity);
+        positionedGlyphs = UniTextArrayPool<PositionedGlyph>.Rent(glyphCapacity);
+        glyphColors = UniTextArrayPool<Color32>.Rent(glyphCapacity);
+
         isRented = true;
         Reset();
     }
 
-    /// <summary>
-    /// Вернуть массивы обратно в пулы. Вызывать в OnDisable.
-    /// </summary>
+
     public void ReturnBuffers()
     {
         if (!isRented) return;
 
-        if (codepoints != null) { ArrayPool<int>.Shared.Return(codepoints); codepoints = null; }
-        if (bidiLevels != null) { ArrayPool<byte>.Shared.Return(bidiLevels); bidiLevels = null; }
-        if (bidiParagraphs != null) { ArrayPool<BidiParagraph>.Shared.Return(bidiParagraphs); bidiParagraphs = null; }
-        if (scripts != null) { ArrayPool<UnicodeScript>.Shared.Return(scripts); scripts = null; }
+        if (codepoints != null)
+        {
+            UniTextArrayPool<int>.Return(codepoints);
+            codepoints = null;
+        }
+
+        if (bidiLevels != null)
+        {
+            UniTextArrayPool<byte>.Return(bidiLevels);
+            bidiLevels = null;
+        }
+
+        if (bidiParagraphs != null)
+        {
+            UniTextArrayPool<BidiParagraph>.Return(bidiParagraphs);
+            bidiParagraphs = null;
+        }
+
+        if (scripts != null)
+        {
+            UniTextArrayPool<UnicodeScript>.Return(scripts);
+            scripts = null;
+        }
 
         if (startMargins != null)
         {
             startMargins.AsSpan().Clear();
-            ArrayPool<float>.Shared.Return(startMargins); startMargins = null;
+            UniTextArrayPool<float>.Return(startMargins);
+            startMargins = null;
         }
-        
-        if (runs != null) { ArrayPool<TextRun>.Shared.Return(runs); runs = null; }
-        if (shapedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(shapedRuns); shapedRuns = null; }
-        if (shapedGlyphs != null) { ArrayPool<ShapedGlyph>.Shared.Return(shapedGlyphs); shapedGlyphs = null; }
-        if (glyphDataCache != null) { ArrayPool<CachedGlyphData>.Shared.Return(glyphDataCache); glyphDataCache = null; }
-        hasValidGlyphCache = false;
-        if (lines != null) { ArrayPool<TextLine>.Shared.Return(lines); lines = null; }
-        if (orderedRuns != null) { ArrayPool<ShapedRun>.Shared.Return(orderedRuns); orderedRuns = null; }
-        if (positionedGlyphs != null) { ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs); positionedGlyphs = null; }
-        if (glyphColors != null) { ArrayPool<Color32>.Shared.Return(glyphColors); glyphColors = null; }
 
-        // Return all shared attribute buffers
+        if (runs != null)
+        {
+            UniTextArrayPool<TextRun>.Return(runs);
+            runs = null;
+        }
+
+        if (shapedRuns != null)
+        {
+            UniTextArrayPool<ShapedRun>.Return(shapedRuns);
+            shapedRuns = null;
+        }
+
+        if (shapedGlyphs != null)
+        {
+            UniTextArrayPool<ShapedGlyph>.Return(shapedGlyphs);
+            shapedGlyphs = null;
+        }
+
+        if (glyphDataCache != null)
+        {
+            UniTextArrayPool<CachedGlyphData>.Return(glyphDataCache);
+            glyphDataCache = null;
+        }
+
+        hasValidGlyphCache = false;
+        if (lines != null)
+        {
+            UniTextArrayPool<TextLine>.Return(lines);
+            lines = null;
+        }
+
+        if (orderedRuns != null)
+        {
+            UniTextArrayPool<ShapedRun>.Return(orderedRuns);
+            orderedRuns = null;
+        }
+
+        if (positionedGlyphs != null)
+        {
+            UniTextArrayPool<PositionedGlyph>.Return(positionedGlyphs);
+            positionedGlyphs = null;
+        }
+
+        if (glyphColors != null)
+        {
+            UniTextArrayPool<Color32>.Return(glyphColors);
+            glyphColors = null;
+        }
+
         ReturnAllAttributes();
 
         isRented = false;
 
-        // Clear Current if it points to this instance
         if (Current == this)
             Current = null;
     }
 
     public void Reset()
     {
-        // Track peak usage before reset (for diagnostics)
-        int cpCount = codepointCount;
+        var cpCount = codepointCount;
         if (cpCount > peakCodepointCount) peakCodepointCount = cpCount;
         if (runCount > peakRunCount) peakRunCount = runCount;
         if (shapedGlyphCount > peakGlyphCount) peakGlyphCount = shapedGlyphCount;
 
-        // Clear margins only for used portion (before resetting count)
         if (startMargins != null && cpCount > 0)
             startMargins.AsSpan(0, cpCount).Clear();
 
-        // Clear all shared attribute buffers
         ClearAllAttributes();
 
         codepointCount = 0;
@@ -282,20 +288,21 @@ public sealed class CommonData
         baseDirection = TextDirection.LeftToRight;
     }
 
-    /// <summary>
-    /// Log peak usage for tuning initial buffer sizes.
-    /// </summary>
+
     public void LogPeakUsage()
     {
-        UnityEngine.Debug.Log($"[SharedTextBuffers] Peak usage: codepoints={peakCodepointCount}, runs={peakRunCount}, glyphs={peakGlyphCount}");
-        UnityEngine.Debug.Log($"[SharedTextBuffers] Buffer sizes: codepoints={codepoints?.Length ?? 0}, runs={runs?.Length ?? 0}, glyphs={shapedGlyphs?.Length ?? 0}");
+        Debug.Log(
+            $"[SharedTextBuffers] Peak usage: codepoints={peakCodepointCount}, runs={peakRunCount}, glyphs={peakGlyphCount}");
+        Debug.Log(
+            $"[SharedTextBuffers] Buffer sizes: codepoints={codepoints?.Length ?? 0}, runs={runs?.Length ?? 0}, glyphs={shapedGlyphs?.Length ?? 0}");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureCodepointCapacity(int required)
     {
         if (codepoints.Length < required)
-            BufferUtils.GrowCodepointBuffers(ref codepoints, ref bidiLevels, ref scripts, ref startMargins, codepointCount, required);
+            BufferUtils.GrowCodepointBuffers(ref codepoints, ref bidiLevels, ref scripts, ref startMargins,
+                codepointCount, required);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -320,16 +327,22 @@ public sealed class CommonData
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureRunCapacity(int required) =>
+    public void EnsureRunCapacity(int required)
+    {
         BufferUtils.EnsureCapacity(ref runs, runCount, required);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureShapedRunCapacity(int required) =>
+    public void EnsureShapedRunCapacity(int required)
+    {
         BufferUtils.EnsureCapacity(ref shapedRuns, shapedRunCount, required);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureShapedGlyphCapacity(int required) =>
+    public void EnsureShapedGlyphCapacity(int required)
+    {
         BufferUtils.EnsureCapacity(ref shapedGlyphs, shapedGlyphCount, required);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureGlyphCacheCapacity(int required)
@@ -339,18 +352,23 @@ public sealed class CommonData
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureLineCapacity(int required) =>
+    public void EnsureLineCapacity(int required)
+    {
         BufferUtils.EnsureCapacity(ref lines, lineCount, required);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureOrderedRunCapacity(int required) =>
+    public void EnsureOrderedRunCapacity(int required)
+    {
         BufferUtils.EnsureCapacity(ref orderedRuns, orderedRunCount, required);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsurePositionedGlyphCapacity(int required)
     {
         if (positionedGlyphs.Length < required)
-            BufferUtils.GrowPositionedGlyphBuffers(ref positionedGlyphs, ref glyphColors, positionedGlyphCount, required);
+            BufferUtils.GrowPositionedGlyphBuffers(ref positionedGlyphs, ref glyphColors, positionedGlyphCount,
+                required);
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -360,9 +378,7 @@ public sealed class CommonData
     }
 }
 
-/// <summary>
-/// Shared static кеш для font fallback lookup.
-/// </summary>
+
 public static class SharedFontCache
 {
     private readonly struct FontCacheEntry
@@ -379,17 +395,18 @@ public static class SharedFontCache
         }
     }
 
-    // Increased from 256 to 4096 for much better hit rate
-    // Most text uses ~100-500 unique codepoints, so 4096 should have very high hit rate
     private const int CacheSize = 4096;
     private const int CacheMask = CacheSize - 1;
     private static FontCacheEntry[] cache = new FontCacheEntry[CacheSize];
 
-    static SharedFontCache() => Clear();
+    static SharedFontCache()
+    {
+        Clear();
+    }
 
     public static bool TryGet(int codepoint, int preferredFontId, out int resultFontId)
     {
-        int index = (codepoint ^ (preferredFontId << 16)) & CacheMask;
+        var index = (codepoint ^ (preferredFontId << 16)) & CacheMask;
         ref var entry = ref cache[index];
 
         if (entry.codepoint == codepoint && entry.preferredFontId == preferredFontId)
@@ -404,23 +421,24 @@ public static class SharedFontCache
 
     public static void Set(int codepoint, int preferredFontId, int resultFontId)
     {
-        int index = (codepoint ^ (preferredFontId << 16)) & CacheMask;
+        var index = (codepoint ^ (preferredFontId << 16)) & CacheMask;
         cache[index] = new FontCacheEntry(codepoint, preferredFontId, resultFontId);
     }
 
     public static void Clear()
     {
-        for (int i = 0; i < CacheSize; i++)
+        for (var i = 0; i < CacheSize; i++)
             cache[i] = new FontCacheEntry(-1, -1, -1);
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload() => Clear();
+    private static void OnDomainReload()
+    {
+        Clear();
+    }
 }
 
-/// <summary>
-/// Shared static пул Mesh объектов для UniText.
-/// </summary>
+
 public static class SharedMeshPool
 {
     private static readonly List<Mesh> available = new(16);
@@ -430,14 +448,12 @@ public static class SharedMeshPool
     {
         EnsureInitialized();
 
-        // Ищем валидный mesh в пуле (не destroyed)
         while (available.Count > 0)
         {
-            int lastIndex = available.Count - 1;
+            var lastIndex = available.Count - 1;
             var mesh = available[lastIndex];
             available.RemoveAt(lastIndex);
 
-            // Проверяем что mesh не был уничтожен Unity
             if (mesh != null)
             {
                 mesh.Clear();
@@ -446,7 +462,6 @@ public static class SharedMeshPool
             }
         }
 
-        // Пул пуст или все mesh'и destroyed — создаём новый
         var newMesh = new Mesh();
         newMesh.name = name;
         return newMesh;
@@ -454,7 +469,6 @@ public static class SharedMeshPool
 
     public static void Release(Mesh mesh)
     {
-        // Проверяем что mesh не destroyed
         if (mesh == null) return;
         mesh.Clear();
         available.Add(mesh);
@@ -465,25 +479,22 @@ public static class SharedMeshPool
         if (meshes == null) return;
 
         foreach (var mesh in meshes)
-        {
-            // Проверяем что mesh не destroyed
             if (mesh != null)
             {
                 mesh.Clear();
                 available.Add(mesh);
             }
-        }
     }
 
     public static void ClearUnused()
     {
-        for (int i = available.Count - 1; i >= 0; i--)
+        for (var i = available.Count - 1; i >= 0; i--)
         {
             var mesh = available[i];
-            // Проверяем что mesh не destroyed перед уничтожением
             if (mesh != null)
                 UnityEngine.Object.Destroy(mesh);
         }
+
         available.Clear();
     }
 
@@ -496,7 +507,10 @@ public static class SharedMeshPool
         SceneManager.sceneUnloaded += OnSceneUnloaded;
     }
 
-    private static void OnSceneUnloaded(Scene scene) => ClearUnused();
+    private static void OnSceneUnloaded(Scene scene)
+    {
+        ClearUnused();
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()

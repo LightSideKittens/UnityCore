@@ -1,10 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 
-/// <summary>
-/// Simple 1:1 shaping for scripts without complex shaping requirements.
-/// Uses shared static buffer to avoid per-instance allocations.
-/// </summary>
+
 public sealed class UniTextShapingEngine : IShapingEngine
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -15,38 +12,34 @@ public sealed class UniTextShapingEngine : IShapingEngine
         UnicodeScript script,
         TextDirection direction)
     {
-        int length = codepoints.Length;
+        var length = codepoints.Length;
         if (length == 0)
             return new ShapingResult(ReadOnlySpan<ShapedGlyph>.Empty, 0);
 
         SharedPipelineComponents.EnsureShapingOutputCapacity(length);
 
-        // Use shared static buffer
         var buffer = SharedPipelineComponents.ShapingOutputBuffer;
         float totalAdvance = 0;
 
-        // Split into two paths: RTL (rare) and LTR (common)
         if (direction == TextDirection.RightToLeft)
         {
             var unicodeData = UnicodeData.Provider;
-            bool hasUnicodeData = unicodeData != null;
+            var hasUnicodeData = unicodeData != null;
 
-            for (int i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
             {
-                int codepoint = codepoints[i];
-                int glyphCodepoint = codepoint;
+                var codepoint = codepoints[i];
+                var glyphCodepoint = codepoint;
 
-                // BiDi mirroring for RTL
                 if (hasUnicodeData && unicodeData.IsBidiMirrored(codepoint))
                 {
-                    int mirrored = unicodeData.GetBidiMirroringGlyph(codepoint);
+                    var mirrored = unicodeData.GetBidiMirroringGlyph(codepoint);
                     if (mirrored != 0 && mirrored != codepoint)
                         glyphCodepoint = mirrored;
                 }
 
-                fontProvider.TryGetGlyphInfo(fontId, glyphCodepoint, out uint glyphIndex, out float advance);
+                fontProvider.TryGetGlyphInfo(fontId, glyphCodepoint, out var glyphIndex, out var advance);
 
-                // RTL: reverse order
                 buffer[length - 1 - i] = new ShapedGlyph
                 {
                     glyphId = (int)glyphIndex,
@@ -59,11 +52,10 @@ public sealed class UniTextShapingEngine : IShapingEngine
         }
         else
         {
-            // LTR fast path - no mirroring, no reverse
-            for (int i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
             {
-                int codepoint = codepoints[i];
-                fontProvider.TryGetGlyphInfo(fontId, codepoint, out uint glyphIndex, out float advance);
+                var codepoint = codepoints[i];
+                fontProvider.TryGetGlyphInfo(fontId, codepoint, out var glyphIndex, out var advance);
 
                 buffer[i] = new ShapedGlyph
                 {
@@ -84,7 +76,6 @@ public sealed class UniTextShapingEngine : IShapingEngine
     {
         return script switch
         {
-            // Simple scripts (1:1 mapping)
             UnicodeScript.Latin => true,
             UnicodeScript.Cyrillic => true,
             UnicodeScript.Greek => true,
@@ -99,7 +90,6 @@ public sealed class UniTextShapingEngine : IShapingEngine
             UnicodeScript.Inherited => true,
             UnicodeScript.Unknown => true,
 
-            // Complex scripts (need HarfBuzz)
             UnicodeScript.Arabic => false,
             UnicodeScript.Hebrew => false,
             UnicodeScript.Syriac => false,
@@ -125,31 +115,20 @@ public sealed class UniTextShapingEngine : IShapingEngine
     }
 }
 
-/// <summary>
-/// Hybrid engine: simple shaping for basic scripts, HarfBuzz for complex scripts.
-/// Uses shared static UniTextShapingEngine to avoid allocations.
-/// </summary>
+
 public sealed class HybridShapingEngine : IShapingEngine
 {
-    // Shared static simple engine - no state, safe to share
     private static readonly UniTextShapingEngine simpleEngine = new();
     private readonly IShapingEngine complexEngine;
-
-    // DEBUG: Enable detailed logging
-    public static bool DebugLogging = false;
 
     public HybridShapingEngine(IShapingEngine harfBuzzEngine)
     {
         complexEngine = harfBuzzEngine ?? simpleEngine;
-        if (DebugLogging)
-            UnityEngine.Debug.Log($"[HybridShapingEngine] Created with complexEngine={complexEngine.GetType().Name}");
     }
 
     public HybridShapingEngine()
     {
         complexEngine = simpleEngine;
-        if (DebugLogging)
-            UnityEngine.Debug.Log("[HybridShapingEngine] Created with NO complex engine (using simple for all)");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -160,7 +139,6 @@ public sealed class HybridShapingEngine : IShapingEngine
         UnicodeScript script,
         TextDirection direction)
     {
-        // Fast path: avoid virtual call overhead for simple scripts
         if (UniTextShapingEngine.CanHandle(script))
             return simpleEngine.Shape(codepoints, fontProvider, fontId, script, direction);
 

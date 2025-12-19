@@ -1,14 +1,8 @@
 using System;
 
-/// <summary>
-/// Абстракция shaping engine.
-/// Единственный интерфейс, сохранённый для поддержки HarfBuzz.
-/// </summary>
+
 public interface IShapingEngine
 {
-    /// <summary>
-    /// Shape codepoints в глифы.
-    /// </summary>
     ShapingResult Shape(
         ReadOnlySpan<int> codepoints,
         UniTextFontProvider fontProvider,
@@ -17,9 +11,7 @@ public interface IShapingEngine
         TextDirection direction);
 }
 
-/// <summary>
-/// Результат shaping.
-/// </summary>
+
 public readonly ref struct ShapingResult
 {
     public readonly ReadOnlySpan<ShapedGlyph> Glyphs;
@@ -32,9 +24,7 @@ public readonly ref struct ShapingResult
     }
 }
 
-/// <summary>
-/// Метрики глифа.
-/// </summary>
+
 public struct GlyphMetrics
 {
     public float width;

@@ -1,8 +1,6 @@
 using System;
 
-/// <summary>
-/// Правило для тега &lt;b&gt;...&lt;/b&gt;
-/// </summary>
+
 [Serializable]
 public sealed class BoldParseRule : TagParseRule
 {

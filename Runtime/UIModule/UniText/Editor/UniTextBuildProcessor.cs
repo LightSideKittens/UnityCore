@@ -3,10 +3,7 @@ using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
 
-/// <summary>
-/// Build processor that clears dynamic data from UniTextFontAsset before build
-/// when clearDynamicDataOnBuild is enabled.
-/// </summary>
+
 public class UniTextBuildProcessor : IPreprocessBuildWithReport
 {
     public int callbackOrder => 0;

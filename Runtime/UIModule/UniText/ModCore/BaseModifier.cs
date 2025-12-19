@@ -1,9 +1,6 @@
 using System;
 
-/// <summary>
-/// Базовый класс для модификаторов с ленивой инициализацией.
-/// Буферы и подписки создаются только при первом Apply.
-/// </summary>
+
 [Serializable]
 public abstract class BaseModifier
 {
@@ -18,6 +15,7 @@ public abstract class BaseModifier
             Subscribe();
             isInitialized = true;
         }
+
         ApplyModifier(start, end, parameter);
     }
 
@@ -34,6 +32,7 @@ public abstract class BaseModifier
             ReleaseBuffers();
             isInitialized = false;
         }
+
         uniText = null;
     }
 
@@ -42,24 +41,26 @@ public abstract class BaseModifier
         if (isInitialized)
             ClearBuffers();
     }
-    
-    public virtual void Destroy() { }
-    
-    /// <summary>Создать буферы и установить static указатели.</summary>
+
+    public virtual void Destroy()
+    {
+    }
+
+
     protected abstract void CreateBuffers();
 
-    /// <summary>Подписаться на события UniText/MeshGenerator.</summary>
+
     protected abstract void Subscribe();
 
-    /// <summary>Отписаться от событий.</summary>
+
     protected abstract void Unsubscribe();
 
-    /// <summary>Освободить буферы (вернуть в пул).</summary>
+
     protected abstract void ReleaseBuffers();
 
-    /// <summary>Очистить буферы (перед новым Rebuild).</summary>
+
     protected abstract void ClearBuffers();
 
-    /// <summary>Логика Apply модификатора.</summary>
+
     protected abstract void ApplyModifier(int start, int end, string parameter);
 }

@@ -14,14 +14,18 @@ public class UnderlineModifier : BaseLineModifier
         return faceInfo.underlineOffset * scale;
     }
 
-    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf) => buffer = buf;
+    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf)
+    {
+        buffer = buf;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasUnderline(int cluster) => buffer != null && buffer.HasFlag(cluster);
+    public static bool HasUnderline(int cluster)
+    {
+        return buffer != null && buffer.HasFlag(cluster);
+    }
 
-    /// <summary>
-    /// Устанавливает флаг подчёркивания для диапазона. Используется другими модификаторами (LinkModifier).
-    /// </summary>
+
     public static void SetFlagRange(int start, int end)
     {
         if (buffer == null) return;
@@ -30,5 +34,8 @@ public class UnderlineModifier : BaseLineModifier
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload() => buffer = null;
+    private static void OnDomainReload()
+    {
+        buffer = null;
+    }
 }

@@ -8,24 +8,32 @@ public class BoldModifier : GlyphModifier<byte>
     private static ArrayPoolBuffer<byte> buffer;
 
     protected override string AttributeKey => AttributeKeys.Bold;
-    protected override Action GetOnGlyphCallback() => OnGlyph;
-    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf) => buffer = buf;
+
+    protected override Action GetOnGlyphCallback()
+    {
+        return OnGlyph;
+    }
+
+    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf)
+    {
+        buffer = buf;
+    }
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
-        int cpCount = CommonData.Current.codepointCount;
+        var cpCount = CommonData.Current.codepointCount;
         buffer.EnsureCapacity(cpCount);
         buffer.SetFlagRange(start, Math.Min(end, cpCount));
     }
 
     private static void OnGlyph()
     {
-        int cluster = UniTextMeshGenerator.currentCluster;
+        var cluster = UniTextMeshGenerator.currentCluster;
         if (!buffer.HasFlag(cluster))
             return;
 
-        float negXScale = -UniTextMeshGenerator.xScale;
-        int baseIdx = UniTextMeshGenerator.vertexCount - 4;
+        var negXScale = -UniTextMeshGenerator.xScale;
+        var baseIdx = UniTextMeshGenerator.vertexCount - 4;
         var uvs = UniTextMeshGenerator.Uvs0;
 
         uvs[baseIdx].w = negXScale;
@@ -35,8 +43,14 @@ public class BoldModifier : GlyphModifier<byte>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsBold(int cluster) => buffer != null && buffer.HasFlag(cluster);
+    public static bool IsBold(int cluster)
+    {
+        return buffer != null && buffer.HasFlag(cluster);
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload() => buffer = null;
+    private static void OnDomainReload()
+    {
+        buffer = null;
+    }
 }

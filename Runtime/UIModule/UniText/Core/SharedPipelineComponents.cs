@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using LSCore;
 using UnityEngine;
 
-/// <summary>
-/// Shared static pipeline components for UniText.
-/// Since the system is single-threaded, we can safely share these between all UniText instances.
-/// This eliminates per-instance allocations for pipeline components.
-/// </summary>
+
 public static class SharedPipelineComponents
 {
     #region Pipeline Components (lazy initialized)
@@ -33,6 +29,7 @@ public static class SharedPipelineComponents
                 harfBuzzEngine = new HarfBuzzShapingEngine();
                 shapingEngine = new HybridShapingEngine(harfBuzzEngine);
             }
+
             return shapingEngine;
         }
     }
@@ -57,7 +54,6 @@ public static class SharedPipelineComponents
 
     #region Mesh Generator Buffers
 
-    // 4 vertices per glyph, match MinGlyphCapacity (256) from CommonData
     private const int InitialMeshCapacity = 256 * 4;
 
     private static Vector3[] meshVertices = new Vector3[InitialMeshCapacity];
@@ -66,7 +62,7 @@ public static class SharedPipelineComponents
     private static Color32[] meshColors32 = new Color32[InitialMeshCapacity];
     private static Vector3[] meshNormals = new Vector3[InitialMeshCapacity];
     private static Vector4[] meshTangents = new Vector4[InitialMeshCapacity];
-    private static int[] meshTriangles = new int[InitialMeshCapacity * 3 / 2]; // 6 indices per 4 vertices
+    private static int[] meshTriangles = new int[InitialMeshCapacity * 3 / 2];
 
     private static readonly Vector3 defaultNormal = new(0f, 0f, -1f);
     private static readonly Vector4 defaultTangent = new(-1f, 0f, 0f, 1f);
@@ -84,7 +80,7 @@ public static class SharedPipelineComponents
     {
         if (meshVertices.Length < vertexCount)
         {
-            int newSize = Mathf.NextPowerOfTwo(vertexCount);
+            var newSize = Mathf.NextPowerOfTwo(vertexCount);
             meshVertices = new Vector3[newSize];
             meshUvs0 = new Vector4[newSize];
             meshUvs2 = new Vector2[newSize];
@@ -92,18 +88,14 @@ public static class SharedPipelineComponents
             meshNormals = new Vector3[newSize];
             meshTangents = new Vector4[newSize];
 
-            // Pre-fill static values
             Array.Fill(meshNormals, defaultNormal);
             Array.Fill(meshTangents, defaultTangent);
 
-            // Pre-fill UV2 pattern (repeating quad corners)
-            for (int i = 0; i < newSize; i++)
+            for (var i = 0; i < newSize; i++)
                 meshUvs2[i] = quadUV2[i & 3];
         }
-        if (meshTriangles.Length < triangleCount)
-        {
-            meshTriangles = new int[Mathf.NextPowerOfTwo(triangleCount)];
-        }
+
+        if (meshTriangles.Length < triangleCount) meshTriangles = new int[Mathf.NextPowerOfTwo(triangleCount)];
     }
 
     #endregion
@@ -144,6 +136,7 @@ public static class SharedPipelineComponents
             kvp.Value.FakeClear();
             pool.Push(kvp.Value);
         }
+
         dict.Clear();
     }
 
@@ -154,10 +147,8 @@ public static class SharedPipelineComponents
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
-        // Dispose HarfBuzz engine on domain reload
         harfBuzzEngine?.Dispose();
 
-        // Reset all references
         bidiEngine = null;
         scriptAnalyzer = null;
         lineBreaker = null;
@@ -165,7 +156,6 @@ public static class SharedPipelineComponents
         shapingEngine = null;
         harfBuzzEngine = null;
 
-        // Reset buffers (will be recreated on demand)
         shapingOutputBuffer = new ShapedGlyph[256];
         meshVertices = new Vector3[InitialMeshCapacity];
         meshUvs0 = new Vector4[InitialMeshCapacity];

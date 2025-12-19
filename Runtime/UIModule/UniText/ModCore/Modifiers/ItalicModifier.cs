@@ -8,34 +8,42 @@ public class ItalicModifier : GlyphModifier<byte>
     private static ArrayPoolBuffer<byte> buffer;
 
     protected override string AttributeKey => AttributeKeys.Italic;
-    protected override Action GetOnGlyphCallback() => OnGlyph;
-    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf) => buffer = buf;
+
+    protected override Action GetOnGlyphCallback()
+    {
+        return OnGlyph;
+    }
+
+    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf)
+    {
+        buffer = buf;
+    }
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
-        int cpCount = CommonData.Current.codepointCount;
+        var cpCount = CommonData.Current.codepointCount;
         buffer.EnsureCapacity(cpCount);
         buffer.SetFlagRange(start, Math.Min(end, cpCount));
     }
 
     private static void OnGlyph()
     {
-        int cluster = UniTextMeshGenerator.currentCluster;
+        var cluster = UniTextMeshGenerator.currentCluster;
         if (!buffer.HasFlag(cluster))
             return;
 
-        float italicStyle = UniTextMeshGenerator.currentFontAsset?.ItalicStyle ?? 12f;
-        float shearValue = italicStyle * 0.01f;
+        var italicStyle = UniTextMeshGenerator.currentFontAsset?.ItalicStyle ?? 12f;
+        var shearValue = italicStyle * 0.01f;
 
-        int baseIdx = UniTextMeshGenerator.vertexCount - 4;
+        var baseIdx = UniTextMeshGenerator.vertexCount - 4;
         var verts = UniTextMeshGenerator.Vertices;
 
-        float blY = verts[baseIdx].y;
-        float tlY = verts[baseIdx + 1].y;
-        float midY = (tlY + blY) * 0.5f;
+        var blY = verts[baseIdx].y;
+        var tlY = verts[baseIdx + 1].y;
+        var midY = (tlY + blY) * 0.5f;
 
-        float topShearX = shearValue * (tlY - midY);
-        float bottomShearX = shearValue * (blY - midY);
+        var topShearX = shearValue * (tlY - midY);
+        var bottomShearX = shearValue * (blY - midY);
 
         verts[baseIdx].x += bottomShearX;
         verts[baseIdx + 1].x += topShearX;
@@ -44,8 +52,14 @@ public class ItalicModifier : GlyphModifier<byte>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsItalic(int cluster) => buffer != null && buffer.HasFlag(cluster);
+    public static bool IsItalic(int cluster)
+    {
+        return buffer != null && buffer.HasFlag(cluster);
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload() => buffer = null;
+    private static void OnDomainReload()
+    {
+        buffer = null;
+    }
 }

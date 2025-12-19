@@ -4,65 +4,47 @@ using UnityEngine;
 using UnityEngine.Profiling;
 using Debug = UnityEngine.Debug;
 
-/// <summary>
-/// Performance test for UniText instantiation and destruction.
-/// Measures CPU time and memory allocations.
-/// </summary>
+
 public class UniTextPerformanceTest : MonoBehaviour
 {
-    [Header("Test Settings")]
-    [Tooltip("Prefab with UniText component to instantiate")]
+    [Header("Test Settings")] [Tooltip("Prefab with UniText component to instantiate")]
     public GameObject prefab;
 
     [Tooltip("Parent transform for instantiated objects (optional)")]
     public Transform parent;
 
-    [Tooltip("Number of objects to create per iteration")]
-    [Min(1)]
+    [Tooltip("Number of objects to create per iteration")] [Min(1)]
     public int objectsPerIteration = 100;
 
-    [Tooltip("Number of test iterations")]
-    [Min(1)]
+    [Tooltip("Number of test iterations")] [Min(1)]
     public int iterations = 10;
 
-    [Tooltip("Frames to wait between creation and destruction")]
-    [Min(1)]
+    [Tooltip("Frames to wait between creation and destruction")] [Min(1)]
     public int framesBetween = 1;
 
-    [Header("CPU Results")]
-    [SerializeField]
+    [Header("CPU Results")] [SerializeField]
     private float lastInstantiateTimeMs;
 
-    [SerializeField]
-    private float lastDestroyTimeMs;
+    [SerializeField] private float lastDestroyTimeMs;
 
-    [SerializeField]
-    private float avgInstantiateTimeMs;
+    [SerializeField] private float avgInstantiateTimeMs;
 
-    [SerializeField]
-    private float avgDestroyTimeMs;
+    [SerializeField] private float avgDestroyTimeMs;
 
-    [SerializeField]
-    private float totalTestTimeMs;
+    [SerializeField] private float totalTestTimeMs;
 
-    [Header("Memory Results")]
-    [SerializeField]
+    [Header("Memory Results")] [SerializeField]
     private long lastInstantiateAllocBytes;
 
-    [SerializeField]
-    private long lastDestroyAllocBytes;
+    [SerializeField] private long lastDestroyAllocBytes;
 
-    [SerializeField]
-    private long avgInstantiateAllocBytes;
+    [SerializeField] private long avgInstantiateAllocBytes;
 
-    [SerializeField]
-    private long avgDestroyAllocBytes;
+    [SerializeField] private long avgDestroyAllocBytes;
 
-    [SerializeField]
-    private int gcCollectionsDuringTest;
+    [SerializeField] private int gcCollectionsDuringTest;
 
-    [SerializeField]
-    private bool isRunning;
+    [SerializeField] private bool isRunning;
 
     private GameObject[] instances;
     private readonly Stopwatch stopwatch = new();
@@ -111,12 +93,11 @@ public class UniTextPerformanceTest : MonoBehaviour
         totalDestroyAlloc = 0;
         completedIterations = 0;
 
-        // Force GC before test to get clean baseline
         System.GC.Collect();
         System.GC.WaitForPendingFinalizers();
         System.GC.Collect();
 
-        int gcCountBefore = System.GC.CollectionCount(0);
+        var gcCountBefore = System.GC.CollectionCount(0);
         var totalStopwatch = Stopwatch.StartNew();
 
         Debug.Log($"═══════════════════════════════════════════════════════════════");
@@ -127,53 +108,40 @@ public class UniTextPerformanceTest : MonoBehaviour
         Debug.Log($"═══════════════════════════════════════════════════════════════");
 
         instances = new GameObject[objectsPerIteration];
-        Transform parentTransform = parent != null ? parent : transform;
+        var parentTransform = parent != null ? parent : transform;
 
-        for (int iter = 0; iter < iterations; iter++)
+        for (var iter = 0; iter < iterations; iter++)
         {
-            // Measure instantiate
-            long allocBefore = Profiler.GetTotalAllocatedMemoryLong();
+            var allocBefore = Profiler.GetTotalAllocatedMemoryLong();
             stopwatch.Restart();
 
-            for (int i = 0; i < objectsPerIteration; i++)
-            {
-                instances[i] = Instantiate(prefab, parentTransform);
-            }
+            for (var i = 0; i < objectsPerIteration; i++) instances[i] = Instantiate(prefab, parentTransform);
 
             stopwatch.Stop();
-            long allocAfter = Profiler.GetTotalAllocatedMemoryLong();
+            var allocAfter = Profiler.GetTotalAllocatedMemoryLong();
 
-            double instantiateMs = stopwatch.Elapsed.TotalMilliseconds;
-            long instantiateAlloc = allocAfter - allocBefore;
+            var instantiateMs = stopwatch.Elapsed.TotalMilliseconds;
+            var instantiateAlloc = allocAfter - allocBefore;
 
             totalInstantiateTime += instantiateMs;
             totalInstantiateAlloc += instantiateAlloc;
             lastInstantiateTimeMs = (float)instantiateMs;
             lastInstantiateAllocBytes = instantiateAlloc;
 
-            // Wait frames
-            for (int f = 0; f < framesBetween; f++)
-            {
-                yield return null;
-            }
+            for (var f = 0; f < framesBetween; f++) yield return null;
 
-            // Measure destroy
             allocBefore = Profiler.GetTotalAllocatedMemoryLong();
             stopwatch.Restart();
 
-            for (int i = 0; i < objectsPerIteration; i++)
-            {
+            for (var i = 0; i < objectsPerIteration; i++)
                 if (instances[i] != null)
-                {
                     Destroy(instances[i]);
-                }
-            }
 
             stopwatch.Stop();
             allocAfter = Profiler.GetTotalAllocatedMemoryLong();
 
-            double destroyMs = stopwatch.Elapsed.TotalMilliseconds;
-            long destroyAlloc = allocAfter - allocBefore;
+            var destroyMs = stopwatch.Elapsed.TotalMilliseconds;
+            var destroyAlloc = allocAfter - allocBefore;
 
             totalDestroyTime += destroyMs;
             totalDestroyAlloc += destroyAlloc;
@@ -182,9 +150,9 @@ public class UniTextPerformanceTest : MonoBehaviour
 
             completedIterations++;
 
-            Debug.Log($"[{iter + 1}/{iterations}] Create: {instantiateMs:F2}ms ({FormatBytes(instantiateAlloc)}) | Destroy: {destroyMs:F2}ms ({FormatBytes(destroyAlloc)})");
+            Debug.Log(
+                $"[{iter + 1}/{iterations}] Create: {instantiateMs:F2}ms ({FormatBytes(instantiateAlloc)}) | Destroy: {destroyMs:F2}ms ({FormatBytes(destroyAlloc)})");
 
-            // Wait for actual destruction
             yield return null;
         }
 
@@ -197,9 +165,12 @@ public class UniTextPerformanceTest : MonoBehaviour
         avgInstantiateAllocBytes = totalInstantiateAlloc / iterations;
         avgDestroyAllocBytes = totalDestroyAlloc / iterations;
 
-        float avgTimePerObject = avgInstantiateTimeMs / objectsPerIteration;
-        float avgDestroyTimePerObject = avgDestroyTimeMs / objectsPerIteration;
-        long avgAllocPerObject = avgInstantiateAllocBytes / objectsPerIteration;
+        var avgTimePerObject = avgInstantiateTimeMs / objectsPerIteration;
+        var avgDestroyTimePerObject = avgDestroyTimeMs / objectsPerIteration;
+        var avgAllocPerObject = avgInstantiateAllocBytes / objectsPerIteration;
+
+        BufferUtils.LogGrowStats();
+        UniTextPoolStats.LogAll();
 
         Debug.Log($"═══════════════════════════════════════════════════════════════");
         Debug.Log($"  Test Complete!");
@@ -209,7 +180,8 @@ public class UniTextPerformanceTest : MonoBehaviour
         Debug.Log($"───────────────────────────────────────────────────────────────");
         Debug.Log($"  INSTANTIATE:");
         Debug.Log($"    Avg time: {avgInstantiateTimeMs:F2}ms ({avgTimePerObject:F4}ms per object)");
-        Debug.Log($"    Avg alloc: {FormatBytes(avgInstantiateAllocBytes)} ({FormatBytes(avgAllocPerObject)} per object)");
+        Debug.Log(
+            $"    Avg alloc: {FormatBytes(avgInstantiateAllocBytes)} ({FormatBytes(avgAllocPerObject)} per object)");
         Debug.Log($"───────────────────────────────────────────────────────────────");
         Debug.Log($"  DESTROY:");
         Debug.Log($"    Avg time: {avgDestroyTimeMs:F2}ms ({avgDestroyTimePerObject:F4}ms per object)");
@@ -235,13 +207,10 @@ public class UniTextPerformanceTest : MonoBehaviour
     {
         if (instances == null) return;
 
-        for (int i = 0; i < instances.Length; i++)
-        {
+        for (var i = 0; i < instances.Length; i++)
             if (instances[i] != null)
-            {
                 Destroy(instances[i]);
-            }
-        }
+
         instances = null;
     }
 
@@ -256,13 +225,9 @@ public class UniTextPerformanceTest : MonoBehaviour
     {
         var test = FindFirstObjectByType<UniTextPerformanceTest>();
         if (test != null)
-        {
             test.RunTest();
-        }
         else
-        {
             Debug.LogError("No UniTextPerformanceTest found in scene. Add the component to a GameObject first.");
-        }
     }
 #endif
 }

@@ -16,10 +16,10 @@ public class RectTransformWrapper
     public Vector2 sizeDelta;
     private bool created;
     public bool isDirty;
-    
+
     public void Setup()
     {
-        if(!isDirty) return;
+        if (!isDirty) return;
         isDirty = false;
         if (!created)
         {
@@ -30,28 +30,28 @@ public class RectTransformWrapper
             ObjTracker.Track(instance.gameObject, this);
 #endif
         }
-        
+
         instance.localScale = Vector3.one;
         instance.anchorMin = new Vector2(0, 1);
         instance.anchorMax = new Vector2(0, 1);
         instance.anchoredPosition = anchoredPosition;
         instance.pivot = pivot;
         instance.sizeDelta = sizeDelta;
-        
+
         instance.GetComponentsInChildren(canvasElementsBuffer);
-        for (int i = 0; i <= (int)CanvasUpdate.PostLayout; i++)
-        for (int j = 0; j < canvasElementsBuffer.Count; j++)
+        for (var i = 0; i <= (int)CanvasUpdate.PostLayout; i++)
+        for (var j = 0; j < canvasElementsBuffer.Count; j++)
             canvasElementsBuffer[j].Rebuild((CanvasUpdate)i);
 
-        for (int i = (int)CanvasUpdate.PreRender; i < (int)CanvasUpdate.LatePreRender; i++)
-        for (int j = 0; j < canvasElementsBuffer.Count; j++)
+        for (var i = (int)CanvasUpdate.PreRender; i < (int)CanvasUpdate.LatePreRender; i++)
+        for (var j = 0; j < canvasElementsBuffer.Count; j++)
             canvasElementsBuffer[j].Rebuild((CanvasUpdate)i);
     }
 
-    
+
     public void Destroy()
     {
-        if(Application.isPlaying) Object.Destroy(instance.gameObject);
+        if (Application.isPlaying) Object.Destroy(instance.gameObject);
         else Object.DestroyImmediate(instance.gameObject);
     }
 }
@@ -73,27 +73,24 @@ public class InlineObject
     public RectTransformWrapper GetOrCreate(Transform parent)
     {
         activeCount++;
-        
-        if (activeCount <= instances.Count)
-        {
-            return instances[activeCount - 1];
-        }
-        
+
+        if (activeCount <= instances.Count) return instances[activeCount - 1];
+
         var wrapper = new RectTransformWrapper();
         wrapper.prefab = prefab;
         wrapper.parent = parent;
         instances.Add(wrapper);
         return wrapper;
     }
-    
+
     public void UpdateInstances()
     {
         var diff = activeCount - instances.Count;
-        
+
         if (diff < 0)
         {
             diff *= -1;
-            for (int i = 0; i < diff; i++)
+            for (var i = 0; i < diff; i++)
             {
                 var last = instances.Count - 1;
                 instances[last].Destroy();
@@ -122,7 +119,7 @@ public class ObjModifier : BaseModifier
     {
         clusterToObj = new Dictionary<int, InlineObject>(16);
         objLookup = new Dictionary<string, InlineObject>(objects.Count);
-        for (int i = 0; i < objects.Count; i++)
+        for (var i = 0; i < objects.Count; i++)
         {
             var obj = objects[i];
             if (!string.IsNullOrEmpty(obj.name))
@@ -176,7 +173,7 @@ public class ObjModifier : BaseModifier
 
     private void OnRebuildStart()
     {
-        for (int i = 0; i < objects.Count; i++)
+        for (var i = 0; i < objects.Count; i++)
             objects[i].activeCount = 0;
     }
 
@@ -185,23 +182,21 @@ public class ObjModifier : BaseModifier
         if (clusterToObj == null || clusterToObj.Count == 0) return;
 
         var buf = CommonData.Current;
-        // Use shapingFontSize - the fontSize used during shaping phase
-        // This is critical for auto size where shaping is done with maxFontSize
-        float fontSize = buf.shapingFontSize > 0 ? buf.shapingFontSize : uniText.FontSize;
+        var fontSize = buf.shapingFontSize > 0 ? buf.shapingFontSize : uniText.FontSize;
         var glyphs = buf.shapedGlyphs;
         var runs = buf.shapedRuns;
-        int runCount = buf.shapedRunCount;
+        var runCount = buf.shapedRunCount;
 
-        for (int r = 0; r < runCount; r++)
+        for (var r = 0; r < runCount; r++)
         {
             ref var run = ref runs[r];
-            int clusterOffset = run.range.start;
-            int glyphEnd = run.glyphStart + run.glyphCount;
+            var clusterOffset = run.range.start;
+            var glyphEnd = run.glyphStart + run.glyphCount;
             float width = 0;
 
-            for (int g = run.glyphStart; g < glyphEnd; g++)
+            for (var g = run.glyphStart; g < glyphEnd; g++)
             {
-                int globalCluster = glyphs[g].cluster + clusterOffset;
+                var globalCluster = glyphs[g].cluster + clusterOffset;
 
                 if (clusterToObj.TryGetValue(globalCluster, out var obj))
                 {
@@ -222,10 +217,9 @@ public class ObjModifier : BaseModifier
         if (clusterToObj == null || clusterToObj.Count == 0) return;
 
         var glyphs = uniText.LastResultGlyphs;
-        float scale = UniTextMeshGenerator.scale;
+        var scale = UniTextMeshGenerator.scale;
 
-        for (int i = 0; i < glyphs.Length; i++)
-        {
+        for (var i = 0; i < glyphs.Length; i++)
             if (clusterToObj.TryGetValue(glyphs[i].cluster, out var obj))
             {
                 if (obj.prefab == null) continue;
@@ -236,34 +230,34 @@ public class ObjModifier : BaseModifier
                     obj.width * scale,
                     obj.height * scale);
             }
-        }
     }
 
     private void CreateObjectInstance(InlineObject obj, float x, float y, float w, float h)
     {
         if (uniText == null) return;
-        
+
         var wrapper = obj.GetOrCreate(uniText.transform);
         wrapper.isDirty = true;
-        Vector2 pivot = wrapper.pivot;
+        var pivot = wrapper.pivot;
         wrapper.anchoredPosition = new Vector2(x + w * pivot.x, y + h * pivot.y);
         wrapper.sizeDelta = new Vector2(w, h);
     }
 
     private void DestroyAllObjects()
     {
-        if(uniText == null) return;
+        if (uniText == null) return;
         for (var i = 0; i < objects.Count; i++)
         {
             var obj = objects[i];
             obj.activeCount = 0;
         }
+
         CanvasUpdateRegistry.Updated += Destro;
-        
+
         void Destro()
         {
             CanvasUpdateRegistry.Updated -= Destro;
-            if(uniText == null) return;
+            if (uniText == null) return;
             for (var i = 0; i < objects.Count; i++)
             {
                 var obj = objects[i];
@@ -272,4 +266,3 @@ public class ObjModifier : BaseModifier
         }
     }
 }
-

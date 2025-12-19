@@ -2,10 +2,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>
-/// Custom editor for UniTextFontAsset.
-/// Handles font byte extraction from source Font asset.
-/// </summary>
+
 [CustomEditor(typeof(UniTextFontAsset))]
 public class UniTextFontAssetEditor : Editor
 {
@@ -465,9 +462,7 @@ public class UniTextFontAssetEditor : Editor
         Debug.Log($"Created UniTextFontAsset: {assetPath}");
     }
 
-    /// <summary>
-    /// Create font asset. Auto-populates sourceFont if a Font is selected.
-    /// </summary>
+    
     [MenuItem("Assets/Create/UniText/Font Asset", false, 100)]
     private static void CreateFontAsset()
     {

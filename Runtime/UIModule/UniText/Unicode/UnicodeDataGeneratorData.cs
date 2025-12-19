@@ -7,8 +7,7 @@ using Debug = UnityEngine.Debug;
 
 public class UnicodeDataGeneratorData : ScriptableObject
 {
-    [Header("Source Files")]
-    public TextAsset derivedBidiClassAsset;
+    [Header("Source Files")] public TextAsset derivedBidiClassAsset;
     public TextAsset derivedJoiningTypeAsset;
     public TextAsset arabicShapingAsset;
     public TextAsset bidiBracketsAsset;
@@ -22,15 +21,13 @@ public class UnicodeDataGeneratorData : ScriptableObject
     public TextAsset derivedCorePropertiesAsset;
     public TextAsset scriptExtensionsAsset;
 
-    [Header("Output")]
-    public DefaultAsset outputFolder;
+    [Header("Output")] public DefaultAsset outputFolder;
     public string outputFileName = "UnicodeData.bytes";
     public bool useFormatV8 = true;
 
-    [Header("Testing")]
-    public TestData testing = new();
-    
-    
+    [Header("Testing")] public TestData testing = new();
+
+
     public void OnGUI()
     {
         EditorGUILayout.LabelField("Unicode Data Generator", EditorStyles.boldLabel);
@@ -39,7 +36,7 @@ public class UnicodeDataGeneratorData : ScriptableObject
         EditorGUI.BeginChangeCheck();
 
         EditorGUILayout.LabelField("Source Files (Required)", EditorStyles.boldLabel);
-        
+
         derivedBidiClassAsset = (TextAsset)EditorGUILayout.ObjectField(
             "DerivedBidiClass.txt",
             derivedBidiClassAsset,
@@ -142,14 +139,11 @@ public class UnicodeDataGeneratorData : ScriptableObject
         outputFileName = EditorGUILayout.TextField("Output File Name", outputFileName);
         useFormatV8 = EditorGUILayout.Toggle("Use Format V8 (Full Unicode Properties)", useFormatV8);
 
-        if (EditorGUI.EndChangeCheck())
-        {
-            EditorUtility.SetDirty(this);
-        }
+        if (EditorGUI.EndChangeCheck()) EditorUtility.SetDirty(this);
 
         EditorGUILayout.Space();
 
-        bool canGenerate = derivedBidiClassAsset != null &&
+        var canGenerate = derivedBidiClassAsset != null &&
                           derivedJoiningTypeAsset != null &&
                           arabicShapingAsset != null &&
                           bidiBracketsAsset != null &&
@@ -157,25 +151,19 @@ public class UnicodeDataGeneratorData : ScriptableObject
                           outputFolder != null;
 
         if (useFormatV8)
-        {
             canGenerate = canGenerate && scriptsAsset != null && lineBreakAsset != null &&
-                         emojiDataAsset != null && generalCategoryAsset != null &&
-                         eastAsianWidthAsset != null && graphemeBreakPropertyAsset != null &&
-                         derivedCorePropertiesAsset != null && scriptExtensionsAsset != null;
-        }
+                          emojiDataAsset != null && generalCategoryAsset != null &&
+                          eastAsianWidthAsset != null && graphemeBreakPropertyAsset != null &&
+                          derivedCorePropertiesAsset != null && scriptExtensionsAsset != null;
 
         EditorGUI.BeginDisabledGroup(!canGenerate);
-        if (GUILayout.Button("Generate Unicode Data", GUILayout.Height(30)))
-        {
-            GenerateUnicodeData();
-        }
+        if (GUILayout.Button("Generate Unicode Data", GUILayout.Height(30))) GenerateUnicodeData();
         EditorGUI.EndDisabledGroup();
 
         if (!canGenerate)
-        {
-            EditorGUILayout.HelpBox("Assign all required source files including GraphemeBreakProperty.txt and output folder to generate.",
+            EditorGUILayout.HelpBox(
+                "Assign all required source files including GraphemeBreakProperty.txt and output folder to generate.",
                 MessageType.Warning);
-        }
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Testing", EditorStyles.boldLabel);
@@ -186,20 +174,18 @@ public class UnicodeDataGeneratorData : ScriptableObject
     {
         try
         {
-            string folderPath = AssetDatabase.GetAssetPath(outputFolder);
-            string outputPath = Path.Combine(folderPath, outputFileName);
+            var folderPath = AssetDatabase.GetAssetPath(outputFolder);
+            var outputPath = Path.Combine(folderPath, outputFileName);
 
-            // Create temp files
-            string tempDir = Path.Combine(Application.temporaryCachePath, "UnicodeGen");
+            var tempDir = Path.Combine(Application.temporaryCachePath, "UnicodeGen");
             Directory.CreateDirectory(tempDir);
 
-            string derivedBidiPath = SaveTempFile(tempDir, "DerivedBidiClass.txt", derivedBidiClassAsset);
-            string derivedJoiningPath = SaveTempFile(tempDir, "DerivedJoiningType.txt", derivedJoiningTypeAsset);
-            string arabicShapingPath = SaveTempFile(tempDir, "ArabicShaping.txt", arabicShapingAsset);
-            string bidiBracketsPath = SaveTempFile(tempDir, "BidiBrackets.txt", bidiBracketsAsset);
-            string bidiMirroringPath = SaveTempFile(tempDir, "BidiMirroring.txt", bidiMirroringAsset);
+            var derivedBidiPath = SaveTempFile(tempDir, "DerivedBidiClass.txt", derivedBidiClassAsset);
+            var derivedJoiningPath = SaveTempFile(tempDir, "DerivedJoiningType.txt", derivedJoiningTypeAsset);
+            var arabicShapingPath = SaveTempFile(tempDir, "ArabicShaping.txt", arabicShapingAsset);
+            var bidiBracketsPath = SaveTempFile(tempDir, "BidiBrackets.txt", bidiBracketsAsset);
+            var bidiMirroringPath = SaveTempFile(tempDir, "BidiMirroring.txt", bidiMirroringAsset);
 
-            // Build data
             var builder = new UnicodeDataBuilder();
             builder.LoadDerivedBidiClass(derivedBidiPath);
             builder.LoadDerivedJoiningType(derivedJoiningPath);
@@ -209,22 +195,22 @@ public class UnicodeDataGeneratorData : ScriptableObject
             var mirrors = UnicodeDataBuilder.BuildMirrorEntries(bidiMirroringPath);
             var brackets = UnicodeDataBuilder.BuildBracketEntries(bidiBracketsPath);
 
-            // Unicode version (17.0.0 = 0x110000)
-            int unicodeVersion = 0x110000;
+            var unicodeVersion = 0x110000;
 
             if (useFormatV8 && scriptsAsset != null && lineBreakAsset != null &&
                 emojiDataAsset != null && generalCategoryAsset != null &&
                 eastAsianWidthAsset != null && graphemeBreakPropertyAsset != null &&
                 derivedCorePropertiesAsset != null && scriptExtensionsAsset != null)
             {
-                string scriptsPath = SaveTempFile(tempDir, "Scripts.txt", scriptsAsset);
-                string lineBreakPath = SaveTempFile(tempDir, "LineBreak.txt", lineBreakAsset);
-                string emojiDataPath = SaveTempFile(tempDir, "emoji-data.txt", emojiDataAsset);
-                string generalCategoryPath = SaveTempFile(tempDir, "DerivedGeneralCategory.txt", generalCategoryAsset);
-                string eastAsianWidthPath = SaveTempFile(tempDir, "EastAsianWidth.txt", eastAsianWidthAsset);
-                string graphemeBreakPath = SaveTempFile(tempDir, "GraphemeBreakProperty.txt", graphemeBreakPropertyAsset);
-                string derivedCorePropertiesPath = SaveTempFile(tempDir, "DerivedCoreProperties.txt", derivedCorePropertiesAsset);
-                string scriptExtensionsPath = SaveTempFile(tempDir, "ScriptExtensions.txt", scriptExtensionsAsset);
+                var scriptsPath = SaveTempFile(tempDir, "Scripts.txt", scriptsAsset);
+                var lineBreakPath = SaveTempFile(tempDir, "LineBreak.txt", lineBreakAsset);
+                var emojiDataPath = SaveTempFile(tempDir, "emoji-data.txt", emojiDataAsset);
+                var generalCategoryPath = SaveTempFile(tempDir, "DerivedGeneralCategory.txt", generalCategoryAsset);
+                var eastAsianWidthPath = SaveTempFile(tempDir, "EastAsianWidth.txt", eastAsianWidthAsset);
+                var graphemeBreakPath = SaveTempFile(tempDir, "GraphemeBreakProperty.txt", graphemeBreakPropertyAsset);
+                var derivedCorePropertiesPath =
+                    SaveTempFile(tempDir, "DerivedCoreProperties.txt", derivedCorePropertiesAsset);
+                var scriptExtensionsPath = SaveTempFile(tempDir, "ScriptExtensions.txt", scriptExtensionsAsset);
 
                 builder.LoadScripts(scriptsPath);
                 builder.LoadLineBreak(lineBreakPath);
@@ -271,7 +257,6 @@ public class UnicodeDataGeneratorData : ScriptableObject
                           $"{mirrors.Count} mirrors, {brackets.Count} brackets.");
             }
 
-            // Cleanup temp files
             Directory.Delete(tempDir, true);
 
             AssetDatabase.Refresh();
@@ -285,7 +270,7 @@ public class UnicodeDataGeneratorData : ScriptableObject
 
     private string SaveTempFile(string dir, string name, TextAsset asset)
     {
-        string path = Path.Combine(dir, name);
+        var path = Path.Combine(dir, name);
         File.WriteAllText(path, asset.text);
         return path;
     }

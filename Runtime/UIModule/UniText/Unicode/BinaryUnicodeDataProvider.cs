@@ -89,9 +89,6 @@ public readonly struct LineBreakRangeEntry
 }
 
 
-/// <summary>
-/// Range entry for Extended_Pictographic property (from emoji-data.txt)
-/// </summary>
 public readonly struct ExtendedPictographicRangeEntry
 {
     public readonly int startCodePoint;
@@ -105,9 +102,6 @@ public readonly struct ExtendedPictographicRangeEntry
 }
 
 
-/// <summary>
-/// Range entry for General_Category property (from DerivedGeneralCategory.txt)
-/// </summary>
 public readonly struct GeneralCategoryRangeEntry
 {
     public readonly int startCodePoint;
@@ -123,9 +117,6 @@ public readonly struct GeneralCategoryRangeEntry
 }
 
 
-/// <summary>
-/// Range entry for East_Asian_Width property (from EastAsianWidth.txt)
-/// </summary>
 public readonly struct EastAsianWidthRangeEntry
 {
     public readonly int startCodePoint;
@@ -141,9 +132,6 @@ public readonly struct EastAsianWidthRangeEntry
 }
 
 
-/// <summary>
-/// Range entry for Grapheme_Cluster_Break property (from GraphemeBreakProperty.txt)
-/// </summary>
 public readonly struct GraphemeBreakRangeEntry
 {
     public readonly int startCodePoint;
@@ -158,9 +146,7 @@ public readonly struct GraphemeBreakRangeEntry
     }
 }
 
-/// <summary>
-/// Range entry for Indic_Conjunct_Break property (from DerivedCoreProperties.txt)
-/// </summary>
+
 public readonly struct IndicConjunctBreakRangeEntry
 {
     public readonly int startCodePoint;
@@ -175,11 +161,7 @@ public readonly struct IndicConjunctBreakRangeEntry
     }
 }
 
-/// <summary>
-/// Entry for Default_Ignorable_Code_Point property ranges.
-/// Characters in these ranges should be rendered as invisible (zero-width)
-/// if not explicitly supported by the font/renderer.
-/// </summary>
+
 public readonly struct DefaultIgnorableRangeEntry
 {
     public readonly int startCodePoint;
@@ -192,9 +174,7 @@ public readonly struct DefaultIgnorableRangeEntry
     }
 }
 
-/// <summary>
-/// Range entry for Script_Extensions property (from ScriptExtensions.txt)
-/// </summary>
+
 public readonly struct ScriptExtensionRangeEntry
 {
     public readonly int startCodePoint;
@@ -212,7 +192,7 @@ public readonly struct ScriptExtensionRangeEntry
 
 public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 {
-    private const uint Magic = 0x554C5452; // "ULTR"
+    private const uint Magic = 0x554C5452;
     private const ushort FormatVersion1 = 1;
     private const ushort FormatVersion2 = 2;
     private const ushort FormatVersion3 = 3;
@@ -222,7 +202,7 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
     private const ushort FormatVersion7 = 7;
     private const ushort FormatVersion8 = 8;
 
-    private const int BmpSize = 65536; // 0x0000–0xFFFF
+    private const int BmpSize = 65536;
 
     private readonly RangeEntry[] ranges;
     private readonly MirrorEntry[] mirrors;
@@ -236,8 +216,7 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
     private readonly IndicConjunctBreakRangeEntry[] indicConjunctBreakRanges;
     private readonly ScriptExtensionRangeEntry[] scriptExtensionRanges;
     private readonly DefaultIgnorableRangeEntry[] defaultIgnorableRanges;
-    
-    // BMP direct lookup tables (O(1) for code points 0x0000–0xFFFF)
+
     private readonly BidiClass[] bmpBidiClass;
     private readonly JoiningType[] bmpJoiningType;
     private readonly UnicodeScript[] bmpScript;
@@ -255,10 +234,10 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
         if (data == null)
             throw new ArgumentNullException(nameof(data));
 
-        using var stream = new MemoryStream(data, writable: false);
+        using var stream = new MemoryStream(data, false);
         using var reader = new BinaryReader(stream);
 
-        uint fileMagic = reader.ReadUInt32();
+        var fileMagic = reader.ReadUInt32();
         if (fileMagic != Magic)
             throw new InvalidDataException("Invalid Unicode data blob: magic mismatch.");
 
@@ -269,23 +248,21 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             FormatVersion != FormatVersion7 && FormatVersion != FormatVersion8)
             throw new InvalidDataException($"Unsupported Unicode data format version: {FormatVersion}.");
 
-        reader.ReadUInt16(); // Reserved
+        reader.ReadUInt16();
 
-        uint unicodeVersion = reader.ReadUInt32();
+        var unicodeVersion = reader.ReadUInt32();
         UnicodeVersionRaw = unchecked((int)unicodeVersion);
 
-        // Read section offsets (format v1)
-        uint rangeOffset = reader.ReadUInt32();
-        uint rangeLength = reader.ReadUInt32();
-        uint mirrorOffset = reader.ReadUInt32();
-        uint mirrorLength = reader.ReadUInt32();
-        uint bracketOffset = reader.ReadUInt32();
-        uint bracketLength = reader.ReadUInt32();
+        var rangeOffset = reader.ReadUInt32();
+        var rangeLength = reader.ReadUInt32();
+        var mirrorOffset = reader.ReadUInt32();
+        var mirrorLength = reader.ReadUInt32();
+        var bracketOffset = reader.ReadUInt32();
+        var bracketLength = reader.ReadUInt32();
 
-        // Format v2 adds Script and LineBreak sections
         uint scriptOffset = 0, scriptLength = 0;
         uint lineBreakOffset = 0, lineBreakLength = 0;
-        
+
         if (FormatVersion >= FormatVersion2)
         {
             scriptOffset = reader.ReadUInt32();
@@ -294,19 +271,17 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             lineBreakLength = reader.ReadUInt32();
         }
 
-        // Format v3 adds Extended_Pictographic section
         uint extPictOffset = 0, extPictLength = 0;
-        
+
         if (FormatVersion >= FormatVersion3)
         {
             extPictOffset = reader.ReadUInt32();
             extPictLength = reader.ReadUInt32();
         }
 
-        // Format v4 adds GeneralCategory and EastAsianWidth sections
         uint gcOffset = 0, gcLength = 0;
         uint eawOffset = 0, eawLength = 0;
-        
+
         if (FormatVersion >= FormatVersion4)
         {
             gcOffset = reader.ReadUInt32();
@@ -315,34 +290,30 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             eawLength = reader.ReadUInt32();
         }
 
-        // Format v5 adds Grapheme_Cluster_Break section
         uint gcbOffset = 0, gcbLength = 0;
-        
+
         if (FormatVersion >= FormatVersion5)
         {
             gcbOffset = reader.ReadUInt32();
             gcbLength = reader.ReadUInt32();
         }
 
-        // Format v6 adds Indic_Conjunct_Break section
         uint incbOffset = 0, incbLength = 0;
-        
+
         if (FormatVersion >= FormatVersion6)
         {
             incbOffset = reader.ReadUInt32();
             incbLength = reader.ReadUInt32();
         }
 
-        // Format v7 adds Script_Extensions section
         uint scxOffset = 0, scxLength = 0;
-        
+
         if (FormatVersion >= FormatVersion7)
         {
             scxOffset = reader.ReadUInt32();
             scxLength = reader.ReadUInt32();
         }
 
-        // Format v8 adds Default_Ignorable_Code_Point section
         uint diOffset = 0, diLength = 0;
 
         if (FormatVersion >= FormatVersion8)
@@ -351,46 +322,44 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             diLength = reader.ReadUInt32();
         }
 
-        // Read Range section
         if (rangeOffset == 0 || rangeLength == 0)
             throw new InvalidDataException("Unicode data blob is missing Range section.");
 
         stream.Position = rangeOffset;
-        uint rangeCount = reader.ReadUInt32();
+        var rangeCount = reader.ReadUInt32();
         ranges = new RangeEntry[rangeCount];
 
         for (uint i = 0; i < rangeCount; i++)
         {
-            uint start = reader.ReadUInt32();
-            uint end = reader.ReadUInt32();
-            byte bidi = reader.ReadByte();
-            byte jt = reader.ReadByte();
-            byte jg = reader.ReadByte();
-            reader.ReadByte(); // padding
+            var start = reader.ReadUInt32();
+            var end = reader.ReadUInt32();
+            var bidi = reader.ReadByte();
+            var jt = reader.ReadByte();
+            var jg = reader.ReadByte();
+            reader.ReadByte();
 
             ranges[i] = new RangeEntry(
-                startCodePoint: unchecked((int)start),
-                endCodePoint: unchecked((int)end),
-                bidiClass: (BidiClass)bidi,
-                joiningType: (JoiningType)jt,
-                joiningGroup: (JoiningGroup)jg);
+                unchecked((int)start),
+                unchecked((int)end),
+                (BidiClass)bidi,
+                (JoiningType)jt,
+                (JoiningGroup)jg);
         }
 
-        // Read Mirror section
         if (mirrorOffset != 0 && mirrorLength != 0)
         {
             stream.Position = mirrorOffset;
-            uint mirrorCount = reader.ReadUInt32();
+            var mirrorCount = reader.ReadUInt32();
             mirrors = new MirrorEntry[mirrorCount];
 
             for (uint i = 0; i < mirrorCount; i++)
             {
-                uint cp = reader.ReadUInt32();
-                uint mirrored = reader.ReadUInt32();
+                var cp = reader.ReadUInt32();
+                var mirrored = reader.ReadUInt32();
 
                 mirrors[i] = new MirrorEntry(
-                    codePoint: unchecked((int)cp),
-                    mirroredCodePoint: unchecked((int)mirrored));
+                    unchecked((int)cp),
+                    unchecked((int)mirrored));
             }
         }
         else
@@ -398,26 +367,25 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             mirrors = Array.Empty<MirrorEntry>();
         }
 
-        // Read Bracket section
         if (bracketOffset != 0 && bracketLength != 0)
         {
             stream.Position = bracketOffset;
-            uint bracketCount = reader.ReadUInt32();
+            var bracketCount = reader.ReadUInt32();
             brackets = new BracketEntry[bracketCount];
 
             for (uint i = 0; i < bracketCount; i++)
             {
-                uint cp = reader.ReadUInt32();
-                uint paired = reader.ReadUInt32();
-                byte bpt = reader.ReadByte();
+                var cp = reader.ReadUInt32();
+                var paired = reader.ReadUInt32();
+                var bpt = reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
 
                 brackets[i] = new BracketEntry(
-                    codePoint: unchecked((int)cp),
-                    pairedCodePoint: unchecked((int)paired),
-                    bracketType: (BidiPairedBracketType)bpt);
+                    unchecked((int)cp),
+                    unchecked((int)paired),
+                    (BidiPairedBracketType)bpt);
             }
         }
         else
@@ -425,26 +393,25 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             brackets = Array.Empty<BracketEntry>();
         }
 
-        // Read Script section (format v2)
         if (scriptOffset != 0 && scriptLength != 0)
         {
             stream.Position = scriptOffset;
-            uint scriptCount = reader.ReadUInt32();
+            var scriptCount = reader.ReadUInt32();
             scriptRanges = new ScriptRangeEntry[scriptCount];
 
             for (uint i = 0; i < scriptCount; i++)
             {
-                uint start = reader.ReadUInt32();
-                uint end = reader.ReadUInt32();
-                byte script = reader.ReadByte();
+                var start = reader.ReadUInt32();
+                var end = reader.ReadUInt32();
+                var script = reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
 
                 scriptRanges[i] = new ScriptRangeEntry(
-                    startCodePoint: unchecked((int)start),
-                    endCodePoint: unchecked((int)end),
-                    script: (UnicodeScript)script);
+                    unchecked((int)start),
+                    unchecked((int)end),
+                    (UnicodeScript)script);
             }
         }
         else
@@ -452,26 +419,25 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             scriptRanges = Array.Empty<ScriptRangeEntry>();
         }
 
-        // Read LineBreak section (format v2)
         if (lineBreakOffset != 0 && lineBreakLength != 0)
         {
             stream.Position = lineBreakOffset;
-            uint lineBreakCount = reader.ReadUInt32();
+            var lineBreakCount = reader.ReadUInt32();
             lineBreakRanges = new LineBreakRangeEntry[lineBreakCount];
 
             for (uint i = 0; i < lineBreakCount; i++)
             {
-                uint start = reader.ReadUInt32();
-                uint end = reader.ReadUInt32();
-                byte lbc = reader.ReadByte();
+                var start = reader.ReadUInt32();
+                var end = reader.ReadUInt32();
+                var lbc = reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
 
                 lineBreakRanges[i] = new LineBreakRangeEntry(
-                    startCodePoint: unchecked((int)start),
-                    endCodePoint: unchecked((int)end),
-                    lineBreakClass: (LineBreakClass)lbc);
+                    unchecked((int)start),
+                    unchecked((int)end),
+                    (LineBreakClass)lbc);
             }
         }
         else
@@ -479,21 +445,20 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             lineBreakRanges = Array.Empty<LineBreakRangeEntry>();
         }
 
-        // Read Extended_Pictographic section (format v3)
         if (extPictOffset != 0 && extPictLength != 0)
         {
             stream.Position = extPictOffset;
-            uint extPictCount = reader.ReadUInt32();
+            var extPictCount = reader.ReadUInt32();
             extendedPictographicRanges = new ExtendedPictographicRangeEntry[extPictCount];
 
             for (uint i = 0; i < extPictCount; i++)
             {
-                uint start = reader.ReadUInt32();
-                uint end = reader.ReadUInt32();
+                var start = reader.ReadUInt32();
+                var end = reader.ReadUInt32();
 
                 extendedPictographicRanges[i] = new ExtendedPictographicRangeEntry(
-                    startCodePoint: unchecked((int)start),
-                    endCodePoint: unchecked((int)end));
+                    unchecked((int)start),
+                    unchecked((int)end));
             }
         }
         else
@@ -501,26 +466,25 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             extendedPictographicRanges = Array.Empty<ExtendedPictographicRangeEntry>();
         }
 
-        // Read GeneralCategory section (format v4)
         if (gcOffset != 0 && gcLength != 0)
         {
             stream.Position = gcOffset;
-            uint gcCount = reader.ReadUInt32();
+            var gcCount = reader.ReadUInt32();
             generalCategoryRanges = new GeneralCategoryRangeEntry[gcCount];
 
             for (uint i = 0; i < gcCount; i++)
             {
-                uint start = reader.ReadUInt32();
-                uint end = reader.ReadUInt32();
-                byte gc = reader.ReadByte();
+                var start = reader.ReadUInt32();
+                var end = reader.ReadUInt32();
+                var gc = reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
 
                 generalCategoryRanges[i] = new GeneralCategoryRangeEntry(
-                    startCodePoint: unchecked((int)start),
-                    endCodePoint: unchecked((int)end),
-                    generalCategory: (GeneralCategory)gc);
+                    unchecked((int)start),
+                    unchecked((int)end),
+                    (GeneralCategory)gc);
             }
         }
         else
@@ -528,26 +492,25 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             generalCategoryRanges = Array.Empty<GeneralCategoryRangeEntry>();
         }
 
-        // Read EastAsianWidth section (format v4)
         if (eawOffset != 0 && eawLength != 0)
         {
             stream.Position = eawOffset;
-            uint eawCount = reader.ReadUInt32();
+            var eawCount = reader.ReadUInt32();
             eastAsianWidthRanges = new EastAsianWidthRangeEntry[eawCount];
 
             for (uint i = 0; i < eawCount; i++)
             {
-                uint start = reader.ReadUInt32();
-                uint end = reader.ReadUInt32();
-                byte eaw = reader.ReadByte();
+                var start = reader.ReadUInt32();
+                var end = reader.ReadUInt32();
+                var eaw = reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
 
                 eastAsianWidthRanges[i] = new EastAsianWidthRangeEntry(
-                    startCodePoint: unchecked((int)start),
-                    endCodePoint: unchecked((int)end),
-                    eastAsianWidth: (EastAsianWidth)eaw);
+                    unchecked((int)start),
+                    unchecked((int)end),
+                    (EastAsianWidth)eaw);
             }
         }
         else
@@ -555,26 +518,25 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             eastAsianWidthRanges = Array.Empty<EastAsianWidthRangeEntry>();
         }
 
-        // Read Grapheme_Cluster_Break section (format v5)
         if (gcbOffset != 0 && gcbLength != 0)
         {
             stream.Position = gcbOffset;
-            uint gcbCount = reader.ReadUInt32();
+            var gcbCount = reader.ReadUInt32();
             graphemeBreakRanges = new GraphemeBreakRangeEntry[gcbCount];
 
             for (uint i = 0; i < gcbCount; i++)
             {
-                uint start = reader.ReadUInt32();
-                uint end = reader.ReadUInt32();
-                byte gcb = reader.ReadByte();
+                var start = reader.ReadUInt32();
+                var end = reader.ReadUInt32();
+                var gcb = reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
 
                 graphemeBreakRanges[i] = new GraphemeBreakRangeEntry(
-                    startCodePoint: unchecked((int)start),
-                    endCodePoint: unchecked((int)end),
-                    graphemeBreak: (GraphemeClusterBreak)gcb);
+                    unchecked((int)start),
+                    unchecked((int)end),
+                    (GraphemeClusterBreak)gcb);
             }
         }
         else
@@ -582,26 +544,25 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             graphemeBreakRanges = Array.Empty<GraphemeBreakRangeEntry>();
         }
 
-        // Read Indic_Conjunct_Break section (format v6)
         if (incbOffset != 0 && incbLength != 0)
         {
             stream.Position = incbOffset;
-            uint incbCount = reader.ReadUInt32();
+            var incbCount = reader.ReadUInt32();
             indicConjunctBreakRanges = new IndicConjunctBreakRangeEntry[incbCount];
 
             for (uint i = 0; i < incbCount; i++)
             {
-                uint start = reader.ReadUInt32();
-                uint end = reader.ReadUInt32();
-                byte incb = reader.ReadByte();
+                var start = reader.ReadUInt32();
+                var end = reader.ReadUInt32();
+                var incb = reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
                 reader.ReadByte();
 
                 indicConjunctBreakRanges[i] = new IndicConjunctBreakRangeEntry(
-                    startCodePoint: unchecked((int)start),
-                    endCodePoint: unchecked((int)end),
-                    indicConjunctBreak: (IndicConjunctBreak)incb);
+                    unchecked((int)start),
+                    unchecked((int)end),
+                    (IndicConjunctBreak)incb);
             }
         }
         else
@@ -609,35 +570,30 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             indicConjunctBreakRanges = Array.Empty<IndicConjunctBreakRangeEntry>();
         }
 
-        // Read Script_Extensions section (format v7)
         if (scxOffset != 0 && scxLength != 0)
         {
             stream.Position = scxOffset;
-            uint scxCount = reader.ReadUInt32();
+            var scxCount = reader.ReadUInt32();
             scriptExtensionRanges = new ScriptExtensionRangeEntry[scxCount];
 
             for (uint i = 0; i < scxCount; i++)
             {
-                uint start = reader.ReadUInt32();
-                uint end = reader.ReadUInt32();
-                byte scriptCount = reader.ReadByte();
-                
+                var start = reader.ReadUInt32();
+                var end = reader.ReadUInt32();
+                var scriptCount = reader.ReadByte();
+
                 var scripts = new UnicodeScript[scriptCount];
-                for (int j = 0; j < scriptCount; j++)
-                {
-                    scripts[j] = (UnicodeScript)reader.ReadByte();
-                }
-                
-                // Read padding to align to 4 bytes
-                int totalBytes = 8 + 1 + scriptCount; // start + end + count + scripts
-                int padding = (4 - (totalBytes % 4)) % 4;
-                for (int p = 0; p < padding; p++)
+                for (var j = 0; j < scriptCount; j++) scripts[j] = (UnicodeScript)reader.ReadByte();
+
+                var totalBytes = 8 + 1 + scriptCount;
+                var padding = (4 - totalBytes % 4) % 4;
+                for (var p = 0; p < padding; p++)
                     reader.ReadByte();
 
                 scriptExtensionRanges[i] = new ScriptExtensionRangeEntry(
-                    startCodePoint: unchecked((int)start),
-                    endCodePoint: unchecked((int)end),
-                    scripts: scripts);
+                    unchecked((int)start),
+                    unchecked((int)end),
+                    scripts);
             }
         }
         else
@@ -645,21 +601,20 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             scriptExtensionRanges = Array.Empty<ScriptExtensionRangeEntry>();
         }
 
-        // Read Default_Ignorable_Code_Point section (format v8)
         if (diOffset != 0 && diLength != 0)
         {
             stream.Position = diOffset;
-            uint diCount = reader.ReadUInt32();
+            var diCount = reader.ReadUInt32();
             defaultIgnorableRanges = new DefaultIgnorableRangeEntry[diCount];
 
             for (uint i = 0; i < diCount; i++)
             {
-                uint start = reader.ReadUInt32();
-                uint end = reader.ReadUInt32();
+                var start = reader.ReadUInt32();
+                var end = reader.ReadUInt32();
 
                 defaultIgnorableRanges[i] = new DefaultIgnorableRangeEntry(
-                    startCodePoint: unchecked((int)start),
-                    endCodePoint: unchecked((int)end));
+                    unchecked((int)start),
+                    unchecked((int)end));
             }
         }
         else
@@ -667,7 +622,6 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
             defaultIgnorableRanges = Array.Empty<DefaultIgnorableRangeEntry>();
         }
 
-        // Initialize BMP lookup tables for O(1) access
         bmpBidiClass = new BidiClass[BmpSize];
         bmpJoiningType = new JoiningType[BmpSize];
         bmpScript = new UnicodeScript[BmpSize];
@@ -676,97 +630,71 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
         bmpEastAsianWidth = new EastAsianWidth[BmpSize];
         bmpGraphemeBreak = new GraphemeClusterBreak[BmpSize];
         bmpIndicConjunctBreak = new IndicConjunctBreak[BmpSize];
-        
+
         InitializeBmpTables();
     }
-    
+
     private void InitializeBmpTables()
     {
-        // Fill BidiClass and JoiningType from ranges
         foreach (var range in ranges)
         {
-            int start = Math.Max(0, range.startCodePoint);
-            int end = Math.Min(BmpSize - 1, range.endCodePoint);
-            for (int cp = start; cp <= end; cp++)
+            var start = Math.Max(0, range.startCodePoint);
+            var end = Math.Min(BmpSize - 1, range.endCodePoint);
+            for (var cp = start; cp <= end; cp++)
             {
                 bmpBidiClass[cp] = range.bidiClass;
                 bmpJoiningType[cp] = range.joiningType;
             }
         }
-        
-        // Fill Script
+
         foreach (var range in scriptRanges)
         {
-            int start = Math.Max(0, range.startCodePoint);
-            int end = Math.Min(BmpSize - 1, range.endCodePoint);
-            for (int cp = start; cp <= end; cp++)
-            {
-                bmpScript[cp] = range.script;
-            }
+            var start = Math.Max(0, range.startCodePoint);
+            var end = Math.Min(BmpSize - 1, range.endCodePoint);
+            for (var cp = start; cp <= end; cp++) bmpScript[cp] = range.script;
         }
-        
-        // Fill LineBreak
+
         foreach (var range in lineBreakRanges)
         {
-            int start = Math.Max(0, range.startCodePoint);
-            int end = Math.Min(BmpSize - 1, range.endCodePoint);
-            for (int cp = start; cp <= end; cp++)
-            {
-                bmpLineBreak[cp] = range.lineBreakClass;
-            }
+            var start = Math.Max(0, range.startCodePoint);
+            var end = Math.Min(BmpSize - 1, range.endCodePoint);
+            for (var cp = start; cp <= end; cp++) bmpLineBreak[cp] = range.lineBreakClass;
         }
-        
-        // Fill GeneralCategory
+
         foreach (var range in generalCategoryRanges)
         {
-            int start = Math.Max(0, range.startCodePoint);
-            int end = Math.Min(BmpSize - 1, range.endCodePoint);
-            for (int cp = start; cp <= end; cp++)
-            {
-                bmpGeneralCategory[cp] = range.generalCategory;
-            }
+            var start = Math.Max(0, range.startCodePoint);
+            var end = Math.Min(BmpSize - 1, range.endCodePoint);
+            for (var cp = start; cp <= end; cp++) bmpGeneralCategory[cp] = range.generalCategory;
         }
-        
-        // Fill EastAsianWidth
+
         foreach (var range in eastAsianWidthRanges)
         {
-            int start = Math.Max(0, range.startCodePoint);
-            int end = Math.Min(BmpSize - 1, range.endCodePoint);
-            for (int cp = start; cp <= end; cp++)
-            {
-                bmpEastAsianWidth[cp] = range.eastAsianWidth;
-            }
+            var start = Math.Max(0, range.startCodePoint);
+            var end = Math.Min(BmpSize - 1, range.endCodePoint);
+            for (var cp = start; cp <= end; cp++) bmpEastAsianWidth[cp] = range.eastAsianWidth;
         }
-        
-        // Fill GraphemeBreak
+
         foreach (var range in graphemeBreakRanges)
         {
-            int start = Math.Max(0, range.startCodePoint);
-            int end = Math.Min(BmpSize - 1, range.endCodePoint);
-            for (int cp = start; cp <= end; cp++)
-            {
-                bmpGraphemeBreak[cp] = range.graphemeBreak;
-            }
+            var start = Math.Max(0, range.startCodePoint);
+            var end = Math.Min(BmpSize - 1, range.endCodePoint);
+            for (var cp = start; cp <= end; cp++) bmpGraphemeBreak[cp] = range.graphemeBreak;
         }
-        
-        // Fill IndicConjunctBreak
+
         foreach (var range in indicConjunctBreakRanges)
         {
-            int start = Math.Max(0, range.startCodePoint);
-            int end = Math.Min(BmpSize - 1, range.endCodePoint);
-            for (int cp = start; cp <= end; cp++)
-            {
-                bmpIndicConjunctBreak[cp] = range.indicConjunctBreak;
-            }
+            var start = Math.Max(0, range.startCodePoint);
+            var end = Math.Min(BmpSize - 1, range.endCodePoint);
+            for (var cp = start; cp <= end; cp++) bmpIndicConjunctBreak[cp] = range.indicConjunctBreak;
         }
     }
 
     public BidiClass GetBidiClass(int codePoint)
     {
-        // Fast path for BMP (99%+ of real text)
         if ((uint)codePoint < BmpSize)
             return bmpBidiClass[codePoint];
-            
+
         var entry = FindRange(codePoint);
         return entry?.bidiClass ?? BidiClass.LeftToRight;
     }
@@ -796,10 +724,9 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     public JoiningType GetJoiningType(int codePoint)
     {
-        // Fast path for BMP
         if ((uint)codePoint < BmpSize)
             return bmpJoiningType[codePoint];
-            
+
         var entry = FindRange(codePoint);
         return entry?.joiningType ?? JoiningType.NonJoining;
     }
@@ -812,22 +739,20 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     public UnicodeScript GetScript(int codePoint)
     {
-        // Fast path for BMP
         if ((uint)codePoint < BmpSize)
             return bmpScript[codePoint];
-            
+
         var entry = FindScriptRange(codePoint);
         return entry?.script ?? UnicodeScript.Unknown;
     }
 
     public LineBreakClass GetLineBreakClass(int codePoint)
     {
-        // Fast path for BMP
         if ((uint)codePoint < BmpSize)
             return bmpLineBreak[codePoint];
-            
+
         var entry = FindLineBreakRange(codePoint);
-        return entry?.lineBreakClass ?? LineBreakClass.XX; // XX = Unknown
+        return entry?.lineBreakClass ?? LineBreakClass.XX;
     }
 
     public bool IsExtendedPictographic(int codePoint)
@@ -837,57 +762,35 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     public GeneralCategory GetGeneralCategory(int codePoint)
     {
-        // Fast path for BMP
         if ((uint)codePoint < BmpSize)
             return bmpGeneralCategory[codePoint];
-            
+
         var entry = FindGeneralCategoryRange(codePoint);
-        return entry?.generalCategory ?? GeneralCategory.Cn; // Cn = Not assigned
+        return entry?.generalCategory ?? GeneralCategory.Cn;
     }
 
     public EastAsianWidth GetEastAsianWidth(int codePoint)
     {
-        // Fast path for BMP
         if ((uint)codePoint < BmpSize)
             return bmpEastAsianWidth[codePoint];
-            
+
         var entry = FindEastAsianWidthRange(codePoint);
-        return entry?.eastAsianWidth ?? EastAsianWidth.N; // N = Neutral
+        return entry?.eastAsianWidth ?? EastAsianWidth.N;
     }
 
-    /// <summary>
-    /// Check if codepoint is an Unambiguous Hyphen (HH class per UAX #14).
-    /// These characters provide break opportunity after, except word-initially.
-    /// 
-    /// Per UAX #14 Table 1 (Unicode 17.0.0), HH class includes:
-    /// ARMENIAN HYPHEN, HEBREW MAQAF, CANADIAN SYLLABICS HYPHEN,
-    /// HYPHEN, FIGURE DASH, EN DASH, DOUBLE OBLIQUE HYPHEN, DOUBLE HYPHEN,
-    /// OBLIQUE HYPHEN, GARAY HYPHEN, YEZIDI HYPHENATION MARK.
-    /// 
-    /// All these codepoints are correctly marked as HH in LineBreak.txt (Unicode 17.0.0).
-    /// See: https://www.unicode.org/Public/17.0.0/ucd/LineBreak.txt
-    /// </summary>
+
     public bool IsUnambiguousHyphen(int codePoint)
     {
         return GetLineBreakClass(codePoint) == LineBreakClass.HH;
     }
-    
-    /// <summary>
-    /// Check if codepoint is U+25CC DOTTED CIRCLE.
-    /// This is a placeholder character used to display combining marks in isolation.
-    /// Used for LB28a Brahmic script rules per UAX #14.
-    /// </summary>
+
+
     public bool IsDottedCircle(int codePoint)
     {
         return codePoint == UnicodeData.DottedCircle;
     }
-    
-    /// <summary>
-    /// Check if codepoint belongs to a Brahmic script for LB28a rules.
-    /// Per UAX #14, $Brahmic = [\p{sc=Bali}\p{sc=Batk}\p{sc=Bugi}\p{sc=Java}\p{sc=Kali}\p{sc=Maka}
-    ///                         \p{sc=Mand}\p{sc=Modi}\p{sc=Nag}\p{sc=Sund}\p{sc=Tale}\p{sc=Talu}
-    ///                         \p{sc=Takr}\p{sc=Tibt}]
-    /// </summary>
+
+
     public bool IsBrahmicForLB28a(int codePoint)
     {
         var script = GetScript(codePoint);
@@ -909,20 +812,18 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     public GraphemeClusterBreak GetGraphemeClusterBreak(int codePoint)
     {
-        // Fast path for BMP
         if ((uint)codePoint < BmpSize)
             return bmpGraphemeBreak[codePoint];
-            
+
         var entry = FindGraphemeBreakRange(codePoint);
         return entry?.graphemeBreak ?? GraphemeClusterBreak.Other;
     }
 
     public IndicConjunctBreak GetIndicConjunctBreak(int codePoint)
     {
-        // Fast path for BMP
         if ((uint)codePoint < BmpSize)
             return bmpIndicConjunctBreak[codePoint];
-            
+
         var entry = FindIndicConjunctBreakRange(codePoint);
         return entry?.indicConjunctBreak ?? IndicConjunctBreak.None;
     }
@@ -932,8 +833,7 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
         var entry = FindScriptExtensionRange(codePoint);
         if (entry != null)
             return entry.Value.scripts;
-        
-        // Default: return array with single Script value
+
         var script = GetScript(codePoint);
         return new[] { script };
     }
@@ -944,31 +844,20 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
         if (entry != null)
         {
             foreach (var s in entry.Value.scripts)
-            {
                 if (s == script)
                     return true;
-            }
             return false;
         }
 
-        // Default: check against single Script value
         return GetScript(codePoint) == script;
     }
 
-    /// <summary>
-    /// Check if codepoint has Default_Ignorable_Code_Point property.
-    /// Uses binary data from DerivedCoreProperties.txt (format v8+).
-    /// Falls back to heuristic for older format versions.
-    /// </summary>
+
     public bool IsDefaultIgnorable(int codePoint)
     {
-        // If we have v8 data, use binary search on ranges
         if (defaultIgnorableRanges != null && defaultIgnorableRanges.Length > 0)
-        {
             return FindDefaultIgnorableRange(codePoint) != null;
-        }
 
-        // Fallback for older formats: approximate check
         var lbc = GetLineBreakClass(codePoint);
         if (lbc == LineBreakClass.ZW || lbc == LineBreakClass.ZWJ)
             return true;
@@ -981,26 +870,20 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private DefaultIgnorableRangeEntry? FindDefaultIgnorableRange(int codePoint)
     {
-        int lo = 0;
-        int hi = defaultIgnorableRanges.Length - 1;
+        var lo = 0;
+        var hi = defaultIgnorableRanges.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = lo + (hi - lo) / 2;
+            var mid = lo + (hi - lo) / 2;
             var entry = defaultIgnorableRanges[mid];
 
             if (codePoint < entry.startCodePoint)
-            {
                 hi = mid - 1;
-            }
             else if (codePoint > entry.endCodePoint)
-            {
                 lo = mid + 1;
-            }
             else
-            {
                 return entry;
-            }
         }
 
         return null;
@@ -1008,12 +891,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private RangeEntry? FindRange(int codePoint)
     {
-        int lo = 0;
-        int hi = ranges.Length - 1;
+        var lo = 0;
+        var hi = ranges.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = ranges[mid];
 
             if (codePoint < entry.startCodePoint)
@@ -1029,12 +912,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private MirrorEntry? FindMirror(int codePoint)
     {
-        int lo = 0;
-        int hi = mirrors.Length - 1;
+        var lo = 0;
+        var hi = mirrors.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = mirrors[mid];
 
             if (codePoint < entry.codePoint)
@@ -1050,12 +933,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private BracketEntry? FindBracket(int codePoint)
     {
-        int lo = 0;
-        int hi = brackets.Length - 1;
+        var lo = 0;
+        var hi = brackets.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = brackets[mid];
 
             if (codePoint < entry.codePoint)
@@ -1071,12 +954,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private ScriptRangeEntry? FindScriptRange(int codePoint)
     {
-        int lo = 0;
-        int hi = scriptRanges.Length - 1;
+        var lo = 0;
+        var hi = scriptRanges.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = scriptRanges[mid];
 
             if (codePoint < entry.startCodePoint)
@@ -1092,12 +975,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private LineBreakRangeEntry? FindLineBreakRange(int codePoint)
     {
-        int lo = 0;
-        int hi = lineBreakRanges.Length - 1;
+        var lo = 0;
+        var hi = lineBreakRanges.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = lineBreakRanges[mid];
 
             if (codePoint < entry.startCodePoint)
@@ -1113,12 +996,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private ExtendedPictographicRangeEntry? FindExtendedPictographicRange(int codePoint)
     {
-        int lo = 0;
-        int hi = extendedPictographicRanges.Length - 1;
+        var lo = 0;
+        var hi = extendedPictographicRanges.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = extendedPictographicRanges[mid];
 
             if (codePoint < entry.startCodePoint)
@@ -1134,12 +1017,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private GeneralCategoryRangeEntry? FindGeneralCategoryRange(int codePoint)
     {
-        int lo = 0;
-        int hi = generalCategoryRanges.Length - 1;
+        var lo = 0;
+        var hi = generalCategoryRanges.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = generalCategoryRanges[mid];
 
             if (codePoint < entry.startCodePoint)
@@ -1155,12 +1038,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private EastAsianWidthRangeEntry? FindEastAsianWidthRange(int codePoint)
     {
-        int lo = 0;
-        int hi = eastAsianWidthRanges.Length - 1;
+        var lo = 0;
+        var hi = eastAsianWidthRanges.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = eastAsianWidthRanges[mid];
 
             if (codePoint < entry.startCodePoint)
@@ -1176,12 +1059,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private GraphemeBreakRangeEntry? FindGraphemeBreakRange(int codePoint)
     {
-        int lo = 0;
-        int hi = graphemeBreakRanges.Length - 1;
+        var lo = 0;
+        var hi = graphemeBreakRanges.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = graphemeBreakRanges[mid];
 
             if (codePoint < entry.startCodePoint)
@@ -1197,12 +1080,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private IndicConjunctBreakRangeEntry? FindIndicConjunctBreakRange(int codePoint)
     {
-        int lo = 0;
-        int hi = indicConjunctBreakRanges.Length - 1;
+        var lo = 0;
+        var hi = indicConjunctBreakRanges.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = indicConjunctBreakRanges[mid];
 
             if (codePoint < entry.startCodePoint)
@@ -1218,12 +1101,12 @@ public sealed class BinaryUnicodeDataProvider : IUnicodeDataProvider
 
     private ScriptExtensionRangeEntry? FindScriptExtensionRange(int codePoint)
     {
-        int lo = 0;
-        int hi = scriptExtensionRanges.Length - 1;
+        var lo = 0;
+        var hi = scriptExtensionRanges.Length - 1;
 
         while (lo <= hi)
         {
-            int mid = (lo + hi) >> 1;
+            var mid = (lo + hi) >> 1;
             var entry = scriptExtensionRanges[mid];
 
             if (codePoint < entry.startCodePoint)

@@ -3,99 +3,72 @@ using System.Collections.Generic;
 using LSCore;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 
-/// <summary>
-/// Компонент для отображения текста с полной Unicode поддержкой.
-/// Использует UniTextFontAsset для рендеринга и собственный pipeline для:
-/// - BiDi (правильное отображение RTL текста)
-/// - Line breaking по Unicode правилам
-/// - Script detection
-/// </summary>
+
 [RequireComponent(typeof(CanvasRenderer))]
 [RequireComponent(typeof(RectTransform))]
 [ExecuteAlways]
 public partial class UniText : MaskableGraphic
 {
-    /// <summary>
-    /// Flags indicating what needs to be rebuilt.
-    /// Each flag represents a specific change type for precise rebuild control.
-    /// </summary>
     [Flags]
     public enum DirtyFlags
     {
         None = 0,
 
-        /// <summary>Mesh colors only (cheapest)</summary>
+
         Color = 1 << 0,
 
-        /// <summary>Alignment offset only</summary>
+
         Alignment = 1 << 1,
 
-        /// <summary>Re-layout needed (rect size changed)</summary>
+
         Layout = 1 << 2,
 
-        /// <summary>Font size changed</summary>
+
         FontSize = 1 << 3,
 
-        /// <summary>Font asset changed</summary>
+
         Font = 1 << 4,
 
-        /// <summary>Base direction changed</summary>
+
         Direction = 1 << 5,
 
-        /// <summary>Text content changed - requires attribute parsing</summary>
+
         Text = 1 << 6,
 
         LayoutRebuild = Layout | FontSize | Alignment,
-        /// <summary>Flags requiring full rebuild (text, font, direction)</summary>
+
         FullRebuild = Text | Font | Direction,
 
         All = Color | Alignment | Layout | FontSize | FullRebuild
     }
-    
+
     #region Serialized Fields
 
-    [TextArea(3, 10)]
-    [SerializeField]
-    private string text = "";
+    [TextArea(3, 10)] [SerializeField] private string text = "";
 
-    [Header("Font")]
-    [SerializeField]
-    private UniTextFontAsset font;
+    [Header("Font")] [SerializeField] private UniTextFontAsset font;
 
-    [SerializeField]
-    private float fontSize = 36f;
+    [SerializeField] private float fontSize = 36f;
 
-    [Header("Layout")]
-    [SerializeField]
-    private TextDirection baseDirection = TextDirection.Auto;
+    [Header("Layout")] [SerializeField] private TextDirection baseDirection = TextDirection.Auto;
 
-    [SerializeField]
-    private bool enableWordWrap = true;
+    [SerializeField] private bool enableWordWrap = true;
 
-    [Header("Alignment")]
-    [SerializeField]
-    private HorizontalAlignment horizontalAlignment = HorizontalAlignment.Left;
+    [Header("Alignment")] [SerializeField] private HorizontalAlignment horizontalAlignment = HorizontalAlignment.Left;
 
-    [SerializeField]
-    private VerticalAlignment verticalAlignment = VerticalAlignment.Top;
+    [SerializeField] private VerticalAlignment verticalAlignment = VerticalAlignment.Top;
 
-    [Header("Auto Size")]
-    [SerializeField]
-    private bool enableAutoSize;
+    [Header("Auto Size")] [SerializeField] private bool enableAutoSize;
 
-    [SerializeField]
-    private float minFontSize = 10f;
+    [SerializeField] private float minFontSize = 10f;
 
-    [SerializeField]
-    private float maxFontSize = 72f;
+    [SerializeField] private float maxFontSize = 72f;
 
-    [SerializeReference]
-    private List<ModRegister> modRegisters;
-    
+    [SerializeReference] private List<ModRegister> modRegisters;
+
     #endregion
 
     #region Runtime Components
@@ -106,10 +79,10 @@ public partial class UniText : MaskableGraphic
     private AttributeParser parser;
     private CommonData textBuffers;
 
-    /// <summary>Font provider для доступа к fontAsset и метрикам.</summary>
+
     public UniTextFontProvider FontProvider => fontProvider;
     public string CleanText => parser?.CleanText ?? text;
-    
+
     #endregion
 
     #region State & Caching
@@ -120,45 +93,36 @@ public partial class UniText : MaskableGraphic
 
     private DirtyFlags dirtyFlags = DirtyFlags.All;
 
-    // Cached results
     private float lastResultWidth;
     private float lastResultHeight;
     private bool textIsParsed;
 
-    // Auto size cache
     private float autoSizedFontSize;
     private float lastAutoSizeWidth;
     private float lastAutoSizeHeight;
     private bool hasValidAutoSize;
 
-    // Layout cache (for preferredHeight with width-only constraint)
     private float layoutCachedFontSize;
     private float layoutCachedWidth;
     private bool hasValidLayoutCache;
 
-    // Preferred size cache
     private float cachedPreferredWidth;
     private float cachedPreferredHeight;
     private float cachedPreferredHeightForWidth;
     private bool hasValidPreferredWidth;
     private bool hasValidPreferredHeight;
 
-    // Sub-mesh renderers для fallback шрифтов
     private readonly List<CanvasRenderer> subMeshRenderers = new();
-    private readonly List<Material> subMeshStencilMaterials = new(); // Cached stencil materials for sub-meshes
+    private readonly List<Material> subMeshStencilMaterials = new();
     private LSList<UniTextMeshPair> lastMeshPairs;
 
-    // Mesh tracking - mesh'и из SharedMeshPool
     private readonly List<Mesh> acquiredMeshes = new();
 
     public event Action Rebuilding;
-    // Cached delegate to avoid lambda allocation
     private Func<Mesh> cachedMeshProvider;
 
-    // Материал для основного mesh
     private Material primaryMaterial;
 
-    // Cached clip parameters for SubMesh
     private Rect cachedClipRect;
     private bool cachedValidClip;
     private Vector4 cachedClipSoftness;
@@ -167,20 +131,13 @@ public partial class UniText : MaskableGraphic
 
     #region Properties (Public API)
 
-    /// <summary>
-    /// Mesh generator instance. Used by modifiers to subscribe to events.
-    /// </summary>
     public TextProcessor TextProcessor => processor;
     public UniTextMeshGenerator MeshGenerator => meshGenerator;
 
-    /// <summary>
-    /// Размер текста после последней обработки.
-    /// </summary>
+
     public Vector2 LastResultSize => new(lastResultWidth, lastResultHeight);
 
-    /// <summary>
-    /// Positioned glyphs после последней обработки.
-    /// </summary>
+
     public ReadOnlySpan<PositionedGlyph> LastResultGlyphs =>
         processor != null ? processor.PositionedGlyphs : ReadOnlySpan<PositionedGlyph>.Empty;
 
@@ -191,23 +148,17 @@ public partial class UniText : MaskableGraphic
         {
             if (text == value) return;
 
-            bool wasEmpty = string.IsNullOrEmpty(text);
-            bool willBeEmpty = string.IsNullOrEmpty(value);
+            var wasEmpty = string.IsNullOrEmpty(text);
+            var willBeEmpty = string.IsNullOrEmpty(value);
 
             text = value;
 
             if (wasEmpty && !willBeEmpty)
-            {
                 OnTextAppeared();
-            }
             else if (!wasEmpty && willBeEmpty)
-            {
                 OnTextDisappeared();
-            }
             else
-            {
                 SetDirty(DirtyFlags.Text);
-            }
         }
     }
 
@@ -389,12 +340,6 @@ public partial class UniText : MaskableGraphic
 
     #region Lifecycle
 
-    protected override void Awake()
-    {
-        base.Awake();
-        InitializeComponents();
-    }
-
     protected override void OnEnable()
     {
         base.OnEnable();
@@ -416,14 +361,6 @@ public partial class UniText : MaskableGraphic
         CleanupResources();
     }
 
-#if UNITY_EDITOR
-    protected override void OnValidate()
-    {
-        base.OnValidate();
-        ForceFullReinitialization();
-        SetDirtyAll();
-    }
-#endif
 
     protected override void OnRectTransformDimensionsChange()
     {
@@ -446,7 +383,7 @@ public partial class UniText : MaskableGraphic
     {
         if (isInitialized) return;
         if (!ValidatePrerequisites()) return;
-        
+
         CreateProcessor();
         RebuildFontProvider();
         parser?.InitializeModifiers(this);
@@ -454,7 +391,7 @@ public partial class UniText : MaskableGraphic
         isInitialized = true;
     }
 
-    
+
     private bool ValidatePrerequisites()
     {
         if (!UnicodeData.IsInitialized)
@@ -485,25 +422,22 @@ public partial class UniText : MaskableGraphic
     private void CreateProcessor()
     {
         textBuffers = new CommonData();
-        textBuffers.RentBuffers();
+        textBuffers.RentBuffers(text?.Length ?? 0);
         processor = new TextProcessor();
-        
+
         if (modRegisters == null || modRegisters.Count == 0) return;
-        
+
         parser = new AttributeParser();
-        for (int i = 0; i < modRegisters.Count; i++)
+        for (var i = 0; i < modRegisters.Count; i++)
         {
             var mod = modRegisters[i];
-            if (mod is { IsValid: true })
-            { 
-                mod.Register(parser);
-            }
+            if (mod is { IsValid: true }) mod.Register(parser);
         }
-        
+
         processor.Parsed += parser.Apply;
     }
 
-    
+
     private void RebuildFontProvider()
     {
         if (font == null) return;
@@ -515,20 +449,13 @@ public partial class UniText : MaskableGraphic
 
     private void EnsureInitialized()
     {
-        if (!isInitialized)
-        {
-            InitializeComponents();
-        }
+        if (!isInitialized) InitializeComponents();
     }
 
     #endregion
 
     #region State Management
 
-    /// <summary>
-    /// Вызывается когда текст появляется (был пустым, стал непустым).
-    /// Эквивалент OnEnable.
-    /// </summary>
     private void OnTextAppeared()
     {
         ResetAfterDomainReload();
@@ -538,10 +465,7 @@ public partial class UniText : MaskableGraphic
         LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
     }
 
-    /// <summary>
-    /// Вызывается когда текст исчезает (был непустым, стал пустым).
-    /// Эквивалент OnDisable.
-    /// </summary>
+
     private void OnTextDisappeared()
     {
         Cleanup();
@@ -549,9 +473,7 @@ public partial class UniText : MaskableGraphic
         SetDirty(DirtyFlags.Text);
     }
 
-    /// <summary>
-    /// Сброс runtime состояния после Domain Reload.
-    /// </summary>
+
     private void ResetAfterDomainReload()
     {
         isInitialized = false;
@@ -570,10 +492,8 @@ public partial class UniText : MaskableGraphic
     }
 
 #if UNITY_EDITOR
-    /// <summary>
-    /// Принудительная полная реинициализация (для OnValidate).
-    /// </summary>
-    private void ForceFullReinitialization()
+
+    public void ForceFullReinitialization()
     {
         parser?.DeinitializeModifiers();
         textBuffers?.ReturnBuffers();
@@ -591,9 +511,7 @@ public partial class UniText : MaskableGraphic
     }
 #endif
 
-    /// <summary>
-    /// Помечает текст как требующий перестройки.
-    /// </summary>
+
     public void SetDirtyAll()
     {
         SetDirty(DirtyFlags.All);
@@ -606,35 +524,37 @@ public partial class UniText : MaskableGraphic
         var oldFlags = dirtyFlags;
         dirtyFlags |= flags;
 
-        // Invalidate shaping when text/font/direction changes
         if ((flags & DirtyFlags.FullRebuild) != 0)
         {
             processor?.InvalidateShapingData();
             textIsParsed = false;
         }
+        else if ((flags & DirtyFlags.Layout) != 0)
+        {
+            processor?.InvalidateLayoutData();
+        }
 
-        // Invalidate preferred size cache
         hasValidPreferredWidth = false;
         hasValidPreferredHeight = false;
 
-        if (oldFlags == DirtyFlags.None)
-        {
-            SetVerticesDirty();
-        }
+        if (oldFlags == DirtyFlags.None) SetVerticesDirty();
 
-        // Notify layout system when text properties affecting size change
         if ((flags & (DirtyFlags.Text | DirtyFlags.Font | DirtyFlags.FontSize | DirtyFlags.Layout)) != 0)
-        {
             LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
-        }
     }
 
     #endregion
 
     #region Rebuild Pipeline
 
-    protected override void OnPopulateMesh(VertexHelper vh) => vh.Clear();
-    protected override void UpdateGeometry() { }
+    protected override void OnPopulateMesh(VertexHelper vh)
+    {
+        vh.Clear();
+    }
+
+    protected override void UpdateGeometry()
+    {
+    }
 
     public override void Rebuild(CanvasUpdate update)
     {
@@ -643,14 +563,10 @@ public partial class UniText : MaskableGraphic
         if (update != CanvasUpdate.PreRender) return;
         if (dirtyFlags == DirtyFlags.None) return;
         if (isRebuilding) return;
-
-        if (CommonData.DebugPipelineLogging)
-            UnityEngine.Debug.Log($"[Rebuild] dirtyFlags={dirtyFlags}");
-
+        
         EnsureInitialized();
         if (!isInitialized) return;
 
-        // Устанавливаем Current и вызываем Rebuilding ПОСЛЕ инициализации
         CommonData.Current = textBuffers;
         Rebuilding?.Invoke();
 
@@ -679,21 +595,23 @@ public partial class UniText : MaskableGraphic
     }
 
     private static bool RequiresFullRebuild(DirtyFlags flags)
-        => (flags & DirtyFlags.FullRebuild) != 0;
+    {
+        return (flags & DirtyFlags.FullRebuild) != 0;
+    }
 
     private static bool RequiresLayoutRebuild(DirtyFlags flags)
-        => (flags & DirtyFlags.LayoutRebuild) != 0;
+    {
+        return (flags & DirtyFlags.LayoutRebuild) != 0;
+    }
 
-    /// <summary>
-    /// Полная перестройка текста (text/font/direction изменились).
-    /// </summary>
+
     private void RebuildFull()
     {
         var rt = rectTransform;
         if (rt == null) return;
 
         ReleaseMeshes();
-        hasValidAutoSize = false; // Text changed, need to recalculate auto size
+        hasValidAutoSize = false;
         hasValidLayoutCache = false;
 
         if (string.IsNullOrEmpty(text))
@@ -708,27 +626,25 @@ public partial class UniText : MaskableGraphic
         try
         {
             var rect = rt.rect;
-            
-            ReadOnlySpan<char> textSpan = TryParseAttributes();
-            
-            // Calculate auto size if enabled
-            float effectiveFontSize = fontSize;
+            Profiler.BeginSample("TryParseAttributes");
+            var textSpan = TryParseAttributes();
+            Profiler.EndSample();
+
+            var effectiveFontSize = fontSize;
             if (enableAutoSize)
-            {
                 effectiveFontSize = CalculateAutoSize(textSpan, rect);
-            }
             else
-            {
                 autoSizedFontSize = fontSize;
-            }
 
             var settings = CreateProcessSettings(rect, effectiveFontSize);
+            Profiler.BeginSample("processor.Process");
             var glyphs = processor.Process(textSpan, settings);
-
+            Profiler.EndSample();
             lastResultWidth = processor.ResultWidth;
             lastResultHeight = processor.ResultHeight;
-
+            Profiler.BeginSample("GenerateMeshes");
             GenerateMeshes(glyphs, rect, effectiveFontSize);
+            Profiler.EndSample();
         }
         catch (Exception ex)
         {
@@ -745,14 +661,12 @@ public partial class UniText : MaskableGraphic
             parser?.Parse(text);
             textIsParsed = true;
         }
-        
-        ReadOnlySpan<char> textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
+
+        var textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
         return textSpan;
     }
-    
-    /// <summary>
-    /// Перестройка layout (rect size, fontSize или layout settings изменились).
-    /// </summary>
+
+
     private void RebuildLayout()
     {
         var rt = rectTransform;
@@ -768,26 +682,19 @@ public partial class UniText : MaskableGraphic
             return;
         }
 
-        // Get text span: from parser if available, otherwise original text
         var textSpan = parser != null ? parser.CleanTextSpan : text.AsSpan();
 
-        // Determine effective font size
-        float effectiveFontSize = fontSize;
+        var effectiveFontSize = fontSize;
         if (enableAutoSize)
         {
-            // Check if we can reuse cached auto size
-            bool canReuseAutoSize = hasValidAutoSize &&
-                                    Mathf.Approximately(lastAutoSizeWidth, rect.width) &&
-                                    Mathf.Approximately(lastAutoSizeHeight, rect.height);
+            var canReuseAutoSize = hasValidAutoSize &&
+                                   Mathf.Approximately(lastAutoSizeWidth, rect.width) &&
+                                   Mathf.Approximately(lastAutoSizeHeight, rect.height);
 
             if (canReuseAutoSize)
-            {
                 effectiveFontSize = autoSizedFontSize;
-            }
             else
-            {
                 effectiveFontSize = CalculateAutoSize(textSpan, rect);
-            }
         }
         else
         {
@@ -803,9 +710,7 @@ public partial class UniText : MaskableGraphic
         GenerateMeshes(glyphs, rect, effectiveFontSize);
     }
 
-    /// <summary>
-    /// Regenerate mesh from existing glyphs (alignment/color change).
-    /// </summary>
+
     private void RebuildMeshOnly()
     {
         var glyphs = processor != null ? processor.PositionedGlyphs : ReadOnlySpan<PositionedGlyph>.Empty;
@@ -852,28 +757,22 @@ public partial class UniText : MaskableGraphic
         };
     }
 
-    /// <summary>
-    /// Calculate optimal font size for auto sizing.
-    /// Shaping is done once, then binary search over font sizes.
-    /// </summary>
+
     private float CalculateAutoSize(ReadOnlySpan<char> textSpan, Rect rect)
     {
         if (processor == null || fontProvider == null)
             return fontSize;
 
-        // Ensure shaping is done with maxFontSize for best precision
         var baseSettings = CreateProcessSettings(rect, maxFontSize);
         processor.EnsureShaping(textSpan, baseSettings);
 
-        // Find optimal size
-        float optimalSize = processor.FindOptimalFontSize(
+        var optimalSize = processor.FindOptimalFontSize(
             minFontSize,
             maxFontSize,
             rect.width,
             rect.height,
             baseSettings);
 
-        // Cache result
         autoSizedFontSize = optimalSize;
         lastAutoSizeWidth = rect.width;
         lastAutoSizeHeight = rect.height;
@@ -916,14 +815,17 @@ public partial class UniText : MaskableGraphic
     {
         var cr = canvasRenderer;
         if (cr == null || primaryMaterial == null)
-            return; // Don't clear - mesh might already be set
+            return;
 
         cr.materialCount = 1;
         cr.SetMaterial(materialForRendering, 0);
         cr.SetTexture(mainTexture);
     }
 
-    protected override void UpdateMaterial() => ApplyMaterial();
+    protected override void UpdateMaterial()
+    {
+        ApplyMaterial();
+    }
 
     private void EnsureMaterialAssigned()
     {
@@ -934,9 +836,15 @@ public partial class UniText : MaskableGraphic
         }
     }
 
-    private Material GetActiveMaterial() => primaryMaterial ?? font?.material;
+    private Material GetActiveMaterial()
+    {
+        return primaryMaterial ?? font?.material;
+    }
 
-    private Texture GetActiveTexture() => GetActiveMaterial()?.mainTexture;
+    private Texture GetActiveTexture()
+    {
+        return GetActiveMaterial()?.mainTexture;
+    }
 
     public override void SetClipRect(Rect clipRect, bool validRect)
     {
@@ -945,8 +853,8 @@ public partial class UniText : MaskableGraphic
         cachedClipRect = clipRect;
         cachedValidClip = validRect;
 
-        int count = subMeshRenderers.Count;
-        for (int i = 0; i < count; i++)
+        var count = subMeshRenderers.Count;
+        for (var i = 0; i < count; i++)
         {
             var renderer = subMeshRenderers[i];
             if (renderer == null) continue;
@@ -963,8 +871,8 @@ public partial class UniText : MaskableGraphic
 
         cachedClipSoftness = new Vector4(clipSoftness.x, clipSoftness.y, 0, 0);
 
-        int count = subMeshRenderers.Count;
-        for (int i = 0; i < count; i++)
+        var count = subMeshRenderers.Count;
+        for (var i = 0; i < count; i++)
         {
             var renderer = subMeshRenderers[i];
             if (renderer != null)
@@ -977,10 +885,10 @@ public partial class UniText : MaskableGraphic
         base.Cull(clipRect, validRect);
 
         var cr = canvasRenderer;
-        bool cull = cr != null && cr.cull;
+        var cull = cr != null && cr.cull;
 
-        int count = subMeshRenderers.Count;
-        for (int i = 0; i < count; i++)
+        var count = subMeshRenderers.Count;
+        for (var i = 0; i < count; i++)
         {
             var renderer = subMeshRenderers[i];
             if (renderer != null)
@@ -991,9 +899,7 @@ public partial class UniText : MaskableGraphic
     public override void RecalculateMasking()
     {
         base.RecalculateMasking();
-        // Release old stencil materials - they will be recreated on next UpdateSubMeshes
         ReleaseSubMeshStencilMaterials();
-        // Trigger rebuild to recreate sub-mesh materials with new stencil values
         SetVerticesDirty();
     }
 
@@ -1004,7 +910,7 @@ public partial class UniText : MaskableGraphic
     private void CollectExistingSubMeshRenderers()
     {
         subMeshRenderers.Clear();
-        for (int i = 0; i < transform.childCount; i++)
+        for (var i = 0; i < transform.childCount; i++)
         {
             var child = transform.GetChild(i);
             if (child.name.StartsWith("UniText SubMesh"))
@@ -1020,11 +926,10 @@ public partial class UniText : MaskableGraphic
     {
         if (lastMeshPairs == null) return;
 
-        int requiredCount = lastMeshPairs.Count - 1;
-        int existingCount = subMeshRenderers.Count;
+        var requiredCount = lastMeshPairs.Count - 1;
+        var existingCount = subMeshRenderers.Count;
 
-        // Hide unused
-        for (int i = requiredCount; i < existingCount; i++)
+        for (var i = requiredCount; i < existingCount; i++)
         {
             var renderer = subMeshRenderers[i];
             if (renderer != null)
@@ -1034,8 +939,7 @@ public partial class UniText : MaskableGraphic
             }
         }
 
-        // Update or create required
-        for (int i = 0; i < requiredCount; i++)
+        for (var i = 0; i < requiredCount; i++)
         {
             var pair = lastMeshPairs[i + 1];
 
@@ -1046,7 +950,6 @@ public partial class UniText : MaskableGraphic
                 {
                     if (!renderer.gameObject.activeSelf)
                         renderer.gameObject.SetActive(true);
-                    // Sync pivot with parent in case it changed
                     var subRT = renderer.GetComponent<RectTransform>();
                     if (subRT != null)
                         subRT.pivot = rectTransform.pivot;
@@ -1074,18 +977,17 @@ public partial class UniText : MaskableGraphic
         renderer.SetMesh(mesh);
         renderer.materialCount = 1;
 
-        // Create stencil material for sub-mesh (same logic as MaskableGraphic.GetModifiedMaterial)
         var matToUse = material;
         if (maskable && material != null)
         {
             var rootCanvas = MaskUtilities.FindRootSortOverrideCanvas(transform);
-            int stencilDepth = MaskUtilities.GetStencilDepth(transform, rootCanvas);
+            var stencilDepth = MaskUtilities.GetStencilDepth(transform, rootCanvas);
             if (stencilDepth > 0)
             {
-                int stencilId = (1 << stencilDepth) - 1;
-                var stencilMat = StencilMaterial.Add(material, stencilId, StencilOp.Keep, CompareFunction.Equal, ColorWriteMask.All, stencilId, 0);
+                var stencilId = (1 << stencilDepth) - 1;
+                var stencilMat = StencilMaterial.Add(material, stencilId, StencilOp.Keep, CompareFunction.Equal,
+                    ColorWriteMask.All, stencilId, 0);
 
-                // Release old stencil material if exists
                 while (subMeshStencilMaterials.Count <= subMeshIndex)
                     subMeshStencilMaterials.Add(null);
 
@@ -1100,9 +1002,6 @@ public partial class UniText : MaskableGraphic
         renderer.SetMaterial(matToUse, 0);
         var tex = material != null ? material.mainTexture : null;
         renderer.SetTexture(tex);
-
-        if (UniTextMeshGenerator.DebugLogging)
-            Debug.Log($"[UniText.SetSubMeshRendererData] mesh={mesh.name}, verts={mesh.vertexCount}, mat={material?.name}, tex={tex?.name}");
     }
 
     private CanvasRenderer CreateSubMeshRenderer(int index, Mesh mesh, Material material)
@@ -1114,21 +1013,19 @@ public partial class UniText : MaskableGraphic
         go.transform.SetParent(transform, false);
 
         var rt = go.AddComponent<RectTransform>();
-        rt.pivot = rectTransform.pivot; // Match parent pivot for correct mesh coordinate interpretation
+        rt.pivot = rectTransform.pivot;
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
 
         var renderer = go.AddComponent<CanvasRenderer>();
-        SetSubMeshRendererData(renderer, mesh, material, index - 1); // index is 1-based, convert to 0-based
+        SetSubMeshRendererData(renderer, mesh, material, index - 1);
 
-        // Apply current clip state
         if (cachedValidClip)
             renderer.EnableRectClipping(cachedClipRect);
         renderer.clippingSoftness = cachedClipSoftness;
 
-        // Apply current cull state
         var cr = canvasRenderer;
         if (cr != null)
             renderer.cull = cr.cull;
@@ -1156,15 +1053,15 @@ public partial class UniText : MaskableGraphic
         return mesh;
     }
 
-    private Mesh GetPooledMeshForText() => GetPooledMesh("UniText Mesh");
+    private Mesh GetPooledMeshForText()
+    {
+        return GetPooledMesh("UniText Mesh");
+    }
 
     #endregion
 
     #region Cleanup
 
-    /// <summary>
-    /// Временная очистка (OnDisable — можно OnEnable обратно).
-    /// </summary>
     private void Cleanup()
     {
         parser?.DeinitializeModifiers();
@@ -1173,9 +1070,7 @@ public partial class UniText : MaskableGraphic
         ReleaseMeshes();
     }
 
-    /// <summary>
-    /// Полная очистка ресурсов (OnDestroy).
-    /// </summary>
+
     private void CleanupResources()
     {
         parser?.DeinitializeModifiers();
@@ -1189,23 +1084,19 @@ public partial class UniText : MaskableGraphic
     {
         canvasRenderer?.Clear();
 
-        int count = subMeshRenderers.Count;
-        for (int i = 0; i < count; i++)
-        {
-            subMeshRenderers[i]?.Clear();
-        }
+        var count = subMeshRenderers.Count;
+        for (var i = 0; i < count; i++) subMeshRenderers[i]?.Clear();
     }
 
     private void ReleaseSubMeshStencilMaterials()
     {
-        for (int i = 0; i < subMeshStencilMaterials.Count; i++)
-        {
+        for (var i = 0; i < subMeshStencilMaterials.Count; i++)
             if (subMeshStencilMaterials[i] != null)
             {
                 StencilMaterial.Remove(subMeshStencilMaterials[i]);
                 subMeshStencilMaterials[i] = null;
             }
-        }
+
         subMeshStencilMaterials.Clear();
     }
 
@@ -1214,7 +1105,6 @@ public partial class UniText : MaskableGraphic
         ReleaseSubMeshStencilMaterials();
 
         foreach (var renderer in subMeshRenderers)
-        {
             if (renderer != null)
             {
                 if (Application.isPlaying)
@@ -1222,7 +1112,7 @@ public partial class UniText : MaskableGraphic
                 else
                     DestroyImmediate(renderer.gameObject);
             }
-        }
+
         subMeshRenderers.Clear();
     }
 

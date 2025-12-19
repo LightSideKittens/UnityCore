@@ -19,7 +19,7 @@ namespace LSCore.NativeUtils
         {
             Directory.Delete(EmojiCachePath, true);
         }
-        
+
         private static Event repaintEvent;
         private static FieldInfo ignoreGuiDepth;
         private static string EmojiCachePath => Path.Combine(Application.persistentDataPath, "EmojiCache");
@@ -27,7 +27,7 @@ namespace LSCore.NativeUtils
         private static byte[] GetRawBytes(string emoji)
         {
             ignoreGuiDepth ??= typeof(Event).GetField("ignoreGuiDepth", BindingFlags.Static | BindingFlags.NonPublic);
-            var prev =  ignoreGuiDepth.GetValue(null);
+            var prev = ignoreGuiDepth.GetValue(null);
             ignoreGuiDepth.SetValue(null, true);
             var previousEvent = Event.current;
             repaintEvent = new Event { type = EventType.Repaint };
@@ -46,11 +46,11 @@ namespace LSCore.NativeUtils
                 Event.current = previousEvent;
             }
         }
-        
+
         private static Range[] ProcessEmojis(string text)
         {
             if (string.IsNullOrEmpty(text)) return Array.Empty<Range>();
-            
+
             var emojiClusters = GetEmojiClusters(text);
             var result = new Range[emojiClusters.Count];
 
@@ -84,14 +84,12 @@ namespace LSCore.NativeUtils
                 var index = enumerator.ElementIndex;
 
                 if (IsEmoji(element))
-                {
                     emojiClusters.Add(new EmojiCluster
                     {
                         Emoji = element,
                         StartIndex = index,
                         Length = element.Length
                     });
-                }
             }
 
             return emojiClusters;
@@ -109,35 +107,27 @@ namespace LSCore.NativeUtils
                 var codePoint = char.ConvertToUtf32(cluster, offset);
                 offset += char.IsSurrogatePair(cluster, offset) ? 2 : 1;
 
-                if (IsEmojiCodepoint(codePoint))
-                {
-                    return true;
-                }
+                if (IsEmojiCodepoint(codePoint)) return true;
             }
 
             return false;
         }
-        
+
         private static bool IsEmojiCodepoint(int codePoint)
         {
             return
-                codePoint is >= 0x1F600 and <= 0x1F64F ||   // Emoticons
-                codePoint is >= 0x1F300 and <= 0x1F5FF ||   // Misc Symbols and Pictographs
-                codePoint is >= 0x1F680 and <= 0x1F6FF ||   // Transport and Map Symbols
-                codePoint is >= 0x1F900 and <= 0x1F9FF ||   // Supplemental Symbols and Pictographs
-                codePoint is >= 0x2600 and <= 0x26FF  ||   // Misc symbols
-                codePoint is >= 0x2700 and <= 0x27BF  ||   // Dingbats
-                codePoint is >= 0x2B00 and <= 0x2BFF  ||   // Misc symbols and arrows
-                codePoint is >= 0x1F100 and <= 0x1F1FF ||   // Enclosed Alphanumeric Supplement
-                codePoint is >= 0x1F200 and <= 0x1F2FF ||   // Enclosed Ideographic Supplement
-                codePoint is >= 0x1FA70 and <= 0x1FAFF;      // Symbols and Pictographs Extended-A
+                codePoint is >= 0x1F600 and <= 0x1F64F || codePoint is >= 0x1F300 and <= 0x1F5FF ||
+                codePoint is >= 0x1F680 and <= 0x1F6FF || codePoint is >= 0x1F900 and <= 0x1F9FF ||
+                codePoint is >= 0x2600 and <= 0x26FF || codePoint is >= 0x2700 and <= 0x27BF ||
+                codePoint is >= 0x2B00 and <= 0x2BFF || codePoint is >= 0x1F100 and <= 0x1F1FF ||
+                codePoint is >= 0x1F200 and <= 0x1F2FF || codePoint is >= 0x1FA70 and <= 0x1FAFF;
         }
-        
+
         private static Texture2D RenderEmojiToTexture(string emoji)
         {
             var dpiScaling = typeof(GUIUtility).Eval<float>("pixelsPerPoint");
             if (dpiScaling <= 0) dpiScaling = 1;
-            
+
             var textureSize = 256;
             var fontSize = (int)(230 / dpiScaling);
 
@@ -158,7 +148,7 @@ namespace LSCore.NativeUtils
             RenderTexture.active = renderTexture;
             GL.Clear(true, true, Color.clear);
 
-            var offsetX = textureSize - (textureSize / dpiScaling);
+            var offsetX = textureSize - textureSize / dpiScaling;
             offsetX /= 2;
             var offsetY = textureSize * (0.05f / dpiScaling);
             var rect = new Rect(-offsetX, -offsetY, textureSize, textureSize);

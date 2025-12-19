@@ -14,17 +14,26 @@ public class StrikethroughModifier : BaseLineModifier
         if (faceInfo.strikethroughOffset != 0)
             return faceInfo.strikethroughOffset * scale;
 
-        float xHeightMid = faceInfo.meanLine > 0
+        var xHeightMid = faceInfo.meanLine > 0
             ? faceInfo.meanLine * 0.5f
             : faceInfo.ascentLine * 0.35f;
         return xHeightMid * scale;
     }
 
-    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf) => buffer = buf;
+    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf)
+    {
+        buffer = buf;
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasStrikethrough(int cluster) => buffer != null && buffer.HasFlag(cluster);
+    public static bool HasStrikethrough(int cluster)
+    {
+        return buffer != null && buffer.HasFlag(cluster);
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload() => buffer = null;
+    private static void OnDomainReload()
+    {
+        buffer = null;
+    }
 }

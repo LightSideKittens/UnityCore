@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-/// <summary>
-/// Данные о ссылке для hit testing.
-/// </summary>
+
 public readonly struct LinkData
 {
     public readonly int start;
@@ -19,29 +17,26 @@ public readonly struct LinkData
         this.url = url;
     }
 
-    public bool Contains(int cluster) => cluster >= start && cluster < end;
+    public bool Contains(int cluster)
+    {
+        return cluster >= start && cluster < end;
+    }
 }
 
-/// <summary>
-/// Модификатор для ссылок. Использует композицию ColorModifier и UnderlineModifier для оформления.
-/// </summary>
+
 [Serializable]
 public class LinkModifier : BaseModifier
 {
-    [SerializeField]
-    private Color32 linkColor = new(66, 133, 244, 255); // Google Blue
+    [SerializeField] private Color32 linkColor = new(66, 133, 244, 255);
 
-    [SerializeField]
-    private bool enableUnderline = true;
+    [SerializeField] private bool enableUnderline = true;
 
     private readonly List<LinkData> links = new(8);
     private static LinkModifier current;
 
-    // Внутренние модификаторы для рендеринга (композиция)
     private ColorModifier colorModifier;
     private UnderlineModifier underlineModifier;
 
-    // Кэшированный hex цвет для передачи в ColorModifier
     private string cachedHexColor;
 
     public Color32 LinkColor
@@ -72,7 +67,6 @@ public class LinkModifier : BaseModifier
         current = this;
         cachedHexColor = ColorToHex(linkColor);
 
-        // Создаём внутренние модификаторы для рендеринга
         colorModifier = new ColorModifier();
         colorModifier.Initialize(uniText);
 
@@ -80,15 +74,20 @@ public class LinkModifier : BaseModifier
         underlineModifier.Initialize(uniText);
     }
 
-    protected override void Subscribe() => uniText.Rebuilding += OnRebuilding;
+    protected override void Subscribe()
+    {
+        uniText.Rebuilding += OnRebuilding;
+    }
 
-    protected override void Unsubscribe() => uniText.Rebuilding -= OnRebuilding;
+    protected override void Unsubscribe()
+    {
+        uniText.Rebuilding -= OnRebuilding;
+    }
 
     protected override void ReleaseBuffers()
     {
         if (current == this) current = null;
 
-        // Освобождаем внутренние модификаторы
         colorModifier?.Deinitialize();
         colorModifier = null;
 
@@ -103,7 +102,10 @@ public class LinkModifier : BaseModifier
         links.Clear();
     }
 
-    private void OnRebuilding() => current = this;
+    private void OnRebuilding()
+    {
+        current = this;
+    }
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
@@ -113,11 +115,7 @@ public class LinkModifier : BaseModifier
 
         colorModifier.Apply(start, end, cachedHexColor);
 
-        // Подчёркивание
-        if (enableUnderline)
-        {
-            underlineModifier.Apply(start, end, parameter);
-        }
+        if (enableUnderline) underlineModifier.Apply(start, end, parameter);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -125,8 +123,9 @@ public class LinkModifier : BaseModifier
     {
         if (current == null) return null;
         var links = current.links;
-        for (int i = 0; i < links.Count; i++)
-            if (links[i].Contains(cluster)) return links[i].url;
+        for (var i = 0; i < links.Count; i++)
+            if (links[i].Contains(cluster))
+                return links[i].url;
         return null;
     }
 
@@ -135,8 +134,9 @@ public class LinkModifier : BaseModifier
     {
         if (current == null) return false;
         var links = current.links;
-        for (int i = 0; i < links.Count; i++)
-            if (links[i].Contains(cluster)) return true;
+        for (var i = 0; i < links.Count; i++)
+            if (links[i].Contains(cluster))
+                return true;
         return false;
     }
 
@@ -145,19 +145,21 @@ public class LinkModifier : BaseModifier
         if (current != null)
         {
             var links = current.links;
-            for (int i = 0; i < links.Count; i++)
-            {
+            for (var i = 0; i < links.Count; i++)
                 if (links[i].Contains(cluster))
                 {
                     linkData = links[i];
                     return true;
                 }
-            }
         }
+
         linkData = default;
         return false;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload() => current = null;
+    private static void OnDomainReload()
+    {
+        current = null;
+    }
 }

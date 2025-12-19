@@ -1,29 +1,18 @@
 using System;
 
-/// <summary>
-/// Itemizer — разбивает текст на runs.
-/// Run создаётся при изменении любого из:
-/// - BiDi level
-/// - Script
-/// - Font
-/// </summary>
+
 public sealed class Itemizer
 {
     public Itemizer(IUnicodeDataProvider unicodeData)
     {
-        // Kept for compatibility, but we use static UnicodeData.Provider
     }
 
-    /// <summary>
-    /// Создать Itemizer с использованием статического UnicodeData.
-    /// </summary>
+
     public Itemizer()
     {
     }
 
-    /// <summary>
-    /// Itemize текст и записать runs в предоставленные буферы.
-    /// </summary>
+
     public void Itemize(
         ReadOnlySpan<int> codepoints,
         ReadOnlySpan<byte> bidiLevels,
@@ -38,14 +27,14 @@ public sealed class Itemizer
         if (codepoints.IsEmpty)
             return;
 
-        int runStart = 0;
-        byte currentLevel = bidiLevels[0];
+        var runStart = 0;
+        var currentLevel = bidiLevels[0];
         var currentScript = scripts[0];
-        int currentFontId = fontProvider?.FindFontForCodepoint(codepoints[0], baseFontId) ?? baseFontId;
+        var currentFontId = fontProvider?.FindFontForCodepoint(codepoints[0], baseFontId) ?? baseFontId;
 
-        for (int i = 1; i < codepoints.Length; i++)
+        for (var i = 1; i < codepoints.Length; i++)
         {
-            bool needBreak = false;
+            var needBreak = false;
 
             if (bidiLevels[i] != currentLevel)
                 needBreak = true;
@@ -53,7 +42,7 @@ public sealed class Itemizer
             if (scripts[i] != currentScript)
                 needBreak = true;
 
-            int fontId = fontProvider?.FindFontForCodepoint(codepoints[i], baseFontId) ?? baseFontId;
+            var fontId = fontProvider?.FindFontForCodepoint(codepoints[i], baseFontId) ?? baseFontId;
             if (fontId != currentFontId)
                 needBreak = true;
 
@@ -75,7 +64,6 @@ public sealed class Itemizer
             }
         }
 
-        // Last run
         EnsureCapacity(ref runs, runCount + 1);
         runs[runCount++] = new TextRun
         {

@@ -15,7 +15,7 @@ public sealed class BidiConformanceRunner
 
     public BidiConformanceSummary RunBidiCharacterTests(string fileContent, int maxFailuresToLog = 20)
     {
-        BidiConformanceSummary summary = new BidiConformanceSummary
+        var summary = new BidiConformanceSummary
         {
             totalEvaluatedTests = 0,
             passedTests = 0,
@@ -30,23 +30,23 @@ public sealed class BidiConformanceRunner
             return summary;
         }
 
-        int totalEvaluated = 0;
-        int passed = 0;
-        int failed = 0;
-        int skipped = 0;
+        var totalEvaluated = 0;
+        var passed = 0;
+        var failed = 0;
+        var skipped = 0;
 
-        List<BidiConformanceFailure> failures = new List<BidiConformanceFailure>();
+        var failures = new List<BidiConformanceFailure>();
 
-        using (StringReader reader = new StringReader(fileContent))
+        using (var reader = new StringReader(fileContent))
         {
             string line;
-            int lineNumber = 0;
+            var lineNumber = 0;
 
             while ((line = reader.ReadLine()) != null)
             {
                 lineNumber++;
 
-                int hashIndex = line.IndexOf('#');
+                var hashIndex = line.IndexOf('#');
                 if (hashIndex >= 0)
                     line = line.Substring(0, hashIndex);
 
@@ -54,21 +54,21 @@ public sealed class BidiConformanceRunner
                 if (line.Length == 0)
                     continue;
 
-                string[] fields = line.Split(';');
+                var fields = line.Split(';');
                 if (fields.Length < 5)
                 {
                     skipped++;
                     continue;
                 }
 
-                string codePointsField = fields[0].Trim();
-                string paragraphDirField = fields[1].Trim();
-                string paragraphLevelField = fields[2].Trim();
-                string expectedLevelsField = fields[3].Trim();
-                string expectedReorderField = fields[4].Trim();
+                var codePointsField = fields[0].Trim();
+                var paragraphDirField = fields[1].Trim();
+                var paragraphLevelField = fields[2].Trim();
+                var expectedLevelsField = fields[3].Trim();
+                var expectedReorderField = fields[4].Trim();
 
                 if (!int.TryParse(paragraphDirField, NumberStyles.Integer, CultureInfo.InvariantCulture,
-                        out int paragraphDir))
+                        out var paragraphDir))
                 {
                     skipped++;
                     continue;
@@ -158,7 +158,7 @@ public sealed class BidiConformanceRunner
                     continue;
                 }
 
-                if (!CompareLevels(expectedLevels, bidiResult.levels, out string levelsErrorMessage))
+                if (!CompareLevels(expectedLevels, bidiResult.levels, out var levelsErrorMessage))
                 {
                     failed++;
                     AddFailure(failures, lineNumber, line,
@@ -167,16 +167,14 @@ public sealed class BidiConformanceRunner
                 }
 
                 if (hasReorderExpectations)
-                {
                     if (!CompareReorder(expectedLevels, expectedReorder, bidiResult.levels,
-                            out string reorderErrorMessage))
+                            out var reorderErrorMessage))
                     {
                         failed++;
                         AddFailure(failures, lineNumber, line,
                             $"Reorder mismatch: {reorderErrorMessage}", maxFailuresToLog);
                         continue;
                     }
-                }
 
                 passed++;
             }
@@ -197,16 +195,14 @@ public sealed class BidiConformanceRunner
         if (string.IsNullOrWhiteSpace(codePointsField))
             return Array.Empty<int>();
 
-        string[] tokens = codePointsField.Split(
+        var tokens = codePointsField.Split(
             new[] { ' ' },
             StringSplitOptions.RemoveEmptyEntries);
 
-        int[] result = new int[tokens.Length];
+        var result = new int[tokens.Length];
 
-        for (int i = 0; i < tokens.Length; i++)
-        {
+        for (var i = 0; i < tokens.Length; i++)
             result[i] = int.Parse(tokens[i], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
-        }
 
         return result;
     }
@@ -217,24 +213,20 @@ public sealed class BidiConformanceRunner
         if (string.IsNullOrWhiteSpace(expectedLevelsField))
             return Array.Empty<int?>();
 
-        string[] tokens = expectedLevelsField.Split(
+        var tokens = expectedLevelsField.Split(
             new[] { ' ' },
             StringSplitOptions.RemoveEmptyEntries);
 
-        int?[] result = new int?[tokens.Length];
+        var result = new int?[tokens.Length];
 
-        for (int i = 0; i < tokens.Length; i++)
+        for (var i = 0; i < tokens.Length; i++)
         {
-            string token = tokens[i];
+            var token = tokens[i];
 
             if (token.Equals("x", StringComparison.OrdinalIgnoreCase))
-            {
                 result[i] = null;
-            }
             else
-            {
                 result[i] = int.Parse(token, NumberStyles.Integer, CultureInfo.InvariantCulture);
-            }
         }
 
         return result;
@@ -248,26 +240,23 @@ public sealed class BidiConformanceRunner
         if (string.IsNullOrWhiteSpace(expectedReorderField))
             return Array.Empty<int>();
 
-        string[] tokens = expectedReorderField.Split(
+        var tokens = expectedReorderField.Split(
             new[] { ' ' },
             StringSplitOptions.RemoveEmptyEntries);
 
         if (tokens.Length == 0)
             return Array.Empty<int>();
 
-        List<int> indices = new List<int>(tokens.Length);
-        bool anyIndex = false;
+        var indices = new List<int>(tokens.Length);
+        var anyIndex = false;
 
-        for (int i = 0; i < tokens.Length; i++)
+        for (var i = 0; i < tokens.Length; i++)
         {
-            string token = tokens[i];
+            var token = tokens[i];
 
-            if (token.Equals("x", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
+            if (token.Equals("x", StringComparison.OrdinalIgnoreCase)) continue;
 
-            int logicalIndex = int.Parse(token, NumberStyles.Integer, CultureInfo.InvariantCulture);
+            var logicalIndex = int.Parse(token, NumberStyles.Integer, CultureInfo.InvariantCulture);
             indices.Add(logicalIndex);
             anyIndex = true;
         }
@@ -288,9 +277,9 @@ public sealed class BidiConformanceRunner
             return false;
         }
 
-        for (int i = 0; i < expectedLevels.Length; i++)
+        for (var i = 0; i < expectedLevels.Length; i++)
         {
-            int? expected = expectedLevels[i];
+            var expected = expectedLevels[i];
 
             if (!expected.HasValue)
                 continue;
@@ -317,10 +306,7 @@ public sealed class BidiConformanceRunner
     {
         errorMessage = string.Empty;
 
-        if (expectedReorder == null || expectedReorder.Length == 0)
-        {
-            return true;
-        }
+        if (expectedReorder == null || expectedReorder.Length == 0) return true;
 
         if (expectedLevels.Length != actualLevels.Length)
         {
@@ -329,19 +315,15 @@ public sealed class BidiConformanceRunner
             return false;
         }
 
-        int length = expectedLevels.Length;
+        var length = expectedLevels.Length;
 
-        List<int> logicalIndices = new List<int>(length);
+        var logicalIndices = new List<int>(length);
 
-        for (int i = 0; i < length; i++)
-        {
+        for (var i = 0; i < length; i++)
             if (expectedLevels[i].HasValue)
-            {
                 logicalIndices.Add(i);
-            }
-        }
 
-        int filteredLength = logicalIndices.Count;
+        var filteredLength = logicalIndices.Count;
 
         if (filteredLength != expectedReorder.Length)
         {
@@ -350,27 +332,24 @@ public sealed class BidiConformanceRunner
             return false;
         }
 
-        if (filteredLength == 0)
-        {
-            return true;
-        }
+        if (filteredLength == 0) return true;
 
-        byte[] filteredLevels = new byte[filteredLength];
+        var filteredLevels = new byte[filteredLength];
 
-        for (int i = 0; i < filteredLength; i++)
+        for (var i = 0; i < filteredLength; i++)
         {
-            int logicalIndex = logicalIndices[i];
+            var logicalIndex = logicalIndices[i];
             filteredLevels[i] = actualLevels[logicalIndex];
         }
 
-        int[] indexMap = new int[filteredLength];
+        var indexMap = new int[filteredLength];
         BidiEngine.ReorderLine(filteredLevels, 0, filteredLength - 1, indexMap);
 
-        int[] actualReorder = new int[filteredLength];
+        var actualReorder = new int[filteredLength];
 
-        for (int visualIndex = 0; visualIndex < filteredLength; visualIndex++)
+        for (var visualIndex = 0; visualIndex < filteredLength; visualIndex++)
         {
-            int filteredLogicalIndex = indexMap[visualIndex];
+            var filteredLogicalIndex = indexMap[visualIndex];
 
             if ((uint)filteredLogicalIndex >= (uint)filteredLength)
             {
@@ -382,10 +361,10 @@ public sealed class BidiConformanceRunner
             actualReorder[visualIndex] = logicalIndices[filteredLogicalIndex];
         }
 
-        for (int i = 0; i < filteredLength; i++)
+        for (var i = 0; i < filteredLength; i++)
         {
-            int expectedLogical = expectedReorder[i];
-            int actualLogical = actualReorder[i];
+            var expectedLogical = expectedReorder[i];
+            var actualLogical = actualReorder[i];
 
             if (actualLogical != expectedLogical)
             {
@@ -423,13 +402,13 @@ public sealed class BidiConformanceRunner
         if (failures == null || failures.Count == 0)
             return string.Empty;
 
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
 
-        int count = Math.Min(failures.Count, maxFailuresToLog);
+        var count = Math.Min(failures.Count, maxFailuresToLog);
 
-        for (int i = 0; i < count; i++)
+        for (var i = 0; i < count; i++)
         {
-            BidiConformanceFailure failure = failures[i];
+            var failure = failures[i];
 
             sb.Append("- Line ")
                 .Append(failure.lineNumber)

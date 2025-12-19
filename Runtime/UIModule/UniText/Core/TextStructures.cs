@@ -1,37 +1,26 @@
 using System;
 
 
-/// <summary>
-/// Направление текста
-/// </summary>
 public enum TextDirection : byte
 {
     LeftToRight = 0,
     RightToLeft = 1,
-    /// <summary>
-    /// Автоматическое определение по первому Strong символу (UAX #9)
-    /// </summary>
+
     Auto = 2
 }
 
-// UnicodeScript и LineBreakClass определены в Unicode модуле (UnicodeDataTypes.cs)
 
-/// <summary>
-/// Результат shaping для одного run
-/// </summary>
 public struct ShapedGlyph
 {
-    public int glyphId; // ID глифа в шрифте
-    public int cluster; // Индекс исходного символа
-    public float advanceX; // Продвижение по X
-    public float advanceY; // Продвижение по Y
-    public float offsetX; // Смещение по X
-    public float offsetY; // Смещение по Y
+    public int glyphId;
+    public int cluster;
+    public float advanceX;
+    public float advanceY;
+    public float offsetX;
+    public float offsetY;
 }
 
-/// <summary>
-/// Диапазон в тексте
-/// </summary>
+
 public readonly struct TextRange : IEquatable<TextRange>
 {
     public readonly int start;
@@ -45,105 +34,111 @@ public readonly struct TextRange : IEquatable<TextRange>
         this.length = length;
     }
 
-    public bool Contains(int index) => index >= start && index < End;
-    public bool Overlaps(TextRange other) => start < other.End && End > other.start;
+    public bool Contains(int index)
+    {
+        return index >= start && index < End;
+    }
 
-    public bool Equals(TextRange other) => start == other.start && length == other.length;
-    public override bool Equals(object obj) => obj is TextRange other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(start, length);
+    public bool Overlaps(TextRange other)
+    {
+        return start < other.End && End > other.start;
+    }
 
-    public static bool operator ==(TextRange left, TextRange right) => left.Equals(right);
-    public static bool operator !=(TextRange left, TextRange right) => !left.Equals(right);
+    public bool Equals(TextRange other)
+    {
+        return start == other.start && length == other.length;
+    }
+
+    public override bool Equals(object obj)
+    {
+        return obj is TextRange other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(start, length);
+    }
+
+    public static bool operator ==(TextRange left, TextRange right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(TextRange left, TextRange right)
+    {
+        return !left.Equals(right);
+    }
 }
 
-/// <summary>
-/// Run текста после itemization
-/// </summary>
+
 public struct TextRun
 {
     public TextRange range;
     public byte bidiLevel;
     public UnicodeScript script;
-    public int fontId; // ID шрифта (для font fallback)
+    public int fontId;
 
     public TextDirection Direction => (bidiLevel & 1) == 0
         ? TextDirection.LeftToRight
         : TextDirection.RightToLeft;
 }
 
-/// <summary>
-/// Run после shaping
-/// </summary>
+
 public struct ShapedRun
 {
-    public TextRange range; // Диапазон в исходном тексте
-    public int glyphStart; // Начало глифов в общем массиве
-    public int glyphCount; // Количество глифов
-    public float width; // Ширина run
+    public TextRange range;
+    public int glyphStart;
+    public int glyphCount;
+    public float width;
     public TextDirection direction;
-    public byte bidiLevel; // BiDi level для reordering (UAX #9)
+    public byte bidiLevel;
     public int fontId;
 }
 
-/// <summary>
-/// Строка текста после line breaking
-/// </summary>
+
 public struct TextLine
 {
-    public TextRange range; // Диапазон в исходном тексте
-    public int runStart; // Начало runs в массиве
-    public int runCount; // Количество runs
-    public float width; // Ширина строки
-    public float height; // Высота строки
-    public float baseline; // Позиция baseline
-    public byte paragraphBaseLevel; // Base level параграфа (0=LTR, 1=RTL) для alignment
-    public float startMargin; // Hanging indent: LTR — слева, RTL — справа
+    public TextRange range;
+    public int runStart;
+    public int runCount;
+    public float width;
+    public float height;
+    public float baseline;
+    public byte paragraphBaseLevel;
+    public float startMargin;
 }
 
-/// <summary>
-/// Финальная позиция глифа для рендеринга.
-/// Содержит только базовые данные. Атрибуты (color, stylePadding и т.д.)
-/// хранятся в отдельных буферах SharedTextBuffers или внутри модификаторов.
-/// </summary>
+
 public struct PositionedGlyph
 {
     public int glyphId;
-    public int cluster; // Индекс исходного символа в clean text (для атрибутов)
+    public int cluster;
     public float x;
     public float y;
     public int fontId;
-    public int shapedGlyphIndex; // Индекс в shapedGlyphs/glyphDataCache для O(1) lookup
+    public int shapedGlyphIndex;
 
-    // Screen bounds in local RectTransform space (filled during mesh generation)
     public float left;
     public float top;
     public float right;
     public float bottom;
 }
 
-/// <summary>
-/// Кэшированные данные глифа для быстрого доступа в mesh generation.
-/// Копирует нужные поля из Unity Glyph для устранения pointer indirection.
-/// </summary>
+
 public struct CachedGlyphData
 {
-    // GlyphRect
     public int rectX;
     public int rectY;
     public int rectWidth;
     public int rectHeight;
-    // GlyphMetrics
     public float bearingX;
     public float bearingY;
     public float width;
     public float height;
-    // Flag
     public bool isValid;
 }
 
-/// <summary>
-/// Горизонтальное выравнивание текста
-/// </summary>
+
 public enum HorizontalAlignment : byte
 {
     Left = 0,
@@ -151,9 +146,7 @@ public enum HorizontalAlignment : byte
     Right = 2
 }
 
-/// <summary>
-/// Вертикальное выравнивание текста
-/// </summary>
+
 public enum VerticalAlignment : byte
 {
     Top = 0,

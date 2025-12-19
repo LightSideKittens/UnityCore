@@ -4,70 +4,59 @@ using System.Globalization;
 using System.Text;
 
 
-/// <summary>
-/// Validates Script property implementation against UAX #24 (Unicode Script Property).
-/// 
-/// Provides two test methods:
-/// 1. RunDataTests: Validates IUnicodeDataProvider.GetScript() against Scripts.txt
-/// 2. RunAnalyzerTests: Validates ScriptAnalyzer against ScriptAnalyzerTest.txt
-/// 
-/// Reference: https://www.unicode.org/reports/tr24/ (Unicode 17.0.0)
-/// </summary>
 public sealed class ScriptConformanceRunner
 {
     private readonly IUnicodeDataProvider dataProvider;
-    
+
     public ScriptConformanceRunner(IUnicodeDataProvider dataProvider)
     {
         this.dataProvider = dataProvider ?? throw new ArgumentNullException(nameof(dataProvider));
     }
-    
+
     #region Data Tests - Scripts.txt validation
-    
-    /// <summary>
-    /// Validate Script property data against Scripts.txt
-    /// Format: 0000..001F ; Common # comment
-    /// </summary>
+
     public ScriptConformanceSummary RunDataTests(string scriptsFileContent, int maxFailuresToLog = 20)
     {
         var summary = new ScriptConformanceSummary();
-        
+
         if (string.IsNullOrEmpty(scriptsFileContent))
         {
             summary.sampleFailures = "Scripts.txt content is empty or null.";
             return summary;
         }
-        
+
         var failures = new StringBuilder();
-        int failureCount = 0;
-        
+        var failureCount = 0;
+
         foreach (var (lineNumber, rangePart, scriptPart) in ParseDataFile(scriptsFileContent))
         {
-            if (!TryParseScript(scriptPart, out UnicodeScript expectedScript))
+            if (!TryParseScript(scriptPart, out var expectedScript))
             {
                 summary.skippedTests++;
                 if (failureCount++ < maxFailuresToLog)
                     failures.AppendLine($"Line {lineNumber}: Unknown script '{scriptPart}'");
                 continue;
             }
-            
-            if (!TryParseRange(rangePart, out int start, out int end))
+
+            if (!TryParseRange(rangePart, out var start, out var end))
             {
                 summary.skippedTests++;
                 if (failureCount++ < maxFailuresToLog)
                     failures.AppendLine($"Line {lineNumber}: Invalid range '{rangePart}'");
                 continue;
             }
-            
-            foreach (int cp in GetSamplePoints(start, end))
+
+            foreach (var cp in GetSamplePoints(start, end))
             {
                 summary.totalEvaluatedTests++;
-                
+
                 try
                 {
                     var actual = dataProvider.GetScript(cp);
                     if (actual == expectedScript)
+                    {
                         summary.passedTests++;
+                    }
                     else
                     {
                         summary.failedTests++;
@@ -83,20 +72,17 @@ public sealed class ScriptConformanceRunner
                 }
             }
         }
-        
+
         summary.sampleFailures = failures.ToString();
         return summary;
     }
-    
+
     #endregion
-    
+
     #region Analyzer Tests - ScriptAnalyzerTest.txt validation
-    
-    /// <summary>
-    /// Validate ScriptAnalyzer against ScriptAnalyzerTest.txt
-    /// Format: 0041 0042 ; Latin Latin # comment
-    /// </summary>
-    public ScriptAnalyzerTestSummary RunAnalyzerTests(ScriptAnalyzer analyzer, string testFileContent, int maxFailuresToLog = 20)
+
+    public ScriptAnalyzerTestSummary RunAnalyzerTests(ScriptAnalyzer analyzer, string testFileContent,
+        int maxFailuresToLog = 20)
     {
         if (analyzer == null)
             throw new ArgumentNullException(nameof(analyzer));
@@ -110,17 +96,15 @@ public sealed class ScriptConformanceRunner
         }
 
         var failures = new StringBuilder();
-        int failureCount = 0;
+        var failureCount = 0;
 
-        // Буфер для результатов анализа
-        UnicodeScript[] scriptsBuffer = new UnicodeScript[256];
+        var scriptsBuffer = new UnicodeScript[256];
 
         foreach (var (lineNumber, codepointsPart, scriptsPart) in ParseDataFile(testFileContent))
         {
             summary.totalTests++;
 
-            // Parse codepoints
-            if (!TryParseCodepoints(codepointsPart, out int[] codepoints))
+            if (!TryParseCodepoints(codepointsPart, out var codepoints))
             {
                 summary.failedTests++;
                 if (failureCount++ < maxFailuresToLog)
@@ -128,8 +112,7 @@ public sealed class ScriptConformanceRunner
                 continue;
             }
 
-            // Parse expected scripts
-            if (!TryParseScriptList(scriptsPart, out UnicodeScript[] expectedScripts))
+            if (!TryParseScriptList(scriptsPart, out var expectedScripts))
             {
                 summary.failedTests++;
                 if (failureCount++ < maxFailuresToLog)
@@ -137,45 +120,43 @@ public sealed class ScriptConformanceRunner
                 continue;
             }
 
-            // Validate lengths match
             if (codepoints.Length != expectedScripts.Length)
             {
                 summary.failedTests++;
                 if (failureCount++ < maxFailuresToLog)
-                    failures.AppendLine($"Line {lineNumber}: Length mismatch - {codepoints.Length} codepoints vs {expectedScripts.Length} scripts");
+                    failures.AppendLine(
+                        $"Line {lineNumber}: Length mismatch - {codepoints.Length} codepoints vs {expectedScripts.Length} scripts");
                 continue;
             }
 
-            // Ensure buffer is large enough
             if (scriptsBuffer.Length < codepoints.Length)
                 scriptsBuffer = new UnicodeScript[codepoints.Length];
 
-            // Run analyzer
             try
             {
                 analyzer.Analyze(codepoints, scriptsBuffer);
                 var actualScripts = scriptsBuffer.AsSpan(0, codepoints.Length);
-                
+
                 if (actualScripts.Length != expectedScripts.Length)
                 {
                     summary.failedTests++;
                     if (failureCount++ < maxFailuresToLog)
-                        failures.AppendLine($"Line {lineNumber}: Result length {actualScripts.Length}, expected {expectedScripts.Length}");
+                        failures.AppendLine(
+                            $"Line {lineNumber}: Result length {actualScripts.Length}, expected {expectedScripts.Length}");
                     continue;
                 }
-                
-                bool passed = true;
-                for (int i = 0; i < actualScripts.Length; i++)
-                {
+
+                var passed = true;
+                for (var i = 0; i < actualScripts.Length; i++)
                     if (actualScripts[i] != expectedScripts[i])
                     {
                         passed = false;
                         if (failureCount++ < maxFailuresToLog)
-                            failures.AppendLine($"Line {lineNumber}: Index {i} (U+{codepoints[i]:X4}) - expected {expectedScripts[i]}, got {actualScripts[i]}");
+                            failures.AppendLine(
+                                $"Line {lineNumber}: Index {i} (U+{codepoints[i]:X4}) - expected {expectedScripts[i]}, got {actualScripts[i]}");
                         break;
                     }
-                }
-                
+
                 if (passed)
                     summary.passedTests++;
                 else
@@ -188,71 +169,68 @@ public sealed class ScriptConformanceRunner
                     failures.AppendLine($"Line {lineNumber}: Exception - {ex.Message}");
             }
         }
-        
+
         summary.sampleFailures = failures.ToString();
         return summary;
     }
-    
+
     #endregion
-    
+
     #region Parsing helpers
-    
+
     private IEnumerable<(int lineNumber, string field1, string field2)> ParseDataFile(string content)
     {
         using var reader = new System.IO.StringReader(content);
         string line;
-        int lineNumber = 0;
-        
+        var lineNumber = 0;
+
         while ((line = reader.ReadLine()) != null)
         {
             lineNumber++;
-            
-            // Strip comment
-            int hash = line.IndexOf('#');
+
+            var hash = line.IndexOf('#');
             if (hash >= 0)
                 line = line.Substring(0, hash);
-            
+
             line = line.Trim();
             if (line.Length == 0)
                 continue;
-            
-            // Split by semicolon
-            int semi = line.IndexOf(';');
+
+            var semi = line.IndexOf(';');
             if (semi < 0)
                 continue;
-            
-            string field1 = line.Substring(0, semi).Trim();
-            string field2 = line.Substring(semi + 1).Trim();
-            
+
+            var field1 = line.Substring(0, semi).Trim();
+            var field2 = line.Substring(semi + 1).Trim();
+
             if (field1.Length > 0 && field2.Length > 0)
                 yield return (lineNumber, field1, field2);
         }
     }
-    
+
     private bool TryParseRange(string rangePart, out int start, out int end)
     {
         start = end = 0;
-        
-        int dots = rangePart.IndexOf("..", StringComparison.Ordinal);
+
+        var dots = rangePart.IndexOf("..", StringComparison.Ordinal);
         if (dots >= 0)
-        {
-            return int.TryParse(rangePart.Substring(0, dots), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out start)
-                && int.TryParse(rangePart.Substring(dots + 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out end)
-                && start >= 0 && end >= start;
-        }
-        
+            return int.TryParse(rangePart.Substring(0, dots), NumberStyles.HexNumber, CultureInfo.InvariantCulture,
+                       out start)
+                   && int.TryParse(rangePart.Substring(dots + 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture,
+                       out end)
+                   && start >= 0 && end >= start;
+
         if (int.TryParse(rangePart, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out start))
         {
             end = start;
             return start >= 0;
         }
-        
+
         return false;
     }
-    
+
     private bool TryParseScript(string name, out UnicodeScript script)
     {
-        // Convert "Old_Italic" -> "OldItalic"
         var sb = new StringBuilder();
         foreach (var part in name.Split('_'))
         {
@@ -261,75 +239,77 @@ public sealed class ScriptConformanceRunner
             if (part.Length > 1)
                 sb.Append(part.Substring(1).ToLowerInvariant());
         }
-        
+
         return Enum.TryParse(sb.ToString(), out script);
     }
-    
+
     private bool TryParseCodepoints(string input, out int[] codepoints)
     {
         var list = new List<int>();
         foreach (var hex in input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
         {
-            if (!int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int cp))
+            if (!int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var cp))
             {
                 codepoints = Array.Empty<int>();
                 return false;
             }
+
             list.Add(cp);
         }
+
         codepoints = list.ToArray();
         return true;
     }
-    
+
     private bool TryParseScriptList(string input, out UnicodeScript[] scripts)
     {
         var list = new List<UnicodeScript>();
         foreach (var name in input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries))
         {
-            if (!TryParseScript(name, out UnicodeScript script))
+            if (!TryParseScript(name, out var script))
             {
                 scripts = Array.Empty<UnicodeScript>();
                 return false;
             }
+
             list.Add(script);
         }
+
         scripts = list.ToArray();
         return true;
     }
-    
+
     private IEnumerable<int> GetSamplePoints(int start, int end)
     {
-        int size = end - start + 1;
-        
+        var size = end - start + 1;
+
         if (size <= 10)
         {
-            for (int i = start; i <= end; i++)
+            for (var i = start; i <= end; i++)
                 yield return i;
             yield break;
         }
-        
-        // For large ranges: boundaries + samples
+
         yield return start;
         yield return end;
         yield return start + 1;
         yield return end - 1;
         yield return start + size / 2;
-        
-        int step = size / 5;
-        for (int i = 1; i < 5; i++)
+
+        var step = size / 5;
+        for (var i = 1; i < 5; i++)
             yield return start + i * step;
     }
-    
+
     #endregion
-    
+
     #region Backward Compatibility
-    
-    /// <summary>
-    /// Alias for RunDataTests (backward compatibility)
-    /// </summary>
+
     public ScriptConformanceSummary RunTests(string scriptsFileContent, int maxFailuresToLog = 20)
-        => RunDataTests(scriptsFileContent, maxFailuresToLog);
-    
+    {
+        return RunDataTests(scriptsFileContent, maxFailuresToLog);
+    }
+
     #endregion
 }
 

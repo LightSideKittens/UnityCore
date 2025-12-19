@@ -1,29 +1,17 @@
 using System;
 
-/// <summary>
-/// Результат парсинга — диапазон с привязанным модификатором.
-/// Индексы указывают на clean text (после удаления тегов).
-/// </summary>
+
 internal struct AttributeSpan : IEquatable<AttributeSpan>
 {
-    /// <summary>
-    /// Начальный индекс в clean text (mutable for remapping)
-    /// </summary>
     public int start;
 
-    /// <summary>
-    /// Конечный индекс (не включительно, mutable for remapping)
-    /// </summary>
+
     public int end;
 
-    /// <summary>
-    /// Модификатор, применяемый к этому диапазону
-    /// </summary>
+
     public readonly BaseModifier modifier;
 
-    /// <summary>
-    /// Параметр из тега (например, "#FF0000")
-    /// </summary>
+
     public readonly string parameter;
 
     public int Length => end - start;
@@ -36,17 +24,43 @@ internal struct AttributeSpan : IEquatable<AttributeSpan>
         this.parameter = parameter;
     }
 
-    public bool Contains(int index) => index >= start && index < end;
-    public bool Overlaps(AttributeSpan other) => start < other.end && end > other.start;
+    public bool Contains(int index)
+    {
+        return index >= start && index < end;
+    }
 
-    public bool Equals(AttributeSpan other) =>
-        start == other.start && end == other.end && ReferenceEquals(modifier, other.modifier);
+    public bool Overlaps(AttributeSpan other)
+    {
+        return start < other.end && end > other.start;
+    }
 
-    public override bool Equals(object obj) => obj is AttributeSpan other && Equals(other);
-    public override int GetHashCode() => HashCode.Combine(start, end, modifier);
+    public bool Equals(AttributeSpan other)
+    {
+        return start == other.start && end == other.end && ReferenceEquals(modifier, other.modifier);
+    }
 
-    public static bool operator ==(AttributeSpan left, AttributeSpan right) => left.Equals(right);
-    public static bool operator !=(AttributeSpan left, AttributeSpan right) => !left.Equals(right);
+    public override bool Equals(object obj)
+    {
+        return obj is AttributeSpan other && Equals(other);
+    }
 
-    public override string ToString() => $"[{start}-{end}] {modifier?.GetType().Name ?? "null"}";
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(start, end, modifier);
+    }
+
+    public static bool operator ==(AttributeSpan left, AttributeSpan right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(AttributeSpan left, AttributeSpan right)
+    {
+        return !left.Equals(right);
+    }
+
+    public override string ToString()
+    {
+        return $"[{start}-{end}] {modifier?.GetType().Name ?? "null"}";
+    }
 }

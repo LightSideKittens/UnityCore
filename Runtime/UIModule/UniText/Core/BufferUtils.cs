@@ -1,16 +1,9 @@
 using System;
-using System.Buffers;
 using System.Runtime.CompilerServices;
 
-/// <summary>
-/// Generic utilities for ArrayPool buffer management.
-/// Eliminates code duplication in CommonData Ensure/Grow methods.
-/// </summary>
+
 public static class BufferUtils
 {
-    /// <summary>
-    /// Ensure buffer has at least 'required' capacity. Grows if needed.
-    /// </summary>
     /// <param name="buffer">Buffer reference (will be replaced if grown)</param>
     /// <param name="count">Current element count to preserve</param>
     /// <param name="required">Required capacity</param>
@@ -21,23 +14,41 @@ public static class BufferUtils
             Grow(ref buffer, count, required);
     }
 
-    /// <summary>
-    /// Grow buffer to at least 'required' capacity, doubling current size.
-    /// </summary>
+
+    public static int growCount;
+    private static System.Collections.Generic.Dictionary<string, int> growByType = new();
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     public static void Grow<T>(ref T[] buffer, int count, int required)
     {
-        int newSize = Math.Max(required, buffer.Length * 2);
-        var newBuffer = ArrayPool<T>.Shared.Rent(newSize);
+        growCount++;
+        var typeName = typeof(T).Name;
+        growByType.TryGetValue(typeName, out var c);
+        growByType[typeName] = c + 1;
+
+        var newSize = Math.Max(required, buffer.Length * 2);
+        var newBuffer = UniTextArrayPool<T>.Rent(newSize);
         buffer.AsSpan(0, count).CopyTo(newBuffer);
-        ArrayPool<T>.Shared.Return(buffer);
+        UniTextArrayPool<T>.Return(buffer);
         buffer = newBuffer;
     }
 
-    /// <summary>
-    /// Grow multiple codepoint-indexed buffers together.
-    /// Used when codepoints, bidiLevels, scripts, margins must stay in sync.
-    /// </summary>
+    public static void LogGrowStats()
+    {
+        if (growCount > 0)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"[BufferUtils] Total Grow: {growCount}");
+            foreach (var kv in growByType)
+                sb.AppendLine($"  {kv.Key}: {kv.Value}");
+            UnityEngine.Debug.Log(sb.ToString());
+        }
+
+        growCount = 0;
+        growByType.Clear();
+    }
+
+
     public static void GrowCodepointBuffers(
         ref int[] codepoints,
         ref byte[] bidiLevels,
@@ -46,49 +57,47 @@ public static class BufferUtils
         int count,
         int required)
     {
-        int newSize = Math.Max(required, codepoints.Length * 2);
+        var newSize = Math.Max(required, codepoints.Length * 2);
 
-        var newCodepoints = ArrayPool<int>.Shared.Rent(newSize);
+        var newCodepoints = UniTextArrayPool<int>.Rent(newSize);
         codepoints.AsSpan(0, count).CopyTo(newCodepoints);
-        ArrayPool<int>.Shared.Return(codepoints);
+        UniTextArrayPool<int>.Return(codepoints);
         codepoints = newCodepoints;
 
-        var newBidiLevels = ArrayPool<byte>.Shared.Rent(newSize);
+        var newBidiLevels = UniTextArrayPool<byte>.Rent(newSize);
         bidiLevels.AsSpan(0, Math.Min(count, bidiLevels.Length)).CopyTo(newBidiLevels);
-        ArrayPool<byte>.Shared.Return(bidiLevels);
+        UniTextArrayPool<byte>.Return(bidiLevels);
         bidiLevels = newBidiLevels;
 
-        var newScripts = ArrayPool<UnicodeScript>.Shared.Rent(newSize);
+        var newScripts = UniTextArrayPool<UnicodeScript>.Rent(newSize);
         scripts.AsSpan(0, Math.Min(count, scripts.Length)).CopyTo(newScripts);
-        ArrayPool<UnicodeScript>.Shared.Return(scripts);
+        UniTextArrayPool<UnicodeScript>.Return(scripts);
         scripts = newScripts;
 
-        var newMargins = ArrayPool<float>.Shared.Rent(newSize);
+        var newMargins = UniTextArrayPool<float>.Rent(newSize);
         startMargins.AsSpan(0, Math.Min(count, startMargins.Length)).CopyTo(newMargins);
         startMargins.AsSpan().Clear();
-        ArrayPool<float>.Shared.Return(startMargins);
+        UniTextArrayPool<float>.Return(startMargins);
         startMargins = newMargins;
     }
 
-    /// <summary>
-    /// Grow positioned glyphs and parallel color buffer together.
-    /// </summary>
+
     public static void GrowPositionedGlyphBuffers(
         ref PositionedGlyph[] positionedGlyphs,
         ref UnityEngine.Color32[] glyphColors,
         int count,
         int required)
     {
-        int newSize = Math.Max(required, positionedGlyphs.Length * 2);
+        var newSize = Math.Max(required, positionedGlyphs.Length * 2);
 
-        var newGlyphs = ArrayPool<PositionedGlyph>.Shared.Rent(newSize);
+        var newGlyphs = UniTextArrayPool<PositionedGlyph>.Rent(newSize);
         positionedGlyphs.AsSpan(0, count).CopyTo(newGlyphs);
-        ArrayPool<PositionedGlyph>.Shared.Return(positionedGlyphs);
+        UniTextArrayPool<PositionedGlyph>.Return(positionedGlyphs);
         positionedGlyphs = newGlyphs;
 
-        var newColors = ArrayPool<UnityEngine.Color32>.Shared.Rent(newSize);
+        var newColors = UniTextArrayPool<UnityEngine.Color32>.Rent(newSize);
         glyphColors.AsSpan(0, count).CopyTo(newColors);
-        ArrayPool<UnityEngine.Color32>.Shared.Return(glyphColors);
+        UniTextArrayPool<UnityEngine.Color32>.Return(glyphColors);
         glyphColors = newColors;
     }
 }

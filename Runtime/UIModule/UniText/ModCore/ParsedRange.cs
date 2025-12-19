@@ -1,6 +1,3 @@
-/// <summary>
-/// Найденный диапазон с информацией о тегах для удаления
-/// </summary>
 public struct ParsedRange
 {
     public int start;
@@ -10,9 +7,7 @@ public struct ParsedRange
     public int closeTagStart;
     public int closeTagEnd;
     public string parameter;
-    /// <summary>
-    /// Строка для вставки вместо тега (self-closing). null = обычный тег.
-    /// </summary>
+
     public string insertString;
 
     public bool HasTags => tagStart >= 0;

@@ -1,7 +1,3 @@
-/// <summary>
-/// Константы ключей для shared attribute буферов в CommonData.
-/// Использование констант вместо строк избегает аллокаций.
-/// </summary>
 public static class AttributeKeys
 {
     public const string Color = "color";

@@ -1,8 +1,6 @@
 using System;
 
-/// <summary>
-/// Правило для тега &lt;u&gt;...&lt;/u&gt;
-/// </summary>
+
 [Serializable]
 public sealed class UnderlineParseRule : TagParseRule
 {

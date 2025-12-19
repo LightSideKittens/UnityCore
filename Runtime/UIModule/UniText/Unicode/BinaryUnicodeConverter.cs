@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
-struct UnicodeProps
+internal struct UnicodeProps
 {
     public BidiClass bidiClass;
     public JoiningType joiningType;
@@ -20,9 +20,7 @@ struct UnicodeProps
     public bool defaultIgnorable;
 }
 
-/// <summary>
-/// Entry for Script_Extensions property
-/// </summary>
+
 public struct ScriptExtensionEntry
 {
     public int startCodePoint;
@@ -31,19 +29,19 @@ public struct ScriptExtensionEntry
 
     public ScriptExtensionEntry(int start, int end, UnicodeScript[] scripts)
     {
-        this.startCodePoint = start;
-        this.endCodePoint = end;
+        startCodePoint = start;
+        endCodePoint = end;
         this.scripts = scripts;
     }
 }
 
 public class UnicodeDataBuilder
 {
-    const int MaxCodePoint = 0x10FFFF;
-    const int ScalarCount = MaxCodePoint + 1;
+    private const int MaxCodePoint = 0x10FFFF;
+    private const int ScalarCount = MaxCodePoint + 1;
 
-    readonly UnicodeProps[] props;
-    readonly List<ScriptExtensionEntry> scriptExtensions = new();
+    private readonly UnicodeProps[] props;
+    private readonly List<ScriptExtensionEntry> scriptExtensions = new();
 
     public UnicodeDataBuilder()
     {
@@ -51,17 +49,17 @@ public class UnicodeDataBuilder
         InitializeDefaults();
     }
 
-    void InitializeDefaults()
+    private void InitializeDefaults()
     {
-        for (int cp = 0; cp < ScalarCount; cp++)
+        for (var cp = 0; cp < ScalarCount; cp++)
         {
             props[cp].bidiClass = BidiClass.LeftToRight;
             props[cp].joiningType = JoiningType.NonJoining;
             props[cp].joiningGroup = JoiningGroup.NoJoiningGroup;
             props[cp].script = UnicodeScript.Unknown;
             props[cp].lineBreakClass = LineBreakClass.XX;
-            props[cp].generalCategory = GeneralCategory.Cn; // Not assigned
-            props[cp].eastAsianWidth = EastAsianWidth.N;    // Neutral
+            props[cp].generalCategory = GeneralCategory.Cn;
+            props[cp].eastAsianWidth = EastAsianWidth.N;
             props[cp].indicConjunctBreak = IndicConjunctBreak.None;
         }
     }
@@ -77,17 +75,17 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 2)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string classPart = semi[1].Trim();
+            var codeRangePart = semi[0].Trim();
+            var classPart = semi[1].Trim();
 
             if (codeRangePart.Length == 0 || classPart.Length == 0)
                 continue;
 
-            BidiClass bidiClass = ParseBidiClass(classPart);
+            var bidiClass = ParseBidiClass(classPart);
 
             ParseRangeAndApply(codeRangePart, cp => props[cp].bidiClass = bidiClass);
         }
@@ -104,23 +102,23 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 4)
                 continue;
 
-            string codePart = semi[0].Trim();
-            string joiningTypePart = semi[2].Trim();
-            string joiningGroupPart = semi[3].Trim();
+            var codePart = semi[0].Trim();
+            var joiningTypePart = semi[2].Trim();
+            var joiningGroupPart = semi[3].Trim();
 
             if (codePart.Length == 0 || joiningTypePart.Length == 0 || joiningGroupPart.Length == 0)
                 continue;
 
-            int codePoint = ParseHexCodePoint(codePart);
+            var codePoint = ParseHexCodePoint(codePart);
             if (codePoint < 0 || codePoint > MaxCodePoint)
                 continue;
 
-            JoiningType joiningType = ParseJoiningType(joiningTypePart);
-            JoiningGroup joiningGroup = ParseJoiningGroup(joiningGroupPart);
+            var joiningType = ParseJoiningType(joiningTypePart);
+            var joiningGroup = ParseJoiningGroup(joiningGroupPart);
 
             props[codePoint].joiningType = joiningType;
             props[codePoint].joiningGroup = joiningGroup;
@@ -139,17 +137,17 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 2)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string typePart = semi[1].Trim();
+            var codeRangePart = semi[0].Trim();
+            var typePart = semi[1].Trim();
 
             if (codeRangePart.Length == 0 || typePart.Length == 0)
                 continue;
 
-            JoiningType joiningType = ParseJoiningType(typePart);
+            var joiningType = ParseJoiningType(typePart);
 
             ParseRangeAndApply(codeRangePart, cp => props[cp].joiningType = joiningType);
         }
@@ -166,17 +164,17 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 2)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string scriptPart = semi[1].Trim();
+            var codeRangePart = semi[0].Trim();
+            var scriptPart = semi[1].Trim();
 
             if (codeRangePart.Length == 0 || scriptPart.Length == 0)
                 continue;
 
-            UnicodeScript script = ParseScript(scriptPart);
+            var script = ParseScript(scriptPart);
 
             ParseRangeAndApply(codeRangePart, cp => props[cp].script = script);
         }
@@ -193,25 +191,23 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 2)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string lbcPart = semi[1].Trim();
+            var codeRangePart = semi[0].Trim();
+            var lbcPart = semi[1].Trim();
 
             if (codeRangePart.Length == 0 || lbcPart.Length == 0)
                 continue;
 
-            LineBreakClass lbc = ParseLineBreakClass(lbcPart);
+            var lbc = ParseLineBreakClass(lbcPart);
 
             ParseRangeAndApply(codeRangePart, cp => props[cp].lineBreakClass = lbc);
         }
     }
 
-    /// <summary>
-    /// Load emoji-data.txt to extract Extended_Pictographic property
-    /// </summary>
+
     public void LoadEmojiData(string path)
     {
         using var reader = new StreamReader(path);
@@ -223,17 +219,16 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 2)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string propertyPart = semi[1].Trim();
+            var codeRangePart = semi[0].Trim();
+            var propertyPart = semi[1].Trim();
 
             if (codeRangePart.Length == 0 || propertyPart.Length == 0)
                 continue;
 
-            // Only interested in Extended_Pictographic property
             if (propertyPart != "Extended_Pictographic")
                 continue;
 
@@ -241,10 +236,7 @@ public class UnicodeDataBuilder
         }
     }
 
-    /// <summary>
-    /// Load DerivedGeneralCategory.txt to extract General_Category property
-    /// Format: 0000..001F    ; Cc # [32] <control-0000>..<control-001F>
-    /// </summary>
+
     public void LoadGeneralCategory(string path)
     {
         using var reader = new StreamReader(path);
@@ -256,25 +248,22 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 2)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string gcPart = semi[1].Trim();
+            var codeRangePart = semi[0].Trim();
+            var gcPart = semi[1].Trim();
 
             if (codeRangePart.Length == 0 || gcPart.Length == 0)
                 continue;
 
-            GeneralCategory gc = ParseGeneralCategory(gcPart);
+            var gc = ParseGeneralCategory(gcPart);
             ParseRangeAndApply(codeRangePart, cp => props[cp].generalCategory = gc);
         }
     }
 
-    /// <summary>
-    /// Load EastAsianWidth.txt to extract East_Asian_Width property
-    /// Format: 0000..001F;N  # Cc    [32] <control-0000>..<control-001F>
-    /// </summary>
+
     public void LoadEastAsianWidth(string path)
     {
         using var reader = new StreamReader(path);
@@ -286,25 +275,22 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 2)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string eawPart = semi[1].Trim();
+            var codeRangePart = semi[0].Trim();
+            var eawPart = semi[1].Trim();
 
             if (codeRangePart.Length == 0 || eawPart.Length == 0)
                 continue;
 
-            EastAsianWidth eaw = ParseEastAsianWidth(eawPart);
+            var eaw = ParseEastAsianWidth(eawPart);
             ParseRangeAndApply(codeRangePart, cp => props[cp].eastAsianWidth = eaw);
         }
     }
 
-    /// <summary>
-    /// Load GraphemeBreakProperty.txt to extract Grapheme_Cluster_Break property
-    /// Format: 0600..0605    ; Prepend # Cf   [6] ARABIC NUMBER SIGN..ARABIC NUMBER MARK ABOVE
-    /// </summary>
+
     public void LoadGraphemeBreakProperty(string path)
     {
         using var reader = new StreamReader(path);
@@ -316,26 +302,22 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 2)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string gcbPart = semi[1].Trim();
+            var codeRangePart = semi[0].Trim();
+            var gcbPart = semi[1].Trim();
 
             if (codeRangePart.Length == 0 || gcbPart.Length == 0)
                 continue;
 
-            GraphemeClusterBreak gcb = ParseGraphemeClusterBreak(gcbPart);
+            var gcb = ParseGraphemeClusterBreak(gcbPart);
             ParseRangeAndApply(codeRangePart, cp => props[cp].graphemeClusterBreak = gcb);
         }
     }
 
-    /// <summary>
-    /// Load Indic_Conjunct_Break (InCB) from DerivedCoreProperties.txt.
-    /// Format: 094D          ; InCB; Linker # Mn       DEVANAGARI SIGN VIRAMA
-    /// Format: 0915..0939    ; InCB; Consonant # Lo  [37] ...
-    /// </summary>
+
     public void LoadIndicConjunctBreak(string path)
     {
         using var reader = new StreamReader(path);
@@ -347,17 +329,16 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            // Looking for lines with InCB property
             if (!line.Contains("InCB"))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 3)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string propertyName = semi[1].Trim();
-            string valuePart = semi[2].Trim();
+            var codeRangePart = semi[0].Trim();
+            var propertyName = semi[1].Trim();
+            var valuePart = semi[2].Trim();
 
             if (propertyName != "InCB")
                 continue;
@@ -365,19 +346,13 @@ public class UnicodeDataBuilder
             if (codeRangePart.Length == 0 || valuePart.Length == 0)
                 continue;
 
-            IndicConjunctBreak incb = ParseIndicConjunctBreak(valuePart);
+            var incb = ParseIndicConjunctBreak(valuePart);
             if (incb != IndicConjunctBreak.None)
-            {
                 ParseRangeAndApply(codeRangePart, cp => props[cp].indicConjunctBreak = incb);
-            }
         }
     }
 
-    /// <summary>
-    /// Load Default_Ignorable_Code_Point from DerivedCoreProperties.txt.
-    /// Format: 00AD          ; Default_Ignorable_Code_Point # Cf SOFT HYPHEN
-    /// Format: 034F          ; Default_Ignorable_Code_Point # Mn COMBINING GRAPHEME JOINER
-    /// </summary>
+
     public void LoadDefaultIgnorable(string path)
     {
         using var reader = new StreamReader(path);
@@ -389,16 +364,15 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            // Looking for lines with Default_Ignorable_Code_Point property
             if (!line.Contains("Default_Ignorable_Code_Point"))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 2)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string propertyName = semi[1].Trim();
+            var codeRangePart = semi[0].Trim();
+            var propertyName = semi[1].Trim();
 
             if (propertyName != "Default_Ignorable_Code_Point")
                 continue;
@@ -410,43 +384,37 @@ public class UnicodeDataBuilder
         }
     }
 
-    /// <summary>
-    /// Load Script_Extensions from ScriptExtensions.txt.
-    /// Format: 0640          ; Adlm Arab Mand Mani Ougr Phlp Rohg Sogd Syrc # Lm ARABIC TATWEEL
-    /// Format: 064B..0655    ; Arab Syrc # Mn [11] ARABIC FATHATAN..ARABIC HAMZA BELOW
-    /// </summary>
+
     public void LoadScriptExtensions(string path)
     {
         scriptExtensions.Clear();
-        
+
         using var reader = new StreamReader(path);
 
         string line;
         while ((line = reader.ReadLine()) != null)
         {
-            // Strip comment
-            int hashIdx = line.IndexOf('#');
+            var hashIdx = line.IndexOf('#');
             if (hashIdx >= 0)
                 line = line.Substring(0, hashIdx);
-            
+
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] semi = line.Split(';');
+            var semi = line.Split(';');
             if (semi.Length < 2)
                 continue;
 
-            string codeRangePart = semi[0].Trim();
-            string scriptsPart = semi[1].Trim();
+            var codeRangePart = semi[0].Trim();
+            var scriptsPart = semi[1].Trim();
 
             if (codeRangePart.Length == 0 || scriptsPart.Length == 0)
                 continue;
 
-            // Parse code range
             int start, end;
             if (codeRangePart.Contains(".."))
             {
-                string[] rangeParts = codeRangePart.Split(new[] { ".." }, StringSplitOptions.None);
+                var rangeParts = codeRangePart.Split(new[] { ".." }, StringSplitOptions.None);
                 start = int.Parse(rangeParts[0], NumberStyles.HexNumber);
                 end = int.Parse(rangeParts[1], NumberStyles.HexNumber);
             }
@@ -455,10 +423,9 @@ public class UnicodeDataBuilder
                 start = end = int.Parse(codeRangePart, NumberStyles.HexNumber);
             }
 
-            // Parse scripts list
-            string[] scriptNames = scriptsPart.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            var scriptNames = scriptsPart.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             var scripts = new List<UnicodeScript>();
-            
+
             foreach (var name in scriptNames)
             {
                 var script = ParseScriptShortName(name);
@@ -466,20 +433,17 @@ public class UnicodeDataBuilder
                     scripts.Add(script);
             }
 
-            if (scripts.Count > 0)
-            {
-                scriptExtensions.Add(new ScriptExtensionEntry(start, end, scripts.ToArray()));
-            }
+            if (scripts.Count > 0) scriptExtensions.Add(new ScriptExtensionEntry(start, end, scripts.ToArray()));
         }
-        
-        // Sort by start code point for binary search
+
         scriptExtensions.Sort((a, b) => a.startCodePoint.CompareTo(b.startCodePoint));
     }
 
-    /// <summary>
-    /// Get the loaded script extensions entries.
-    /// </summary>
-    public IReadOnlyList<ScriptExtensionEntry> GetScriptExtensionEntries() => scriptExtensions;
+
+    public IReadOnlyList<ScriptExtensionEntry> GetScriptExtensionEntries()
+    {
+        return scriptExtensions;
+    }
 
     private static IndicConjunctBreak ParseIndicConjunctBreak(string value)
     {
@@ -570,11 +534,11 @@ public class UnicodeDataBuilder
     {
         int rangeStart, rangeEnd;
 
-        int dotsIndex = codeRangePart.IndexOf("..", StringComparison.Ordinal);
+        var dotsIndex = codeRangePart.IndexOf("..", StringComparison.Ordinal);
         if (dotsIndex >= 0)
         {
-            string startHex = codeRangePart.Substring(0, dotsIndex);
-            string endHex = codeRangePart.Substring(dotsIndex + 2);
+            var startHex = codeRangePart.Substring(0, dotsIndex);
+            var endHex = codeRangePart.Substring(dotsIndex + 2);
 
             rangeStart = ParseHexCodePoint(startHex);
             rangeEnd = ParseHexCodePoint(endHex);
@@ -591,28 +555,25 @@ public class UnicodeDataBuilder
         if (rangeEnd > MaxCodePoint)
             rangeEnd = MaxCodePoint;
 
-        for (int cp = rangeStart; cp <= rangeEnd; cp++)
-        {
-            apply(cp);
-        }
+        for (var cp = rangeStart; cp <= rangeEnd; cp++) apply(cp);
     }
 
-    static string StripComment(string line)
+    private static string StripComment(string line)
     {
-        int hashIndex = line.IndexOf('#');
+        var hashIndex = line.IndexOf('#');
         if (hashIndex >= 0)
             line = line.Substring(0, hashIndex);
         return line.Trim();
     }
 
-    static int ParseHexCodePoint(string hex)
+    private static int ParseHexCodePoint(string hex)
     {
-        if (int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out int value))
+        if (int.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var value))
             return value;
         return -1;
     }
 
-    static BidiClass ParseBidiClass(string value)
+    private static BidiClass ParseBidiClass(string value)
     {
         return value switch
         {
@@ -643,7 +604,7 @@ public class UnicodeDataBuilder
         };
     }
 
-    static JoiningType ParseJoiningType(string value)
+    private static JoiningType ParseJoiningType(string value)
     {
         return value switch
         {
@@ -657,16 +618,15 @@ public class UnicodeDataBuilder
         };
     }
 
-    static JoiningGroup ParseJoiningGroup(string value)
+    private static JoiningGroup ParseJoiningGroup(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             return JoiningGroup.NoJoiningGroup;
 
-        // Convert to PascalCase
-        string[] parts = value.Trim().Split(new[] { ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
+        var parts = value.Trim().Split(new[] { ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
         var sb = new System.Text.StringBuilder();
 
-        foreach (string part in parts)
+        foreach (var part in parts)
         {
             if (part.Length == 0) continue;
             sb.Append(char.ToUpperInvariant(part[0]));
@@ -674,7 +634,7 @@ public class UnicodeDataBuilder
                 sb.Append(part.Substring(1).ToLowerInvariant());
         }
 
-        string enumName = sb.ToString();
+        var enumName = sb.ToString();
 
         if (Enum.TryParse<JoiningGroup>(enumName, out var result))
             return result;
@@ -682,21 +642,18 @@ public class UnicodeDataBuilder
         return JoiningGroup.NoJoiningGroup;
     }
 
-    static UnicodeScript ParseScript(string value)
+    private static UnicodeScript ParseScript(string value)
     {
-        // Remove underscores: "Old_Italic" -> "OldItalic"
-        string enumName = value.Trim().Replace("_", "");
+        var enumName = value.Trim().Replace("_", "");
 
-        if (Enum.TryParse<UnicodeScript>(enumName, ignoreCase: true, out var result))
+        if (Enum.TryParse<UnicodeScript>(enumName, true, out var result))
             return result;
 
         return UnicodeScript.Unknown;
     }
 
-    /// <summary>
-    /// Parse 4-letter script short name (from ScriptExtensions.txt) to UnicodeScript enum.
-    /// </summary>
-    static UnicodeScript ParseScriptShortName(string shortName)
+
+    private static UnicodeScript ParseScriptShortName(string shortName)
     {
         return shortName.Trim() switch
         {
@@ -875,7 +832,7 @@ public class UnicodeDataBuilder
         };
     }
 
-    static LineBreakClass ParseLineBreakClass(string value)
+    private static LineBreakClass ParseLineBreakClass(string value)
     {
         if (Enum.TryParse<LineBreakClass>(value.Trim(), out var result))
             return result;
@@ -887,14 +844,14 @@ public class UnicodeDataBuilder
     {
         var result = new List<RangeEntry>();
 
-        int currentStart = 0;
+        var currentStart = 0;
         var current = props[0];
 
-        for (int cp = 1; cp <= MaxCodePoint; cp++)
+        for (var cp = 1; cp <= MaxCodePoint; cp++)
         {
             var p = props[cp];
 
-            bool same =
+            var same =
                 p.bidiClass == current.bidiClass &&
                 p.joiningType == current.joiningType &&
                 p.joiningGroup == current.joiningGroup;
@@ -902,11 +859,11 @@ public class UnicodeDataBuilder
             if (!same)
             {
                 result.Add(new RangeEntry(
-                    startCodePoint: currentStart,
-                    endCodePoint: cp - 1,
-                    bidiClass: current.bidiClass,
-                    joiningType: current.joiningType,
-                    joiningGroup: current.joiningGroup));
+                    currentStart,
+                    cp - 1,
+                    current.bidiClass,
+                    current.joiningType,
+                    current.joiningGroup));
 
                 currentStart = cp;
                 current = p;
@@ -914,11 +871,11 @@ public class UnicodeDataBuilder
         }
 
         result.Add(new RangeEntry(
-            startCodePoint: currentStart,
-            endCodePoint: MaxCodePoint,
-            bidiClass: current.bidiClass,
-            joiningType: current.joiningType,
-            joiningGroup: current.joiningGroup));
+            currentStart,
+            MaxCodePoint,
+            current.bidiClass,
+            current.joiningType,
+            current.joiningGroup));
 
         return result;
     }
@@ -927,10 +884,10 @@ public class UnicodeDataBuilder
     {
         var result = new List<ScriptRangeEntry>();
 
-        int currentStart = 0;
+        var currentStart = 0;
         var currentScript = props[0].script;
 
-        for (int cp = 1; cp <= MaxCodePoint; cp++)
+        for (var cp = 1; cp <= MaxCodePoint; cp++)
         {
             var script = props[cp].script;
 
@@ -951,10 +908,10 @@ public class UnicodeDataBuilder
     {
         var result = new List<LineBreakRangeEntry>();
 
-        int currentStart = 0;
+        var currentStart = 0;
         var currentLbc = props[0].lineBreakClass;
 
-        for (int cp = 1; cp <= MaxCodePoint; cp++)
+        for (var cp = 1; cp <= MaxCodePoint; cp++)
         {
             var lbc = props[cp].lineBreakClass;
 
@@ -971,55 +928,44 @@ public class UnicodeDataBuilder
         return result;
     }
 
-    /// <summary>
-    /// Build range entries for Extended_Pictographic property.
-    /// Only includes ranges where Extended_Pictographic=true.
-    /// </summary>
+
     public List<ExtendedPictographicRangeEntry> BuildExtendedPictographicRangeEntries()
     {
         var result = new List<ExtendedPictographicRangeEntry>();
 
-        int currentStart = -1;
-        bool inRange = false;
+        var currentStart = -1;
+        var inRange = false;
 
-        for (int cp = 0; cp <= MaxCodePoint; cp++)
+        for (var cp = 0; cp <= MaxCodePoint; cp++)
         {
-            bool ep = props[cp].extendedPictographic;
+            var ep = props[cp].extendedPictographic;
 
             if (ep && !inRange)
             {
-                // Start a new range
                 currentStart = cp;
                 inRange = true;
             }
             else if (!ep && inRange)
             {
-                // End current range
                 result.Add(new ExtendedPictographicRangeEntry(currentStart, cp - 1));
                 inRange = false;
             }
         }
 
-        // Don't forget the last range if it extends to MaxCodePoint
-        if (inRange)
-        {
-            result.Add(new ExtendedPictographicRangeEntry(currentStart, MaxCodePoint));
-        }
+        if (inRange) result.Add(new ExtendedPictographicRangeEntry(currentStart, MaxCodePoint));
 
         return result;
     }
 
-    /// <summary>
-    /// Build range entries for General_Category property.
-    /// </summary>
+
     public List<GeneralCategoryRangeEntry> BuildGeneralCategoryRangeEntries()
     {
         var result = new List<GeneralCategoryRangeEntry>();
 
-        int currentStart = 0;
+        var currentStart = 0;
         var currentGc = props[0].generalCategory;
 
-        for (int cp = 1; cp <= MaxCodePoint; cp++)
+        for (var cp = 1; cp <= MaxCodePoint; cp++)
         {
             var gc = props[cp].generalCategory;
 
@@ -1036,17 +982,15 @@ public class UnicodeDataBuilder
         return result;
     }
 
-    /// <summary>
-    /// Build range entries for East_Asian_Width property.
-    /// </summary>
+
     public List<EastAsianWidthRangeEntry> BuildEastAsianWidthRangeEntries()
     {
         var result = new List<EastAsianWidthRangeEntry>();
 
-        int currentStart = 0;
+        var currentStart = 0;
         var currentEaw = props[0].eastAsianWidth;
 
-        for (int cp = 1; cp <= MaxCodePoint; cp++)
+        for (var cp = 1; cp <= MaxCodePoint; cp++)
         {
             var eaw = props[cp].eastAsianWidth;
 
@@ -1063,23 +1007,20 @@ public class UnicodeDataBuilder
         return result;
     }
 
-    /// <summary>
-    /// Build range entries for Grapheme_Cluster_Break property.
-    /// </summary>
+
     public List<GraphemeBreakRangeEntry> BuildGraphemeBreakRangeEntries()
     {
         var result = new List<GraphemeBreakRangeEntry>();
 
-        int currentStart = 0;
+        var currentStart = 0;
         var currentGcb = props[0].graphemeClusterBreak;
 
-        for (int cp = 1; cp <= MaxCodePoint; cp++)
+        for (var cp = 1; cp <= MaxCodePoint; cp++)
         {
             var gcb = props[cp].graphemeClusterBreak;
 
             if (gcb != currentGcb)
             {
-                // Only add non-Other entries to save space
                 if (currentGcb != GraphemeClusterBreak.Other)
                     result.Add(new GraphemeBreakRangeEntry(currentStart, cp - 1, currentGcb));
                 currentStart = cp;
@@ -1087,30 +1028,26 @@ public class UnicodeDataBuilder
             }
         }
 
-        // Add final range if not Other
         if (currentGcb != GraphemeClusterBreak.Other)
             result.Add(new GraphemeBreakRangeEntry(currentStart, MaxCodePoint, currentGcb));
 
         return result;
     }
 
-    /// <summary>
-    /// Build range entries for Indic_Conjunct_Break property.
-    /// </summary>
+
     public List<IndicConjunctBreakRangeEntry> BuildIndicConjunctBreakRangeEntries()
     {
         var result = new List<IndicConjunctBreakRangeEntry>();
 
-        int currentStart = 0;
+        var currentStart = 0;
         var currentIncb = props[0].indicConjunctBreak;
 
-        for (int cp = 1; cp <= MaxCodePoint; cp++)
+        for (var cp = 1; cp <= MaxCodePoint; cp++)
         {
             var incb = props[cp].indicConjunctBreak;
 
             if (incb != currentIncb)
             {
-                // Only add non-None entries to save space
                 if (currentIncb != IndicConjunctBreak.None)
                     result.Add(new IndicConjunctBreakRangeEntry(currentStart, cp - 1, currentIncb));
                 currentStart = cp;
@@ -1118,27 +1055,23 @@ public class UnicodeDataBuilder
             }
         }
 
-        // Add final range if not None
         if (currentIncb != IndicConjunctBreak.None)
             result.Add(new IndicConjunctBreakRangeEntry(currentStart, MaxCodePoint, currentIncb));
 
         return result;
     }
 
-    /// <summary>
-    /// Build range entries for Default_Ignorable_Code_Point property.
-    /// Only includes ranges where Default_Ignorable_Code_Point=true.
-    /// </summary>
+
     public List<DefaultIgnorableRangeEntry> BuildDefaultIgnorableRangeEntries()
     {
         var result = new List<DefaultIgnorableRangeEntry>();
 
-        int currentStart = -1;
-        bool inRange = false;
+        var currentStart = -1;
+        var inRange = false;
 
-        for (int cp = 0; cp <= MaxCodePoint; cp++)
+        for (var cp = 0; cp <= MaxCodePoint; cp++)
         {
-            bool di = props[cp].defaultIgnorable;
+            var di = props[cp].defaultIgnorable;
 
             if (di && !inRange)
             {
@@ -1152,10 +1085,7 @@ public class UnicodeDataBuilder
             }
         }
 
-        if (inRange)
-        {
-            result.Add(new DefaultIgnorableRangeEntry(currentStart, MaxCodePoint));
-        }
+        if (inRange) result.Add(new DefaultIgnorableRangeEntry(currentStart, MaxCodePoint));
 
         return result;
     }
@@ -1176,18 +1106,18 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] parts = line.Split(';');
+            var parts = line.Split(';');
             if (parts.Length < 2)
                 continue;
 
-            string codePart = parts[0].Trim();
-            string mirrorPart = parts[1].Trim();
+            var codePart = parts[0].Trim();
+            var mirrorPart = parts[1].Trim();
 
             if (codePart.Length == 0 || mirrorPart.Length == 0)
                 continue;
 
-            int codePoint = ParseHexCodePoint(codePart);
-            int mirrored = ParseHexCodePoint(mirrorPart);
+            var codePoint = ParseHexCodePoint(codePart);
+            var mirrored = ParseHexCodePoint(mirrorPart);
 
             if (codePoint < 0 || codePoint > MaxCodePoint)
                 continue;
@@ -1218,18 +1148,18 @@ public class UnicodeDataBuilder
             if (string.IsNullOrWhiteSpace(line))
                 continue;
 
-            string[] parts = line.Split(';');
+            var parts = line.Split(';');
             if (parts.Length < 3)
                 continue;
 
-            string codePart = parts[0].Trim();
-            string pairedPart = parts[1].Trim();
-            string typePart = parts[2].Trim();
+            var codePart = parts[0].Trim();
+            var pairedPart = parts[1].Trim();
+            var typePart = parts[2].Trim();
 
             if (codePart.Length == 0 || typePart.Length == 0)
                 continue;
 
-            int codePoint = ParseHexCodePoint(codePart);
+            var codePoint = ParseHexCodePoint(codePart);
             if (codePoint < 0 || codePoint > MaxCodePoint)
                 continue;
 
@@ -1247,7 +1177,7 @@ public class UnicodeDataBuilder
                     continue;
             }
 
-            BidiPairedBracketType bracketType = typePart.ToUpperInvariant() switch
+            var bracketType = typePart.ToUpperInvariant() switch
             {
                 "O" => BidiPairedBracketType.Open,
                 "C" => BidiPairedBracketType.Close,
@@ -1270,15 +1200,13 @@ public class UnicodeDataBuilder
 
 public static class UnicodeBinaryWriter
 {
-    const uint Magic = 0x554C5452; // "ULTR"
-    const ushort FormatVersion5 = 5;
-    const ushort FormatVersion6 = 6;
-    const ushort FormatVersion7 = 7;
-    const ushort FormatVersion8 = 8;
+    private const uint Magic = 0x554C5452;
+    private const ushort FormatVersion5 = 5;
+    private const ushort FormatVersion6 = 6;
+    private const ushort FormatVersion7 = 7;
+    private const ushort FormatVersion8 = 8;
 
-    /// <summary>
-    /// Write format version 8 (V7 + Default_Ignorable_Code_Point)
-    /// </summary>
+
     public static void WriteBinary(
         string outputPath,
         IReadOnlyList<RangeEntry> ranges,
@@ -1298,20 +1226,17 @@ public static class UnicodeBinaryWriter
         using var stream = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None);
         using var writer = new BinaryWriter(stream);
 
-        // Header placeholder
-        long headerPosition = stream.Position;
+        var headerPosition = stream.Position;
 
         writer.Write(Magic);
         writer.Write(FormatVersion8);
-        writer.Write((ushort)0); // Reserved
+        writer.Write((ushort)0);
         writer.Write((uint)unicodeVersionRaw);
 
-        // Section offsets placeholder (13 sections * 8 bytes)
-        for (int i = 0; i < 26; i++)
+        for (var i = 0; i < 26; i++)
             writer.Write((uint)0);
 
-        // Write Range section
-        long rangeOffset = stream.Position;
+        var rangeOffset = stream.Position;
         writer.Write((uint)ranges.Count);
         foreach (var r in ranges)
         {
@@ -1320,22 +1245,22 @@ public static class UnicodeBinaryWriter
             writer.Write((byte)r.bidiClass);
             writer.Write((byte)r.joiningType);
             writer.Write((byte)r.joiningGroup);
-            writer.Write((byte)0); // padding
+            writer.Write((byte)0);
         }
-        uint rangeLength = (uint)(stream.Position - rangeOffset);
 
-        // Write Mirror section
-        long mirrorOffset = stream.Position;
+        var rangeLength = (uint)(stream.Position - rangeOffset);
+
+        var mirrorOffset = stream.Position;
         writer.Write((uint)mirrors.Count);
         foreach (var m in mirrors)
         {
             writer.Write((uint)m.codePoint);
             writer.Write((uint)m.mirroredCodePoint);
         }
-        uint mirrorLength = (uint)(stream.Position - mirrorOffset);
 
-        // Write Bracket section
-        long bracketOffset = stream.Position;
+        var mirrorLength = (uint)(stream.Position - mirrorOffset);
+
+        var bracketOffset = stream.Position;
         writer.Write((uint)brackets.Count);
         foreach (var b in brackets)
         {
@@ -1346,10 +1271,10 @@ public static class UnicodeBinaryWriter
             writer.Write((byte)0);
             writer.Write((byte)0);
         }
-        uint bracketLength = (uint)(stream.Position - bracketOffset);
 
-        // Write Script section
-        long scriptOffset = stream.Position;
+        var bracketLength = (uint)(stream.Position - bracketOffset);
+
+        var scriptOffset = stream.Position;
         writer.Write((uint)scripts.Count);
         foreach (var s in scripts)
         {
@@ -1360,10 +1285,10 @@ public static class UnicodeBinaryWriter
             writer.Write((byte)0);
             writer.Write((byte)0);
         }
-        uint scriptLength = (uint)(stream.Position - scriptOffset);
 
-        // Write LineBreak section
-        long lineBreakOffset = stream.Position;
+        var scriptLength = (uint)(stream.Position - scriptOffset);
+
+        var lineBreakOffset = stream.Position;
         writer.Write((uint)lineBreaks.Count);
         foreach (var lb in lineBreaks)
         {
@@ -1374,20 +1299,20 @@ public static class UnicodeBinaryWriter
             writer.Write((byte)0);
             writer.Write((byte)0);
         }
-        uint lineBreakLength = (uint)(stream.Position - lineBreakOffset);
 
-        // Write Extended_Pictographic section
-        long extPictOffset = stream.Position;
+        var lineBreakLength = (uint)(stream.Position - lineBreakOffset);
+
+        var extPictOffset = stream.Position;
         writer.Write((uint)extendedPictographics.Count);
         foreach (var ep in extendedPictographics)
         {
             writer.Write((uint)ep.startCodePoint);
             writer.Write((uint)ep.endCodePoint);
         }
-        uint extPictLength = (uint)(stream.Position - extPictOffset);
 
-        // Write GeneralCategory section
-        long gcOffset = stream.Position;
+        var extPictLength = (uint)(stream.Position - extPictOffset);
+
+        var gcOffset = stream.Position;
         writer.Write((uint)generalCategories.Count);
         foreach (var gc in generalCategories)
         {
@@ -1398,10 +1323,10 @@ public static class UnicodeBinaryWriter
             writer.Write((byte)0);
             writer.Write((byte)0);
         }
-        uint gcLength = (uint)(stream.Position - gcOffset);
 
-        // Write EastAsianWidth section
-        long eawOffset = stream.Position;
+        var gcLength = (uint)(stream.Position - gcOffset);
+
+        var eawOffset = stream.Position;
         writer.Write((uint)eastAsianWidths.Count);
         foreach (var eaw in eastAsianWidths)
         {
@@ -1412,10 +1337,10 @@ public static class UnicodeBinaryWriter
             writer.Write((byte)0);
             writer.Write((byte)0);
         }
-        uint eawLength = (uint)(stream.Position - eawOffset);
 
-        // Write Grapheme_Cluster_Break section
-        long gcbOffset = stream.Position;
+        var eawLength = (uint)(stream.Position - eawOffset);
+
+        var gcbOffset = stream.Position;
         writer.Write((uint)graphemeBreaks.Count);
         foreach (var gcb in graphemeBreaks)
         {
@@ -1426,10 +1351,10 @@ public static class UnicodeBinaryWriter
             writer.Write((byte)0);
             writer.Write((byte)0);
         }
-        uint gcbLength = (uint)(stream.Position - gcbOffset);
 
-        // Write Indic_Conjunct_Break section
-        long incbOffset = stream.Position;
+        var gcbLength = (uint)(stream.Position - gcbOffset);
+
+        var incbOffset = stream.Position;
         writer.Write((uint)indicConjunctBreaks.Count);
         foreach (var incb in indicConjunctBreaks)
         {
@@ -1440,39 +1365,36 @@ public static class UnicodeBinaryWriter
             writer.Write((byte)0);
             writer.Write((byte)0);
         }
-        uint incbLength = (uint)(stream.Position - incbOffset);
 
-        // Write Script_Extensions section
-        long scxOffset = stream.Position;
+        var incbLength = (uint)(stream.Position - incbOffset);
+
+        var scxOffset = stream.Position;
         writer.Write((uint)scriptExtensions.Count);
         foreach (var scx in scriptExtensions)
         {
             writer.Write((uint)scx.startCodePoint);
             writer.Write((uint)scx.endCodePoint);
             writer.Write((byte)scx.scripts.Length);
-            foreach (var script in scx.scripts)
-            {
-                writer.Write((byte)script);
-            }
-            // Padding to align to 4 bytes
-            int totalBytes = 8 + 1 + scx.scripts.Length; // start + end + count + scripts
-            int padding = (4 - (totalBytes % 4)) % 4;
-            for (int p = 0; p < padding; p++)
+            foreach (var script in scx.scripts) writer.Write((byte)script);
+
+            var totalBytes = 8 + 1 + scx.scripts.Length;
+            var padding = (4 - totalBytes % 4) % 4;
+            for (var p = 0; p < padding; p++)
                 writer.Write((byte)0);
         }
-        uint scxLength = (uint)(stream.Position - scxOffset);
 
-        // Write Default_Ignorable_Code_Point section
-        long diOffset = stream.Position;
+        var scxLength = (uint)(stream.Position - scxOffset);
+
+        var diOffset = stream.Position;
         writer.Write((uint)defaultIgnorables.Count);
         foreach (var di in defaultIgnorables)
         {
             writer.Write((uint)di.startCodePoint);
             writer.Write((uint)di.endCodePoint);
         }
-        uint diLength = (uint)(stream.Position - diOffset);
 
-        // Go back and write header with offsets
+        var diLength = (uint)(stream.Position - diOffset);
+
         stream.Position = headerPosition;
 
         writer.Write(Magic);
@@ -1508,9 +1430,7 @@ public static class UnicodeBinaryWriter
         writer.Flush();
     }
 
-    /// <summary>
-    /// Write format version 1 (backward compatible, no Script/LineBreak)
-    /// </summary>
+
     public static void WriteBinaryV1(
         string outputPath,
         IReadOnlyList<RangeEntry> ranges,
@@ -1523,18 +1443,17 @@ public static class UnicodeBinaryWriter
 
         const ushort v1 = 1;
 
-        long headerPosition = stream.Position;
+        var headerPosition = stream.Position;
 
         writer.Write(Magic);
         writer.Write(v1);
         writer.Write((ushort)0);
         writer.Write((uint)unicodeVersionRaw);
 
-        // 3 sections
-        for (int i = 0; i < 6; i++)
+        for (var i = 0; i < 6; i++)
             writer.Write((uint)0);
 
-        long rangeOffset = stream.Position;
+        var rangeOffset = stream.Position;
         writer.Write((uint)ranges.Count);
         foreach (var r in ranges)
         {
@@ -1545,18 +1464,20 @@ public static class UnicodeBinaryWriter
             writer.Write((byte)r.joiningGroup);
             writer.Write((byte)0);
         }
-        uint rangeLength = (uint)(stream.Position - rangeOffset);
 
-        long mirrorOffset = stream.Position;
+        var rangeLength = (uint)(stream.Position - rangeOffset);
+
+        var mirrorOffset = stream.Position;
         writer.Write((uint)mirrors.Count);
         foreach (var m in mirrors)
         {
             writer.Write((uint)m.codePoint);
             writer.Write((uint)m.mirroredCodePoint);
         }
-        uint mirrorLength = (uint)(stream.Position - mirrorOffset);
 
-        long bracketOffset = stream.Position;
+        var mirrorLength = (uint)(stream.Position - mirrorOffset);
+
+        var bracketOffset = stream.Position;
         writer.Write((uint)brackets.Count);
         foreach (var b in brackets)
         {
@@ -1567,7 +1488,8 @@ public static class UnicodeBinaryWriter
             writer.Write((byte)0);
             writer.Write((byte)0);
         }
-        uint bracketLength = (uint)(stream.Position - bracketOffset);
+
+        var bracketLength = (uint)(stream.Position - bracketOffset);
 
         stream.Position = headerPosition;
 

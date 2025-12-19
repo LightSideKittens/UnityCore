@@ -9,35 +9,43 @@ public class ColorModifier : GlyphModifier<uint>
     private static ArrayPoolBuffer<uint> buffer;
 
     protected override string AttributeKey => AttributeKeys.Color;
-    protected override Action GetOnGlyphCallback() => OnGlyph;
-    protected override void SetStaticBuffer(ArrayPoolBuffer<uint> buf) => buffer = buf;
+
+    protected override Action GetOnGlyphCallback()
+    {
+        return OnGlyph;
+    }
+
+    protected override void SetStaticBuffer(ArrayPoolBuffer<uint> buf)
+    {
+        buffer = buf;
+    }
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
         if (string.IsNullOrEmpty(parameter))
             return;
 
-        if (!TryParseColor(parameter, out Color32 color))
+        if (!TryParseColor(parameter, out var color))
             return;
 
-        int cpCount = CommonData.Current.codepointCount;
+        var cpCount = CommonData.Current.codepointCount;
         buffer.EnsureCapacity(cpCount);
 
-        uint packed = PackColor(color);
+        var packed = PackColor(color);
         buffer.SetValueRange(start, Math.Min(end, cpCount), packed);
     }
 
-    
+
     private static void OnGlyph()
     {
-        int cluster = UniTextMeshGenerator.currentCluster;
-        uint packed = buffer.GetValueOrDefault(cluster);
+        var cluster = UniTextMeshGenerator.currentCluster;
+        var packed = buffer.GetValueOrDefault(cluster);
         if (packed == 0)
             return;
 
-        Color32 color = UnpackColor(packed);
+        var color = UnpackColor(packed);
 
-        int baseIdx = UniTextMeshGenerator.vertexCount - 4;
+        var baseIdx = UniTextMeshGenerator.vertexCount - 4;
         var colors = UniTextMeshGenerator.Colors;
 
         colors[baseIdx] = color;
@@ -49,7 +57,7 @@ public class ColorModifier : GlyphModifier<uint>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint PackColor(Color32 c)
     {
-        byte a = c.a == 0 ? (byte)1 : c.a;
+        var a = c.a == 0 ? (byte)1 : c.a;
         return ((uint)a << 24) | ((uint)c.r << 16) | ((uint)c.g << 8) | c.b;
     }
 
@@ -65,11 +73,12 @@ public class ColorModifier : GlyphModifier<uint>
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool HasColor(int cluster) => buffer != null && buffer.HasValue(cluster);
+    public static bool HasColor(int cluster)
+    {
+        return buffer != null && buffer.HasValue(cluster);
+    }
 
-    /// <summary>
-    /// Устанавливает цвет для кластера. Используется другими модификаторами (LinkModifier).
-    /// </summary>
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetColor(int cluster, Color32 color)
     {
@@ -79,14 +88,12 @@ public class ColorModifier : GlyphModifier<uint>
         buffer.MarkUsed(cluster);
     }
 
-    /// <summary>
-    /// Устанавливает цвет для диапазона. Используется другими модификаторами (LinkModifier).
-    /// </summary>
+
     public static void SetColorRange(int start, int end, Color32 color)
     {
         if (buffer == null) return;
         buffer.EnsureCapacity(end);
-        uint packed = PackColor(color);
+        var packed = PackColor(color);
         buffer.SetValueRange(start, end, packed);
     }
 
@@ -95,7 +102,7 @@ public class ColorModifier : GlyphModifier<uint>
     {
         if (buffer == null || (uint)cluster >= (uint)buffer.Capacity)
             return new Color32(255, 255, 255, 255);
-        uint packed = buffer.Data[cluster];
+        var packed = buffer.Data[cluster];
         if (packed == 0)
             return new Color32(255, 255, 255, 255);
         return UnpackColor(packed);
@@ -109,18 +116,23 @@ public class ColorModifier : GlyphModifier<uint>
             color = default;
             return false;
         }
-        uint packed = buffer.Data[cluster];
+
+        var packed = buffer.Data[cluster];
         if (packed == 0)
         {
             color = default;
             return false;
         }
+
         color = UnpackColor(packed);
         return true;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload() => buffer = null;
+    private static void OnDomainReload()
+    {
+        buffer = null;
+    }
 
     private static bool TryParseColor(string value, out Color32 color)
     {
@@ -135,26 +147,31 @@ public class ColorModifier : GlyphModifier<uint>
     private static bool TryParseHexColor(string hex, out Color32 color)
     {
         color = new Color32(255, 255, 255, 255);
-        int len = hex.Length - 1;
+        var len = hex.Length - 1;
 
         if (len == 3)
         {
-            byte r = ParseHexDigit(hex[1]);
-            byte g = ParseHexDigit(hex[2]);
-            byte b = ParseHexDigit(hex[3]);
+            var r = ParseHexDigit(hex[1]);
+            var g = ParseHexDigit(hex[2]);
+            var b = ParseHexDigit(hex[3]);
             color = new Color32((byte)(r * 17), (byte)(g * 17), (byte)(b * 17), 255);
             return true;
         }
+
         if (len == 6)
         {
-            color = new Color32(ParseHexByte(hex[1], hex[2]), ParseHexByte(hex[3], hex[4]), ParseHexByte(hex[5], hex[6]), 255);
+            color = new Color32(ParseHexByte(hex[1], hex[2]), ParseHexByte(hex[3], hex[4]),
+                ParseHexByte(hex[5], hex[6]), 255);
             return true;
         }
+
         if (len == 8)
         {
-            color = new Color32(ParseHexByte(hex[1], hex[2]), ParseHexByte(hex[3], hex[4]), ParseHexByte(hex[5], hex[6]), ParseHexByte(hex[7], hex[8]));
+            color = new Color32(ParseHexByte(hex[1], hex[2]), ParseHexByte(hex[3], hex[4]),
+                ParseHexByte(hex[5], hex[6]), ParseHexByte(hex[7], hex[8]));
             return true;
         }
+
         return false;
     }
 
@@ -166,9 +183,12 @@ public class ColorModifier : GlyphModifier<uint>
         return 0;
     }
 
-    private static byte ParseHexByte(char high, char low) => (byte)(ParseHexDigit(high) * 16 + ParseHexDigit(low));
+    private static byte ParseHexByte(char high, char low)
+    {
+        return (byte)(ParseHexDigit(high) * 16 + ParseHexDigit(low));
+    }
 
-    private static readonly Dictionary<string, Color32> namedColors = new(System.StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, Color32> namedColors = new(StringComparer.OrdinalIgnoreCase)
     {
         ["white"] = new Color32(255, 255, 255, 255),
         ["black"] = new Color32(0, 0, 0, 255),
@@ -194,5 +214,7 @@ public class ColorModifier : GlyphModifier<uint>
     };
 
     private static bool TryParseNamedColor(string name, out Color32 color)
-        => namedColors.TryGetValue(name, out color);
+    {
+        return namedColors.TryGetValue(name, out color);
+    }
 }
