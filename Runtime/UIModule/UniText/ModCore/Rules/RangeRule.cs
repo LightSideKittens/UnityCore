@@ -12,7 +12,7 @@ public class RangeRule : IParseRule
         public string parameter;
     }
 
-    public List<Data> data;
+    public List<Data> data = new();
     private Range currentRange;
 
     public int TryMatch(string text, int index, IList<ParsedRange> results)

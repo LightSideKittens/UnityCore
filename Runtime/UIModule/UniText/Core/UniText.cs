@@ -555,7 +555,7 @@ public partial class UniText : MaskableGraphic
     protected override void UpdateGeometry()
     {
     }
-
+    
     public override void Rebuild(CanvasUpdate update)
     {
         base.Rebuild(update);

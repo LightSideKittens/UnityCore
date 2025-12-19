@@ -18,68 +18,25 @@ public class UniTextFontAsset : ScriptableObject
     #region Serialized Fields
 
     [SerializeField] private byte[] fontData;
-
-
     [SerializeField] private int fontDataHash;
-
-
     [SerializeField] private string sourceFontFilePath;
-
-
     [SerializeField] private UniTextAtlasPopulationMode atlasPopulationMode = UniTextAtlasPopulationMode.Dynamic;
-
-
     [SerializeField] internal FaceInfo faceInfo;
-
-
     [SerializeField] internal List<Glyph> glyphTable = new();
-
-
     [SerializeField] internal List<UniTextCharacter> characterTable = new();
-
-
     [SerializeField] internal Texture2D[] atlasTextures;
-
-
     [SerializeField] internal int atlasTextureIndex;
-
-
     [SerializeField] internal int atlasWidth = 1024;
-
-
     [SerializeField] internal int atlasHeight = 1024;
-
-
     [SerializeField] internal int atlasPadding = 9;
-
-
     [SerializeField] internal GlyphRenderMode atlasRenderMode = GlyphRenderMode.SDFAA;
-
-
     [SerializeField] private List<GlyphRect> usedGlyphRects = new();
-
-
     [SerializeField] private List<GlyphRect> freeGlyphRects = new();
-
-
     [SerializeField] internal Material material;
-
-
     [SerializeField] internal List<UniTextFontAsset> fallbackFontAssetTable;
-
-
-    [SerializeField] private bool isMultiAtlasTexturesEnabled = true;
-
-
     [SerializeField] internal bool clearDynamicDataOnBuild = true;
-
-
     [SerializeField] internal float normalStyle = 0f;
-
-
     [SerializeField] internal float boldStyle = 0.75f;
-
-
     [SerializeField] internal float italicStyle = 30f;
 
     #endregion
@@ -627,9 +584,7 @@ public class UniTextFontAsset : ScriptableObject
 
         if (!success || glyph == null)
         {
-            if (isMultiAtlasTexturesEnabled)
-                return TryAddGlyphToNewAtlasTexture(unicode, glyphIndex, out character);
-            return false;
+            return TryAddGlyphToNewAtlasTexture(unicode, glyphIndex, out character);
         }
 
         glyph.atlasIndex = atlasTextureIndex;
@@ -826,16 +781,8 @@ public class UniTextFontAsset : ScriptableObject
 
         if (!success || glyph == null)
         {
-            if (isMultiAtlasTexturesEnabled)
-            {
-                Debug.Log(
-                    $"[UniTextFontAsset] Atlas {atlasTextureIndex} full, creating new atlas for glyph {glyphIndex}. freeRects={freeGlyphRects.Count}, usedRects={usedGlyphRects.Count}");
-                return TryAddGlyphToNewAtlasByIndex(glyphIndex);
-            }
-
-            Debug.LogWarning(
-                $"[UniTextFontAsset] Failed to add glyph {glyphIndex} - atlas full and multi-atlas disabled!");
-            return false;
+            Debug.Log($"[UniTextFontAsset] Atlas {atlasTextureIndex} full, creating new atlas for glyph {glyphIndex}. freeRects={freeGlyphRects.Count}, usedRects={usedGlyphRects.Count}");
+            return TryAddGlyphToNewAtlasByIndex(glyphIndex);
         }
 
         glyph.atlasIndex = atlasTextureIndex;
@@ -1135,16 +1082,9 @@ public class UniTextFontAsset : ScriptableObject
 public class UniTextCharacter
 {
     public uint unicode;
-
-
     public uint glyphIndex;
-
-
     [NonSerialized] public Glyph glyph;
-
-
     [NonSerialized] public UniTextFontAsset fontAsset;
-
     public UniTextCharacter()
     {
     }

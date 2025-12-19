@@ -45,11 +45,7 @@ public sealed class UniTextBuffers
 
     public PositionedGlyph[] positionedGlyphs;
     public int positionedGlyphCount;
-
-
-    public Color32[] glyphColors;
-
-
+    
     public float[] startMargins;
 
     public int peakCodepointCount;
@@ -109,7 +105,7 @@ public sealed class UniTextBuffers
     }
 
 
-    public void ClearAllAttributes()
+    private void ClearAllAttributes()
     {
         if (sharedAttributes == null) return;
         foreach (var attr in sharedAttributes.Values)
@@ -118,7 +114,7 @@ public sealed class UniTextBuffers
     }
 
 
-    public void ReturnAllAttributes()
+    private void ReturnAllAttributes()
     {
         if (sharedAttributes == null) return;
         foreach (var attr in sharedAttributes.Values)
@@ -162,7 +158,6 @@ public sealed class UniTextBuffers
         lines = UniTextArrayPool<TextLine>.Rent(MinLineCapacity);
         orderedRuns = UniTextArrayPool<ShapedRun>.Rent(MinRunCapacity);
         positionedGlyphs = UniTextArrayPool<PositionedGlyph>.Rent(glyphCapacity);
-        glyphColors = UniTextArrayPool<Color32>.Rent(glyphCapacity);
 
         isRented = true;
         Reset();
@@ -173,88 +168,37 @@ public sealed class UniTextBuffers
     {
         if (!isRented) return;
 
-        if (codepoints != null)
-        {
-            UniTextArrayPool<int>.Return(codepoints);
-            codepoints = null;
-        }
-
-        if (bidiLevels != null)
-        {
-            UniTextArrayPool<byte>.Return(bidiLevels);
-            bidiLevels = null;
-        }
-
-        if (bidiParagraphs != null)
-        {
-            UniTextArrayPool<BidiParagraph>.Return(bidiParagraphs);
-            bidiParagraphs = null;
-        }
-
-        if (scripts != null)
-        {
-            UniTextArrayPool<UnicodeScript>.Return(scripts);
-            scripts = null;
-        }
-
-        if (startMargins != null)
-        {
-            startMargins.AsSpan().Clear();
-            UniTextArrayPool<float>.Return(startMargins);
-            startMargins = null;
-        }
-
-        if (runs != null)
-        {
-            UniTextArrayPool<TextRun>.Return(runs);
-            runs = null;
-        }
-
-        if (shapedRuns != null)
-        {
-            UniTextArrayPool<ShapedRun>.Return(shapedRuns);
-            shapedRuns = null;
-        }
-
-        if (shapedGlyphs != null)
-        {
-            UniTextArrayPool<ShapedGlyph>.Return(shapedGlyphs);
-            shapedGlyphs = null;
-        }
-
-        if (glyphDataCache != null)
-        {
-            UniTextArrayPool<CachedGlyphData>.Return(glyphDataCache);
-            glyphDataCache = null;
-        }
-
+        startMargins.AsSpan().Clear();
         hasValidGlyphCache = false;
-        if (lines != null)
-        {
-            UniTextArrayPool<TextLine>.Return(lines);
-            lines = null;
-        }
-
-        if (orderedRuns != null)
-        {
-            UniTextArrayPool<ShapedRun>.Return(orderedRuns);
-            orderedRuns = null;
-        }
-
-        if (positionedGlyphs != null)
-        {
-            UniTextArrayPool<PositionedGlyph>.Return(positionedGlyphs);
-            positionedGlyphs = null;
-        }
-
-        if (glyphColors != null)
-        {
-            UniTextArrayPool<Color32>.Return(glyphColors);
-            glyphColors = null;
-        }
+        
+        UniTextArrayPool<int>.Return(codepoints);
+        UniTextArrayPool<byte>.Return(bidiLevels);
+        UniTextArrayPool<BidiParagraph>.Return(bidiParagraphs);
+        UniTextArrayPool<UnicodeScript>.Return(scripts);
+        UniTextArrayPool<float>.Return(startMargins);
+        UniTextArrayPool<TextRun>.Return(runs);
+        UniTextArrayPool<ShapedRun>.Return(shapedRuns);
+        UniTextArrayPool<ShapedGlyph>.Return(shapedGlyphs);
+        UniTextArrayPool<CachedGlyphData>.Return(glyphDataCache);
+        UniTextArrayPool<TextLine>.Return(lines);
+        UniTextArrayPool<ShapedRun>.Return(orderedRuns);
+        UniTextArrayPool<PositionedGlyph>.Return(positionedGlyphs);
+        
+        codepoints = null;
+        bidiLevels = null;
+        bidiParagraphs = null;
+        scripts = null;
+        startMargins = null;
+        runs = null;
+        shapedRuns = null;
+        shapedGlyphs = null;
+        glyphDataCache = null;
+        lines = null;
+        orderedRuns = null;
+        positionedGlyphs = null;
 
         ReturnAllAttributes();
-
+        
         isRented = false;
     }
 
@@ -280,15 +224,6 @@ public sealed class UniTextBuffers
         orderedRunCount = 0;
         positionedGlyphCount = 0;
         baseDirection = TextDirection.LeftToRight;
-    }
-
-
-    public void LogPeakUsage()
-    {
-        Debug.Log(
-            $"[SharedTextBuffers] Peak usage: codepoints={peakCodepointCount}, runs={peakRunCount}, glyphs={peakGlyphCount}");
-        Debug.Log(
-            $"[SharedTextBuffers] Buffer sizes: codepoints={codepoints?.Length ?? 0}, runs={runs?.Length ?? 0}, glyphs={shapedGlyphs?.Length ?? 0}");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -346,23 +281,10 @@ public sealed class UniTextBuffers
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureLineCapacity(int required)
-    {
-        BufferUtils.EnsureCapacity(ref lines, lineCount, required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureOrderedRunCapacity(int required)
-    {
-        BufferUtils.EnsureCapacity(ref orderedRuns, orderedRunCount, required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsurePositionedGlyphCapacity(int required)
     {
         if (positionedGlyphs.Length < required)
-            BufferUtils.GrowPositionedGlyphBuffers(ref positionedGlyphs, ref glyphColors, positionedGlyphCount,
-                required);
+            BufferUtils.GrowPositionedGlyphBuffers(ref positionedGlyphs, positionedGlyphCount, required);
     }
 }
 

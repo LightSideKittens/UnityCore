@@ -84,7 +84,6 @@ public static class BufferUtils
 
     public static void GrowPositionedGlyphBuffers(
         ref PositionedGlyph[] positionedGlyphs,
-        ref UnityEngine.Color32[] glyphColors,
         int count,
         int required)
     {
@@ -94,10 +93,5 @@ public static class BufferUtils
         positionedGlyphs.AsSpan(0, count).CopyTo(newGlyphs);
         UniTextArrayPool<PositionedGlyph>.Return(positionedGlyphs);
         positionedGlyphs = newGlyphs;
-
-        var newColors = UniTextArrayPool<UnityEngine.Color32>.Rent(newSize);
-        glyphColors.AsSpan(0, count).CopyTo(newColors);
-        UniTextArrayPool<UnityEngine.Color32>.Return(glyphColors);
-        glyphColors = newColors;
     }
 }

@@ -59,7 +59,7 @@ public sealed class TextProcessor
     private static LineBreaker LineBreaker => SharedPipelineComponents.LineBreaker;
     private static TextLayout Layout => SharedPipelineComponents.Layout;
 
-    private readonly UniTextBuffers buf;
+    public readonly UniTextBuffers buf;
     private UniTextFontProvider fontProvider;
     private int baseFontId;
     private float resultWidth;
@@ -307,21 +307,32 @@ public sealed class TextProcessor
     {
         if (!hasValidShapingData) return 0;
 
-        if (hasValidLayoutData && Math.Abs(lastLayoutWidth - settings.MaxWidth) < 0.001f) return resultHeight;
-        
         var buf = this.buf;
+
+        var heightMatches = (float.IsInfinity(lastLayoutMaxHeight) && float.IsInfinity(settings.MaxHeight)) ||
+                            Math.Abs(lastLayoutMaxHeight - settings.MaxHeight) < 0.001f;
+
+        var canReuseLayout = hasValidLayoutData &&
+                             Math.Abs(lastLayoutWidth - settings.MaxWidth) < 0.001f &&
+                             Math.Abs(lastLayoutFontSize - settings.fontSize) < 0.001f &&
+                             heightMatches &&
+                             buf.positionedGlyphCount > 0;
+
+        if (canReuseLayout)
+            return resultHeight;
+
         var glyphScale = buf.GetGlyphScale(settings.fontSize);
         var effectiveMaxWidth = settings.enableWordWrap ? width / glyphScale : TextProcessSettings.FloatMax;
 
         BreakLines(effectiveMaxWidth);
-        LayoutText(settings);
 
-        lastLayoutWidth = settings.MaxWidth;
-        lastLayoutFontSize = settings.fontSize;
-        lastLayoutMaxHeight = settings.MaxHeight;
-        hasValidLayoutData = true;
+        if (fontProvider != null)
+        {
+            fontProvider.GetLineMetrics(settings.fontSize, out var ascender, out var descender, out var lineHeight);
+            return UniTextFontProvider.CalculateTextHeight(ascender, descender, buf.lineCount, lineHeight, settings.LineSpacing);
+        }
 
-        return resultHeight;
+        return buf.lineCount * settings.fontSize * 1.2f;
     }
 
 

@@ -116,11 +116,11 @@ public class UniTextMeshGenerator
             if (fontAsset == null) continue;
 
             var glyphLookup = fontAsset.GlyphLookupTable;
-            var hasMultipleAtlases = fontAsset.AtlasTextures != null && fontAsset.AtlasTextures.Length > 1;
+            var hasMultipleAtlases = fontAsset.AtlasTextures is { Length: > 1 };
 
             if (!hasMultipleAtlases)
             {
-                var mesh = meshProvider?.Invoke() ?? new Mesh();
+                var mesh = meshProvider();
                 GenerateMeshForFont(mesh, glyphIndices, positionedGlyphs, fontAsset);
                 resultBuffer.Add(new UniTextMeshPair(mesh, fontAsset.Material));
             }
@@ -152,7 +152,7 @@ public class UniTextMeshGenerator
                     var atlasIndex = atlasKvp.Key;
                     var atlasIndices = atlasKvp.Value;
 
-                    var mesh = meshProvider?.Invoke() ?? new Mesh();
+                    var mesh = meshProvider();
                     GenerateMeshForFont(mesh, atlasIndices, positionedGlyphs, fontAsset);
                     var atlasMat = fontAsset.material;
                     resultBuffer.Add(new UniTextMeshPair(mesh, atlasMat));
@@ -163,10 +163,8 @@ public class UniTextMeshGenerator
                 glyphsByAtlas.Clear();
             }
         }
-
-        if (buf != null)
-            buf.hasValidGlyphCache = true;
-
+        
+        buf.hasValidGlyphCache = true;
         OnRebuildEnd?.Invoke();
 
         return resultBuffer;
