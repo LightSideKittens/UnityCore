@@ -40,14 +40,14 @@ public class UniTextEditor : Editor
     {
         propertyTree.Dispose();
     }
-
+    
     public override void OnInspectorGUI()
     {
         uniText = (UniText)target;
 
         BeginSection("Text");
         EditorGUILayout.BeginHorizontal();
-        textAreaExpand = EditorGUILayout.ToggleLeft("Expand", textAreaExpand, GUILayout.Width(60));
+        textAreaExpand = EditorGUILayout.Toggle("Expand", textAreaExpand, GUILayout.Width(60));
         EditorGUILayout.LabelField("Size", GUILayout.Width(30));
         textAreaFontSize = EditorGUILayout.IntSlider(textAreaFontSize, 8, 24);
         EditorGUILayout.EndHorizontal();
@@ -89,6 +89,10 @@ public class UniTextEditor : Editor
         propertyTree.EndDraw();
         serializedObject.ApplyModifiedProperties();
         EndSection();
+
+        var style = new GUIStyle(EditorStyles.centeredGreyMiniLabel);
+        EditorGUILayout.LabelField("Made with ❤️ by Light Side", style);
+        EditorGUILayout.Space(-4);
     }
 
     private void BeginSection(string label)
@@ -136,7 +140,7 @@ public class UniTextEditor : Editor
         LoadAlignIcons();
         if (alignButtonStyle == null)
         {
-            alignButtonStyle = new GUIStyle(EditorStyles.miniButton) { fixedHeight = 28 };
+            alignButtonStyle = new GUIStyle(EditorStyles.miniButton) { fixedHeight = 26 };
             alignButtonSelectedStyle = new GUIStyle(alignButtonStyle);
             var selTex = MakeTex(new Color(0.29f, 0.59f, 0.32f));
             var deselTex = MakeTex(new Color(0.3f, 0.3f, 0.38f));
