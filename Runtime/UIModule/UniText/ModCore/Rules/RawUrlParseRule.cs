@@ -2,35 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-
 [Serializable]
-public sealed class LinkParseRule : TagParseRule
+public sealed class RawUrlParseRule : IParseRule
 {
-    public bool parseLinkInRawText = true;
-
-    protected override string TagName => "link";
-    protected override bool HasParameter => true;
-
     private static readonly string[] schemes =
         { "https://", "http://", "ftp://", "ftps://", "mailto:", "tel:", "file://" };
 
     private const string WwwPrefix = "www.";
 
-    public override int TryMatch(string text, int index, IList<ParsedRange> results)
-    {
-        var tagResult = base.TryMatch(text, index, results);
-        if (tagResult > index) return tagResult;
-
-        if (parseLinkInRawText)
-        {
-            var urlResult = TryMatchRawUrl(text, index, results);
-            if (urlResult > index) return urlResult;
-        }
-
-        return index;
-    }
-
-    private int TryMatchRawUrl(string text, int index, IList<ParsedRange> results)
+    public int TryMatch(string text, int index, IList<ParsedRange> results)
     {
         var c = text[index];
 
@@ -64,6 +44,10 @@ public sealed class LinkParseRule : TagParseRule
         return index;
     }
 
+    public void Finalize(int textLength, IList<ParsedRange> results) { }
+
+    public void Reset() { }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool StartsWithScheme(string text, int index, string scheme)
     {
@@ -72,7 +56,7 @@ public sealed class LinkParseRule : TagParseRule
         return MatchesIgnoreCase(text, index, scheme);
     }
 
-    private static int FindUrlEnd(string text, int start)
+    internal static int FindUrlEnd(string text, int start)
     {
         var i = start;
         var parenDepth = 0;
@@ -115,7 +99,7 @@ public sealed class LinkParseRule : TagParseRule
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool IsValidUrlChar(char c)
+    internal static bool IsValidUrlChar(char c)
     {
         if (c >= 'a' && c <= 'z') return true;
         if (c >= 'A' && c <= 'Z') return true;

@@ -19,6 +19,21 @@ public class UniTextEditor : Editor
     {
         propertyTree = PropertyTree.Create(serializedObject);
         modRegistersProp = propertyTree.RootProperty.Children["modRegisters"];
+        propertyTree.OnPropertyValueChanged += OnPropChanged;
+    }
+
+    private void OnPropChanged(InspectorProperty property, int selectionIndex)
+    {
+        if (property.SerializationRoot.Children["modRegisters"] == modRegistersProp)
+        {
+            serializedObject.ApplyModifiedProperties();
+            foreach (var t in targets)
+            {
+                var ut = (UniText)t;
+                ut.ForceFullReinitialization();
+                ut.SetDirtyAll();
+            }
+        }
     }
 
     private void OnDisable()
@@ -51,43 +66,27 @@ public class UniTextEditor : Editor
         BeginSection("Font");
         DrawField("Font Asset", uniText.Font, v => uniText.Font = v);
         DrawField("Font Size", uniText.FontSize, v => uniText.FontSize = v);
-        EndSection();
-
-        BeginSection("Layout");
-        DrawField("Base Direction", uniText.BaseDirection, v => uniText.BaseDirection = v);
-        DrawField("Word Wrap", uniText.EnableWordWrap, v => uniText.EnableWordWrap = v);
-        EndSection();
-
-        BeginSection("Alignment");
-        DrawField("Horizontal", uniText.HorizontalAlignment, v => uniText.HorizontalAlignment = v);
-        DrawField("Vertical", uniText.VerticalAlignment, v => uniText.VerticalAlignment = v);
-        EndSection();
-
-        BeginSection("Auto Size");
-        DrawField("Enable", uniText.EnableAutoSize, v => uniText.EnableAutoSize = v);
+        DrawField("Enable Auto Size", uniText.EnableAutoSize, v => uniText.EnableAutoSize = v);
         if (uniText.EnableAutoSize)
         {
             DrawField("Min Size", uniText.MinFontSize, v => uniText.MinFontSize = v);
             DrawField("Max Size", uniText.MaxFontSize, v => uniText.MaxFontSize = v);
         }
+        DrawField("Color", uniText.color, v => uniText.color = v);
+        EndSection();
+
+        BeginSection("Layout");
+        DrawField("Base Direction", uniText.BaseDirection, v => uniText.BaseDirection = v);
+        DrawField("Word Wrap", uniText.EnableWordWrap, v => uniText.EnableWordWrap = v);
+        EditorGUILayout.Space(4);
+        DrawAlignmentButtons();
         EndSection();
 
         BeginSection("Modifiers");
         serializedObject.Update();
-        EditorGUI.BeginChangeCheck();
         propertyTree.BeginDraw(true);
         modRegistersProp.Draw();
         propertyTree.EndDraw();
-        if (EditorGUI.EndChangeCheck())
-        {
-            serializedObject.ApplyModifiedProperties();
-            foreach (var t in targets)
-            {
-                var ut = (UniText)t;
-                ut.ForceFullReinitialization();
-                ut.SetDirtyAll();
-            }
-        }
         serializedObject.ApplyModifiedProperties();
         EndSection();
     }
@@ -102,6 +101,85 @@ public class UniTextEditor : Editor
     private void EndSection()
     {
         EditorGUILayout.EndVertical();
+    }
+
+    private static GUIContent[] alignIcons;
+    private static GUIStyle alignButtonStyle;
+    private static GUIStyle alignButtonSelectedStyle;
+
+    private void LoadAlignIcons()
+    {
+        if (alignIcons != null) return;
+        var script = MonoScript.FromScriptableObject(this);
+        var scriptPath = AssetDatabase.GetAssetPath(script);
+        var folder = scriptPath.Substring(0, scriptPath.LastIndexOf('/') + 1);
+
+        alignIcons = new GUIContent[6];
+        var names = new[] { "left-align", "h-center-align", "right-align", "top-align", "middle-align", "bottom-align" };
+        for (var i = 0; i < 6; i++)
+        {
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(folder + names[i] + ".png");
+            alignIcons[i] = tex != null ? new GUIContent(tex) : new GUIContent(names[i][0].ToString().ToUpper());
+        }
+    }
+
+    private static Texture2D MakeTex(Color col)
+    {
+        var tex = new Texture2D(1, 1);
+        tex.SetPixel(0, 0, col);
+        tex.Apply();
+        return tex;
+    }
+    
+    private void DrawAlignmentButtons()
+    {
+        LoadAlignIcons();
+        if (alignButtonStyle == null)
+        {
+            alignButtonStyle = new GUIStyle(EditorStyles.miniButton) { fixedHeight = 28 };
+            alignButtonSelectedStyle = new GUIStyle(alignButtonStyle);
+            var selTex = MakeTex(new Color(0.29f, 0.59f, 0.32f));
+            var deselTex = MakeTex(new Color(0.3f, 0.3f, 0.38f));
+            alignButtonSelectedStyle.normal.background = selTex;
+            alignButtonSelectedStyle.hover.background = selTex;
+            alignButtonStyle.normal.background = deselTex;
+            alignButtonStyle.hover.background = deselTex;
+        }
+
+        EditorGUILayout.LabelField("Alignment", EditorStyles.boldLabel);
+        EditorGUILayout.BeginHorizontal();
+
+        EditorGUI.BeginChangeCheck();
+        var h = uniText.HorizontalAlignment;
+        if (DrawAlignButton(0, h == HorizontalAlignment.Left)) h = HorizontalAlignment.Left;
+        if (DrawAlignButton(1, h == HorizontalAlignment.Center)) h = HorizontalAlignment.Center;
+        if (DrawAlignButton(2, h == HorizontalAlignment.Right)) h = HorizontalAlignment.Right;
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(uniText, "Change Horizontal Alignment");
+            uniText.HorizontalAlignment = h;
+        }
+
+        GUILayout.Space(8);
+
+        EditorGUI.BeginChangeCheck();
+        var v = uniText.VerticalAlignment;
+        if (DrawAlignButton(3, v == VerticalAlignment.Top)) v = VerticalAlignment.Top;
+        if (DrawAlignButton(4, v == VerticalAlignment.Middle)) v = VerticalAlignment.Middle;
+        if (DrawAlignButton(5, v == VerticalAlignment.Bottom)) v = VerticalAlignment.Bottom;
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(uniText, "Change Vertical Alignment");
+            uniText.VerticalAlignment = v;
+        }
+        
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private bool DrawAlignButton(int index, bool isSelected)
+    {
+        var style = isSelected ? alignButtonSelectedStyle : alignButtonStyle;
+        return GUILayout.Button(alignIcons[index], style, GUILayout.Width(30));
     }
 
     private void DrawField<T>(string label, T value, Action<T> setter, Func<T> customDraw = null)
@@ -123,6 +201,7 @@ public class UniTextEditor : Editor
             float f => (T)(object)EditorGUILayout.FloatField(label, f),
             bool b => (T)(object)EditorGUILayout.Toggle(label, b),
             Enum e => (T)(object)EditorGUILayout.EnumPopup(label, e),
+            Color c => (T)(object)EditorGUILayout.ColorField(label, c),
             UnityEngine.Object o => (T)(object)EditorGUILayout.ObjectField(label, o, typeof(T), false),
             _ => value
         };
