@@ -193,6 +193,8 @@ MonoBehaviour:
   - rid: 2031797638559170641
   - rid: 2031797638559170654
   - rid: 2031797673101099088
+  maxClickDistance: 50
+  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -326,9 +328,9 @@ RectTransform:
   m_Father: {fileID: 397460097}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: -17, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &82496335
 MonoBehaviour:
@@ -413,10 +415,10 @@ RectTransform:
   - {fileID: 1745089068}
   m_Father: {fileID: 992357367}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 391.5, y: -55.732956}
+  m_SizeDelta: {x: 743, y: 71.46591}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &108888007
 MonoBehaviour:
@@ -514,8 +516,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 130.5, y: -17.4375}
-  m_SizeDelta: {x: 261, y: 34.875}
+  m_AnchoredPosition: {x: 351.5, y: -62.93182}
+  m_SizeDelta: {x: 703, y: 125.86364}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &343527993
 MonoBehaviour:
@@ -537,9 +539,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  text: "\u0623\u0631\u0642\u0627\u0645 \u0639\u0631\u0628\u064A\u0629-\u0647\u0646\u062F\u064A\u0629"
+  text: DFj lfdksjsa;dsfjasdf;als jkdf;alsdjk ;alsdjkd;alsdjf la;djf a;lsdjf la;sdjflask
+    df;lasdjf;al sjf;alsdjf ;ladjslk;ajs dlkfjas;dl jfal;sdkf ;aldjf;lasdjf ;lkjsdf;l
+    djskf;lkasflkja sl;djfa;sld ;alsdj ;lajsfk
   font: {fileID: 11400000, guid: 1ec898e0cfcf3b2438ab0b77f44b7bc2, type: 2}
-  fontSize: 36
+  fontSize: 26
   baseDirection: 2
   enableWordWrap: 1
   horizontalAlignment: 0
@@ -548,6 +552,8 @@ MonoBehaviour:
   minFontSize: 10
   maxFontSize: 72
   modRegisters: []
+  maxClickDistance: 50
+  openLinksInBrowser: 1
   references:
     version: 2
     RefIds: []
@@ -632,7 +638,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &397460097
 RectTransform:
   m_ObjectHideFlags: 0
@@ -646,14 +652,13 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 82496334}
-  - {fileID: 823249996}
   - {fileID: 2032284228}
   m_Father: {fileID: 2035672421}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 3.36, y: 458.40002}
-  m_SizeDelta: {x: 437.13, y: 832}
+  m_AnchoredPosition: {x: -0.000030518, y: 39}
+  m_SizeDelta: {x: 800, y: 832}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &397460098
 MonoBehaviour:
@@ -668,7 +673,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ScrollRect
   m_Content: {fileID: 992357367}
-  m_Horizontal: 1
+  m_Horizontal: 0
   m_Vertical: 1
   m_MovementType: 1
   m_Elasticity: 0.1
@@ -676,7 +681,7 @@ MonoBehaviour:
   m_DecelerationRate: 0.135
   m_ScrollSensitivity: 1
   m_Viewport: {fileID: 82496334}
-  m_HorizontalScrollbar: {fileID: 823249997}
+  m_HorizontalScrollbar: {fileID: 0}
   m_VerticalScrollbar: {fileID: 2032284229}
   m_HorizontalScrollbarVisibility: 2
   m_VerticalScrollbarVisibility: 2
@@ -856,6 +861,8 @@ MonoBehaviour:
   - rid: 2031797638559170654
   - rid: 2031797673101099088
   - rid: 2031797751082647650
+  maxClickDistance: 50
+  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -1105,7 +1112,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &666491814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1126,7 +1133,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  text: "1223232. \u0644\u0644\u0644\u0644\u0644shaping  faksjd fhak<obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log<obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/>lsjdfhaklsjdhafalskjdh
+  text: "1223232. \u0644\u0644\u0644\u0644\u0644shaping  faksjd fhak<obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/>lsjdfhaklsjdhafalskjdh
     aksldjha ksl jfha skldaskjhaskdjh\n  1. \u0644\u0644\u0644\u0644\u0644shaping\n-
     \u0644\u0644\u0644\u0644\u0644shaping  faksjd fhak lsjdfhaklsjdha falskjdh aksldjha
     ksl jfha skldaskjhaskdjh\n  - \u0644\u0644\u0644\u0644\u0644shaping\n      -
@@ -1196,93 +1203,95 @@ MonoBehaviour:
   baseDirection: 2
   enableWordWrap: 1
   horizontalAlignment: 0
-  verticalAlignment: 1
+  verticalAlignment: 0
   enableAutoSize: 0
   minFontSize: 10
   maxFontSize: 72
   modRegisters:
-  - rid: 2031797631429115970
-  - rid: 2031797638559170626
-  - rid: 2031797638559170637
-  - rid: 2031797638559170641
-  - rid: 2031797638559170654
-  - rid: 2031797673101099088
+  - rid: 2031797866453532871
+  - rid: 2031797866453532872
+  - rid: 2031797866453532873
+  - rid: 2031797866453532874
+  - rid: 2031797866453532875
+  - rid: 2031797866453532876
+  maxClickDistance: 50
+  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
-    - rid: 2031797631429115970
+    - rid: 2031797866453532871
       type: {class: ModRegister, ns: , asm: LSCore.UniText}
       data:
         modifier:
-          rid: 2031797631429115971
+          rid: 2031797866453532878
         rule:
-          rid: 2031797631429115972
-    - rid: 2031797631429115971
+          rid: 2031797866453532879
+    - rid: 2031797866453532872
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532880
+        rule:
+          rid: 2031797866453532881
+    - rid: 2031797866453532873
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532882
+        rule:
+          rid: 2031797866453532883
+    - rid: 2031797866453532874
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532884
+        rule:
+          rid: 2031797866453532885
+    - rid: 2031797866453532875
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532886
+        rule:
+          rid: 2031797866453532887
+    - rid: 2031797866453532876
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532888
+        rule:
+          rid: 2031797866453532889
+    - rid: 2031797866453532878
       type: {class: ColorModifier, ns: , asm: LSCore.UniText}
       data: 
-    - rid: 2031797631429115972
+    - rid: 2031797866453532879
       type: {class: ColorParseRule, ns: , asm: LSCore.UniText}
       data: 
-    - rid: 2031797638559170626
-      type: {class: ModRegister, ns: , asm: LSCore.UniText}
-      data:
-        modifier:
-          rid: 2031797638559170629
-        rule:
-          rid: 2031797638559170630
-    - rid: 2031797638559170629
+    - rid: 2031797866453532880
       type: {class: BoldModifier, ns: , asm: LSCore.UniText}
       data: 
-    - rid: 2031797638559170630
+    - rid: 2031797866453532881
       type: {class: BoldParseRule, ns: , asm: LSCore.UniText}
       data: 
-    - rid: 2031797638559170637
-      type: {class: ModRegister, ns: , asm: LSCore.UniText}
-      data:
-        modifier:
-          rid: 2031797638559170638
-        rule:
-          rid: 2031797638559170639
-    - rid: 2031797638559170638
+    - rid: 2031797866453532882
       type: {class: ItalicModifier, ns: , asm: LSCore.UniText}
       data: 
-    - rid: 2031797638559170639
+    - rid: 2031797866453532883
       type: {class: ItalicParseRule, ns: , asm: LSCore.UniText}
       data: 
-    - rid: 2031797638559170641
-      type: {class: ModRegister, ns: , asm: LSCore.UniText}
-      data:
-        modifier:
-          rid: 2031797638559170642
-        rule:
-          rid: 2031797638559170643
-    - rid: 2031797638559170642
+    - rid: 2031797866453532884
       type: {class: UnderlineModifier, ns: , asm: LSCore.UniText}
       data: 
-    - rid: 2031797638559170643
+    - rid: 2031797866453532885
       type: {class: UnderlineParseRule, ns: , asm: LSCore.UniText}
       data: 
-    - rid: 2031797638559170654
-      type: {class: ModRegister, ns: , asm: LSCore.UniText}
-      data:
-        modifier:
-          rid: 2031797638559170655
-        rule:
-          rid: 2031797638559170656
-    - rid: 2031797638559170655
+    - rid: 2031797866453532886
       type: {class: StrikethroughModifier, ns: , asm: LSCore.UniText}
       data: 
-    - rid: 2031797638559170656
+    - rid: 2031797866453532887
       type: {class: StrikethroughParseRule, ns: , asm: LSCore.UniText}
       data: 
-    - rid: 2031797673101099088
-      type: {class: ModRegister, ns: , asm: LSCore.UniText}
-      data:
-        modifier:
-          rid: 2031797673101099089
-        rule:
-          rid: 2031797673101099090
-    - rid: 2031797673101099089
+    - rid: 2031797866453532888
       type: {class: ListModifier, ns: , asm: LSCore.UniText}
       data:
         indentPerLevel: 20
@@ -1293,7 +1302,7 @@ MonoBehaviour:
         - '-'
         - "\xB7"
         orderedStyles: 000000000100000003000000
-    - rid: 2031797673101099090
+    - rid: 2031797866453532889
       type: {class: MarkdownListParseRule, ns: , asm: LSCore.UniText}
       data:
         spacesPerLevel: 2
@@ -1321,8 +1330,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 2110.6, y: -707}
-  m_SizeDelta: {x: 1062.1, y: 1658}
+  m_AnchoredPosition: {x: 2169.9, y: -707}
+  m_SizeDelta: {x: 1136.7, y: 1658}
   m_Pivot: {x: 0.79593015, y: 0.66504484}
 --- !u!1 &744005121
 GameObject:
@@ -1356,10 +1365,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1106683184}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 257, y: -15.732956}
+  m_SizeDelta: {x: 514, y: 31.465912}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &744005123
 MonoBehaviour:
@@ -1381,20 +1390,55 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  text: '- sdfasdfa'
-  font: {fileID: 11400000, guid: cdf5a293da49e2a459e6b5ec953395c4, type: 2}
+  text: '[https://google.com](https://google.com)'
+  font: {fileID: 11400000, guid: 1ec898e0cfcf3b2438ab0b77f44b7bc2, type: 2}
   fontSize: 26
   baseDirection: 2
   enableWordWrap: 1
   horizontalAlignment: 0
-  verticalAlignment: 0
+  verticalAlignment: 1
   enableAutoSize: 0
   minFontSize: 10
   maxFontSize: 72
-  modRegisters: []
+  modRegisters:
+  - rid: 2031797829424906360
+  - rid: 2031797829424906363
+  maxClickDistance: 5
+  openLinksInBrowser: 1
   references:
     version: 2
-    RefIds: []
+    RefIds:
+    - rid: 2031797829424906360
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797829424906361
+        rule:
+          rid: 2031797829424906362
+    - rid: 2031797829424906361
+      type: {class: LinkModifier, ns: , asm: LSCore.UniText}
+      data:
+        linkColor:
+          serializedVersion: 2
+          rgba: 4294214978
+        enableUnderline: 1
+    - rid: 2031797829424906362
+      type: {class: LinkParseRule, ns: , asm: LSCore.UniText}
+      data:
+        parseLinkInRawText: 1
+    - rid: 2031797829424906363
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797829424906364
+        rule:
+          rid: 2031797829424906365
+    - rid: 2031797829424906364
+      type: {class: UnderlineModifier, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797829424906365
+      type: {class: UnderlineParseRule, ns: , asm: LSCore.UniText}
+      data: 
 --- !u!222 &744005124
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1735,168 +1779,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1 &823249995
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 823249996}
-  - component: {fileID: 823249999}
-  - component: {fileID: 823249998}
-  - component: {fileID: 823249997}
-  m_Layer: 5
-  m_Name: Scrollbar Horizontal
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &823249996
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 823249995}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 900265210}
-  m_Father: {fileID: 397460097}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 20}
-  m_Pivot: {x: 0, y: 0}
---- !u!114 &823249997
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 823249995}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2a4db7a114972834c8e4117be1d82ba3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Scrollbar
-  m_Navigation:
-    m_Mode: 3
-    m_WrapAround: 0
-    m_SelectOnUp: {fileID: 0}
-    m_SelectOnDown: {fileID: 0}
-    m_SelectOnLeft: {fileID: 0}
-    m_SelectOnRight: {fileID: 0}
-  m_Transition: 1
-  m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
-    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
-    m_ColorMultiplier: 1
-    m_FadeDuration: 0.1
-  m_SpriteState:
-    m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 0}
-    m_SelectedSprite: {fileID: 0}
-    m_DisabledSprite: {fileID: 0}
-  m_AnimationTriggers:
-    m_NormalTrigger: Normal
-    m_HighlightedTrigger: Highlighted
-    m_PressedTrigger: Pressed
-    m_SelectedTrigger: Selected
-    m_DisabledTrigger: Disabled
-  m_Interactable: 1
-  m_TargetGraphic: {fileID: 1015382251}
-  m_HandleRect: {fileID: 1015382250}
-  m_Direction: 0
-  m_Value: 0
-  m_Size: 1
-  m_NumberOfSteps: 0
-  m_OnValueChanged:
-    m_PersistentCalls:
-      m_Calls: []
---- !u!114 &823249998
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 823249995}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &823249999
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 823249995}
-  m_CullTransparentMesh: 1
---- !u!1 &900265209
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 900265210}
-  m_Layer: 5
-  m_Name: Sliding Area
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &900265210
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 900265209}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1015382250}
-  m_Father: {fileID: 823249996}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -20, y: -20}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &933978094
 GameObject:
   m_ObjectHideFlags: 0
@@ -2008,9 +1890,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 0, y: -831.99994}
+  m_SizeDelta: {x: 0, y: 111.46591}
+  m_Pivot: {x: 0, y: 0}
 --- !u!114 &992357368
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2042,7 +1924,7 @@ MonoBehaviour:
     m_Right: 20
     m_Top: 20
     m_Bottom: 20
-  m_ChildAlignment: 0
+  m_ChildAlignment: 6
   m_Spacing: 20
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 0
@@ -2051,81 +1933,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!1 &1015382249
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1015382250}
-  - component: {fileID: 1015382252}
-  - component: {fileID: 1015382251}
-  m_Layer: 5
-  m_Name: Handle
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1015382250
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1015382249}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 900265210}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 20, y: 20}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1015382251
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1015382249}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1015382252
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1015382249}
-  m_CullTransparentMesh: 1
 --- !u!1 &1106683183
 GameObject:
   m_ObjectHideFlags: 0
@@ -2160,10 +1967,10 @@ RectTransform:
   - {fileID: 744005122}
   m_Father: {fileID: 1745089068}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 277, y: -35.732956}
+  m_SizeDelta: {x: 514, y: 31.465912}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1106683185
 MonoBehaviour:
@@ -2263,8 +2070,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 197.905, y: -57.4375}
-  m_SizeDelta: {x: 355.81, y: 74.875}
+  m_AnchoredPosition: {x: 391.5, y: -102.93182}
+  m_SizeDelta: {x: 743, y: 165.86365}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1230704922
 MonoBehaviour:
@@ -2430,6 +2237,8 @@ MonoBehaviour:
   - rid: 2031797638559170641
   - rid: 2031797638559170654
   - rid: 2031797673101099088
+  maxClickDistance: 50
+  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -2639,8 +2448,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 150.5, y: -37.4375}
-  m_SizeDelta: {x: 261, y: 34.875}
+  m_AnchoredPosition: {x: 371.5, y: -82.93182}
+  m_SizeDelta: {x: 703, y: 125.86365}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1506365442
 MonoBehaviour:
@@ -2739,7 +2548,7 @@ RectTransform:
   m_Father: {fileID: 161588101}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -2856,6 +2665,8 @@ MonoBehaviour:
   - rid: 2031797638559170641
   - rid: 2031797638559170654
   - rid: 2031797673101099088
+  maxClickDistance: 50
+  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -2986,10 +2797,10 @@ RectTransform:
   - {fileID: 1106683184}
   m_Father: {fileID: 108888006}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 277, y: -35.732956}
+  m_SizeDelta: {x: 554, y: 71.46591}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1745089069
 MonoBehaviour:
@@ -3223,6 +3034,8 @@ MonoBehaviour:
   - rid: 2031797638559170641
   - rid: 2031797638559170654
   - rid: 2031797673101099088
+  maxClickDistance: 50
+  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -3356,9 +3169,9 @@ RectTransform:
   m_Father: {fileID: 397460097}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
-  m_AnchorMax: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 20, y: 0}
+  m_SizeDelta: {x: 20, y: -17}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &2032284229
 MonoBehaviour:
@@ -3403,7 +3216,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1583017945}
   m_HandleRect: {fileID: 1583017944}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 0
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -3672,33 +3485,10 @@ MonoBehaviour:
   alternateFont: {fileID: 0}
   testFontSize: 24
   testColor: {r: 1, g: 0, b: 0, a: 1}
-  modifiers:
-  - rid: 2031797829424906313
+  modifiers: []
   references:
     version: 2
-    RefIds:
-    - rid: 2031797829424906313
-      type: {class: ModRegister, ns: , asm: LSCore.UniText}
-      data:
-        modifier:
-          rid: 2031797829424906314
-        rule:
-          rid: 2031797829424906315
-    - rid: 2031797829424906314
-      type: {class: ListModifier, ns: , asm: LSCore.UniText}
-      data:
-        indentPerLevel: 20
-        markerToTextGap: 8
-        bulletMarkerWidth: 24
-        bulletMarkers:
-        - "\u2022"
-        - '-'
-        - "\xB7"
-        orderedStyles: 000000000100000003000000
-    - rid: 2031797829424906315
-      type: {class: MarkdownListParseRule, ns: , asm: LSCore.UniText}
-      data:
-        spacesPerLevel: 2
+    RefIds: []
 --- !u!114 &2035672424
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3747,8 +3537,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 150.5, y: -37.4375}
-  m_SizeDelta: {x: 301, y: 74.875}
+  m_AnchoredPosition: {x: 371.5, y: -82.93182}
+  m_SizeDelta: {x: 743, y: 165.86365}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2130086788
 MonoBehaviour:
