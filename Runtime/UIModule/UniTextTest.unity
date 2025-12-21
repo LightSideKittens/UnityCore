@@ -153,8 +153,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1077.5, y: -111.91521}
-  m_SizeDelta: {x: 2155, y: 223.83041}
+  m_AnchoredPosition: {x: 1077.5, y: -123.83264}
+  m_SizeDelta: {x: 2155, y: 247.66528}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &48367697
 MonoBehaviour:
@@ -177,7 +177,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   text: test testsetes esktjslddkfjsl kjfa;dslkfja;lsdkfj d
-  font: {fileID: 11400000, guid: cdf5a293da49e2a459e6b5ec953395c4, type: 2}
+  fonts: {fileID: 0}
+  appearance: {fileID: 0}
   fontSize: 108.34
   baseDirection: 2
   enableWordWrap: 1
@@ -417,8 +418,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 391.5, y: -55.732956}
-  m_SizeDelta: {x: 743, y: 71.46591}
+  m_AnchoredPosition: {x: 299.15, y: -114.295006}
+  m_SizeDelta: {x: 558.3, y: 188.59001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &108888007
 MonoBehaviour:
@@ -542,7 +543,8 @@ MonoBehaviour:
   text: DFj lfdksjsa;dsfjasdf;als jkdf;alsdjk ;alsdjkd;alsdjf la;djf a;lsdjf la;sdjflask
     df;lasdjf;al sjf;alsdjf ;ladjslk;ajs dlkfjas;dl jfal;sdkf ;aldjf;lasdjf ;lkjsdf;l
     djskf;lkasflkja sl;djfa;sld ;alsdj ;lajsfk
-  font: {fileID: 11400000, guid: 1ec898e0cfcf3b2438ab0b77f44b7bc2, type: 2}
+  fonts: {fileID: 0}
+  appearance: {fileID: 0}
   fontSize: 26
   baseDirection: 2
   enableWordWrap: 1
@@ -657,8 +659,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.000030518, y: 39}
-  m_SizeDelta: {x: 800, y: 832}
+  m_AnchoredPosition: {x: -92.3, y: 39}
+  m_SizeDelta: {x: 615.3, y: 832}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &397460098
 MonoBehaviour:
@@ -844,7 +846,8 @@ MonoBehaviour:
     42]) + ZWNJ \u0645\u06CC\u200C\u0631\u0648\u0645 + ZWJ \u200D\u0628\u200D + bidi
     controls  \u0639\u0631\u0628\u064A \u0645\u0639  EN  \u062F\u0627\u062E\u0644 
     done."
-  font: {fileID: 11400000, guid: cdf5a293da49e2a459e6b5ec953395c4, type: 2}
+  fonts: {fileID: 0}
+  appearance: {fileID: 0}
   fontSize: 28
   baseDirection: 2
   enableWordWrap: 1
@@ -1172,22 +1175,22 @@ MonoBehaviour:
     \u201Elow-high\u201C.\n\nRichText: <i><b>\u063A\u0627\u0645\u0642 \u0639\u0631\u0628\u064A
     \u0645\u0631\u062D\u0628\u0627</b></i>, <i>\u05E9\u05DC\u05D5\u05DD \u05DE\u05D5\u05D3\u05D2\u05E9</i>,
     <color=#FF0000>red English text</color>, <size=150%>\u0646\u0635 \u0645\u0643\u0628\u0631</size>,
-    <u>\u062E\u0637 \u0633\u0641\u0644\u064A</u>.\n\nZWJ forms (for shaping): \u200D\u0628
-    (forced final), \u0628\u200D (forced initial), \u200D\u0628\u200D (forced medial).\nMix
-    with diacritics + ZWJ: \u200D\u0628\u064E\u200D\u060C \u200D\u0646\u0651\u064E\u200D.\nZWNJ
-    breaking join: \u0628\u0627\u200C\u0628\u060C \u0644\u0627\u200C\u0627\u060C
-    \u0645\u06CC\u200C\u0631\u0648\u062F.\n\nBidi controls (LRE/RLE/PDF, LRM/RLM):\nEnglish
-    before  \u0645\u0631\u062D\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645 
-    after [RLE ... PDF].\nLRM/LRM: EN\u200E-\u200Etag, AR\u200F-\u200F\u0639\u0644\u0627\u0645\u0629.\n\nMixed
-    run: \u0645\u0631\u062D\u0628\u0627 (hello) 123 in [EN], \u062B\u0645 \u0646\u0635
-    \u0639\u0631\u0628\u064A\u060C then Hebrew \u05E9\u05DC\u05D5\u05DD, \u05D5\u05D0\u05D6
-    again \u0639\u0631\u0628\u0649.\nRight-to-left with inner English: \u0647\u0630\u0627
-    \"test\" \u062F\u0627\u062E\u0644 \u062C\u0645\u0644\u0629 \u0639\u0631\u0628\u064A\u0629
-    (with brackets).\u061F\n\nBrackets around RTL: (\u0645\u0631\u062D\u0628\u0627)\u060C
-    [\u0633\u0644\u0627\u0645]\u060C {\u0634\u06A9\u0631\u06CC\u06C1} and around
-    mixed [hello \u0645\u0631\u062D\u0628\u0627 123].</color>\n\nEmojis: \U0001F600
-    \U0001F603 \U0001F601 \U0001F602 \U0001F914 \U0001F44D \u2764.\nRTL with emojis:
-    \u0645\u0631\u062D\u0628\u0627 \U0001F600 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\u060C
+    <u><color=#695>test</color> \u062E\u0637 \u0633\u0641\u0644\u064A</u>.\n\nZWJ
+    forms (for shaping): \u200D\u0628 (forced final), \u0628\u200D (forced initial),
+    \u200D\u0628\u200D (forced medial).\nMix with diacritics + ZWJ: \u200D\u0628\u064E\u200D\u060C
+    \u200D\u0646\u0651\u064E\u200D.\nZWNJ breaking join: \u0628\u0627\u200C\u0628\u060C
+    \u0644\u0627\u200C\u0627\u060C \u0645\u06CC\u200C\u0631\u0648\u062F.\n\nBidi
+    controls (LRE/RLE/PDF, LRM/RLM):\nEnglish before  \u0645\u0631\u062D\u0628\u0627
+    \u0628\u0627\u0644\u0639\u0627\u0644\u0645  after [RLE ... PDF].\nLRM/LRM: EN\u200E-\u200Etag,
+    AR\u200F-\u200F\u0639\u0644\u0627\u0645\u0629.\n\nMixed run: \u0645\u0631\u062D\u0628\u0627
+    (hello) 123 in [EN], \u062B\u0645 \u0646\u0635 \u0639\u0631\u0628\u064A\u060C
+    then Hebrew \u05E9\u05DC\u05D5\u05DD, \u05D5\u05D0\u05D6 again \u0639\u0631\u0628\u0649.\nRight-to-left
+    with inner English: \u0647\u0630\u0627 \"test\" \u062F\u0627\u062E\u0644 \u062C\u0645\u0644\u0629
+    \u0639\u0631\u0628\u064A\u0629 (with brackets).\u061F\n\nBrackets around RTL:
+    (\u0645\u0631\u062D\u0628\u0627)\u060C [\u0633\u0644\u0627\u0645]\u060C {\u0634\u06A9\u0631\u06CC\u06C1}
+    and around mixed [hello \u0645\u0631\u062D\u0628\u0627 123].</color>\n\nEmojis:
+    \U0001F600 \U0001F603 \U0001F601 \U0001F602 \U0001F914 \U0001F44D \u2764.\nRTL
+    with emojis: \u0645\u0631\u062D\u0628\u0627 \U0001F600 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\u060C
     \u0631\u0642\u0645 \u0661\u0662\u0663\u060C \u0646\u0635 \U0001F603 \u0645\u062E\u062A\u0644\u0637
     \U0001F44D.\nFamily ZWJ emoji: \U0001F468\u200D\U0001F469\u200D\U0001F467, flags:
     \U0001F1EE\U0001F1F7 (IL), \U0001F1EA\U0001F1F8 (ES), \U0001F1FA\U0001F1F8 (US).\n\nBig
@@ -1198,7 +1201,8 @@ MonoBehaviour:
     42]) + ZWNJ \u0645\u06CC\u200C\u0631\u0648\u0645 + ZWJ \u200D\u0628\u200D + bidi
     controls  \u0639\u0631\u0628\u064A \u0645\u0639  EN  \u062F\u0627\u062E\u0644 
     done."
-  font: {fileID: 11400000, guid: cdf5a293da49e2a459e6b5ec953395c4, type: 2}
+  fonts: {fileID: 11400000, guid: f1fb4d96c5ba77542999c02f0460bb35, type: 2}
+  appearance: {fileID: 11400000, guid: 366a003927a7b1d4c8978732eee3bd40, type: 2}
   fontSize: 28
   baseDirection: 2
   enableWordWrap: 1
@@ -1330,8 +1334,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 2169.9, y: -707}
-  m_SizeDelta: {x: 1136.7, y: 1658}
+  m_AnchoredPosition: {x: 2247.5, y: -719}
+  m_SizeDelta: {x: 1262.7, y: 1658}
   m_Pivot: {x: 0.79593015, y: 0.66504484}
 --- !u!1 &744005121
 GameObject:
@@ -1367,8 +1371,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 257, y: -15.732956}
-  m_SizeDelta: {x: 514, y: 31.465912}
+  m_AnchoredPosition: {x: 126, y: -74.295006}
+  m_SizeDelta: {x: 252, y: 148.59001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &744005123
 MonoBehaviour:
@@ -1390,13 +1394,21 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  text: '[https://google.com](https://google.com)'
-  font: {fileID: 11400000, guid: 1ec898e0cfcf3b2438ab0b77f44b7bc2, type: 2}
+  text: '[Google Markdown link](https://google.com)
+
+
+    https://google.com
+
+
+    <link="https://google.com">Google
+    Tag Link</link>'
+  fonts: {fileID: 11400000, guid: f1fb4d96c5ba77542999c02f0460bb35, type: 2}
+  appearance: {fileID: 11400000, guid: 366a003927a7b1d4c8978732eee3bd40, type: 2}
   fontSize: 26
   baseDirection: 2
   enableWordWrap: 1
   horizontalAlignment: 0
-  verticalAlignment: 1
+  verticalAlignment: 0
   enableAutoSize: 0
   minFontSize: 10
   maxFontSize: 72
@@ -1414,7 +1426,7 @@ MonoBehaviour:
         modifier:
           rid: 2031797829424906361
         rule:
-          rid: 2031797829424906362
+          rid: 2031797866453532930
     - rid: 2031797829424906361
       type: {class: LinkModifier, ns: , asm: LSCore.UniText}
       data:
@@ -1422,10 +1434,6 @@ MonoBehaviour:
           serializedVersion: 2
           rgba: 4294214978
         enableUnderline: 1
-    - rid: 2031797829424906362
-      type: {class: LinkParseRule, ns: , asm: LSCore.UniText}
-      data:
-        parseLinkInRawText: 1
     - rid: 2031797829424906363
       type: {class: ModRegister, ns: , asm: LSCore.UniText}
       data:
@@ -1438,6 +1446,22 @@ MonoBehaviour:
       data: 
     - rid: 2031797829424906365
       type: {class: UnderlineParseRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532930
+      type: {class: CompositeParseRule, ns: , asm: LSCore.UniText}
+      data:
+        rules:
+        - rid: 2031797866453532931
+        - rid: 2031797866453532932
+        - rid: 2031797891964076123
+    - rid: 2031797866453532931
+      type: {class: MarkdownLinkParseRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532932
+      type: {class: RawUrlParseRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797891964076123
+      type: {class: LinkTagParseRule, ns: , asm: LSCore.UniText}
       data: 
 --- !u!222 &744005124
 CanvasRenderer:
@@ -1486,7 +1510,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.80700004}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 27.05, y: -103.65991}
-  m_SizeDelta: {x: 2155, y: -193.04947}
+  m_SizeDelta: {x: 2155, y: -126.42872}
   m_Pivot: {x: 0.50000006, y: 1}
 --- !u!114 &769616321
 MonoBehaviour:
@@ -1613,8 +1637,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 2142, y: -707}
-  m_SizeDelta: {x: 1101.6, y: 1658}
+  m_AnchoredPosition: {x: 3303.9, y: -742}
+  m_SizeDelta: {x: 1148.7, y: 1658}
   m_Pivot: {x: 0.79593015, y: 0.66504484}
 --- !u!222 &793427667
 CanvasRenderer:
@@ -1683,22 +1707,22 @@ MonoBehaviour:
     \u201Elow-high\u201C.\n\nRichText: <i><b>\u063A\u0627\u0645\u0642 \u0639\u0631\u0628\u064A
     \u0645\u0631\u062D\u0628\u0627</b></i>, <i>\u05E9\u05DC\u05D5\u05DD \u05DE\u05D5\u05D3\u05D2\u05E9</i>,
     <color=#FF0000>red English text</color>, <size=150%>\u0646\u0635 \u0645\u0643\u0628\u0631</size>,
-    <u>\u062E\u0637 \u0633\u0641\u0644\u064A</u>.\n\nZWJ forms (for shaping): \u200D\u0628
-    (forced final), \u0628\u200D (forced initial), \u200D\u0628\u200D (forced medial).\nMix
-    with diacritics + ZWJ: \u200D\u0628\u064E\u200D\u060C \u200D\u0646\u0651\u064E\u200D.\nZWNJ
-    breaking join: \u0628\u0627\u200C\u0628\u060C \u0644\u0627\u200C\u0627\u060C
-    \u0645\u06CC\u200C\u0631\u0648\u062F.\n\nBidi controls (LRE/RLE/PDF, LRM/RLM):\nEnglish
-    before  \u0645\u0631\u062D\u0628\u0627 \u0628\u0627\u0644\u0639\u0627\u0644\u0645 
-    after [RLE ... PDF].\nLRM/LRM: EN\u200E-\u200Etag, AR\u200F-\u200F\u0639\u0644\u0627\u0645\u0629.\n\nMixed
-    run: \u0645\u0631\u062D\u0628\u0627 (hello) 123 in [EN], \u062B\u0645 \u0646\u0635
-    \u0639\u0631\u0628\u064A\u060C then Hebrew \u05E9\u05DC\u05D5\u05DD, \u05D5\u05D0\u05D6
-    again \u0639\u0631\u0628\u0649.\nRight-to-left with inner English: \u0647\u0630\u0627
-    \"test\" \u062F\u0627\u062E\u0644 \u062C\u0645\u0644\u0629 \u0639\u0631\u0628\u064A\u0629
-    (with brackets).\u061F\n\nBrackets around RTL: (\u0645\u0631\u062D\u0628\u0627)\u060C
-    [\u0633\u0644\u0627\u0645]\u060C {\u0634\u06A9\u0631\u06CC\u06C1} and around
-    mixed [hello \u0645\u0631\u062D\u0628\u0627 123].</color>\n\nEmojis: \U0001F600
-    \U0001F603 \U0001F601 \U0001F602 \U0001F914 \U0001F44D \u2764.\nRTL with emojis:
-    \u0645\u0631\u062D\u0628\u0627 \U0001F600 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\u060C
+    <u> <color=#000>test</color> \u062E\u0637 \u0633\u0641\u0644\u064A</u>.\n\nZWJ
+    forms (for shaping): \u200D\u0628 (forced final), \u0628\u200D (forced initial),
+    \u200D\u0628\u200D (forced medial).\nMix with diacritics + ZWJ: \u200D\u0628\u064E\u200D\u060C
+    \u200D\u0646\u0651\u064E\u200D.\nZWNJ breaking join: \u0628\u0627\u200C\u0628\u060C
+    \u0644\u0627\u200C\u0627\u060C \u0645\u06CC\u200C\u0631\u0648\u062F.\n\nBidi
+    controls (LRE/RLE/PDF, LRM/RLM):\nEnglish before  \u0645\u0631\u062D\u0628\u0627
+    \u0628\u0627\u0644\u0639\u0627\u0644\u0645  after [RLE ... PDF].\nLRM/LRM: EN\u200E-\u200Etag,
+    AR\u200F-\u200F\u0639\u0644\u0627\u0645\u0629.\n\nMixed run: \u0645\u0631\u062D\u0628\u0627
+    (hello) 123 in [EN], \u062B\u0645 \u0646\u0635 \u0639\u0631\u0628\u064A\u060C
+    then Hebrew \u05E9\u05DC\u05D5\u05DD, \u05D5\u05D0\u05D6 again \u0639\u0631\u0628\u0649.\nRight-to-left
+    with inner English: \u0647\u0630\u0627 \"test\" \u062F\u0627\u062E\u0644 \u062C\u0645\u0644\u0629
+    \u0639\u0631\u0628\u064A\u0629 (with brackets).\u061F\n\nBrackets around RTL:
+    (\u0645\u0631\u062D\u0628\u0627)\u060C [\u0633\u0644\u0627\u0645]\u060C {\u0634\u06A9\u0631\u06CC\u06C1}
+    and around mixed [hello \u0645\u0631\u062D\u0628\u0627 123].</color>\n\nEmojis:
+    \U0001F600 \U0001F603 \U0001F601 \U0001F602 \U0001F914 \U0001F44D \u2764.\nRTL
+    with emojis: \u0645\u0631\u062D\u0628\u0627 \U0001F600 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\u060C
     \u0631\u0642\u0645 \u0661\u0662\u0663\u060C \u0646\u0635 \U0001F603 \u0645\u062E\u062A\u0644\u0637
     \U0001F44D.\nFamily ZWJ emoji: \U0001F468\u200D\U0001F469\u200D\U0001F467, flags:
     \U0001F1EE\U0001F1F7 (IL), \U0001F1EA\U0001F1F8 (ES), \U0001F1FA\U0001F1F8 (US).\n\nBig
@@ -1890,8 +1914,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -831.99994}
-  m_SizeDelta: {x: 0, y: 111.46591}
+  m_AnchoredPosition: {x: 0, y: -832}
+  m_SizeDelta: {x: 0, y: 228.59001}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &992357368
 MonoBehaviour:
@@ -1969,8 +1993,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 277, y: -35.732956}
-  m_SizeDelta: {x: 514, y: 31.465912}
+  m_AnchoredPosition: {x: 146, y: -94.295006}
+  m_SizeDelta: {x: 252, y: 148.59001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1106683185
 MonoBehaviour:
@@ -2221,7 +2245,8 @@ MonoBehaviour:
     42]) + ZWNJ \u0645\u06CC\u200C\u0631\u0648\u0645 + ZWJ \u200D\u0628\u200D + bidi
     controls  \u0639\u0631\u0628\u064A \u0645\u0639  EN  \u062F\u0627\u062E\u0644 
     done."
-  font: {fileID: 11400000, guid: cdf5a293da49e2a459e6b5ec953395c4, type: 2}
+  fonts: {fileID: 0}
+  appearance: {fileID: 0}
   fontSize: 28
   baseDirection: 2
   enableWordWrap: 1
@@ -2649,7 +2674,8 @@ MonoBehaviour:
       m_Calls: []
   text: "dfsj\naskl\ndfjdfddfdddfsjdkf\naslk\nadfa\na\n\nadfa\n\nadfa das\n\nadfadsfasdf\n\nasdfadf\n\nadfadfadsfadf
     adsfj kaldfj asldfj \n\nsdfasdf"
-  font: {fileID: 11400000, guid: cdf5a293da49e2a459e6b5ec953395c4, type: 2}
+  fonts: {fileID: 0}
+  appearance: {fileID: 0}
   fontSize: 70.479996
   baseDirection: 2
   enableWordWrap: 0
@@ -2799,8 +2825,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 277, y: -35.732956}
-  m_SizeDelta: {x: 554, y: 71.46591}
+  m_AnchoredPosition: {x: 146, y: -94.295006}
+  m_SizeDelta: {x: 292, y: 188.59001}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1745089069
 MonoBehaviour:
@@ -3018,7 +3044,8 @@ MonoBehaviour:
     42]) + ZWNJ \u0645\u06CC\u200C\u0631\u0648\u0645 + ZWJ \u200D\u0628\u200D + bidi
     controls  \u0639\u0631\u0628\u064A \u0645\u0639  EN  \u062F\u0627\u062E\u0644 
     done."
-  font: {fileID: 11400000, guid: cdf5a293da49e2a459e6b5ec953395c4, type: 2}
+  fonts: {fileID: 0}
+  appearance: {fileID: 0}
   fontSize: 28
   baseDirection: 2
   enableWordWrap: 0
@@ -3482,7 +3509,7 @@ MonoBehaviour:
   mixedText: "Hello \u0645\u0631\u062D\u0628\u0627 World \u0639\u0627\u0644\u0645"
   longText: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
     tempor incididunt ut labore et dolore magna aliqua.
-  alternateFont: {fileID: 0}
+  alternateFonts: {fileID: 0}
   testFontSize: 24
   testColor: {r: 1, g: 0, b: 0, a: 1}
   modifiers: []
