@@ -169,7 +169,6 @@ public class UniTextPerformanceTest : MonoBehaviour
         var avgDestroyTimePerObject = avgDestroyTimeMs / objectsPerIteration;
         var avgAllocPerObject = avgInstantiateAllocBytes / objectsPerIteration;
 
-        BufferUtils.LogGrowStats();
         UniTextPoolStats.LogAll();
 
         Debug.Log($"═══════════════════════════════════════════════════════════════");

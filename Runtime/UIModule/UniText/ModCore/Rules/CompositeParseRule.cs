@@ -7,7 +7,7 @@ public sealed class CompositeParseRule : IParseRule
 {
     [SerializeReference] public List<IParseRule> rules = new();
 
-    public int TryMatch(string text, int index, IList<ParsedRange> results)
+    public int TryMatch(string text, int index, PooledList<ParsedRange> results)
     {
         for (var i = 0; i < rules.Count; i++)
         {
@@ -21,7 +21,7 @@ public sealed class CompositeParseRule : IParseRule
         return index;
     }
 
-    public void Finalize(int textLength, IList<ParsedRange> results)
+    public void Finalize(int textLength, PooledList<ParsedRange> results)
     {
         for (var i = 0; i < rules.Count; i++)
             rules[i]?.Finalize(textLength, results);

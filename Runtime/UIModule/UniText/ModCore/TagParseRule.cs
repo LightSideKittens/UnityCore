@@ -8,7 +8,7 @@ public abstract class TagParseRule : IParseRule
 {
     private readonly Stack<OpenTag> openTags = new(8);
 
-    private static readonly Dictionary<int, string> parameterCache = new(128);
+    private static readonly FastIntDictionary<string> parameterCache = new(128);
 
     private struct OpenTag
     {
@@ -34,7 +34,7 @@ public abstract class TagParseRule : IParseRule
         openTags.Clear();
     }
 
-    public void Finalize(int textLength, IList<ParsedRange> results)
+    public void Finalize(int textLength, PooledList<ParsedRange> results)
     {
         while (openTags.Count > 0)
         {
@@ -47,7 +47,7 @@ public abstract class TagParseRule : IParseRule
         }
     }
 
-    public virtual int TryMatch(string text, int index, IList<ParsedRange> results)
+    public virtual int TryMatch(string text, int index, PooledList<ParsedRange> results)
     {
         if (text[index] != '<')
             return index;
@@ -66,7 +66,7 @@ public abstract class TagParseRule : IParseRule
         return index;
     }
 
-    private int TryMatchOpenTag(string text, int index, IList<ParsedRange> results)
+    private int TryMatchOpenTag(string text, int index, PooledList<ParsedRange> results)
     {
         var tagNameLen = TagName.Length;
         var minLen = HasParameter ? tagNameLen + 4 : tagNameLen + 2;
@@ -145,7 +145,7 @@ public abstract class TagParseRule : IParseRule
         return -1;
     }
 
-    private int TryMatchCloseTag(string text, int index, IList<ParsedRange> results)
+    private int TryMatchCloseTag(string text, int index, PooledList<ParsedRange> results)
     {
         var tagNameLen = TagName.Length;
 

@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class UnderlineModifier : BaseLineModifier
 {
-    private static ArrayPoolBuffer<byte> buffer;
+    private static byte[] buffer;
 
     protected override string AttributeKey => AttributeKeys.Underline;
 
@@ -14,7 +14,7 @@ public class UnderlineModifier : BaseLineModifier
         return faceInfo.underlineOffset * scale;
     }
 
-    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf)
+    protected override void SetStaticBuffer(byte[] buf)
     {
         buffer = buf;
     }
@@ -22,15 +22,14 @@ public class UnderlineModifier : BaseLineModifier
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasUnderline(int cluster)
     {
-        return buffer != null && buffer.HasFlag(cluster);
+        return buffer.HasFlag(cluster);
     }
 
 
     public static void SetFlagRange(int start, int end)
     {
         if (buffer == null) return;
-        buffer.EnsureCapacity(end);
-        buffer.SetFlagRange(start, end);
+        buffer.SetFlagRange(start, Math.Min(end, buffer.Length));
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

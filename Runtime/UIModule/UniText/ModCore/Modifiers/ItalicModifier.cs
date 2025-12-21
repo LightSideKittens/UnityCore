@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class ItalicModifier : GlyphModifier<byte>
 {
-    private static ArrayPoolBuffer<byte> buffer;
+    private static byte[] buffer;
 
     protected override string AttributeKey => AttributeKeys.Italic;
 
@@ -14,15 +14,15 @@ public class ItalicModifier : GlyphModifier<byte>
         return OnGlyph;
     }
 
-    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf)
+    protected override void SetStaticBuffer(byte[] buf)
     {
         buffer = buf;
     }
 
     protected override void ApplyModifier(int start, int end, string parameter)
     {
-        var cpCount = buffers.codepointCount;
-        buffer.EnsureCapacity(cpCount);
+        var cpCount = buffers.codepoints.count;
+        EnsureBufferCapacity(cpCount);
         buffer.SetFlagRange(start, Math.Min(end, cpCount));
     }
 
@@ -32,7 +32,7 @@ public class ItalicModifier : GlyphModifier<byte>
         if (!buffer.HasFlag(cluster))
             return;
 
-        var italicStyle = UniTextMeshGenerator.currentFontAsset?.ItalicStyle ?? 12f;
+        var italicStyle = UniTextMeshGenerator.currentFont?.ItalicStyle ?? 12f;
         var shearValue = italicStyle * 0.01f;
 
         var baseIdx = UniTextMeshGenerator.vertexCount - 4;
@@ -54,7 +54,7 @@ public class ItalicModifier : GlyphModifier<byte>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsItalic(int cluster)
     {
-        return buffer != null && buffer.HasFlag(cluster);
+        return buffer.HasFlag(cluster);
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

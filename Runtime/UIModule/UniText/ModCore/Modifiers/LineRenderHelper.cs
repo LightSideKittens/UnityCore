@@ -15,7 +15,7 @@ public static class LineRenderHelper
     /// <param name="color">Цвет линии</param>
     public static void DrawLine(float startX, float endX, float baselineY, float lineYOffset, Color32 color)
     {
-        var fontAsset = UniTextMeshGenerator.currentFontAsset;
+        var fontAsset = UniTextMeshGenerator.currentFont;
         if (fontAsset == null)
             return;
 
@@ -191,9 +191,9 @@ public static class LineRenderHelper
     }
 
 
-    private static Glyph GetUnderscoreGlyph(UniTextFontAsset fontAsset)
+    private static Glyph GetUnderscoreGlyph(UniTextFont font)
     {
-        var fontId = fontAsset.GetInstanceID();
+        var fontId = font.GetInstanceID();
 
         if (cachedUnderscoreGlyph != null && cachedFontInstanceId == fontId)
             return cachedUnderscoreGlyph;
@@ -203,7 +203,7 @@ public static class LineRenderHelper
 
         const uint underscoreCodepoint = '_';
 
-        var charTable = fontAsset.CharacterLookupTable;
+        var charTable = font.CharacterLookupTable;
         if (charTable != null && charTable.TryGetValue(underscoreCodepoint, out var character) &&
             character?.glyph != null)
         {
@@ -211,7 +211,7 @@ public static class LineRenderHelper
             return cachedUnderscoreGlyph;
         }
 
-        if (fontAsset.TryAddCharacter(underscoreCodepoint, out var addedChar) && addedChar?.glyph != null)
+        if (font.TryAddCharacter(underscoreCodepoint, out var addedChar) && addedChar?.glyph != null)
             cachedUnderscoreGlyph = addedChar.glyph;
 
         return cachedUnderscoreGlyph;

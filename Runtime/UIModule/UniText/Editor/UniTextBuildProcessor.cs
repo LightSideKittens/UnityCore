@@ -16,7 +16,7 @@ public class UniTextBuildProcessor : IPreprocessBuildWithReport
         foreach (var guid in guids)
         {
             string path = AssetDatabase.GUIDToAssetPath(guid);
-            var fontAsset = AssetDatabase.LoadAssetAtPath<UniTextFontAsset>(path);
+            var fontAsset = AssetDatabase.LoadAssetAtPath<UniTextFont>(path);
 
             if (fontAsset == null || !fontAsset.ClearDynamicDataOnBuild)
                 continue;

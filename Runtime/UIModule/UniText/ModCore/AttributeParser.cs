@@ -1,19 +1,18 @@
 using System;
 using System.Collections.Generic;
-using LSCore;
 
 
 public sealed class AttributeParser
 {
     public readonly List<(IParseRule rule, BaseModifier modifier)> ruleModPairs = new();
-    internal readonly LSList<AttributeSpan> spans = new();
+    internal readonly PooledList<AttributeSpan> spans = new();
 
     private readonly List<IParseRule> allRules = new();
 
-    private readonly LSList<ParsedRange> tempRanges = new(32);
+    private readonly PooledList<ParsedRange> tempRanges = new(32);
 
-    private readonly LSList<(int start, int end)> tagRemovals = new();
-    private readonly LSList<(int start, int end, string insert)> tagInsertions = new();
+    private readonly PooledList<(int start, int end)> tagRemovals = new();
+    private readonly PooledList<(int start, int end, string insert)> tagInsertions = new();
 
     private static readonly RemovalComparerImpl RemovalComparer = new();
     private static readonly InsertionComparerImpl InsertionComparer = new();
@@ -44,7 +43,6 @@ public sealed class AttributeParser
 
     private string cachedCleanTextString;
 
-
     public string CleanText
     {
         get
@@ -73,24 +71,24 @@ public sealed class AttributeParser
                 break;
             }
     }
-
-
+    
     public void InitializeModifiers(UniText uniText)
     {
         for (var i = 0; i < ruleModPairs.Count; i++) ruleModPairs[i].modifier.Initialize(uniText);
     }
-
 
     public void DeinitializeModifiers()
     {
         for (var i = 0; i < ruleModPairs.Count; i++) ruleModPairs[i].modifier.Deinitialize();
     }
 
-    public void DestroyModifiers()
+    public void Release()
     {
-        for (var i = 0; i < ruleModPairs.Count; i++) ruleModPairs[i].modifier.Destroy();
+        spans.Return();
+        tempRanges.Return();
+        tagRemovals.Return();
+        tagInsertions.Return();
     }
-
 
     public void ResetModifiers()
     {
@@ -109,7 +107,7 @@ public sealed class AttributeParser
 
     /// <param name="text">Исходный текст с разметкой</param>
     /// <returns>Clean text без тегов</returns>
-    public string Parse(string text)
+    public void Parse(string text)
     {
         spans.FakeClear();
         tagRemovals.FakeClear();
@@ -123,7 +121,7 @@ public sealed class AttributeParser
         if (string.IsNullOrEmpty(text))
         {
             cleanTextLength = 0;
-            return string.Empty;
+            return;
         }
 
         var index = 0;
@@ -172,8 +170,6 @@ public sealed class AttributeParser
         }
 
         BuildCleanTextAndRemapIndices(text);
-
-        return cachedCleanTextString;
     }
 
     private void ProcessRange(in ParsedRange range)
@@ -268,7 +264,7 @@ public sealed class AttributeParser
         cleanTextLength += str.Length;
     }
 
-    private static void RemapSpanIndices(LSList<AttributeSpan> spans, int[] indexMap, int mapLength,
+    private static void RemapSpanIndices(PooledList<AttributeSpan> spans, int[] indexMap, int mapLength,
         int cleanTextLength)
     {
         for (var i = 0; i < spans.Count; i++)

@@ -15,12 +15,12 @@ public class RangeRule : IParseRule
     public List<Data> data = new();
     private Range currentRange;
 
-    public int TryMatch(string text, int index, IList<ParsedRange> results)
+    public int TryMatch(string text, int index, PooledList<ParsedRange> results)
     {
         return index;
     }
 
-    public void Finalize(int textLength, IList<ParsedRange> results)
+    public void Finalize(int textLength, PooledList<ParsedRange> results)
     {
         for (var i = 0; i < data.Count; i++)
         {

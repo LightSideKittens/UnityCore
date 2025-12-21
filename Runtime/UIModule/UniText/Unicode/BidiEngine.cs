@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using LSCore;
 
 public enum BidiParagraphDirection
 {
@@ -156,6 +155,12 @@ public sealed class BidiEngine
         }
     }
 
+    private sealed class BracketPairComparer : IComparer<BracketPair>
+    {
+        public static readonly BracketPairComparer Instance = new();
+        public int Compare(BracketPair a, BracketPair b) => a.openIndex.CompareTo(b.openIndex);
+    }
+
     private const int MaxExplicitLevel = 125;
 
     public static int processCallCount;
@@ -167,21 +172,21 @@ public sealed class BidiEngine
     [ThreadStatic] private static EmbeddingState[]? embeddingStack;
     [ThreadStatic] private static BidiClass[]? bidiClasses;
     [ThreadStatic] private static BidiClass[]? originalBidiClasses;
-    [ThreadStatic] private static LSList<BidiParagraph>? paragraphs;
-    [ThreadStatic] private static LSList<LevelRun>? levelRuns;
-    [ThreadStatic] private static LSList<IsolatingRunSequence>? sequences;
-    [ThreadStatic] private static LSList<int>? seqIndices;
-    [ThreadStatic] private static LSList<BracketPair>? bracketPairs;
-    [ThreadStatic] private static LSList<int>? openStack;
-    [ThreadStatic] private static LSList<int>? isolatePairStack;
+    [ThreadStatic] private static PooledList<BidiParagraph>? paragraphs;
+    [ThreadStatic] private static PooledList<LevelRun>? levelRuns;
+    [ThreadStatic] private static PooledList<IsolatingRunSequence>? sequences;
+    [ThreadStatic] private static PooledList<int>? seqIndices;
+    [ThreadStatic] private static PooledList<BracketPair>? bracketPairs;
+    [ThreadStatic] private static PooledList<int>? openStack;
+    [ThreadStatic] private static PooledList<int>? isolatePairStack;
     [ThreadStatic] private static Stack<int>? isolateStack;
 
     [ThreadStatic] private static byte[]? levelsBuffer;
     [ThreadStatic] private static BidiParagraph[]? paragraphsResultBuffer;
     [ThreadStatic] private static int[]? matchingIsolateBuffer;
     [ThreadStatic] private static int[]? runIndexByPositionBuffer;
-    [ThreadStatic] private static LSList<LevelRun>? bracketLevelRuns;
-    [ThreadStatic] private static LSList<IsolatingRunSequence>? bracketSequences;
+    [ThreadStatic] private static PooledList<LevelRun>? bracketLevelRuns;
+    [ThreadStatic] private static PooledList<IsolatingRunSequence>? bracketSequences;
 
     [ThreadStatic] private static int[]? sequenceIndicesBuffer;
     [ThreadStatic] private static int sequenceIndicesCount;
@@ -191,12 +196,12 @@ public sealed class BidiEngine
     [ThreadStatic] private static bool[]? visitedBuffer;
 
     private static EmbeddingState[] EmbeddingStack => embeddingStack ??= new EmbeddingState[MaxExplicitLevel + 2];
-    private static LSList<BidiParagraph> ParagraphsBuffer => paragraphs ??= new LSList<BidiParagraph>(4);
-    private static LSList<IsolatingRunSequence> SequencesBuffer => sequences ??= new LSList<IsolatingRunSequence>(16);
-    private static LSList<int> SeqIndicesBuffer => seqIndices ??= new LSList<int>(128);
-    private static LSList<BracketPair> BracketPairsBuffer => bracketPairs ??= new LSList<BracketPair>(32);
-    private static LSList<int> OpenStackBuffer => openStack ??= new LSList<int>(32);
-    private static LSList<int> IsolatePairStackBuffer => isolatePairStack ??= new LSList<int>(32);
+    private static PooledList<BidiParagraph> ParagraphsBuffer => paragraphs ??= new PooledList<BidiParagraph>(4);
+    private static PooledList<IsolatingRunSequence> SequencesBuffer => sequences ??= new PooledList<IsolatingRunSequence>(16);
+    private static PooledList<int> SeqIndicesBuffer => seqIndices ??= new PooledList<int>(128);
+    private static PooledList<BracketPair> BracketPairsBuffer => bracketPairs ??= new PooledList<BracketPair>(32);
+    private static PooledList<int> OpenStackBuffer => openStack ??= new PooledList<int>(32);
+    private static PooledList<int> IsolatePairStackBuffer => isolatePairStack ??= new PooledList<int>(32);
     private static Stack<int> IsolateStackBuffer => isolateStack ??= new Stack<int>(16);
 
     private static void EnsureBidiClassesCapacity(int length)
@@ -245,15 +250,15 @@ public sealed class BidiEngine
         }
     }
 
-    private static LSList<LevelRun> BracketLevelRunsBuffer => bracketLevelRuns ??= new LSList<LevelRun>(32);
+    private static PooledList<LevelRun> BracketLevelRunsBuffer => bracketLevelRuns ??= new PooledList<LevelRun>(32);
 
-    private static LSList<IsolatingRunSequence> BracketSequencesBuffer =>
-        bracketSequences ??= new LSList<IsolatingRunSequence>(16);
+    private static PooledList<IsolatingRunSequence> BracketSequencesBuffer =>
+        bracketSequences ??= new PooledList<IsolatingRunSequence>(16);
 
-    [ThreadStatic] private static LSList<(int runStart, int runEnd, byte level)>? tempLevelRuns;
+    [ThreadStatic] private static PooledList<(int runStart, int runEnd, byte level)>? tempLevelRuns;
 
-    private static LSList<(int runStart, int runEnd, byte level)> TempLevelRunsBuffer
-        => tempLevelRuns ??= new LSList<(int, int, byte)>(32);
+    private static PooledList<(int runStart, int runEnd, byte level)> TempLevelRunsBuffer
+        => tempLevelRuns ??= new PooledList<(int, int, byte)>(32);
 
     private static int[] SequenceIndicesBuffer
     {
@@ -420,62 +425,6 @@ public sealed class BidiEngine
         }
     }
 
-    public static void ReorderLine(byte[] levels, int start, int end, Span<int> indexMap)
-    {
-        var length = end - start + 1;
-        if (length <= 0)
-            return;
-
-        for (var i = 0; i < length; i++)
-            indexMap[i] = start + i;
-
-        byte maxLevel = 0;
-        var minOddLevel = byte.MaxValue;
-
-        for (var i = start; i <= end; i++)
-        {
-            var level = levels[i];
-            if (level > maxLevel)
-                maxLevel = level;
-            if ((level & 1) != 0 && level < minOddLevel)
-                minOddLevel = level;
-        }
-
-        if (minOddLevel == byte.MaxValue)
-            return;
-
-        for (var level = maxLevel; level >= minOddLevel; level--)
-        {
-            var i = 0;
-            while (i < length)
-                if (levels[indexMap[i]] >= level)
-                {
-                    var runStart = i;
-                    var runEnd = i + 1;
-                    while (runEnd < length && levels[indexMap[runEnd]] >= level)
-                        runEnd++;
-
-                    var left = runStart;
-                    var right = runEnd - 1;
-                    while (left < right)
-                    {
-                        (indexMap[left], indexMap[right]) = (indexMap[right], indexMap[left]);
-                        left++;
-                        right--;
-                    }
-
-                    i = runEnd;
-                }
-                else
-                {
-                    i++;
-                }
-
-            if (level == 0)
-                break;
-        }
-    }
-
     private BidiResult ProcessInternal(ReadOnlySpan<int> codePoints, byte? forcedParagraphLevel, bool copyLevels = true)
     {
         processCallCount++;
@@ -574,7 +523,7 @@ public sealed class BidiEngine
     }
 
 
-    private LSList<IsolatingRunSequence> BuildIsolatingRunSequences(
+    private PooledList<IsolatingRunSequence> BuildIsolatingRunSequences(
         int start,
         int end,
         byte paragraphBaseLevel,
@@ -670,7 +619,13 @@ public sealed class BidiEngine
                 {
                     var currentRun = levelRuns[currentRunIndex];
 
-                    for (var i = currentRun.runStart; i <= currentRun.runEnd; i++) SeqIndicesBuffer.Add(i);
+                    var runLen = currentRun.runEnd - currentRun.runStart + 1;
+                    SeqIndicesBuffer.EnsureCapacity(SeqIndicesBuffer.buffer.count + runLen);
+                    var seqArr = SeqIndicesBuffer.buffer.data;
+                    var seqIdx = SeqIndicesBuffer.buffer.count;
+                    for (var i = currentRun.runStart; i <= currentRun.runEnd; i++)
+                        seqArr[seqIdx++] = i;
+                    SeqIndicesBuffer.buffer.count = seqIdx;
 
                     var lastIndex = currentRun.runEnd;
                     var lastBc = bidiClasses[lastIndex];
@@ -747,131 +702,11 @@ public sealed class BidiEngine
         }
     }
 
-    private void ResolveNeutralTypesForParagraph(
-        int start,
-        int end,
-        byte paragraphBaseLevel,
-        BidiClass[] bidiClasses,
-        byte[] levels)
+    private void ResolveNeutralTypesWithSequences(PooledList<IsolatingRunSequence> sequences, BidiClass[] bidiClasses)
     {
-        if (start > end)
-            return;
-
-        var sequences = BuildIsolatingRunSequences(
-            start,
-            end,
-            paragraphBaseLevel,
-            bidiClasses,
-            levels);
-
-        if (sequences.Count == 0)
-            return;
-
-        foreach (var seq in sequences)
+        for (var i = 0; i < sequences.Count; i++)
         {
-            var indices = GetSequenceIndices(seq);
-            var seqLen = indices.Length;
-            if (seqLen == 0)
-                continue;
-
-            var k = 0;
-
-            while (k < seqLen)
-            {
-                var idx = indices[k];
-                var bc = bidiClasses[idx];
-
-                if (!IsNeutralType(bc))
-                {
-                    k++;
-                    continue;
-                }
-
-                var neutralStartPos = k;
-                var neutralEndPos = k;
-
-                while (neutralEndPos + 1 < seqLen &&
-                       IsNeutralType(bidiClasses[indices[neutralEndPos + 1]]))
-                    neutralEndPos++;
-
-                var sGroup = BidiClass.OtherNeutral;
-                var sGroupFromActualChar = false;
-
-                for (var pos = neutralStartPos - 1; pos >= 0; pos--)
-                {
-                    var j = indices[pos];
-                    var t = bidiClasses[j];
-
-                    if (t == BidiClass.BoundaryNeutral)
-                        continue;
-
-                    var strong = MapToStrongTypeForNeutrals(t);
-                    if (strong != BidiClass.OtherNeutral)
-                    {
-                        sGroup = strong;
-                        sGroupFromActualChar = true;
-                        break;
-                    }
-                }
-
-                if (sGroup == BidiClass.OtherNeutral) sGroup = MapToStrongTypeForNeutrals(seq.sos);
-
-                var eGroup = BidiClass.OtherNeutral;
-                var eGroupFromActualChar = false;
-
-                for (var pos = neutralEndPos + 1; pos < seqLen; pos++)
-                {
-                    var j = indices[pos];
-                    var t = bidiClasses[j];
-
-                    if (t == BidiClass.BoundaryNeutral)
-                        continue;
-
-                    var strong = MapToStrongTypeForNeutrals(t);
-                    if (strong != BidiClass.OtherNeutral)
-                    {
-                        eGroup = strong;
-                        eGroupFromActualChar = true;
-                        break;
-                    }
-                }
-
-                if (eGroup == BidiClass.OtherNeutral) eGroup = MapToStrongTypeForNeutrals(seq.eos);
-
-                BidiClass resolvedType;
-                if (sGroup != BidiClass.OtherNeutral &&
-                    sGroup == eGroup)
-                    resolvedType = sGroup;
-                else
-                    resolvedType = (seq.level & 1) == 0
-                        ? BidiClass.LeftToRight
-                        : BidiClass.RightToLeft;
-
-                var isolateControlsCanChange = sGroupFromActualChar && eGroupFromActualChar;
-
-                for (var pos = neutralStartPos; pos <= neutralEndPos; pos++)
-                {
-                    var j = indices[pos];
-                    var t = bidiClasses[j];
-
-                    if (t == BidiClass.BoundaryNeutral)
-                        continue;
-
-                    if (!isolateControlsCanChange && IsIsolateControl(t))
-                        continue;
-
-                    if (IsNeutralType(t)) bidiClasses[j] = resolvedType;
-                }
-
-                k = neutralEndPos + 1;
-            }
-        }
-    }
-
-    private void ResolveNeutralTypesWithSequences(LSList<IsolatingRunSequence> sequences, BidiClass[] bidiClasses)
-    {
-        foreach (var seq in sequences)
-        {
+            ref var seq = ref sequences[i];
             var indices = GetSequenceIndices(seq);
             var seqLen = indices.Length;
             if (seqLen == 0)
@@ -1134,7 +969,7 @@ public sealed class BidiEngine
         if (BracketPairsBuffer.Count == 0)
             return;
 
-        BracketPairsBuffer.Sort((a, b) => a.openIndex.CompareTo(b.openIndex));
+        BracketPairsBuffer.Sort(0, BracketPairsBuffer.Count, BracketPairComparer.Instance);
 
         var embeddingDir = GetStrongTypeFromLevel(sequence.level);
 
@@ -1289,37 +1124,17 @@ public sealed class BidiEngine
         return openCp == UnicodeData.LeftParenthesis && closeCp == UnicodeData.RightParenthesis;
     }
 
-    private void ResolveWeakTypesForParagraph(
-        int start,
-        int end,
-        byte paragraphBaseLevel,
-        BidiClass[] bidiClasses,
-        byte[] levels)
+    private void ResolveWeakTypesWithSequences(PooledList<IsolatingRunSequence> sequences, BidiClass[] bidiClasses)
     {
-        if (start > end)
-            return;
-
-        var sequences = BuildIsolatingRunSequences(
-            start,
-            end,
-            paragraphBaseLevel,
-            bidiClasses,
-            levels);
-
-        if (sequences.Count == 0)
-            return;
-
-        foreach (var seq in sequences) ResolveWeakTypesForSequence(seq, bidiClasses);
-    }
-
-    private void ResolveWeakTypesWithSequences(LSList<IsolatingRunSequence> sequences, BidiClass[] bidiClasses)
-    {
-        foreach (var seq in sequences)
+        for (var i = 0; i < sequences.Count; i++)
+        {
+            ref var seq = ref sequences[i];
             ResolveWeakTypesForSequence(seq, bidiClasses);
+        }
     }
 
     private void ResolveWeakTypesForSequence(
-        IsolatingRunSequence seq,
+        in IsolatingRunSequence seq,
         BidiClass[] bidiClasses)
     {
         var indices = GetSequenceIndices(seq);
@@ -1837,14 +1652,14 @@ public sealed class BidiEngine
             : BidiClass.RightToLeft;
     }
 
-    private LSList<IsolatingRunSequence> BuildIsolatingRunSequencesForParagraph(
+    private PooledList<IsolatingRunSequence> BuildIsolatingRunSequencesForParagraph(
         int start,
         int end,
         byte paragraphBaseLevel,
         BidiClass[] bidiClasses,
         byte[] levels,
-        LSList<LevelRun> levelRuns,
-        LSList<IsolatingRunSequence> sequences,
+        PooledList<LevelRun> levelRuns,
+        PooledList<IsolatingRunSequence> sequences,
         int[] matchingIsolate,
         int[] runIndexByPosition)
     {
@@ -1923,8 +1738,13 @@ public sealed class BidiEngine
             {
                 visited[currentRun] = true;
                 var run = levelRuns[currentRun];
+                var runLen = run.endIndex - run.startIndex + 1;
+                SeqIndicesBuffer.EnsureCapacity(SeqIndicesBuffer.buffer.count + runLen);
+                var seqArr = SeqIndicesBuffer.buffer.data;
+                var seqIdx = SeqIndicesBuffer.buffer.count;
                 for (var i = run.startIndex; i <= run.endIndex; i++)
-                    SeqIndicesBuffer.Add(i);
+                    seqArr[seqIdx++] = i;
+                SeqIndicesBuffer.buffer.count = seqIdx;
 
                 var succ = nextRun[currentRun];
                 if (succ < 0 || visited[succ])
@@ -1976,7 +1796,7 @@ public sealed class BidiEngine
         BidiClass[] bidiClasses,
         int length,
         byte givenBaseLevel,
-        LSList<BidiParagraph> paragraphs)
+        PooledList<BidiParagraph> paragraphs)
     {
         var paraStart = 0;
         for (var i = 0; i < length; i++)
@@ -2113,7 +1933,7 @@ public sealed class BidiEngine
         return (paragraphBaseLevel & 1) == 1;
     }
 
-    private static void BuildParagraphs(BidiClass[] bidiClasses, int length, LSList<BidiParagraph> paragraphs)
+    private static void BuildParagraphs(BidiClass[] bidiClasses, int length, PooledList<BidiParagraph> paragraphs)
     {
         var paraStart = 0;
         for (var i = 0; i < length; i++)
@@ -2203,7 +2023,7 @@ public sealed class BidiEngine
         int end,
         byte[] levels,
         BidiClass[] bidiClasses,
-        LSList<LevelRun> levelRuns)
+        PooledList<LevelRun> levelRuns)
     {
         levelRuns.FakeClear();
 

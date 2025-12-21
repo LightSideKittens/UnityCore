@@ -29,16 +29,16 @@ public static class HarfBuzzFontValidator
     }
 
 
-    public static uint GetGlyphIndex(UniTextFontAsset fontAsset, uint codepoint)
+    public static uint GetGlyphIndex(UniTextFont font, uint codepoint)
     {
-        if (fontAsset == null || !fontAsset.HasFontData)
+        if (font == null || !font.HasFontData)
             return 0;
 
-        var instanceId = fontAsset.GetInstanceID();
+        var instanceId = font.GetInstanceID();
 
         if (!fontCache.TryGetValue(instanceId, out var cache))
         {
-            cache = CreateCache(fontAsset);
+            cache = CreateCache(font);
             if (cache == null)
                 return 0;
             fontCache[instanceId] = cache;
@@ -50,9 +50,9 @@ public static class HarfBuzzFontValidator
         return 0;
     }
 
-    private static ValidatorCache CreateCache(UniTextFontAsset fontAsset)
+    private static ValidatorCache CreateCache(UniTextFont font)
     {
-        var fontData = fontAsset.FontData;
+        var fontData = font.FontData;
         if (fontData == null || fontData.Length == 0)
             return null;
 
@@ -73,7 +73,7 @@ public static class HarfBuzzFontValidator
         catch (Exception ex)
         {
             UnityEngine.Debug.LogError(
-                $"[HarfBuzzFontValidator] Failed to create cache for {fontAsset.name}: {ex.Message}");
+                $"[HarfBuzzFontValidator] Failed to create cache for {font.name}: {ex.Message}");
             return null;
         }
     }

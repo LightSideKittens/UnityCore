@@ -13,13 +13,14 @@ public enum UniTextAtlasPopulationMode
 
 
 [Serializable]
-public class UniTextFontAsset : ScriptableObject
+public class UniTextFont : ScriptableObject
 {
     #region Serialized Fields
 
     [SerializeField] private byte[] fontData;
     [SerializeField] private int fontDataHash;
     [SerializeField] private string sourceFontFilePath;
+    [SerializeField] private float italicStyle = 30;
     [SerializeField] private UniTextAtlasPopulationMode atlasPopulationMode = UniTextAtlasPopulationMode.Dynamic;
     [SerializeField] internal FaceInfo faceInfo;
     [SerializeField] internal List<Glyph> glyphTable = new();
@@ -32,12 +33,7 @@ public class UniTextFontAsset : ScriptableObject
     [SerializeField] internal GlyphRenderMode atlasRenderMode = GlyphRenderMode.SDFAA;
     [SerializeField] private List<GlyphRect> usedGlyphRects = new();
     [SerializeField] private List<GlyphRect> freeGlyphRects = new();
-    [SerializeField] internal Material material;
-    [SerializeField] internal List<UniTextFontAsset> fallbackFontAssetTable;
     [SerializeField] internal bool clearDynamicDataOnBuild = true;
-    [SerializeField] internal float normalStyle = 0f;
-    [SerializeField] internal float boldStyle = 0.75f;
-    [SerializeField] internal float italicStyle = 30f;
 
     #endregion
 
@@ -71,6 +67,7 @@ public class UniTextFontAsset : ScriptableObject
 
     public byte[] FontData => fontData;
 
+    public float ItalicStyle => italicStyle;
 
     public int FontDataHash => fontDataHash;
 
@@ -137,13 +134,6 @@ public class UniTextFontAsset : ScriptableObject
     public GlyphRenderMode AtlasRenderMode => atlasRenderMode;
 
 
-    public Material Material
-    {
-        get => material;
-        set => material = value;
-    }
-
-
     public Dictionary<uint, Glyph> GlyphLookupTable
     {
         get
@@ -166,59 +156,6 @@ public class UniTextFontAsset : ScriptableObject
     }
 
 
-    public List<UniTextFontAsset> FallbackFontAssetTable
-    {
-        get => fallbackFontAssetTable;
-        set => fallbackFontAssetTable = value;
-    }
-
-
-    public float NormalStyle
-    {
-        get => normalStyle;
-        set
-        {
-            normalStyle = value;
-            UpdateMaterialProperties();
-        }
-    }
-
-
-    public float BoldStyle
-    {
-        get => boldStyle;
-        set
-        {
-            boldStyle = value;
-            UpdateMaterialProperties();
-        }
-    }
-
-
-    public float ItalicStyle
-    {
-        get => italicStyle;
-        set => italicStyle = value;
-    }
-
-    #endregion
-
-    #region Material Properties
-
-    private static readonly int s_WeightNormal = Shader.PropertyToID("_WeightNormal");
-    private static readonly int s_WeightBold = Shader.PropertyToID("_WeightBold");
-
-
-    public void UpdateMaterialProperties()
-    {
-        if (material == null) return;
-
-        material.SetFloat(s_WeightNormal, normalStyle);
-        material.SetFloat(s_WeightBold, boldStyle);
-    }
-
-    private static readonly int s_MainTex = Shader.PropertyToID("_MainTex");
-
     #endregion
 
     #region Initialization
@@ -228,7 +165,6 @@ public class UniTextFontAsset : ScriptableObject
         InitializeGlyphLookupDictionary();
         InitializeCharacterLookupDictionary();
         AddSynthesizedCharacters();
-        UpdateMaterialProperties();
     }
 
     private void InitializeGlyphLookupDictionary()
@@ -269,7 +205,7 @@ public class UniTextFontAsset : ScriptableObject
             if (!characterLookupDictionary.ContainsKey(unicode))
             {
                 characterLookupDictionary.Add(unicode, character);
-                character.fontAsset = this;
+                character.Font = this;
 
                 if (glyphLookupDictionary.TryGetValue(character.glyphIndex, out var glyph))
                     character.glyph = glyph;
@@ -436,7 +372,7 @@ public class UniTextFontAsset : ScriptableObject
     }
 
 
-    public bool HasCharacter(uint unicode, bool searchFallbacks = false, bool tryAddCharacter = false)
+    public bool HasCharacter(uint unicode, bool tryAddCharacter = false)
     {
         if (characterLookupDictionary == null)
             ReadFontAssetDefinition();
@@ -447,14 +383,6 @@ public class UniTextFontAsset : ScriptableObject
         if (tryAddCharacter && atlasPopulationMode == UniTextAtlasPopulationMode.Dynamic)
             if (TryAddCharacterInternal(unicode, out _))
                 return true;
-
-        if (searchFallbacks && fallbackFontAssetTable != null)
-            for (var i = 0; i < fallbackFontAssetTable.Count; i++)
-            {
-                var fallback = fallbackFontAssetTable[i];
-                if (fallback != null && fallback.HasCharacter(unicode, true, tryAddCharacter))
-                    return true;
-            }
 
         return false;
     }
@@ -529,7 +457,7 @@ public class UniTextFontAsset : ScriptableObject
         {
             character = new UniTextCharacter(unicode, glyphIndex)
             {
-                fontAsset = this,
+                Font = this,
                 glyph = existingGlyph
             };
             characterTable.Add(character);
@@ -595,7 +523,7 @@ public class UniTextFontAsset : ScriptableObject
 
         character = new UniTextCharacter(unicode, glyphIndex)
         {
-            fontAsset = this,
+            Font = this,
             glyph = glyph
         };
         characterTable.Add(character);
@@ -647,7 +575,7 @@ public class UniTextFontAsset : ScriptableObject
 
         character = new UniTextCharacter(unicode, glyphIndex)
         {
-            fontAsset = this,
+            Font = this,
             glyph = glyph
         };
         characterTable.Add(character);
@@ -910,7 +838,7 @@ public class UniTextFontAsset : ScriptableObject
 
     #region Static Creation Methods
 
-    public static UniTextFontAsset CreateFontAsset(byte[] fontBytes, int samplingPointSize = 90, int atlasPadding = 9,
+    public static UniTextFont CreateFontAsset(byte[] fontBytes, int samplingPointSize = 90, int atlasPadding = 9,
         GlyphRenderMode renderMode = GlyphRenderMode.SDFAA, int atlasWidth = 1024, int atlasHeight = 1024)
     {
         if (fontBytes == null || fontBytes.Length == 0)
@@ -925,8 +853,9 @@ public class UniTextFontAsset : ScriptableObject
             return null;
         }
 
-        var fontAsset = CreateInstance<UniTextFontAsset>();
+        var fontAsset = CreateInstance<UniTextFont>();
         fontAsset.fontData = fontBytes;
+        fontAsset.fontDataHash = ComputeFontDataHash(fontBytes);
         fontAsset.faceInfo = FontEngine.GetFaceInfo();
         fontAsset.atlasPopulationMode = UniTextAtlasPopulationMode.Dynamic;
         fontAsset.atlasWidth = atlasWidth;
@@ -939,21 +868,6 @@ public class UniTextFontAsset : ScriptableObject
             : TextureFormat.Alpha8;
         var texture = new Texture2D(1, 1, texFormat, false);
         fontAsset.atlasTextures = new[] { texture };
-
-        var shader = Shader.Find("UniText/Mobile/Distance Field");
-        if (shader == null)
-            shader = Shader.Find("GUI/Text Shader");
-
-        if (shader != null)
-        {
-            fontAsset.material = new Material(shader);
-            fontAsset.material.SetTexture("_MainTex", texture);
-            fontAsset.material.SetFloat("_TextureWidth", atlasWidth);
-            fontAsset.material.SetFloat("_TextureHeight", atlasHeight);
-            fontAsset.material.SetFloat("_GradientScale", atlasPadding + 1);
-            fontAsset.material.SetFloat(s_WeightNormal, fontAsset.normalStyle);
-            fontAsset.material.SetFloat(s_WeightBold, fontAsset.boldStyle);
-        }
 
         fontAsset.freeGlyphRects = new List<GlyphRect> { new(0, 0, atlasWidth - 1, atlasHeight - 1) };
         fontAsset.usedGlyphRects = new List<GlyphRect>();
@@ -1049,9 +963,15 @@ public class UniTextFontAsset : ScriptableObject
     #region Editor Support
 
 #if UNITY_EDITOR
-
+    
     [SerializeField] public Font sourceFont;
+    
+    public event Action Changed;
 
+    private void OnValidate()
+    {
+        Changed?.Invoke();
+    }
 
     public void SetFontData(byte[] data)
     {
@@ -1075,6 +995,11 @@ public class UniTextFontAsset : ScriptableObject
 #endif
 
     #endregion
+
+    public int ComputeFontDataHash()
+    {
+        return fontDataHash = ComputeFontDataHash(fontData);
+    }
 }
 
 
@@ -1084,7 +1009,7 @@ public class UniTextCharacter
     public uint unicode;
     public uint glyphIndex;
     [NonSerialized] public Glyph glyph;
-    [NonSerialized] public UniTextFontAsset fontAsset;
+    [NonSerialized] public UniTextFont Font;
     public UniTextCharacter()
     {
     }
@@ -1095,10 +1020,10 @@ public class UniTextCharacter
         this.glyphIndex = glyphIndex;
     }
 
-    public UniTextCharacter(uint unicode, UniTextFontAsset fontAsset, Glyph glyph)
+    public UniTextCharacter(uint unicode, UniTextFont font, Glyph glyph)
     {
         this.unicode = unicode;
-        this.fontAsset = fontAsset;
+        this.Font = font;
         this.glyph = glyph;
         glyphIndex = glyph?.index ?? 0;
     }

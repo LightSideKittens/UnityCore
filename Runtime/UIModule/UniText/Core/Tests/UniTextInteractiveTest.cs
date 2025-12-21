@@ -15,7 +15,7 @@ public class UniTextInteractiveTest : MonoBehaviour
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 
     [Header("Font Tests")] [SerializeField]
-    private UniTextFontAsset alternateFont;
+    private UniTextFonts alternateFonts;
 
     [SerializeField] private float testFontSize = 24f;
 
@@ -24,7 +24,7 @@ public class UniTextInteractiveTest : MonoBehaviour
 
     [SerializeReference] public List<ModRegister> modifiers = new();
 
-    private UniTextFontAsset originalFont;
+    private UniTextFonts originalFonts;
     private float originalFontSize;
     private Color originalColor;
     private string originalText;
@@ -43,7 +43,7 @@ public class UniTextInteractiveTest : MonoBehaviour
     private void SaveOriginalState()
     {
         if (target == null) return;
-        originalFont = target.Font;
+        originalFonts = target.Fonts;
         originalFontSize = target.FontSize;
         originalColor = target.color;
         originalText = target.Text;
@@ -128,18 +128,18 @@ public class UniTextInteractiveTest : MonoBehaviour
     [ContextMenu("Font/Set Alternate Font")]
     public void SetAlternateFont()
     {
-        if (target == null || alternateFont == null) return;
+        if (target == null || alternateFonts == null) return;
         SaveOriginalState();
-        target.Font = alternateFont;
-        Log($"Font changed to: {alternateFont.name}");
+        target.Fonts = alternateFonts;
+        Log($"Fonts changed to: {alternateFonts.name}");
     }
 
     [ContextMenu("Font/Restore Original Font")]
     public void RestoreOriginalFont()
     {
-        if (target == null || originalFont == null) return;
-        target.Font = originalFont;
-        Log($"Font restored to: {originalFont.name}");
+        if (target == null || originalFonts == null) return;
+        target.Fonts = originalFonts;
+        Log($"Fonts restored to: {originalFonts.name}");
     }
 
     [ContextMenu("Font/Set Test Font Size")]
@@ -482,7 +482,8 @@ public class UniTextInteractiveTest : MonoBehaviour
                   $"UniText State: {target.name}\n" +
                   $"───────────────────────────────────────\n" +
                   $"Text: \"{target.Text}\" ({target.Text?.Length ?? 0} chars)\n" +
-                  $"Font: {(target.Font != null ? target.Font.name : "null")}\n" +
+                  $"Fonts: {(target.Fonts != null ? target.Fonts.name : "null")}\n" +
+                  $"MainFont: {(target.MainFont != null ? target.MainFont.name : "null")}\n" +
                   $"FontSize: {target.FontSize}\n" +
                   $"Color: {target.color}\n" +
                   $"Direction: {target.BaseDirection}\n" +
@@ -519,7 +520,7 @@ public class UniTextInteractiveTest : MonoBehaviour
     public void RestoreAll()
     {
         if (target == null) return;
-        if (originalFont != null) target.Font = originalFont;
+        if (originalFonts != null) target.Fonts = originalFonts;
         if (originalFontSize > 0) target.FontSize = originalFontSize;
         target.color = originalColor;
         if (originalText != null) target.Text = originalText;

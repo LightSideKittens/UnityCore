@@ -9,8 +9,11 @@ using Buffer = HarfBuzzSharp.Buffer;
 public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 {
     private ShapedGlyph[] outputBuffer = new ShapedGlyph[256];
-    private readonly Dictionary<int, HarfBuzzFontCache> fontCache = new();
+    private readonly FastIntDictionary<HarfBuzzFontCache> fontCache = new();
     private readonly Stack<Buffer> bufferPool = new(4);
+
+    private int lastFontId = -1;
+    private int lastFontHash;
 
 
     private sealed class HarfBuzzFontCache : IDisposable
@@ -46,8 +49,8 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 
     public void Dispose()
     {
-        foreach (var entry in fontCache.Values)
-            entry.Dispose();
+        foreach (var kvp in fontCache)
+            kvp.Value.Dispose();
         fontCache.Clear();
 
         while (bufferPool.Count > 0)
@@ -174,9 +177,7 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
                     codepoint = mirrored;
             }
 
-            uint glyphIndex = 0;
-            float advance = 0;
-            fontProvider?.TryGetGlyphInfo(fontId, codepoint, out glyphIndex, out advance);
+            fontProvider.TryGetGlyphInfo(fontId, codepoint, out var glyphIndex, out var advance);
 
             var outputIndex = isRtl ? length - 1 - i : i;
             outputBuffer[outputIndex] = new ShapedGlyph

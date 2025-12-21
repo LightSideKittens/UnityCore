@@ -126,11 +126,6 @@ public sealed class HybridShapingEngine : IShapingEngine
         complexEngine = harfBuzzEngine ?? simpleEngine;
     }
 
-    public HybridShapingEngine()
-    {
-        complexEngine = simpleEngine;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ShapingResult Shape(
         ReadOnlySpan<int> codepoints,

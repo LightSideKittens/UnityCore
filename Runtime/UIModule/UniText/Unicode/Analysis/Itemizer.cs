@@ -34,10 +34,7 @@ public sealed class Itemizer
 
         for (var i = 1; i < codepoints.Length; i++)
         {
-            var needBreak = false;
-
-            if (bidiLevels[i] != currentLevel)
-                needBreak = true;
+            bool needBreak = bidiLevels[i] != currentLevel;
 
             if (scripts[i] != currentScript)
                 needBreak = true;

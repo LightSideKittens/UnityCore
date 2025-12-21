@@ -23,13 +23,3 @@ public readonly ref struct ShapingResult
         TotalAdvance = totalAdvance;
     }
 }
-
-
-public struct GlyphMetrics
-{
-    public float width;
-    public float height;
-    public float bearingX;
-    public float bearingY;
-    public float advance;
-}

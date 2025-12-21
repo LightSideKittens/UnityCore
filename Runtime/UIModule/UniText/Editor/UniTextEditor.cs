@@ -2,6 +2,7 @@ using System;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 [CustomEditor(typeof(UniText))]
 [CanEditMultipleObjects]
@@ -30,8 +31,7 @@ public class UniTextEditor : Editor
             foreach (var t in targets)
             {
                 var ut = (UniText)t;
-                ut.ForceFullReinitialization();
-                ut.SetDirtyAll();
+                ut.SetDirty(UniText.DirtyFlags.All);
             }
         }
     }
@@ -47,8 +47,9 @@ public class UniTextEditor : Editor
 
         BeginSection("Text");
         EditorGUILayout.BeginHorizontal();
-        textAreaExpand = EditorGUILayout.Toggle("Expand", textAreaExpand, GUILayout.Width(60));
-        EditorGUILayout.LabelField("Size", GUILayout.Width(30));
+        EditorGUILayout.LabelField("Expand", GUILayout.Width(50));
+        textAreaExpand = EditorGUILayout.Toggle(textAreaExpand, GUILayout.Width(25));
+        EditorGUILayout.LabelField("Size", GUILayout.Width(50));
         textAreaFontSize = EditorGUILayout.IntSlider(textAreaFontSize, 8, 24);
         EditorGUILayout.EndHorizontal();
 
@@ -64,7 +65,8 @@ public class UniTextEditor : Editor
         EndSection();
 
         BeginSection("Font");
-        DrawField("Font Asset", uniText.Font, v => uniText.Font = v);
+        DrawField("Fonts", uniText.Fonts, v => uniText.Fonts = v);
+        DrawField("Appearance", uniText.Appearance, v => uniText.Appearance = v);
         DrawField("Font Size", uniText.FontSize, v => uniText.FontSize = v);
         DrawField("Enable Auto Size", uniText.EnableAutoSize, v => uniText.EnableAutoSize = v);
         if (uniText.EnableAutoSize)
@@ -199,15 +201,22 @@ public class UniTextEditor : Editor
 
     private T DrawValue<T>(string label, T value)
     {
-        return value switch
+        var newValue = value switch
         {
             string s => (T)(object)EditorGUILayout.TextField(label, s),
             float f => (T)(object)EditorGUILayout.FloatField(label, f),
             bool b => (T)(object)EditorGUILayout.Toggle(label, b),
             Enum e => (T)(object)EditorGUILayout.EnumPopup(label, e),
             Color c => (T)(object)EditorGUILayout.ColorField(label, c),
-            UnityEngine.Object o => (T)(object)EditorGUILayout.ObjectField(label, o, typeof(T), false),
-            _ => value
+            _ => default,
         };
+
+        if (typeof(Object).IsAssignableFrom(typeof(T)))
+        {
+            var obj = value as Object;
+            return (T)(object)EditorGUILayout.ObjectField(label, obj, typeof(T), false);
+        }
+        
+        return newValue;
     }
 }

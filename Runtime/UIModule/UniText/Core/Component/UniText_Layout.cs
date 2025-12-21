@@ -4,15 +4,18 @@ using UnityEngine.UI;
 
 public partial class UniText : ILayoutElement
 {
-    void ILayoutElement.CalculateLayoutInputHorizontal()
-    {
-        EnsureShapingForLayout();
-    }
+    private float cachedPreferredWidth;
+    private float cachedPreferredHeight;
+    private float cachedPreferredHeightForWidth;
+    private bool hasValidPreferredWidth;
+    private bool hasValidPreferredHeight;
+    private float layoutCachedFontSize;
+    private float layoutCachedWidth;
+    private bool hasValidLayoutCache;
+    
+    void ILayoutElement.CalculateLayoutInputHorizontal() => EnsureShapingForLayout();
 
-    void ILayoutElement.CalculateLayoutInputVertical()
-    {
-        
-    }
+    void ILayoutElement.CalculateLayoutInputVertical() { }
 
     public float minWidth => 0;
 
@@ -21,14 +24,14 @@ public partial class UniText : ILayoutElement
         get
         {
             if (string.IsNullOrEmpty(text)) return 0;
-            if (processor == null) return 0;
+            if (textProcessor == null) return 0;
 
             if (hasValidPreferredWidth) return cachedPreferredWidth;
 
             EnsureShapingForLayout();
 
             var glyphScale = GetGlyphScaleForLayout();
-            cachedPreferredWidth = Mathf.Ceil(processor.GetMaxLineWidth() * glyphScale);
+            cachedPreferredWidth = Mathf.Ceil(textProcessor.GetMaxLineWidth() * glyphScale);
             hasValidPreferredWidth = true;
             return cachedPreferredWidth;
         }
@@ -43,7 +46,7 @@ public partial class UniText : ILayoutElement
         get
         {
             if (string.IsNullOrEmpty(text)) return 0;
-            if (processor == null) return 0;
+            if (textProcessor == null) return 0;
 
             var width = rectTransform.rect.width;
             if (width <= 0) return 0;
@@ -63,7 +66,7 @@ public partial class UniText : ILayoutElement
                 else
                 {
                     var tempSettings = CreateProcessSettingsForLayout(width);
-                    effectiveFontSize = processor.FindOptimalFontSize(minFontSize, maxFontSize, width,
+                    effectiveFontSize = textProcessor.FindOptimalFontSize(minFontSize, maxFontSize, width,
                         TextProcessSettings.FloatMax, tempSettings);
 
                     layoutCachedFontSize = effectiveFontSize;
@@ -87,7 +90,7 @@ public partial class UniText : ILayoutElement
                 VerticalAlignment = verticalAlignment
             };
 
-            cachedPreferredHeight = processor.GetHeightForWidth(width, settings);
+            cachedPreferredHeight = textProcessor.GetHeightForWidth(width, settings);
             cachedPreferredHeightForWidth = width;
             hasValidPreferredHeight = true;
             return cachedPreferredHeight;
@@ -102,17 +105,12 @@ public partial class UniText : ILayoutElement
     private void EnsureShapingForLayout()
     {
         if (string.IsNullOrEmpty(text)) return;
+        if (!ValidateAndInitialize()) return;
+        if (textProcessor.HasValidShapingData) return;
 
-        EnsureInitialized();
-
-        if (processor == null || fontProvider == null) return;
-        
-        if (processor.HasValidShapingData) return;
-
-        var textSpan = TryParseAttributes();
-
+        var textSpan = ParseOrGetParsedAttributes();
         var settings = CreateProcessSettingsForLayout(TextProcessSettings.FloatMax);
-        processor.EnsureShaping(textSpan, settings);
+        textProcessor.EnsureShaping(textSpan, settings);
     }
 
 

@@ -6,7 +6,7 @@ using UnityEngine;
 [Serializable]
 public class ColorModifier : GlyphModifier<uint>
 {
-    private static ArrayPoolBuffer<uint> buffer;
+    private static uint[] buffer;
 
     protected override string AttributeKey => AttributeKeys.Color;
 
@@ -15,7 +15,7 @@ public class ColorModifier : GlyphModifier<uint>
         return OnGlyph;
     }
 
-    protected override void SetStaticBuffer(ArrayPoolBuffer<uint> buf)
+    protected override void SetStaticBuffer(uint[] buf)
     {
         buffer = buf;
     }
@@ -28,8 +28,8 @@ public class ColorModifier : GlyphModifier<uint>
         if (!TryParseColor(parameter, out var color))
             return;
 
-        var cpCount = buffers.codepointCount;
-        buffer.EnsureCapacity(cpCount);
+        var cpCount = buffers.codepoints.count;
+        EnsureBufferCapacity(cpCount);
 
         var packed = PackColor(color);
         buffer.SetValueRange(start, Math.Min(end, cpCount), packed);
@@ -75,34 +75,31 @@ public class ColorModifier : GlyphModifier<uint>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasColor(int cluster)
     {
-        return buffer != null && buffer.HasValue(cluster);
+        return buffer.HasValue(cluster);
     }
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void SetColor(int cluster, Color32 color)
     {
-        if (buffer == null) return;
-        buffer.EnsureCapacity(cluster + 1);
-        buffer.Data[cluster] = PackColor(color);
-        buffer.MarkUsed(cluster);
+        if (buffer == null || (uint)cluster >= (uint)buffer.Length) return;
+        buffer[cluster] = PackColor(color);
     }
 
 
     public static void SetColorRange(int start, int end, Color32 color)
     {
         if (buffer == null) return;
-        buffer.EnsureCapacity(end);
         var packed = PackColor(color);
-        buffer.SetValueRange(start, end, packed);
+        buffer.SetValueRange(start, Math.Min(end, buffer.Length), packed);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Color32 GetColor(int cluster)
     {
-        if (buffer == null || (uint)cluster >= (uint)buffer.Capacity)
+        if (buffer == null || (uint)cluster >= (uint)buffer.Length)
             return new Color32(255, 255, 255, 255);
-        var packed = buffer.Data[cluster];
+        var packed = buffer[cluster];
         if (packed == 0)
             return new Color32(255, 255, 255, 255);
         return UnpackColor(packed);
@@ -111,13 +108,13 @@ public class ColorModifier : GlyphModifier<uint>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool TryGetColor(int cluster, out Color32 color)
     {
-        if (buffer == null || (uint)cluster >= (uint)buffer.Capacity)
+        if (buffer == null || (uint)cluster >= (uint)buffer.Length)
         {
             color = default;
             return false;
         }
 
-        var packed = buffer.Data[cluster];
+        var packed = buffer[cluster];
         if (packed == 0)
         {
             color = default;

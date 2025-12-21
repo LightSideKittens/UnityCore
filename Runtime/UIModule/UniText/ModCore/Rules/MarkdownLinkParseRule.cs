@@ -4,7 +4,7 @@ using System.Collections.Generic;
 [Serializable]
 public sealed class MarkdownLinkParseRule : IParseRule
 {
-    public int TryMatch(string text, int index, IList<ParsedRange> results)
+    public int TryMatch(string text, int index, PooledList<ParsedRange> results)
     {
         if (text[index] != '[') return index;
 
@@ -35,7 +35,7 @@ public sealed class MarkdownLinkParseRule : IParseRule
         return fullEnd;
     }
 
-    public void Finalize(int textLength, IList<ParsedRange> results) { }
+    public void Finalize(int textLength, PooledList<ParsedRange> results) { }
 
     public void Reset() { }
 

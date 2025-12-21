@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -8,33 +7,21 @@ public sealed class UniTextSettings : ScriptableObject
 
     [SerializeField] private TextAsset unicodeDataAsset;
 
-    [Header("Default Font")] [SerializeField] [Tooltip("Default font used when UniText has no font assigned")]
-    private UniTextFontAsset defaultFontAsset;
+#if UNITY_EDITOR
+    [Header("Editor Defaults")]
+    [SerializeField] [Tooltip("Default fonts assigned to new UniText components")]
+    private UniTextFonts defaultFonts;
 
-    [Header("Font Fallback")]
-    [SerializeField]
-    [Tooltip("Global fallback font assets used when character is not found in primary font or its fallbacks")]
-    private List<UniTextFontAsset> fallbackFontAssets;
+    [SerializeField] [Tooltip("Default appearance assigned to new UniText components")]
+    private UniTextAppearance defaultAppearance;
 
+    public static UniTextFonts DefaultFonts => Instance?.defaultFonts;
+    public static UniTextAppearance DefaultAppearance => Instance?.defaultAppearance;
+#endif
 
     public TextAsset UnicodeDataAsset => unicodeDataAsset;
 
-
-    public static UniTextFontAsset DefaultFontAsset => Instance?.defaultFontAsset;
-
-
-    public static List<UniTextFontAsset> FallbackFontAssets
-    {
-        get => Instance?.fallbackFontAssets;
-        set
-        {
-            if (Instance != null)
-                Instance.fallbackFontAssets = value;
-        }
-    }
-
     private static UniTextSettings instance;
-
 
     public static UniTextSettings Instance
     {
@@ -46,14 +33,13 @@ public sealed class UniTextSettings : ScriptableObject
 
                 if (instance == null)
                     Debug.LogError(
-                        $"UniTextUnicodeSettings not found at Resources/{ResourcePath}.asset. " +
-                        "Create it via Assets > Create > UniText > Unicode Settings and place in Resources folder.");
+                        $"UniTextSettings not found at Resources/{ResourcePath}.asset. " +
+                        "Create it via Assets > Create > UniText > Settings and place in Resources folder.");
             }
 
             return instance;
         }
     }
-
 
     public static void SetInstance(UniTextSettings settings)
     {

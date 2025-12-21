@@ -16,111 +16,97 @@ public sealed class UniTextBuffers
     private const int MinLineCapacity = 32;
     private const int MinParagraphCapacity = 8;
 
-    public int[] codepoints;
-    public int codepointCount;
+    public PooledBuffer<int> codepoints;
+    public PooledBuffer<BidiParagraph> bidiParagraphs;
+    public PooledBuffer<TextRun> runs;
+    public PooledBuffer<ShapedRun> shapedRuns;
+    public PooledBuffer<ShapedGlyph> shapedGlyphs;
+    public PooledBuffer<TextLine> lines;
+    public PooledBuffer<ShapedRun> orderedRuns;
+    public PooledBuffer<PositionedGlyph> positionedGlyphs;
 
+    // Parallel arrays - share codepoints.count
     public byte[] bidiLevels;
-    public BidiParagraph[] bidiParagraphs;
-    public int bidiParagraphCount;
-    public TextDirection baseDirection;
-
     public UnicodeScript[] scripts;
+    public float[] startMargins;
 
-    public TextRun[] runs;
-    public int runCount;
-
-    public ShapedRun[] shapedRuns;
-    public int shapedRunCount;
-    public ShapedGlyph[] shapedGlyphs;
-    public int shapedGlyphCount;
+    public TextDirection baseDirection;
     public float shapingFontSize;
 
     public CachedGlyphData[] glyphDataCache;
     public bool hasValidGlyphCache;
 
-    public TextLine[] lines;
-    public int lineCount;
-    public ShapedRun[] orderedRuns;
-    public int orderedRunCount;
+    public bool isRented;
 
-    public PositionedGlyph[] positionedGlyphs;
-    public int positionedGlyphCount;
-    
-    public float[] startMargins;
+    private Dictionary<string, Array> attributeArrays;
 
-    public int peakCodepointCount;
-    public int peakRunCount;
-    public int peakGlyphCount;
-
-    private bool isRented;
-
-    private class SharedAttribute
+    public T[] GetOrCreateAttributeArray<T>(string key, int minCapacity) where T : unmanaged
     {
-        public object buffer;
-        public int refCount;
+        attributeArrays ??= new Dictionary<string, Array>(8);
+
+        if (attributeArrays.TryGetValue(key, out var existing))
+            return (T[])existing;
+
+        var arr = UniTextArrayPool<T>.Rent(Math.Max(minCapacity, 32));
+        arr.AsSpan().Clear();
+        attributeArrays[key] = arr;
+        return arr;
     }
 
-    private Dictionary<string, SharedAttribute> sharedAttributes;
-
-
-    public ArrayPoolBuffer<T> AcquireAttribute<T>(string key, int initialCapacity) where T : struct
+    public T[] GetAttributeArray<T>(string key) where T : unmanaged
     {
-        sharedAttributes ??= new Dictionary<string, SharedAttribute>(8);
-
-        if (!sharedAttributes.TryGetValue(key, out var attr))
-        {
-            attr = new SharedAttribute
-            {
-                buffer = new ArrayPoolBuffer<T>(initialCapacity),
-                refCount = 0
-            };
-            sharedAttributes[key] = attr;
-        }
-
-        attr.refCount++;
-        return (ArrayPoolBuffer<T>)attr.buffer;
-    }
-
-
-    public ArrayPoolBuffer<T> GetAttribute<T>(string key) where T : struct
-    {
-        if (sharedAttributes != null && sharedAttributes.TryGetValue(key, out var attr))
-            return (ArrayPoolBuffer<T>)attr.buffer;
+        if (attributeArrays != null && attributeArrays.TryGetValue(key, out var arr))
+            return (T[])arr;
         return null;
     }
 
-
-    public void ReleaseAttribute(string key)
+    public T[] GrowAttributeArray<T>(string key, int required) where T : unmanaged
     {
-        if (sharedAttributes == null || !sharedAttributes.TryGetValue(key, out var attr))
-            return;
+        if (attributeArrays == null || !attributeArrays.TryGetValue(key, out var existing))
+            return GetOrCreateAttributeArray<T>(key, required);
 
-        attr.refCount--;
-        if (attr.refCount <= 0)
-        {
-            if (attr.buffer is IPoolReturnable poolable)
-                poolable.ReturnToPool();
-            sharedAttributes.Remove(key);
-        }
+        var oldArray = (T[])existing;
+        if (oldArray.Length >= required)
+            return oldArray;
+
+        var newSize = Math.Max(required, oldArray.Length * 2);
+        var newArray = UniTextArrayPool<T>.Rent(newSize);
+        oldArray.AsSpan().CopyTo(newArray);
+        newArray.AsSpan(oldArray.Length).Clear();
+        UniTextArrayPool<T>.Return(oldArray);
+        attributeArrays[key] = newArray;
+        return newArray;
     }
 
+    public void ReleaseAttributeArray(string key)
+    {
+        if (attributeArrays == null || !attributeArrays.TryGetValue(key, out var arr))
+            return;
+
+        if (arr is byte[] byteArr) UniTextArrayPool<byte>.Return(byteArr);
+        else if (arr is uint[] uintArr) UniTextArrayPool<uint>.Return(uintArr);
+        attributeArrays.Remove(key);
+    }
 
     private void ClearAllAttributes()
     {
-        if (sharedAttributes == null) return;
-        foreach (var attr in sharedAttributes.Values)
-            if (attr.buffer is IClearable clearable)
-                clearable.Clear();
+        if (attributeArrays == null) return;
+        foreach (var arr in attributeArrays.Values)
+        {
+            if (arr is byte[] byteArr) byteArr.AsSpan().Clear();
+            else if (arr is uint[] uintArr) uintArr.AsSpan().Clear();
+        }
     }
-
 
     private void ReturnAllAttributes()
     {
-        if (sharedAttributes == null) return;
-        foreach (var attr in sharedAttributes.Values)
-            if (attr.buffer is IPoolReturnable poolable)
-                poolable.ReturnToPool();
-        sharedAttributes.Clear();
+        if (attributeArrays == null) return;
+        foreach (var arr in attributeArrays.Values)
+        {
+            if (arr is byte[] byteArr) UniTextArrayPool<byte>.Return(byteArr);
+            else if (arr is uint[] uintArr) UniTextArrayPool<uint>.Return(uintArr);
+        }
+        attributeArrays.Clear();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -138,7 +124,7 @@ public sealed class UniTextBuffers
     }
 
 
-    public void RentBuffers(int textLength)
+    public void EnsureRentBuffers(int textLength)
     {
         if (isRented) return;
         rentBuffersCallCount++;
@@ -146,145 +132,179 @@ public sealed class UniTextBuffers
         var codepointCapacity = EstimateCapacity(textLength, MinCodepointCapacity);
         var glyphCapacity = EstimateCapacity(textLength, MinGlyphCapacity);
 
-        codepoints = UniTextArrayPool<int>.Rent(codepointCapacity);
+        codepoints.Rent(codepointCapacity);
+        bidiParagraphs.Rent(MinParagraphCapacity);
+        runs.Rent(MinRunCapacity);
+        shapedRuns.Rent(MinRunCapacity);
+        shapedGlyphs.Rent(glyphCapacity);
+        lines.Rent(MinLineCapacity);
+        orderedRuns.Rent(MinRunCapacity);
+        positionedGlyphs.Rent(glyphCapacity);
+
         bidiLevels = UniTextArrayPool<byte>.Rent(codepointCapacity);
-        bidiParagraphs = UniTextArrayPool<BidiParagraph>.Rent(MinParagraphCapacity);
         scripts = UniTextArrayPool<UnicodeScript>.Rent(codepointCapacity);
         startMargins = UniTextArrayPool<float>.Rent(codepointCapacity);
-        runs = UniTextArrayPool<TextRun>.Rent(MinRunCapacity);
-        shapedRuns = UniTextArrayPool<ShapedRun>.Rent(MinRunCapacity);
-        shapedGlyphs = UniTextArrayPool<ShapedGlyph>.Rent(glyphCapacity);
         glyphDataCache = UniTextArrayPool<CachedGlyphData>.Rent(glyphCapacity);
-        lines = UniTextArrayPool<TextLine>.Rent(MinLineCapacity);
-        orderedRuns = UniTextArrayPool<ShapedRun>.Rent(MinRunCapacity);
-        positionedGlyphs = UniTextArrayPool<PositionedGlyph>.Rent(glyphCapacity);
 
         isRented = true;
         Reset();
     }
 
 
-    public void ReturnBuffers()
+    public void EnsureReturnBuffers()
     {
         if (!isRented) return;
 
         startMargins.AsSpan().Clear();
         hasValidGlyphCache = false;
-        
-        UniTextArrayPool<int>.Return(codepoints);
+
+        codepoints.Return();
+        bidiParagraphs.Return();
+        runs.Return();
+        shapedRuns.Return();
+        shapedGlyphs.Return();
+        lines.Return();
+        orderedRuns.Return();
+        positionedGlyphs.Return();
+
         UniTextArrayPool<byte>.Return(bidiLevels);
-        UniTextArrayPool<BidiParagraph>.Return(bidiParagraphs);
         UniTextArrayPool<UnicodeScript>.Return(scripts);
         UniTextArrayPool<float>.Return(startMargins);
-        UniTextArrayPool<TextRun>.Return(runs);
-        UniTextArrayPool<ShapedRun>.Return(shapedRuns);
-        UniTextArrayPool<ShapedGlyph>.Return(shapedGlyphs);
         UniTextArrayPool<CachedGlyphData>.Return(glyphDataCache);
-        UniTextArrayPool<TextLine>.Return(lines);
-        UniTextArrayPool<ShapedRun>.Return(orderedRuns);
-        UniTextArrayPool<PositionedGlyph>.Return(positionedGlyphs);
-        
-        codepoints = null;
+
         bidiLevels = null;
-        bidiParagraphs = null;
         scripts = null;
         startMargins = null;
-        runs = null;
-        shapedRuns = null;
-        shapedGlyphs = null;
         glyphDataCache = null;
-        lines = null;
-        orderedRuns = null;
-        positionedGlyphs = null;
 
         ReturnAllAttributes();
-        
+
         isRented = false;
     }
 
     public void Reset()
     {
-        var cpCount = codepointCount;
-        if (cpCount > peakCodepointCount) peakCodepointCount = cpCount;
-        if (runCount > peakRunCount) peakRunCount = runCount;
-        if (shapedGlyphCount > peakGlyphCount) peakGlyphCount = shapedGlyphCount;
+        var cpCount = codepoints.count;
 
         if (startMargins != null && cpCount > 0)
             startMargins.AsSpan(0, cpCount).Clear();
 
         ClearAllAttributes();
 
-        codepointCount = 0;
-        bidiParagraphCount = 0;
-        runCount = 0;
-        shapedRunCount = 0;
-        shapedGlyphCount = 0;
+        codepoints.FakeClear();
+        bidiParagraphs.FakeClear();
+        runs.FakeClear();
+        shapedRuns.FakeClear();
+        shapedGlyphs.FakeClear();
+        lines.FakeClear();
+        orderedRuns.FakeClear();
+        positionedGlyphs.FakeClear();
+
         hasValidGlyphCache = false;
-        lineCount = 0;
-        orderedRunCount = 0;
-        positionedGlyphCount = 0;
         baseDirection = TextDirection.LeftToRight;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureCodepointCapacity(int required)
     {
-        if (codepoints.Length < required)
-            BufferUtils.GrowCodepointBuffers(ref codepoints, ref bidiLevels, ref scripts, ref startMargins,
-                codepointCount, required);
+        if (codepoints.Capacity < required)
+            GrowCodepointBuffers(required);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureBidiCapacity(int required)
     {
         if (bidiLevels.Length < required)
-            BufferUtils.Grow(ref bidiLevels, bidiLevels.Length, required);
+            Grow(ref bidiLevels, bidiLevels.Length, required);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureBidiParagraphCapacity(int required)
     {
-        if (bidiParagraphs.Length < required)
-            BufferUtils.Grow(ref bidiParagraphs, bidiParagraphCount, required);
+        bidiParagraphs.EnsureCapacity(required);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureScriptCapacity(int required)
     {
         if (scripts.Length < required)
-            BufferUtils.Grow(ref scripts, scripts.Length, required);
+            Grow(ref scripts, scripts.Length, required);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureRunCapacity(int required)
     {
-        BufferUtils.EnsureCapacity(ref runs, runCount, required);
+        runs.EnsureCapacity(required);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureShapedRunCapacity(int required)
     {
-        BufferUtils.EnsureCapacity(ref shapedRuns, shapedRunCount, required);
+        shapedRuns.EnsureCapacity(required);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureShapedGlyphCapacity(int required)
     {
-        BufferUtils.EnsureCapacity(ref shapedGlyphs, shapedGlyphCount, required);
+        shapedGlyphs.EnsureCapacity(required);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureGlyphCacheCapacity(int required)
     {
         if (glyphDataCache == null || glyphDataCache.Length < required)
-            BufferUtils.Grow(ref glyphDataCache, glyphDataCache?.Length ?? 0, required);
+            Grow(ref glyphDataCache, glyphDataCache?.Length ?? 0, required);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EnsureLineCapacity(int required)
+    {
+        lines.EnsureCapacity(required);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EnsureOrderedRunCapacity(int required)
+    {
+        orderedRuns.EnsureCapacity(required);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsurePositionedGlyphCapacity(int required)
     {
-        if (positionedGlyphs.Length < required)
-            BufferUtils.GrowPositionedGlyphBuffers(ref positionedGlyphs, positionedGlyphCount, required);
+        positionedGlyphs.EnsureCapacity(required);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static void Grow<T>(ref T[] buffer, int count, int required)
+    {
+        var newSize = Math.Max(required, buffer.Length * 2);
+        var newBuffer = UniTextArrayPool<T>.Rent(newSize);
+        buffer.AsSpan(0, count).CopyTo(newBuffer);
+        UniTextArrayPool<T>.Return(buffer);
+        buffer = newBuffer;
+    }
+
+    private void GrowCodepointBuffers(int required)
+    {
+        var newSize = Math.Max(required, codepoints.Capacity * 2);
+        var cpCount = codepoints.count;
+
+        codepoints.EnsureCapacity(newSize);
+
+        var newBidiLevels = UniTextArrayPool<byte>.Rent(newSize);
+        bidiLevels.AsSpan(0, Math.Min(cpCount, bidiLevels.Length)).CopyTo(newBidiLevels);
+        UniTextArrayPool<byte>.Return(bidiLevels);
+        bidiLevels = newBidiLevels;
+
+        var newScripts = UniTextArrayPool<UnicodeScript>.Rent(newSize);
+        scripts.AsSpan(0, Math.Min(cpCount, scripts.Length)).CopyTo(newScripts);
+        UniTextArrayPool<UnicodeScript>.Return(scripts);
+        scripts = newScripts;
+
+        var newMargins = UniTextArrayPool<float>.Rent(newSize);
+        startMargins.AsSpan(0, Math.Min(cpCount, startMargins.Length)).CopyTo(newMargins);
+        UniTextArrayPool<float>.Return(startMargins);
+        startMargins = newMargins;
     }
 }
 

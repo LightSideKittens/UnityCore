@@ -98,10 +98,10 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
     /// <param name="maxDistance">Максимальное расстояние для fallback (0 = без fallback)</param>
     public TextHitResult HitTest(Vector2 localPosition, float maxDistance = 0)
     {
-        if (processor == null)
+        if (textProcessor == null)
             return TextHitResult.None;
 
-        var glyphs = processor.PositionedGlyphs;
+        var glyphs = textProcessor.PositionedGlyphs;
         var glyphCount = glyphs.Length;
         if (glyphCount == 0)
             return TextHitResult.None;

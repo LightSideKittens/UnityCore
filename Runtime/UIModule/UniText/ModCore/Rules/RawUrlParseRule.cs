@@ -10,7 +10,7 @@ public sealed class RawUrlParseRule : IParseRule
 
     private const string WwwPrefix = "www.";
 
-    public int TryMatch(string text, int index, IList<ParsedRange> results)
+    public int TryMatch(string text, int index, PooledList<ParsedRange> results)
     {
         var c = text[index];
 
@@ -44,7 +44,7 @@ public sealed class RawUrlParseRule : IParseRule
         return index;
     }
 
-    public void Finalize(int textLength, IList<ParsedRange> results) { }
+    public void Finalize(int textLength, PooledList<ParsedRange> results) { }
 
     public void Reset() { }
 

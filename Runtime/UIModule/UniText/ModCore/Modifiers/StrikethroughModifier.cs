@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class StrikethroughModifier : BaseLineModifier
 {
-    private static ArrayPoolBuffer<byte> buffer;
+    private static byte[] buffer;
 
     protected override string AttributeKey => AttributeKeys.Strikethrough;
 
@@ -20,7 +20,7 @@ public class StrikethroughModifier : BaseLineModifier
         return xHeightMid * scale;
     }
 
-    protected override void SetStaticBuffer(ArrayPoolBuffer<byte> buf)
+    protected override void SetStaticBuffer(byte[] buf)
     {
         buffer = buf;
     }
@@ -28,7 +28,7 @@ public class StrikethroughModifier : BaseLineModifier
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool HasStrikethrough(int cluster)
     {
-        return buffer != null && buffer.HasFlag(cluster);
+        return buffer.HasFlag(cluster);
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

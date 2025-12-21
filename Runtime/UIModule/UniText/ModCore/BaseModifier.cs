@@ -4,7 +4,7 @@ using System;
 [Serializable]
 public abstract class BaseModifier
 {
-    protected UniText uniText;
+    [NonSerialized] public UniText uniText;
     protected UniTextBuffers buffers;
     protected bool isInitialized;
 
@@ -28,14 +28,10 @@ public abstract class BaseModifier
 
     public void Deinitialize()
     {
-        if (isInitialized)
-        {
-            Unsubscribe();
-            ReleaseBuffers();
-            isInitialized = false;
-        }
-
-        uniText = null;
+        if (!isInitialized) return;
+        Unsubscribe();
+        ReleaseBuffers();
+        isInitialized = false;
     }
 
     public void Reset()
@@ -43,11 +39,6 @@ public abstract class BaseModifier
         if (isInitialized)
             ClearBuffers();
     }
-
-    public virtual void Destroy()
-    {
-    }
-
 
     protected abstract void CreateBuffers();
 

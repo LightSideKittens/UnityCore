@@ -13,7 +13,7 @@ public static class GlyphRenderHelper
     /// <returns>Advance X (ширина для следующего символа), или 0 если глиф не найден</returns>
     public static float DrawGlyph(uint codepoint, float x, float baselineY, Color32 color)
     {
-        var fontAsset = UniTextMeshGenerator.currentFontAsset;
+        var fontAsset = UniTextMeshGenerator.currentFont;
         if (fontAsset == null)
             return 0f;
 
@@ -158,7 +158,7 @@ public static class GlyphRenderHelper
         if (string.IsNullOrEmpty(text))
             return 0f;
 
-        var fontAsset = UniTextMeshGenerator.currentFontAsset;
+        var fontAsset = UniTextMeshGenerator.currentFont;
         if (fontAsset == null)
             return 0f;
 
@@ -216,7 +216,7 @@ public static class GlyphRenderHelper
         if (sb == null || sb.Length == 0)
             return 0f;
 
-        var fontAsset = UniTextMeshGenerator.currentFontAsset;
+        var fontAsset = UniTextMeshGenerator.currentFont;
         if (fontAsset == null)
             return 0f;
 
@@ -243,13 +243,13 @@ public static class GlyphRenderHelper
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Glyph GetGlyph(UniTextFontAsset fontAsset, uint codepoint)
+    private static Glyph GetGlyph(UniTextFont font, uint codepoint)
     {
-        var charTable = fontAsset.CharacterLookupTable;
+        var charTable = font.CharacterLookupTable;
         if (charTable != null && charTable.TryGetValue(codepoint, out var character) && character?.glyph != null)
             return character.glyph;
 
-        if (fontAsset.TryAddCharacter(codepoint, out var addedChar) && addedChar?.glyph != null) return addedChar.glyph;
+        if (font.TryAddCharacter(codepoint, out var addedChar) && addedChar?.glyph != null) return addedChar.glyph;
 
         return null;
     }

@@ -15,7 +15,7 @@ public abstract class BaseLineModifier : BaseModifier
 
     private const float LineBreakThreshold = 5f;
 
-    protected ArrayPoolBuffer<byte> flagsBuffer;
+    protected byte[] flagsBuffer;
 
     private LineSegment[] lineSegments;
     private int lineSegmentsCapacity;
@@ -26,12 +26,12 @@ public abstract class BaseLineModifier : BaseModifier
     protected abstract string AttributeKey { get; }
 
     protected abstract float GetLineOffset(UnityEngine.TextCore.FaceInfo faceInfo, float scale);
-    protected abstract void SetStaticBuffer(ArrayPoolBuffer<byte> buffer);
+    protected abstract void SetStaticBuffer(byte[] buffer);
 
     protected sealed override void CreateBuffers()
     {
-        var cpCount = buffers.codepointCount;
-        flagsBuffer = buffers.AcquireAttribute<byte>(AttributeKey, cpCount);
+        var cpCount = buffers.codepoints.count;
+        flagsBuffer = buffers.GetOrCreateAttributeArray<byte>(AttributeKey, cpCount);
         SetStaticBuffer(flagsBuffer);
 
         lineSegments = UniTextArrayPool<LineSegment>.Rent(64);
@@ -62,7 +62,7 @@ public abstract class BaseLineModifier : BaseModifier
     protected sealed override void ReleaseBuffers()
     {
         SetStaticBuffer(null);
-        buffers.ReleaseAttribute(AttributeKey);
+        buffers.ReleaseAttributeArray(AttributeKey);
         flagsBuffer = null;
 
         if (lineSegments != null)
@@ -80,14 +80,23 @@ public abstract class BaseLineModifier : BaseModifier
 
     protected sealed override void ApplyModifier(int start, int end, string parameter)
     {
-        var cpCount = buffers.codepointCount;
-        flagsBuffer.EnsureCapacity(cpCount);
+        var cpCount = buffers.codepoints.count;
+        EnsureBufferCapacity(cpCount);
         flagsBuffer.SetFlagRange(start, Math.Min(end, cpCount));
+    }
+
+    protected void EnsureBufferCapacity(int required)
+    {
+        if (flagsBuffer == null || flagsBuffer.Length < required)
+        {
+            flagsBuffer = buffers.GrowAttributeArray<byte>(AttributeKey, required);
+            SetStaticBuffer(flagsBuffer);
+        }
     }
 
     private void OnRebuilding()
     {
-        flagsBuffer = buffers.GetAttribute<byte>(AttributeKey);
+        flagsBuffer = buffers.GetAttributeArray<byte>(AttributeKey);
         SetStaticBuffer(flagsBuffer);
     }
 
@@ -124,7 +133,7 @@ public abstract class BaseLineModifier : BaseModifier
         if (linesDrawnThisFrame) return;
         linesDrawnThisFrame = true;
 
-        var fontAsset = UniTextMeshGenerator.currentFontAsset;
+        var fontAsset = UniTextMeshGenerator.currentFont;
         if (fontAsset == null) return;
 
         if (!flagsBuffer.HasAnyFlags()) return;
@@ -137,8 +146,8 @@ public abstract class BaseLineModifier : BaseModifier
         var defaultColor = UniTextMeshGenerator.currentDefaultColor;
 
         var buf = buffers;
-        var allGlyphs = buf.positionedGlyphs;
-        var glyphCount = buf.positionedGlyphCount;
+        var allGlyphs = buf.positionedGlyphs.data;
+        var glyphCount = buf.positionedGlyphs.count;
 
         if (glyphCount == 0) return;
 
@@ -177,14 +186,14 @@ public abstract class BaseLineModifier : BaseModifier
             {
                 var idx = glyph.shapedGlyphIndex;
 
-                if ((uint)idx < (uint)buf.shapedGlyphCount && buf.glyphDataCache != null)
+                if ((uint)idx < (uint)buf.shapedGlyphs.count && buf.glyphDataCache != null)
                 {
                     ref var cached = ref buf.glyphDataCache[idx];
                     if (cached.isValid)
                         glyphWidth = (cached.bearingX + cached.width) * scale;
                 }
 
-                if (glyphWidth < 1f && (uint)idx < (uint)buf.shapedGlyphCount)
+                if (glyphWidth < 1f && (uint)idx < (uint)buf.shapedGlyphs.count)
                     glyphWidth = buf.shapedGlyphs[idx].advanceX * scale;
                 if (glyphWidth < 1f)
                     glyphWidth = defaultWidth;

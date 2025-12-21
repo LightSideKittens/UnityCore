@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
-using LSCore;
 using UnityEngine;
 
 public struct ListItemInfo
@@ -24,11 +23,11 @@ public enum OrderedMarkerStyle
 [Serializable]
 public class ListModifier : BaseModifier
 {
-    private LSList<ListItemInfo> instanceItems;
+    private PooledList<ListItemInfo> instanceItems;
     private bool instanceMarkersDrawnThisFrame;
     private UniTextFontProvider instanceFontProvider;
 
-    private static LSList<ListItemInfo> items;
+    private static PooledList<ListItemInfo> items;
     private static bool markersDrawnThisFrame;
     private static UniTextFontProvider fontProviderRef;
 
@@ -44,7 +43,7 @@ public class ListModifier : BaseModifier
 
     protected override void CreateBuffers()
     {
-        instanceItems = new LSList<ListItemInfo>(32);
+        instanceItems = new PooledList<ListItemInfo>(32);
         instanceFontProvider = uniText.FontProvider;
         items = instanceItems;
         fontProviderRef = instanceFontProvider;
@@ -66,6 +65,7 @@ public class ListModifier : BaseModifier
 
     protected override void ReleaseBuffers()
     {
+        instanceItems?.Return();
         instanceItems = null;
         instanceFontProvider = null;
     }
@@ -133,10 +133,10 @@ public class ListModifier : BaseModifier
         return MeasureStringWithScale(sharedBuilder, fontAsset, scale) + markerToTextGap;
     }
 
-    private static float MeasureStringWithScale(StringBuilder sb, UniTextFontAsset fontAsset, float scale)
+    private static float MeasureStringWithScale(StringBuilder sb, UniTextFont font, float scale)
     {
         if (sb == null || sb.Length == 0) return 0f;
-        var charTable = fontAsset.CharacterLookupTable;
+        var charTable = font.CharacterLookupTable;
         if (charTable == null) return 0f;
         var totalWidth = 0f;
         var len = sb.Length;
@@ -145,7 +145,7 @@ public class ListModifier : BaseModifier
             uint codepoint = sb[i];
             if (charTable.TryGetValue(codepoint, out var ch) && ch?.glyph != null)
                 totalWidth += ch.glyph.metrics.horizontalAdvance * scale;
-            else if (fontAsset.TryAddCharacter(codepoint, out var addedCh) && addedCh?.glyph != null)
+            else if (font.TryAddCharacter(codepoint, out var addedCh) && addedCh?.glyph != null)
                 totalWidth += addedCh.glyph.metrics.horizontalAdvance * scale;
         }
 
@@ -160,7 +160,7 @@ public class ListModifier : BaseModifier
 
         if (item.end > buf.startMargins.Length) buf.EnsureCodepointCapacity(item.end);
         var margins = buf.startMargins;
-        var safeEnd = Math.Min(item.end, buf.codepointCount);
+        var safeEnd = Math.Min(item.end, buf.codepoints.count);
         for (var i = item.start; i < safeEnd; i++)
             if (contentIndent > margins[i])
                 margins[i] = contentIndent;
@@ -171,7 +171,11 @@ public class ListModifier : BaseModifier
         if (items == null || items.Count == 0 || markersDrawnThisFrame) return;
         markersDrawnThisFrame = true;
         instanceMarkersDrawnThisFrame = true;
-        foreach (var item in items) RenderMarker(item);
+        for (var i = 0; i < items.Count; i++)
+        {
+            var item = items[i];
+            RenderMarker(item);
+        }
     }
 
     private void RenderMarker(ListItemInfo item)
@@ -203,11 +207,11 @@ public class ListModifier : BaseModifier
     private float GetItemBaselineY(int cluster, out float firstGlyphX)
     {
         var buf = buffers;
-        for (var i = 0; i < buf.positionedGlyphCount; i++)
-            if (buf.positionedGlyphs[i].cluster >= cluster)
+        for (var i = 0; i < buf.positionedGlyphs.count; i++)
+            if (buf.positionedGlyphs.data[i].cluster >= cluster)
             {
-                firstGlyphX = UniTextMeshGenerator.offsetX + buf.positionedGlyphs[i].x;
-                return UniTextMeshGenerator.offsetY - buf.positionedGlyphs[i].y;
+                firstGlyphX = UniTextMeshGenerator.offsetX + buf.positionedGlyphs.data[i].x;
+                return UniTextMeshGenerator.offsetY - buf.positionedGlyphs.data[i].y;
             }
 
         firstGlyphX = 0;
@@ -218,9 +222,9 @@ public class ListModifier : BaseModifier
     private float GetLineWidth(int cluster)
     {
         var buf = buffers;
-        for (var i = 0; i < buf.lineCount; i++)
+        for (var i = 0; i < buf.lines.count; i++)
         {
-            ref readonly var line = ref buf.lines[i];
+            ref readonly var line = ref buf.lines.data[i];
             if (cluster >= line.range.start && cluster < line.range.start + line.range.length)
                 return line.width;
         }

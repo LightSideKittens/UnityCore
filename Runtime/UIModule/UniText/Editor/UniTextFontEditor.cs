@@ -3,8 +3,8 @@ using UnityEditor;
 using UnityEngine;
 
 
-[CustomEditor(typeof(UniTextFontAsset))]
-public class UniTextFontAssetEditor : Editor
+[CustomEditor(typeof(UniTextFont))]
+public class UniTextFontEditor : Editor
 {
     private SerializedProperty fontDataProp;
     private SerializedProperty sourceFontProp;
@@ -16,16 +16,10 @@ public class UniTextFontAssetEditor : Editor
     private SerializedProperty atlasPaddingProp;
     private SerializedProperty atlasRenderModeProp;
     private SerializedProperty atlasTexturesProp;
-    private SerializedProperty materialProp;
-    private SerializedProperty fallbackFontAssetTableProp;
-    private SerializedProperty normalStyleProp;
-    private SerializedProperty boldStyleProp;
     private SerializedProperty italicStyleProp;
-
+    
     private bool showFaceInfo;
     private bool showAtlasSettings = true;
-    private bool showFontStyles = true;
-    private bool showFallbacks;
 
     private void OnEnable()
     {
@@ -39,10 +33,6 @@ public class UniTextFontAssetEditor : Editor
         atlasPaddingProp = serializedObject.FindProperty("atlasPadding");
         atlasRenderModeProp = serializedObject.FindProperty("atlasRenderMode");
         atlasTexturesProp = serializedObject.FindProperty("atlasTextures");
-        materialProp = serializedObject.FindProperty("material");
-        fallbackFontAssetTableProp = serializedObject.FindProperty("fallbackFontAssetTable");
-        normalStyleProp = serializedObject.FindProperty("normalStyle");
-        boldStyleProp = serializedObject.FindProperty("boldStyle");
         italicStyleProp = serializedObject.FindProperty("italicStyle");
     }
 
@@ -50,7 +40,7 @@ public class UniTextFontAssetEditor : Editor
     {
         serializedObject.Update();
 
-        var fontAsset = (UniTextFontAsset)target;
+        var fontAsset = (UniTextFont)target;
 
         EditorGUILayout.Space();
 
@@ -64,28 +54,14 @@ public class UniTextFontAssetEditor : Editor
 
         EditorGUILayout.Space();
 
-        // Face Info
-        DrawFaceInfoSection();
+        EditorGUILayout.PropertyField(faceInfoProp, true);
 
         EditorGUILayout.Space();
 
+        EditorGUILayout.PropertyField(italicStyleProp);
+        
         // Atlas Settings
         DrawAtlasSettingsSection();
-
-        EditorGUILayout.Space();
-
-        // Font Styles (Bold/Normal weights)
-        DrawFontStylesSection();
-
-        EditorGUILayout.Space();
-
-        // Material
-        EditorGUILayout.PropertyField(materialProp);
-
-        EditorGUILayout.Space();
-
-        // Fallback Fonts
-        DrawFallbacksSection();
 
         EditorGUILayout.Space();
 
@@ -95,7 +71,7 @@ public class UniTextFontAssetEditor : Editor
         serializedObject.ApplyModifiedProperties();
     }
 
-    private void DrawSourceFontSection(UniTextFontAsset fontAsset)
+    private void DrawSourceFontSection(UniTextFont uniTextFont)
     {
         EditorGUILayout.LabelField("Source Font", EditorStyles.boldLabel);
 
@@ -108,7 +84,7 @@ public class UniTextFontAssetEditor : Editor
             var font = sourceFontProp.objectReferenceValue as Font;
             if (font != null)
             {
-                ExtractFontBytes(fontAsset, font);
+                ExtractFontBytes(uniTextFont, font);
             }
         }
 
@@ -123,7 +99,7 @@ public class UniTextFontAssetEditor : Editor
                 var font = sourceFontProp.objectReferenceValue as Font;
                 if (font != null)
                 {
-                    ExtractFontBytes(fontAsset, font);
+                    ExtractFontBytes(uniTextFont, font);
                 }
                 else
                 {
@@ -133,28 +109,28 @@ public class UniTextFontAssetEditor : Editor
 
             if (GUILayout.Button("Load from File...", GUILayout.Height(25)))
             {
-                LoadFontFromFile(fontAsset);
+                LoadFontFromFile(uniTextFont);
             }
         }
     }
 
-    private void DrawFontDataStatus(UniTextFontAsset fontAsset)
+    private void DrawFontDataStatus(UniTextFont font)
     {
         EditorGUILayout.LabelField("Font Data Status", EditorStyles.boldLabel);
 
         using (new EditorGUILayout.HorizontalScope())
         {
-            var hasData = fontAsset.HasFontData;
+            var hasData = font.HasFontData;
             var statusColor = hasData ? Color.green : Color.red;
             var statusText = hasData
-                ? $"✓ Font data loaded ({fontAsset.FontData.Length:N0} bytes)"
+                ? $"✓ Font data loaded ({font.FontData.Length:N0} bytes)"
                 : "✗ No font data - TEXT WILL NOT RENDER!";
 
             var style = new GUIStyle(EditorStyles.label) { normal = { textColor = statusColor } };
             EditorGUILayout.LabelField(statusText, style);
         }
 
-        if (fontAsset.HasFontData)
+        if (font.HasFontData)
         {
             EditorGUILayout.HelpBox(
                 "Raw font bytes are available for HarfBuzz shaping. " +
@@ -181,17 +157,6 @@ public class UniTextFontAssetEditor : Editor
         }
     }
 
-    private void DrawFaceInfoSection()
-    {
-        showFaceInfo = EditorGUILayout.Foldout(showFaceInfo, "Face Info", true);
-        if (showFaceInfo)
-        {
-            EditorGUI.indentLevel++;
-            EditorGUILayout.PropertyField(faceInfoProp, true);
-            EditorGUI.indentLevel--;
-        }
-    }
-
     private void DrawAtlasSettingsSection()
     {
         showAtlasSettings = EditorGUILayout.Foldout(showAtlasSettings, "Atlas Settings", true);
@@ -202,57 +167,13 @@ public class UniTextFontAssetEditor : Editor
             EditorGUILayout.PropertyField(atlasHeightProp);
             EditorGUILayout.PropertyField(atlasPaddingProp);
             EditorGUILayout.PropertyField(atlasRenderModeProp);
-            EditorGUILayout.PropertyField(atlasTexturesProp, true);
-            EditorGUI.indentLevel--;
-        }
-    }
-
-    private void DrawFontStylesSection()
-    {
-        showFontStyles = EditorGUILayout.Foldout(showFontStyles, "Font Styles", true);
-        if (showFontStyles)
-        {
-            EditorGUI.indentLevel++;
-
-            EditorGUI.BeginChangeCheck();
-
-            EditorGUILayout.PropertyField(normalStyleProp,
-                new GUIContent("Normal Weight", "Weight value for normal text. Typical value: 0"));
-
-            EditorGUILayout.PropertyField(boldStyleProp,
-                new GUIContent("Bold Weight", "Weight value for bold text (<b> tag). Typical value: 0.75"));
-
-            EditorGUILayout.PropertyField(italicStyleProp,
-                new GUIContent("Italic Angle", "Slant angle in degrees for italic text (<i> tag). Typical value: 12"));
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                serializedObject.ApplyModifiedProperties();
-
-                // Update material properties immediately
-                var fontAsset = (UniTextFontAsset)target;
-                fontAsset.UpdateMaterialProperties();
-                EditorUtility.SetDirty(fontAsset);
-            }
-
-            EditorGUI.indentLevel--;
-        }
-    }
-
-    private void DrawFallbacksSection()
-    {
-        showFallbacks = EditorGUILayout.Foldout(showFallbacks, "Fallback Font Assets", true);
-        if (showFallbacks)
-        {
-            EditorGUI.indentLevel++;
-            EditorGUILayout.PropertyField(fallbackFontAssetTableProp, true);
             EditorGUI.indentLevel--;
         }
     }
 
     private bool showDynamicData;
 
-    private void DrawDynamicDataSection(UniTextFontAsset fontAsset)
+    private void DrawDynamicDataSection(UniTextFont font)
     {
         showDynamicData = EditorGUILayout.Foldout(showDynamicData, "Dynamic Data", true);
         if (!showDynamicData) return;
@@ -274,9 +195,9 @@ public class UniTextFontAssetEditor : Editor
         EditorGUILayout.LabelField($"Atlas textures: {atlasCount}");
 
         // Show atlas texture size
-        if (fontAsset.AtlasTexture != null)
+        if (font.AtlasTexture != null)
         {
-            var tex = fontAsset.AtlasTexture;
+            var tex = font.AtlasTexture;
             long sizeBytes = tex.width * tex.height;
             if (tex.format == TextureFormat.RGBA32)
                 sizeBytes *= 4;
@@ -312,9 +233,9 @@ public class UniTextFontAssetEditor : Editor
                 "The atlas will regenerate at runtime as characters are requested.\n\n" +
                 "Are you sure?", "Clear", "Cancel"))
             {
-                Undo.RecordObject(fontAsset, "Clear Dynamic Data");
-                fontAsset.ClearDynamicData();
-                EditorUtility.SetDirty(fontAsset);
+                Undo.RecordObject(font, "Clear Dynamic Data");
+                font.ClearDynamicData();
+                EditorUtility.SetDirty(font);
                 AssetDatabase.SaveAssets();
             }
         }
@@ -325,7 +246,7 @@ public class UniTextFontAssetEditor : Editor
         EditorGUI.indentLevel--;
     }
 
-    private void ExtractFontBytes(UniTextFontAsset fontAsset, Font font)
+    private void ExtractFontBytes(UniTextFont uniTextFont, Font font)
     {
         // Get the asset path of the font
         string fontPath = AssetDatabase.GetAssetPath(font);
@@ -351,10 +272,10 @@ public class UniTextFontAssetEditor : Editor
         {
             byte[] fontBytes = File.ReadAllBytes(fullPath);
 
-            Undo.RecordObject(fontAsset, "Extract Font Bytes");
-            fontAsset.SetFontData(fontBytes);
-            fontAsset.UpdateFromSourceFont();
-            EditorUtility.SetDirty(fontAsset);
+            Undo.RecordObject(uniTextFont, "Extract Font Bytes");
+            uniTextFont.SetFontData(fontBytes);
+            uniTextFont.UpdateFromSourceFont();
+            EditorUtility.SetDirty(uniTextFont);
 
             Debug.Log($"UniTextFontAsset: Extracted {fontBytes.Length:N0} bytes from '{font.name}'");
         }
@@ -366,7 +287,7 @@ public class UniTextFontAssetEditor : Editor
         }
     }
 
-    private void LoadFontFromFile(UniTextFontAsset fontAsset)
+    private void LoadFontFromFile(UniTextFont font)
     {
         string path = EditorUtility.OpenFilePanel("Select Font File", "", "ttf,otf,ttc");
         if (string.IsNullOrEmpty(path))
@@ -376,15 +297,15 @@ public class UniTextFontAssetEditor : Editor
         {
             byte[] fontBytes = File.ReadAllBytes(path);
 
-            Undo.RecordObject(fontAsset, "Load Font from File");
-            fontAsset.SetFontData(fontBytes);
+            Undo.RecordObject(font, "Load Font from File");
+            font.SetFontData(fontBytes);
 
             // Store the source path
             var sourceFontFilePathProp = serializedObject.FindProperty("sourceFontFilePath");
             sourceFontFilePathProp.stringValue = path;
 
             serializedObject.ApplyModifiedProperties();
-            EditorUtility.SetDirty(fontAsset);
+            EditorUtility.SetDirty(font);
 
             Debug.Log($"UniTextFontAsset: Loaded {fontBytes.Length:N0} bytes from '{Path.GetFileName(path)}'");
         }
@@ -418,7 +339,7 @@ public class UniTextFontAssetEditor : Editor
         byte[] fontBytes = File.ReadAllBytes(fullPath);
 
         // Create asset
-        var fontAsset = UniTextFontAsset.CreateFontAsset(fontBytes);
+        var fontAsset = UniTextFont.CreateFontAsset(fontBytes);
         if (fontAsset == null)
         {
             EditorUtility.DisplayDialog("Error", "Failed to create font asset.", "OK");
@@ -434,13 +355,7 @@ public class UniTextFontAssetEditor : Editor
 
         AssetDatabase.CreateAsset(fontAsset, assetPath);
 
-        // Save sub-assets (material, textures)
-        if (fontAsset.Material != null)
-        {
-            fontAsset.Material.name = font.name + " Material";
-            AssetDatabase.AddObjectToAsset(fontAsset.Material, fontAsset);
-        }
-
+        // Save sub-assets (textures only, no material)
         if (fontAsset.AtlasTextures != null)
         {
             for (int i = 0; i < fontAsset.AtlasTextures.Length; i++)
@@ -462,7 +377,7 @@ public class UniTextFontAssetEditor : Editor
         Debug.Log($"Created UniTextFontAsset: {assetPath}");
     }
 
-    
+
     [MenuItem("Assets/Create/UniText/Font Asset", false, 100)]
     private static void CreateFontAsset()
     {
@@ -475,35 +390,19 @@ public class UniTextFontAssetEditor : Editor
         }
         else
         {
-            // Create empty asset with default Material and Texture
+            // Create empty asset with default Texture
             CreateEmptyFontAssetWithSubAssets();
         }
     }
 
     private static void CreateEmptyFontAssetWithSubAssets()
     {
-        var fontAsset = ScriptableObject.CreateInstance<UniTextFontAsset>();
+        var fontAsset = ScriptableObject.CreateInstance<UniTextFont>();
 
         // Create default atlas texture
         var texture = new Texture2D(1, 1, TextureFormat.Alpha8, false);
         texture.name = "Atlas";
         fontAsset.AtlasTextures = new[] { texture };
-
-        // Create default material
-        var shader = Shader.Find("UniText/Mobile/Distance Field");
-        if (shader == null)
-            shader = Shader.Find("GUI/Text Shader");
-
-        if (shader != null)
-        {
-            var material = new Material(shader);
-            material.name = "Material";
-            material.SetTexture("_MainTex", texture);
-            material.SetFloat("_TextureWidth", 1024);
-            material.SetFloat("_TextureHeight", 1024);
-            material.SetFloat("_GradientScale", 10);
-            fontAsset.Material = material;
-        }
 
         // Determine save path
         string directory = GetSelectedDirectory();
@@ -514,9 +413,6 @@ public class UniTextFontAssetEditor : Editor
         AssetDatabase.CreateAsset(fontAsset, assetPath);
 
         // Add SubAssets
-        if (fontAsset.Material != null)
-            AssetDatabase.AddObjectToAsset(fontAsset.Material, fontAsset);
-
         if (texture != null)
             AssetDatabase.AddObjectToAsset(texture, fontAsset);
 

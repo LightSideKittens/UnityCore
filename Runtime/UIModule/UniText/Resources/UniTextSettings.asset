@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: UniTextSettings
   m_EditorClassIdentifier: 
   unicodeDataAsset: {fileID: 4900000, guid: 86e6445c93d99a7478cd8b8d74dc2ad5, type: 3}
-  defaultFontAsset: {fileID: 0}
-  fallbackFontAssets: []
+  defaultFonts: {fileID: 11400000, guid: f1fb4d96c5ba77542999c02f0460bb35, type: 2}
+  defaultAppearance: {fileID: 11400000, guid: 366a003927a7b1d4c8978732eee3bd40, type: 2}

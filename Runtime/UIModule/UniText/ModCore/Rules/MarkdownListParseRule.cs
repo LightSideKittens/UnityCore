@@ -14,7 +14,7 @@ public sealed class MarkdownListParseRule : IParseRule
 
     private static readonly Dictionary<(int level, int number), string> OrderedParamCache = new(64);
 
-    public int TryMatch(string text, int index, IList<ParsedRange> results)
+    public int TryMatch(string text, int index, PooledList<ParsedRange> results)
     {
         if (index > 0 && text[index - 1] != '\n')
             return index;
@@ -151,7 +151,7 @@ public sealed class MarkdownListParseRule : IParseRule
         return textLen;
     }
 
-    public void Finalize(int textLength, IList<ParsedRange> results)
+    public void Finalize(int textLength, PooledList<ParsedRange> results)
     {
     }
 

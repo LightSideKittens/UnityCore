@@ -111,13 +111,13 @@ public class ObjModifier : BaseModifier
 {
     public List<InlineObject> objects = new();
 
-    private Dictionary<int, InlineObject> clusterToObj;
+    private FastIntDictionary<InlineObject> clusterToObj;
     private Dictionary<string, InlineObject> objLookup;
 
 
     protected override void CreateBuffers()
     {
-        clusterToObj = new Dictionary<int, InlineObject>(16);
+        clusterToObj = new FastIntDictionary<InlineObject>(16);
         objLookup = new Dictionary<string, InlineObject>(objects.Count);
         for (var i = 0; i < objects.Count; i++)
         {
@@ -183,9 +183,9 @@ public class ObjModifier : BaseModifier
 
         var buf = buffers;
         var fontSize = buf.shapingFontSize > 0 ? buf.shapingFontSize : uniText.FontSize;
-        var glyphs = buf.shapedGlyphs;
-        var runs = buf.shapedRuns;
-        var runCount = buf.shapedRunCount;
+        var glyphs = buf.shapedGlyphs.data;
+        var runs = buf.shapedRuns.data;
+        var runCount = buf.shapedRuns.count;
 
         for (var r = 0; r < runCount; r++)
         {

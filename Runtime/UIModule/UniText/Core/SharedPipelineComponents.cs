@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using LSCore;
 using UnityEngine;
 
 
@@ -102,26 +101,26 @@ public static class SharedPipelineComponents
 
     #region Glyph Grouping (for mesh generator)
 
-    private static Dictionary<int, LSList<int>> glyphsByFont;
-    private static Stack<LSList<int>> glyphListPool;
-    private static LSList<UniTextMeshPair> meshResultBuffer;
+    private static FastIntDictionary<PooledList<int>> glyphsByFont;
+    private static Stack<PooledList<int>> glyphListPool;
+    private static PooledList<UniTextRenderData> meshResultBuffer;
 
-    public static Dictionary<int, LSList<int>> GlyphsByFont
-        => glyphsByFont ??= new Dictionary<int, LSList<int>>();
+    public static FastIntDictionary<PooledList<int>> GlyphsByFont
+        => glyphsByFont ??= new FastIntDictionary<PooledList<int>>();
 
-    public static Stack<LSList<int>> GlyphListPool
-        => glyphListPool ??= new Stack<LSList<int>>();
+    public static Stack<PooledList<int>> GlyphListPool
+        => glyphListPool ??= new Stack<PooledList<int>>();
 
-    public static LSList<UniTextMeshPair> MeshResultBuffer
-        => meshResultBuffer ??= new LSList<UniTextMeshPair>(4);
+    public static PooledList<UniTextRenderData> MeshResultBuffer
+        => meshResultBuffer ??= new PooledList<UniTextRenderData>(4);
 
-    public static LSList<int> AcquireGlyphIndexList()
+    public static PooledList<int> AcquireGlyphIndexList()
     {
         var pool = GlyphListPool;
-        return pool.Count > 0 ? pool.Pop() : new LSList<int>(64);
+        return pool.Count > 0 ? pool.Pop() : new PooledList<int>(64);
     }
 
-    public static void ReleaseGlyphIndexList(LSList<int> list)
+    public static void ReleaseGlyphIndexList(PooledList<int> list)
     {
         list.FakeClear();
         GlyphListPool.Push(list);
@@ -137,7 +136,7 @@ public static class SharedPipelineComponents
             pool.Push(kvp.Value);
         }
 
-        dict.Clear();
+        dict.ClearFast();
     }
 
     #endregion
