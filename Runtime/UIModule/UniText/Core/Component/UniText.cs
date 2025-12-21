@@ -568,9 +568,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         };
         textProcessor.EnsureShaping(textSpan, shapingSettings);
 
-        var effectiveFontSize = enableAutoSize
-            ? CalculateAutoSize(rect)
-            : fontSize;
+        var effectiveFontSize = CalculateEffectiveFontSize(rect);
         autoSizedFontSize = effectiveFontSize;
 
         textProcessor.EnsureLines(rect.width, effectiveFontSize, enableWordWrap);
@@ -608,9 +606,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
             return;
         }
 
-        var effectiveFontSize = enableAutoSize
-            ? CalculateAutoSize(rect)
-            : fontSize;
+        var effectiveFontSize = CalculateEffectiveFontSize(rect);
         autoSizedFontSize = effectiveFontSize;
 
         textProcessor.EnsureLines(rect.width, effectiveFontSize, enableWordWrap);
@@ -691,8 +687,37 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         enableWordWrap = enableWordWrap
     };
 
+    private float CalculateEffectiveFontSize(Rect rect)
+    {
+        var effectiveFontSize = enableAutoSize
+            ? CalculateAutoSize(rect)
+            : fontSize;
+        return effectiveFontSize;
+    }
+    
     private float CalculateAutoSize(Rect rect)
     {
+        if (enableWordWrap && textProcessor.CanReuseLines(rect.width, maxFontSize, true))
+        {
+            var preferredH = textProcessor.GetPreferredHeight(maxFontSize);
+            if (rect.height >= preferredH - 0.01f)
+            {
+                return maxFontSize;
+            }
+        }
+
+        if (!enableWordWrap &&
+            hasValidAutoSizeForLayout &&
+            Mathf.Approximately(autoSizeWidthCache, rect.width))
+        {
+            textProcessor.EnsureLines(rect.width, autoSizedFontSizeForLayout, false);
+            var preferredH = textProcessor.GetPreferredHeight(autoSizedFontSizeForLayout);
+            if (rect.height >= preferredH - 0.01f)
+            {
+                return autoSizedFontSizeForLayout;
+            }
+        }
+
         var baseSettings = new TextProcessSettings
         {
             MaxWidth = rect.width,

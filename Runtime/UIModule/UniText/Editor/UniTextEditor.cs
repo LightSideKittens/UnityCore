@@ -73,6 +73,9 @@ public class UniTextEditor : Editor
         {
             DrawField("Min Size", uniText.MinFontSize, v => uniText.MinFontSize = v);
             DrawField("Max Size", uniText.MaxFontSize, v => uniText.MaxFontSize = v);
+            GUI.enabled = false;
+            EditorGUILayout.FloatField("Font Size", uniText.CurrentFontSize);
+            GUI.enabled = true;
         }
         DrawField("Color", uniText.color, v => uniText.color = v);
         EndSection();
