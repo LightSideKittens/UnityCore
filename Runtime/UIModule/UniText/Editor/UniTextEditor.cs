@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Sirenix.OdinInspector.Editor;
@@ -23,17 +24,21 @@ public class UniTextEditor : Editor
     private static readonly Color32[] tagColors =
     {
         new(102, 187, 255, 255),
-        new(91, 255, 186, 255), 
+        new(91, 255, 186, 255),
         new(255, 251, 93, 255),
         new(255, 179, 99, 255),
-        new(255, 146, 248, 255), 
+        new(255, 146, 248, 255),
         new(255, 114, 107, 255),
         new(150, 88, 255, 255),
         new(72, 139, 255, 255),
         new(113, 255, 87, 255),
     };
+
+    private static readonly Regex richTextTagRegex = new(@"</?[a-zA-Z][^>]*>", RegexOptions.Compiled);
+
     private readonly PooledList<ParsedRange> tempRanges = new(32);
     private readonly List<(int start, int end, int colorIndex)> highlightRanges = new(32);
+    private readonly List<(int start, int end)> noparseOnlyRanges = new(32);
     private readonly StringBuilder highlightBuilder = new(256);
 
     private void OnEnable()
@@ -240,22 +245,61 @@ public class UniTextEditor : Editor
         return newValue;
     }
 
+    private const string TextAreaControlName = "UniTextEditorTextArea";
+    private bool needsRefocus;
+    private bool needSetup;
+    private int savedCursorIndex;
+    private int savedSelectIndex;
+    private TextEditor editor;
+    
     private void DrawHighlightedTextArea()
     {
         var text = uniText.Text ?? "";
         var displayText = enableHighlight ? BuildHighlightedText(text) : text;
-
+        
+        GUI.SetNextControlName(TextAreaControlName);
         EditorGUI.BeginChangeCheck();
+
         string newText;
         if (textAreaExpand)
             newText = EditorGUILayout.TextArea(displayText, textAreaStyle, GUILayout.ExpandHeight(true));
         else
             newText = EditorGUILayout.TextArea(displayText, textAreaStyle, GUILayout.MinHeight(60));
-
+        
+        if (editor != null && needSetup && editor.hasSelection)
+        {
+            editor.DetectFocusChange();
+            editor.cursorIndex = savedCursorIndex;
+            editor.selectIndex = savedSelectIndex; 
+            needSetup = false;
+        }
+        
+        if (editor != null && needsRefocus)
+        {
+            if (Event.current.type == EventType.Repaint)
+            { 
+                EditorGUI.FocusTextInControl(TextAreaControlName);
+                needsRefocus = false;
+                needSetup = true;
+            }
+        }
+        
         if (EditorGUI.EndChangeCheck())
         {
+            var activeField = typeof(EditorGUI).GetField("activeEditor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            editor = activeField?.GetValue(null) as TextEditor;
+            
+            if (editor != null)
+            {
+                savedCursorIndex = editor.cursorIndex;
+                savedSelectIndex = editor.selectIndex;
+            }
+
             Undo.RecordObject(uniText, "Change Text");
             uniText.Text = enableHighlight ? StripColorTags(newText) : newText;
+            
+            GUIUtility.keyboardControl = 0;
+            needsRefocus = true;
         }
     }
 
@@ -264,25 +308,45 @@ public class UniTextEditor : Editor
         if (string.IsNullOrEmpty(text)) return text;
 
         CollectHighlightRanges(text);
-        if (highlightRanges.Count == 0) return text;
+        if (highlightRanges.Count == 0 && noparseOnlyRanges.Count == 0) return text;
 
-        highlightRanges.Sort((a, b) => a.start.CompareTo(b.start));
+        var allRanges = new List<(int start, int end, int colorIndex, bool noparseOnly)>();
+        for (var i = 0; i < highlightRanges.Count; i++)
+        {
+            var (start, end, colorIndex) = highlightRanges[i];
+            allRanges.Add((start, end, colorIndex, false));
+        }
+        for (var i = 0; i < noparseOnlyRanges.Count; i++)
+        {
+            var (start, end) = noparseOnlyRanges[i];
+            allRanges.Add((start, end, -1, true));
+        }
+        allRanges.Sort((a, b) => a.start.CompareTo(b.start));
 
         highlightBuilder.Clear();
         var lastEnd = 0;
 
-        for (var i = 0; i < highlightRanges.Count; i++)
+        for (var i = 0; i < allRanges.Count; i++)
         {
-            var (start, end, colorIndex) = highlightRanges[i];
+            var (start, end, colorIndex, noparseOnly) = allRanges[i];
             if (start < lastEnd) continue;
 
             if (start > lastEnd)
                 highlightBuilder.Append(text, lastEnd, start - lastEnd);
 
-            var colorHex = ColorUtility.ToHtmlStringRGB(tagColors[colorIndex % tagColors.Length]);
-            highlightBuilder.Append("<color=#").Append(colorHex).Append("><noparse>");
-            highlightBuilder.Append(text, start, end - start);
-            highlightBuilder.Append("</noparse></color>");
+            if (noparseOnly)
+            {
+                highlightBuilder.Append("<noparse>");
+                highlightBuilder.Append(text, start, end - start);
+                highlightBuilder.Append("</noparse>");
+            }
+            else
+            {
+                var colorHex = ColorUtility.ToHtmlStringRGB(tagColors[colorIndex % tagColors.Length]);
+                highlightBuilder.Append("<color=#").Append(colorHex).Append("><noparse>");
+                highlightBuilder.Append(text, start, end - start);
+                highlightBuilder.Append("</noparse></color>");
+            }
             lastEnd = end;
         }
 
@@ -295,46 +359,69 @@ public class UniTextEditor : Editor
     private void CollectHighlightRanges(string text)
     {
         highlightRanges.Clear();
+        noparseOnlyRanges.Clear();
 
         var modRegs = modRegistersProp?.ValueEntry?.WeakSmartValue as List<ModRegister>;
-        if (modRegs == null || modRegs.Count == 0) return;
 
         var colorIndex = 0;
-        for (var m = 0; m < modRegs.Count; m++)
+        if (modRegs != null)
         {
-            var reg = modRegs[m];
-            if (reg?.rule == null) continue;
-
-            tempRanges.Clear();
-            reg.rule.Reset();
-            var idx = 0;
-            while (idx < text.Length)
+            for (var m = 0; m < modRegs.Count; m++)
             {
-                var newIdx = reg.rule.TryMatch(text, idx, tempRanges);
-                idx = newIdx > idx ? newIdx : idx + 1;
-            }
-            reg.rule.Finalize(text.Length, tempRanges);
+                var reg = modRegs[m];
+                if (reg?.rule == null) continue;
 
-            for (var i = 0; i < tempRanges.Count; i++)
-            {
-                var range = tempRanges[i];
-                if (range.HasTags)
+                tempRanges.Clear();
+                reg.rule.Reset();
+                var idx = 0;
+                while (idx < text.Length)
                 {
-                    if (range.tagStart < range.tagEnd)
-                        highlightRanges.Add((range.tagStart, range.tagEnd, colorIndex));
-                    if (range.closeTagStart < range.closeTagEnd)
-                        highlightRanges.Add((range.closeTagStart, range.closeTagEnd, colorIndex));
+                    var newIdx = reg.rule.TryMatch(text, idx, tempRanges);
+                    idx = newIdx > idx ? newIdx : idx + 1;
                 }
-                else if (range.start < range.end)
+                reg.rule.Finalize(text.Length, tempRanges);
+
+                for (var i = 0; i < tempRanges.Count; i++)
                 {
-                    highlightRanges.Add((range.start, range.end, colorIndex));
+                    var range = tempRanges[i];
+                    if (range.HasTags)
+                    {
+                        if (range.tagStart < range.tagEnd)
+                            highlightRanges.Add((range.tagStart, range.tagEnd, colorIndex));
+                        if (range.closeTagStart < range.closeTagEnd)
+                            highlightRanges.Add((range.closeTagStart, range.closeTagEnd, colorIndex));
+                    }
+                    else if (range.start < range.end)
+                    {
+                        highlightRanges.Add((range.start, range.end, colorIndex));
+                    }
+                    colorIndex++;
                 }
-                colorIndex++;
             }
+        }
+
+        var matches = richTextTagRegex.Matches(text);
+        foreach (Match match in matches)
+        {
+            var start = match.Index;
+            var end = start + match.Length;
+            if (!IsRangeCovered(start, end))
+                noparseOnlyRanges.Add((start, end));
         }
     }
 
-    private static readonly Regex stripRegex = new(@"<color=#[A-Fa-f0-9]+><noparse>|</noparse></color>", RegexOptions.Compiled);
+    private bool IsRangeCovered(int start, int end)
+    {
+        for (var i = 0; i < highlightRanges.Count; i++)
+        {
+            var (hStart, hEnd, _) = highlightRanges[i];
+            if (hStart <= start && end <= hEnd)
+                return true;
+        }
+        return false;
+    }
+
+    private static readonly Regex stripRegex = new(@"<color=#[A-Fa-f0-9]+><noparse>|</noparse></color>|<noparse>|</noparse>", RegexOptions.Compiled);
 
     private static string StripColorTags(string text)
     {
