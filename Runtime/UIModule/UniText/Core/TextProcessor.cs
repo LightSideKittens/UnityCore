@@ -69,10 +69,15 @@ public sealed class TextProcessor
 
     private float lastLinesWidth = -1;
     private float lastLinesFontSize = -1;
+    private bool lastLinesWordWrap;
     private bool hasValidLinesData;
 
     private float lastLayoutMaxHeight = -1;
+    private HorizontalAlignment lastLayoutHAlign;
+    private VerticalAlignment lastLayoutVAlign;
     private bool hasValidPositionedGlyphs;
+
+    private ReadOnlyMemory<char> lastText;
 
     public static int processCallCount;
     public static int ensureShapingCallCount;
@@ -93,85 +98,6 @@ public sealed class TextProcessor
         fontProvider = provider;
         baseFontId = defaultFontId;
     }
-
-
-    /// <param name="text">Text to process</param>
-    /// <param name="settings">Processing settings</param>
-    public ReadOnlySpan<PositionedGlyph> Process(
-        ReadOnlySpan<char> text,
-        TextProcessSettings settings)
-    {
-        Profiler.BeginSample("TextProcessor.Process");
-        processCallCount++;
-        var fullRebuild = !hasValidShapingData;
-
-        var canReuseLines = !fullRebuild &&
-                            hasValidLinesData &&
-                            Math.Abs(lastLinesWidth - settings.MaxWidth) < 0.001f &&
-                            Math.Abs(lastLinesFontSize - settings.fontSize) < 0.001f;
-
-        var heightMatches = (float.IsInfinity(lastLayoutMaxHeight) && float.IsInfinity(settings.MaxHeight)) ||
-                            Math.Abs(lastLayoutMaxHeight - settings.MaxHeight) < 0.001f;
-        var canReusePositionedGlyphs = canReuseLines &&
-                                       hasValidPositionedGlyphs &&
-                                       heightMatches &&
-                                       buf.positionedGlyphs.count > 0;
-
-        if (fullRebuild)
-        {
-            buf.Reset();
-            hasValidShapingData = false;
-            hasValidLinesData = false;
-            hasValidPositionedGlyphs = false;
-        }
-        else if (!canReusePositionedGlyphs)
-        {
-            if (!canReuseLines)
-            {
-                buf.lines.count = 0;
-                buf.orderedRuns.count = 0;
-            }
-            buf.positionedGlyphs.count = 0;
-        }
-
-        if (text.IsEmpty)
-        {
-            resultWidth = 0;
-            resultHeight = 0;
-            hasValidShapingData = false;
-            hasValidLinesData = false;
-            hasValidPositionedGlyphs = false;
-            return ReadOnlySpan<PositionedGlyph>.Empty;
-        }
-
-        fontProvider?.SetFontSize(settings.fontSize);
-
-        if (fullRebuild)
-            if (!DoFullShaping(text, settings))
-                return ReadOnlySpan<PositionedGlyph>.Empty;
-
-        if (!canReusePositionedGlyphs)
-        {
-            if (!canReuseLines)
-            {
-                var glyphScale = buf.GetGlyphScale(settings.fontSize);
-                var effectiveMaxWidth =
-                    settings.enableWordWrap ? settings.MaxWidth / glyphScale : TextProcessSettings.FloatMax;
-                BreakLines(effectiveMaxWidth);
-
-                lastLinesWidth = settings.MaxWidth;
-                lastLinesFontSize = settings.fontSize;
-                hasValidLinesData = true;
-            }
-
-            LayoutText(settings);
-            lastLayoutMaxHeight = settings.MaxHeight;
-            hasValidPositionedGlyphs = true;
-        }
-
-        Profiler.EndSample();
-        return buf.positionedGlyphs.Span;
-    }
     
     public bool HasValidShapingData => hasValidShapingData;
     
@@ -188,12 +114,14 @@ public sealed class TextProcessor
         hasValidPositionedGlyphs = false;
         lastLinesWidth = -1;
         lastLinesFontSize = -1;
+        lastLinesWordWrap = false;
         lastLayoutMaxHeight = -1;
     }
 
     public void InvalidatePositionedGlyphs()
     {
         hasValidPositionedGlyphs = false;
+        lastLayoutMaxHeight = -1;
     }
 
 
@@ -216,6 +144,72 @@ public sealed class TextProcessor
 
         fontProvider?.SetFontSize(settings.fontSize);
         DoFullShaping(text, settings);
+
+        Profiler.EndSample();
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool CanReuseLines(float width, float fontSize, bool wordWrap)
+    {
+        return hasValidLinesData &&
+               Math.Abs(lastLinesWidth - width) < 0.001f &&
+               Math.Abs(lastLinesFontSize - fontSize) < 0.001f &&
+               lastLinesWordWrap == wordWrap;
+    }
+
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool CanReusePositions(float maxHeight, HorizontalAlignment hAlign, VerticalAlignment vAlign)
+    {
+        if (!hasValidPositionedGlyphs) return false;
+
+        var heightMatches = (float.IsInfinity(lastLayoutMaxHeight) && float.IsInfinity(maxHeight)) ||
+                            Math.Abs(lastLayoutMaxHeight - maxHeight) < 0.001f;
+
+        return heightMatches && lastLayoutHAlign == hAlign && lastLayoutVAlign == vAlign;
+    }
+
+
+    public void EnsureLines(float width, float fontSize, bool wordWrap)
+    {
+        if (!hasValidShapingData) return;
+        if (CanReuseLines(width, fontSize, wordWrap)) return;
+
+        Profiler.BeginSample("TextProcessor.EnsureLines");
+
+        buf.lines.count = 0;
+        buf.orderedRuns.count = 0;
+        buf.positionedGlyphs.count = 0;
+        hasValidPositionedGlyphs = false;
+
+        var glyphScale = buf.GetGlyphScale(fontSize);
+        var effectiveMaxWidth = wordWrap ? width / glyphScale : TextProcessSettings.FloatMax;
+        BreakLines(effectiveMaxWidth);
+
+        lastLinesWidth = width;
+        lastLinesFontSize = fontSize;
+        lastLinesWordWrap = wordWrap;
+        hasValidLinesData = true;
+
+        Profiler.EndSample();
+    }
+
+
+    public void EnsurePositions(TextProcessSettings settings)
+    {
+        if (!hasValidLinesData) return;
+        if (CanReusePositions(settings.MaxHeight, settings.HorizontalAlignment, settings.VerticalAlignment)) return;
+
+        Profiler.BeginSample("TextProcessor.EnsurePositions");
+
+        buf.positionedGlyphs.count = 0;
+        LayoutText(settings);
+
+        lastLayoutMaxHeight = settings.MaxHeight;
+        lastLayoutHAlign = settings.HorizontalAlignment;
+        lastLayoutVAlign = settings.VerticalAlignment;
+        hasValidPositionedGlyphs = true;
 
         Profiler.EndSample();
     }
@@ -275,12 +269,32 @@ public sealed class TextProcessor
     public float GetUnwrappedWidth()
     {
         if (!hasValidShapingData) return 0;
-        
+
         float total = 0;
         var count = buf.shapedRuns.count;
         for (var i = 0; i < count; i++)
             total += buf.shapedRuns[i].width;
         return total;
+    }
+    
+    public float GetPreferredWidth(float fontSize)
+    {
+        if (!hasValidShapingData) return 0;
+        var glyphScale = buf.GetGlyphScale(fontSize);
+        return Mathf.Ceil(GetMaxLineWidth() * glyphScale);
+    }
+    
+    public float GetPreferredHeight(float fontSize, float lineSpacing = 0f)
+    {
+        if (!hasValidLinesData) return 0;
+
+        if (fontProvider != null)
+        {
+            fontProvider.GetLineMetrics(fontSize, out var ascender, out var descender, out var lineHeight);
+            return UniTextFontProvider.CalculateTextHeight(ascender, descender, buf.lines.count, lineHeight, lineSpacing);
+        }
+
+        return buf.lines.count * fontSize * 1.2f;
     }
 
 
@@ -327,58 +341,7 @@ public sealed class TextProcessor
 
         return maxWidth > 0 ? maxWidth : GetUnwrappedWidth();
     }
-
-
-    public float GetHeightForWidth(float width, TextProcessSettings settings)
-    {
-        Profiler.BeginSample("TextProcessor.GetHeightForWidth");
-
-        if (!hasValidShapingData)
-        {
-            Profiler.EndSample();
-            return 0;
-        }
-
-        var canReuseLines = hasValidLinesData &&
-                            Math.Abs(lastLinesWidth - settings.MaxWidth) < 0.001f &&
-                            Math.Abs(lastLinesFontSize - settings.fontSize) < 0.001f;
-
-        if (!canReuseLines)
-        {
-            buf.lines.count = 0;
-            buf.orderedRuns.count = 0;
-
-            var glyphScale = buf.GetGlyphScale(settings.fontSize);
-            var effectiveMaxWidth = settings.enableWordWrap ? width / glyphScale : TextProcessSettings.FloatMax;
-            BreakLines(effectiveMaxWidth);
-
-            lastLinesWidth = settings.MaxWidth;
-            lastLinesFontSize = settings.fontSize;
-            hasValidLinesData = true;
-        }
-
-        float result;
-        if (fontProvider != null)
-        {
-            fontProvider.GetLineMetrics(settings.fontSize, out var ascender, out var descender, out var lineHeight);
-            result = UniTextFontProvider.CalculateTextHeight(ascender, descender, buf.lines.count, lineHeight, settings.LineSpacing);
-        }
-        else
-        {
-            result = buf.lines.count * settings.fontSize * 1.2f;
-        }
-
-        Profiler.EndSample();
-        return result;
-    }
-
-
-    /// <param name="minSize">Minimum font size</param>
-    /// <param name="maxSize">Maximum font size</param>
-    /// <param name="targetWidth">Target width constraint</param>
-    /// <param name="targetHeight">Target height constraint</param>
-    /// <param name="baseSettings">Base settings (fontSize will be modified during search)</param>
-    /// <returns>Optimal font size that fits, or minSize if text doesn't fit even at minimum</returns>
+    
     public float FindOptimalFontSize(
         float minSize,
         float maxSize,
@@ -790,7 +753,6 @@ public sealed class TextProcessor
         buf.shapedRuns[count] = run;
         buf.shapedRuns.count = count + 1;
     }
-
 
     private void EnsureGlyphsInAtlas()
     {

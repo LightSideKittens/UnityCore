@@ -5,15 +5,10 @@ using UnityEngine.UI;
 
 public partial class UniText : ILayoutElement
 {
-    private float cachedPreferredWidth;
-    private float cachedPreferredHeight;
-    private float cachedPreferredHeightForWidth;
-    private bool hasValidPreferredWidth;
-    private bool hasValidPreferredHeight;
-    private float layoutCachedFontSize;
-    private float layoutCachedWidth;
-    private bool hasValidLayoutCache;
-    
+    private float autoSizedFontSizeForLayout;
+    private float autoSizeWidthCache;
+    private bool hasValidAutoSizeForLayout;
+
     void ILayoutElement.CalculateLayoutInputHorizontal()
     {
         Profiler.BeginSample("UniText.CalculateLayoutInputHorizontal");
@@ -21,7 +16,28 @@ public partial class UniText : ILayoutElement
         Profiler.EndSample();
     }
 
-    void ILayoutElement.CalculateLayoutInputVertical() { }
+    void ILayoutElement.CalculateLayoutInputVertical()
+    {
+        Profiler.BeginSample("UniText.CalculateLayoutInputVertical");
+
+        if (string.IsNullOrEmpty(text) || textProcessor == null)
+        {
+            Profiler.EndSample();
+            return;
+        }
+
+        var width = rectTransform.rect.width;
+        if (width <= 0)
+        {
+            Profiler.EndSample();
+            return;
+        }
+
+        var effectiveFontSize = GetEffectiveFontSizeForLayout(width);
+        textProcessor.EnsureLines(width, effectiveFontSize, enableWordWrap);
+
+        Profiler.EndSample();
+    }
 
     public float minWidth => 0;
 
@@ -32,18 +48,14 @@ public partial class UniText : ILayoutElement
             if (string.IsNullOrEmpty(text)) return 0;
             if (textProcessor == null) return 0;
 
-            if (hasValidPreferredWidth) return cachedPreferredWidth;
-
             Profiler.BeginSample("UniText.preferredWidth");
 
             EnsureShapingForLayout();
-
-            var glyphScale = GetGlyphScaleForLayout();
-            cachedPreferredWidth = Mathf.Ceil(textProcessor.GetMaxLineWidth() * glyphScale);
-            hasValidPreferredWidth = true;
+            var effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
+            var result = textProcessor.GetPreferredWidth(effectiveFontSize);
 
             Profiler.EndSample();
-            return cachedPreferredWidth;
+            return result;
         }
     }
 
@@ -61,53 +73,15 @@ public partial class UniText : ILayoutElement
             var width = rectTransform.rect.width;
             if (width <= 0) return 0;
 
-            if (hasValidPreferredHeight && Mathf.Approximately(cachedPreferredHeightForWidth, width))
-                return cachedPreferredHeight;
-
             Profiler.BeginSample("UniText.preferredHeight");
 
             EnsureShapingForLayout();
-
-            float effectiveFontSize;
-            if (enableAutoSize && !enableWordWrap)
-            {
-                if (hasValidLayoutCache && Mathf.Approximately(layoutCachedWidth, width))
-                {
-                    effectiveFontSize = layoutCachedFontSize;
-                }
-                else
-                {
-                    var tempSettings = CreateProcessSettingsForLayout(width);
-                    effectiveFontSize = textProcessor.FindOptimalFontSize(minFontSize, maxFontSize, width,
-                        TextProcessSettings.FloatMax, tempSettings);
-
-                    layoutCachedFontSize = effectiveFontSize;
-                    layoutCachedWidth = width;
-                    hasValidLayoutCache = true;
-                }
-            }
-            else
-            {
-                effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
-            }
-
-            var settings = new TextProcessSettings
-            {
-                MaxWidth = width,
-                MaxHeight = TextProcessSettings.FloatMax,
-                fontSize = effectiveFontSize,
-                baseDirection = baseDirection,
-                enableWordWrap = enableWordWrap,
-                HorizontalAlignment = horizontalAlignment,
-                VerticalAlignment = verticalAlignment
-            };
-
-            cachedPreferredHeight = textProcessor.GetHeightForWidth(width, settings);
-            cachedPreferredHeightForWidth = width;
-            hasValidPreferredHeight = true;
+            var effectiveFontSize = GetEffectiveFontSizeForLayout(width);
+            textProcessor.EnsureLines(width, effectiveFontSize, enableWordWrap);
+            var result = textProcessor.GetPreferredHeight(effectiveFontSize);
 
             Profiler.EndSample();
-            return cachedPreferredHeight;
+            return result;
         }
     }
 
@@ -125,34 +99,54 @@ public partial class UniText : ILayoutElement
         Profiler.BeginSample("UniText.EnsureShapingForLayout");
 
         var textSpan = ParseOrGetParsedAttributes();
-        var settings = CreateProcessSettingsForLayout(TextProcessSettings.FloatMax);
+        var effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
+        var settings = new TextProcessSettings
+        {
+            fontSize = effectiveFontSize,
+            baseDirection = baseDirection
+        };
+
         textProcessor.EnsureShaping(textSpan, settings);
 
         Profiler.EndSample();
     }
 
 
-    private TextProcessSettings CreateProcessSettingsForLayout(float width)
+    private float GetEffectiveFontSizeForLayout(float width)
     {
-        var effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
+        if (!enableAutoSize) return fontSize;
 
-        return new TextProcessSettings
+        if (hasValidAutoSizeForLayout && Mathf.Approximately(autoSizeWidthCache, width))
+            return autoSizedFontSizeForLayout;
+
+        if (!enableWordWrap)
         {
-            MaxWidth = width,
-            MaxHeight = TextProcessSettings.FloatMax,
-            fontSize = effectiveFontSize,
-            baseDirection = baseDirection,
-            enableWordWrap = enableWordWrap,
-            HorizontalAlignment = horizontalAlignment,
-            VerticalAlignment = verticalAlignment
-        };
+            var settings = new TextProcessSettings
+            {
+                MaxWidth = width,
+                MaxHeight = TextProcessSettings.FloatMax,
+                fontSize = maxFontSize,
+                baseDirection = baseDirection,
+                enableWordWrap = false
+            };
+
+            autoSizedFontSizeForLayout = textProcessor.FindOptimalFontSize(
+                minFontSize, maxFontSize, width, TextProcessSettings.FloatMax, settings);
+        }
+        else
+        {
+            autoSizedFontSizeForLayout = maxFontSize;
+        }
+
+        autoSizeWidthCache = width;
+        hasValidAutoSizeForLayout = true;
+
+        return autoSizedFontSizeForLayout;
     }
 
 
-    private float GetGlyphScaleForLayout()
+    private void InvalidateAutoSizeCache()
     {
-        var buf = buffers;
-        var targetFontSize = enableAutoSize ? maxFontSize : fontSize;
-        return buf.shapingFontSize > 0 ? targetFontSize / buf.shapingFontSize : 1f;
+        hasValidAutoSizeForLayout = false;
     }
 }

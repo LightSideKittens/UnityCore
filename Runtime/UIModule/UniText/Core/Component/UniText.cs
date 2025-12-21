@@ -60,15 +60,12 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     private float lastResultWidth;
     private float lastResultHeight;
     private float autoSizedFontSize;
-    private float lastAutoSizeWidth;
-    private float lastAutoSizeHeight;
-    private bool hasValidAutoSize;
 
     private readonly List<CanvasRenderer> subMeshRenderers = new();
     private readonly List<Material> subMeshStencilMaterials = new();
     private readonly List<Mesh> acquiredMeshes = new();
     private PooledList<UniTextRenderData> lastMeshPairs;
-    
+
     private Rect cachedClipRect;
     private bool cachedValidClip;
     private Vector4 cachedClipSoftness;
@@ -203,7 +200,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         {
             if (enableAutoSize == value) return;
             enableAutoSize = value;
-            hasValidAutoSize = false;
             SetDirty(DirtyFlags.Layout);
         }
     }
@@ -216,7 +212,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
             value = Mathf.Max(1f, value);
             if (Mathf.Approximately(minFontSize, value)) return;
             minFontSize = value;
-            if (enableAutoSize) { hasValidAutoSize = false; SetDirty(DirtyFlags.Layout); }
+            if (enableAutoSize) SetDirty(DirtyFlags.Layout);
         }
     }
 
@@ -228,7 +224,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
             value = Mathf.Max(1f, value);
             if (Mathf.Approximately(maxFontSize, value)) return;
             maxFontSize = value;
-            if (enableAutoSize) { hasValidAutoSize = false; SetDirty(DirtyFlags.Layout); }
+            if (enableAutoSize) SetDirty(DirtyFlags.Layout);
         }
     }
 
@@ -260,24 +256,16 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         {
             textProcessor?.InvalidateShapingData();
             textIsParsed = false;
-            hasValidLayoutCache = false;
-            hasValidAutoSize = false;
+            InvalidateAutoSizeCache();
         }
         else if ((flags & (DirtyFlags.Layout | DirtyFlags.FontSize)) != 0)
         {
             textProcessor?.InvalidateLayoutData();
-            hasValidAutoSize = false;
-            hasValidLayoutCache = false;
+            InvalidateAutoSizeCache();
         }
         else if ((flags & DirtyFlags.Alignment) != 0)
         {
             textProcessor?.InvalidatePositionedGlyphs();
-        }
-
-        if ((flags & ~(DirtyFlags.Material | DirtyFlags.Alignment | DirtyFlags.Color)) != 0)
-        {
-            hasValidPreferredWidth = false;
-            hasValidPreferredHeight = false;
         }
 
         SetVerticesDirty();
@@ -373,7 +361,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     }
 
     #endregion
-
     
     #region Lifecycle
 
@@ -424,13 +411,19 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         if (!Mathf.Approximately(width, lastKnownWidth))
         {
             lastKnownWidth = width;
-            SetDirty(DirtyFlags.Layout);
+
+            var effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
+            if (textProcessor != null && textProcessor.CanReuseLines(width, effectiveFontSize, enableWordWrap))
+            {
+                SetDirty(DirtyFlags.Alignment);
+            }
+            else
+            {
+                SetDirty(DirtyFlags.Layout);
+            }
         }
         else
         {
-            // Height only changed - trigger RebuildLayout for auto size / vertical alignment
-            // but skip InvalidateLayoutData (lines don't depend on height)
-            // Alignment flag triggers RebuildLayout without InvalidateLayoutData
             SetDirty(DirtyFlags.Alignment);
         }
     }
@@ -555,7 +548,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         Profiler.BeginSample("UniText.RebuildFull");
 
         ReleaseMeshes();
-        hasValidAutoSize = false;
 
         if (string.IsNullOrEmpty(text))
         {
@@ -568,17 +560,28 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
         var rect = rectTransform.rect;
         var textSpan = ParseOrGetParsedAttributes();
-        var effectiveFontSize = enableAutoSize ? CalculateAutoSize(textSpan, rect) : fontSize;
-        if (!enableAutoSize) autoSizedFontSize = fontSize;
+
+        var shapingSettings = new TextProcessSettings
+        {
+            fontSize = enableAutoSize ? maxFontSize : fontSize,
+            baseDirection = baseDirection
+        };
+        textProcessor.EnsureShaping(textSpan, shapingSettings);
+
+        var effectiveFontSize = enableAutoSize
+            ? CalculateAutoSize(rect)
+            : fontSize;
+        autoSizedFontSize = effectiveFontSize;
+
+        textProcessor.EnsureLines(rect.width, effectiveFontSize, enableWordWrap);
 
         var settings = CreateProcessSettings(rect, effectiveFontSize);
-
-        var glyphs = textProcessor.Process(textSpan, settings);
+        textProcessor.EnsurePositions(settings);
 
         lastResultWidth = textProcessor.ResultWidth;
         lastResultHeight = textProcessor.ResultHeight;
 
-        GenerateMeshes(glyphs, rect, effectiveFontSize);
+        GenerateMeshes(textProcessor.PositionedGlyphs, rect, effectiveFontSize);
 
         Profiler.EndSample();
     }
@@ -597,47 +600,28 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         }
 
         var rect = rectTransform.rect;
-        var textSpan = ParseOrGetParsedAttributes();
 
-        var effectiveFontSize = fontSize;
-        if (enableAutoSize)
+        if (!textProcessor.HasValidShapingData)
         {
-            var canReuse = hasValidAutoSize &&
-                           Mathf.Approximately(lastAutoSizeWidth, rect.width) &&
-                           Mathf.Approximately(lastAutoSizeHeight, rect.height);
+            RebuildFull();
+            Profiler.EndSample();
+            return;
+        }
 
-            if (canReuse)
-            {
-                effectiveFontSize = autoSizedFontSize;
-            }
-            else if (hasValidPreferredHeight &&
-                     Mathf.Approximately(cachedPreferredHeightForWidth, rect.width) &&
-                     rect.height >= cachedPreferredHeight - 0.01f &&
-                     (enableWordWrap || hasValidLayoutCache))
-            {
-                effectiveFontSize = enableWordWrap ? maxFontSize : layoutCachedFontSize;
-                autoSizedFontSize = effectiveFontSize;
-                lastAutoSizeWidth = rect.width;
-                lastAutoSizeHeight = rect.height;
-                hasValidAutoSize = true;
-            }
-            else
-            {
-                effectiveFontSize = CalculateAutoSize(textSpan, rect);
-            }
-        }
-        else
-        {
-            autoSizedFontSize = fontSize;
-        }
+        var effectiveFontSize = enableAutoSize
+            ? CalculateAutoSize(rect)
+            : fontSize;
+        autoSizedFontSize = effectiveFontSize;
+
+        textProcessor.EnsureLines(rect.width, effectiveFontSize, enableWordWrap);
 
         var settings = CreateProcessSettings(rect, effectiveFontSize);
-        var glyphs = textProcessor.Process(textSpan, settings);
+        textProcessor.EnsurePositions(settings);
 
         lastResultWidth = textProcessor.ResultWidth;
         lastResultHeight = textProcessor.ResultHeight;
 
-        GenerateMeshes(glyphs, rect, effectiveFontSize);
+        GenerateMeshes(textProcessor.PositionedGlyphs, rect, effectiveFontSize);
 
         Profiler.EndSample();
     }
@@ -707,19 +691,20 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         enableWordWrap = enableWordWrap
     };
 
-    private float CalculateAutoSize(ReadOnlySpan<char> textSpan, Rect rect)
+    private float CalculateAutoSize(Rect rect)
     {
-        var baseSettings = CreateProcessSettings(rect, maxFontSize);
-        textProcessor.EnsureShaping(textSpan, baseSettings);
+        var baseSettings = new TextProcessSettings
+        {
+            MaxWidth = rect.width,
+            MaxHeight = rect.height,
+            fontSize = maxFontSize,
+            baseDirection = baseDirection,
+            enableWordWrap = enableWordWrap,
+            HorizontalAlignment = horizontalAlignment,
+            VerticalAlignment = verticalAlignment
+        };
 
-        var optimalSize = textProcessor.FindOptimalFontSize(minFontSize, maxFontSize, rect.width, rect.height, baseSettings);
-
-        autoSizedFontSize = optimalSize;
-        lastAutoSizeWidth = rect.width;
-        lastAutoSizeHeight = rect.height;
-        hasValidAutoSize = true;
-
-        return optimalSize;
+        return textProcessor.FindOptimalFontSize(minFontSize, maxFontSize, rect.width, rect.height, baseSettings);
     }
 
     #endregion
@@ -955,7 +940,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
         void OnUpdate()
         { 
-            if(Application.isPlaying) return;
             if(this ==  null) return;
             EditorApplication.update -= OnUpdate;
             ReInitModifiers();

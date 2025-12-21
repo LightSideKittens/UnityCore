@@ -25,7 +25,6 @@ public sealed class UniTextBuffers
     public PooledBuffer<ShapedRun> orderedRuns;
     public PooledBuffer<PositionedGlyph> positionedGlyphs;
 
-    // Parallel arrays - share codepoints.count
     public byte[] bidiLevels;
     public UnicodeScript[] scripts;
     public float[] startMargins;
