@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -15,6 +18,23 @@ public class UniTextEditor : Editor
     private static bool textAreaExpand;
     private static int textAreaFontSize = 14;
     private static GUIStyle textAreaStyle;
+    private static bool enableHighlight = true;
+
+    private static readonly Color32[] tagColors =
+    {
+        new(102, 187, 255, 255),
+        new(91, 255, 186, 255), 
+        new(255, 251, 93, 255),
+        new(255, 179, 99, 255),
+        new(255, 146, 248, 255), 
+        new(255, 114, 107, 255),
+        new(150, 88, 255, 255),
+        new(72, 139, 255, 255),
+        new(113, 255, 87, 255),
+    };
+    private readonly PooledList<ParsedRange> tempRanges = new(32);
+    private readonly List<(int start, int end, int colorIndex)> highlightRanges = new(32);
+    private readonly StringBuilder highlightBuilder = new(256);
 
     private void OnEnable()
     {
@@ -49,19 +69,16 @@ public class UniTextEditor : Editor
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Expand", GUILayout.Width(50));
         textAreaExpand = EditorGUILayout.Toggle(textAreaExpand, GUILayout.Width(25));
-        EditorGUILayout.LabelField("Size", GUILayout.Width(50));
+        EditorGUILayout.LabelField("Highlight", GUILayout.Width(60));
+        enableHighlight = EditorGUILayout.Toggle(enableHighlight, GUILayout.Width(25));
+        EditorGUILayout.LabelField("Size", GUILayout.Width(30));
         textAreaFontSize = EditorGUILayout.IntSlider(textAreaFontSize, 8, 24);
         EditorGUILayout.EndHorizontal();
 
-        if (textAreaStyle == null || textAreaStyle.fontSize != textAreaFontSize)
-            textAreaStyle = new GUIStyle(EditorStyles.textArea) { fontSize = textAreaFontSize };
+        if (textAreaStyle == null || textAreaStyle.fontSize != textAreaFontSize || textAreaStyle.richText != enableHighlight)
+            textAreaStyle = new GUIStyle(EditorStyles.textArea) { fontSize = textAreaFontSize, richText = enableHighlight };
 
-        DrawField(null, uniText.Text, v => uniText.Text = v, () =>
-        {
-            if (textAreaExpand)
-                return EditorGUILayout.TextArea(uniText.Text, textAreaStyle, GUILayout.ExpandHeight(true));
-            return EditorGUILayout.TextArea(uniText.Text, textAreaStyle, GUILayout.MinHeight(60));
-        });
+        DrawHighlightedTextArea();
         EndSection();
 
         BeginSection("Font");
@@ -219,7 +236,109 @@ public class UniTextEditor : Editor
             var obj = value as Object;
             return (T)(object)EditorGUILayout.ObjectField(label, obj, typeof(T), false);
         }
-        
+
         return newValue;
+    }
+
+    private void DrawHighlightedTextArea()
+    {
+        var text = uniText.Text ?? "";
+        var displayText = enableHighlight ? BuildHighlightedText(text) : text;
+
+        EditorGUI.BeginChangeCheck();
+        string newText;
+        if (textAreaExpand)
+            newText = EditorGUILayout.TextArea(displayText, textAreaStyle, GUILayout.ExpandHeight(true));
+        else
+            newText = EditorGUILayout.TextArea(displayText, textAreaStyle, GUILayout.MinHeight(60));
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(uniText, "Change Text");
+            uniText.Text = enableHighlight ? StripColorTags(newText) : newText;
+        }
+    }
+
+    private string BuildHighlightedText(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+
+        CollectHighlightRanges(text);
+        if (highlightRanges.Count == 0) return text;
+
+        highlightRanges.Sort((a, b) => a.start.CompareTo(b.start));
+
+        highlightBuilder.Clear();
+        var lastEnd = 0;
+
+        for (var i = 0; i < highlightRanges.Count; i++)
+        {
+            var (start, end, colorIndex) = highlightRanges[i];
+            if (start < lastEnd) continue;
+
+            if (start > lastEnd)
+                highlightBuilder.Append(text, lastEnd, start - lastEnd);
+
+            var colorHex = ColorUtility.ToHtmlStringRGB(tagColors[colorIndex % tagColors.Length]);
+            highlightBuilder.Append("<color=#").Append(colorHex).Append("><noparse>");
+            highlightBuilder.Append(text, start, end - start);
+            highlightBuilder.Append("</noparse></color>");
+            lastEnd = end;
+        }
+
+        if (lastEnd < text.Length)
+            highlightBuilder.Append(text, lastEnd, text.Length - lastEnd);
+
+        return highlightBuilder.ToString();
+    }
+
+    private void CollectHighlightRanges(string text)
+    {
+        highlightRanges.Clear();
+
+        var modRegs = modRegistersProp?.ValueEntry?.WeakSmartValue as List<ModRegister>;
+        if (modRegs == null || modRegs.Count == 0) return;
+
+        var colorIndex = 0;
+        for (var m = 0; m < modRegs.Count; m++)
+        {
+            var reg = modRegs[m];
+            if (reg?.rule == null) continue;
+
+            tempRanges.Clear();
+            reg.rule.Reset();
+            var idx = 0;
+            while (idx < text.Length)
+            {
+                var newIdx = reg.rule.TryMatch(text, idx, tempRanges);
+                idx = newIdx > idx ? newIdx : idx + 1;
+            }
+            reg.rule.Finalize(text.Length, tempRanges);
+
+            for (var i = 0; i < tempRanges.Count; i++)
+            {
+                var range = tempRanges[i];
+                if (range.HasTags)
+                {
+                    if (range.tagStart < range.tagEnd)
+                        highlightRanges.Add((range.tagStart, range.tagEnd, colorIndex));
+                    if (range.closeTagStart < range.closeTagEnd)
+                        highlightRanges.Add((range.closeTagStart, range.closeTagEnd, colorIndex));
+                }
+                else if (range.start < range.end)
+                {
+                    highlightRanges.Add((range.start, range.end, colorIndex));
+                }
+                colorIndex++;
+            }
+        }
+    }
+
+    private static readonly Regex stripRegex = new(@"<color=#[A-Fa-f0-9]+><noparse>|</noparse></color>", RegexOptions.Compiled);
+
+    private static string StripColorTags(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        return stripRegex.Replace(text, "");
     }
 }

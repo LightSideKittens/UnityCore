@@ -67,6 +67,12 @@ using UnityEditor;
             if (m_Material.HasProperty("_OutlineSoftness"))
                 DoSlider("_OutlineSoftness", "Softness");
 
+            if (m_Material.HasProperty("_WeightNormal"))
+                DoFloat("_WeightNormal", "Weight Normal");
+
+            if (m_Material.HasProperty("_WeightBold"))
+                DoFloat("_WeightBold", "Weight Bold");
+
             EditorGUI.indentLevel -= 1;
             EditorGUILayout.Space();
         }
