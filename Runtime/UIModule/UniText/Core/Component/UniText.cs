@@ -288,6 +288,15 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         }
     }
 
+    private bool wasDirtied;
+    
+    public override void SetVerticesDirty()
+    {
+        if(wasDirtied) return;
+        wasDirtied = true;
+        base.SetVerticesDirty();
+    }
+
     #endregion
 
     #region Modifiers
@@ -480,7 +489,8 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         else RebuildMeshOnly();
 
         UpdateRendering();
-
+        
+        wasDirtied = false;
         Profiler.EndSample();
     }
     
@@ -595,7 +605,26 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
             var canReuse = hasValidAutoSize &&
                            Mathf.Approximately(lastAutoSizeWidth, rect.width) &&
                            Mathf.Approximately(lastAutoSizeHeight, rect.height);
-            effectiveFontSize = canReuse ? autoSizedFontSize : CalculateAutoSize(textSpan, rect);
+
+            if (canReuse)
+            {
+                effectiveFontSize = autoSizedFontSize;
+            }
+            else if (hasValidPreferredHeight &&
+                     Mathf.Approximately(cachedPreferredHeightForWidth, rect.width) &&
+                     rect.height >= cachedPreferredHeight - 0.01f &&
+                     (enableWordWrap || hasValidLayoutCache))
+            {
+                effectiveFontSize = enableWordWrap ? maxFontSize : layoutCachedFontSize;
+                autoSizedFontSize = effectiveFontSize;
+                lastAutoSizeWidth = rect.width;
+                lastAutoSizeHeight = rect.height;
+                hasValidAutoSize = true;
+            }
+            else
+            {
+                effectiveFontSize = CalculateAutoSize(textSpan, rect);
+            }
         }
         else
         {
@@ -926,6 +955,8 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
         void OnUpdate()
         { 
+            if(Application.isPlaying) return;
+            if(this ==  null) return;
             EditorApplication.update -= OnUpdate;
             ReInitModifiers();
         }

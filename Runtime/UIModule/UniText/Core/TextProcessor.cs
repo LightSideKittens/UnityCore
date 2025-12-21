@@ -460,22 +460,11 @@ public sealed class TextProcessor
 
             var heightLimitedSize = targetHeight / (ascenderRatio - descenderRatio + (lineCount - 1) * lineHeightRatio);
 
-            var optimalSize = Math.Min(widthLimitedSize, heightLimitedSize);
-
+            var optimalSize = Math.Clamp(Math.Min(widthLimitedSize, heightLimitedSize), minSize, maxSize);
             hasValidLinesData = false;
             hasValidPositionedGlyphs = false;
-            lastLinesWidth = -1;
-            lastLinesFontSize = -1;
-            lastLayoutMaxHeight = -1;
-
-            return Math.Clamp(optimalSize, minSize, maxSize);
+            return optimalSize;
         }
-
-        hasValidLinesData = false;
-        hasValidPositionedGlyphs = false;
-        lastLinesWidth = -1;
-        lastLinesFontSize = -1;
-        lastLayoutMaxHeight = -1;
 
         const float tolerance = 0.5f;
         var lo = minSize;
@@ -500,6 +489,9 @@ public sealed class TextProcessor
                 hi = mid;
         }
 
+        if (Math.Abs(lastLinesFontSize - lo) > 0.001f)
+            GetHeightForFontSize(lo, targetWidth, baseSettings);
+
         return lo;
     }
 
@@ -515,6 +507,11 @@ public sealed class TextProcessor
         buf.positionedGlyphs.count = 0;
 
         BreakLines(effectiveMaxWidth);
+
+        lastLinesWidth = targetWidth;
+        lastLinesFontSize = fontSize;
+        hasValidLinesData = true;
+        hasValidPositionedGlyphs = false;
 
         if (fontProvider != null)
         {
