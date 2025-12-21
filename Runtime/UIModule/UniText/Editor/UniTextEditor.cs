@@ -31,7 +31,7 @@ public class UniTextEditor : Editor
             foreach (var t in targets)
             {
                 var ut = (UniText)t;
-                ut.SetDirty(UniText.DirtyFlags.All);
+                ut.ReInitModifiers();
             }
         }
     }

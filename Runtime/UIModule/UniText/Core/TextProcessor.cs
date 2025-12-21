@@ -191,6 +191,11 @@ public sealed class TextProcessor
         lastLayoutMaxHeight = -1;
     }
 
+    public void InvalidatePositionedGlyphs()
+    {
+        hasValidPositionedGlyphs = false;
+    }
+
 
     public void EnsureShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
@@ -198,16 +203,21 @@ public sealed class TextProcessor
 
         if (hasValidShapingData) return;
 
+        Profiler.BeginSample("TextProcessor.EnsureShaping");
+
         buf.Reset();
 
         if (text.IsEmpty)
         {
             hasValidShapingData = false;
+            Profiler.EndSample();
             return;
         }
 
         fontProvider?.SetFontSize(settings.fontSize);
         DoFullShaping(text, settings);
+
+        Profiler.EndSample();
     }
 
 
@@ -321,7 +331,13 @@ public sealed class TextProcessor
 
     public float GetHeightForWidth(float width, TextProcessSettings settings)
     {
-        if (!hasValidShapingData) return 0;
+        Profiler.BeginSample("TextProcessor.GetHeightForWidth");
+
+        if (!hasValidShapingData)
+        {
+            Profiler.EndSample();
+            return 0;
+        }
 
         var canReuseLines = hasValidLinesData &&
                             Math.Abs(lastLinesWidth - settings.MaxWidth) < 0.001f &&
@@ -341,13 +357,19 @@ public sealed class TextProcessor
             hasValidLinesData = true;
         }
 
+        float result;
         if (fontProvider != null)
         {
             fontProvider.GetLineMetrics(settings.fontSize, out var ascender, out var descender, out var lineHeight);
-            return UniTextFontProvider.CalculateTextHeight(ascender, descender, buf.lines.count, lineHeight, settings.LineSpacing);
+            result = UniTextFontProvider.CalculateTextHeight(ascender, descender, buf.lines.count, lineHeight, settings.LineSpacing);
+        }
+        else
+        {
+            result = buf.lines.count * settings.fontSize * 1.2f;
         }
 
-        return buf.lines.count * settings.fontSize * 1.2f;
+        Profiler.EndSample();
+        return result;
     }
 
 
@@ -380,15 +402,20 @@ public sealed class TextProcessor
             var currentLineWidth = 0f;
             var codepoints = buf.codepoints.Span;
             var glyphs = buf.shapedGlyphs.Span;
+            var margins = buf.startMargins;
             var glyphIdx = 0;
+            var lineStartIdx = 0;
 
             for (var i = 0; i < codepoints.Length; i++)
             {
                 var cp = codepoints[i];
                 if (UnicodeData.IsLineBreak(cp))
                 {
-                    if (currentLineWidth > maxLineWidth) maxLineWidth = currentLineWidth;
+                    var lineMargin = lineStartIdx < margins.Length ? margins[lineStartIdx] : 0;
+                    var totalLineWidth = currentLineWidth + lineMargin;
+                    if (totalLineWidth > maxLineWidth) maxLineWidth = totalLineWidth;
                     currentLineWidth = 0f;
+                    lineStartIdx = i + 1;
                     lineCount++;
                     if (glyphIdx < glyphs.Length && glyphs[glyphIdx].advanceX == 0f)
                         glyphIdx++;
@@ -408,7 +435,9 @@ public sealed class TextProcessor
                 }
             }
 
-            if (currentLineWidth > maxLineWidth) maxLineWidth = currentLineWidth;
+            var lastLineMargin = lineStartIdx < margins.Length ? margins[lineStartIdx] : 0;
+            var lastLineTotal = currentLineWidth + lastLineMargin;
+            if (lastLineTotal > maxLineWidth) maxLineWidth = lastLineTotal;
 
             if (maxLineWidth <= 0f) maxLineWidth = 1f;
 

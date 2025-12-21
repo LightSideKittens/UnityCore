@@ -64,12 +64,14 @@ public sealed class AttributeParser
     public void Unregister(BaseModifier modifier)
     {
         for (var i = ruleModPairs.Count - 1; i >= 0; i--)
+        {
             if (ruleModPairs[i].modifier == modifier)
             {
                 allRules.Remove(ruleModPairs[i].rule);
                 ruleModPairs.RemoveAt(i);
                 break;
             }
+        }
     }
     
     public void InitializeModifiers(UniText uniText)

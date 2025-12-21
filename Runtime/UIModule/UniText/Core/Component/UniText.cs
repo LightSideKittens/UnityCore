@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Profiling;
@@ -9,7 +10,7 @@ using UnityEngine.Rendering;
 [RequireComponent(typeof(CanvasRenderer))]
 [RequireComponent(typeof(RectTransform))]
 [ExecuteAlways]
-public partial class UniText : MaskableGraphic
+public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 {
     [Flags]
     public enum DirtyFlags
@@ -41,7 +42,7 @@ public partial class UniText : MaskableGraphic
     [Header("Auto Size")] [SerializeField] private bool enableAutoSize;
     [SerializeField] private float minFontSize = 10f;
     [SerializeField] private float maxFontSize = 72f;
-    [SerializeReference] private List<ModRegister> modRegisters;
+    [SerializeReference] private List<ModRegister> modRegisters = new();
 
     #endregion
 
@@ -260,13 +261,20 @@ public partial class UniText : MaskableGraphic
             textProcessor?.InvalidateShapingData();
             textIsParsed = false;
             hasValidLayoutCache = false;
+            hasValidAutoSize = false;
         }
-        else if ((flags & DirtyFlags.Layout) != 0)
+        else if ((flags & (DirtyFlags.Layout | DirtyFlags.FontSize)) != 0)
         {
             textProcessor?.InvalidateLayoutData();
+            hasValidAutoSize = false;
+            hasValidLayoutCache = false;
+        }
+        else if ((flags & DirtyFlags.Alignment) != 0)
+        {
+            textProcessor?.InvalidatePositionedGlyphs();
         }
 
-        if ((flags & ~DirtyFlags.Material) != 0)
+        if ((flags & ~(DirtyFlags.Material | DirtyFlags.Alignment | DirtyFlags.Color)) != 0)
         {
             hasValidPreferredWidth = false;
             hasValidPreferredHeight = false;
@@ -275,22 +283,23 @@ public partial class UniText : MaskableGraphic
         SetVerticesDirty();
 
         if ((flags & (DirtyFlags.Text | DirtyFlags.Font | DirtyFlags.FontSize | DirtyFlags.Layout)) != 0)
+        {
             LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
+        }
     }
 
     #endregion
 
     #region Modifiers
-
+    
     public void RegisterModifier(ModRegister register)
     {
-        if (register == null || !register.IsValid) return;
-        modRegisters ??= new List<ModRegister>();
+        if (!register.IsValid) return;
         modRegisters.Add(register);
 
         if (textProcessor != null)
         {
-            CreateParserIfNeeded();
+            EnsureAttributeParserCreated();
             register.Register(attributeParser);
             register.modifier.Initialize(this);
             SetDirty(DirtyFlags.Text);
@@ -299,8 +308,7 @@ public partial class UniText : MaskableGraphic
 
     public void UnregisterModifier(ModRegister register)
     {
-        if (register == null) return;
-        modRegisters?.Remove(register);
+        modRegisters.Remove(register);
 
         if (attributeParser != null)
         {
@@ -308,13 +316,51 @@ public partial class UniText : MaskableGraphic
             attributeParser.Unregister(register.modifier);
             SetDirty(DirtyFlags.Text);
         }
+
+        if (modRegisters.Count == 0)
+        {
+            DestroyAttributeParser();
+        }
     }
 
-    private void CreateParserIfNeeded()
+    public void ReInitModifiers()
+    {
+        DestroyAttributeParser();
+        EnsureAttributeParserCreated();
+    }
+    
+    private void EnsureAttributeParserCreated()
     {
         if (attributeParser != null) return;
-        attributeParser = new AttributeParser();
-        textProcessor.Parsed += attributeParser.Apply;
+        if(textProcessor == null) return;
+        
+        if (modRegisters is { Count: > 0 })
+        {
+            attributeParser = new AttributeParser();
+            for (var i = 0; i < modRegisters.Count; i++)
+            {
+                var mod = modRegisters[i];
+                if (mod is { IsValid: true }) mod.Register(attributeParser);
+            }
+            textProcessor.Parsed += attributeParser.Apply;
+            attributeParser.InitializeModifiers(this);
+            SetDirty(DirtyFlags.Text);
+        }
+    }
+
+    private void DestroyAttributeParser()
+    {
+        if(attributeParser == null) return;
+        
+        attributeParser.DeinitializeModifiers();
+        attributeParser.Release();
+        if (textProcessor != null)
+        {
+            textProcessor.Parsed -= attributeParser.Apply;
+        }
+
+        attributeParser = null;
+        SetDirty(DirtyFlags.Text);
     }
 
     #endregion
@@ -373,9 +419,10 @@ public partial class UniText : MaskableGraphic
         }
         else
         {
-            // Height only changed - trigger rebuild for auto size / vertical alignment
-            // but skip layout recalc (preferredHeight doesn't depend on current height)
-            SetVerticesDirty();
+            // Height only changed - trigger RebuildLayout for auto size / vertical alignment
+            // but skip InvalidateLayoutData (lines don't depend on height)
+            // Alignment flag triggers RebuildLayout without InvalidateLayoutData
+            SetDirty(DirtyFlags.Alignment);
         }
     }
 
@@ -413,9 +460,15 @@ public partial class UniText : MaskableGraphic
     {
         if (update != CanvasUpdate.PreRender) return;
         if (dirtyFlags == DirtyFlags.None) return;
-        
-        if (!ValidateAndInitialize()) return;
-        
+
+        Profiler.BeginSample("UniText.Rebuild");
+
+        if (!ValidateAndInitialize())
+        {
+            Profiler.EndSample();
+            return;
+        }
+
         Rebuilding?.Invoke();
 
         var flags = dirtyFlags;
@@ -427,42 +480,40 @@ public partial class UniText : MaskableGraphic
         else RebuildMeshOnly();
 
         UpdateRendering();
+
+        Profiler.EndSample();
     }
     
     private bool ValidateAndInitialize()
     {
+        Profiler.BeginSample("UniText.ValidateAndInitialize");
+
         if (!UnicodeData.IsInitialized)
         {
             UnicodeData.EnsureInitialized();
             if (!UnicodeData.IsInitialized)
             {
                 Debug.LogError("UniText: Unicode data not initialized.");
+                Profiler.EndSample();
                 return false;
             }
         }
 
-        if (!TryInitFontsAndAppearance()) return false;
-        
+        if (!TryInitFontsAndAppearance())
+        {
+            Profiler.EndSample();
+            return false;
+        }
+
         buffers ??= new UniTextBuffers();
         buffers.EnsureRentBuffers(text.Length);
-        
+
         if (textProcessor == null)
         {
             textProcessor = new TextProcessor(buffers);
-
-            if (modRegisters is { Count: > 0 })
-            {
-                attributeParser = new AttributeParser();
-                for (var i = 0; i < modRegisters.Count; i++)
-                {
-                    var mod = modRegisters[i];
-                    if (mod is { IsValid: true }) mod.Register(attributeParser);
-                }
-                textProcessor.Parsed += attributeParser.Apply;
-                attributeParser.InitializeModifiers(this);
-            }
+            EnsureAttributeParserCreated();
         }
-        
+
         if (fontProvider == null)
         {
             fontProvider = new UniTextFontProvider(fonts, appearance);
@@ -470,6 +521,7 @@ public partial class UniText : MaskableGraphic
             textProcessor.SetFontProvider(fontProvider);
         }
 
+        Profiler.EndSample();
         return true;
     }
 
@@ -490,6 +542,8 @@ public partial class UniText : MaskableGraphic
 
     private void RebuildFull()
     {
+        Profiler.BeginSample("UniText.RebuildFull");
+
         ReleaseMeshes();
         hasValidAutoSize = false;
 
@@ -498,6 +552,7 @@ public partial class UniText : MaskableGraphic
             lastMeshPairs = null;
             lastResultWidth = lastResultHeight = 0;
             autoSizedFontSize = fontSize;
+            Profiler.EndSample();
             return;
         }
 
@@ -507,22 +562,27 @@ public partial class UniText : MaskableGraphic
         if (!enableAutoSize) autoSizedFontSize = fontSize;
 
         var settings = CreateProcessSettings(rect, effectiveFontSize);
-        
+
         var glyphs = textProcessor.Process(textSpan, settings);
-        
+
         lastResultWidth = textProcessor.ResultWidth;
         lastResultHeight = textProcessor.ResultHeight;
-        
+
         GenerateMeshes(glyphs, rect, effectiveFontSize);
+
+        Profiler.EndSample();
     }
 
     private void RebuildLayout()
     {
+        Profiler.BeginSample("UniText.RebuildLayout");
+
         ReleaseMeshes();
 
         if (string.IsNullOrEmpty(text))
         {
             lastMeshPairs = null;
+            Profiler.EndSample();
             return;
         }
 
@@ -549,6 +609,8 @@ public partial class UniText : MaskableGraphic
         lastResultHeight = textProcessor.ResultHeight;
 
         GenerateMeshes(glyphs, rect, effectiveFontSize);
+
+        Profiler.EndSample();
     }
 
     private void RebuildMeshOnly()
@@ -561,7 +623,8 @@ public partial class UniText : MaskableGraphic
         }
 
         ReleaseMeshes();
-        GenerateMeshes(glyphs, rectTransform.rect);
+        var effectiveFontSize = enableAutoSize ? autoSizedFontSize : fontSize;
+        GenerateMeshes(glyphs, rectTransform.rect, effectiveFontSize);
     }
 
     private void UpdateMaterialsOnly()
@@ -581,7 +644,7 @@ public partial class UniText : MaskableGraphic
     {
         if (!textIsParsed)
         {
-            Profiler.BeginSample("ParseAttributes");
+            Profiler.BeginSample("UniText.ParseAttributes");
             attributeParser?.ResetModifiers();
             attributeParser?.Parse(text);
             textIsParsed = true;
@@ -593,7 +656,7 @@ public partial class UniText : MaskableGraphic
 
     private void GenerateMeshes(ReadOnlySpan<PositionedGlyph> glyphs, Rect rect, float effectiveFontSize = -1)
     {
-        Profiler.BeginSample("GenerateMeshes");
+        Profiler.BeginSample("UniText.GenerateMeshes");
         meshGenerator.FontSize = effectiveFontSize > 0 ? effectiveFontSize : fontSize;
         meshGenerator.DefaultColor = color;
         meshGenerator.SetCanvasParameters(transform, canvas);
@@ -636,15 +699,20 @@ public partial class UniText : MaskableGraphic
 
     private void UpdateRendering()
     {
+        Profiler.BeginSample("UniText.UpdateRendering");
+
         canvasRenderer?.Clear();
 
         if (lastMeshPairs == null || lastMeshPairs.Count == 0)
         {
             ClearAllRenderers();
+            Profiler.EndSample();
             return;
         }
 
         UpdateSubMeshes();
+
+        Profiler.EndSample();
     }
 
     protected override void UpdateMaterial() { }
@@ -711,7 +779,13 @@ public partial class UniText : MaskableGraphic
 
     private void UpdateSubMeshes()
     {
-        if (lastMeshPairs == null) return;
+        Profiler.BeginSample("UniText.UpdateSubMeshes");
+
+        if (lastMeshPairs == null)
+        {
+            Profiler.EndSample();
+            return;
+        }
 
         var requiredCount = lastMeshPairs.Count;
         var existingCount = subMeshRenderers.Count;
@@ -743,6 +817,8 @@ public partial class UniText : MaskableGraphic
             if (i < existingCount) subMeshRenderers[i] = newR;
             else subMeshRenderers.Add(newR);
         }
+
+        Profiler.EndSample();
     }
 
     private void SetSubMeshRendererData(CanvasRenderer r, Mesh mesh, Material mat, Texture tex, int subMeshIndex)
@@ -840,4 +916,19 @@ public partial class UniText : MaskableGraphic
     }
 
     #endregion
+
+    void ISerializationCallbackReceiver.OnBeforeSerialize() { }
+
+    void ISerializationCallbackReceiver.OnAfterDeserialize()
+    {
+#if UNITY_EDITOR
+        EditorApplication.update += OnUpdate;
+
+        void OnUpdate()
+        { 
+            EditorApplication.update -= OnUpdate;
+            ReInitModifiers();
+        }
+#endif
+    }
 }

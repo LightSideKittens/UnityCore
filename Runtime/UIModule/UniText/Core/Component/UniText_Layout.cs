@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Profiling;
 using UnityEngine.UI;
 
 
@@ -13,7 +14,12 @@ public partial class UniText : ILayoutElement
     private float layoutCachedWidth;
     private bool hasValidLayoutCache;
     
-    void ILayoutElement.CalculateLayoutInputHorizontal() => EnsureShapingForLayout();
+    void ILayoutElement.CalculateLayoutInputHorizontal()
+    {
+        Profiler.BeginSample("UniText.CalculateLayoutInputHorizontal");
+        EnsureShapingForLayout();
+        Profiler.EndSample();
+    }
 
     void ILayoutElement.CalculateLayoutInputVertical() { }
 
@@ -28,11 +34,15 @@ public partial class UniText : ILayoutElement
 
             if (hasValidPreferredWidth) return cachedPreferredWidth;
 
+            Profiler.BeginSample("UniText.preferredWidth");
+
             EnsureShapingForLayout();
 
             var glyphScale = GetGlyphScaleForLayout();
             cachedPreferredWidth = Mathf.Ceil(textProcessor.GetMaxLineWidth() * glyphScale);
             hasValidPreferredWidth = true;
+
+            Profiler.EndSample();
             return cachedPreferredWidth;
         }
     }
@@ -53,6 +63,8 @@ public partial class UniText : ILayoutElement
 
             if (hasValidPreferredHeight && Mathf.Approximately(cachedPreferredHeightForWidth, width))
                 return cachedPreferredHeight;
+
+            Profiler.BeginSample("UniText.preferredHeight");
 
             EnsureShapingForLayout();
 
@@ -93,6 +105,8 @@ public partial class UniText : ILayoutElement
             cachedPreferredHeight = textProcessor.GetHeightForWidth(width, settings);
             cachedPreferredHeightForWidth = width;
             hasValidPreferredHeight = true;
+
+            Profiler.EndSample();
             return cachedPreferredHeight;
         }
     }
@@ -108,9 +122,13 @@ public partial class UniText : ILayoutElement
         if (!ValidateAndInitialize()) return;
         if (textProcessor.HasValidShapingData) return;
 
+        Profiler.BeginSample("UniText.EnsureShapingForLayout");
+
         var textSpan = ParseOrGetParsedAttributes();
         var settings = CreateProcessSettingsForLayout(TextProcessSettings.FloatMax);
         textProcessor.EnsureShaping(textSpan, settings);
+
+        Profiler.EndSample();
     }
 
 

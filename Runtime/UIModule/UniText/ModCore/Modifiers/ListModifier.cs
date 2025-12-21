@@ -200,6 +200,9 @@ public class ListModifier : BaseModifier
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool IsItemRtl(int cluster)
     {
+        var dir = uniText.BaseDirection;
+        if (dir == TextDirection.LeftToRight) return false;
+        if (dir == TextDirection.RightToLeft) return true;
         var levels = buffers.bidiLevels;
         return (uint)cluster < (uint)levels.Length && (levels[cluster] & 1) == 1;
     }
