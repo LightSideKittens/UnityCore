@@ -240,7 +240,7 @@ public sealed class ScriptConformanceRunner
                 sb.Append(part.Substring(1).ToLowerInvariant());
         }
 
-        return Enum.TryParse(sb.ToString(), out script);
+        return Enum.TryParse(sb.ToString(), true, out script);
     }
 
     private bool TryParseCodepoints(string input, out int[] codepoints)
