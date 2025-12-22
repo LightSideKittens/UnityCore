@@ -151,14 +151,6 @@ public sealed class MarkdownListParseRule : IParseRule
         return textLen;
     }
 
-    public void Finalize(int textLength, PooledList<ParsedRange> results)
-    {
-    }
-
-    public void Reset()
-    {
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string GetLevelString(int level)
     {

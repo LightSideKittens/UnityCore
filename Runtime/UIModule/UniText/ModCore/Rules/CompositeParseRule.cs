@@ -21,10 +21,10 @@ public sealed class CompositeParseRule : IParseRule
         return index;
     }
 
-    public void Finalize(int textLength, PooledList<ParsedRange> results)
+    public void Finalize(string text, PooledList<ParsedRange> results)
     {
         for (var i = 0; i < rules.Count; i++)
-            rules[i]?.Finalize(textLength, results);
+            rules[i]?.Finalize(text, results);
     }
 
     public void Reset()

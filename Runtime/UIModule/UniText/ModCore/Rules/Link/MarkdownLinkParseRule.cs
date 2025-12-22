@@ -35,10 +35,6 @@ public sealed class MarkdownLinkParseRule : IParseRule
         return fullEnd;
     }
 
-    public void Finalize(int textLength, PooledList<ParsedRange> results) { }
-
-    public void Reset() { }
-
     private static int FindCloseBracket(string text, int start)
     {
         var depth = 1;

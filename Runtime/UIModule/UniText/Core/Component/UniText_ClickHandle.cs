@@ -4,29 +4,12 @@ using UnityEngine.EventSystems;
 
 public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler
 {
-    [Header("Click Handling")] [SerializeField]
-    private float maxClickDistance = 50f;
-
-    [SerializeField] private bool openLinksInBrowser = true;
-
     private TextHitResult lastHoverResult;
-
-
     public event Action<TextHitResult> OnTextClick;
-
-
     public event Action<string> OnLinkClick;
-
-
     public event Action<string> OnLinkEnter;
-
-
     public event Action OnLinkExit;
-
-
     public TextHitResult LastHoverResult => lastHoverResult;
-
-
     public bool IsHoveringLink => lastHoverResult.hit && LinkModifier.IsLink(lastHoverResult.cluster);
 
     public void OnPointerClick(PointerEventData eventData)
@@ -35,7 +18,7 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
             ? canvas.worldCamera
             : null;
 
-        var result = HitTestScreen(eventData.position, camera, maxClickDistance);
+        var result = HitTestScreen(eventData.position, camera, 5);
         if (!result.hit) return;
 
         OnTextClick?.Invoke(result);
@@ -44,8 +27,7 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
         {
             var url = LinkModifier.GetLinkUrl(result.cluster);
             OnLinkClick?.Invoke(url);
-
-            if (openLinksInBrowser && !string.IsNullOrEmpty(url)) Application.OpenURL(url);
+            Application.OpenURL(url);
         }
     }
 
@@ -71,7 +53,7 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
             ? canvas.worldCamera
             : null;
 
-        var result = HitTestScreen(eventData.position, camera, maxClickDistance);
+        var result = HitTestScreen(eventData.position, camera, 5);
 
         var wasLink = lastHoverResult.hit && LinkModifier.IsLink(lastHoverResult.cluster);
         var isLink = result.hit && LinkModifier.IsLink(result.cluster);
@@ -85,17 +67,7 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
 
         lastHoverResult = result;
     }
-
-
-    public int GetCharacterIndexAtPosition(Vector2 localPosition)
-    {
-        var result = HitTest(localPosition);
-        return result.hit ? result.glyphIndex : -1;
-    }
-
-
-    /// <param name="localPosition">Позиция в локальных координатах RectTransform</param>
-    /// <param name="maxDistance">Максимальное расстояние для fallback (0 = без fallback)</param>
+    
     public TextHitResult HitTest(Vector2 localPosition, float maxDistance = 0)
     {
         if (textProcessor == null)

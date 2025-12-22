@@ -161,7 +161,7 @@ public sealed class AttributeParser
         {
             var rule = allRules[r];
             tempRanges.FakeClear();
-            rule.Finalize(text.Length, tempRanges);
+            rule.Finalize(text, tempRanges);
 
             for (var j = 0; j < tempRanges.Count; j++)
             {

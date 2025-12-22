@@ -20,21 +20,17 @@ public class RangeRule : IParseRule
         return index;
     }
 
-    public void Finalize(int textLength, PooledList<ParsedRange> results)
+    public void Finalize(string text, PooledList<ParsedRange> results)
     {
         for (var i = 0; i < data.Count; i++)
         {
             var d = data[i];
             if (!RangeEx.TryParse(d.range, out currentRange)) RangeEx.TryParse("..", out currentRange);
 
-            var r = currentRange.GetOffsetAndLength(textLength);
+            var r = currentRange.GetOffsetAndLength(text.Length);
             var start = r.Offset;
             var end = r.Offset + r.Length;
             results.Add(new ParsedRange(start, end, d.parameter));
         }
-    }
-
-    public void Reset()
-    {
     }
 }

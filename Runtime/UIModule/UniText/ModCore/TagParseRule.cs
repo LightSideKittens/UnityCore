@@ -34,7 +34,7 @@ public abstract class TagParseRule : IParseRule
         openTags.Clear();
     }
 
-    public void Finalize(int textLength, PooledList<ParsedRange> results)
+    public void Finalize(string text, PooledList<ParsedRange> results)
     {
         while (openTags.Count > 0)
         {
@@ -42,7 +42,7 @@ public abstract class TagParseRule : IParseRule
             results.Add(new ParsedRange(
                 open.tagStart,
                 open.tagEnd,
-                textLength, textLength, open.parameter
+                text.Length, text.Length, open.parameter
             ));
         }
     }

@@ -379,7 +379,7 @@ public class UniTextEditor : Editor
                     var newIdx = reg.rule.TryMatch(text, idx, tempRanges);
                     idx = newIdx > idx ? newIdx : idx + 1;
                 }
-                reg.rule.Finalize(text.Length, tempRanges);
+                reg.rule.Finalize(text, tempRanges);
 
                 for (var i = 0; i < tempRanges.Count; i++)
                 {
