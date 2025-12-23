@@ -17,7 +17,8 @@ public class UniTextEditor : Editor
     private static bool textAreaExpand;
     private static int textAreaFontSize = 14;
     private static GUIStyle textAreaStyle = null; // сбросим для применения изменений
-
+    private static bool enableHighlight = true;
+    
     private static readonly Color32[] tagColors =
     {
         new(102, 187, 255, 255),
@@ -64,6 +65,8 @@ public class UniTextEditor : Editor
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Expand", GUILayout.Width(50));
         textAreaExpand = EditorGUILayout.Toggle(textAreaExpand, GUILayout.Width(25));
+        EditorGUILayout.LabelField("Highlight", GUILayout.Width(60));
+        enableHighlight = EditorGUILayout.Toggle(enableHighlight, GUILayout.Width(25));
         EditorGUILayout.LabelField("Size", GUILayout.Width(50));
         textAreaFontSize = EditorGUILayout.IntSlider(textAreaFontSize, 8, 24);
         EditorGUILayout.EndHorizontal();
@@ -80,7 +83,7 @@ public class UniTextEditor : Editor
             textScrollPos = EditorGUILayout.BeginScrollView(textScrollPos, option);
             
             var result = EditorGUILayout.TextArea(uniText.Text, textAreaStyle, GUILayout.ExpandHeight(true));
-            if (Event.current.type == EventType.Repaint)
+            if (Event.current.type == EventType.Repaint && enableHighlight)
             {
                 lastTextAreaRect = GUILayoutUtility.GetLastRect();
                 HighlightTags(uniText.Text);
