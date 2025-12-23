@@ -18,6 +18,19 @@ public class UniTextEditor : Editor
     private static int textAreaFontSize = 14;
     private static GUIStyle textAreaStyle = null; // сбросим для применения изменений
 
+    private static readonly Color32[] tagColors =
+    {
+        new(102, 187, 255, 255),
+        new(91, 255, 186, 255),
+        new(255, 251, 93, 255),
+        new(255, 179, 99, 255),
+        new(255, 146, 248, 255),
+        new(255, 114, 107, 255),
+        new(150, 88, 255, 255),
+        new(72, 139, 255, 255),
+        new(113, 255, 87, 255),
+    };
+    
     private void OnEnable()
     {
         propertyTree = PropertyTree.Create(serializedObject);
@@ -241,8 +254,8 @@ public class UniTextEditor : Editor
     
     private static FieldInfo modRegistersField;
 
-    private readonly PooledList<ParsedRange> parseBuffer = new(32);
-    private readonly List<(int start, int end)> tagRanges = new();
+    private readonly PooledList<ParsedRange> tempRanges = new(32);
+    private readonly List<(int start, int end, int colorIndex)> highlightRanges = new();
     private static readonly Color tagColor = new(0.4f, 0.7f, 1f, 1f);
     private static readonly Color defaultColor = new(0.82f, 0.82f, 0.82f, 1f);
     private Rect lastTextAreaRect;
@@ -251,7 +264,6 @@ public class UniTextEditor : Editor
     private string cachedText;
     private int cachedTextHash;
     private Rect cachedRect;
-    private HashSet<int> cachedTagIndices;
     private Vector2 textScrollPos;
 
     private static GUIStyle charStyle;
@@ -265,7 +277,7 @@ public class UniTextEditor : Editor
 
         if (needRebuild)
         {
-            RebuildTagIndices(text);
+            CollectHighlightRanges(text);
             cachedText = text;
             cachedTextHash = textHash;
         }
@@ -273,63 +285,48 @@ public class UniTextEditor : Editor
         DrawCharLabels(text);
     }
 
-    private void RebuildTagIndices(string text)
+    private void CollectHighlightRanges(string text)
     {
-        modRegistersField ??= typeof(UniText).GetField("modRegisters", BindingFlags.NonPublic | BindingFlags.Instance);
+        highlightRanges.Clear();
 
-        // Собираем диапазоны тегов
-        tagRanges.Clear();
-        var modRegisters = modRegistersField?.GetValue(uniText) as List<ModRegister>;
-        if (modRegisters != null)
+        var modRegs = modRegistersProp?.ValueEntry?.WeakSmartValue as List<ModRegister>;
+
+        var colorIndex = 0;
+        if (modRegs != null)
         {
-            foreach (var modReg in modRegisters)
+            for (var m = 0; m < modRegs.Count; m++)
             {
-                if (modReg?.rule == null) continue;
-                modReg.rule.Reset();
+                var reg = modRegs[m];
+                if (reg?.rule == null) continue;
 
+                tempRanges.Clear();
+                reg.rule.Reset();
                 var idx = 0;
                 while (idx < text.Length)
                 {
-                    parseBuffer.FakeClear();
-                    var newIdx = modReg.rule.TryMatch(text, idx, parseBuffer);
-                    if (newIdx > idx)
-                    {
-                        for (var i = 0; i < parseBuffer.Count; i++)
-                        {
-                            ref readonly var range = ref parseBuffer[i];
-                            if (range.HasTags)
-                            {
-                                tagRanges.Add((range.tagStart, range.tagEnd));
-                                if (range.closeTagStart != range.closeTagEnd)
-                                    tagRanges.Add((range.closeTagStart, range.closeTagEnd));
-                            }
-                        }
-                        idx = newIdx;
-                    }
-                    else idx++;
+                    var newIdx = reg.rule.TryMatch(text, idx, tempRanges);
+                    idx = newIdx > idx ? newIdx : idx + 1;
                 }
+                reg.rule.Finalize(text, tempRanges);
 
-                parseBuffer.FakeClear();
-                modReg.rule.Finalize(text, parseBuffer);
-                for (var i = 0; i < parseBuffer.Count; i++)
+                for (var i = 0; i < tempRanges.Count; i++)
                 {
-                    ref readonly var range = ref parseBuffer[i];
+                    var range = tempRanges[i];
                     if (range.HasTags)
                     {
-                        tagRanges.Add((range.tagStart, range.tagEnd));
-                        if (range.closeTagStart != range.closeTagEnd)
-                            tagRanges.Add((range.closeTagStart, range.closeTagEnd));
+                        if (range.tagStart < range.tagEnd)
+                            highlightRanges.Add((range.tagStart, range.tagEnd, colorIndex));
+                        if (range.closeTagStart < range.closeTagEnd)
+                            highlightRanges.Add((range.closeTagStart, range.closeTagEnd, colorIndex));
                     }
+                    else if (range.start < range.end)
+                    {
+                        highlightRanges.Add((range.start, range.end, colorIndex));
+                    }
+                    colorIndex++;
                 }
             }
         }
-
-        // Собираем индексы символов в тегах
-        cachedTagIndices ??= new HashSet<int>();
-        cachedTagIndices.Clear();
-        foreach (var (start, end) in tagRanges)
-            for (var i = start; i < end; i++)
-                cachedTagIndices.Add(i);
     }
 
     private void DrawCharLabels(string text)
@@ -343,28 +340,32 @@ public class UniTextEditor : Editor
                 padding = new RectOffset(0, 0, 0, 0),
                 margin = new RectOffset(0, 0, 0, 0),
                 alignment = TextAnchor.UpperLeft,
-                normal = { background = null, textColor = defaultColor }
+                normal = { background = null }
             };
         }
 
-        if (cachedTagIndices == null || cachedTagIndices.Count == 0) return;
+        if (highlightRanges.Count == 0) return;
 
         var content = new GUIContent(text);
         var lineHeight = textAreaStyle.lineHeight;
-        charStyle.normal.textColor = tagColor;
 
-        foreach (var i in cachedTagIndices)
+        foreach (var (start, end, colorIndex) in highlightRanges)
         {
-            if (i >= text.Length) continue;
-            var c = text[i];
-            if (c == '\n' || c == '\r') continue;
+            var color = tagColors[colorIndex % tagColors.Length];
+            charStyle.normal.textColor = color;
 
-            var pos = textAreaStyle.GetCursorPixelPosition(lastTextAreaRect, content, i);
-            var nextPos = textAreaStyle.GetCursorPixelPosition(lastTextAreaRect, content, i + 1);
-            var charWidth = nextPos.x - pos.x;
+            for (var i = start; i < end && i < text.Length; i++)
+            {
+                var c = text[i];
+                if (c == '\n' || c == '\r') continue;
 
-            var charRect = new Rect(pos.x, pos.y, charWidth, lineHeight);
-            GUI.Label(charRect, c.ToString(), charStyle);
+                var pos = textAreaStyle.GetCursorPixelPosition(lastTextAreaRect, content, i);
+                var nextPos = textAreaStyle.GetCursorPixelPosition(lastTextAreaRect, content, i + 1);
+                var charWidth = nextPos.x - pos.x;
+
+                var charRect = new Rect(pos.x, pos.y, charWidth, lineHeight);
+                GUI.Label(charRect, c.ToString(), charStyle);
+            }
         }
     }
 }
