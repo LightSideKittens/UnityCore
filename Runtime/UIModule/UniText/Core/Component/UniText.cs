@@ -87,6 +87,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     public ReadOnlySpan<PositionedGlyph> LastResultGlyphs => textProcessor != null ? textProcessor.PositionedGlyphs : ReadOnlySpan<PositionedGlyph>.Empty;
     public UniTextFont MainFont => fonts?.MainFont;
     public float CurrentFontSize => enableAutoSize ? autoSizedFontSize : fontSize;
+    public IReadOnlyList<ModRegister> ModRegisters => modRegisters;
 
     public string Text
     {
@@ -472,7 +473,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         }
 
         Rebuilding?.Invoke();
-
+        
         var flags = dirtyFlags;
         dirtyFlags = DirtyFlags.None;
 

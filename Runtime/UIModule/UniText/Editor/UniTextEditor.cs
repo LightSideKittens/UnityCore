@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Reflection;
 using Sirenix.OdinInspector.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -18,28 +16,7 @@ public class UniTextEditor : Editor
 
     private static bool textAreaExpand;
     private static int textAreaFontSize = 14;
-    private static GUIStyle textAreaStyle;
-    private static bool enableHighlight = true;
-
-    private static readonly Color32[] tagColors =
-    {
-        new(102, 187, 255, 255),
-        new(91, 255, 186, 255),
-        new(255, 251, 93, 255),
-        new(255, 179, 99, 255),
-        new(255, 146, 248, 255),
-        new(255, 114, 107, 255),
-        new(150, 88, 255, 255),
-        new(72, 139, 255, 255),
-        new(113, 255, 87, 255),
-    };
-
-    private static readonly Regex richTextTagRegex = new(@"</?[a-zA-Z][^>]*>", RegexOptions.Compiled);
-
-    private readonly PooledList<ParsedRange> tempRanges = new(32);
-    private readonly List<(int start, int end, int colorIndex)> highlightRanges = new(32);
-    private readonly List<(int start, int end)> noparseOnlyRanges = new(32);
-    private readonly StringBuilder highlightBuilder = new(256);
+    private static GUIStyle textAreaStyle = null; // сбросим для применения изменений
 
     private void OnEnable()
     {
@@ -74,16 +51,32 @@ public class UniTextEditor : Editor
         EditorGUILayout.BeginHorizontal();
         EditorGUILayout.LabelField("Expand", GUILayout.Width(50));
         textAreaExpand = EditorGUILayout.Toggle(textAreaExpand, GUILayout.Width(25));
-        EditorGUILayout.LabelField("Highlight", GUILayout.Width(60));
-        enableHighlight = EditorGUILayout.Toggle(enableHighlight, GUILayout.Width(25));
-        EditorGUILayout.LabelField("Size", GUILayout.Width(30));
+        EditorGUILayout.LabelField("Size", GUILayout.Width(50));
         textAreaFontSize = EditorGUILayout.IntSlider(textAreaFontSize, 8, 24);
         EditorGUILayout.EndHorizontal();
 
-        if (textAreaStyle == null || textAreaStyle.fontSize != textAreaFontSize || textAreaStyle.richText != enableHighlight)
-            textAreaStyle = new GUIStyle(EditorStyles.textArea) { fontSize = textAreaFontSize, richText = enableHighlight };
+        if (textAreaStyle == null || textAreaStyle.fontSize != textAreaFontSize)
+        {
+            textAreaStyle = new GUIStyle(EditorStyles.textArea) { fontSize = textAreaFontSize };
+        }
 
-        DrawHighlightedTextArea();
+        DrawField(null, uniText.Text, v => uniText.Text = v, () =>
+        {
+            var option = textAreaExpand ? GUILayout.ExpandHeight(true) : GUILayout.Height(72 * (textAreaFontSize / 14f));
+            
+            textScrollPos = EditorGUILayout.BeginScrollView(textScrollPos, option);
+            
+            var result = EditorGUILayout.TextArea(uniText.Text, textAreaStyle, GUILayout.ExpandHeight(true));
+            if (Event.current.type == EventType.Repaint)
+            {
+                lastTextAreaRect = GUILayoutUtility.GetLastRect();
+                HighlightTags(uniText.Text);
+            }
+
+            EditorGUILayout.EndScrollView();
+
+            return result;
+        });
         EndSection();
 
         BeginSection("Font");
@@ -133,6 +126,7 @@ public class UniTextEditor : Editor
     {
         EditorGUILayout.EndVertical();
     }
+    
 
     private static GUIContent[] alignIcons;
     private static GUIStyle alignButtonStyle;
@@ -241,191 +235,136 @@ public class UniTextEditor : Editor
             var obj = value as Object;
             return (T)(object)EditorGUILayout.ObjectField(label, obj, typeof(T), false);
         }
-
+        
         return newValue;
     }
-
-    private const string TextAreaControlName = "UniTextEditorTextArea";
-    private bool needsRefocus;
-    private bool needSetup;
-    private int savedCursorIndex;
-    private int savedSelectIndex;
-    private TextEditor editor;
     
-    private void DrawHighlightedTextArea()
+    private static FieldInfo modRegistersField;
+
+    private readonly PooledList<ParsedRange> parseBuffer = new(32);
+    private readonly List<(int start, int end)> tagRanges = new();
+    private static readonly Color tagColor = new(0.4f, 0.7f, 1f, 1f);
+    private static readonly Color defaultColor = new(0.82f, 0.82f, 0.82f, 1f);
+    private Rect lastTextAreaRect;
+
+    // Кеш для оптимизации
+    private string cachedText;
+    private int cachedTextHash;
+    private Rect cachedRect;
+    private HashSet<int> cachedTagIndices;
+    private Vector2 textScrollPos;
+
+    private static GUIStyle charStyle;
+
+    private void HighlightTags(string text)
     {
-        var text = uniText.Text ?? "";
-        var displayText = enableHighlight ? BuildHighlightedText(text) : text;
-        
-        GUI.SetNextControlName(TextAreaControlName);
-        EditorGUI.BeginChangeCheck();
+        if (string.IsNullOrEmpty(text)) return;
 
-        string newText;
-        if (textAreaExpand)
-            newText = EditorGUILayout.TextArea(displayText, textAreaStyle, GUILayout.ExpandHeight(true));
-        else
-            newText = EditorGUILayout.TextArea(displayText, textAreaStyle, GUILayout.MinHeight(60));
-        
-        if (editor != null && needSetup && editor.hasSelection)
-        {
-            editor.DetectFocusChange();
-            editor.cursorIndex = savedCursorIndex;
-            editor.selectIndex = savedSelectIndex; 
-            needSetup = false;
-        }
-        
-        if (editor != null && needsRefocus)
-        {
-            if (Event.current.type == EventType.Repaint)
-            { 
-                EditorGUI.FocusTextInControl(TextAreaControlName);
-                needsRefocus = false;
-                needSetup = true;
-            }
-        }
-        
-        if (EditorGUI.EndChangeCheck())
-        {
-            var activeField = typeof(EditorGUI).GetField("activeEditor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            editor = activeField?.GetValue(null) as TextEditor;
-            
-            if (editor != null)
-            {
-                savedCursorIndex = editor.cursorIndex;
-                savedSelectIndex = editor.selectIndex;
-            }
+        var textHash = text.GetHashCode();
+        var needRebuild = cachedText != text || cachedTextHash != textHash;
 
-            Undo.RecordObject(uniText, "Change Text");
-            uniText.Text = enableHighlight ? StripColorTags(newText) : newText;
-            
-            GUIUtility.keyboardControl = 0;
-            needsRefocus = true;
+        if (needRebuild)
+        {
+            RebuildTagIndices(text);
+            cachedText = text;
+            cachedTextHash = textHash;
         }
+
+        DrawCharLabels(text);
     }
 
-    private string BuildHighlightedText(string text)
+    private void RebuildTagIndices(string text)
     {
-        if (string.IsNullOrEmpty(text)) return text;
+        modRegistersField ??= typeof(UniText).GetField("modRegisters", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        CollectHighlightRanges(text);
-        if (highlightRanges.Count == 0 && noparseOnlyRanges.Count == 0) return text;
-
-        var allRanges = new List<(int start, int end, int colorIndex, bool noparseOnly)>();
-        for (var i = 0; i < highlightRanges.Count; i++)
+        // Собираем диапазоны тегов
+        tagRanges.Clear();
+        var modRegisters = modRegistersField?.GetValue(uniText) as List<ModRegister>;
+        if (modRegisters != null)
         {
-            var (start, end, colorIndex) = highlightRanges[i];
-            allRanges.Add((start, end, colorIndex, false));
-        }
-        for (var i = 0; i < noparseOnlyRanges.Count; i++)
-        {
-            var (start, end) = noparseOnlyRanges[i];
-            allRanges.Add((start, end, -1, true));
-        }
-        allRanges.Sort((a, b) => a.start.CompareTo(b.start));
-
-        highlightBuilder.Clear();
-        var lastEnd = 0;
-
-        for (var i = 0; i < allRanges.Count; i++)
-        {
-            var (start, end, colorIndex, noparseOnly) = allRanges[i];
-            if (start < lastEnd) continue;
-
-            if (start > lastEnd)
-                highlightBuilder.Append(text, lastEnd, start - lastEnd);
-
-            if (noparseOnly)
+            foreach (var modReg in modRegisters)
             {
-                highlightBuilder.Append("<noparse>");
-                highlightBuilder.Append(text, start, end - start);
-                highlightBuilder.Append("</noparse>");
-            }
-            else
-            {
-                var colorHex = ColorUtility.ToHtmlStringRGB(tagColors[colorIndex % tagColors.Length]);
-                highlightBuilder.Append("<color=#").Append(colorHex).Append("><noparse>");
-                highlightBuilder.Append(text, start, end - start);
-                highlightBuilder.Append("</noparse></color>");
-            }
-            lastEnd = end;
-        }
+                if (modReg?.rule == null) continue;
+                modReg.rule.Reset();
 
-        if (lastEnd < text.Length)
-            highlightBuilder.Append(text, lastEnd, text.Length - lastEnd);
-
-        return highlightBuilder.ToString();
-    }
-
-    private void CollectHighlightRanges(string text)
-    {
-        highlightRanges.Clear();
-        noparseOnlyRanges.Clear();
-
-        var modRegs = modRegistersProp?.ValueEntry?.WeakSmartValue as List<ModRegister>;
-
-        var colorIndex = 0;
-        if (modRegs != null)
-        {
-            for (var m = 0; m < modRegs.Count; m++)
-            {
-                var reg = modRegs[m];
-                if (reg?.rule == null) continue;
-
-                tempRanges.Clear();
-                reg.rule.Reset();
                 var idx = 0;
                 while (idx < text.Length)
                 {
-                    var newIdx = reg.rule.TryMatch(text, idx, tempRanges);
-                    idx = newIdx > idx ? newIdx : idx + 1;
+                    parseBuffer.FakeClear();
+                    var newIdx = modReg.rule.TryMatch(text, idx, parseBuffer);
+                    if (newIdx > idx)
+                    {
+                        for (var i = 0; i < parseBuffer.Count; i++)
+                        {
+                            ref readonly var range = ref parseBuffer[i];
+                            if (range.HasTags)
+                            {
+                                tagRanges.Add((range.tagStart, range.tagEnd));
+                                if (range.closeTagStart != range.closeTagEnd)
+                                    tagRanges.Add((range.closeTagStart, range.closeTagEnd));
+                            }
+                        }
+                        idx = newIdx;
+                    }
+                    else idx++;
                 }
-                reg.rule.Finalize(text, tempRanges);
 
-                for (var i = 0; i < tempRanges.Count; i++)
+                parseBuffer.FakeClear();
+                modReg.rule.Finalize(text, parseBuffer);
+                for (var i = 0; i < parseBuffer.Count; i++)
                 {
-                    var range = tempRanges[i];
+                    ref readonly var range = ref parseBuffer[i];
                     if (range.HasTags)
                     {
-                        if (range.tagStart < range.tagEnd)
-                            highlightRanges.Add((range.tagStart, range.tagEnd, colorIndex));
-                        if (range.closeTagStart < range.closeTagEnd)
-                            highlightRanges.Add((range.closeTagStart, range.closeTagEnd, colorIndex));
+                        tagRanges.Add((range.tagStart, range.tagEnd));
+                        if (range.closeTagStart != range.closeTagEnd)
+                            tagRanges.Add((range.closeTagStart, range.closeTagEnd));
                     }
-                    else if (range.start < range.end)
-                    {
-                        highlightRanges.Add((range.start, range.end, colorIndex));
-                    }
-                    colorIndex++;
                 }
             }
         }
 
-        var matches = richTextTagRegex.Matches(text);
-        foreach (Match match in matches)
-        {
-            var start = match.Index;
-            var end = start + match.Length;
-            if (!IsRangeCovered(start, end))
-                noparseOnlyRanges.Add((start, end));
-        }
+        // Собираем индексы символов в тегах
+        cachedTagIndices ??= new HashSet<int>();
+        cachedTagIndices.Clear();
+        foreach (var (start, end) in tagRanges)
+            for (var i = start; i < end; i++)
+                cachedTagIndices.Add(i);
     }
 
-    private bool IsRangeCovered(int start, int end)
+    private void DrawCharLabels(string text)
     {
-        for (var i = 0; i < highlightRanges.Count; i++)
+        if (charStyle == null || charStyle.fontSize != textAreaFontSize)
         {
-            var (hStart, hEnd, _) = highlightRanges[i];
-            if (hStart <= start && end <= hEnd)
-                return true;
+            charStyle = new GUIStyle
+            {
+                fontSize = textAreaFontSize,
+                font = textAreaStyle.font,
+                padding = new RectOffset(0, 0, 0, 0),
+                margin = new RectOffset(0, 0, 0, 0),
+                alignment = TextAnchor.UpperLeft,
+                normal = { background = null, textColor = defaultColor }
+            };
         }
-        return false;
-    }
 
-    private static readonly Regex stripRegex = new(@"<color=#[A-Fa-f0-9]+><noparse>|</noparse></color>|<noparse>|</noparse>", RegexOptions.Compiled);
+        if (cachedTagIndices == null || cachedTagIndices.Count == 0) return;
 
-    private static string StripColorTags(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return text;
-        return stripRegex.Replace(text, "");
+        var content = new GUIContent(text);
+        var lineHeight = textAreaStyle.lineHeight;
+        charStyle.normal.textColor = tagColor;
+
+        foreach (var i in cachedTagIndices)
+        {
+            if (i >= text.Length) continue;
+            var c = text[i];
+            if (c == '\n' || c == '\r') continue;
+
+            var pos = textAreaStyle.GetCursorPixelPosition(lastTextAreaRect, content, i);
+            var nextPos = textAreaStyle.GetCursorPixelPosition(lastTextAreaRect, content, i + 1);
+            var charWidth = nextPos.x - pos.x;
+
+            var charRect = new Rect(pos.x, pos.y, charWidth, lineHeight);
+            GUI.Label(charRect, c.ToString(), charStyle);
+        }
     }
 }
