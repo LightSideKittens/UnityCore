@@ -194,8 +194,6 @@ MonoBehaviour:
   - rid: 2031797638559170641
   - rid: 2031797638559170654
   - rid: 2031797673101099088
-  maxClickDistance: 50
-  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -569,8 +567,6 @@ MonoBehaviour:
   minFontSize: 10
   maxFontSize: 72
   modRegisters: []
-  maxClickDistance: 50
-  openLinksInBrowser: 1
   references:
     version: 2
     RefIds: []
@@ -879,8 +875,6 @@ MonoBehaviour:
   - rid: 2031797638559170654
   - rid: 2031797673101099088
   - rid: 2031797751082647650
-  maxClickDistance: 50
-  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -1234,8 +1228,6 @@ MonoBehaviour:
   - rid: 2031797866453532875
   - rid: 2031797866453532876
   - rid: 2031797913714425945
-  maxClickDistance: 50
-  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -1380,8 +1372,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1894, y: -529}
-  m_SizeDelta: {x: 890.7, y: 2272.2842}
+  m_AnchoredPosition: {x: 1943.9998, y: -527}
+  m_SizeDelta: {x: 929, y: 2272.3}
   m_Pivot: {x: 0.79593015, y: 0.66504484}
 --- !u!1 &744005121
 GameObject:
@@ -1461,8 +1453,6 @@ MonoBehaviour:
   modRegisters:
   - rid: 2031797829424906360
   - rid: 2031797829424906363
-  maxClickDistance: 5
-  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -1960,7 +1950,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000012398, y: -831.99915}
+  m_AnchoredPosition: {x: -0.000012398, y: -832}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &992357368
@@ -2308,8 +2298,6 @@ MonoBehaviour:
   - rid: 2031797638559170641
   - rid: 2031797638559170654
   - rid: 2031797673101099088
-  maxClickDistance: 50
-  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -2737,8 +2725,6 @@ MonoBehaviour:
   - rid: 2031797638559170641
   - rid: 2031797638559170654
   - rid: 2031797673101099088
-  maxClickDistance: 50
-  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
@@ -3107,8 +3093,6 @@ MonoBehaviour:
   - rid: 2031797638559170641
   - rid: 2031797638559170654
   - rid: 2031797673101099088
-  maxClickDistance: 50
-  openLinksInBrowser: 1
   references:
     version: 2
     RefIds:
