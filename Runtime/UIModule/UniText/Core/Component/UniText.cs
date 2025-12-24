@@ -269,21 +269,15 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
             textProcessor?.InvalidatePositionedGlyphs();
         }
 
-        SetVerticesDirty();
+        if (!isRebuilding)
+        { 
+            SetVerticesDirty();
+        }
 
         if ((flags & (DirtyFlags.Text | DirtyFlags.Font | DirtyFlags.FontSize | DirtyFlags.Layout)) != 0)
         {
             LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
         }
-    }
-
-    private bool wasDirtied;
-    
-    public override void SetVerticesDirty()
-    {
-        if(wasDirtied) return;
-        wasDirtied = true;
-        base.SetVerticesDirty();
     }
 
     #endregion
@@ -459,7 +453,15 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
     #region Rebuild
 
+    private bool isRebuilding;
     public override void Rebuild(CanvasUpdate update)
+    {
+        isRebuilding = true;
+        InternalRebuild(update);
+        isRebuilding = false;
+    }
+
+    private void InternalRebuild(CanvasUpdate update)
     {
         if (update != CanvasUpdate.PreRender) return;
         if (dirtyFlags == DirtyFlags.None) return;
@@ -484,7 +486,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
         UpdateRendering();
         
-        wasDirtied = false;
         Profiler.EndSample();
     }
     
@@ -962,6 +963,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     void ISerializationCallbackReceiver.OnAfterDeserialize()
     {
 #if UNITY_EDITOR
+        isRebuilding = false;
         EditorApplication.update += OnUpdate;
 
         void OnUpdate()

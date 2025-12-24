@@ -39,6 +39,7 @@ public class UniTextEditor : Editor
         propertyTree.OnPropertyValueChanged += OnPropChanged;
     }
 
+     
     private void OnPropChanged(InspectorProperty property, int selectionIndex)
     {
         if (property.SerializationRoot.Children["modRegisters"] == modRegistersProp)
@@ -46,6 +47,7 @@ public class UniTextEditor : Editor
             serializedObject.ApplyModifiedProperties();
             foreach (var t in targets)
             {
+                cachedText = string.Empty;
                 var ut = (UniText)t;
                 ut.ReInitModifiers();
             }
