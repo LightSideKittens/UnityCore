@@ -71,8 +71,10 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     private Vector4 cachedClipSoftness;
 
     private float lastKnownWidth = -1;
+    private float lastKnownHeight = -1;
 
     public event Action Rebuilding;
+    public event Action RectHeightChanged;
 
     #endregion
 
@@ -401,9 +403,20 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     protected override void OnRectTransformDimensionsChange()
     {
         base.OnRectTransformDimensionsChange();
-        var width = rectTransform.rect.width;
+        var rect = rectTransform.rect;
+        var width = rect.width;
+        var height = rect.height;
 
-        if (!Mathf.Approximately(width, lastKnownWidth))
+        var widthChanged = !Mathf.Approximately(width, lastKnownWidth);
+        var heightChanged = !Mathf.Approximately(height, lastKnownHeight);
+
+        if (heightChanged)
+        {
+            lastKnownHeight = height;
+            RectHeightChanged?.Invoke();
+        }
+
+        if (widthChanged)
         {
             lastKnownWidth = width;
 

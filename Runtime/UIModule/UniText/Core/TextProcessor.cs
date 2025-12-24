@@ -41,14 +41,6 @@ public struct TextProcessSettings
         get => layout.lineSpacing;
         set => layout.lineSpacing = value;
     }
-
-    public static TextProcessSettings Default => new()
-    {
-        layout = LayoutSettings.Default,
-        fontSize = 36f,
-        baseDirection = TextDirection.LeftToRight,
-        enableWordWrap = true
-    };
 }
 
 public sealed class TextProcessor
@@ -85,6 +77,7 @@ public sealed class TextProcessor
 
     public event Action Parsed;
     public event Action Shaped;
+    public event Action LayoutComplete;
 
     public TextProcessor(UniTextBuffers uniTextBuffers)
     {
@@ -107,7 +100,6 @@ public sealed class TextProcessor
         InvalidateLayoutData();
     }
 
-
     public void InvalidateLayoutData()
     {
         hasValidLinesData = false;
@@ -123,8 +115,7 @@ public sealed class TextProcessor
         hasValidPositionedGlyphs = false;
         lastLayoutMaxHeight = -1;
     }
-
-
+    
     public void EnsureShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
         ensureShapingCallCount++;
@@ -147,8 +138,7 @@ public sealed class TextProcessor
 
         Profiler.EndSample();
     }
-
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool CanReuseLines(float width, float fontSize, bool wordWrap)
     {
@@ -157,8 +147,7 @@ public sealed class TextProcessor
                Math.Abs(lastLinesFontSize - fontSize) < 0.001f &&
                lastLinesWordWrap == wordWrap;
     }
-
-
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool CanReusePositions(float maxHeight, HorizontalAlignment hAlign, VerticalAlignment vAlign)
     {
@@ -169,8 +158,7 @@ public sealed class TextProcessor
 
         return heightMatches && lastLayoutHAlign == hAlign && lastLayoutVAlign == vAlign;
     }
-
-
+    
     public void EnsureLines(float width, float fontSize, bool wordWrap)
     {
         if (!hasValidShapingData) return;
@@ -194,8 +182,7 @@ public sealed class TextProcessor
 
         Profiler.EndSample();
     }
-
-
+    
     public void EnsurePositions(TextProcessSettings settings)
     {
         if (!hasValidLinesData) return;
@@ -211,11 +198,12 @@ public sealed class TextProcessor
         lastLayoutVAlign = settings.VerticalAlignment;
         hasValidPositionedGlyphs = true;
 
+        LayoutComplete?.Invoke();
+
         Profiler.EndSample();
     }
-
-
-    private bool DoFullShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
+    
+    private void DoFullShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
         doFullShapingCallCount++;
         
@@ -234,7 +222,7 @@ public sealed class TextProcessor
             hasValidShapingData = false;
             hasValidLinesData = false;
             hasValidPositionedGlyphs = false;
-            return false;
+            return;
         }
 
         Profiler.BeginSample("TextProcessor.AnalyzeBidi");
@@ -262,10 +250,8 @@ public sealed class TextProcessor
         Profiler.EndSample();
 
         hasValidShapingData = true;
-        return true;
     }
-
-
+    
     public float GetUnwrappedWidth()
     {
         if (!hasValidShapingData) return 0;
@@ -488,7 +474,6 @@ public sealed class TextProcessor
 
     public float ResultWidth => resultWidth;
     public float ResultHeight => resultHeight;
-    public Vector2 ResultSize => new(resultWidth, resultHeight);
 
     public ReadOnlySpan<PositionedGlyph> PositionedGlyphs
     {
@@ -496,15 +481,6 @@ public sealed class TextProcessor
         {
             var b = buf;
             return b.positionedGlyphs.Span;
-        }
-    }
-
-    public ReadOnlySpan<int> Codepoints
-    {
-        get
-        {
-            var b = buf;
-            return b.codepoints.Span;
         }
     }
 
@@ -516,7 +492,6 @@ public sealed class TextProcessor
         var i = 0;
         while (i < text.Length) AddCharacter(text, ref i);
     }
-
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void AddCharacter(ReadOnlySpan<char> text, ref int i)
@@ -801,8 +776,7 @@ public sealed class TextProcessor
         if (fontProvider != null)
         {
             fontProvider.GetLineMetrics(settings.fontSize, out var ascender, out var descender, out var lineHeight);
-            var scale = fontProvider.GetScale(baseFontId, settings.fontSize);
-            Layout.SetFontMetrics(ascender, descender, lineHeight, scale, buf.GetGlyphScale(settings.fontSize));
+            Layout.SetFontMetrics(ascender, descender, lineHeight, buf.GetGlyphScale(settings.fontSize));
         }
 
         Layout.SetLayoutSettings(settings.layout);

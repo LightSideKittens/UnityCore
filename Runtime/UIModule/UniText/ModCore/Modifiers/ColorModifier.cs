@@ -20,7 +20,7 @@ public class ColorModifier : GlyphModifier<uint>
         buffer = buf;
     }
 
-    protected override void ApplyModifier(int start, int end, string parameter)
+    protected override void OnApply(int start, int end, string parameter)
     {
         if (string.IsNullOrEmpty(parameter))
             return;

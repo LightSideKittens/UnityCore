@@ -75,7 +75,7 @@ public class ListModifier : BaseModifier
         instanceItems.FakeClear();
     }
 
-    protected override void ApplyModifier(int start, int end, string parameter)
+    protected override void OnApply(int start, int end, string parameter)
     {
         var item = ParseParameter(start, end, parameter);
         items.Add(item);

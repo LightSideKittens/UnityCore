@@ -17,7 +17,7 @@ public abstract class BaseModifier
             isInitialized = true;
         }
 
-        ApplyModifier(start, end, parameter);
+        OnApply(start, end, parameter);
     }
 
     public void Initialize(UniText uniText)
@@ -55,5 +55,5 @@ public abstract class BaseModifier
     protected abstract void ClearBuffers();
 
 
-    protected abstract void ApplyModifier(int start, int end, string parameter);
+    protected abstract void OnApply(int start, int end, string parameter);
 }

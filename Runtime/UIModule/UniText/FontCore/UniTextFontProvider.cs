@@ -36,16 +36,6 @@ public sealed class UniTextFontProvider
         FontSize = size;
     }
 
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public float GetScale(int fontId, float size)
-    {
-        var fontAsset = GetFontAsset(fontId);
-        var pointSize = fontAsset?.FaceInfo.pointSize ?? 0;
-        return pointSize > 0 ? size / pointSize : 1f;
-    }
-
-
     public UniTextFont MainFont => mainFont;
 
     public UniTextAppearance Appearance => appearance;

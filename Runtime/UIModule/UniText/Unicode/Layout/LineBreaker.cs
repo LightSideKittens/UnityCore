@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 public sealed class LineBreaker
 {
-    private readonly LineBreakAlgorithm lineBreakAlgorithm;
+    private readonly LineBreakAlgorithm lineBreakAlgorithm = new();
 
     private const int MinBreakOpportunitiesSize = 256;
     private bool[] breakOpportunities = UniTextArrayPool<bool>.Rent(MinBreakOpportunitiesSize);
@@ -17,20 +17,7 @@ public sealed class LineBreaker
 
     private BidiParagraph[] tempParagraphs;
     private int tempParagraphCount;
-
-    public LineBreaker(LineBreakAlgorithm lineBreakAlgorithm)
-    {
-        this.lineBreakAlgorithm = lineBreakAlgorithm ?? throw new ArgumentNullException(nameof(lineBreakAlgorithm));
-    }
-
-
-    public LineBreaker()
-    {
-        lineBreakAlgorithm = new LineBreakAlgorithm();
-    }
-
-
-    /// <param name="glyphScale">Scale factor for margins (fontSize / shapingFontSize). Default 1.0 for no scaling.</param>
+    
     public void BreakLines(
         ReadOnlySpan<int> codepoints,
         ReadOnlySpan<ShapedRun> runs,
@@ -151,7 +138,7 @@ public sealed class LineBreaker
 
                 if (IsMandatoryBreak(cp))
                 {
-                    CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx, lineWidth, rawMargin);
+                    CreateLineFromCodepoints(runs, glyphs, lineStartCp, cpIdx, rawMargin);
                     lineStartCp = cpIdx + 1;
                     lineWidth = 0;
                     lastBreakCp = -1;
@@ -166,7 +153,7 @@ public sealed class LineBreaker
                 while (lineWidth > effectiveMaxWidth)
                     if (lastBreakCp >= 0 && lastBreakCp >= lineStartCp)
                     {
-                        CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, lastBreakCp, widthAtLastBreak,
+                        CreateLineFromCodepoints(runs, glyphs, lineStartCp, lastBreakCp,
                             rawMargin);
                         lineStartCp = lastBreakCp + 1;
                         lineWidth -= widthAtLastBreak;
@@ -178,7 +165,7 @@ public sealed class LineBreaker
                     else if (cpIdx > lineStartCp)
                     {
                         var widthBeforeCurrent = lineWidth - cpWidths[cpIdx];
-                        CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpIdx - 1, widthBeforeCurrent,
+                        CreateLineFromCodepoints(runs, glyphs, lineStartCp, cpIdx - 1,
                             rawMargin);
                         lineStartCp = cpIdx;
                         lineWidth = cpWidths[cpIdx];
@@ -200,7 +187,7 @@ public sealed class LineBreaker
             }
 
             if (lineStartCp < cpCount)
-                CreateLineFromCodepoints(runs, glyphs, codepoints, lineStartCp, cpCount - 1, lineWidth, rawMargin);
+                CreateLineFromCodepoints(runs, glyphs, lineStartCp, cpCount - 1, rawMargin);
         }
         finally
         {
@@ -212,9 +199,7 @@ public sealed class LineBreaker
     private void CreateLineFromCodepoints(
         ReadOnlySpan<ShapedRun> runs,
         ReadOnlySpan<ShapedGlyph> glyphs,
-        ReadOnlySpan<int> codepoints,
-        int startCp, int endCp,
-        float width, float startMargin = 0f)
+        int startCp, int endCp, float startMargin = 0f)
     {
         if (startCp > endCp) return;
 
@@ -282,8 +267,6 @@ public sealed class LineBreaker
             runStart = lineRunStart,
             runCount = lineRunCount,
             width = actualLineWidth,
-            height = 0,
-            baseline = 0,
             startMargin = startMargin
         };
     }
@@ -322,8 +305,7 @@ public sealed class LineBreaker
 
         return tempParagraphs[0].baseLevel;
     }
-
-
+    
     private void ReorderRunsInLine(int start, int count, byte paragraphBaseLevel)
     {
         if (count <= 1) return;

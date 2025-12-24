@@ -31,28 +31,18 @@ public sealed class TextLayout
     private float fontAscender;
     private float fontDescender;
     private float fontLineHeight;
-    private float fontScale = 1f;
     private float glyphScale = 1f;
 
     public TextLayout()
     {
         settings = LayoutSettings.Default;
     }
-
-    public TextLayout(LayoutSettings settings)
-    {
-        this.settings = settings;
-    }
-
-
-    /// <param name="glyphScaleFactor">Коэффициент масштабирования для advance/offset глифов (currentFontSize / shapingFontSize)</param>
-    public void SetFontMetrics(float ascender, float descender, float lineHeight, float scale,
-        float glyphScaleFactor = 1f)
+    
+    public void SetFontMetrics(float ascender, float descender, float lineHeight, float glyphScaleFactor = 1f)
     {
         fontAscender = ascender;
         fontDescender = descender;
         fontLineHeight = lineHeight;
-        fontScale = scale;
         glyphScale = glyphScaleFactor;
     }
 

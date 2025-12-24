@@ -78,7 +78,7 @@ public abstract class BaseLineModifier : BaseModifier
         linesDrawnThisFrame = false;
     }
 
-    protected sealed override void ApplyModifier(int start, int end, string parameter)
+    protected sealed override void OnApply(int start, int end, string parameter)
     {
         var cpCount = buffers.codepoints.count;
         EnsureBufferCapacity(cpCount);

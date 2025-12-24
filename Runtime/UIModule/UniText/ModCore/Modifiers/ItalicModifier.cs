@@ -19,7 +19,7 @@ public class ItalicModifier : GlyphModifier<byte>
         buffer = buf;
     }
 
-    protected override void ApplyModifier(int start, int end, string parameter)
+    protected override void OnApply(int start, int end, string parameter)
     {
         var cpCount = buffers.codepoints.count;
         EnsureBufferCapacity(cpCount);

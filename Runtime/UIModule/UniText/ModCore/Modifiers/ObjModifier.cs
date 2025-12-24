@@ -164,7 +164,7 @@ public class ObjModifier : BaseModifier
         clusterToObj?.Clear();
     }
 
-    protected override void ApplyModifier(int start, int end, string parameter)
+    protected override void OnApply(int start, int end, string parameter)
     {
         if (string.IsNullOrEmpty(parameter)) return;
         if (objLookup == null || !objLookup.TryGetValue(parameter, out var obj)) return;
