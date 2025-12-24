@@ -633,6 +633,103 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &387182426
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 387182427}
+  - component: {fileID: 387182429}
+  - component: {fileID: 387182428}
+  m_Layer: 5
+  m_Name: GameObject_6
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &387182427
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 387182426}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2035672421}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 2547.78, y: 121.26}
+  m_SizeDelta: {x: 254.8, y: 143.82}
+  m_Pivot: {x: 0.7356097, y: 0.6622467}
+--- !u!114 &387182428
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 387182426}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: beaa34cb0e58d624bb3a264b28600785, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.UIModule::UniText
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 1, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  text: <ellipsis=s>START Tets est setse tTets est setse tTets est setse MIDDLE tTets
+    est setse tTets est setse tTets est setse tddfsd END</ellipsis>
+  fonts: {fileID: 11400000, guid: f1fb4d96c5ba77542999c02f0460bb35, type: 2}
+  appearance: {fileID: 11400000, guid: 366a003927a7b1d4c8978732eee3bd40, type: 2}
+  fontSize: 28
+  baseDirection: 2
+  enableWordWrap: 1
+  horizontalAlignment: 0
+  verticalAlignment: 0
+  enableAutoSize: 0
+  minFontSize: 10
+  maxFontSize: 72
+  modRegisters:
+  - rid: 2031797959231537360
+  references:
+    version: 2
+    RefIds:
+    - rid: 2031797959231537360
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797959231537361
+        rule:
+          rid: 2031797959231537362
+    - rid: 2031797959231537361
+      type: {class: EllipsisOverflowModifier, ns: , asm: LSCore.UniText}
+      data:
+        defaultTruncationMode: 2
+        ellipsisString: "\u2026"
+    - rid: 2031797959231537362
+      type: {class: EllipsisTagRule, ns: , asm: LSCore.UniText}
+      data: 
+--- !u!222 &387182429
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 387182426}
+  m_CullTransparentMesh: 1
 --- !u!1 &397460096
 GameObject:
   m_ObjectHideFlags: 0
@@ -1146,7 +1243,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   text: "123456. \u0644\u0644\u0644\u0644\u0644shaping  faksjd fhak<obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/><obj=\"log\"/>lsjdfhaklsjdhafalskjdh
-    aksldjha ksl jfha skldaskjhaskdjh\n 1. \u0644\u0644\u0644\u0644\u0644shaping\n-
+    aksldjha ksl jfha skldaskjhaskdjh\n  1. \u0644\u0644\u0644\u0644\u0644shaping\n-
     \u0644\u0644\u0644\u0644\u0644shaping  faksjd fhak lsjdfhaklsjdha falskjdh aksldjha
     ksl jfha skldaskjhaskdjh\n  - \u0644\u0644\u0644\u0644\u0644shaping\n      -
     \u0644\u0644\u0644\u0644\u0644shaping\n- sdfsdf\n  - sdfjslkdfs\n    - dfskldfj\n1.
@@ -3421,6 +3518,7 @@ RectTransform:
   - {fileID: 597897574}
   - {fileID: 769616320}
   - {fileID: 666491816}
+  - {fileID: 387182427}
   - {fileID: 397460097}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
