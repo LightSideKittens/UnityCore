@@ -22,6 +22,7 @@ public sealed class UniTextBuffers
     public PooledBuffer<ShapedRun> shapedRuns;
     public PooledBuffer<ShapedGlyph> shapedGlyphs;
     public PooledBuffer<float> cpWidths;
+    
     public PooledBuffer<bool> breakOpportunities;
     public PooledBuffer<TextLine> lines;
     public PooledBuffer<ShapedRun> orderedRuns;

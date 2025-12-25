@@ -783,6 +783,32 @@ public sealed class TextProcessor
         EnsurePositions(lastSettings);
     }
 
+    public void ForceReposition()
+    {
+        if (!hasValidShapingData || !hasValidLinesData) return;
+
+        UpdateLineWidths();
+        hasValidPositionedGlyphs = false;
+        EnsurePositions(lastSettings);
+    }
+
+    private void UpdateLineWidths()
+    {
+        var lines = buf.lines.data;
+        var lineCount = buf.lines.count;
+        var runs = buf.orderedRuns.data;
+
+        for (var i = 0; i < lineCount; i++)
+        {
+            ref var line = ref lines[i];
+            var width = 0f;
+            var end = line.runStart + line.runCount;
+            for (var r = line.runStart; r < end; r++)
+                width += runs[r].width;
+            line.width = width;
+        }
+    }
+
     private void EnsureLinesInternal(float width, float fontSize, bool wordWrap, ReadOnlySpan<float> cpWidths)
     {
         buf.lines.count = 0;
