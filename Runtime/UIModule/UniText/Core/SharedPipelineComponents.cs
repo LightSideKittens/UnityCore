@@ -9,6 +9,7 @@ public static class SharedPipelineComponents
 
     private static BidiEngine bidiEngine;
     private static ScriptAnalyzer scriptAnalyzer;
+    private static LineBreakAlgorithm lineBreakAlgorithm;
     private static LineBreaker lineBreaker;
     private static TextLayout layout;
     private static HybridShapingEngine shapingEngine;
@@ -16,6 +17,7 @@ public static class SharedPipelineComponents
 
     public static BidiEngine BidiEngine => bidiEngine ??= new BidiEngine();
     public static ScriptAnalyzer ScriptAnalyzer => scriptAnalyzer ??= new ScriptAnalyzer();
+    public static LineBreakAlgorithm LineBreakAlgorithm => lineBreakAlgorithm ??= new LineBreakAlgorithm();
     public static LineBreaker LineBreaker => lineBreaker ??= new LineBreaker();
     public static TextLayout Layout => layout ??= new TextLayout();
 
@@ -150,6 +152,7 @@ public static class SharedPipelineComponents
 
         bidiEngine = null;
         scriptAnalyzer = null;
+        lineBreakAlgorithm = null;
         lineBreaker = null;
         layout = null;
         shapingEngine = null;

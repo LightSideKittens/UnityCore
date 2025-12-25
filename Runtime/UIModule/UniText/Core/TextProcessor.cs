@@ -176,21 +176,7 @@ public sealed class TextProcessor
         if (CanReuseLines(width, fontSize, wordWrap)) return;
 
         Profiler.BeginSample("TextProcessor.EnsureLines");
-
-        buf.lines.count = 0;
-        buf.orderedRuns.count = 0;
-        buf.positionedGlyphs.count = 0;
-        hasValidPositionedGlyphs = false;
-
-        var glyphScale = buf.GetGlyphScale(fontSize);
-        var effectiveMaxWidth = wordWrap ? width / glyphScale : TextProcessSettings.FloatMax;
-        BreakLines(effectiveMaxWidth);
-
-        lastLinesWidth = width;
-        lastLinesFontSize = fontSize;
-        lastLinesWordWrap = wordWrap;
-        hasValidLinesData = true;
-
+        EnsureLinesInternal(width, fontSize, wordWrap, buf.cpWidths.Span);
         Profiler.EndSample();
     }
     
@@ -225,6 +211,10 @@ public sealed class TextProcessor
         Parse(text);
         Profiler.EndSample();
 
+        Profiler.BeginSample("TextProcessor.ComputeBreakOpportunities");
+        ComputeBreakOpportunities();
+        Profiler.EndSample();
+
         Profiler.BeginSample("TextProcessor.Parsed?.Invoke()");
         Parsed?.Invoke();
         Profiler.EndSample();
@@ -251,6 +241,10 @@ public sealed class TextProcessor
 
         Profiler.BeginSample("TextProcessor.Shape");
         Shape();
+        Profiler.EndSample();
+
+        Profiler.BeginSample("TextProcessor.ComputeCpWidths");
+        ComputeCpWidths();
         Profiler.EndSample();
 
         Profiler.BeginSample("TextProcessor.Shaped?.Invoke()");
@@ -467,7 +461,7 @@ public sealed class TextProcessor
         buf.orderedRuns.count = 0;
         buf.positionedGlyphs.count = 0;
 
-        BreakLines(effectiveMaxWidth);
+        BreakLines(effectiveMaxWidth, buf.cpWidths.Span);
 
         lastLinesWidth = targetWidth;
         lastLinesFontSize = fontSize;
@@ -741,17 +735,82 @@ public sealed class TextProcessor
         buf.shapedRuns.count = count + 1;
     }
 
+    private void ComputeBreakOpportunities()
+    {
+        var cpCount = buf.codepoints.count;
+        var requiredLength = cpCount + 1;  // +1 for break after last codepoint
+        buf.breakOpportunities.EnsureCapacity(requiredLength);
+        buf.breakOpportunities.count = requiredLength;
+
+        SharedPipelineComponents.LineBreakAlgorithm.GetBreakOpportunities(
+            buf.codepoints.Span,
+            buf.breakOpportunities.data);
+    }
+
+    private void ComputeCpWidths()
+    {
+        var cpCount = buf.codepoints.count;
+        buf.cpWidths.EnsureCapacity(cpCount);
+        buf.cpWidths.count = cpCount;
+
+        var widths = buf.cpWidths.data;
+        Array.Clear(widths, 0, cpCount);
+
+        var runs = buf.shapedRuns.data;
+        var runCount = buf.shapedRuns.count;
+        var glyphs = buf.shapedGlyphs.data;
+
+        for (var r = 0; r < runCount; r++)
+        {
+            ref readonly var run = ref runs[r];
+            var rangeStart = run.range.start;
+            var end = run.glyphStart + run.glyphCount;
+            for (var g = run.glyphStart; g < end; g++)
+            {
+                var cpIdx = rangeStart + glyphs[g].cluster;
+                if ((uint)cpIdx < (uint)cpCount)
+                    widths[cpIdx] += glyphs[g].advanceX;
+            }
+        }
+    }
+
     private void EnsureGlyphsInAtlas()
     {
         if (fontProvider == null)
             return;
-        
+
         fontProvider.EnsureGlyphsInAtlas(
             buf.shapedRuns.Span,
             buf.shapedGlyphs.Span);
     }
 
-    private void BreakLines(float maxWidth)
+    public void ForceRelayoutWithCpWidths(ReadOnlySpan<float> cpWidths)
+    {
+        if (!hasValidShapingData) return;
+
+        InvalidateLayoutData();
+        EnsureLinesInternal(lastSettings.MaxWidth, lastSettings.fontSize, lastSettings.enableWordWrap, cpWidths);
+        EnsurePositions(lastSettings);
+    }
+
+    private void EnsureLinesInternal(float width, float fontSize, bool wordWrap, ReadOnlySpan<float> cpWidths)
+    {
+        buf.lines.count = 0;
+        buf.orderedRuns.count = 0;
+        buf.positionedGlyphs.count = 0;
+        hasValidPositionedGlyphs = false;
+
+        var glyphScale = buf.GetGlyphScale(fontSize);
+        var effectiveMaxWidth = wordWrap ? width / glyphScale : TextProcessSettings.FloatMax;
+        BreakLines(effectiveMaxWidth, cpWidths);
+
+        lastLinesWidth = width;
+        lastLinesFontSize = fontSize;
+        lastLinesWordWrap = wordWrap;
+        hasValidLinesData = true;
+    }
+
+    private void BreakLines(float maxWidth, ReadOnlySpan<float> cpWidths)
     {
         Profiler.BeginSample("TextProcessor.BreakLines");
         buf.lines.count = 0;
@@ -766,11 +825,13 @@ public sealed class TextProcessor
             buf.codepoints.Span,
             buf.shapedRuns.Span,
             buf.shapedGlyphs.Span,
+            cpWidths,
+            buf.breakOpportunities.Span,
             maxWidth,
-            buf.bidiParagraphs.data,
-            buf.bidiParagraphs.count,
+            buf.bidiParagraphs.Span,
             ref linesArr, ref lineCnt,
-            ref orderedRunsArr, ref orderedRunCnt, buf.startMargins);
+            ref orderedRunsArr, ref orderedRunCnt,
+            buf.startMargins.AsSpan(0, buf.codepoints.count));
 
         buf.lines.data = linesArr;
         buf.orderedRuns.data = orderedRunsArr;

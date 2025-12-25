@@ -21,6 +21,8 @@ public sealed class UniTextBuffers
     public PooledBuffer<TextRun> runs;
     public PooledBuffer<ShapedRun> shapedRuns;
     public PooledBuffer<ShapedGlyph> shapedGlyphs;
+    public PooledBuffer<float> cpWidths;  // Codepoint widths - computed after shaping
+    public PooledBuffer<bool> breakOpportunities;  // Line break opportunities - computed after parse
     public PooledBuffer<TextLine> lines;
     public PooledBuffer<ShapedRun> orderedRuns;
     public PooledBuffer<PositionedGlyph> positionedGlyphs;
@@ -136,6 +138,8 @@ public sealed class UniTextBuffers
         runs.Rent(MinRunCapacity);
         shapedRuns.Rent(MinRunCapacity);
         shapedGlyphs.Rent(glyphCapacity);
+        cpWidths.Rent(codepointCapacity);
+        breakOpportunities.Rent(codepointCapacity + 1);  // +1 for break after last codepoint
         lines.Rent(MinLineCapacity);
         orderedRuns.Rent(MinRunCapacity);
         positionedGlyphs.Rent(glyphCapacity);
@@ -162,6 +166,8 @@ public sealed class UniTextBuffers
         runs.Return();
         shapedRuns.Return();
         shapedGlyphs.Return();
+        cpWidths.Return();
+        breakOpportunities.Return();
         lines.Return();
         orderedRuns.Return();
         positionedGlyphs.Return();
@@ -195,6 +201,8 @@ public sealed class UniTextBuffers
         runs.FakeClear();
         shapedRuns.FakeClear();
         shapedGlyphs.FakeClear();
+        cpWidths.FakeClear();
+        breakOpportunities.FakeClear();
         lines.FakeClear();
         orderedRuns.FakeClear();
         positionedGlyphs.FakeClear();

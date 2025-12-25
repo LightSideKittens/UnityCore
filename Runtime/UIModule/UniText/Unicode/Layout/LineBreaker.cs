@@ -4,39 +4,30 @@ using System.Runtime.CompilerServices;
 
 public sealed class LineBreaker
 {
-    private readonly LineBreakAlgorithm lineBreakAlgorithm = new();
-
-    private const int MinBreakOpportunitiesSize = 256;
-    private bool[] breakOpportunities = UniTextArrayPool<bool>.Rent(MinBreakOpportunitiesSize);
-
     private TextLine[] tempLines;
     private int tempLineCount;
     private ShapedRun[] tempOrderedRuns;
     private int tempOrderedRunCount;
     private int searchStartRunIdx;
 
-    private BidiParagraph[] tempParagraphs;
-    private int tempParagraphCount;
-    
     public void BreakLines(
         ReadOnlySpan<int> codepoints,
         ReadOnlySpan<ShapedRun> runs,
         ReadOnlySpan<ShapedGlyph> glyphs,
+        ReadOnlySpan<float> cpWidths,
+        ReadOnlySpan<bool> breakOpportunities,
         float maxWidth,
-        BidiParagraph[] paragraphs,
-        int paragraphCount,
+        ReadOnlySpan<BidiParagraph> paragraphs,
         ref TextLine[] linesOut,
         ref int lineCount,
         ref ShapedRun[] orderedRunsOut,
         ref int orderedRunCount,
-        float[] startMargins)
+        ReadOnlySpan<float> startMargins)
     {
         tempLines = linesOut;
         tempLineCount = 0;
         tempOrderedRuns = orderedRunsOut;
         tempOrderedRunCount = 0;
-        tempParagraphs = paragraphs;
-        tempParagraphCount = paragraphCount;
 
         if (runs.IsEmpty)
         {
@@ -45,9 +36,8 @@ public sealed class LineBreaker
             return;
         }
 
-        GetBreakOpportunities(codepoints);
-        WrapLines(codepoints, runs, glyphs, maxWidth, startMargins);
-        ReorderRunsPerLine();
+        WrapLines(codepoints, runs, glyphs, cpWidths, breakOpportunities, maxWidth, startMargins);
+        ReorderRunsPerLine(paragraphs);
 
         linesOut = tempLines;
         orderedRunsOut = tempOrderedRuns;
@@ -55,21 +45,8 @@ public sealed class LineBreaker
         orderedRunCount = tempOrderedRunCount;
     }
 
-    private void GetBreakOpportunities(ReadOnlySpan<int> codepoints)
-    {
-        var requiredLength = codepoints.Length + 1;
-        if (breakOpportunities.Length < requiredLength)
-        {
-            var newSize = Math.Max(requiredLength, breakOpportunities.Length * 2);
-            UniTextArrayPool<bool>.Return(breakOpportunities);
-            breakOpportunities = UniTextArrayPool<bool>.Rent(newSize);
-        }
-
-        lineBreakAlgorithm.GetBreakOpportunities(codepoints, breakOpportunities);
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool CanBreakAfter(int index)
+    private static bool CanBreakAfter(ReadOnlySpan<bool> breakOpportunities, int index)
     {
         var breakIndex = index + 1;
         return (uint)breakIndex < (uint)breakOpportunities.Length && breakOpportunities[breakIndex];
@@ -89,10 +66,14 @@ public sealed class LineBreaker
                cp == UnicodeData.ParagraphSeparator;
     }
 
-    private void WrapLines(ReadOnlySpan<int> codepoints,
+    private void WrapLines(
+        ReadOnlySpan<int> codepoints,
         ReadOnlySpan<ShapedRun> runs,
         ReadOnlySpan<ShapedGlyph> glyphs,
-        float maxWidth, float[] startMargins)
+        ReadOnlySpan<float> cpWidths,
+        ReadOnlySpan<bool> breakOpportunities,
+        float maxWidth,
+        ReadOnlySpan<float> startMargins)
     {
         if (runs.IsEmpty) return;
 
@@ -100,100 +81,67 @@ public sealed class LineBreaker
 
         var cpCount = codepoints.Length;
 
-        const int StackAllocThreshold = 4096;
-        float[] rentedArray = null;
-        var cpWidths = cpCount <= StackAllocThreshold
-            ? stackalloc float[cpCount]
-            : (rentedArray = UniTextArrayPool<float>.Rent(cpCount)).AsSpan(0, cpCount);
-        cpWidths.Clear();
+        var lineStartCp = 0;
+        float lineWidth = 0;
+        var lastBreakCp = -1;
+        float widthAtLastBreak = 0;
 
-        var margins = startMargins;
+        var rawMargin = (uint)lineStartCp < (uint)startMargins.Length ? startMargins[lineStartCp] : 0f;
+        var effectiveMaxWidth = maxWidth - rawMargin;
 
-        try
+        for (var cpIdx = 0; cpIdx < cpCount; cpIdx++)
         {
-            for (var runIdx = 0; runIdx < runs.Length; runIdx++)
+            var cp = codepoints[cpIdx];
+
+            if (IsMandatoryBreak(cp))
             {
-                var run = runs[runIdx];
-                var rangeStart = run.range.start;
-                for (var g = 0; g < run.glyphCount; g++)
-                {
-                    var glyph = glyphs[run.glyphStart + g];
-                    var cpIdx = rangeStart + glyph.cluster;
-                    if ((uint)cpIdx < (uint)cpCount)
-                        cpWidths[cpIdx] += glyph.advanceX;
-                }
+                CreateLineFromCodepoints(runs, glyphs, lineStartCp, cpIdx, rawMargin);
+                lineStartCp = cpIdx + 1;
+                lineWidth = 0;
+                lastBreakCp = -1;
+                widthAtLastBreak = 0;
+                rawMargin = (uint)lineStartCp < (uint)startMargins.Length ? startMargins[lineStartCp] : 0f;
+                effectiveMaxWidth = maxWidth - rawMargin;
+                continue;
             }
 
-            var lineStartCp = 0;
-            float lineWidth = 0;
-            var lastBreakCp = -1;
-            float widthAtLastBreak = 0;
+            lineWidth += cpWidths[cpIdx];
 
-            var rawMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
-            var effectiveMaxWidth = maxWidth - rawMargin;
-
-            for (var cpIdx = 0; cpIdx < cpCount; cpIdx++)
-            {
-                var cp = codepoints[cpIdx];
-
-                if (IsMandatoryBreak(cp))
+            while (lineWidth > effectiveMaxWidth)
+                if (lastBreakCp >= 0 && lastBreakCp >= lineStartCp)
                 {
-                    CreateLineFromCodepoints(runs, glyphs, lineStartCp, cpIdx, rawMargin);
-                    lineStartCp = cpIdx + 1;
-                    lineWidth = 0;
+                    CreateLineFromCodepoints(runs, glyphs, lineStartCp, lastBreakCp, rawMargin);
+                    lineStartCp = lastBreakCp + 1;
+                    lineWidth -= widthAtLastBreak;
                     lastBreakCp = -1;
                     widthAtLastBreak = 0;
-                    rawMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
+                    rawMargin = (uint)lineStartCp < (uint)startMargins.Length ? startMargins[lineStartCp] : 0f;
                     effectiveMaxWidth = maxWidth - rawMargin;
-                    continue;
                 }
-
-                lineWidth += cpWidths[cpIdx];
-
-                while (lineWidth > effectiveMaxWidth)
-                    if (lastBreakCp >= 0 && lastBreakCp >= lineStartCp)
-                    {
-                        CreateLineFromCodepoints(runs, glyphs, lineStartCp, lastBreakCp,
-                            rawMargin);
-                        lineStartCp = lastBreakCp + 1;
-                        lineWidth -= widthAtLastBreak;
-                        lastBreakCp = -1;
-                        widthAtLastBreak = 0;
-                        rawMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
-                        effectiveMaxWidth = maxWidth - rawMargin;
-                    }
-                    else if (cpIdx > lineStartCp)
-                    {
-                        var widthBeforeCurrent = lineWidth - cpWidths[cpIdx];
-                        CreateLineFromCodepoints(runs, glyphs, lineStartCp, cpIdx - 1,
-                            rawMargin);
-                        lineStartCp = cpIdx;
-                        lineWidth = cpWidths[cpIdx];
-                        lastBreakCp = -1;
-                        widthAtLastBreak = 0;
-                        rawMargin = (uint)lineStartCp < (uint)margins.Length ? margins[lineStartCp] : 0f;
-                        effectiveMaxWidth = maxWidth - rawMargin;
-                    }
-                    else
-                    {
-                        break;
-                    }
-
-                if (CanBreakAfter(cpIdx))
+                else if (cpIdx > lineStartCp)
                 {
-                    lastBreakCp = cpIdx;
-                    widthAtLastBreak = lineWidth;
+                    CreateLineFromCodepoints(runs, glyphs, lineStartCp, cpIdx - 1, rawMargin);
+                    lineStartCp = cpIdx;
+                    lineWidth = cpWidths[cpIdx];
+                    lastBreakCp = -1;
+                    widthAtLastBreak = 0;
+                    rawMargin = (uint)lineStartCp < (uint)startMargins.Length ? startMargins[lineStartCp] : 0f;
+                    effectiveMaxWidth = maxWidth - rawMargin;
                 }
-            }
+                else
+                {
+                    break;
+                }
 
-            if (lineStartCp < cpCount)
-                CreateLineFromCodepoints(runs, glyphs, lineStartCp, cpCount - 1, rawMargin);
+            if (CanBreakAfter(breakOpportunities, cpIdx))
+            {
+                lastBreakCp = cpIdx;
+                widthAtLastBreak = lineWidth;
+            }
         }
-        finally
-        {
-            if (rentedArray != null)
-                UniTextArrayPool<float>.Return(rentedArray);
-        }
+
+        if (lineStartCp < cpCount)
+            CreateLineFromCodepoints(runs, glyphs, lineStartCp, cpCount - 1, rawMargin);
     }
 
     private void CreateLineFromCodepoints(
@@ -271,13 +219,13 @@ public sealed class LineBreaker
         };
     }
 
-    private void ReorderRunsPerLine()
+    private void ReorderRunsPerLine(ReadOnlySpan<BidiParagraph> paragraphs)
     {
         for (var i = 0; i < tempLineCount; i++)
         {
             var line = tempLines[i];
 
-            var paragraphBaseLevel = FindParagraphBaseLevel(line.range.start);
+            var paragraphBaseLevel = FindParagraphBaseLevel(paragraphs, line.range.start);
 
             ReorderRunsInLine(line.runStart, line.runCount, paragraphBaseLevel);
 
@@ -288,24 +236,24 @@ public sealed class LineBreaker
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private byte FindParagraphBaseLevel(int codepointIndex)
+    private static byte FindParagraphBaseLevel(ReadOnlySpan<BidiParagraph> paragraphs, int codepointIndex)
     {
-        if (tempParagraphs == null || tempParagraphCount == 0)
+        if (paragraphs.IsEmpty)
             return 0;
 
-        if (tempParagraphCount == 1)
-            return tempParagraphs[0].baseLevel;
+        if (paragraphs.Length == 1)
+            return paragraphs[0].baseLevel;
 
-        for (var i = 0; i < tempParagraphCount; i++)
+        for (var i = 0; i < paragraphs.Length; i++)
         {
-            var para = tempParagraphs[i];
+            var para = paragraphs[i];
             if (codepointIndex >= para.startIndex && codepointIndex <= para.endIndex)
                 return para.baseLevel;
         }
 
-        return tempParagraphs[0].baseLevel;
+        return paragraphs[0].baseLevel;
     }
-    
+
     private void ReorderRunsInLine(int start, int count, byte paragraphBaseLevel)
     {
         if (count <= 1) return;
