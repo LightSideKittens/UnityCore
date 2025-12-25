@@ -69,6 +69,8 @@ public sealed class TextProcessor
     private VerticalAlignment lastLayoutVAlign;
     private bool hasValidPositionedGlyphs;
 
+    private TextProcessSettings lastSettings;
+
     private ReadOnlyMemory<char> lastText;
 
     public static int processCallCount;
@@ -115,7 +117,16 @@ public sealed class TextProcessor
         hasValidPositionedGlyphs = false;
         lastLayoutMaxHeight = -1;
     }
-    
+
+    public void ForceRelayout()
+    {
+        if (!hasValidShapingData) return;
+
+        InvalidateLayoutData();
+        EnsureLines(lastSettings.MaxWidth, lastSettings.fontSize, lastSettings.enableWordWrap);
+        EnsurePositions(lastSettings);
+    }
+
     public void EnsureShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
         ensureShapingCallCount++;
@@ -190,6 +201,7 @@ public sealed class TextProcessor
 
         Profiler.BeginSample("TextProcessor.EnsurePositions");
 
+        lastSettings = settings;
         buf.positionedGlyphs.count = 0;
         LayoutText(settings);
 

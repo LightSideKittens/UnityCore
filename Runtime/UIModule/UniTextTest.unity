@@ -177,8 +177,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   text: test testsetes esktjslddkfjsl kjfa;dslkfja;lsdkfj d
-  fonts: {fileID: 0}
-  appearance: {fileID: 0}
+  fonts: {fileID: 11400000, guid: f1fb4d96c5ba77542999c02f0460bb35, type: 2}
+  appearance: {fileID: 11400000, guid: 366a003927a7b1d4c8978732eee3bd40, type: 2}
   fontSize: 108.34
   baseDirection: 2
   enableWordWrap: 1
@@ -645,7 +645,7 @@ GameObject:
   - component: {fileID: 387182429}
   - component: {fileID: 387182428}
   m_Layer: 5
-  m_Name: GameObject_6
+  m_Name: EllipsisTest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -667,9 +667,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 2547.78, y: 121.26}
-  m_SizeDelta: {x: 254.8, y: 143.82}
-  m_Pivot: {x: 0.7356097, y: 0.6622467}
+  m_AnchoredPosition: {x: 2636.4, y: -82.8}
+  m_SizeDelta: {x: 701.9, y: 707.9}
+  m_Pivot: {x: 0.22652645, y: 1.4530691}
 --- !u!114 &387182428
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -690,37 +690,61 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  text: <ellipsis=s>START Tets est setse tTets est setse tTets est setse MIDDLE tTets
-    est setse tTets est setse tTets est setse tddfsd END</ellipsis>
+  text: "<color=#98f>DTART OUT OF TAG DTART OUT OF TAGDTART OUT OF TAGDTART OUT OF
+    TAGDTART OUT OF TAG</color> <ellipsis=start>START S1 S2 S3 S4 S5 S6 S7 S8 S9
+    S10 S11 S12 S13 S14 S15 S16 S17 S18 S19 S20 S21 S22 S23 S24S25S26S27S28S29  END</ellipsis>
+    <color=#98f>END OUT OF TAG END OUT OF TAG END OUT OF TAG END OUT OF TAG END OUT
+    OF TAG END OUT OF T</color>\n\n<color=#98f>DTART OUT OF TAG DTART OUT OF TAGDTART
+    OUT OF TAGDTART OUT OF TAGDTART OUT OF TAG</color> <ellipsis=mid>START S1 S2
+    S3 S4 S5 S6 S7 S8 S9 S10 S11 S12 S13 S14 S15 S16 S17 S18 S19 S20 S21 S22 S23
+    S24S25S26S27S28S29  END</ellipsis> <color=#98f>END OUT OF TAG END OUT OF TAG
+    END OUT OF TAG END OUT OF TAG END OUT OF TAG END OUT OF T</color>  \n\n<color=#98f>DTART
+    OUT OF TAG DTART OUT OF TAGDTART OUT OF TAGDTART OUT OF TAGDTART OUT OF TAG</color>
+    <ellipsis=end>START S1 S2 S3 S4 S5 S6 S7 S8 S9 S10 S11 S12 S13 S14 S15 S16 S17
+    S18 S19 S20 S21 S22 S23 S24 S25S26S27S28S29  END</ellipsis> <color=#98f>END OUT
+    OF TAG END OUT OF TAG END OUT OF TAG END OUT OF TAG END OUT OF TAG END OUT OF
+    T</color>"
   fonts: {fileID: 11400000, guid: f1fb4d96c5ba77542999c02f0460bb35, type: 2}
   appearance: {fileID: 11400000, guid: 366a003927a7b1d4c8978732eee3bd40, type: 2}
   fontSize: 28
   baseDirection: 2
   enableWordWrap: 1
-  horizontalAlignment: 0
-  verticalAlignment: 0
+  horizontalAlignment: 2
+  verticalAlignment: 1
   enableAutoSize: 0
   minFontSize: 10
   maxFontSize: 72
   modRegisters:
-  - rid: 2031797959231537360
+  - rid: 2031797989190140000
+  - rid: 2031797989190140030
   references:
     version: 2
     RefIds:
-    - rid: 2031797959231537360
+    - rid: 2031797989190140000
       type: {class: ModRegister, ns: , asm: LSCore.UniText}
       data:
         modifier:
-          rid: 2031797959231537361
+          rid: 2031797989190140001
         rule:
-          rid: 2031797959231537362
-    - rid: 2031797959231537361
-      type: {class: EllipsisOverflowModifier, ns: , asm: LSCore.UniText}
-      data:
-        defaultTruncationMode: 2
-        ellipsisString: "\u2026"
-    - rid: 2031797959231537362
+          rid: 2031797989190140002
+    - rid: 2031797989190140001
+      type: {class: EllipsisModifier, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797989190140002
       type: {class: EllipsisTagRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797989190140030
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797989190140031
+        rule:
+          rid: 2031797989190140032
+    - rid: 2031797989190140031
+      type: {class: ColorModifier, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797989190140032
+      type: {class: ColorParseRule, ns: , asm: LSCore.UniText}
       data: 
 --- !u!222 &387182429
 CanvasRenderer:
@@ -743,7 +767,7 @@ GameObject:
   - component: {fileID: 397460099}
   - component: {fileID: 397460098}
   m_Layer: 5
-  m_Name: Scroll View
+  m_Name: ComplexLayoutTest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -767,8 +791,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 9.5, y: 39}
-  m_SizeDelta: {x: 987.7, y: 832}
+  m_AnchoredPosition: {x: -10.7, y: 39}
+  m_SizeDelta: {x: 947.5, y: 832}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &397460098
 MonoBehaviour:
@@ -1216,7 +1240,7 @@ GameObject:
   - component: {fileID: 666491815}
   - component: {fileID: 666491814}
   m_Layer: 5
-  m_Name: GameObject_3
+  m_Name: FullTest
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1643,7 +1667,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.80700004}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 27.05, y: -103.65991}
-  m_SizeDelta: {x: 2155, y: -126.42872}
+  m_SizeDelta: {x: 2155, y: -169.21466}
   m_Pivot: {x: 0.50000006, y: 1}
 --- !u!114 &769616321
 MonoBehaviour:
@@ -2047,7 +2071,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000012398, y: -832}
+  m_AnchoredPosition: {x: -0.000012398, y: -831.99994}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &992357368

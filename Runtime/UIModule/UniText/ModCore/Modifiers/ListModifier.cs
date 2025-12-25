@@ -299,9 +299,7 @@ public class ListModifier : BaseModifier
         var end = sb.Length - 1;
         while (start < end)
         {
-            var tmp = sb[start];
-            sb[start] = sb[end];
-            sb[end] = tmp;
+            (sb[start], sb[end]) = (sb[end], sb[start]);
             start++;
             end--;
         }
