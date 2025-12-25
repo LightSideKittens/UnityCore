@@ -7,12 +7,7 @@ public static class LineRenderHelper
     private static Glyph cachedUnderscoreGlyph;
     private static int cachedFontInstanceId;
 
-
-    /// <param name="startX">Начало линии X</param>
-    /// <param name="endX">Конец линии X</param>
-    /// <param name="baselineY">Y позиция baseline</param>
-    /// <param name="lineYOffset">Offset от baseline (underlineOffset или strikethroughOffset)</param>
-    /// <param name="color">Цвет линии</param>
+    
     public static void DrawLine(float startX, float endX, float baselineY, float lineYOffset, Color32 color)
     {
         var fontAsset = UniTextMeshGenerator.currentFont;

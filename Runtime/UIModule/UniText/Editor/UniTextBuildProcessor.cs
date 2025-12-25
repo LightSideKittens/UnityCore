@@ -21,7 +21,6 @@ public class UniTextBuildProcessor : IPreprocessBuildWithReport
             if (fontAsset == null || !fontAsset.ClearDynamicDataOnBuild)
                 continue;
 
-            // Use SerializedObject to access internal fields
             var serializedObject = new SerializedObject(fontAsset);
             var glyphTableProp = serializedObject.FindProperty("glyphTable");
             var characterTableProp = serializedObject.FindProperty("characterTable");

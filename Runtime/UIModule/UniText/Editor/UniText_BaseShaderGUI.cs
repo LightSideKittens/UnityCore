@@ -81,7 +81,6 @@ public abstract class UniText_BaseShaderGUI : ShaderGUI
         new("Off"), new("Front"), new("Back")
     };
 
-    // Styles (initialized lazily)
     static GUIStyle s_PanelTitle;
     static GUIStyle s_RightLabel;
 
@@ -150,11 +149,9 @@ public abstract class UniText_BaseShaderGUI : ShaderGUI
         bool enabled = GUI.enabled;
         GUI.enabled = true;
 
-        // Clickable label toggle (like TMP)
         if (GUI.Button(r, new GUIContent(panel), PanelTitle))
             expanded = !expanded;
 
-        // Right-aligned hint
         r.width -= 30;
         GUI.Label(r, new GUIContent(expanded ? s_PanelStateLabel[0] : s_PanelStateLabel[1]), RightLabel);
 
@@ -178,7 +175,6 @@ public abstract class UniText_BaseShaderGUI : ShaderGUI
         EditorGUILayout.BeginVertical(EditorStyles.helpBox);
         GUILayout.BeginHorizontal();
 
-        // Toggle checkbox
         Rect r = EditorGUI.IndentedRect(GUILayoutUtility.GetRect(20, 20, GUILayout.Width(20f)));
         bool active = EditorGUI.Toggle(r, feature.Active);
 
@@ -188,18 +184,15 @@ public abstract class UniText_BaseShaderGUI : ShaderGUI
             feature.SetActive(active, m_Material);
         }
 
-        // Panel title
         r = EditorGUI.IndentedRect(GUILayoutUtility.GetRect(20, 18));
         r.width += 6;
 
         bool enabled = GUI.enabled;
         GUI.enabled = true;
 
-        // Clickable label toggle
         if (GUI.Button(r, new GUIContent(panel), PanelTitle))
             expanded = !expanded;
 
-        // Right-aligned hint
         r.width -= 10;
         GUI.Label(r, new GUIContent(expanded ? s_PanelStateLabel[0] : s_PanelStateLabel[1]), RightLabel);
 

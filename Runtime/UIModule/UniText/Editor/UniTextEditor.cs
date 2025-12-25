@@ -16,7 +16,7 @@ public class UniTextEditor : Editor
 
     private static bool textAreaExpand;
     private static int textAreaFontSize = 14;
-    private static GUIStyle textAreaStyle = null; // сбросим для применения изменений
+    private static GUIStyle textAreaStyle = null;
     private static bool enableHighlight = true;
     
     private static readonly Color32[] tagColors =
@@ -265,7 +265,6 @@ public class UniTextEditor : Editor
     private static readonly Color defaultColor = new(0.82f, 0.82f, 0.82f, 1f);
     private Rect lastTextAreaRect;
 
-    // Кеш для оптимизации
     private string cachedText;
     private int cachedTextHash;
     private Rect cachedRect;

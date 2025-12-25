@@ -118,15 +118,6 @@ public sealed class TextProcessor
         lastLayoutMaxHeight = -1;
     }
 
-    public void ForceRelayout()
-    {
-        if (!hasValidShapingData) return;
-
-        InvalidateLayoutData();
-        EnsureLines(lastSettings.MaxWidth, lastSettings.fontSize, lastSettings.enableWordWrap);
-        EnsurePositions(lastSettings);
-    }
-
     public void EnsureShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
         ensureShapingCallCount++;
@@ -288,8 +279,7 @@ public sealed class TextProcessor
 
         return buf.lines.count * fontSize * 1.2f;
     }
-
-
+    
     public float GetMaxLineWidth()
     {
         if (!hasValidShapingData) return 0;
@@ -738,7 +728,7 @@ public sealed class TextProcessor
     private void ComputeBreakOpportunities()
     {
         var cpCount = buf.codepoints.count;
-        var requiredLength = cpCount + 1;  // +1 for break after last codepoint
+        var requiredLength = cpCount + 1;
         buf.breakOpportunities.EnsureCapacity(requiredLength);
         buf.breakOpportunities.count = requiredLength;
 
@@ -784,7 +774,7 @@ public sealed class TextProcessor
             buf.shapedGlyphs.Span);
     }
 
-    public void ForceRelayoutWithCpWidths(ReadOnlySpan<float> cpWidths)
+    public void ForceRelayout(ReadOnlySpan<float> cpWidths)
     {
         if (!hasValidShapingData) return;
 

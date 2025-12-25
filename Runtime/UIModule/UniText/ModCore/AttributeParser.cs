@@ -8,6 +8,7 @@ public sealed class AttributeParser
     internal readonly PooledList<AttributeSpan> spans = new();
 
     private readonly List<IParseRule> allRules = new();
+    private readonly Dictionary<IParseRule, BaseModifier> ruleToModifier = new();
 
     private readonly PooledList<ParsedRange> tempRanges = new(32);
 
@@ -33,13 +34,10 @@ public sealed class AttributeParser
         }
     }
 
-    private static int[] sharedIndexMap = new int[1024];
-    private static char[] sharedCleanTextBuffer = new char[1024];
+    private PooledBuffer<int> indexMapBuffer;
+    private PooledBuffer<char> cleanTextBuffer;
 
-    private int cleanTextLength;
-
-
-    public ReadOnlySpan<char> CleanTextSpan => sharedCleanTextBuffer.AsSpan(0, cleanTextLength);
+    public ReadOnlySpan<char> CleanTextSpan => cleanTextBuffer.Span;
 
     private string cachedCleanTextString;
 
@@ -47,8 +45,8 @@ public sealed class AttributeParser
     {
         get
         {
-            if (cachedCleanTextString == null && cleanTextLength > 0)
-                cachedCleanTextString = new string(sharedCleanTextBuffer, 0, cleanTextLength);
+            if (cachedCleanTextString == null && cleanTextBuffer.count > 0)
+                cachedCleanTextString = new string(cleanTextBuffer.data, 0, cleanTextBuffer.count);
             return cachedCleanTextString ?? string.Empty;
         }
     }
@@ -58,6 +56,7 @@ public sealed class AttributeParser
     {
         ruleModPairs.Add((rule, modifier));
         allRules.Add(rule);
+        ruleToModifier[rule] = modifier;
     }
 
 
@@ -67,7 +66,9 @@ public sealed class AttributeParser
         {
             if (ruleModPairs[i].modifier == modifier)
             {
-                allRules.Remove(ruleModPairs[i].rule);
+                var rule = ruleModPairs[i].rule;
+                allRules.Remove(rule);
+                ruleToModifier.Remove(rule);
                 ruleModPairs.RemoveAt(i);
                 break;
             }
@@ -90,6 +91,8 @@ public sealed class AttributeParser
         tempRanges.Return();
         tagRemovals.Return();
         tagInsertions.Return();
+        indexMapBuffer.Return();
+        cleanTextBuffer.Return();
     }
 
     public void ResetModifiers()
@@ -105,26 +108,20 @@ public sealed class AttributeParser
             span.modifier.Apply(span.start, span.end, span.parameter);
         }
     }
-
-
-    /// <param name="text">Исходный текст с разметкой</param>
-    /// <returns>Clean text без тегов</returns>
+    
     public void Parse(string text)
     {
         spans.FakeClear();
         tagRemovals.FakeClear();
         tagInsertions.FakeClear();
-        cleanTextLength = 0;
+        cleanTextBuffer.FakeClear();
         cachedCleanTextString = null;
 
         for (var r = 0; r < allRules.Count; r++)
             allRules[r].Reset();
 
         if (string.IsNullOrEmpty(text))
-        {
-            cleanTextLength = 0;
             return;
-        }
 
         var index = 0;
         while (index < text.Length)
@@ -192,12 +189,8 @@ public sealed class AttributeParser
 
     private void CreateSpanForRule(IParseRule rule, in ParsedRange range)
     {
-        for (var i = 0; i < ruleModPairs.Count; i++)
-            if (ReferenceEquals(ruleModPairs[i].rule, rule))
-            {
-                spans.Add(new AttributeSpan(range.start, range.end, ruleModPairs[i].modifier, range.parameter));
-                return;
-            }
+        if (ruleToModifier.TryGetValue(rule, out var modifier))
+            spans.Add(new AttributeSpan(range.start, range.end, modifier, range.parameter));
     }
 
     private void BuildCleanTextAndRemapIndices(string text)
@@ -207,11 +200,10 @@ public sealed class AttributeParser
 
         var mapSize = text.Length + 1;
 
-        if (sharedIndexMap.Length < mapSize)
-            sharedIndexMap = new int[Math.Max(mapSize, sharedIndexMap.Length * 2)];
-        var indexMap = sharedIndexMap;
+        indexMapBuffer.EnsureCapacity(mapSize);
+        cleanTextBuffer.EnsureCapacity(text.Length);
 
-        EnsureCleanTextCapacity(text.Length);
+        var indexMap = indexMapBuffer.data;
 
         var offset = 0;
         var removalIdx = 0;
@@ -225,7 +217,7 @@ public sealed class AttributeParser
             if (insertionIdx < tagInsertions.Count && i == tagInsertions[insertionIdx].start)
             {
                 var ins = tagInsertions[insertionIdx];
-                indexMap[i] = cleanTextLength;
+                indexMap[i] = cleanTextBuffer.count;
                 AppendToCleanText(ins.insert);
                 offset += ins.end - ins.start - ins.insert.Length;
                 i = ins.end - 1;
@@ -242,28 +234,20 @@ public sealed class AttributeParser
             {
                 indexMap[i] = i - offset;
                 if (i < text.Length)
-                    sharedCleanTextBuffer[cleanTextLength++] = text[i];
+                    cleanTextBuffer.data[cleanTextBuffer.count++] = text[i];
             }
         }
 
-        RemapSpanIndices(spans, indexMap, mapSize, cleanTextLength);
-    }
-
-    private static void EnsureCleanTextCapacity(int required)
-    {
-        if (sharedCleanTextBuffer.Length >= required)
-            return;
-
-        sharedCleanTextBuffer = new char[Math.Max(required, sharedCleanTextBuffer.Length * 2)];
+        RemapSpanIndices(spans, indexMap, mapSize, cleanTextBuffer.count);
     }
 
     private void AppendToCleanText(string str)
     {
         if (string.IsNullOrEmpty(str)) return;
 
-        EnsureCleanTextCapacity(cleanTextLength + str.Length);
-        str.AsSpan().CopyTo(sharedCleanTextBuffer.AsSpan(cleanTextLength));
-        cleanTextLength += str.Length;
+        cleanTextBuffer.EnsureCapacity(cleanTextBuffer.count + str.Length);
+        str.AsSpan().CopyTo(cleanTextBuffer.data.AsSpan(cleanTextBuffer.count));
+        cleanTextBuffer.count += str.Length;
     }
 
     private static void RemapSpanIndices(PooledList<AttributeSpan> spans, int[] indexMap, int mapLength,

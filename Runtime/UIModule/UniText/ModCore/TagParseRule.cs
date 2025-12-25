@@ -237,7 +237,10 @@ public abstract class TagParseRule : IParseRule
             var c = text[index + i];
             var p = pattern[i];
 
-            if (c != p && char.ToLowerInvariant(c) != char.ToLowerInvariant(p))
+            if (c == p) continue;
+
+            var cLower = (uint)((c | 0x20) - 'a');
+            if (cLower >= 26 || (c | 0x20) != p)
                 return false;
         }
 

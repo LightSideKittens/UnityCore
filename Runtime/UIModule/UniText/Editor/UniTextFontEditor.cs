@@ -44,12 +44,10 @@ public class UniTextFontEditor : Editor
 
         EditorGUILayout.Space();
 
-        // Source Font Section
         DrawSourceFontSection(fontAsset);
 
         EditorGUILayout.Space();
 
-        // Font Data Status
         DrawFontDataStatus(fontAsset);
 
         EditorGUILayout.Space();
@@ -59,13 +57,11 @@ public class UniTextFontEditor : Editor
         EditorGUILayout.Space();
 
         EditorGUILayout.PropertyField(italicStyleProp);
-        
-        // Atlas Settings
+
         DrawAtlasSettingsSection();
 
         EditorGUILayout.Space();
 
-        // Dynamic Data
         DrawDynamicDataSection(fontAsset);
 
         serializedObject.ApplyModifiedProperties();
@@ -90,7 +86,6 @@ public class UniTextFontEditor : Editor
 
         EditorGUILayout.PropertyField(atlasPopulationModeProp);
 
-        // Manual extraction button
         EditorGUILayout.Space(5);
         using (new EditorGUILayout.HorizontalScope())
         {
@@ -180,7 +175,6 @@ public class UniTextFontEditor : Editor
 
         EditorGUI.indentLevel++;
 
-        // Show current dynamic data stats
         var glyphTableProp = serializedObject.FindProperty("glyphTable");
         var characterTableProp = serializedObject.FindProperty("characterTable");
         var clearDynamicDataOnBuildProp = serializedObject.FindProperty("clearDynamicDataOnBuild");
@@ -194,7 +188,6 @@ public class UniTextFontEditor : Editor
         EditorGUILayout.LabelField($"Characters mapped: {charCount}");
         EditorGUILayout.LabelField($"Atlas textures: {atlasCount}");
 
-        // Show atlas texture size
         if (font.AtlasTexture != null)
         {
             var tex = font.AtlasTexture;
@@ -209,7 +202,6 @@ public class UniTextFontEditor : Editor
 
         EditorGUILayout.Space(5);
 
-        // Clear on build toggle
         if (clearDynamicDataOnBuildProp != null)
         {
             EditorGUILayout.PropertyField(clearDynamicDataOnBuildProp,
@@ -221,7 +213,6 @@ public class UniTextFontEditor : Editor
 
         EditorGUILayout.Space(5);
 
-        // Clear button
         EditorGUILayout.BeginHorizontal();
         GUILayout.Space(EditorGUI.indentLevel * 15);
 
@@ -248,7 +239,6 @@ public class UniTextFontEditor : Editor
 
     private void ExtractFontBytes(UniTextFont uniTextFont, Font font)
     {
-        // Get the asset path of the font
         string fontPath = AssetDatabase.GetAssetPath(font);
         if (string.IsNullOrEmpty(fontPath))
         {
@@ -258,7 +248,6 @@ public class UniTextFontEditor : Editor
             return;
         }
 
-        // Read the font file bytes
         string fullPath = Path.GetFullPath(fontPath);
         if (!File.Exists(fullPath))
         {
@@ -300,7 +289,6 @@ public class UniTextFontEditor : Editor
             Undo.RecordObject(font, "Load Font from File");
             font.SetFontData(fontBytes);
 
-            // Store the source path
             var sourceFontFilePathProp = serializedObject.FindProperty("sourceFontFilePath");
             sourceFontFilePathProp.stringValue = path;
 
@@ -326,7 +314,6 @@ public class UniTextFontEditor : Editor
             return;
         }
 
-        // Get font bytes
         string fontPath = AssetDatabase.GetAssetPath(font);
         string fullPath = Path.GetFullPath(fontPath);
 
@@ -338,7 +325,6 @@ public class UniTextFontEditor : Editor
 
         byte[] fontBytes = File.ReadAllBytes(fullPath);
 
-        // Create asset
         var fontAsset = UniTextFont.CreateFontAsset(fontBytes);
         if (fontAsset == null)
         {
@@ -348,14 +334,12 @@ public class UniTextFontEditor : Editor
 
         fontAsset.sourceFont = font;
 
-        // Save asset
         string directory = Path.GetDirectoryName(fontPath);
         string assetPath = Path.Combine(directory, font.name + " UniText.asset").Replace("\\", "/");
         assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
 
         AssetDatabase.CreateAsset(fontAsset, assetPath);
 
-        // Save sub-assets (textures only, no material)
         if (fontAsset.AtlasTextures != null)
         {
             for (int i = 0; i < fontAsset.AtlasTextures.Length; i++)
@@ -385,12 +369,10 @@ public class UniTextFontEditor : Editor
 
         if (selectedFont != null)
         {
-            // Create from selected Font with all SubAssets
             CreateFontAssetFromFont();
         }
         else
         {
-            // Create empty asset with default Texture
             CreateEmptyFontAssetWithSubAssets();
         }
     }
@@ -399,20 +381,16 @@ public class UniTextFontEditor : Editor
     {
         var fontAsset = ScriptableObject.CreateInstance<UniTextFont>();
 
-        // Create default atlas texture
         var texture = new Texture2D(1, 1, TextureFormat.Alpha8, false);
         texture.name = "Atlas";
         fontAsset.AtlasTextures = new[] { texture };
 
-        // Determine save path
         string directory = GetSelectedDirectory();
         string assetPath = Path.Combine(directory, "New UniTextFontAsset.asset").Replace("\\", "/");
         assetPath = AssetDatabase.GenerateUniqueAssetPath(assetPath);
 
-        // Save main asset
         AssetDatabase.CreateAsset(fontAsset, assetPath);
 
-        // Add SubAssets
         if (texture != null)
             AssetDatabase.AddObjectToAsset(texture, fontAsset);
 

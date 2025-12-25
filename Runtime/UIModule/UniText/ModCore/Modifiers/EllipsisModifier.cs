@@ -25,11 +25,9 @@ public class EllipsisModifier : BaseModifier
     private bool isProcessingRelayout;
     private int iterationCount;
 
-    // Caches built on OnShaped - O(1) lookup instead of O(runs)
     private PooledBuffer<int> glyphToGlobalCluster;
     private PooledBuffer<(int firstGlyph, int lastGlyph)> rangeGlyphBoundsCache;
 
-    // Current cpWidths for truncation - copied from buf.cpWidths and modified
     private PooledBuffer<float> currentCpWidths;
 
     protected override void CreateBuffers()
@@ -212,11 +210,9 @@ public class EllipsisModifier : BaseModifier
         if (ranges == null || ranges.Count == 0)
             return;
 
-        // Skip if we're in the middle of relayout - wait for it to complete
         if (isProcessingRelayout)
             return;
 
-        // New layout cycle - check if we need to truncate
         ClearEllipsisState();
         iterationCount = 0;
 
@@ -244,11 +240,9 @@ public class EllipsisModifier : BaseModifier
         if (glyphCount == 0)
             return;
 
-        // Save original advances once at start
         originalAdvances.EnsureCapacity(glyphCount);
         SaveOriginalAdvances(glyphs, glyphCount);
 
-        // Prepare currentCpWidths buffer
         currentCpWidths.EnsureCapacity(cpCount);
 
         var ellipsisWidth = MeasureEllipsisWidth();
@@ -256,7 +250,6 @@ public class EllipsisModifier : BaseModifier
         isProcessingRelayout = true;
         needsRestore = true;
 
-        // Binary search for optimal truncation ratio
         var low = 0f;
         var high = 1f;
         const float epsilon = 0.01f;
@@ -265,42 +258,35 @@ public class EllipsisModifier : BaseModifier
         {
             var mid = (low + high) / 2f;
 
-            // Restore original advances before applying new truncation
             RestoreAdvancesForBinarySearch(glyphs, glyphCount);
 
-            // Copy base cpWidths and apply truncation (updates both glyphs and cpWidths)
             CopyBaseCpWidths(cpCount);
             ApplyTruncationRatio(glyphs, mid, ellipsisWidth);
             RecalculateRunWidths(glyphs, runs, runCount);
 
-            // Relayout using precomputed cpWidths - skips O(glyphs) computation
-            uniText.TextProcessor.ForceRelayoutWithCpWidths(currentCpWidths.Span);
+            uniText.TextProcessor.ForceRelayout(currentCpWidths.Span);
             var resultHeight = uniText.TextProcessor.ResultHeight;
 
-            // Early exit when close enough (saves 60-70% iterations on average)
             if (Math.Abs(resultHeight - maxHeight) < 2f)
                 break;
 
             if (resultHeight > maxHeight)
             {
-                // Still overflow - need to truncate more
                 low = mid;
             }
             else
             {
-                // Fits - can truncate less
                 high = mid;
             }
 
             iterationCount++;
         }
 
-        // Apply final truncation at 'high' ratio (guaranteed to fit)
         RestoreAdvancesForBinarySearch(glyphs, glyphCount);
         CopyBaseCpWidths(cpCount);
         ApplyTruncationRatio(glyphs, high, ellipsisWidth);
         RecalculateRunWidths(glyphs, runs, runCount);
-        uniText.TextProcessor.ForceRelayoutWithCpWidths(currentCpWidths.Span);
+        uniText.TextProcessor.ForceRelayout(currentCpWidths.Span);
 
         isProcessingRelayout = false;
     }
@@ -317,7 +303,6 @@ public class EllipsisModifier : BaseModifier
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void CopyBaseCpWidths(int cpCount)
     {
-        // Copy from global buf.cpWidths (computed in TextProcessor.Shape)
         var src = buffers.cpWidths.data;
         var dst = currentCpWidths.data;
         var count = Math.Min(buffers.cpWidths.count, cpCount);
@@ -366,14 +351,13 @@ public class EllipsisModifier : BaseModifier
                     truncEnd = Math.Min(midPoint + halfTrunc, lastGlyph);
                     ellipsisAt = truncStart;
                     break;
-                default: // End
+                default:
                     truncEnd = lastGlyph;
                     truncStart = Math.Max(lastGlyph - glyphsToTruncate + 1, firstGlyph);
                     ellipsisAt = truncStart;
                     break;
             }
 
-            // Update both glyphs.advanceX and cpWidths for truncated range
             for (var g = truncStart; g <= truncEnd; g++)
             {
                 var cluster = clusterData[g];
@@ -382,7 +366,6 @@ public class EllipsisModifier : BaseModifier
 
                 glyphs[g].advanceX = newAdvance;
 
-                // Update cpWidths: subtract old, add new
                 if ((uint)cluster < (uint)cpCount)
                     cpWidths[cluster] += newAdvance - oldAdvance;
             }

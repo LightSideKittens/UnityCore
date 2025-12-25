@@ -21,8 +21,8 @@ public sealed class UniTextBuffers
     public PooledBuffer<TextRun> runs;
     public PooledBuffer<ShapedRun> shapedRuns;
     public PooledBuffer<ShapedGlyph> shapedGlyphs;
-    public PooledBuffer<float> cpWidths;  // Codepoint widths - computed after shaping
-    public PooledBuffer<bool> breakOpportunities;  // Line break opportunities - computed after parse
+    public PooledBuffer<float> cpWidths;
+    public PooledBuffer<bool> breakOpportunities;
     public PooledBuffer<TextLine> lines;
     public PooledBuffer<ShapedRun> orderedRuns;
     public PooledBuffer<PositionedGlyph> positionedGlyphs;
@@ -139,7 +139,7 @@ public sealed class UniTextBuffers
         shapedRuns.Rent(MinRunCapacity);
         shapedGlyphs.Rent(glyphCapacity);
         cpWidths.Rent(codepointCapacity);
-        breakOpportunities.Rent(codepointCapacity + 1);  // +1 for break after last codepoint
+        breakOpportunities.Rent(codepointCapacity + 1);
         lines.Rent(MinLineCapacity);
         orderedRuns.Rent(MinRunCapacity);
         positionedGlyphs.Rent(glyphCapacity);

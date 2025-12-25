@@ -11,13 +11,11 @@ public sealed class RawUrlParseRule : IParseRule
         var len = text.Length;
         var i = 0;
 
-        // Ищем :// — это признак URL со схемой
         while (i < len - 2)
         {
             var colonPos = text.IndexOf(':', i);
             if (colonPos < 0) break;
 
-            // Проверяем ://
             if (colonPos + 2 < len && text[colonPos + 1] == '/' && text[colonPos + 2] == '/')
             {
                 var schemeStart = FindSchemeStart(text, colonPos);
@@ -32,7 +30,6 @@ public sealed class RawUrlParseRule : IParseRule
                     }
                 }
             }
-            // mailto: и tel: (без //)
             else if (colonPos >= 6)
             {
                 var cl = ToLowerAscii(text[colonPos - 6]);
@@ -73,7 +70,6 @@ public sealed class RawUrlParseRule : IParseRule
             i = colonPos + 1;
         }
 
-        // Ищем www.
         i = 0;
         while (i < len - 3)
         {
@@ -100,7 +96,6 @@ public sealed class RawUrlParseRule : IParseRule
 
     private static int FindSchemeStart(string text, int colonPos)
     {
-        // https (5), http (4), ftps (4), ftp (3), file (4)
         if (colonPos >= 5)
         {
             var c = ToLowerAscii(text[colonPos - 5]);

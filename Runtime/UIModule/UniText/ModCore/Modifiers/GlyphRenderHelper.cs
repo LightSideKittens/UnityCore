@@ -6,11 +6,6 @@ using UnityEngine.TextCore;
 
 public static class GlyphRenderHelper
 {
-    /// <param name="codepoint">Unicode codepoint символа</param>
-    /// <param name="x">X позиция (левый край)</param>
-    /// <param name="baselineY">Y позиция baseline</param>
-    /// <param name="color">Цвет глифа</param>
-    /// <returns>Advance X (ширина для следующего символа), или 0 если глиф не найден</returns>
     public static float DrawGlyph(uint codepoint, float x, float baselineY, Color32 color)
     {
         var fontAsset = UniTextMeshGenerator.currentFont;
@@ -119,13 +114,7 @@ public static class GlyphRenderHelper
 
         return metrics.horizontalAdvance * scale;
     }
-
-
-    /// <param name="text">Текст для рендеринга</param>
-    /// <param name="x">X позиция (левый край)</param>
-    /// <param name="baselineY">Y позиция baseline</param>
-    /// <param name="color">Цвет текста</param>
-    /// <returns>Общая ширина отрендеренного текста</returns>
+    
     public static float DrawString(string text, float x, float baselineY, Color32 color)
     {
         if (string.IsNullOrEmpty(text))
