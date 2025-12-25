@@ -9,8 +9,8 @@ public class EllipsisModifier : BaseModifier
         public int start;
         public int end;
         public TruncationMode mode;
-        public int truncateFromCluster;
-        public int truncateToCluster;
+        public int truncateMinCluster;
+        public int truncateMaxCluster;
         public int ellipsisCluster;
         public bool needsEllipsis;
     }
@@ -97,8 +97,8 @@ public class EllipsisModifier : BaseModifier
             start = start,
             end = end,
             mode = mode,
-            truncateFromCluster = -1,
-            truncateToCluster = -1,
+            truncateMinCluster = -1,
+            truncateMaxCluster = -1,
             ellipsisCluster = -1,
             needsEllipsis = false
         });
@@ -112,8 +112,8 @@ public class EllipsisModifier : BaseModifier
         {
             var range = ranges[r];
             range.needsEllipsis = false;
-            range.truncateFromCluster = -1;
-            range.truncateToCluster = -1;
+            range.truncateMinCluster = -1;
+            range.truncateMaxCluster = -1;
             range.ellipsisCluster = -1;
             ranges[r] = range;
         }
@@ -267,9 +267,6 @@ public class EllipsisModifier : BaseModifier
             uniText.TextProcessor.ForceRelayout(currentCpWidths.Span);
             var resultHeight = uniText.TextProcessor.ResultHeight;
 
-            if (Math.Abs(resultHeight - maxHeight) < 2f)
-                break;
-
             if (resultHeight > maxHeight)
             {
                 low = mid;
@@ -330,50 +327,78 @@ public class EllipsisModifier : BaseModifier
             if (firstGlyph < 0)
                 continue;
 
-            var rangeGlyphCount = lastGlyph - firstGlyph + 1;
-            var glyphsToTruncate = (int)Math.Ceiling(rangeGlyphCount * ratio);
+            var minCluster = int.MaxValue;
+            var maxCluster = int.MinValue;
+            for (var g = firstGlyph; g <= lastGlyph; g++)
+            {
+                var cluster = clusterData[g];
+                if (cluster < minCluster) minCluster = cluster;
+                if (cluster > maxCluster) maxCluster = cluster;
+            }
 
-            if (glyphsToTruncate <= 0)
+            if (minCluster > maxCluster)
                 continue;
 
-            int truncStart, truncEnd, ellipsisAt;
+            var clusterRange = maxCluster - minCluster + 1;
+            var clustersToTruncate = (int)Math.Ceiling(clusterRange * ratio);
+
+            if (clustersToTruncate <= 0)
+                continue;
+
+            int truncClusterMin, truncClusterMax;
             switch (range.mode)
             {
                 case TruncationMode.Start:
-                    truncStart = firstGlyph;
-                    truncEnd = Math.Min(firstGlyph + glyphsToTruncate - 1, lastGlyph);
-                    ellipsisAt = truncEnd;
+                    truncClusterMin = minCluster;
+                    truncClusterMax = Math.Min(minCluster + clustersToTruncate - 1, maxCluster);
                     break;
                 case TruncationMode.Middle:
-                    var midPoint = (firstGlyph + lastGlyph) / 2;
-                    var halfTrunc = glyphsToTruncate / 2;
-                    truncStart = Math.Max(midPoint - halfTrunc, firstGlyph);
-                    truncEnd = Math.Min(midPoint + halfTrunc, lastGlyph);
-                    ellipsisAt = truncStart;
+                    var midCluster = (minCluster + maxCluster) / 2;
+                    var halfTrunc = clustersToTruncate / 2;
+                    truncClusterMin = Math.Max(midCluster - halfTrunc, minCluster);
+                    truncClusterMax = Math.Min(midCluster + halfTrunc, maxCluster);
                     break;
                 default:
-                    truncEnd = lastGlyph;
-                    truncStart = Math.Max(lastGlyph - glyphsToTruncate + 1, firstGlyph);
-                    ellipsisAt = truncStart;
+                    truncClusterMax = maxCluster;
+                    truncClusterMin = Math.Max(maxCluster - clustersToTruncate + 1, minCluster);
                     break;
             }
 
-            for (var g = truncStart; g <= truncEnd; g++)
+            var ellipsisClusterTarget = range.mode == TruncationMode.Start ? truncClusterMax : truncClusterMin;
+            var ellipsisGlyph = -1;
+
+            for (var g = firstGlyph; g <= lastGlyph; g++)
             {
                 var cluster = clusterData[g];
-                var oldAdvance = origAdvances[g];
-                var newAdvance = (g == ellipsisAt) ? ellipsisWidth : 0f;
+                if (cluster < truncClusterMin || cluster > truncClusterMax)
+                    continue;
 
+                var oldAdvance = origAdvances[g];
+
+                if (ellipsisGlyph < 0 || cluster == ellipsisClusterTarget)
+                    ellipsisGlyph = g;
+
+                var newAdvance = 0f;
                 glyphs[g].advanceX = newAdvance;
 
                 if ((uint)cluster < (uint)cpCount)
                     cpWidths[cluster] += newAdvance - oldAdvance;
             }
 
-            range.truncateFromCluster = GetGlobalCluster(truncStart);
-            range.truncateToCluster = GetGlobalCluster(truncEnd);
-            range.ellipsisCluster = GetGlobalCluster(ellipsisAt);
-            range.needsEllipsis = true;
+            if (ellipsisGlyph >= 0)
+            {
+                var oldAdvance = 0f;
+                glyphs[ellipsisGlyph].advanceX = ellipsisWidth;
+
+                var cluster = clusterData[ellipsisGlyph];
+                if ((uint)cluster < (uint)cpCount)
+                    cpWidths[cluster] += ellipsisWidth - oldAdvance;
+            }
+
+            range.truncateMinCluster = truncClusterMin;
+            range.truncateMaxCluster = truncClusterMax;
+            range.ellipsisCluster = ellipsisGlyph >= 0 ? clusterData[ellipsisGlyph] : -1;
+            range.needsEllipsis = ellipsisGlyph >= 0;
             ranges[r] = range;
         }
     }
@@ -411,7 +436,6 @@ public class EllipsisModifier : BaseModifier
         return 0f;
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void RecalculateRunWidths(ShapedGlyph[] glyphs, ShapedRun[] runs, int runCount)
     {
@@ -441,7 +465,7 @@ public class EllipsisModifier : BaseModifier
             if (!range.needsEllipsis)
                 continue;
 
-            if (cluster >= range.truncateFromCluster && cluster <= range.truncateToCluster)
+            if (cluster >= range.truncateMinCluster && cluster <= range.truncateMaxCluster)
             {
                 UniTextMeshGenerator.vertexCount -= 4;
                 UniTextMeshGenerator.triangleCount -= 6;
@@ -473,11 +497,20 @@ public class EllipsisModifier : BaseModifier
         if (positionedCount == 0)
             return;
 
+        var currentFont = UniTextMeshGenerator.currentFont;
+        if (currentFont == null)
+            return;
+
         for (var i = 0; i < positionedCount; i++)
         {
             if (positionedGlyphs[i].cluster == range.ellipsisCluster)
             {
                 ref readonly var pg = ref positionedGlyphs[i];
+
+                var glyphFont = uniText.FontProvider.GetFontAsset(pg.fontId);
+                if (glyphFont != currentFont)
+                    return;
+
                 var x = UniTextMeshGenerator.offsetX + pg.x;
                 var y = UniTextMeshGenerator.offsetY - pg.y;
                 GlyphRenderHelper.DrawString(EllipsisText, x, y, UniTextMeshGenerator.currentDefaultColor);
