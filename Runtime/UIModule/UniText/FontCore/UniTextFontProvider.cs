@@ -260,6 +260,9 @@ public sealed class UniTextFontProvider
 
     public void EnsureGlyphsInAtlas(ReadOnlySpan<ShapedRun> shapedRuns, ReadOnlySpan<ShapedGlyph> shapedGlyphs)
     {
+        glyphsByFontBuffer ??= new FastIntDictionary<List<uint>>();
+        glyphListPool ??= new Stack<List<uint>>();
+
         foreach (var kvp in glyphsByFontBuffer)
         {
             kvp.Value.Clear();
@@ -303,20 +306,14 @@ public sealed class UniTextFontProvider
         }
     }
 
-    private static readonly FastIntDictionary<List<uint>> glyphsByFontBuffer = new();
-    private static readonly Stack<List<uint>> glyphListPool = new();
+    [ThreadStatic] private static FastIntDictionary<List<uint>> glyphsByFontBuffer;
+    [ThreadStatic] private static Stack<List<uint>> glyphListPool;
 
     private static List<uint> AcquireGlyphList()
     {
+        glyphListPool ??= new Stack<List<uint>>();
         if (glyphListPool.Count > 0)
             return glyphListPool.Pop();
         return new List<uint>(256);
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        glyphsByFontBuffer.Clear();
-        glyphListPool.Clear();
     }
 }

@@ -256,13 +256,9 @@ public class UniTextEditor : Editor
         
         return newValue;
     }
-    
-    private static FieldInfo modRegistersField;
 
     private readonly PooledList<ParsedRange> tempRanges = new(32);
     private readonly List<(int start, int end, int colorIndex)> highlightRanges = new();
-    private static readonly Color tagColor = new(0.4f, 0.7f, 1f, 1f);
-    private static readonly Color defaultColor = new(0.82f, 0.82f, 0.82f, 1f);
     private Rect lastTextAreaRect;
 
     private string cachedText;

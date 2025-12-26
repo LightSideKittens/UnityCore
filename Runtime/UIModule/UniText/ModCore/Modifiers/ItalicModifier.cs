@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class ItalicModifier : GlyphModifier<byte>
 {
-    private static byte[] buffer;
+    [ThreadStatic] private static byte[] buffer;
 
     protected override string AttributeKey => AttributeKeys.Italic;
 
@@ -55,11 +55,5 @@ public class ItalicModifier : GlyphModifier<byte>
     public static bool IsItalic(int cluster)
     {
         return buffer.HasFlag(cluster);
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        buffer = null;
     }
 }

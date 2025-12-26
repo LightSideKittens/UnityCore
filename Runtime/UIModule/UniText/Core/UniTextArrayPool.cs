@@ -55,8 +55,8 @@ public static class UniTextArrayPool<T>
     private const int MinBucketSize = 32;
     private const int MaxArraysPerBucket = 512;
 
-    private static readonly T[][][] buckets = new T[BucketCount][][];
-    private static readonly int[] bucketCounts = new int[BucketCount];
+    [ThreadStatic] private static T[][][] threadBuckets;
+    [ThreadStatic] private static int[] threadBucketCounts;
 
     public static int totalRents;
     public static int poolHits;
@@ -64,15 +64,21 @@ public static class UniTextArrayPool<T>
     public static int totalReturns;
     public static int returnRejected;
 
-    static UniTextArrayPool()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void EnsureThreadPoolInitialized()
     {
+        if (threadBuckets != null) return;
+        threadBuckets = new T[BucketCount][][];
+        threadBucketCounts = new int[BucketCount];
         for (var i = 0; i < BucketCount; i++)
-            buckets[i] = new T[MaxArraysPerBucket][];
+            threadBuckets[i] = new T[MaxArraysPerBucket][];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T[] Rent(int minimumLength)
     {
+        EnsureThreadPoolInitialized();
+
         var bucketIndex = GetBucketIndex(minimumLength);
         if (bucketIndex < 0)
         {
@@ -81,8 +87,8 @@ public static class UniTextArrayPool<T>
         }
 
         var bucketSize = MinBucketSize << bucketIndex;
-        ref var count = ref bucketCounts[bucketIndex];
-        var bucket = buckets[bucketIndex];
+        ref var count = ref threadBucketCounts[bucketIndex];
+        var bucket = threadBuckets[bucketIndex];
 
         totalRents++;
         if (count > 0)
@@ -102,6 +108,7 @@ public static class UniTextArrayPool<T>
     public static void Return(T[] array)
     {
         if (array == null) return;
+        EnsureThreadPoolInitialized();
 
         totalReturns++;
         var bucketIndex = GetBucketIndex(array.Length);
@@ -118,10 +125,10 @@ public static class UniTextArrayPool<T>
             return;
         }
 
-        ref var count = ref bucketCounts[bucketIndex];
+        ref var count = ref threadBucketCounts[bucketIndex];
         if (count < MaxArraysPerBucket)
         {
-            buckets[bucketIndex][count] = array;
+            threadBuckets[bucketIndex][count] = array;
             count++;
         }
         else
@@ -150,10 +157,11 @@ public static class UniTextArrayPool<T>
 
     public static void Clear()
     {
+        if (threadBuckets == null) return;
         for (var i = 0; i < BucketCount; i++)
         {
-            Array.Clear(buckets[i], 0, bucketCounts[i]);
-            bucketCounts[i] = 0;
+            Array.Clear(threadBuckets[i], 0, threadBucketCounts[i]);
+            threadBucketCounts[i] = 0;
         }
     }
 
@@ -175,20 +183,20 @@ public static class UniTextArrayPool<T>
     {
         var sb = new System.Text.StringBuilder();
         sb.AppendLine($"UniTextArrayPool<{typeof(T).Name}>:");
+        if (threadBuckets == null)
+        {
+            sb.AppendLine("  (not initialized for this thread)");
+            return sb.ToString();
+        }
         for (var i = 0; i < BucketCount; i++)
         {
             var size = MinBucketSize << i;
-            sb.AppendLine($"  [{size}]: {bucketCounts[i]}/{MaxArraysPerBucket}");
+            sb.AppendLine($"  [{size}]: {threadBucketCounts[i]}/{MaxArraysPerBucket}");
         }
 
         return sb.ToString();
     }
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        Clear();
-    }
 }
 
 public struct PooledBuffer<T>

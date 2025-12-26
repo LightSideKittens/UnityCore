@@ -55,12 +55,6 @@ public class UniTextFont : ScriptableObject
 
     private static int currentlyLoadedFontInstanceId = 0;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        currentlyLoadedFontInstanceId = 0;
-    }
-
     #endregion
 
     #region Properties

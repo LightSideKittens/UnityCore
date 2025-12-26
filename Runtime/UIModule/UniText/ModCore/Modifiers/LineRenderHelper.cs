@@ -1,11 +1,12 @@
+using System;
 using UnityEngine;
 using UnityEngine.TextCore;
 
 
 public static class LineRenderHelper
 {
-    private static Glyph cachedUnderscoreGlyph;
-    private static int cachedFontInstanceId;
+    [ThreadStatic] private static Glyph cachedUnderscoreGlyph;
+    [ThreadStatic] private static int cachedFontInstanceId;
 
     
     public static void DrawLine(float startX, float endX, float baselineY, float lineYOffset, Color32 color)
@@ -210,13 +211,5 @@ public static class LineRenderHelper
             cachedUnderscoreGlyph = addedChar.glyph;
 
         return cachedUnderscoreGlyph;
-    }
-
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        cachedUnderscoreGlyph = null;
-        cachedFontInstanceId = 0;
     }
 }

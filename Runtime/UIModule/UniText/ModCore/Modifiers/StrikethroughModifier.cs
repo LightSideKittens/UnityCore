@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class StrikethroughModifier : BaseLineModifier
 {
-    private static byte[] buffer;
+    [ThreadStatic] private static byte[] buffer;
 
     protected override string AttributeKey => AttributeKeys.Strikethrough;
 
@@ -29,11 +29,5 @@ public class StrikethroughModifier : BaseLineModifier
     public static bool HasStrikethrough(int cluster)
     {
         return buffer.HasFlag(cluster);
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        buffer = null;
     }
 }

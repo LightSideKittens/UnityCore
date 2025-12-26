@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class UnderlineModifier : BaseLineModifier
 {
-    private static byte[] buffer;
+    [ThreadStatic] private static byte[] buffer;
 
     protected override string AttributeKey => AttributeKeys.Underline;
 
@@ -30,11 +30,5 @@ public class UnderlineModifier : BaseLineModifier
     {
         if (buffer == null) return;
         buffer.SetFlagRange(start, Math.Min(end, buffer.Length));
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        buffer = null;
     }
 }

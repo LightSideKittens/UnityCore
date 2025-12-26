@@ -37,7 +37,7 @@ public struct ParsedRange
         end = closeTagStart;
     }
 
-    public static ParsedRange SelfClosing(int tagStart, int tagEnd, string insertString, string parameter)
+    public static ParsedRange SelfClosing(int tagStart, int tagEnd, string insertString, string parameter = null)
     {
         return new ParsedRange
         {

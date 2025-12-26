@@ -78,9 +78,6 @@ public static class UnicodeData
     #endregion
 
     private static IUnicodeDataProvider provider;
-    private static bool initialized;
-    private static bool initializationFailed;
-
 
     public static IUnicodeDataProvider Provider
     {
@@ -92,20 +89,17 @@ public static class UnicodeData
     }
 
 
-    public static bool IsInitialized => initialized && !initializationFailed && provider != null;
+    public static bool IsInitialized => provider != null;
 
 
     public static void EnsureInitialized()
     {
-        if (initialized)
+        if (IsInitialized)
             return;
-
-        initialized = true;
-
+        
         var settings = UniTextSettings.Instance;
         if (settings == null || settings.UnicodeDataAsset == null)
         {
-            initializationFailed = true;
             Debug.LogError("UnicodeData: Failed to initialize - UniTextSettings or UnicodeDataAsset is null.");
             return;
         }
@@ -116,7 +110,6 @@ public static class UnicodeData
         }
         catch (Exception ex)
         {
-            initializationFailed = true;
             Debug.LogError($"UnicodeData: Failed to parse Unicode data: {ex.Message}");
         }
     }
@@ -128,8 +121,6 @@ public static class UnicodeData
             throw new ArgumentNullException(nameof(dataProvider));
 
         provider = dataProvider;
-        initialized = true;
-        initializationFailed = false;
     }
 
 
@@ -139,24 +130,5 @@ public static class UnicodeData
             throw new ArgumentNullException(nameof(unicodeData));
 
         provider = new BinaryUnicodeDataProvider(unicodeData);
-        initialized = true;
-        initializationFailed = false;
     }
-
-
-    public static void Reset()
-    {
-        provider = null;
-        initialized = false;
-        initializationFailed = false;
-    }
-
-#if UNITY_EDITOR
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void ResetOnDomainReload()
-    {
-        Reset();
-    }
-#endif
 }

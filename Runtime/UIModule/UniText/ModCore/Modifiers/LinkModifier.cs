@@ -32,7 +32,7 @@ public class LinkModifier : BaseModifier
     [SerializeField] private bool enableUnderline = true;
 
     private readonly List<LinkData> links = new(8);
-    private static LinkModifier current;
+    [ThreadStatic] private static LinkModifier current;
 
     private ColorModifier colorModifier;
     private UnderlineModifier underlineModifier;
@@ -155,11 +155,5 @@ public class LinkModifier : BaseModifier
 
         linkData = default;
         return false;
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        current = null;
     }
 }

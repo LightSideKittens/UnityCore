@@ -5,7 +5,7 @@ using UnityEngine;
 [Serializable]
 public class BoldModifier : GlyphModifier<byte>
 {
-    private static byte[] buffer;
+    [ThreadStatic] private static byte[] buffer;
 
     protected override string AttributeKey => AttributeKeys.Bold;
 
@@ -46,11 +46,5 @@ public class BoldModifier : GlyphModifier<byte>
     public static bool IsBold(int cluster)
     {
         return buffer.HasFlag(cluster);
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        buffer = null;
     }
 }

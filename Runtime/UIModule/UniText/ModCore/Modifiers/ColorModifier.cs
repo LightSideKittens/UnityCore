@@ -6,7 +6,7 @@ using UnityEngine;
 [Serializable]
 public class ColorModifier : GlyphModifier<uint>
 {
-    private static uint[] buffer;
+    [ThreadStatic] private static uint[] buffer;
 
     protected override string AttributeKey => AttributeKeys.Color;
 
@@ -123,12 +123,6 @@ public class ColorModifier : GlyphModifier<uint>
 
         color = UnpackColor(packed);
         return true;
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        buffer = null;
     }
 
     private static bool TryParseColor(string value, out Color32 color)

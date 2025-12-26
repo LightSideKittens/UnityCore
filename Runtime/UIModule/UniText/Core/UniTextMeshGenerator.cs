@@ -20,23 +20,23 @@ public struct UniTextRenderData
 
 public class UniTextMeshGenerator
 {
-    public static int currentCluster;
-    public static float currentX;
-    public static float currentY;
-    public static float currentWidth;
-    public static float currentHeight;
-    public static float currentBaselineY;
-    public static float scale;
-    public static float xScale;
-    public static Color32 currentDefaultColor;
-    public static UniTextFont currentFont;
-    public static float offsetX;
-    public static float offsetY;
-    public static float rectWidth;
-    public static HorizontalAlignment horizontalAlignment;
-    public static int vertexCount;
-    public static int triangleCount;
-    private static FastIntDictionary<PooledList<int>> glyphsByAtlas;
+    [ThreadStatic] public static int currentCluster;
+    [ThreadStatic] public static float currentX;
+    [ThreadStatic] public static float currentY;
+    [ThreadStatic] public static float currentWidth;
+    [ThreadStatic] public static float currentHeight;
+    [ThreadStatic] public static float currentBaselineY;
+    [ThreadStatic] public static float scale;
+    [ThreadStatic] public static float xScale;
+    [ThreadStatic] public static Color32 currentDefaultColor;
+    [ThreadStatic] public static UniTextFont currentFont;
+    [ThreadStatic] public static float offsetX;
+    [ThreadStatic] public static float offsetY;
+    [ThreadStatic] public static float rectWidth;
+    [ThreadStatic] public static HorizontalAlignment horizontalAlignment;
+    [ThreadStatic] public static int vertexCount;
+    [ThreadStatic] public static int triangleCount;
+    [ThreadStatic] private static FastIntDictionary<PooledList<int>> glyphsByAtlas;
     private readonly UniTextFontProvider fontProvider;
     private readonly UniTextBuffers buf;
     private Canvas canvas;
@@ -393,9 +393,4 @@ public class UniTextMeshGenerator
         return scale * (canvas.worldCamera != null ? absLossyScale : 1f);
     }
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        glyphsByAtlas = null;
-    }
 }

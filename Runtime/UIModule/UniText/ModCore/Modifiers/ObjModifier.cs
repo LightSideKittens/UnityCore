@@ -7,7 +7,7 @@ using Object = UnityEngine.Object;
 
 public class RectTransformWrapper
 {
-    private static List<ICanvasElement> canvasElementsBuffer = new();
+    [ThreadStatic] private static List<ICanvasElement> canvasElementsBuffer;
     public RectTransform instance;
     public RectTransform prefab;
     public Transform parent;
@@ -38,6 +38,7 @@ public class RectTransformWrapper
         instance.pivot = pivot;
         instance.sizeDelta = sizeDelta;
 
+        canvasElementsBuffer ??= new List<ICanvasElement>();
         instance.GetComponentsInChildren(canvasElementsBuffer);
         for (var i = 0; i <= (int)CanvasUpdate.PostLayout; i++)
         for (var j = 0; j < canvasElementsBuffer.Count; j++)

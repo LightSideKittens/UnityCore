@@ -27,11 +27,10 @@ public class ListModifier : BaseModifier
     private bool instanceMarkersDrawnThisFrame;
     private UniTextFontProvider instanceFontProvider;
 
-    private static PooledList<ListItemInfo> items;
-    private static bool markersDrawnThisFrame;
-    private static UniTextFontProvider fontProviderRef;
-
-    private static readonly StringBuilder sharedBuilder = new(32);
+    [ThreadStatic] private static PooledList<ListItemInfo> items;
+    [ThreadStatic] private static bool markersDrawnThisFrame;
+    [ThreadStatic] private static UniTextFontProvider fontProviderRef;
+    [ThreadStatic] private static StringBuilder sharedBuilder;
 
     public float indentPerLevel = 20f;
     public float markerToTextGap = 8f;
@@ -47,6 +46,7 @@ public class ListModifier : BaseModifier
         instanceFontProvider = uniText.FontProvider;
         items = instanceItems;
         fontProviderRef = instanceFontProvider;
+        sharedBuilder ??= new StringBuilder(32);
     }
 
     protected override void Subscribe()
@@ -125,6 +125,7 @@ public class ListModifier : BaseModifier
         var fontSize = buf.shapingFontSize > 0 ? buf.shapingFontSize : fontProviderRef.FontSize;
         var scale = fontSize / fontAsset.FaceInfo.pointSize;
 
+        sharedBuilder ??= new StringBuilder(32);
         sharedBuilder.Clear();
         var level = Math.Max(0, Math.Min(item.nestingLevel, orderedStyles.Length - 1));
         AppendOrderedNumber(sharedBuilder, item.displayNumber, orderedStyles[level]);
@@ -184,6 +185,7 @@ public class ListModifier : BaseModifier
         var baselineY = GetItemBaselineY(item.start, out var firstGlyphX);
         if (float.IsNaN(baselineY)) return;
 
+        sharedBuilder ??= new StringBuilder(32);
         GetMarkerText(item, isRtl, sharedBuilder);
 
         var buf = buffers;
@@ -474,14 +476,5 @@ public class ListModifier : BaseModifier
                 n -= 1;
             }
         }
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        items = null;
-        markersDrawnThisFrame = false;
-        fontProviderRef = null;
-        sharedBuilder.Clear();
     }
 }

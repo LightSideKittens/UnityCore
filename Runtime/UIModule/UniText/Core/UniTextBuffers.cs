@@ -335,15 +335,19 @@ public static class SharedFontCache
 
     private const int CacheSize = 4096;
     private const int CacheMask = CacheSize - 1;
-    private static FontCacheEntry[] cache = new FontCacheEntry[CacheSize];
+    [ThreadStatic] private static FontCacheEntry[] cache;
 
-    static SharedFontCache()
+    private static void EnsureInitialized()
     {
-        Clear();
+        if (cache != null) return;
+        cache = new FontCacheEntry[CacheSize];
+        for (var i = 0; i < CacheSize; i++)
+            cache[i] = new FontCacheEntry(-1, -1, -1);
     }
 
     public static bool TryGet(int codepoint, int preferredFontId, out int resultFontId)
     {
+        EnsureInitialized();
         var index = (codepoint ^ (preferredFontId << 16)) & CacheMask;
         ref var entry = ref cache[index];
 
@@ -359,20 +363,16 @@ public static class SharedFontCache
 
     public static void Set(int codepoint, int preferredFontId, int resultFontId)
     {
+        EnsureInitialized();
         var index = (codepoint ^ (preferredFontId << 16)) & CacheMask;
         cache[index] = new FontCacheEntry(codepoint, preferredFontId, resultFontId);
     }
 
     public static void Clear()
     {
+        if (cache == null) return;
         for (var i = 0; i < CacheSize; i++)
             cache[i] = new FontCacheEntry(-1, -1, -1);
-    }
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        Clear();
     }
 }
 
@@ -450,10 +450,4 @@ public static class SharedMeshPool
         ClearUnused();
     }
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void OnDomainReload()
-    {
-        available.Clear();
-        initialized = false;
-    }
 }
