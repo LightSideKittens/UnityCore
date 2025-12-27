@@ -6,15 +6,18 @@ using UnityEngine.UI;
 public partial class UniText : ILayoutElement, ILayoutController
 {
     private float cachedEffectiveFontSize;
-    private float cachedAutoSizeWidth;
+    private float cachedPreferredWidth;
+    private float cachedPreferredHeight;
+    private float cachedLayoutWidth;
     private bool hasValidLayoutCache;
-    private bool hasValidAutoSizeCache;
 
     #region ILayoutElement
 
     void ILayoutElement.CalculateLayoutInputHorizontal()
     {
         Profiler.BeginSample("UniText.CalculateLayoutInputHorizontal");
+
+        cachedPreferredWidth = 0;
 
         if (!string.IsNullOrEmpty(text) && ValidateAndInitialize())
         {
@@ -29,6 +32,9 @@ public partial class UniText : ILayoutElement, ILayoutController
                 };
                 textProcessor.EnsureFirstPass(textSpan, settings);
             }
+
+            var effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
+            cachedPreferredWidth = textProcessor.GetPreferredWidth(effectiveFontSize);
         }
 
         Profiler.EndSample();
@@ -41,57 +47,47 @@ public partial class UniText : ILayoutElement, ILayoutController
         if (string.IsNullOrEmpty(text) || textProcessor == null || !textProcessor.HasValidFirstPassData)
         {
             hasValidLayoutCache = false;
+            cachedPreferredHeight = 0;
             Profiler.EndSample();
             return;
         }
 
-        var rect = rectTransform.rect;
-        if (rect.width <= 0)
+        var width = rectTransform.rect.width;
+        if (width <= 0)
         {
             hasValidLayoutCache = false;
+            cachedPreferredHeight = 0;
             Profiler.EndSample();
             return;
         }
 
-        cachedEffectiveFontSize = GetEffectiveFontSize(rect.width);
+        // Пропускаем перерасчёт если ширина не изменилась
+        if (hasValidLayoutCache && Mathf.Approximately(cachedLayoutWidth, width))
+        {
+            Profiler.EndSample();
+            return;
+        }
+
+        cachedEffectiveFontSize = GetEffectiveFontSize(width);
+        cachedLayoutWidth = width;
         hasValidLayoutCache = true;
 
-        textProcessor.EnsureLines(rect.width, cachedEffectiveFontSize, enableWordWrap);
+        textProcessor.EnsureLines(width, cachedEffectiveFontSize, enableWordWrap);
+
+        // Кэшируем preferredHeight
+        cachedPreferredHeight = (enableAutoSize && enableWordWrap)
+            ? textProcessor.GetPreferredHeight(maxFontSize)
+            : textProcessor.GetPreferredHeight(cachedEffectiveFontSize);
 
         Profiler.EndSample();
     }
 
     public float minWidth => 0;
-
-    public float preferredWidth
-    {
-        get
-        {
-            if (textProcessor == null || !textProcessor.HasValidFirstPassData) return 0;
-
-            var effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
-            return textProcessor.GetPreferredWidth(effectiveFontSize);
-        }
-    }
-
+    public float preferredWidth => cachedPreferredWidth;
     public float flexibleWidth => -1;
 
     public float minHeight => 0;
-
-    public float preferredHeight
-    {
-        get
-        {
-            if (textProcessor == null || !textProcessor.HasValidFirstPassData) return 0;
-            if (!hasValidLayoutCache) return 0;
-
-            if (enableAutoSize && enableWordWrap)
-                return textProcessor.GetPreferredHeight(maxFontSize);
-
-            return textProcessor.GetPreferredHeight(cachedEffectiveFontSize);
-        }
-    }
-
+    public float preferredHeight => cachedPreferredHeight;
     public float flexibleHeight => -1;
 
     public int layoutPriority => 0;
@@ -139,9 +135,7 @@ public partial class UniText : ILayoutElement, ILayoutController
         if (!enableAutoSize) return fontSize;
         if (enableWordWrap) return maxFontSize;
 
-        if (hasValidAutoSizeCache && Mathf.Approximately(cachedAutoSizeWidth, width))
-            return cachedEffectiveFontSize;
-
+        // Без word wrap — ищем размер по ширине
         var settings = new TextProcessSettings
         {
             MaxWidth = width,
@@ -151,18 +145,13 @@ public partial class UniText : ILayoutElement, ILayoutController
             enableWordWrap = false
         };
 
-        var result = textProcessor.FindOptimalFontSize(
+        return textProcessor.FindOptimalFontSize(
             minFontSize, maxFontSize, width, TextProcessSettings.FloatMax, settings);
-        cachedAutoSizeWidth = width;
-        hasValidAutoSizeCache = true;
-
-        return result;
     }
 
     private void InvalidateLayoutCache()
     {
         hasValidLayoutCache = false;
-        hasValidAutoSizeCache = false;
     }
 
     #endregion
