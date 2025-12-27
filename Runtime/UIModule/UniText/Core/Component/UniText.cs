@@ -257,14 +257,14 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
         if ((flags & DirtyFlags.FullRebuild) != 0)
         {
-            textProcessor?.InvalidateShapingData();
+            textProcessor?.InvalidateFirstPassData();
             textIsParsed = false;
-            InvalidateAutoSizeCache();
+            InvalidateLayoutCache();
         }
         else if ((flags & (DirtyFlags.Layout | DirtyFlags.FontSize)) != 0)
         {
             textProcessor?.InvalidateLayoutData();
-            InvalidateAutoSizeCache();
+            InvalidateLayoutCache();
         }
         else if ((flags & DirtyFlags.Alignment) != 0)
         {
@@ -488,17 +488,59 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         }
 
         Rebuilding?.Invoke();
-        
+
         var flags = dirtyFlags;
         dirtyFlags = DirtyFlags.None;
 
-        if ((flags & DirtyFlags.FullRebuild) != 0) RebuildFull();
-        else if ((flags & DirtyFlags.LayoutRebuild) != 0) RebuildLayout();
-        else if ((flags & DirtyFlags.Material) != 0) UpdateMaterialsOnly();
-        else RebuildMeshOnly();
+        if (string.IsNullOrEmpty(text))
+        {
+            lastMeshPairs = null;
+            lastResultWidth = lastResultHeight = 0;
+            autoSizedFontSize = fontSize;
+            UpdateRendering();
+            Profiler.EndSample();
+            return;
+        }
+
+        if (!textProcessor.HasValidFirstPassData || !hasValidLayoutCache)
+        {
+            UpdateRendering();
+            Profiler.EndSample();
+            return;
+        }
+
+        var needsPositioning = (flags & (DirtyFlags.FullRebuild | DirtyFlags.LayoutRebuild | DirtyFlags.Alignment)) != 0;
+        var needsMesh = needsPositioning || (flags & DirtyFlags.Color) != 0;
+
+        if (needsPositioning)
+        {
+            autoSizedFontSize = cachedEffectiveFontSize;
+            var settings = CreateProcessSettings(rectTransform.rect, cachedEffectiveFontSize);
+            textProcessor.EnsurePositions(settings);
+            lastResultWidth = textProcessor.ResultWidth;
+            lastResultHeight = textProcessor.ResultHeight;
+        }
+
+        if (needsMesh)
+        {
+            var glyphs = textProcessor.PositionedGlyphs;
+            if (!glyphs.IsEmpty)
+            {
+                var effectiveFontSize = enableAutoSize ? autoSizedFontSize : fontSize;
+                GenerateMeshes(glyphs, rectTransform.rect, effectiveFontSize);
+            }
+            else
+            {
+                lastMeshPairs = null;
+            }
+        }
+        else if ((flags & DirtyFlags.Material) != 0)
+        {
+            UpdateMaterialsOnly();
+        }
 
         UpdateRendering();
-        
+
         Profiler.EndSample();
     }
     
@@ -558,102 +600,9 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         return true;
     }
 
-    private void RebuildFull()
-    {
-        Profiler.BeginSample("UniText.RebuildFull");
-
-        ReleaseMeshes();
-
-        if (string.IsNullOrEmpty(text))
-        {
-            lastMeshPairs = null;
-            lastResultWidth = lastResultHeight = 0;
-            autoSizedFontSize = fontSize;
-            Profiler.EndSample();
-            return;
-        }
-
-        var rect = rectTransform.rect;
-        var textSpan = ParseOrGetParsedAttributes();
-
-        var shapingSettings = new TextProcessSettings
-        {
-            fontSize = enableAutoSize ? maxFontSize : fontSize,
-            baseDirection = baseDirection
-        };
-        textProcessor.EnsureShaping(textSpan, shapingSettings);
-
-        var effectiveFontSize = CalculateEffectiveFontSize(rect);
-        autoSizedFontSize = effectiveFontSize;
-
-        textProcessor.EnsureLines(rect.width, effectiveFontSize, enableWordWrap);
-
-        var settings = CreateProcessSettings(rect, effectiveFontSize);
-        textProcessor.EnsurePositions(settings);
-
-        lastResultWidth = textProcessor.ResultWidth;
-        lastResultHeight = textProcessor.ResultHeight;
-
-        GenerateMeshes(textProcessor.PositionedGlyphs, rect, effectiveFontSize);
-
-        Profiler.EndSample();
-    }
-
-    private void RebuildLayout()
-    {
-        Profiler.BeginSample("UniText.RebuildLayout");
-
-        ReleaseMeshes();
-
-        if (string.IsNullOrEmpty(text))
-        {
-            lastMeshPairs = null;
-            Profiler.EndSample();
-            return;
-        }
-
-        var rect = rectTransform.rect;
-
-        if (!textProcessor.HasValidShapingData)
-        {
-            RebuildFull();
-            Profiler.EndSample();
-            return;
-        }
-
-        var effectiveFontSize = CalculateEffectiveFontSize(rect);
-        autoSizedFontSize = effectiveFontSize;
-
-        textProcessor.EnsureLines(rect.width, effectiveFontSize, enableWordWrap);
-
-        var settings = CreateProcessSettings(rect, effectiveFontSize);
-        textProcessor.EnsurePositions(settings);
-
-        lastResultWidth = textProcessor.ResultWidth;
-        lastResultHeight = textProcessor.ResultHeight;
-
-        GenerateMeshes(textProcessor.PositionedGlyphs, rect, effectiveFontSize);
-
-        Profiler.EndSample();
-    }
-
-    private void RebuildMeshOnly()
-    {
-        var glyphs = textProcessor.PositionedGlyphs;
-        if (glyphs.IsEmpty)
-        {
-            lastMeshPairs = null;
-            return;
-        }
-
-        ReleaseMeshes();
-        var effectiveFontSize = enableAutoSize ? autoSizedFontSize : fontSize;
-        GenerateMeshes(glyphs, rectTransform.rect, effectiveFontSize);
-    }
-
     private void UpdateMaterialsOnly()
     {
-        if (lastMeshPairs == null || fontProvider == null) return;
+        if (lastMeshPairs == null) return;
 
         fontProvider.InvalidateMaterialCache();
 
@@ -678,15 +627,15 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         return attributeParser != null ? attributeParser.CleanTextSpan : text.AsSpan();
     }
 
-    private void GenerateMeshes(ReadOnlySpan<PositionedGlyph> glyphs, Rect rect, float effectiveFontSize = -1)
+    private void GenerateMeshes(ReadOnlySpan<PositionedGlyph> glyphs, Rect rect, float effectiveFontSize)
     {
         Profiler.BeginSample("UniText.GenerateMeshes");
-        meshGenerator.FontSize = effectiveFontSize > 0 ? effectiveFontSize : fontSize;
+        meshGenerator.FontSize = effectiveFontSize;
         meshGenerator.DefaultColor = color;
         meshGenerator.SetCanvasParameters(transform, canvas);
         meshGenerator.SetRectOffset(rect);
         meshGenerator.SetHorizontalAlignment(horizontalAlignment);
-
+        ReleaseMeshes();
         lastMeshPairs = meshGenerator.GenerateMeshes(glyphs, GetPooledMeshForText);
         Profiler.EndSample();
     }
@@ -701,51 +650,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         baseDirection = baseDirection,
         enableWordWrap = enableWordWrap
     };
-
-    private float CalculateEffectiveFontSize(Rect rect)
-    {
-        var effectiveFontSize = enableAutoSize
-            ? CalculateAutoSize(rect)
-            : fontSize;
-        return effectiveFontSize;
-    }
-    
-    private float CalculateAutoSize(Rect rect)
-    {
-        if (enableWordWrap && textProcessor.CanReuseLines(rect.width, maxFontSize, true))
-        {
-            var preferredH = textProcessor.GetPreferredHeight(maxFontSize);
-            if (rect.height >= preferredH - 0.01f)
-            {
-                return maxFontSize;
-            }
-        }
-
-        if (!enableWordWrap &&
-            hasValidAutoSizeForLayout &&
-            Mathf.Approximately(autoSizeWidthCache, rect.width))
-        {
-            textProcessor.EnsureLines(rect.width, autoSizedFontSizeForLayout, false);
-            var preferredH = textProcessor.GetPreferredHeight(autoSizedFontSizeForLayout);
-            if (rect.height >= preferredH - 0.01f)
-            {
-                return autoSizedFontSizeForLayout;
-            }
-        }
-
-        var baseSettings = new TextProcessSettings
-        {
-            MaxWidth = rect.width,
-            MaxHeight = rect.height,
-            fontSize = maxFontSize,
-            baseDirection = baseDirection,
-            enableWordWrap = enableWordWrap,
-            HorizontalAlignment = horizontalAlignment,
-            VerticalAlignment = verticalAlignment
-        };
-
-        return textProcessor.FindOptimalFontSize(minFontSize, maxFontSize, rect.width, rect.height, baseSettings);
-    }
 
     #endregion
 
@@ -834,12 +738,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     private void UpdateSubMeshes()
     {
         Profiler.BeginSample("UniText.UpdateSubMeshes");
-
-        if (lastMeshPairs == null)
-        {
-            Profiler.EndSample();
-            return;
-        }
 
         var requiredCount = lastMeshPairs.Count;
         var existingCount = subMeshRenderers.Count;

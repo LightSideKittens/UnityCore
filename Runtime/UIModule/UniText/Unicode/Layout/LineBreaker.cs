@@ -75,8 +75,6 @@ public sealed class LineBreaker
         float maxWidth,
         ReadOnlySpan<float> startMargins)
     {
-        if (runs.IsEmpty) return;
-
         searchStartRunIdx = 0;
 
         var cpCount = codepoints.Length;

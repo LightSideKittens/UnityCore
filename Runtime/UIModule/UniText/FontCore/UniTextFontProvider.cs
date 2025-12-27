@@ -59,10 +59,8 @@ public sealed class UniTextFontProvider
 
     private void UpdateFontScale()
     {
-        if (mainFont != null && mainFont.FaceInfo.pointSize > 0)
-            fontScale = fontSize / mainFont.FaceInfo.pointSize;
-        else
-            fontScale = 1f;
+        var pointSize = mainFont.FaceInfo.pointSize;
+        fontScale = pointSize > 0 ? fontSize / pointSize : 1f;
     }
 
 
@@ -87,7 +85,7 @@ public sealed class UniTextFontProvider
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UniTextFont GetFontAsset(int fontId)
     {
-        if (fontId == cachedGetFontAssetId && cachedGetFontAsset != null)
+        if (fontId == cachedGetFontAssetId)
             return cachedGetFontAsset;
 
         var font = fontId == 0 ? mainFont : fontAssets.TryGetValue(fontId, out var asset) ? asset : mainFont;
@@ -163,14 +161,6 @@ public sealed class UniTextFontProvider
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GetLineMetrics(float size, out float ascender, out float descender, out float lineHeight)
     {
-        if (mainFont == null)
-        {
-            ascender = size * 0.8f;
-            descender = size * 0.2f;
-            lineHeight = size;
-            return;
-        }
-
         var faceInfo = mainFont.FaceInfo;
         var scale = faceInfo.pointSize > 0 ? size / faceInfo.pointSize : 1f;
         ascender = faceInfo.ascentLine * scale;
@@ -193,13 +183,6 @@ public sealed class UniTextFontProvider
     {
         if (SharedFontCache.TryGet(codepoint, baseFontId, out var cachedFontId))
             return cachedFontId;
-
-        var baseFont = GetFontAsset(baseFontId);
-        if (baseFont == null)
-        {
-            SharedFontCache.Set(codepoint, baseFontId, baseFontId);
-            return baseFontId;
-        }
 
         searchedFontAssets ??= new HashSet<int>();
         searchedFontAssets.Clear();
@@ -298,10 +281,10 @@ public sealed class UniTextFontProvider
             var fontId = kvp.Key;
             var glyphList = kvp.Value;
 
-            var fontAsset = GetFontAsset(fontId);
-            if (fontAsset != null && glyphList.Count > 0)
+            if (glyphList.Count > 0)
             {
-                var added = fontAsset.TryAddGlyphsByIndex(glyphList);
+                var fontAsset = GetFontAsset(fontId);
+                fontAsset.TryAddGlyphsByIndex(glyphList);
             }
         }
     }

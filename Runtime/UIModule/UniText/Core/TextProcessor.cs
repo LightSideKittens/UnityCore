@@ -57,7 +57,7 @@ public sealed class TextProcessor
     private float resultWidth;
     private float resultHeight;
 
-    private bool hasValidShapingData;
+    private bool hasValidFirstPassData;
 
     private float lastLinesWidth = -1;
     private float lastLinesFontSize = -1;
@@ -94,11 +94,11 @@ public sealed class TextProcessor
         baseFontId = defaultFontId;
     }
     
-    public bool HasValidShapingData => hasValidShapingData;
+    public bool HasValidFirstPassData => hasValidFirstPassData;
     
-    public void InvalidateShapingData()
+    public void InvalidateFirstPassData()
     {
-        hasValidShapingData = false;
+        hasValidFirstPassData = false;
         InvalidateLayoutData();
     }
 
@@ -118,11 +118,11 @@ public sealed class TextProcessor
         lastLayoutMaxHeight = -1;
     }
 
-    public void EnsureShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
+    public void EnsureFirstPass(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
         ensureShapingCallCount++;
 
-        if (hasValidShapingData) return;
+        if (hasValidFirstPassData) return;
 
         Profiler.BeginSample("TextProcessor.EnsureShaping");
 
@@ -130,13 +130,13 @@ public sealed class TextProcessor
 
         if (text.IsEmpty)
         {
-            hasValidShapingData = false;
+            hasValidFirstPassData = false;
             Profiler.EndSample();
             return;
         }
 
-        fontProvider?.SetFontSize(settings.fontSize);
-        DoFullShaping(text, settings);
+        fontProvider.SetFontSize(settings.fontSize);
+        DoFirstPass(text, settings);
 
         Profiler.EndSample();
     }
@@ -163,7 +163,7 @@ public sealed class TextProcessor
     
     public void EnsureLines(float width, float fontSize, bool wordWrap)
     {
-        if (!hasValidShapingData) return;
+        if (!hasValidFirstPassData) return;
         if (CanReuseLines(width, fontSize, wordWrap)) return;
 
         Profiler.BeginSample("TextProcessor.EnsureLines");
@@ -192,7 +192,7 @@ public sealed class TextProcessor
         Profiler.EndSample();
     }
     
-    private void DoFullShaping(ReadOnlySpan<char> text, TextProcessSettings settings)
+    private void DoFirstPass(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
         doFullShapingCallCount++;
         
@@ -212,7 +212,7 @@ public sealed class TextProcessor
 
         if (buf.codepoints.count == 0)
         {
-            hasValidShapingData = false;
+            hasValidFirstPassData = false;
             hasValidLinesData = false;
             hasValidPositionedGlyphs = false;
             return;
@@ -246,12 +246,12 @@ public sealed class TextProcessor
         EnsureGlyphsInAtlas();
         Profiler.EndSample();
 
-        hasValidShapingData = true;
+        hasValidFirstPassData = true;
     }
     
     public float GetUnwrappedWidth()
     {
-        if (!hasValidShapingData) return 0;
+        if (!hasValidFirstPassData) return 0;
 
         float total = 0;
         var count = buf.shapedRuns.count;
@@ -262,7 +262,7 @@ public sealed class TextProcessor
     
     public float GetPreferredWidth(float fontSize)
     {
-        if (!hasValidShapingData) return 0;
+        if (!hasValidFirstPassData) return 0;
         var glyphScale = buf.GetGlyphScale(fontSize);
         return Mathf.Ceil(GetMaxLineWidth() * glyphScale);
     }
@@ -282,7 +282,7 @@ public sealed class TextProcessor
     
     public float GetMaxLineWidth()
     {
-        if (!hasValidShapingData) return 0;
+        if (!hasValidFirstPassData) return 0;
 
         var codepoints = buf.codepoints.Span;
         var glyphs = buf.shapedGlyphs.Span;
@@ -331,7 +331,7 @@ public sealed class TextProcessor
         float targetHeight,
         TextProcessSettings baseSettings)
     {
-        if (!hasValidShapingData) return minSize;
+        if (!hasValidFirstPassData) return minSize;
         if (targetWidth <= 0 || targetHeight <= 0) return minSize;
         
         if (buf.shapingFontSize <= 0) return minSize;
@@ -776,7 +776,7 @@ public sealed class TextProcessor
 
     public void ForceRelayout(ReadOnlySpan<float> cpWidths)
     {
-        if (!hasValidShapingData) return;
+        if (!hasValidFirstPassData) return;
 
         InvalidateLayoutData();
         EnsureLinesInternal(lastSettings.MaxWidth, lastSettings.fontSize, lastSettings.enableWordWrap, cpWidths);
@@ -785,7 +785,7 @@ public sealed class TextProcessor
 
     public void ForceReposition()
     {
-        if (!hasValidShapingData || !hasValidLinesData) return;
+        if (!hasValidFirstPassData || !hasValidLinesData) return;
 
         UpdateLineWidths();
         hasValidPositionedGlyphs = false;
