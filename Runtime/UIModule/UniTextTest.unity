@@ -645,7 +645,7 @@ GameObject:
   - component: {fileID: 387182429}
   - component: {fileID: 387182428}
   m_Layer: 5
-  m_Name: EllipsisTest
+  m_Name: EllipsisTest_NonWordWrap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -663,12 +663,12 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 2035672421}
+  m_Father: {fileID: 1106683184}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 2616.7, y: 211.30005}
-  m_SizeDelta: {x: 615.1, y: 722.9}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.22652645, y: 1.4530691}
 --- !u!114 &387182428
 MonoBehaviour:
@@ -690,27 +690,23 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  text: "<color=#98f>DTART OUT OF TAG DTART OUT OF TAGDTART OUT OF TAGDTART OUT OF
-    TAGDTART OUT OF TAG</color> <ellipsis=start>START S1 S2 S3 S4 S5 S6 S7 S8 S9
-    S10 S11 S12 S13 S14 S15 S16 S17 S18 S19 S20 S21 S22 S23 S24S25S26S27S28S29  END</ellipsis>
-    <color=#98f>END OUT OF TAG END OUT OF TAG END OUT OF TAG END OUT OF TAG END OUT
-    OF TAG END OUT OF T</color>\n\n<color=#98f>DTART OUT OF TAG DTART OUT OF TAGDTART
-    OUT OF TAGDTART OUT OF TAGDTART OUT OF TAG</color> <ellipsis=mid>START S1 S2
-    S3 S4 S5 S6 S7 S8 S9 S10 S11 S12 S13 S14 S15 S16 S17 S18 S19 S20 S21 S22 S23
-    S24S25S26S27S28S29  END</ellipsis> <color=#98f>END OUT OF TAG END OUT OF TAG
-    END OUT OF TAG END OUT OF TAG END OUT OF TAG END OUT OF T</color>  \n\n<color=#98f>DTART
-    OUT OF TAG DTART OUT OF TAGDTART OUT OF TAGDTART OUT OF TAGDTART OUT OF TAG</color>
-    <ellipsis=end>START S1 S2 S3 S4 S5 S6 S7 S8 S9 S10 S11 S12 S13 S14 S15 S16 S17
-    S18 S19 S20 S21 S22 S23 S24 S25S26S27S28S29  END</ellipsis> <color=#98f>END OUT
-    OF TAG END OUT OF TAG END OUT OF TAG END OUT OF TAG END OUT OF TAG END OUT OF
-    T</color>"
+  text: "dfslsafdjl<ellipsis=start>\u0627\u0644\u0639\u0631\u0628\u064A\u0629: \u0645\u0631\u062D\u0628\u0627\u064B
+    \u0628\u0627\u0644\u0639\u0627\u0644\u0645! \u0647\u0630\u0627 \u0646\u064E\u0635\u0651\u064C
+    \u0644\u0627\u062E\u062A\u0628\u0627\u0631 \u0627\u0644\u0627\u062A\u062C\u0627\u0647\u061B
+    \u0639\u0631\u0628\u0649\u060C \u0639\u0631\u0628\u064A\u060C \u0639\u0631\u0628\u064A\u061F
+    S1 S2 S3 S4 END\nsfdhaksdljh aksldjhasdf asdf</ellipsis> dsfsdf \n\ndfslsafdjl<ellipsis=start>\u0627\u0644\u0639\u0631\u0628\u064A\u0629:
+    \u0645\u0631\u062D\u0628\u0627\u064B \u0628\u0627\u0644\u0639\u0627\u0644\u0645!
+    \u0647\u0630\u0627 \u0646\u064E\u0635\u0651\u064C \u0644\u0627\u062E\u062A\u0628\u0627\u0631
+    \u0627\u0644\u0627\u062A\u062C\u0627\u0647\u061B \u0639\u0631\u0628\u0649\u060C
+    \u0639\u0631\u0628\u064A\u060C \u0639\u0631\u0628\u064A\u061F S1 S2 S3 S4 ENDsfdhaksdljh
+    aksldjhasdf asdf</ellipsis> dsfsdf "
   fonts: {fileID: 11400000, guid: f1fb4d96c5ba77542999c02f0460bb35, type: 2}
   appearance: {fileID: 11400000, guid: 366a003927a7b1d4c8978732eee3bd40, type: 2}
   fontSize: 28
   baseDirection: 2
-  enableWordWrap: 1
-  horizontalAlignment: 2
-  verticalAlignment: 1
+  enableWordWrap: 0
+  horizontalAlignment: 0
+  verticalAlignment: 0
   enableAutoSize: 0
   minFontSize: 10
   maxFontSize: 72
@@ -791,8 +787,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -10.7, y: 39}
-  m_SizeDelta: {x: 947.5, y: 832}
+  m_AnchoredPosition: {x: -26.5, y: -284}
+  m_SizeDelta: {x: 1026.8, y: 832}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &397460098
 MonoBehaviour:
@@ -1493,8 +1489,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 2070.6, y: -527}
-  m_SizeDelta: {x: 1088.1, y: 2272.3}
+  m_AnchoredPosition: {x: 2267.6, y: -545.7}
+  m_SizeDelta: {x: 1335.9, y: 2328.2}
   m_Pivot: {x: 0.79593015, y: 0.66504484}
 --- !u!1 &744005121
 GameObject:
@@ -2071,7 +2067,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -0.000012398, y: -831.9999}
+  m_AnchoredPosition: {x: -0.000012398, y: -832}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &992357368
@@ -2114,6 +2110,42 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &1020714940
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1020714941}
+  m_Layer: 5
+  m_Name: EllipsisTests
+  m_TagString: Untagged
+  m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1020714941
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1020714940}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2019467432}
+  m_Father: {fileID: 2035672421}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1106683183
 GameObject:
   m_ObjectHideFlags: 0
@@ -2146,6 +2178,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 744005122}
+  - {fileID: 387182427}
   m_Father: {fileID: 1745089068}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3075,6 +3108,141 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2019467431
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2019467432}
+  - component: {fileID: 2019467434}
+  - component: {fileID: 2019467433}
+  m_Layer: 5
+  m_Name: EllipsisTest_WordWrap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2019467432
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2019467431}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1020714941}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 2461.3, y: 52.300003}
+  m_SizeDelta: {x: 454.8, y: 473.5}
+  m_Pivot: {x: 0.22652645, y: 1.4530691}
+--- !u!114 &2019467433
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2019467431}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: beaa34cb0e58d624bb3a264b28600785, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.UIModule::UniText
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 1, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  text: "<color=#98f>\u0627\u0644\u0639\u0631\u0628\u064A\u0629: \u0645\u0631\u062D\u0628\u0627\u064B
+    \u0628\u0627\u0644\u0639\u0627\u0644\u0645! \u0647\u0630\u0627 \u0646\u064E\u0635\u0651\u064C
+    \u0644\u0627\u062E\u062A\u0628\u0627\u0631 \u0627\u0644\u0627\u062A\u062C\u0627\u0647\u061B
+    \u0639\u0631\u0628\u0649\u060C \u0639\u0631\u0628\u064A\u060C \u0639\u0631\u0628\u064A\u061F</color>
+    <ellipsis=start>\u0627\u0644\u0639\u0631\u0628\u064A\u0629: \u0645\u0631\u062D\u0628\u0627\u064B
+    \u0628\u0627\u0644\u0639\u0627\u0644\u0645! \u0647\u0630\u0627 \u0646\u064E\u0635\u0651\u064C
+    \u0644\u0627\u062E\u062A\u0628\u0627\u0631 \u0627\u0644\u0627\u062A\u062C\u0627\u0647\u061B
+    \u0639\u0631\u0628\u0649\u060C \u0639\u0631\u0628\u064A\u060C \u0639\u0631\u0628\u064A\u061F
+    S17 S18 S19 S20 S21 S22 S23 S24 S25 S26 S27 S28 S29  END</ellipsis> <color=#98f>END
+    OUT OF TAG</color>\n\n<color=#98f>\u0627\u0644\u0639\u0631\u0628\u064A\u0629:
+    \u0645\u0631\u062D\u0628\u0627\u064B \u0628\u0627\u0644\u0639\u0627\u0644\u0645!
+    \u0647\u0630\u0627 \u0646\u064E\u0635\u0651\u064C \u0644\u0627\u062E\u062A\u0628\u0627\u0631
+    \u0627\u0644\u0627\u062A\u062C\u0627\u0647\u061B \u0639\u0631\u0628\u0649\u060C
+    \u0639\u0631\u0628\u064A\u060C \u0639\u0631\u0628\u064A\u061F</color> <ellipsis=mid>\u0627\u0644\u0639\u0631\u0628\u064A\u0629:
+    \u0645\u0631\u062D\u0628\u0627\u064B \u0628\u0627\u0644\u0639\u0627\u0644\u0645!
+    \u0647\u0630\u0627 \u0646\u064E\u0635\u0651\u064C \u0644\u0627\u062E\u062A\u0628\u0627\u0631
+    \u0627\u0644\u0627\u062A\u062C\u0627\u0647\u061B \u0639\u0631\u0628\u0649\u060C
+    \u0639\u0631\u0628\u064A\u060C \u0639\u0631\u0628\u064A\u061F S17 S18 S19 S20
+    S21 S22 S23 S24 S25 S26 S27 S28 S29  END</ellipsis> <color=#98f>END OUT OF TAG</color>\n\n<color=#98f>\u0627\u0644\u0639\u0631\u0628\u064A\u0629:
+    \u0645\u0631\u062D\u0628\u0627\u064B \u0628\u0627\u0644\u0639\u0627\u0644\u0645!
+    \u0647\u0630\u0627 \u0646\u064E\u0635\u0651\u064C \u0644\u0627\u062E\u062A\u0628\u0627\u0631
+    \u0627\u0644\u0627\u062A\u062C\u0627\u0647\u061B \u0639\u0631\u0628\u0649\u060C
+    \u0639\u0631\u0628\u064A\u060C \u0639\u0631\u0628\u064A\u061F</color> <ellipsis=end>\u0627\u0644\u0639\u0631\u0628\u064A\u0629:
+    \u0645\u0631\u062D\u0628\u0627\u064B \u0628\u0627\u0644\u0639\u0627\u0644\u0645!
+    \u0647\u0630\u0627 \u0646\u064E\u0635\u0651\u064C \u0644\u0627\u062E\u062A\u0628\u0627\u0631
+    \u0627\u0644\u0627\u062A\u062C\u0627\u0647\u061B \u0639\u0631\u0628\u0649\u060C
+    \u0639\u0631\u0628\u064A\u060C \u0639\u0631\u0628\u064A\u061F S17 S18 S19 S20
+    S21 S22 S23 S24 S25 S26 S27 S28 S29  END</ellipsis> <color=#98f>END OUT OF TAG</color>"
+  fonts: {fileID: 11400000, guid: f1fb4d96c5ba77542999c02f0460bb35, type: 2}
+  appearance: {fileID: 11400000, guid: 366a003927a7b1d4c8978732eee3bd40, type: 2}
+  fontSize: 28
+  baseDirection: 2
+  enableWordWrap: 1
+  horizontalAlignment: 0
+  verticalAlignment: 0
+  enableAutoSize: 0
+  minFontSize: 10
+  maxFontSize: 72
+  modRegisters:
+  - rid: 2031797989190140000
+  - rid: 2031797989190140030
+  references:
+    version: 2
+    RefIds:
+    - rid: 2031797989190140000
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797989190140001
+        rule:
+          rid: 2031797989190140002
+    - rid: 2031797989190140001
+      type: {class: EllipsisModifier, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797989190140002
+      type: {class: EllipsisTagRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797989190140030
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797989190140031
+        rule:
+          rid: 2031797989190140032
+    - rid: 2031797989190140031
+      type: {class: ColorModifier, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797989190140032
+      type: {class: ColorParseRule, ns: , asm: LSCore.UniText}
+      data: 
+--- !u!222 &2019467434
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2019467431}
+  m_CullTransparentMesh: 1
 --- !u!1 &2023444737
 GameObject:
   m_ObjectHideFlags: 0
@@ -3395,7 +3563,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1583017944}
   m_Direction: 2
   m_Value: 0
-  m_Size: 0.99999785
+  m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -3542,7 +3710,7 @@ RectTransform:
   - {fileID: 597897574}
   - {fileID: 769616320}
   - {fileID: 666491816}
-  - {fileID: 387182427}
+  - {fileID: 1020714941}
   - {fileID: 397460097}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
