@@ -218,7 +218,7 @@ public class ObjModifier : BaseModifier
         if (clusterToObj == null || clusterToObj.Count == 0) return;
 
         var glyphs = uniText.LastResultGlyphs;
-        var scale = UniTextMeshGenerator.scale;
+        var scale = UniTextMeshGenerator.Current.scale;
 
         for (var i = 0; i < glyphs.Length; i++)
             if (clusterToObj.TryGetValue(glyphs[i].cluster, out var obj))

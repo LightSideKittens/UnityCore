@@ -28,15 +28,16 @@ public class ItalicModifier : GlyphModifier<byte>
 
     private static void OnGlyph()
     {
-        var cluster = UniTextMeshGenerator.currentCluster;
+        var gen = UniTextMeshGenerator.Current;
+        var cluster = gen.currentCluster;
         if (!buffer.HasFlag(cluster))
             return;
 
-        var italicStyle = UniTextMeshGenerator.currentFont?.ItalicStyle ?? 12f;
+        var italicStyle = gen.currentFont?.ItalicStyle ?? 12f;
         var shearValue = italicStyle * 0.01f;
 
-        var baseIdx = UniTextMeshGenerator.vertexCount - 4;
-        var verts = UniTextMeshGenerator.Vertices;
+        var baseIdx = gen.vertexCount - 4;
+        var verts = gen.Vertices;
 
         var blY = verts[baseIdx].y;
         var tlY = verts[baseIdx + 1].y;

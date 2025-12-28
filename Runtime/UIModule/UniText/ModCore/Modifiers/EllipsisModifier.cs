@@ -236,7 +236,7 @@ public class EllipsisModifier : BaseModifier
         ClearEllipsisState();
         iterationCount = 0;
 
-        var rect = uniText.rectTransform.rect;
+        var rect = uniText.cachedTransformData.rect;
         var maxWidth = rect.width;
         var maxHeight = rect.height;
         var resultWidth = uniText.TextProcessor.ResultWidth;
@@ -731,7 +731,8 @@ public class EllipsisModifier : BaseModifier
 
     private void OnGlyph()
     {
-        var cluster = UniTextMeshGenerator.currentCluster;
+        var gen = UniTextMeshGenerator.Current;
+        var cluster = gen.currentCluster;
 
         if (lineTruncations != null && lineTruncations.Count > 0)
         {
@@ -740,8 +741,8 @@ public class EllipsisModifier : BaseModifier
                 var lt = lineTruncations[i];
                 if (cluster >= lt.truncateMinCluster && cluster <= lt.truncateMaxCluster)
                 {
-                    UniTextMeshGenerator.vertexCount -= 4;
-                    UniTextMeshGenerator.triangleCount -= 6;
+                    gen.vertexCount -= 4;
+                    gen.triangleCount -= 6;
                     return;
                 }
             }
@@ -758,8 +759,8 @@ public class EllipsisModifier : BaseModifier
 
             if (cluster >= range.truncateMinCluster && cluster <= range.truncateMaxCluster)
             {
-                UniTextMeshGenerator.vertexCount -= 4;
-                UniTextMeshGenerator.triangleCount -= 6;
+                gen.vertexCount -= 4;
+                gen.triangleCount -= 6;
                 return;
             }
         }
@@ -798,15 +799,16 @@ public class EllipsisModifier : BaseModifier
         if (fontProvider == null)
             return;
 
+        var gen = UniTextMeshGenerator.Current;
         for (var i = 0; i < positionedCount; i++)
         {
             if (positionedGlyphs[i].cluster == ellipsisCluster)
             {
                 ref readonly var pg = ref positionedGlyphs[i];
 
-                var x = UniTextMeshGenerator.offsetX + pg.x;
-                var y = UniTextMeshGenerator.offsetY - pg.y;
-                GlyphRenderHelper.DrawString(fontProvider, EllipsisText, x, y, UniTextMeshGenerator.currentDefaultColor);
+                var x = gen.offsetX + pg.x;
+                var y = gen.offsetY - pg.y;
+                GlyphRenderHelper.DrawString(fontProvider, EllipsisText, x, y, gen.currentDefaultColor);
                 return;
             }
         }

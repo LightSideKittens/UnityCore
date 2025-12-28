@@ -38,15 +38,16 @@ public class ColorModifier : GlyphModifier<uint>
 
     private static void OnGlyph()
     {
-        var cluster = UniTextMeshGenerator.currentCluster;
+        var gen = UniTextMeshGenerator.Current;
+        var cluster = gen.currentCluster;
         var packed = buffer.GetValueOrDefault(cluster);
         if (packed == 0)
             return;
 
         var color = UnpackColor(packed);
 
-        var baseIdx = UniTextMeshGenerator.vertexCount - 4;
-        var colors = UniTextMeshGenerator.Colors;
+        var baseIdx = gen.vertexCount - 4;
+        var colors = gen.Colors;
 
         colors[baseIdx] = color;
         colors[baseIdx + 1] = color;

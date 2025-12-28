@@ -28,13 +28,14 @@ public class BoldModifier : GlyphModifier<byte>
 
     private static void OnGlyph()
     {
-        var cluster = UniTextMeshGenerator.currentCluster;
+        var gen = UniTextMeshGenerator.Current;
+        var cluster = gen.currentCluster;
         if (!buffer.HasFlag(cluster))
             return;
 
-        var negXScale = -UniTextMeshGenerator.xScale;
-        var baseIdx = UniTextMeshGenerator.vertexCount - 4;
-        var uvs = UniTextMeshGenerator.Uvs0;
+        var negXScale = -gen.xScale;
+        var baseIdx = gen.vertexCount - 4;
+        var uvs = gen.Uvs0;
 
         uvs[baseIdx].w = negXScale;
         uvs[baseIdx + 1].w = negXScale;

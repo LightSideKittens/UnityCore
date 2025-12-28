@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -53,7 +54,6 @@ public sealed class TextProcessor
 
     public readonly UniTextBuffers buf;
     private UniTextFontProvider fontProvider;
-    private int baseFontId;
     private float resultWidth;
     private float resultHeight;
 
@@ -88,14 +88,14 @@ public sealed class TextProcessor
             throw new InvalidOperationException("UnicodeData not initialized.");
     }
 
-    public void SetFontProvider(UniTextFontProvider provider, int defaultFontId = 0)
+    public void SetFontProvider(UniTextFontProvider provider)
     {
         fontProvider = provider;
-        baseFontId = defaultFontId;
     }
     
     public bool HasValidFirstPassData => hasValidFirstPassData;
-    
+    public bool HasValidPositionedGlyphs => hasValidPositionedGlyphs;
+
     public void InvalidateFirstPassData()
     {
         hasValidFirstPassData = false;
@@ -120,7 +120,7 @@ public sealed class TextProcessor
 
     public void EnsureFirstPass(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
-        ensureShapingCallCount++;
+        Interlocked.Increment(ref ensureShapingCallCount);
 
         if (hasValidFirstPassData) return;
 
@@ -194,7 +194,7 @@ public sealed class TextProcessor
     
     private void DoFirstPass(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
-        doFullShapingCallCount++;
+        Interlocked.Increment(ref doFullShapingCallCount);
         
         buf.shapingFontSize = settings.fontSize;
 
@@ -569,11 +569,10 @@ public sealed class TextProcessor
         var lvlSpan = buf.bidiLevels.AsSpan(0, cpCount);
         var scrSpan = buf.scripts.AsSpan(0, cpCount);
         var fp = fontProvider;
-        var baseFont = baseFontId;
 
         if (fp == null)
         {
-            ItemizeWithoutFontLookup(cpCount, lvlSpan, scrSpan, baseFont);
+            ItemizeWithoutFontLookup(cpCount, lvlSpan, scrSpan, 0);
             return;
         }
 
@@ -585,7 +584,7 @@ public sealed class TextProcessor
 
         var cp0 = cpSpan[0];
         lastLookupCodepoint = cp0;
-        var lastLookupResult = fp.FindFontForCodepoint(cp0, baseFont);
+        var lastLookupResult = fp.FindFontForCodepoint(cp0);
         var currentFontId = lastLookupResult;
 
         for (var i = 1; i < cpCount; i++)
@@ -601,7 +600,7 @@ public sealed class TextProcessor
             }
             else
             {
-                fontId = fp.FindFontForCodepoint(cp, baseFont);
+                fontId = fp.FindFontForCodepoint(cp);
                 lastLookupCodepoint = cp;
                 lastLookupResult = fontId;
             }

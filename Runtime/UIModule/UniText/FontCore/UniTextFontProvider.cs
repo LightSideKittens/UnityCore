@@ -6,18 +6,18 @@ using UnityEngine;
 
 public sealed class UniTextFontProvider
 {
+    // fontId = FontDataHash (stable across sessions)
     private readonly FastIntDictionary<UniTextFont> fontAssets = new();
-    private readonly FastIntDictionary<int> fontAssetToId = new();
 
     private UniTextFonts fontsAsset;
     private UniTextAppearance appearance;
     private UniTextFont mainFont;
+    private int mainFontId;
 
     private float fontSize = 36f;
     private float fontScale = 1f;
-    private int nextFontId = 1000;
 
-    private static HashSet<int> searchedFontAssets;
+    [ThreadStatic] private static HashSet<int> searchedFontAssets;
 
 
     public float FontSize
@@ -29,13 +29,14 @@ public sealed class UniTextFontProvider
             UpdateFontScale();
         }
     }
-    
+
     public void SetFontSize(float size)
     {
         FontSize = size;
     }
 
     public UniTextFont MainFont => mainFont;
+    public int MainFontId => mainFontId;
 
     public UniTextAppearance Appearance => appearance;
 
@@ -50,9 +51,10 @@ public sealed class UniTextFontProvider
         this.mainFont = fonts.MainFont;
         this.fontSize = fontSize;
 
-        SharedFontCache.Clear();
+        // Register main font with its FontDataHash as ID
+        mainFontId = GetFontId(mainFont);
+        RegisterFontAsset(mainFontId, mainFont);
 
-        RegisterFontAsset(0, mainFont);
         UpdateFontScale();
     }
 
@@ -62,50 +64,35 @@ public sealed class UniTextFontProvider
         fontScale = pointSize > 0 ? fontSize / pointSize : 1f;
     }
 
+    /// <summary>
+    /// Get stable fontId from FontDataHash. Returns 0 for null fonts.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetFontId(UniTextFont font)
+    {
+        if (font == null) return 0;
+        var hash = font.FontDataHash;
+        if (hash == 0 && font.HasFontData)
+            hash = font.ComputeFontDataHash();
+        return hash != 0 ? hash : font.GetCachedInstanceId(); // Fallback to instanceId if no font data
+    }
 
     public void RegisterFontAsset(int fontId, UniTextFont font)
     {
-        if (font == null) return;
-
+        if (font == null || fontId == 0) return;
         fontAssets[fontId] = font;
-        fontAssetToId[font.GetInstanceID()] = fontId;
-
-        if (fontId == 0)
-        {
-            mainFont = font;
-            UpdateFontScale();
-        }
     }
-
-
-    private int cachedGetFontAssetId = -1;
-    private UniTextFont cachedGetFontAsset;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public UniTextFont GetFontAsset(int fontId)
     {
-        if (fontId == cachedGetFontAssetId)
-            return cachedGetFontAsset;
+        if (fontId == mainFontId)
+            return mainFont;
 
-        var font = fontId == 0 ? mainFont : fontAssets.TryGetValue(fontId, out var asset) ? asset : mainFont;
-        cachedGetFontAssetId = fontId;
-        cachedGetFontAsset = font;
-        return font;
-    }
+        if (fontAssets.TryGetValue(fontId, out var asset))
+            return asset;
 
-
-    private int GetOrCreateFontId(UniTextFont font)
-    {
-        if (font == null)
-            return 0;
-
-        var instanceId = font.GetInstanceID();
-        if (fontAssetToId.TryGetValue(instanceId, out var existingId))
-            return existingId;
-
-        var newId = nextFontId++;
-        RegisterFontAsset(newId, font);
-        return newId;
+        return mainFont; // Fallback
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -121,7 +108,6 @@ public sealed class UniTextFontProvider
             lineHeight = (ascender - descender) * 1.2f;
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float CalculateTextHeight(float ascender, float descender, int lineCount, float lineHeight,
         float lineSpacing = 0f)
@@ -129,10 +115,15 @@ public sealed class UniTextFontProvider
         return ascender - descender + (lineCount - 1) * (lineHeight + lineSpacing);
     }
 
-    public int FindFontForCodepoint(int codepoint, int baseFontId)
+    public int FindFontForCodepoint(int codepoint)
     {
-        if (SharedFontCache.TryGet(codepoint, baseFontId, out var cachedFontId))
-            return cachedFontId;
+        // Check cache - fontIds are stable (FontDataHash), so cache is always valid
+        if (SharedFontCache.TryGet(codepoint, mainFontId, out var cachedFontId))
+        {
+            // Ensure font is registered in this provider
+            if (cachedFontId == mainFontId || fontAssets.ContainsKey(cachedFontId))
+                return cachedFontId;
+        }
 
         searchedFontAssets ??= new HashSet<int>();
         searchedFontAssets.Clear();
@@ -142,15 +133,18 @@ public sealed class UniTextFontProvider
 
         if (foundFont == null)
         {
-            SharedFontCache.Set(codepoint, baseFontId, baseFontId);
-            return baseFontId;
+            SharedFontCache.Set(codepoint, mainFontId, mainFontId);
+            return mainFontId;
         }
 
-        var fontId = GetOrCreateFontId(foundFont);
-        SharedFontCache.Set(codepoint, baseFontId, fontId);
+        var fontId = GetFontId(foundFont);
+        if (!fontAssets.ContainsKey(fontId))
+            RegisterFontAsset(fontId, foundFont);
+
+        SharedFontCache.Set(codepoint, mainFontId, fontId);
         return fontId;
     }
-    
+
     private int cachedMaterialFontId = -1;
     private Material cachedMaterial;
 
@@ -179,15 +173,8 @@ public sealed class UniTextFontProvider
 
     public int GetFontDataHash(int fontId)
     {
-        var fontAsset = GetFontAsset(fontId);
-        if (fontAsset == null) return 0;
-
-        var hash = fontAsset.FontDataHash;
-        if (hash == 0 && fontAsset.HasFontData)
-        {
-            hash = fontAsset.ComputeFontDataHash();
-        }
-        return hash;
+        // fontId IS the FontDataHash now
+        return fontId;
     }
 
 
@@ -253,7 +240,6 @@ public sealed class UniTextFontProvider
 
     /// <summary>
     /// Ensures virtual codepoints are added to the correct font atlas (with fallback support).
-    /// Virtual codepoints (markers, ellipsis) may come from fallback fonts.
     /// </summary>
     public void EnsureCodepointsInAtlas(ReadOnlySpan<uint> codepoints)
     {
@@ -262,7 +248,7 @@ public sealed class UniTextFontProvider
         for (var i = 0; i < codepoints.Length; i++)
         {
             var codepoint = codepoints[i];
-            var fontId = FindFontForCodepoint((int)codepoint, 0);
+            var fontId = FindFontForCodepoint((int)codepoint);
             var font = GetFontAsset(fontId);
             font?.TryAddCharacter(codepoint);
         }

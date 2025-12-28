@@ -58,20 +58,11 @@ public class UniTextFont : ScriptableObject
 
     #endregion
 
-    public int CachedInstanceId
-    {
-        get
-        {
-            if (cachedInstanceId < 0)
-                cachedInstanceId = GetInstanceID();
-            return cachedInstanceId;
-        }
-    }
-
-    public void EnsureInstanceIdCached()
+    public int GetCachedInstanceId()
     {
         if (cachedInstanceId < 0)
             cachedInstanceId = GetInstanceID();
+        return cachedInstanceId;
     }
 
     #region Properties

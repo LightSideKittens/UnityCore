@@ -8,13 +8,29 @@ using Buffer = HarfBuzzSharp.Buffer;
 
 public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 {
-    private ShapedGlyph[] outputBuffer = new ShapedGlyph[256];
-    private readonly FastIntDictionary<HarfBuzzFontCache> fontCache = new();
-    private readonly Stack<Buffer> bufferPool = new(4);
+    // Shared font cache (thread-safe with lock) - fonts are expensive, share them
+    private static readonly FastIntDictionary<HarfBuzzFontCache> fontCache = new();
+    private static readonly object fontCacheLock = new();
 
-    private int lastFontId = -1;
-    private int lastFontHash;
+    // Per-thread working buffers
+    [ThreadStatic] private static ShapedGlyph[] outputBuffer;
+    [ThreadStatic] private static Stack<Buffer> bufferPool;
 
+    [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void OnDomainReload()
+    {
+        lock (fontCacheLock)
+        {
+            foreach (var kvp in fontCache)
+                kvp.Value?.Dispose();
+            fontCache.Clear();
+        }
+        outputBuffer = null;
+        bufferPool = null;
+    }
+
+    private static ShapedGlyph[] OutputBuffer => outputBuffer ??= new ShapedGlyph[256];
+    private static Stack<Buffer> BufferPool => bufferPool ??= new Stack<Buffer>(4);
 
     private sealed class HarfBuzzFontCache : IDisposable
     {
@@ -49,20 +65,21 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 
     public void Dispose()
     {
-        foreach (var kvp in fontCache)
-            kvp.Value.Dispose();
-        fontCache.Clear();
-
-        while (bufferPool.Count > 0)
-            bufferPool.Pop().Dispose();
+        lock (fontCacheLock)
+        {
+            foreach (var kvp in fontCache)
+                kvp.Value.Dispose();
+            fontCache.Clear();
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Buffer AcquireBuffer()
+    private static Buffer AcquireBuffer()
     {
-        if (bufferPool.Count > 0)
+        var pool = BufferPool;
+        if (pool.Count > 0)
         {
-            var buffer = bufferPool.Pop();
+            var buffer = pool.Pop();
             buffer.ClearContents();
             return buffer;
         }
@@ -71,10 +88,11 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ReleaseBuffer(Buffer buffer)
+    private static void ReleaseBuffer(Buffer buffer)
     {
-        if (buffer != null && bufferPool.Count < 8)
-            bufferPool.Push(buffer);
+        var pool = BufferPool;
+        if (buffer != null && pool.Count < 8)
+            pool.Push(buffer);
         else
             buffer?.Dispose();
     }
@@ -94,14 +112,18 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
         if (fontHash == 0)
             return FallbackShape(codepoints, fontProvider, fontId, direction);
 
-        if (!fontCache.TryGetValue(fontHash, out var fontEntry))
+        HarfBuzzFontCache fontEntry;
+        lock (fontCacheLock)
         {
-            var fontData = fontProvider.GetFontData(fontId);
-            if (fontData == null || fontData.Length == 0)
-                return FallbackShape(codepoints, fontProvider, fontId, direction);
+            if (!fontCache.TryGetValue(fontHash, out fontEntry))
+            {
+                var fontData = fontProvider.GetFontData(fontId);
+                if (fontData == null || fontData.Length == 0)
+                    return FallbackShape(codepoints, fontProvider, fontId, direction);
 
-            fontEntry = new HarfBuzzFontCache(fontData);
-            fontCache[fontHash] = fontEntry;
+                fontEntry = new HarfBuzzFontCache(fontData);
+                fontCache[fontHash] = fontEntry;
+            }
         }
 
         var buffer = AcquireBuffer();
@@ -118,8 +140,12 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             var glyphPositions = buffer.GetGlyphPositionSpan();
             var glyphCount = glyphInfos.Length;
 
-            if (outputBuffer.Length < glyphCount)
-                outputBuffer = new ShapedGlyph[Math.Max(glyphCount, outputBuffer.Length * 2)];
+            var outBuf = OutputBuffer;
+            if (outBuf.Length < glyphCount)
+            {
+                outBuf = new ShapedGlyph[Math.Max(glyphCount, outBuf.Length * 2)];
+                outputBuffer = outBuf;
+            }
 
             float totalAdvance = 0;
             var fontSize = fontProvider?.FontSize ?? 36f;
@@ -131,7 +157,7 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
                 ref readonly var pos = ref glyphPositions[i];
 
                 var advanceX = pos.XAdvance * offsetScale;
-                outputBuffer[i] = new ShapedGlyph
+                outBuf[i] = new ShapedGlyph
                 {
                     glyphId = (int)info.Codepoint,
                     cluster = (int)info.Cluster,
@@ -143,7 +169,7 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
                 totalAdvance += advanceX;
             }
 
-            return new ShapingResult(outputBuffer.AsSpan(0, glyphCount), totalAdvance);
+            return new ShapingResult(outBuf.AsSpan(0, glyphCount), totalAdvance);
         }
         finally
         {
@@ -151,15 +177,19 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
         }
     }
 
-    private ShapingResult FallbackShape(
+    private static ShapingResult FallbackShape(
         ReadOnlySpan<int> codepoints,
         UniTextFontProvider fontProvider,
         int fontId,
         TextDirection direction)
     {
         var length = codepoints.Length;
-        if (outputBuffer.Length < length)
-            outputBuffer = new ShapedGlyph[Math.Max(length, outputBuffer.Length * 2)];
+        var outBuf = OutputBuffer;
+        if (outBuf.Length < length)
+        {
+            outBuf = new ShapedGlyph[Math.Max(length, outBuf.Length * 2)];
+            outputBuffer = outBuf;
+        }
 
         float totalAdvance = 0;
         var unicodeData = UnicodeData.Provider;
@@ -184,9 +214,9 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             float advance;
 
             HarfBuzzFontValidator.TryGetGlyphInfo(font, (uint)codepoint, fontSize, out glyphIndex, out advance);
-            
+
             var outputIndex = isRtl ? length - 1 - i : i;
-            outputBuffer[outputIndex] = new ShapedGlyph
+            outBuf[outputIndex] = new ShapedGlyph
             {
                 glyphId = (int)glyphIndex,
                 cluster = i,
@@ -195,7 +225,7 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             totalAdvance += advance;
         }
 
-        return new ShapingResult(outputBuffer.AsSpan(0, length), totalAdvance);
+        return new ShapingResult(outBuf.AsSpan(0, length), totalAdvance);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

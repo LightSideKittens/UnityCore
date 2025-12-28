@@ -40,7 +40,7 @@ public class UniTextAppearance : ScriptableObject, ISerializationCallbackReceive
         {
             var pair = fontMaterials[i];
             if (pair.font != null && pair.material != null)
-                materialByFontId[pair.font.GetInstanceID()] = pair.material;
+                materialByFontId[pair.font.GetCachedInstanceId()] = pair.material;
         }
     }
 
@@ -53,7 +53,7 @@ public class UniTextAppearance : ScriptableObject, ISerializationCallbackReceive
         if (materialByFontId == null)
             RebuildLookup();
 
-        return materialByFontId.TryGetValue(font.GetInstanceID(), out var mat) ? mat : defaultMaterial;
+        return materialByFontId.TryGetValue(font.GetCachedInstanceId(), out var mat) ? mat : defaultMaterial;
     }
 
     void ISerializationCallbackReceiver.OnBeforeSerialize() { }

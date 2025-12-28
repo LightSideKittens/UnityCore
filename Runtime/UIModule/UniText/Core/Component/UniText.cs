@@ -272,8 +272,8 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         }
 
         if (!isRebuilding)
-        { 
-            SetVerticesDirty();
+        {
+            RegisterDirty(this);
         }
 
         if ((flags & (DirtyFlags.Text | DirtyFlags.Font | DirtyFlags.FontSize | DirtyFlags.Layout)) != 0)
@@ -380,6 +380,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     protected override void OnDisable()
     {
         base.OnDisable();
+        UnregisterDirty(this);
         UnlistenConfigChanged();
         ClearAllRenderers();
         DeInit();
@@ -467,98 +468,14 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     #region Rebuild
 
     private bool isRebuilding;
+
     public override void Rebuild(CanvasUpdate update)
     {
-        isRebuilding = true;
-        InternalRebuild(update);
-        isRebuilding = false;
-    }
-
-    private void InternalRebuild(CanvasUpdate update)
-    {
-        if (update != CanvasUpdate.PreRender) return;
-        if (dirtyFlags == DirtyFlags.None) return;
-
-        Profiler.BeginSample("UniText.Rebuild");
-
-        if (!ValidateAndInitialize())
-        {
-            Profiler.EndSample();
-            return;
-        }
-
-        Rebuilding?.Invoke();
-
-        var flags = dirtyFlags;
-        dirtyFlags = DirtyFlags.None;
-
-        if (string.IsNullOrEmpty(text))
-        {
-            lastMeshPairs = null;
-            lastResultWidth = lastResultHeight = 0;
-            autoSizedFontSize = fontSize;
-            UpdateRendering();
-            Profiler.EndSample();
-            return;
-        }
-
-        if (!textProcessor.HasValidFirstPassData || !hasValidLayoutCache)
-        {
-            UpdateRendering();
-            Profiler.EndSample();
-            return;
-        }
-
-        var needsPositioning = (flags & (DirtyFlags.FullRebuild | DirtyFlags.LayoutRebuild | DirtyFlags.Alignment)) != 0;
-        var needsMesh = needsPositioning || (flags & DirtyFlags.Color) != 0;
-
-        if (needsPositioning)
-        {
-            autoSizedFontSize = cachedEffectiveFontSize;
-            var settings = CreateProcessSettings(rectTransform.rect, cachedEffectiveFontSize);
-            textProcessor.EnsurePositions(settings);
-            lastResultWidth = textProcessor.ResultWidth;
-            lastResultHeight = textProcessor.ResultHeight;
-        }
-
-        if (needsMesh)
-        {
-            var glyphs = textProcessor.PositionedGlyphs;
-            if (!glyphs.IsEmpty)
-            {
-                textProcessor.EnsureGlyphsInAtlas();
-                var effectiveFontSize = enableAutoSize ? autoSizedFontSize : fontSize;
-                GenerateMeshes(glyphs, rectTransform.rect, effectiveFontSize);
-            }
-            else
-            {
-                lastMeshPairs = null;
-            }
-        }
-        else if ((flags & DirtyFlags.Material) != 0)
-        {
-            UpdateMaterialsOnly();
-        }
-
-        UpdateRendering();
-
-        Profiler.EndSample();
     }
     
     private bool ValidateAndInitialize()
     {
         Profiler.BeginSample("UniText.ValidateAndInitialize");
-
-        if (!UnicodeData.IsInitialized)
-        {
-            UnicodeData.EnsureInitialized();
-            if (!UnicodeData.IsInitialized)
-            {
-                Debug.LogError("UniText: Unicode data not initialized.");
-                Profiler.EndSample();
-                return false;
-            }
-        }
 
         if (!TryInitFontsAndAppearance())
         {
@@ -600,19 +517,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         
         return true;
     }
-
-    private void UpdateMaterialsOnly()
-    {
-        if (lastMeshPairs == null) return;
-
-        fontProvider.InvalidateMaterialCache();
-
-        for (var i = 0; i < lastMeshPairs.Count; i++)
-        {
-            ref var pair = ref lastMeshPairs.buffer.data[i];
-            pair.material = fontProvider.GetMaterial(pair.fontId);
-        }
-    }
+    
 
     private ReadOnlySpan<char> ParseOrGetParsedAttributes()
     {
@@ -626,19 +531,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         }
         
         return attributeParser != null ? attributeParser.CleanTextSpan : text.AsSpan();
-    }
-
-    private void GenerateMeshes(ReadOnlySpan<PositionedGlyph> glyphs, Rect rect, float effectiveFontSize)
-    {
-        Profiler.BeginSample("UniText.GenerateMeshes");
-        meshGenerator.FontSize = effectiveFontSize;
-        meshGenerator.DefaultColor = color;
-        meshGenerator.SetCanvasParameters(transform, canvas);
-        meshGenerator.SetRectOffset(rect);
-        meshGenerator.SetHorizontalAlignment(horizontalAlignment);
-        ReleaseMeshes();
-        lastMeshPairs = meshGenerator.GenerateMeshes(glyphs, GetPooledMeshForText);
-        Profiler.EndSample();
     }
 
     private TextProcessSettings CreateProcessSettings(Rect rect, float effectiveFontSize) => new()

@@ -18,7 +18,6 @@ public sealed class Itemizer
         ReadOnlySpan<byte> bidiLevels,
         UnicodeScript[] scripts,
         UniTextFontProvider fontProvider,
-        int baseFontId,
         TextRun[] runs,
         ref int runCount)
     {
@@ -27,10 +26,12 @@ public sealed class Itemizer
         if (codepoints.IsEmpty)
             return;
 
+        var defaultFontId = fontProvider?.MainFontId ?? 0;
+
         var runStart = 0;
         var currentLevel = bidiLevels[0];
         var currentScript = scripts[0];
-        var currentFontId = fontProvider?.FindFontForCodepoint(codepoints[0], baseFontId) ?? baseFontId;
+        var currentFontId = fontProvider?.FindFontForCodepoint(codepoints[0]) ?? defaultFontId;
 
         for (var i = 1; i < codepoints.Length; i++)
         {
@@ -39,7 +40,7 @@ public sealed class Itemizer
             if (scripts[i] != currentScript)
                 needBreak = true;
 
-            var fontId = fontProvider?.FindFontForCodepoint(codepoints[i], baseFontId) ?? baseFontId;
+            var fontId = fontProvider?.FindFontForCodepoint(codepoints[i]) ?? defaultFontId;
             if (fontId != currentFontId)
                 needBreak = true;
 

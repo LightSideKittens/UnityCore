@@ -8,8 +8,12 @@ public static class GlyphRenderHelper
 {
     public static float DrawGlyph(UniTextFontProvider fontProvider, uint codepoint, float x, float baselineY, Color32 color)
     {
-        var currentFont = UniTextMeshGenerator.currentFont;
-        if (currentFont == null || fontProvider == null)
+        var gen = UniTextMeshGenerator.Current;
+        if (gen == null || fontProvider == null)
+            return 0f;
+
+        var currentFont = gen.currentFont;
+        if (currentFont == null)
             return 0f;
 
         var glyph = GetGlyph(fontProvider, codepoint, out var glyphFont);
@@ -17,16 +21,19 @@ public static class GlyphRenderHelper
 
         // Only render if this glyph belongs to the current font being rendered
         if (glyphFont != currentFont)
-            return glyph.metrics.horizontalAdvance * UniTextMeshGenerator.scale;
+            return glyph.metrics.horizontalAdvance * gen.scale;
 
         var glyphRect = glyph.glyphRect;
         var metrics = glyph.metrics;
 
         if (glyphRect.width == 0 || glyphRect.height == 0)
-            return metrics.horizontalAdvance * UniTextMeshGenerator.scale;
+            return metrics.horizontalAdvance * gen.scale;
 
-        var scale = UniTextMeshGenerator.scale;
-        var xScale = UniTextMeshGenerator.xScale;
+        // Ensure buffer capacity before writing
+        gen.EnsureCapacity(4, 6);
+
+        var scale = gen.scale;
+        var xScaleVal = gen.xScale;
         float padding = currentFont.AtlasPadding;
         float atlasWidth = currentFont.AtlasWidth;
         float atlasHeight = currentFont.AtlasHeight;
@@ -50,13 +57,13 @@ public static class GlyphRenderHelper
         var uvTLy = (glyphRect.y + glyphRect.height + padding) * invAtlasHeight;
         var uvTRx = (glyphRect.x + glyphRect.width + padding) * invAtlasWidth;
 
-        var verts = UniTextMeshGenerator.Vertices;
-        var uvData = UniTextMeshGenerator.Uvs0;
-        var cols = UniTextMeshGenerator.Colors;
-        var tris = UniTextMeshGenerator.Triangles;
+        var verts = gen.Vertices;
+        var uvData = gen.Uvs0;
+        var cols = gen.Colors;
+        var tris = gen.Triangles;
 
-        var vertIdx = UniTextMeshGenerator.vertexCount;
-        var triIdx = UniTextMeshGenerator.triangleCount;
+        var vertIdx = gen.vertexCount;
+        var triIdx = gen.triangleCount;
 
         var i0 = vertIdx;
         var i1 = vertIdx + 1;
@@ -84,22 +91,22 @@ public static class GlyphRenderHelper
         uv0.x = uvBLx;
         uv0.y = uvBLy;
         uv0.z = 0;
-        uv0.w = xScale;
+        uv0.w = xScaleVal;
         ref var uv1 = ref uvData[i1];
         uv1.x = uvBLx;
         uv1.y = uvTLy;
         uv1.z = 0;
-        uv1.w = xScale;
+        uv1.w = xScaleVal;
         ref var uv2 = ref uvData[i2];
         uv2.x = uvTRx;
         uv2.y = uvTLy;
         uv2.z = 0;
-        uv2.w = xScale;
+        uv2.w = xScaleVal;
         ref var uv3 = ref uvData[i3];
         uv3.x = uvTRx;
         uv3.y = uvBLy;
         uv3.z = 0;
-        uv3.w = xScale;
+        uv3.w = xScaleVal;
 
         cols[i0] = color;
         cols[i1] = color;
@@ -113,8 +120,8 @@ public static class GlyphRenderHelper
         tris[triIdx + 4] = i3;
         tris[triIdx + 5] = i0;
 
-        UniTextMeshGenerator.vertexCount += 4;
-        UniTextMeshGenerator.triangleCount += 6;
+        gen.vertexCount += 4;
+        gen.triangleCount += 6;
 
         return metrics.horizontalAdvance * scale;
     }
@@ -238,7 +245,7 @@ public static class GlyphRenderHelper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Glyph GetGlyph(UniTextFontProvider fontProvider, uint codepoint, out UniTextFont font)
     {
-        var fontId = fontProvider.FindFontForCodepoint((int)codepoint, 0);
+        var fontId = fontProvider.FindFontForCodepoint((int)codepoint);
         font = fontProvider.GetFontAsset(fontId);
 
         var charTable = font.CharacterLookupTable;

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -131,7 +132,7 @@ public sealed class UniTextBuffers
     public void EnsureRentBuffers(int textLength)
     {
         if (isRented) return;
-        rentBuffersCallCount++;
+        Interlocked.Increment(ref rentBuffersCallCount);
 
         var codepointCapacity = EstimateCapacity(textLength, MinCodepointCapacity);
         var glyphCapacity = EstimateCapacity(textLength, MinGlyphCapacity);

@@ -194,7 +194,7 @@ public class ListModifier : BaseModifier
             ? firstGlyphX + GetLineWidth(item.start) * glyphScale + scaledGap
             : firstGlyphX - GlyphRenderHelper.MeasureString(fontProviderRef, sharedBuilder) - scaledGap;
 
-        GlyphRenderHelper.DrawString(fontProviderRef, sharedBuilder, markerX, baselineY, UniTextMeshGenerator.currentDefaultColor);
+        GlyphRenderHelper.DrawString(fontProviderRef, sharedBuilder, markerX, baselineY, UniTextMeshGenerator.Current.currentDefaultColor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -210,11 +210,12 @@ public class ListModifier : BaseModifier
     private float GetItemBaselineY(int cluster, out float firstGlyphX)
     {
         var buf = buffers;
+        var gen = UniTextMeshGenerator.Current;
         for (var i = 0; i < buf.positionedGlyphs.count; i++)
             if (buf.positionedGlyphs.data[i].cluster >= cluster)
             {
-                firstGlyphX = UniTextMeshGenerator.offsetX + buf.positionedGlyphs.data[i].x;
-                return UniTextMeshGenerator.offsetY - buf.positionedGlyphs.data[i].y;
+                firstGlyphX = gen.offsetX + buf.positionedGlyphs.data[i].x;
+                return gen.offsetY - buf.positionedGlyphs.data[i].y;
             }
 
         firstGlyphX = 0;

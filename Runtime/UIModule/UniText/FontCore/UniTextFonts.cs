@@ -18,22 +18,11 @@ public class UniTextFonts : ScriptableObject
         for (var i = 0; i < fonts.Count; i++)
         {
             var font = fonts[i];
-            if (font == null || !searched.Add(font.GetInstanceID()))
+            if (!searched.Add(font.GetCachedInstanceId()))
                 continue;
 
-            if (font.HasFontData)
-            {
-                var glyphIndex = HarfBuzzFontValidator.GetGlyphIndex(font, unicode);
-                if (glyphIndex != 0) return font;
-            }
-            else
-            {
-                if (font.LoadFontFace() == UnityEngine.TextCore.LowLevel.FontEngineError.Success)
-                {
-                    var glyphIndex = UniTextFontEngine.GetGlyphIndex(unicode);
-                    if (glyphIndex != 0) return font;
-                }
-            }
+            var glyphIndex = HarfBuzzFontValidator.GetGlyphIndex(font, unicode);
+            if (glyphIndex != 0) return font;
         }
 
         return null;

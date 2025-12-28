@@ -135,17 +135,18 @@ public abstract class BaseLineModifier : BaseModifier
         if (linesDrawnThisFrame) return;
         linesDrawnThisFrame = true;
 
-        var fontAsset = UniTextMeshGenerator.currentFont;
+        var gen = UniTextMeshGenerator.Current;
+        var fontAsset = gen.currentFont;
         if (fontAsset == null) return;
 
         if (!flagsBuffer.HasAnyFlags()) return;
 
         lineSegmentCount = 0;
 
-        var scale = UniTextMeshGenerator.scale;
-        var offsetX = UniTextMeshGenerator.offsetX;
-        var offsetY = UniTextMeshGenerator.offsetY;
-        var defaultColor = UniTextMeshGenerator.currentDefaultColor;
+        var scale = gen.scale;
+        var offsetX = gen.offsetX;
+        var offsetY = gen.offsetY;
+        var defaultColor = gen.currentDefaultColor;
 
         var buf = buffers;
         var allGlyphs = buf.positionedGlyphs.data;

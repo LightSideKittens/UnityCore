@@ -12,8 +12,12 @@ public static class LineRenderHelper
 
     public static void DrawLine(UniTextFontProvider fontProvider, float startX, float endX, float baselineY, float lineYOffset, Color32 color)
     {
-        var currentFont = UniTextMeshGenerator.currentFont;
-        if (currentFont == null || fontProvider == null)
+        var gen = UniTextMeshGenerator.Current;
+        if (gen == null || fontProvider == null)
+            return;
+
+        var currentFont = gen.currentFont;
+        if (currentFont == null)
             return;
 
         var underscoreGlyph = GetUnderscoreGlyph(fontProvider, out var glyphFont);
@@ -24,8 +28,11 @@ public static class LineRenderHelper
         if (glyphFont != currentFont)
             return;
 
-        var scale = UniTextMeshGenerator.scale;
-        var xScale = UniTextMeshGenerator.xScale;
+        // Ensure buffer capacity before writing (12 vertices, 18 triangles for 3 quads)
+        gen.EnsureCapacity(12, 18);
+
+        var scale = gen.scale;
+        var xScaleVal = gen.xScale;
         float padding = currentFont.AtlasPadding;
         float atlasWidth = currentFont.AtlasWidth;
         float atlasHeight = currentFont.AtlasHeight;
@@ -46,14 +53,14 @@ public static class LineRenderHelper
         var thickness = (lineThickness + padding) * scale;
         var paddingScaled = padding * scale;
 
-        var verts = UniTextMeshGenerator.Vertices;
-        var uvs0 = UniTextMeshGenerator.Uvs0;
-        var uvs2 = UniTextMeshGenerator.Uvs2;
-        var colors = UniTextMeshGenerator.Colors;
-        var tris = UniTextMeshGenerator.Triangles;
+        var verts = gen.Vertices;
+        var uvs0 = gen.Uvs0;
+        var uvs2 = gen.Uvs2;
+        var colors = gen.Colors;
+        var tris = gen.Triangles;
 
-        var vertIdx = UniTextMeshGenerator.vertexCount;
-        var triIdx = UniTextMeshGenerator.triangleCount;
+        var vertIdx = gen.vertexCount;
+        var triIdx = gen.triangleCount;
 
         #region VERTICES (12 vertices = 3 quads)
 
@@ -82,33 +89,33 @@ public static class LineRenderHelper
         var uv0 = new Vector4(
             (underscoreRect.x - startPadding) / atlasWidth,
             (underscoreRect.y - padding) / atlasHeight,
-            0, xScale);
+            0, xScaleVal);
 
         var uv1 = new Vector4(
             uv0.x,
             (underscoreRect.y + underscoreRect.height + padding) / atlasHeight,
-            0, xScale);
+            0, xScaleVal);
 
         var uv2 = new Vector4(
             (underscoreRect.x - startPadding + underscoreRect.width * 0.5f) / atlasWidth,
             uv1.y,
-            0, xScale);
+            0, xScaleVal);
 
-        var uv3 = new Vector4(uv2.x, uv0.y, 0, xScale);
+        var uv3 = new Vector4(uv2.x, uv0.y, 0, xScaleVal);
 
         var uv4 = new Vector4(
             (underscoreRect.x + endPadding + underscoreRect.width * 0.5f) / atlasWidth,
             uv1.y,
-            0, xScale);
+            0, xScaleVal);
 
-        var uv5 = new Vector4(uv4.x, uv0.y, 0, xScale);
+        var uv5 = new Vector4(uv4.x, uv0.y, 0, xScaleVal);
 
         var uv6 = new Vector4(
             (underscoreRect.x + endPadding + underscoreRect.width) / atlasWidth,
             uv1.y,
-            0, xScale);
+            0, xScaleVal);
 
-        var uv7 = new Vector4(uv6.x, uv0.y, 0, xScale);
+        var uv7 = new Vector4(uv6.x, uv0.y, 0, xScaleVal);
 
         uvs0[vertIdx + 0] = uv0;
         uvs0[vertIdx + 1] = uv1;
@@ -117,10 +124,10 @@ public static class LineRenderHelper
 
         var centerU = (underscoreRect.x + underscoreRect.width * 0.5f) / atlasWidth;
         var halfPixelOffset = 0.5f / atlasWidth;
-        uvs0[vertIdx + 4] = new Vector4(centerU - halfPixelOffset, uv0.y, 0, xScale);
-        uvs0[vertIdx + 5] = new Vector4(centerU - halfPixelOffset, uv1.y, 0, xScale);
-        uvs0[vertIdx + 6] = new Vector4(centerU + halfPixelOffset, uv1.y, 0, xScale);
-        uvs0[vertIdx + 7] = new Vector4(centerU + halfPixelOffset, uv0.y, 0, xScale);
+        uvs0[vertIdx + 4] = new Vector4(centerU - halfPixelOffset, uv0.y, 0, xScaleVal);
+        uvs0[vertIdx + 5] = new Vector4(centerU - halfPixelOffset, uv1.y, 0, xScaleVal);
+        uvs0[vertIdx + 6] = new Vector4(centerU + halfPixelOffset, uv1.y, 0, xScaleVal);
+        uvs0[vertIdx + 7] = new Vector4(centerU + halfPixelOffset, uv0.y, 0, xScaleVal);
 
         uvs0[vertIdx + 8] = uv5;
         uvs0[vertIdx + 9] = uv4;
@@ -187,8 +194,8 @@ public static class LineRenderHelper
 
         #endregion
 
-        UniTextMeshGenerator.vertexCount += 12;
-        UniTextMeshGenerator.triangleCount += 18;
+        gen.vertexCount += 12;
+        gen.triangleCount += 18;
     }
 
 
@@ -208,7 +215,7 @@ public static class LineRenderHelper
 
         const uint underscoreCodepoint = '_';
 
-        var fontId = fontProvider.FindFontForCodepoint((int)underscoreCodepoint, 0);
+        var fontId = fontProvider.FindFontForCodepoint((int)underscoreCodepoint);
         font = fontProvider.GetFontAsset(fontId);
 
         var charTable = font.CharacterLookupTable;

@@ -44,7 +44,7 @@ public static class HarfBuzzFontValidator
         if (font == null || !font.HasFontData)
             return null;
 
-        var instanceId = font.CachedInstanceId;
+        var instanceId = font.GetCachedInstanceId();
         if (fontCache.TryGetValue(instanceId, out var cache))
             return cache;
 

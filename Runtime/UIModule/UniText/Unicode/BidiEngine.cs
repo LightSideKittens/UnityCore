@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 public enum BidiParagraphDirection
 {
@@ -427,7 +428,7 @@ public sealed class BidiEngine
 
     private BidiResult ProcessInternal(ReadOnlySpan<int> codePoints, byte? forcedParagraphLevel, bool copyLevels = true)
     {
-        processCallCount++;
+        Interlocked.Increment(ref processCallCount);
 
         var length = codePoints.Length;
         if (length == 0)
@@ -530,7 +531,7 @@ public sealed class BidiEngine
         BidiClass[] bidiClasses,
         byte[] levels)
     {
-        buildIsoRunSeqCallCount++;
+        Interlocked.Increment(ref buildIsoRunSeqCallCount);
         SequencesBuffer.FakeClear();
         ResetSequenceIndices();
 
@@ -1663,7 +1664,7 @@ public sealed class BidiEngine
         int[] matchingIsolate,
         int[] runIndexByPosition)
     {
-        buildIsoRunSeqForParagraphCallCount++;
+        Interlocked.Increment(ref buildIsoRunSeqForParagraphCallCount);
         sequences.FakeClear();
         ResetSequenceIndices();
 

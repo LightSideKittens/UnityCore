@@ -44,6 +44,21 @@ public class UniTextPerformanceTest : MonoBehaviour
 
     [SerializeField] private int gcCollectionsDuringTest;
 
+    [Header("Detailed Memory")]
+    [SerializeField] private long totalAllocatedBefore;
+    [SerializeField] private long totalAllocatedAfter;
+    [SerializeField] private long totalReservedBefore;
+    [SerializeField] private long totalReservedAfter;
+    [SerializeField] private long monoHeapBefore;
+    [SerializeField] private long monoHeapAfter;
+    [SerializeField] private long monoUsedBefore;
+    [SerializeField] private long monoUsedAfter;
+    [SerializeField] private long managedMemoryBefore;
+    [SerializeField] private long managedMemoryAfter;
+    [SerializeField] private int gcGen0Collections;
+    [SerializeField] private int gcGen1Collections;
+    [SerializeField] private int gcGen2Collections;
+
     [SerializeField] private bool isRunning;
 
     private GameObject[] instances;
@@ -97,7 +112,17 @@ public class UniTextPerformanceTest : MonoBehaviour
         System.GC.WaitForPendingFinalizers();
         System.GC.Collect();
 
-        var gcCountBefore = System.GC.CollectionCount(0);
+        // Capture memory state BEFORE test
+        var gcGen0Before = System.GC.CollectionCount(0);
+        var gcGen1Before = System.GC.CollectionCount(1);
+        var gcGen2Before = System.GC.CollectionCount(2);
+
+        totalAllocatedBefore = Profiler.GetTotalAllocatedMemoryLong();
+        totalReservedBefore = Profiler.GetTotalReservedMemoryLong();
+        monoHeapBefore = Profiler.GetMonoHeapSizeLong();
+        monoUsedBefore = Profiler.GetMonoUsedSizeLong();
+        managedMemoryBefore = System.GC.GetTotalMemory(false);
+
         var totalStopwatch = Stopwatch.StartNew();
 
         Debug.Log($"═══════════════════════════════════════════════════════════════");
@@ -105,6 +130,13 @@ public class UniTextPerformanceTest : MonoBehaviour
         Debug.Log($"  Objects per iteration: {objectsPerIteration}");
         Debug.Log($"  Iterations: {iterations}");
         Debug.Log($"  Frames between create/destroy: {framesBetween}");
+        Debug.Log($"───────────────────────────────────────────────────────────────");
+        Debug.Log($"  MEMORY BEFORE TEST:");
+        Debug.Log($"    Total Allocated:  {FormatBytes(totalAllocatedBefore)}");
+        Debug.Log($"    Total Reserved:   {FormatBytes(totalReservedBefore)}");
+        Debug.Log($"    Mono Heap Size:   {FormatBytes(monoHeapBefore)}");
+        Debug.Log($"    Mono Used:        {FormatBytes(monoUsedBefore)}");
+        Debug.Log($"    Managed Memory:   {FormatBytes(managedMemoryBefore)}");
         Debug.Log($"═══════════════════════════════════════════════════════════════");
 
         instances = new GameObject[objectsPerIteration];
@@ -158,7 +190,18 @@ public class UniTextPerformanceTest : MonoBehaviour
 
         totalStopwatch.Stop();
         totalTestTimeMs = (float)totalStopwatch.Elapsed.TotalMilliseconds;
-        gcCollectionsDuringTest = System.GC.CollectionCount(0) - gcCountBefore;
+
+        // Capture memory state AFTER test
+        totalAllocatedAfter = Profiler.GetTotalAllocatedMemoryLong();
+        totalReservedAfter = Profiler.GetTotalReservedMemoryLong();
+        monoHeapAfter = Profiler.GetMonoHeapSizeLong();
+        monoUsedAfter = Profiler.GetMonoUsedSizeLong();
+        managedMemoryAfter = System.GC.GetTotalMemory(false);
+
+        gcGen0Collections = System.GC.CollectionCount(0) - gcGen0Before;
+        gcGen1Collections = System.GC.CollectionCount(1) - gcGen1Before;
+        gcGen2Collections = System.GC.CollectionCount(2) - gcGen2Before;
+        gcCollectionsDuringTest = gcGen0Collections;
 
         avgInstantiateTimeMs = (float)(totalInstantiateTime / iterations);
         avgDestroyTimeMs = (float)(totalDestroyTime / iterations);
@@ -169,26 +212,38 @@ public class UniTextPerformanceTest : MonoBehaviour
         var avgDestroyTimePerObject = avgDestroyTimeMs / objectsPerIteration;
         var avgAllocPerObject = avgInstantiateAllocBytes / objectsPerIteration;
 
-        UniTextPoolStats.LogAll();
-
         Debug.Log($"═══════════════════════════════════════════════════════════════");
         Debug.Log($"  Test Complete!");
         Debug.Log($"───────────────────────────────────────────────────────────────");
         Debug.Log($"  Total time: {totalTestTimeMs:F2}ms");
-        Debug.Log($"  GC collections during test: {gcCollectionsDuringTest}");
+        Debug.Log($"───────────────────────────────────────────────────────────────");
+        Debug.Log($"  GC COLLECTIONS DURING TEST:");
+        Debug.Log($"    Gen 0: {gcGen0Collections}");
+        Debug.Log($"    Gen 1: {gcGen1Collections}");
+        Debug.Log($"    Gen 2: {gcGen2Collections}");
+        Debug.Log($"───────────────────────────────────────────────────────────────");
+        Debug.Log($"  MEMORY AFTER TEST:");
+        Debug.Log($"    Total Allocated:  {FormatBytes(totalAllocatedAfter)} (Δ {FormatBytesDelta(totalAllocatedAfter - totalAllocatedBefore)})");
+        Debug.Log($"    Total Reserved:   {FormatBytes(totalReservedAfter)} (Δ {FormatBytesDelta(totalReservedAfter - totalReservedBefore)})");
+        Debug.Log($"    Mono Heap Size:   {FormatBytes(monoHeapAfter)} (Δ {FormatBytesDelta(monoHeapAfter - monoHeapBefore)})");
+        Debug.Log($"    Mono Used:        {FormatBytes(monoUsedAfter)} (Δ {FormatBytesDelta(monoUsedAfter - monoUsedBefore)})");
+        Debug.Log($"    Managed Memory:   {FormatBytes(managedMemoryAfter)} (Δ {FormatBytesDelta(managedMemoryAfter - managedMemoryBefore)})");
+        Debug.Log($"    Unused Reserved:  {FormatBytes(Profiler.GetTotalUnusedReservedMemoryLong())}");
         Debug.Log($"───────────────────────────────────────────────────────────────");
         Debug.Log($"  INSTANTIATE:");
         Debug.Log($"    Avg time: {avgInstantiateTimeMs:F2}ms ({avgTimePerObject:F4}ms per object)");
-        Debug.Log(
-            $"    Avg alloc: {FormatBytes(avgInstantiateAllocBytes)} ({FormatBytes(avgAllocPerObject)} per object)");
+        Debug.Log($"    Avg alloc: {FormatBytes(avgInstantiateAllocBytes)} ({FormatBytes(avgAllocPerObject)} per object)");
         Debug.Log($"───────────────────────────────────────────────────────────────");
         Debug.Log($"  DESTROY:");
         Debug.Log($"    Avg time: {avgDestroyTimeMs:F2}ms ({avgDestroyTimePerObject:F4}ms per object)");
         Debug.Log($"    Avg alloc: {FormatBytes(avgDestroyAllocBytes)}");
         Debug.Log($"───────────────────────────────────────────────────────────────");
-        Debug.Log($"  Total objects: {objectsPerIteration * iterations}");
-        Debug.Log($"  Total alloc: {FormatBytes(totalInstantiateAlloc + totalDestroyAlloc)}");
+        Debug.Log($"  SUMMARY:");
+        Debug.Log($"    Total objects: {objectsPerIteration * iterations}");
+        Debug.Log($"    Total alloc during test: {FormatBytes(totalInstantiateAlloc + totalDestroyAlloc)}");
         Debug.Log($"═══════════════════════════════════════════════════════════════");
+
+        UniTextPoolStats.LogAll();
 
         instances = null;
         isRunning = false;
@@ -200,6 +255,17 @@ public class UniTextPerformanceTest : MonoBehaviour
         if (bytes < 1024) return $"{bytes} B";
         if (bytes < 1024 * 1024) return $"{bytes / 1024f:F1} KB";
         return $"{bytes / (1024f * 1024f):F2} MB";
+    }
+
+    private static string FormatBytesDelta(long bytes)
+    {
+        var sign = bytes >= 0 ? "+" : "-";
+        var abs = bytes >= 0 ? bytes : -bytes;
+        string formatted;
+        if (abs < 1024) formatted = $"{abs} B";
+        else if (abs < 1024 * 1024) formatted = $"{abs / 1024f:F1} KB";
+        else formatted = $"{abs / (1024f * 1024f):F2} MB";
+        return sign + formatted;
     }
 
     private void CleanupInstances()

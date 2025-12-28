@@ -19,20 +19,9 @@ public partial class UniText : ILayoutElement, ILayoutController
 
         cachedPreferredWidth = 0;
 
-        if (!string.IsNullOrEmpty(text) && ValidateAndInitialize())
+        // FirstPass уже выполнен в preWillRenderCanvases (параллельно)
+        if (!string.IsNullOrEmpty(text) && textProcessor != null && textProcessor.HasValidFirstPassData)
         {
-            if (!textProcessor.HasValidFirstPassData)
-            {
-                var textSpan = ParseOrGetParsedAttributes();
-                var shapingFontSize = enableAutoSize ? maxFontSize : fontSize;
-                var settings = new TextProcessSettings
-                {
-                    fontSize = shapingFontSize,
-                    baseDirection = baseDirection
-                };
-                textProcessor.EnsureFirstPass(textSpan, settings);
-            }
-
             var effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
             cachedPreferredWidth = textProcessor.GetPreferredWidth(effectiveFontSize);
         }
