@@ -6,29 +6,34 @@ using UnityEngine.TextCore;
 public static class LineRenderHelper
 {
     [ThreadStatic] private static Glyph cachedUnderscoreGlyph;
-    [ThreadStatic] private static int cachedFontInstanceId;
+    [ThreadStatic] private static UniTextFont cachedUnderscoreFont;
+    [ThreadStatic] private static int cachedFontProviderId;
 
-    
-    public static void DrawLine(float startX, float endX, float baselineY, float lineYOffset, Color32 color)
+
+    public static void DrawLine(UniTextFontProvider fontProvider, float startX, float endX, float baselineY, float lineYOffset, Color32 color)
     {
-        var fontAsset = UniTextMeshGenerator.currentFont;
-        if (fontAsset == null)
+        var currentFont = UniTextMeshGenerator.currentFont;
+        if (currentFont == null || fontProvider == null)
             return;
 
-        var underscoreGlyph = GetUnderscoreGlyph(fontAsset);
+        var underscoreGlyph = GetUnderscoreGlyph(fontProvider, out var glyphFont);
         if (underscoreGlyph == null || underscoreGlyph.glyphRect.width == 0)
+            return;
+
+        // Only render if underscore belongs to current font
+        if (glyphFont != currentFont)
             return;
 
         var scale = UniTextMeshGenerator.scale;
         var xScale = UniTextMeshGenerator.xScale;
-        float padding = fontAsset.AtlasPadding;
-        float atlasWidth = fontAsset.AtlasWidth;
-        float atlasHeight = fontAsset.AtlasHeight;
+        float padding = currentFont.AtlasPadding;
+        float atlasWidth = currentFont.AtlasWidth;
+        float atlasHeight = currentFont.AtlasHeight;
 
         var underscoreRect = underscoreGlyph.glyphRect;
         var underscoreMetrics = underscoreGlyph.metrics;
 
-        var lineThickness = fontAsset.FaceInfo.underlineThickness;
+        var lineThickness = currentFont.FaceInfo.underlineThickness;
 
         var y = baselineY + lineYOffset;
         var start = new Vector3(startX, y, 0);
@@ -187,28 +192,32 @@ public static class LineRenderHelper
     }
 
 
-    private static Glyph GetUnderscoreGlyph(UniTextFont font)
+    private static Glyph GetUnderscoreGlyph(UniTextFontProvider fontProvider, out UniTextFont font)
     {
-        var fontId = font.GetInstanceID();
+        var providerId = fontProvider.GetHashCode();
 
-        if (cachedUnderscoreGlyph != null && cachedFontInstanceId == fontId)
+        if (cachedUnderscoreGlyph != null && cachedFontProviderId == providerId)
+        {
+            font = cachedUnderscoreFont;
             return cachedUnderscoreGlyph;
+        }
 
         cachedUnderscoreGlyph = null;
-        cachedFontInstanceId = fontId;
+        cachedUnderscoreFont = null;
+        cachedFontProviderId = providerId;
 
         const uint underscoreCodepoint = '_';
+
+        var fontId = fontProvider.FindFontForCodepoint((int)underscoreCodepoint, 0);
+        font = fontProvider.GetFontAsset(fontId);
 
         var charTable = font.CharacterLookupTable;
         if (charTable != null && charTable.TryGetValue(underscoreCodepoint, out var character) &&
             character?.glyph != null)
         {
             cachedUnderscoreGlyph = character.glyph;
-            return cachedUnderscoreGlyph;
+            cachedUnderscoreFont = font;
         }
-
-        if (font.TryAddCharacter(underscoreCodepoint, out var addedChar) && addedChar?.glyph != null)
-            cachedUnderscoreGlyph = addedChar.glyph;
 
         return cachedUnderscoreGlyph;
     }

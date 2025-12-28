@@ -166,6 +166,9 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
         var isRtl = direction == TextDirection.RightToLeft;
         var checkMirroring = isRtl && unicodeData != null;
 
+        var font = fontProvider.GetFontAsset(fontId);
+        var fontSize = fontProvider.FontSize;
+
         for (var i = 0; i < length; i++)
         {
             var codepoint = codepoints[i];
@@ -177,8 +180,11 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
                     codepoint = mirrored;
             }
 
-            fontProvider.TryGetGlyphInfo(fontId, codepoint, out var glyphIndex, out var advance);
+            uint glyphIndex;
+            float advance;
 
+            HarfBuzzFontValidator.TryGetGlyphInfo(font, (uint)codepoint, fontSize, out glyphIndex, out advance);
+            
             var outputIndex = isRtl ? length - 1 - i : i;
             outputBuffer[outputIndex] = new ShapedGlyph
             {

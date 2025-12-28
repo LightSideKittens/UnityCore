@@ -242,10 +242,6 @@ public sealed class TextProcessor
         Shaped?.Invoke();
         Profiler.EndSample();
 
-        Profiler.BeginSample("TextProcessor.EnsureGlyphsInAtlas");
-        EnsureGlyphsInAtlas();
-        Profiler.EndSample();
-
         hasValidFirstPassData = true;
     }
     
@@ -764,7 +760,7 @@ public sealed class TextProcessor
         }
     }
 
-    private void EnsureGlyphsInAtlas()
+    public void EnsureGlyphsInAtlas()
     {
         if (fontProvider == null)
             return;
@@ -772,6 +768,12 @@ public sealed class TextProcessor
         fontProvider.EnsureGlyphsInAtlas(
             buf.shapedRuns.Span,
             buf.shapedGlyphs.Span);
+
+        var count = buf.virtualCodepoints.count;
+        if (count == 0) return;
+
+        var codepoints = new ReadOnlySpan<uint>(buf.virtualCodepoints.data, 0, count);
+        fontProvider.EnsureCodepointsInAtlas(codepoints);
     }
 
     public void ForceRelayout(ReadOnlySpan<float> cpWidths)

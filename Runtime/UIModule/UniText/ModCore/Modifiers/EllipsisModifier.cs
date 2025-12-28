@@ -113,6 +113,9 @@ public class EllipsisModifier : BaseModifier
             ellipsisCluster = -1,
             needsEllipsis = false
         });
+
+        for (var i = 0; i < EllipsisText.Length; i++)
+            buffers.virtualCodepoints.Add(EllipsisText[i]);
     }
 
     private void ClearEllipsisState()
@@ -791,8 +794,8 @@ public class EllipsisModifier : BaseModifier
         if (positionedCount == 0)
             return;
 
-        var currentFont = UniTextMeshGenerator.currentFont;
-        if (currentFont == null)
+        var fontProvider = uniText.FontProvider;
+        if (fontProvider == null)
             return;
 
         for (var i = 0; i < positionedCount; i++)
@@ -801,13 +804,9 @@ public class EllipsisModifier : BaseModifier
             {
                 ref readonly var pg = ref positionedGlyphs[i];
 
-                var glyphFont = uniText.FontProvider.GetFontAsset(pg.fontId);
-                if (glyphFont != currentFont)
-                    return;
-
                 var x = UniTextMeshGenerator.offsetX + pg.x;
                 var y = UniTextMeshGenerator.offsetY - pg.y;
-                GlyphRenderHelper.DrawString(EllipsisText, x, y, UniTextMeshGenerator.currentDefaultColor);
+                GlyphRenderHelper.DrawString(fontProvider, EllipsisText, x, y, UniTextMeshGenerator.currentDefaultColor);
                 return;
             }
         }

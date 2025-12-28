@@ -22,11 +22,13 @@ public sealed class UniTextBuffers
     public PooledBuffer<ShapedRun> shapedRuns;
     public PooledBuffer<ShapedGlyph> shapedGlyphs;
     public PooledBuffer<float> cpWidths;
-    
+
     public PooledBuffer<bool> breakOpportunities;
     public PooledBuffer<TextLine> lines;
     public PooledBuffer<ShapedRun> orderedRuns;
     public PooledBuffer<PositionedGlyph> positionedGlyphs;
+
+    public PooledBuffer<uint> virtualCodepoints;
 
     public byte[] bidiLevels;
     public UnicodeScript[] scripts;
@@ -144,6 +146,7 @@ public sealed class UniTextBuffers
         lines.Rent(MinLineCapacity);
         orderedRuns.Rent(MinRunCapacity);
         positionedGlyphs.Rent(glyphCapacity);
+        virtualCodepoints.Rent(MinCodepointCapacity);
 
         bidiLevels = UniTextArrayPool<byte>.Rent(codepointCapacity);
         scripts = UniTextArrayPool<UnicodeScript>.Rent(codepointCapacity);
@@ -172,6 +175,7 @@ public sealed class UniTextBuffers
         lines.Return();
         orderedRuns.Return();
         positionedGlyphs.Return();
+        virtualCodepoints.Return();
 
         UniTextArrayPool<byte>.Return(bidiLevels);
         UniTextArrayPool<UnicodeScript>.Return(scripts);
@@ -207,6 +211,7 @@ public sealed class UniTextBuffers
         lines.FakeClear();
         orderedRuns.FakeClear();
         positionedGlyphs.FakeClear();
+        virtualCodepoints.FakeClear();
 
         hasValidGlyphCache = false;
         baseDirection = TextDirection.LeftToRight;

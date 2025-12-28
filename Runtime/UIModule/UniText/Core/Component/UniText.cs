@@ -526,6 +526,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
             var glyphs = textProcessor.PositionedGlyphs;
             if (!glyphs.IsEmpty)
             {
+                textProcessor.EnsureGlyphsInAtlas();
                 var effectiveFontSize = enableAutoSize ? autoSizedFontSize : fontSize;
                 GenerateMeshes(glyphs, rectTransform.rect, effectiveFontSize);
             }

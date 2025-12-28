@@ -83,6 +83,8 @@ public abstract class BaseLineModifier : BaseModifier
         var cpCount = buffers.codepoints.count;
         EnsureBufferCapacity(cpCount);
         flagsBuffer.SetFlagRange(start, Math.Min(end, cpCount));
+
+        buffers.virtualCodepoints.Add('_');
     }
 
     protected void EnsureBufferCapacity(int required)
@@ -249,10 +251,11 @@ public abstract class BaseLineModifier : BaseModifier
 
         var lineOffset = GetLineOffset(fontAsset.FaceInfo, scale);
 
+        var fontProvider = uniText.FontProvider;
         for (var i = 0; i < lineSegmentCount; i++)
         {
             ref var seg = ref lineSegments[i];
-            LineRenderHelper.DrawLine(seg.startX, seg.endX, seg.baselineY, lineOffset, seg.color);
+            LineRenderHelper.DrawLine(fontProvider, seg.startX, seg.endX, seg.baselineY, lineOffset, seg.color);
         }
     }
 }

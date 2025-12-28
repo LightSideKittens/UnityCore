@@ -6,14 +6,18 @@ using UnityEngine.TextCore;
 
 public static class GlyphRenderHelper
 {
-    public static float DrawGlyph(uint codepoint, float x, float baselineY, Color32 color)
+    public static float DrawGlyph(UniTextFontProvider fontProvider, uint codepoint, float x, float baselineY, Color32 color)
     {
-        var fontAsset = UniTextMeshGenerator.currentFont;
-        if (fontAsset == null)
+        var currentFont = UniTextMeshGenerator.currentFont;
+        if (currentFont == null || fontProvider == null)
             return 0f;
 
-        var glyph = GetGlyph(fontAsset, codepoint);
+        var glyph = GetGlyph(fontProvider, codepoint, out var glyphFont);
         if (glyph == null) return 0f;
+
+        // Only render if this glyph belongs to the current font being rendered
+        if (glyphFont != currentFont)
+            return glyph.metrics.horizontalAdvance * UniTextMeshGenerator.scale;
 
         var glyphRect = glyph.glyphRect;
         var metrics = glyph.metrics;
@@ -23,9 +27,9 @@ public static class GlyphRenderHelper
 
         var scale = UniTextMeshGenerator.scale;
         var xScale = UniTextMeshGenerator.xScale;
-        float padding = fontAsset.AtlasPadding;
-        float atlasWidth = fontAsset.AtlasWidth;
-        float atlasHeight = fontAsset.AtlasHeight;
+        float padding = currentFont.AtlasPadding;
+        float atlasWidth = currentFont.AtlasWidth;
+        float atlasHeight = currentFont.AtlasHeight;
         var padding2 = padding * 2;
 
         var invAtlasWidth = 1f / atlasWidth;
@@ -114,10 +118,10 @@ public static class GlyphRenderHelper
 
         return metrics.horizontalAdvance * scale;
     }
-    
-    public static float DrawString(string text, float x, float baselineY, Color32 color)
+
+    public static float DrawString(UniTextFontProvider fontProvider, string text, float x, float baselineY, Color32 color)
     {
-        if (string.IsNullOrEmpty(text))
+        if (string.IsNullOrEmpty(text) || fontProvider == null)
             return 0f;
 
         var totalWidth = 0f;
@@ -133,7 +137,7 @@ public static class GlyphRenderHelper
                 i++;
             }
 
-            var advance = DrawGlyph(codepoint, currentX, baselineY, color);
+            var advance = DrawGlyph(fontProvider, codepoint, currentX, baselineY, color);
             currentX += advance;
             totalWidth += advance;
         }
@@ -142,16 +146,11 @@ public static class GlyphRenderHelper
     }
 
 
-    public static float MeasureString(string text)
+    public static float MeasureString(UniTextFontProvider fontProvider, string text)
     {
-        if (string.IsNullOrEmpty(text))
+        if (string.IsNullOrEmpty(text) || fontProvider == null)
             return 0f;
 
-        var fontAsset = UniTextMeshGenerator.currentFont;
-        if (fontAsset == null)
-            return 0f;
-
-        var scale = UniTextMeshGenerator.scale;
         var totalWidth = 0f;
 
         for (var i = 0; i < text.Length; i++)
@@ -164,17 +163,22 @@ public static class GlyphRenderHelper
                 i++;
             }
 
-            var glyph = GetGlyph(fontAsset, codepoint);
-            if (glyph != null) totalWidth += glyph.metrics.horizontalAdvance * scale;
+            var glyph = GetGlyph(fontProvider, codepoint, out var font);
+            if (glyph != null)
+            {
+                var pointSize = font.FaceInfo.pointSize;
+                var scale = pointSize > 0 ? fontProvider.FontSize / pointSize : 1f;
+                totalWidth += glyph.metrics.horizontalAdvance * scale;
+            }
         }
 
         return totalWidth;
     }
 
 
-    public static float DrawString(StringBuilder sb, float x, float baselineY, Color32 color)
+    public static float DrawString(UniTextFontProvider fontProvider, StringBuilder sb, float x, float baselineY, Color32 color)
     {
-        if (sb == null || sb.Length == 0)
+        if (sb == null || sb.Length == 0 || fontProvider == null)
             return 0f;
 
         var totalWidth = 0f;
@@ -191,7 +195,7 @@ public static class GlyphRenderHelper
                 i++;
             }
 
-            var advance = DrawGlyph(codepoint, currentX, baselineY, color);
+            var advance = DrawGlyph(fontProvider, codepoint, currentX, baselineY, color);
             currentX += advance;
             totalWidth += advance;
         }
@@ -200,16 +204,11 @@ public static class GlyphRenderHelper
     }
 
 
-    public static float MeasureString(StringBuilder sb)
+    public static float MeasureString(UniTextFontProvider fontProvider, StringBuilder sb)
     {
-        if (sb == null || sb.Length == 0)
+        if (sb == null || sb.Length == 0 || fontProvider == null)
             return 0f;
 
-        var fontAsset = UniTextMeshGenerator.currentFont;
-        if (fontAsset == null)
-            return 0f;
-
-        var scale = UniTextMeshGenerator.scale;
         var totalWidth = 0f;
         var len = sb.Length;
 
@@ -223,8 +222,13 @@ public static class GlyphRenderHelper
                 i++;
             }
 
-            var glyph = GetGlyph(fontAsset, codepoint);
-            if (glyph != null) totalWidth += glyph.metrics.horizontalAdvance * scale;
+            var glyph = GetGlyph(fontProvider, codepoint, out var font);
+            if (glyph != null)
+            {
+                var pointSize = font.FaceInfo.pointSize;
+                var scale = pointSize > 0 ? fontProvider.FontSize / pointSize : 1f;
+                totalWidth += glyph.metrics.horizontalAdvance * scale;
+            }
         }
 
         return totalWidth;
@@ -232,13 +236,14 @@ public static class GlyphRenderHelper
 
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static Glyph GetGlyph(UniTextFont font, uint codepoint)
+    private static Glyph GetGlyph(UniTextFontProvider fontProvider, uint codepoint, out UniTextFont font)
     {
+        var fontId = fontProvider.FindFontForCodepoint((int)codepoint, 0);
+        font = fontProvider.GetFontAsset(fontId);
+
         var charTable = font.CharacterLookupTable;
         if (charTable != null && charTable.TryGetValue(codepoint, out var character) && character?.glyph != null)
             return character.glyph;
-
-        if (font.TryAddCharacter(codepoint, out var addedChar) && addedChar?.glyph != null) return addedChar.glyph;
 
         return null;
     }

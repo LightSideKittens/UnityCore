@@ -52,10 +52,27 @@ public class UniTextFont : ScriptableObject
     private bool tempFileCreated;
 
     private int cachedFaceIndex = -1;
+    private int cachedInstanceId = -1;
 
     private static int currentlyLoadedFontInstanceId = 0;
 
     #endregion
+
+    public int CachedInstanceId
+    {
+        get
+        {
+            if (cachedInstanceId < 0)
+                cachedInstanceId = GetInstanceID();
+            return cachedInstanceId;
+        }
+    }
+
+    public void EnsureInstanceIdCached()
+    {
+        if (cachedInstanceId < 0)
+            cachedInstanceId = GetInstanceID();
+    }
 
     #region Properties
 
@@ -64,8 +81,7 @@ public class UniTextFont : ScriptableObject
     public float ItalicStyle => italicStyle;
 
     public int FontDataHash => fontDataHash;
-
-
+    
     public bool HasFontData => fontData != null && fontData.Length > 0;
 
 
@@ -176,9 +192,8 @@ public class UniTextFont : ScriptableObject
             var glyph = glyphTable[i];
             var index = glyph.index;
 
-            if (!glyphLookupDictionary.ContainsKey(index))
+            if (glyphLookupDictionary.TryAdd(index, glyph))
             {
-                glyphLookupDictionary.Add(index, glyph);
                 glyphIndexList.Add(index);
             }
         }
@@ -196,18 +211,14 @@ public class UniTextFont : ScriptableObject
             var character = characterTable[i];
             var unicode = character.unicode;
 
-            if (!characterLookupDictionary.ContainsKey(unicode))
+            if (characterLookupDictionary.TryAdd(unicode, character))
             {
-                characterLookupDictionary.Add(unicode, character);
-                character.Font = this;
-
                 if (glyphLookupDictionary.TryGetValue(character.glyphIndex, out var glyph))
                     character.glyph = glyph;
             }
         }
     }
-
-
+    
     private void AddSynthesizedCharacters()
     {
         var fontLoaded = LoadFontFace() == FontEngineError.Success;
@@ -241,15 +252,15 @@ public class UniTextFont : ScriptableObject
                 var glyphLoadFlags = GlyphLoadFlags.LOAD_NO_BITMAP;
                 if (FontEngine.TryGetGlyphWithUnicodeValue(cp, glyphLoadFlags, out glyph))
                 {
-                    var character = new UniTextCharacter(cp, this, glyph);
+                    var character = new UniTextCharacter(cp, glyph);
                     characterLookupDictionary.Add(cp, character);
                 }
 
                 return;
             }
 
-        glyph = new Glyph(0, new UnityEngine.TextCore.GlyphMetrics(0, 0, 0, 0, 0), GlyphRect.zero, 1.0f, 0);
-        var synthCharacter = new UniTextCharacter(cp, this, glyph);
+        glyph = new Glyph(0, new GlyphMetrics(0, 0, 0, 0, 0), GlyphRect.zero, 1.0f, 0);
+        var synthCharacter = new UniTextCharacter(cp, glyph);
         characterLookupDictionary.Add(cp, synthCharacter);
     }
 
@@ -300,12 +311,6 @@ public class UniTextFont : ScriptableObject
         return FontEngineError.Invalid_File;
     }
 
-
-    public void UnloadFontFace()
-    {
-    }
-
-
     private string GetOrCreateTempFontFile()
     {
         if (tempFileCreated && !string.IsNullOrEmpty(cachedTempFontPath))
@@ -339,78 +344,35 @@ public class UniTextFont : ScriptableObject
         }
     }
 
-
     private void OnDestroy()
     {
         if (tempFileCreated && !string.IsNullOrEmpty(cachedTempFontPath))
+        {
             try
             {
                 if (System.IO.File.Exists(cachedTempFontPath))
+                {
                     System.IO.File.Delete(cachedTempFontPath);
+                }
             }
-            catch
-            {
-            }
-    }
-
-    #endregion
-
-    #region Character Lookup
-
-    public bool HasCharacter(int codepoint)
-    {
-        if (characterLookupDictionary == null)
-            ReadFontAssetDefinition();
-
-        return characterLookupDictionary != null && characterLookupDictionary.ContainsKey((uint)codepoint);
-    }
-
-
-    public bool HasCharacter(uint unicode, bool tryAddCharacter = false)
-    {
-        if (characterLookupDictionary == null)
-            ReadFontAssetDefinition();
-
-        if (characterLookupDictionary.ContainsKey(unicode))
-            return true;
-
-        if (tryAddCharacter && atlasPopulationMode == UniTextAtlasPopulationMode.Dynamic)
-            if (TryAddCharacterInternal(unicode, out _))
-                return true;
-
-        return false;
-    }
-
-
-    public uint GetGlyphIndex(uint unicode)
-    {
-        if (characterLookupDictionary != null && characterLookupDictionary.TryGetValue(unicode, out var character))
-            return character.glyphIndex;
-
-        if (LoadFontFace() == FontEngineError.Success)
-            return UniTextFontEngine.GetGlyphIndex(unicode);
-
-        return 0;
+            catch { }
+        }
     }
 
     #endregion
 
     #region Dynamic Character Loading
 
-    public bool TryAddCharacter(uint unicode, out UniTextCharacter character)
+    public bool TryAddCharacter(uint unicode)
     {
-        character = null;
-
         if (atlasPopulationMode != UniTextAtlasPopulationMode.Dynamic)
             return false;
 
-        return TryAddCharacterInternal(unicode, out character);
+        return TryAddCharacterInternal(unicode);
     }
 
-    private bool TryAddCharacterInternal(uint unicode, out UniTextCharacter character)
+    private bool TryAddCharacterInternal(uint unicode)
     {
-        character = null;
-
         uint glyphIndex = 0;
 
         if (HasFontData) glyphIndex = HarfBuzzFontValidator.GetGlyphIndex(this, unicode);
@@ -443,15 +405,15 @@ public class UniTextFont : ScriptableObject
 
         if (characterLookupDictionary.ContainsKey(unicode))
         {
-            character = characterLookupDictionary[unicode];
             return true;
         }
 
+        UniTextCharacter character;
+        
         if (glyphLookupDictionary.TryGetValue(glyphIndex, out var existingGlyph))
         {
             character = new UniTextCharacter(unicode, glyphIndex)
             {
-                Font = this,
                 glyph = existingGlyph
             };
             characterTable.Add(character);
@@ -517,7 +479,6 @@ public class UniTextFont : ScriptableObject
 
         character = new UniTextCharacter(unicode, glyphIndex)
         {
-            Font = this,
             glyph = glyph
         };
         characterTable.Add(character);
@@ -569,7 +530,6 @@ public class UniTextFont : ScriptableObject
 
         character = new UniTextCharacter(unicode, glyphIndex)
         {
-            Font = this,
             glyph = glyph
         };
         characterTable.Add(character);
@@ -579,55 +539,6 @@ public class UniTextFont : ScriptableObject
 
         return true;
     }
-
-
-    public bool TryAddGlyphByIndex(uint glyphIndex)
-    {
-        if (atlasPopulationMode != UniTextAtlasPopulationMode.Dynamic)
-            return false;
-
-        if (glyphLookupDictionary == null)
-            ReadFontAssetDefinition();
-
-        if (glyphLookupDictionary.ContainsKey(glyphIndex))
-            return true;
-
-        if (LoadFontFace() != FontEngineError.Success)
-            return false;
-
-        return TryAddGlyphToAtlasByIndex(glyphIndex);
-    }
-
-
-    public int TryAddGlyphsByIndex(ReadOnlySpan<uint> glyphIndices)
-    {
-        if (atlasPopulationMode != UniTextAtlasPopulationMode.Dynamic)
-            return 0;
-
-        if (glyphLookupDictionary == null)
-            ReadFontAssetDefinition();
-
-        if (LoadFontFace() != FontEngineError.Success)
-            return 0;
-
-        var addedCount = 0;
-        for (var i = 0; i < glyphIndices.Length; i++)
-        {
-            var glyphIndex = glyphIndices[i];
-
-            if (glyphIndex == 0)
-                continue;
-
-            if (glyphLookupDictionary.ContainsKey(glyphIndex))
-                continue;
-
-            if (TryAddGlyphToAtlasByIndex(glyphIndex))
-                addedCount++;
-        }
-
-        return addedCount;
-    }
-
 
     public int TryAddGlyphsByIndex(List<uint> glyphIndices)
     {
@@ -785,49 +696,7 @@ public class UniTextFont : ScriptableObject
 
         return true;
     }
-
-
-    public bool TryAddCharacters(string characters, out string missingCharacters)
-    {
-        missingCharacters = "";
-
-        if (string.IsNullOrEmpty(characters) || atlasPopulationMode != UniTextAtlasPopulationMode.Dynamic)
-        {
-            missingCharacters = characters;
-            return false;
-        }
-
-        if (LoadFontFace() != FontEngineError.Success)
-        {
-            missingCharacters = characters;
-            return false;
-        }
-
-        var missing = new System.Text.StringBuilder();
-
-        for (var i = 0; i < characters.Length; i++)
-        {
-            uint unicode;
-            if (char.IsHighSurrogate(characters[i]) && i + 1 < characters.Length &&
-                char.IsLowSurrogate(characters[i + 1]))
-            {
-                unicode = (uint)char.ConvertToUtf32(characters[i], characters[i + 1]);
-                i++;
-            }
-            else
-            {
-                unicode = characters[i];
-            }
-
-            if (!characterLookupDictionary.ContainsKey(unicode))
-                if (!TryAddCharacterInternal(unicode, out _))
-                    missing.Append(char.ConvertFromUtf32((int)unicode));
-        }
-
-        missingCharacters = missing.ToString();
-        return missingCharacters.Length == 0;
-    }
-
+    
     #endregion
 
     #region Static Creation Methods
@@ -978,7 +847,6 @@ public class UniTextFont : ScriptableObject
                 faceInfo = FontEngine.GetFaceInfo();
     }
 
-
     public void UpdateFromSourceFont()
     {
         if (sourceFont == null) return;
@@ -1003,7 +871,7 @@ public class UniTextCharacter
     public uint unicode;
     public uint glyphIndex;
     [NonSerialized] public Glyph glyph;
-    [NonSerialized] public UniTextFont Font;
+    
     public UniTextCharacter()
     {
     }
@@ -1014,10 +882,9 @@ public class UniTextCharacter
         this.glyphIndex = glyphIndex;
     }
 
-    public UniTextCharacter(uint unicode, UniTextFont font, Glyph glyph)
+    public UniTextCharacter(uint unicode, Glyph glyph)
     {
         this.unicode = unicode;
-        this.Font = font;
         this.glyph = glyph;
         glyphIndex = glyph?.index ?? 0;
     }

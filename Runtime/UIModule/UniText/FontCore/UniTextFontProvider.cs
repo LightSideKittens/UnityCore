@@ -27,7 +27,6 @@ public sealed class UniTextFontProvider
         {
             fontSize = value;
             UpdateFontScale();
-            cachedFontId = -1;
         }
     }
     
@@ -107,55 +106,6 @@ public sealed class UniTextFontProvider
         var newId = nextFontId++;
         RegisterFontAsset(newId, font);
         return newId;
-    }
-
-    private int cachedFontId = -1;
-    private UniTextFont cachedFont;
-    private float cachedScale;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool TryGetGlyphInfo(int fontId, int codepoint, out uint glyphIndex, out float advance)
-    {
-        glyphIndex = 0;
-        advance = 0;
-
-        UniTextFont font;
-        float scale;
-
-        if (fontId == cachedFontId)
-        {
-            font = cachedFont;
-            scale = cachedScale;
-        }
-        else
-        {
-            font = fontId == 0 ? mainFont : fontAssets[fontId];
-
-            var pointSize = font.FaceInfo.pointSize;
-            scale = pointSize > 0 ? fontSize / pointSize : fontScale;
-
-            cachedFontId = fontId;
-            cachedFont = font;
-            cachedScale = scale;
-        }
-
-        var charLookup = font.CharacterLookupTable;
-        if (charLookup == null)
-            return false;
-
-        var unicode = (uint)codepoint;
-        if (!charLookup.TryGetValue(unicode, out var character) || character == null)
-            if (font.AtlasPopulationMode != UniTextAtlasPopulationMode.Dynamic ||
-                !font.TryAddCharacter(unicode, out character))
-                return false;
-
-        var glyph = character.glyph;
-        if (glyph == null)
-            return false;
-
-        glyphIndex = character.glyphIndex;
-        advance = glyph.metrics.horizontalAdvance * scale;
-        return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -298,5 +248,23 @@ public sealed class UniTextFontProvider
         if (glyphListPool.Count > 0)
             return glyphListPool.Pop();
         return new List<uint>(256);
+    }
+
+
+    /// <summary>
+    /// Ensures virtual codepoints are added to the correct font atlas (with fallback support).
+    /// Virtual codepoints (markers, ellipsis) may come from fallback fonts.
+    /// </summary>
+    public void EnsureCodepointsInAtlas(ReadOnlySpan<uint> codepoints)
+    {
+        if (codepoints.Length == 0) return;
+
+        for (var i = 0; i < codepoints.Length; i++)
+        {
+            var codepoint = codepoints[i];
+            var fontId = FindFontForCodepoint((int)codepoint, 0);
+            var font = GetFontAsset(fontId);
+            font?.TryAddCharacter(codepoint);
+        }
     }
 }

@@ -24,11 +24,9 @@ public enum OrderedMarkerStyle
 public class ListModifier : BaseModifier
 {
     private PooledList<ListItemInfo> instanceItems;
-    private bool instanceMarkersDrawnThisFrame;
     private UniTextFontProvider instanceFontProvider;
 
     [ThreadStatic] private static PooledList<ListItemInfo> items;
-    [ThreadStatic] private static bool markersDrawnThisFrame;
     [ThreadStatic] private static UniTextFontProvider fontProviderRef;
     [ThreadStatic] private static StringBuilder sharedBuilder;
 
@@ -52,14 +50,12 @@ public class ListModifier : BaseModifier
     protected override void Subscribe()
     {
         uniText.Rebuilding += OnRebuilding;
-        uniText.MeshGenerator.OnRebuildStart += OnRebuildStart;
         uniText.MeshGenerator.OnAfterGlyphsPerFont += OnAfterGlyphs;
     }
 
     protected override void Unsubscribe()
     {
         uniText.Rebuilding -= OnRebuilding;
-        uniText.MeshGenerator.OnRebuildStart -= OnRebuildStart;
         uniText.MeshGenerator.OnAfterGlyphsPerFont -= OnAfterGlyphs;
     }
 
@@ -80,19 +76,23 @@ public class ListModifier : BaseModifier
         var item = ParseParameter(start, end, parameter);
         items.Add(item);
         ApplyMargins(item);
+        CollectVirtualCodepoints(item);
+    }
+
+    private void CollectVirtualCodepoints(ListItemInfo item)
+    {
+        if (item.displayNumber < 0)
+        {
+            var marker = bulletMarkers[Math.Max(0, Math.Min(item.nestingLevel, bulletMarkers.Length - 1))];
+            for (var i = 0; i < marker.Length; i++)
+                buffers.virtualCodepoints.Add(marker[i]);
+        }
     }
 
     private void OnRebuilding()
     {
         items = instanceItems;
         fontProviderRef = instanceFontProvider;
-        markersDrawnThisFrame = instanceMarkersDrawnThisFrame;
-    }
-
-    private void OnRebuildStart()
-    {
-        markersDrawnThisFrame = false;
-        instanceMarkersDrawnThisFrame = false;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -123,7 +123,6 @@ public class ListModifier : BaseModifier
 
         var buf = buffers;
         var fontSize = buf.shapingFontSize > 0 ? buf.shapingFontSize : fontProviderRef.FontSize;
-        var scale = fontSize / fontAsset.FaceInfo.pointSize;
 
         sharedBuilder ??= new StringBuilder(32);
         sharedBuilder.Clear();
@@ -131,23 +130,24 @@ public class ListModifier : BaseModifier
         AppendOrderedNumber(sharedBuilder, item.displayNumber, orderedStyles[level]);
         sharedBuilder.Append('.');
 
-        return MeasureStringWithScale(sharedBuilder, fontAsset, scale) + markerToTextGap;
+        return MeasureStringWithHarfBuzz(sharedBuilder, fontAsset, fontSize, buf) + markerToTextGap;
     }
 
-    private static float MeasureStringWithScale(StringBuilder sb, UniTextFont font, float scale)
+    private static float MeasureStringWithHarfBuzz(StringBuilder sb, UniTextFont font, float fontSize, UniTextBuffers buf)
     {
         if (sb == null || sb.Length == 0) return 0f;
-        var charTable = font.CharacterLookupTable;
-        if (charTable == null) return 0f;
+        if (!font.HasFontData) return 0f;
+
         var totalWidth = 0f;
         var len = sb.Length;
         for (var i = 0; i < len; i++)
         {
             uint codepoint = sb[i];
-            if (charTable.TryGetValue(codepoint, out var ch) && ch?.glyph != null)
-                totalWidth += ch.glyph.metrics.horizontalAdvance * scale;
-            else if (font.TryAddCharacter(codepoint, out var addedCh) && addedCh?.glyph != null)
-                totalWidth += addedCh.glyph.metrics.horizontalAdvance * scale;
+            if (HarfBuzzFontValidator.TryGetGlyphInfo(font, codepoint, fontSize, out _, out var advance))
+            {
+                totalWidth += advance;
+                buf.virtualCodepoints.Add(codepoint);
+            }
         }
 
         return totalWidth;
@@ -169,9 +169,7 @@ public class ListModifier : BaseModifier
 
     private void OnAfterGlyphs()
     {
-        if (items == null || items.Count == 0 || markersDrawnThisFrame) return;
-        markersDrawnThisFrame = true;
-        instanceMarkersDrawnThisFrame = true;
+        if (items == null || items.Count == 0) return;
         for (var i = 0; i < items.Count; i++)
         {
             var item = items[i];
@@ -194,9 +192,9 @@ public class ListModifier : BaseModifier
 
         var markerX = isRtl
             ? firstGlyphX + GetLineWidth(item.start) * glyphScale + scaledGap
-            : firstGlyphX - GlyphRenderHelper.MeasureString(sharedBuilder) - scaledGap;
+            : firstGlyphX - GlyphRenderHelper.MeasureString(fontProviderRef, sharedBuilder) - scaledGap;
 
-        GlyphRenderHelper.DrawString(sharedBuilder, markerX, baselineY, UniTextMeshGenerator.currentDefaultColor);
+        GlyphRenderHelper.DrawString(fontProviderRef, sharedBuilder, markerX, baselineY, UniTextMeshGenerator.currentDefaultColor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -21,6 +21,9 @@ public sealed class UniTextShapingEngine : IShapingEngine
         var buffer = SharedPipelineComponents.ShapingOutputBuffer;
         float totalAdvance = 0;
 
+        var font = fontProvider.GetFontAsset(fontId);
+        var fontSize = fontProvider.FontSize;
+
         if (direction == TextDirection.RightToLeft)
         {
             var unicodeData = UnicodeData.Provider;
@@ -38,8 +41,11 @@ public sealed class UniTextShapingEngine : IShapingEngine
                         glyphCodepoint = mirrored;
                 }
 
-                fontProvider.TryGetGlyphInfo(fontId, glyphCodepoint, out var glyphIndex, out var advance);
+                uint glyphIndex;
+                float advance;
 
+                HarfBuzzFontValidator.TryGetGlyphInfo(font, (uint)glyphCodepoint, fontSize, out glyphIndex, out advance);
+                
                 buffer[length - 1 - i] = new ShapedGlyph
                 {
                     glyphId = (int)glyphIndex,
@@ -55,8 +61,12 @@ public sealed class UniTextShapingEngine : IShapingEngine
             for (var i = 0; i < length; i++)
             {
                 var codepoint = codepoints[i];
-                fontProvider.TryGetGlyphInfo(fontId, codepoint, out var glyphIndex, out var advance);
 
+                uint glyphIndex;
+                float advance;
+
+                HarfBuzzFontValidator.TryGetGlyphInfo(font, (uint)codepoint, fontSize, out glyphIndex, out advance);
+                
                 buffer[i] = new ShapedGlyph
                 {
                     glyphId = (int)glyphIndex,
