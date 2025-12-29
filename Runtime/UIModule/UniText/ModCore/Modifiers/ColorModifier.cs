@@ -45,7 +45,7 @@ public class ColorModifier : GlyphModifier<uint>
             return;
 
         var color = UnpackColor(packed);
-
+        color.a = gen.defaultColor.a;
         var baseIdx = gen.vertexCount - 4;
         var colors = gen.Colors;
 

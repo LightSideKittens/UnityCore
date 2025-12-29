@@ -84,7 +84,6 @@ public class UniTextMeshGenerator
     }
 
     public float FontSize { get; set; } = 36f;
-    public Color32 DefaultColor { get; set; } = new(255, 255, 255, 255);
     public bool HasGeneratedData => hasGeneratedData;
 
     public Vector3[] Vertices => instanceVertices.data;
@@ -357,7 +356,6 @@ public class UniTextMeshGenerator
         xScale = xScaleVal;
         offsetX = offX;
         offsetY = offY;
-        this.defaultColor = DefaultColor;
         this.font = font;
         vertexCount = instanceVertices.count;
         triangleCount = instanceTriangles.count;
@@ -365,7 +363,6 @@ public class UniTextMeshGenerator
         OnBeforeMesh?.Invoke();
 
         var glyphLookup = font.GlyphLookupTable;
-        var defaultColor = DefaultColor;
 
         buf.EnsureGlyphCacheCapacity(buf.shapedGlyphs.count);
         var glyphCache = buf.glyphDataCache;

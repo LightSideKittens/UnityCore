@@ -222,7 +222,7 @@ public partial class UniText
         var glyphs = textProcessor.PositionedGlyphs;
         if (glyphs.IsEmpty) return;
         meshGenerator.FontSize = effectiveFontSize;
-        meshGenerator.DefaultColor = color;
+        meshGenerator.defaultColor = color;
         meshGenerator.SetCanvasParametersCached(cached.lossyScale, cached.hasWorldCamera);
         meshGenerator.SetRectOffset(cached.rect);
         meshGenerator.SetHorizontalAlignment(horizontalAlignment);

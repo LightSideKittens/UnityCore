@@ -162,7 +162,8 @@ public abstract class BaseLineModifier : BaseModifier
             var glyphX = offsetX + glyph.x;
             var baselineY = offsetY - glyph.y;
             var glyphColor = ColorModifier.TryGetColor(cluster, out var customColor) ? customColor : defaultColor;
-
+            glyphColor.a = defaultColor.a;
+            
             float glyphWidth = 0;
             if (i + 1 < glyphCount)
             {
