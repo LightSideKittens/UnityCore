@@ -3,10 +3,7 @@ using System.Threading;
 using UnityEngine;
 using ThreadPriority = System.Threading.ThreadPriority;
 
-/// <summary>
-/// Thread pool with guaranteed thread affinity for UniText components.
-/// Same component is always processed by the same thread across all pipeline phases.
-/// </summary>
+
 public static class UniTextWorkerPool
 {
     private static readonly int ThreadCount = Math.Max(1, Environment.ProcessorCount - 1);
@@ -186,12 +183,7 @@ public static class UniTextWorkerPool
             }
         }
     }
-
-    /// <summary>
-    /// Execute action on all components in parallel.
-    /// Components are distributed to threads with fixed affinity:
-    /// component[i] always goes to thread (i % ThreadCount).
-    /// </summary>
+    
     public static void Execute(UniText[] components, int count, Action<UniText> action)
     {
         if (count == 0) return;
@@ -273,28 +265,5 @@ public static class UniTextWorkerPool
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// Get thread index for a component index.
-    /// Use this to ensure same thread affinity across phases.
-    /// </summary>
-    public static int GetThreadIndexForComponent(int componentIndex, int totalCount)
-    {
-        if (totalCount <= 1 || !IsParallelSupported) return 0;
-
-        var perThread = totalCount / ThreadCount;
-        var remainder = totalCount % ThreadCount;
-
-        var offset = 0;
-        for (var i = 0; i < ThreadCount; i++)
-        {
-            var threadCount = perThread + (i < remainder ? 1 : 0);
-            if (componentIndex < offset + threadCount)
-                return i;
-            offset += threadCount;
-        }
-
-        return ThreadCount - 1;
     }
 }

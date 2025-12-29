@@ -17,9 +17,6 @@ public class UniTextFontEditor : Editor
     private SerializedProperty atlasRenderModeProp;
     private SerializedProperty atlasTexturesProp;
     private SerializedProperty italicStyleProp;
-    
-    private bool showFaceInfo;
-    private bool showAtlasSettings = true;
 
     private void OnEnable()
     {
@@ -42,35 +39,66 @@ public class UniTextFontEditor : Editor
 
         var fontAsset = (UniTextFont)target;
 
-        EditorGUILayout.Space();
+        BeginSection("Source Font");
+        DrawSourceFontContent(fontAsset);
+        EndSection();
 
-        DrawSourceFontSection(fontAsset);
+        BeginSection("Font Data Status");
+        DrawFontDataStatusContent(fontAsset);
+        EndSection();
 
-        EditorGUILayout.Space();
-
-        DrawFontDataStatus(fontAsset);
-
-        EditorGUILayout.Space();
-
-        EditorGUILayout.PropertyField(faceInfoProp, true);
-
-        EditorGUILayout.Space();
-
+        BeginSection("Face Info");
+        DrawFlatProperties(faceInfoProp);
         EditorGUILayout.PropertyField(italicStyleProp);
+        EndSection();
 
-        DrawAtlasSettingsSection();
+        BeginSection("Atlas Settings");
+        EditorGUILayout.PropertyField(atlasWidthProp);
+        EditorGUILayout.PropertyField(atlasHeightProp);
+        EditorGUILayout.PropertyField(atlasPaddingProp);
+        EditorGUILayout.PropertyField(atlasRenderModeProp);
+        EndSection();
 
-        EditorGUILayout.Space();
-
-        DrawDynamicDataSection(fontAsset);
+        BeginSection("Dynamic Data");
+        DrawDynamicDataContent(fontAsset);
+        EndSection();
 
         serializedObject.ApplyModifiedProperties();
+
+        var style = new GUIStyle(EditorStyles.centeredGreyMiniLabel);
+        EditorGUILayout.LabelField("Made with ❤️ by Light Side", style);
+        EditorGUILayout.Space(-4);
     }
 
-    private void DrawSourceFontSection(UniTextFont uniTextFont)
+    private void BeginSection(string label)
     {
-        EditorGUILayout.LabelField("Source Font", EditorStyles.boldLabel);
+        EditorGUILayout.Space(4);
+        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+        EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
+    }
 
+    private void EndSection()
+    {
+        EditorGUILayout.EndVertical();
+    }
+
+    private void DrawFlatProperties(SerializedProperty property)
+    {
+        var iterator = property.Copy();
+        var endProperty = property.GetEndProperty();
+
+        iterator.NextVisible(true);
+
+        while (!SerializedProperty.EqualContents(iterator, endProperty))
+        {
+            EditorGUILayout.PropertyField(iterator, true);
+            if (!iterator.NextVisible(false))
+                break;
+        }
+    }
+
+    private void DrawSourceFontContent(UniTextFont uniTextFont)
+    {
         EditorGUI.BeginChangeCheck();
         EditorGUILayout.PropertyField(sourceFontProp, new GUIContent("Source Font File"));
         if (EditorGUI.EndChangeCheck())
@@ -109,23 +137,18 @@ public class UniTextFontEditor : Editor
         }
     }
 
-    private void DrawFontDataStatus(UniTextFont font)
+    private void DrawFontDataStatusContent(UniTextFont font)
     {
-        EditorGUILayout.LabelField("Font Data Status", EditorStyles.boldLabel);
+        var hasData = font.HasFontData;
+        var statusColor = hasData ? new Color(0.33f, 1f, 0.39f) : new Color(1f, 0.35f, 0.28f);
+        var statusText = hasData
+            ? $"✓ Font data loaded ({font.FontData.Length:N0} bytes)"
+            : "✗ No font data - TEXT WILL NOT RENDER!";
 
-        using (new EditorGUILayout.HorizontalScope())
-        {
-            var hasData = font.HasFontData;
-            var statusColor = hasData ? Color.green : Color.red;
-            var statusText = hasData
-                ? $"✓ Font data loaded ({font.FontData.Length:N0} bytes)"
-                : "✗ No font data - TEXT WILL NOT RENDER!";
+        var statusStyle = new GUIStyle(EditorStyles.label) { normal = { textColor = statusColor } };
+        EditorGUILayout.LabelField(statusText, statusStyle);
 
-            var style = new GUIStyle(EditorStyles.label) { normal = { textColor = statusColor } };
-            EditorGUILayout.LabelField(statusText, style);
-        }
-
-        if (font.HasFontData)
+        if (hasData)
         {
             EditorGUILayout.HelpBox(
                 "Raw font bytes are available for HarfBuzz shaping. " +
@@ -152,29 +175,8 @@ public class UniTextFontEditor : Editor
         }
     }
 
-    private void DrawAtlasSettingsSection()
+    private void DrawDynamicDataContent(UniTextFont font)
     {
-        showAtlasSettings = EditorGUILayout.Foldout(showAtlasSettings, "Atlas Settings", true);
-        if (showAtlasSettings)
-        {
-            EditorGUI.indentLevel++;
-            EditorGUILayout.PropertyField(atlasWidthProp);
-            EditorGUILayout.PropertyField(atlasHeightProp);
-            EditorGUILayout.PropertyField(atlasPaddingProp);
-            EditorGUILayout.PropertyField(atlasRenderModeProp);
-            EditorGUI.indentLevel--;
-        }
-    }
-
-    private bool showDynamicData;
-
-    private void DrawDynamicDataSection(UniTextFont font)
-    {
-        showDynamicData = EditorGUILayout.Foldout(showDynamicData, "Dynamic Data", true);
-        if (!showDynamicData) return;
-
-        EditorGUI.indentLevel++;
-
         var glyphTableProp = serializedObject.FindProperty("glyphTable");
         var characterTableProp = serializedObject.FindProperty("characterTable");
         var clearDynamicDataOnBuildProp = serializedObject.FindProperty("clearDynamicDataOnBuild");
@@ -183,10 +185,8 @@ public class UniTextFontEditor : Editor
         int charCount = characterTableProp?.arraySize ?? 0;
         int atlasCount = atlasTexturesProp?.arraySize ?? 0;
 
-        EditorGUILayout.LabelField("Statistics", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField($"Glyphs in atlas: {glyphCount}");
-        EditorGUILayout.LabelField($"Characters mapped: {charCount}");
-        EditorGUILayout.LabelField($"Atlas textures: {atlasCount}");
+        EditorGUILayout.LabelField("Statistics", EditorStyles.miniLabel);
+        EditorGUILayout.LabelField($"Glyphs: {glyphCount}  |  Characters: {charCount}  |  Atlas textures: {atlasCount}");
 
         if (font.AtlasTexture != null)
         {
@@ -205,7 +205,7 @@ public class UniTextFontEditor : Editor
         if (clearDynamicDataOnBuildProp != null)
         {
             EditorGUILayout.PropertyField(clearDynamicDataOnBuildProp,
-                new GUIContent("Clear Dynamic Data On Build",
+                new GUIContent("Clear On Build",
                     "When enabled, all dynamically generated glyphs and atlas data will be cleared before build. " +
                     "The atlas will regenerate at runtime as characters are needed. " +
                     "This significantly reduces build size."));
@@ -213,10 +213,7 @@ public class UniTextFontEditor : Editor
 
         EditorGUILayout.Space(5);
 
-        EditorGUILayout.BeginHorizontal();
-        GUILayout.Space(EditorGUI.indentLevel * 15);
-
-        GUI.backgroundColor = new Color(1f, 0.7f, 0.7f);
+        GUI.backgroundColor = new Color(1f, 0.47f, 0.47f);
         if (GUILayout.Button("Clear Dynamic Data", GUILayout.Height(25)))
         {
             if (EditorUtility.DisplayDialog("Clear Dynamic Data",
@@ -231,10 +228,6 @@ public class UniTextFontEditor : Editor
             }
         }
         GUI.backgroundColor = Color.white;
-
-        EditorGUILayout.EndHorizontal();
-
-        EditorGUI.indentLevel--;
     }
 
     private void ExtractFontBytes(UniTextFont uniTextFont, Font font)

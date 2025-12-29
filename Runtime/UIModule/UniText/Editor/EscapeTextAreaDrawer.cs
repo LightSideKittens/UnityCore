@@ -27,7 +27,6 @@ public sealed class EscapeTextAreaDrawer : PropertyDrawer
         var escapeEnabled = EditorPrefs.GetBool(prefKey, attr.ProcessEscapes);
         var displayValue = escapeEnabled ? ToDisplayString(storedValue) : storedValue;
 
-        // Count explicit line breaks only (standard TextArea approach)
         var lineCount = CountLines(displayValue);
         lineCount = Mathf.Clamp(lineCount, attr.MinLines, attr.MaxLines);
 
@@ -47,7 +46,6 @@ public sealed class EscapeTextAreaDrawer : PropertyDrawer
 
         EditorGUI.BeginProperty(position, label, property);
 
-        // TextArea rect (leave space for toggle)
         var textAreaRect = new Rect(
             position.x,
             position.y,
@@ -55,7 +53,6 @@ public sealed class EscapeTextAreaDrawer : PropertyDrawer
             position.height
         );
 
-        // Toggle centered vertically on the right
         var toggleRect = new Rect(
             position.xMax - ToggleWidth,
             position.y + (position.height - EditorGUIUtility.singleLineHeight) * 0.5f,
@@ -96,10 +93,7 @@ public sealed class EscapeTextAreaDrawer : PropertyDrawer
             if (c == '\n') count++;
         return count;
     }
-
-    /// <summary>
-    /// Converts stored string (with actual control chars) to display string (with escape sequences).
-    /// </summary>
+    
     private static string ToDisplayString(string stored)
     {
         if (string.IsNullOrEmpty(stored)) return stored;
@@ -128,10 +122,7 @@ public sealed class EscapeTextAreaDrawer : PropertyDrawer
         }
         return sb.ToString();
     }
-
-    /// <summary>
-    /// Converts display string (with escape sequences) to stored string (with actual control chars).
-    /// </summary>
+    
     private static string FromDisplayString(string display)
     {
         if (string.IsNullOrEmpty(display) || display.IndexOf('\\') < 0)

@@ -16,7 +16,7 @@ public static class LineRenderHelper
         if (gen == null || fontProvider == null)
             return;
 
-        var currentFont = gen.currentFont;
+        var currentFont = gen.font;
         if (currentFont == null)
             return;
 

@@ -24,7 +24,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         Direction = 1 << 5,
         Text = 1 << 6,
         Material = 1 << 7,
-        LayoutRebuild = Layout | FontSize | Alignment,
         FullRebuild = Text | Font | Direction,
         All = Color | Alignment | Layout | FontSize | FullRebuild
     }
@@ -384,8 +383,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     protected override void OnDisable()
     {
         base.OnDisable();
-        UnregisterDirty(this);
-        UnlistenConfigChanged();
         ClearAllRenderers();
         DeInit();
     }
@@ -398,6 +395,8 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     
     private void DeInit()
     {
+        UnlistenConfigChanged();
+        UnregisterDirty(this);
         attributeParser?.DeinitializeModifiers();
         attributeParser?.Release();
         ReleaseSubMeshStencilMaterials();

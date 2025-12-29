@@ -123,7 +123,7 @@ public abstract class BaseLineModifier : BaseModifier
         var gen = UniTextMeshGenerator.Current;
         if (gen == null) return;
 
-        var currentFont = gen.currentFont;
+        var currentFont = gen.font;
         if (currentFont == null) return;
 
         var fontProvider = uniText.FontProvider;
@@ -138,7 +138,7 @@ public abstract class BaseLineModifier : BaseModifier
         var scale = gen.scale;
         var offsetX = gen.offsetX;
         var offsetY = gen.offsetY;
-        var defaultColor = gen.currentDefaultColor;
+        var defaultColor = gen.defaultColor;
 
         var buf = buffers;
         var allGlyphs = buf.positionedGlyphs.data;

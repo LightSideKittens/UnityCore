@@ -810,6 +810,7 @@ public class UniTextFont : ScriptableObject
             currentlyLoadedFontInstanceId = 0;
 
         Debug.Log($"UniTextFontAsset [{name}]: Dynamic data cleared. Atlas will regenerate at runtime.");
+        Changed?.Invoke();
     }
 
     #endregion

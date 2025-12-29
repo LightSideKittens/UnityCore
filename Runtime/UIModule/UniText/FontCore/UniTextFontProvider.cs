@@ -61,10 +61,7 @@ public sealed class UniTextFontProvider
         var pointSize = mainFont.FaceInfo.pointSize;
         fontScale = pointSize > 0 ? fontSize / pointSize : 1f;
     }
-
-    /// <summary>
-    /// Get stable fontId from FontDataHash. Returns 0 for null fonts.
-    /// </summary>
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int GetFontId(UniTextFont font)
     {
@@ -231,11 +228,7 @@ public sealed class UniTextFontProvider
             return glyphListPool.Pop();
         return new List<uint>(256);
     }
-
-
-    /// <summary>
-    /// Ensures virtual codepoints are added to the correct font atlas (with fallback support).
-    /// </summary>
+    
     public void EnsureCodepointsInAtlas(ReadOnlySpan<uint> codepoints)
     {
         if (codepoints.Length == 0) return;

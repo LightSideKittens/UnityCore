@@ -824,7 +824,7 @@ public class EllipsisModifier : BaseModifier
 
                 var x = gen.offsetX + pg.x;
                 var y = gen.offsetY - pg.y;
-                GlyphRenderHelper.DrawString(fontProvider, EllipsisText, x, y, gen.currentDefaultColor);
+                GlyphRenderHelper.DrawString(fontProvider, EllipsisText, x, y, gen.defaultColor);
                 return;
             }
         }

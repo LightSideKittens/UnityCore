@@ -52,10 +52,7 @@ public static class UniTextPoolStats
         UniTextArrayPool<Vector2>.LogStats();
         UniTextArrayPool<Color32>.LogStats();
     }
-
-    /// <summary>
-    /// Log only pools with active leaks (rents > returns).
-    /// </summary>
+    
     public static void LogLeaks()
     {
         Debug.Log("=== UniText Pool Leak Check ===");
@@ -374,11 +371,7 @@ public struct PooledBuffer<T>
         if (Capacity < required)
             Grow(required);
     }
-
-    /// <summary>
-    /// Ensure capacity and reset count to 0. Uses direct allocation (no pooling).
-    /// Safe for cross-thread use where buffer lives longer than a single operation.
-    /// </summary>
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureCapacityAndClear(int required)
     {
@@ -400,10 +393,7 @@ public struct PooledBuffer<T>
         }
         data = newData;
     }
-
-    /// <summary>
-    /// Grow using direct allocation without pooling.
-    /// </summary>
+    
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void GrowDirect(int required)
     {
@@ -436,6 +426,14 @@ public struct PooledBuffer<T>
         count--;
         if (index < count)
             Array.Copy(data, index + 1, data, index, count - index);
+    }
+    
+    public void SwapRemoveAt(int index)
+    {
+        count--;
+        if (index < count)
+            data[index] = data[count];
+        data[count] = default;
     }
 
     public void Sort(Comparison<T> comparison)

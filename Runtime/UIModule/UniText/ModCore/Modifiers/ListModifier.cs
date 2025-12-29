@@ -194,7 +194,7 @@ public class ListModifier : BaseModifier
             ? firstGlyphX + GetLineWidth(item.start) * glyphScale + scaledGap
             : firstGlyphX - GlyphRenderHelper.MeasureString(fontProviderRef, sharedBuilder) - scaledGap;
 
-        GlyphRenderHelper.DrawString(fontProviderRef, sharedBuilder, markerX, baselineY, UniTextMeshGenerator.Current.currentDefaultColor);
+        GlyphRenderHelper.DrawString(fontProviderRef, sharedBuilder, markerX, baselineY, UniTextMeshGenerator.Current.defaultColor);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

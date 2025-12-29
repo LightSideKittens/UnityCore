@@ -6,11 +6,7 @@ using UnityEngine.Profiling;
 public partial class UniText
 {
     #region Cached Data for Parallel
-
-    /// <summary>
-    /// Cached Unity object data for thread-safe parallel access.
-    /// Must be populated on main thread before parallel execution.
-    /// </summary>
+    
     public struct CachedTransformData
     {
         public Rect rect;
@@ -19,10 +15,7 @@ public partial class UniText
     }
 
     public CachedTransformData cachedTransformData;
-
-    /// <summary>
-    /// Cache Unity object data on main thread for parallel access.
-    /// </summary>
+    
     private void PrepareForParallel()
     {
         cachedTransformData = new CachedTransformData
@@ -37,8 +30,7 @@ public partial class UniText
 
     #region Static Batch Processing
 
-    private static UniText[] componentsBuffer = new UniText[64];
-    private static int componentsCount;
+    private static PooledBuffer<UniText> componentsBuffer;
     private static bool isSubscribed;
     private static bool useParallel;
 
@@ -50,6 +42,7 @@ public partial class UniText
         if (isSubscribed) return;
         Canvas.preWillRenderCanvases += OnPreWillRenderCanvases;
         Canvas.willRenderCanvases += OnWillRenderCanvases;
+        componentsBuffer.EnsureCapacity(64);
         isSubscribed = true;
     }
 
@@ -57,26 +50,22 @@ public partial class UniText
     {
         EnsureSubscribed();
 
-        for (var i = 0; i < componentsCount; i++)
+        for (var i = 0; i < componentsBuffer.count; i++)
         {
             if (componentsBuffer[i] == component)
                 return;
         }
 
-        if (componentsCount >= componentsBuffer.Length)
-            Array.Resize(ref componentsBuffer, componentsBuffer.Length * 2);
-
-        componentsBuffer[componentsCount++] = component;
+        componentsBuffer.Add(component);
     }
 
     private static void UnregisterDirty(UniText component)
     {
-        for (var i = 0; i < componentsCount; i++)
+        for (var i = 0; i < componentsBuffer.count; i++)
         {
             if (componentsBuffer[i] == component)
             {
-                componentsBuffer[i] = componentsBuffer[--componentsCount];
-                componentsBuffer[componentsCount] = null;
+                componentsBuffer.SwapRemoveAt(i);
                 return;
             }
         }
@@ -101,18 +90,14 @@ public partial class UniText
         }
     }
     
-    /// <summary>
-    /// Called BEFORE Layout phase.
-    /// Parallel FirstPass: Parse, BiDi, Script, Shaping.
-    /// </summary>
     private static void OnPreWillRenderCanvases()
     {
-        if (componentsCount == 0) return;
+        if (componentsBuffer.count == 0) return;
         if (!CanWork) return;
 
         Profiler.BeginSample("UniText.PreWillRender.FirstPass");
 
-        var count = componentsCount;
+        var count = componentsBuffer.count;
         var totalChars = 0;
 
         for (var i = 0; i < count; i++)
@@ -133,7 +118,7 @@ public partial class UniText
 
         if (useParallel)
         {
-            UniTextWorkerPool.Execute(componentsBuffer, count, static comp => comp.DoFirstPass());
+            UniTextWorkerPool.Execute(componentsBuffer.data, count, static comp => comp.DoFirstPass());
         }
         else
         {
@@ -145,20 +130,15 @@ public partial class UniText
 
         Profiler.EndSample();
     }
-
     
-    /// <summary>
-    /// Called AFTER Layout phase (ILayoutElement already used ready data).
-    /// Rasterization (main thread), Mesh generation (parallel), Apply (main thread).
-    /// </summary>
     private static void OnWillRenderCanvases()
     {
-        if (componentsCount == 0) return;
+        if (componentsBuffer.count == 0) return;
         if (!CanWork) return;
 
         Profiler.BeginSample("UniText.WillRender.MeshGeneration");
 
-        var count = componentsCount;
+        var count = componentsBuffer.count;
 
         Profiler.BeginSample("Rasterization");
         for (var i = 0; i < count; i++)
@@ -171,7 +151,7 @@ public partial class UniText
         Profiler.BeginSample("MeshDataGeneration");
         if (useParallel)
         {
-            UniTextWorkerPool.Execute(componentsBuffer, count, static comp => comp.DoGenerateMeshData());
+            UniTextWorkerPool.Execute(componentsBuffer.data, count, static comp => comp.DoGenerateMeshData());
         }
         else
         {
@@ -183,7 +163,7 @@ public partial class UniText
         Profiler.EndSample();
 
         Profiler.BeginSample("ApplyMeshes");
-        
+
         for (var i = 0; i < count; i++)
         {
             componentsBuffer[i].DoApplyMesh();
@@ -191,12 +171,7 @@ public partial class UniText
 
         Profiler.EndSample();
 
-        for (var i = 0; i < count; i++)
-        {
-            componentsBuffer[i] = null;
-        }
-
-        componentsCount = 0;
+        componentsBuffer.Clear();
 
         Profiler.EndSample();
     }
@@ -204,11 +179,7 @@ public partial class UniText
     #endregion
 
     #region Instance Batch Methods
-
-    /// <summary>
-    /// FirstPass: Parse, BiDi, Script analysis, Shaping.
-    /// Called in parallel from preWillRenderCanvases.
-    /// </summary>
+    
     private void DoFirstPass()
     {
         if (string.IsNullOrEmpty(text)) return;
@@ -222,21 +193,13 @@ public partial class UniText
         };
         textProcessor.EnsureFirstPass(textSpan, settings);
     }
-
-    /// <summary>
-    /// Rasterization: Add glyphs to font atlas.
-    /// Must be called on main thread (FontEngine requirement).
-    /// </summary>
+    
     private void DoEnsureGlyphsInAtlas()
     {
         if (textProcessor == null || !textProcessor.HasValidFirstPassData) return;
         textProcessor.EnsureGlyphsInAtlas();
     }
-
-    /// <summary>
-    /// Generate mesh data into instance buffers.
-    /// Can be called in parallel.
-    /// </summary>
+    
     private void DoGenerateMeshData()
     {
         if (textProcessor == null || !textProcessor.HasValidFirstPassData) return;
@@ -266,11 +229,7 @@ public partial class UniText
 
         meshGenerator.GenerateMeshDataOnly(glyphs);
     }
-
-    /// <summary>
-    /// Apply generated mesh data to Unity Mesh.
-    /// Must be called on main thread (Unity Mesh API requirement).
-    /// </summary>
+    
     private void DoApplyMesh()
     {
         if (meshGenerator == null || !meshGenerator.HasGeneratedData) return;

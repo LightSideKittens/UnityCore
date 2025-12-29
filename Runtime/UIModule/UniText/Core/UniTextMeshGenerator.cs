@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -19,9 +18,7 @@ public struct UniTextRenderData
     }
 }
 
-/// <summary>
-/// Info about a generated mesh segment (for deferred apply).
-/// </summary>
+
 public struct GeneratedMeshSegment
 {
     public int fontId;
@@ -40,19 +37,19 @@ public class UniTextMeshGenerator
     public static UniTextMeshGenerator Current => current;
 
     public int currentCluster;
-    public float currentX;
-    public float currentY;
-    public float currentWidth;
-    public float currentHeight;
-    public float currentBaselineY;
+    public float x;
+    public float y;
+    public float width;
+    public float height;
+    public float baselineY;
     public float scale;
     public float xScale;
-    public Color32 currentDefaultColor;
-    public UniTextFont currentFont;
+    public Color32 defaultColor;
+    public UniTextFont font;
     public float offsetX;
     public float offsetY;
-    public float currentRectWidth;
-    public HorizontalAlignment currentHorizontalAlignment;
+    public float rectWidth;
+    public HorizontalAlignment hAlignment;
     public int vertexCount;
     public int triangleCount;
 
@@ -128,11 +125,7 @@ public class UniTextMeshGenerator
         instanceTriangles.Return();
         hasGeneratedData = false;
     }
-
-    /// <summary>
-    /// Ensure buffers have capacity for additional vertices and triangles.
-    /// Call before writing mesh data from modifiers.
-    /// </summary>
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureCapacity(int additionalVertices, int additionalTriangles)
     {
@@ -180,10 +173,7 @@ public class UniTextMeshGenerator
     }
 
     #endregion
-
-    /// <summary>
-    /// Set canvas parameters from cached data (thread-safe).
-    /// </summary>
+    
     public void SetCanvasParametersCached(float lossyScale, bool hasWorldCamera)
     {
         this.lossyScale = lossyScale;
@@ -193,12 +183,12 @@ public class UniTextMeshGenerator
     public void SetRectOffset(Rect rect)
     {
         rectOffset = rect;
-        currentRectWidth = rect.width;
+        rectWidth = rect.width;
     }
 
     public void SetHorizontalAlignment(HorizontalAlignment alignment)
     {
-        currentHorizontalAlignment = alignment;
+        hAlignment = alignment;
     }
 
     private float CalculateXScale(float scale)
@@ -208,11 +198,7 @@ public class UniTextMeshGenerator
     }
 
     #region Parallel Mesh Generation
-
-    /// <summary>
-    /// Generate mesh data into instance buffers. Can be called from any thread.
-    /// Call ApplyMeshesToUnity() on main thread to apply to Unity Mesh objects.
-    /// </summary>
+    
     public void GenerateMeshDataOnly(ReadOnlySpan<PositionedGlyph> glyphs)
     {
         OnRebuildStart?.Invoke();
@@ -371,8 +357,8 @@ public class UniTextMeshGenerator
         xScale = xScaleVal;
         offsetX = offX;
         offsetY = offY;
-        currentDefaultColor = DefaultColor;
-        currentFont = font;
+        this.defaultColor = DefaultColor;
+        this.font = font;
         vertexCount = instanceVertices.count;
         triangleCount = instanceTriangles.count;
 
@@ -480,11 +466,11 @@ public class UniTextMeshGenerator
             tris[triangleCount + 5] = i0;
 
             currentCluster = cluster;
-            currentX = glyph.x;
-            currentY = glyph.y;
-            currentWidth = widthScaled;
-            currentHeight = heightScaled;
-            currentBaselineY = offY - glyph.y;
+            x = glyph.x;
+            y = glyph.y;
+            width = widthScaled;
+            height = heightScaled;
+            baselineY = offY - glyph.y;
 
             vertexCount += 4;
             triangleCount += 6;
@@ -502,10 +488,7 @@ public class UniTextMeshGenerator
         instanceTangents.count = vertexCount;
         instanceTriangles.count = triangleCount;
     }
-
-    /// <summary>
-    /// Apply generated mesh data to Unity Mesh objects. Must be called on main thread.
-    /// </summary>
+    
     public PooledList<UniTextRenderData> ApplyMeshesToUnity(Func<Mesh> meshProvider)
     {
         var resultBuffer = SharedPipelineComponents.MeshResultBuffer;

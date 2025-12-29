@@ -12,7 +12,7 @@ public static class GlyphRenderHelper
         if (gen == null || fontProvider == null)
             return 0f;
 
-        var currentFont = gen.currentFont;
+        var currentFont = gen.font;
         if (currentFont == null)
             return 0f;
 

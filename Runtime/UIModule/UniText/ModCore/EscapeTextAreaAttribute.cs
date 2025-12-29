@@ -1,10 +1,6 @@
 using System;
 using UnityEngine;
 
-/// <summary>
-/// TextArea attribute with optional escape sequence processing.
-/// Supports: \n, \r, \t, \\, \uXXXX (Unicode), \xXX (hex byte)
-/// </summary>
 [AttributeUsage(AttributeTargets.Field)]
 public sealed class EscapeTextAreaAttribute : PropertyAttribute
 {

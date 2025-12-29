@@ -33,7 +33,7 @@ public class ItalicModifier : GlyphModifier<byte>
         if (!buffer.HasFlag(cluster))
             return;
 
-        var italicStyle = gen.currentFont?.ItalicStyle ?? 12f;
+        var italicStyle = gen.font?.ItalicStyle ?? 12f;
         var shearValue = italicStyle * 0.01f;
 
         var baseIdx = gen.vertexCount - 4;
