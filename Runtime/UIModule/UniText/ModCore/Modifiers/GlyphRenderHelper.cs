@@ -19,7 +19,6 @@ public static class GlyphRenderHelper
         var glyph = GetGlyph(fontProvider, codepoint, out var glyphFont);
         if (glyph == null) return 0f;
 
-        // Only render if this glyph belongs to the current font being rendered
         if (glyphFont != currentFont)
             return glyph.metrics.horizontalAdvance * gen.scale;
 
@@ -29,7 +28,6 @@ public static class GlyphRenderHelper
         if (glyphRect.width == 0 || glyphRect.height == 0)
             return metrics.horizontalAdvance * gen.scale;
 
-        // Ensure buffer capacity before writing
         gen.EnsureCapacity(4, 6);
 
         var scale = gen.scale;

@@ -6,7 +6,6 @@ using UnityEngine;
 
 public sealed class UniTextFontProvider
 {
-    // fontId = FontDataHash (stable across sessions)
     private readonly FastIntDictionary<UniTextFont> fontAssets = new();
 
     private UniTextFonts fontsAsset;
@@ -51,7 +50,6 @@ public sealed class UniTextFontProvider
         this.mainFont = fonts.MainFont;
         this.fontSize = fontSize;
 
-        // Register main font with its FontDataHash as ID
         mainFontId = GetFontId(mainFont);
         RegisterFontAsset(mainFontId, mainFont);
 
@@ -74,7 +72,7 @@ public sealed class UniTextFontProvider
         var hash = font.FontDataHash;
         if (hash == 0 && font.HasFontData)
             hash = font.ComputeFontDataHash();
-        return hash != 0 ? hash : font.GetCachedInstanceId(); // Fallback to instanceId if no font data
+        return hash != 0 ? hash : font.GetCachedInstanceId();
     }
 
     public void RegisterFontAsset(int fontId, UniTextFont font)
@@ -92,7 +90,7 @@ public sealed class UniTextFontProvider
         if (fontAssets.TryGetValue(fontId, out var asset))
             return asset;
 
-        return mainFont; // Fallback
+        return mainFont;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -117,10 +115,8 @@ public sealed class UniTextFontProvider
 
     public int FindFontForCodepoint(int codepoint)
     {
-        // Check cache - fontIds are stable (FontDataHash), so cache is always valid
         if (SharedFontCache.TryGet(codepoint, mainFontId, out var cachedFontId))
         {
-            // Ensure font is registered in this provider
             if (cachedFontId == mainFontId || fontAssets.ContainsKey(cachedFontId))
                 return cachedFontId;
         }
@@ -173,7 +169,6 @@ public sealed class UniTextFontProvider
 
     public int GetFontDataHash(int fontId)
     {
-        // fontId IS the FontDataHash now
         return fontId;
     }
 

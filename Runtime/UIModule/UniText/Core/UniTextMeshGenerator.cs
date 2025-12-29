@@ -36,11 +36,9 @@ public struct GeneratedMeshSegment
 
 public class UniTextMeshGenerator
 {
-    // Current generator for this thread (set during generation)
     [ThreadStatic] private static UniTextMeshGenerator current;
     public static UniTextMeshGenerator Current => current;
 
-    // State for modifier callbacks (instance fields, accessed via Current)
     public int currentCluster;
     public float currentX;
     public float currentY;
@@ -60,7 +58,6 @@ public class UniTextMeshGenerator
 
     [ThreadStatic] private static FastIntDictionary<PooledList<int>> glyphsByAtlas;
 
-    // Instance buffers for parallel mesh generation
     private PooledBuffer<Vector3> instanceVertices;
     private PooledBuffer<Vector4> instanceUvs0;
     private PooledBuffer<Vector2> instanceUvs2;
@@ -93,7 +90,6 @@ public class UniTextMeshGenerator
     public Color32 DefaultColor { get; set; } = new(255, 255, 255, 255);
     public bool HasGeneratedData => hasGeneratedData;
 
-    // Direct access to instance buffer data
     public Vector3[] Vertices => instanceVertices.data;
     public Vector4[] Uvs0 => instanceUvs0.data;
     public Vector2[] Uvs2 => instanceUvs2.data;
@@ -116,13 +112,11 @@ public class UniTextMeshGenerator
         generatedSegments ??= new PooledList<GeneratedMeshSegment>(4);
         generatedSegments.FakeClear();
 
-        // Set current generator for this thread
         current = this;
     }
 
     public void ReturnInstanceBuffers()
     {
-        // Clear current generator
         current = null;
 
         instanceVertices.Return();
@@ -156,7 +150,7 @@ public class UniTextMeshGenerator
     private void GrowVertexBuffers(int required)
     {
         var newCapacity = Math.Max(required, instanceVertices.Capacity * 2);
-        var currentCount = vertexCount; // Use actual count, not buffer.count
+        var currentCount = vertexCount;
 
         GrowBuffer(ref instanceVertices, newCapacity, currentCount);
         GrowBuffer(ref instanceUvs0, newCapacity, currentCount);
@@ -170,7 +164,7 @@ public class UniTextMeshGenerator
     private void GrowTriangleBuffer(int required)
     {
         var newCapacity = Math.Max(required, instanceTriangles.Capacity * 2);
-        GrowBuffer(ref instanceTriangles, newCapacity, triangleCount); // Use actual count
+        GrowBuffer(ref instanceTriangles, newCapacity, triangleCount);
     }
 
     private static void GrowBuffer<T>(ref PooledBuffer<T> buffer, int newCapacity, int currentCount)
@@ -223,7 +217,6 @@ public class UniTextMeshGenerator
     {
         OnRebuildStart?.Invoke();
 
-        // Estimate buffer sizes (base glyphs only - modifiers grow buffers as needed)
         var glyphLen = glyphs.Length;
         var estimatedVertices = glyphLen * 4;
         var estimatedTriangles = glyphLen * 6;
@@ -251,6 +244,21 @@ public class UniTextMeshGenerator
                 lastList = list;
             }
             lastList.buffer.data[lastList.buffer.count++] = i;
+        }
+
+        var virtualCount = buf.virtualCodepoints.count;
+        if (virtualCount > 0)
+        {
+            for (var i = 0; i < virtualCount; i++)
+            {
+                var cp = buf.virtualCodepoints.data[i];
+                var vFontId = fontProvider.FindFontForCodepoint((int)cp);
+                if (!glyphsByFont.ContainsKey(vFontId))
+                {
+                    var list = SharedPipelineComponents.AcquireGlyphIndexList();
+                    glyphsByFont[vFontId] = list;
+                }
+            }
         }
 
         var positionedGlyphs = buf.positionedGlyphs.data;
@@ -359,14 +367,12 @@ public class UniTextMeshGenerator
         var offY = rectOffset.yMax;
         var xScaleVal = CalculateXScale(scaleVal);
 
-        // Set instance state for modifiers
         scale = scaleVal;
         xScale = xScaleVal;
         offsetX = offX;
         offsetY = offY;
         currentDefaultColor = DefaultColor;
         currentFont = font;
-        // Continue from current position (don't reset to 0 - would overwrite previous segments)
         vertexCount = instanceVertices.count;
         triangleCount = instanceTriangles.count;
 
@@ -438,7 +444,6 @@ public class UniTextMeshGenerator
             var i2 = vertexCount + 2;
             var i3 = vertexCount + 3;
 
-            // Access buffers via properties (not cached) - they may grow during OnGlyph callbacks
             var verts = Vertices;
             var uvData = Uvs0;
             var cols = Colors;
@@ -489,7 +494,6 @@ public class UniTextMeshGenerator
 
         OnAfterGlyphsPerFont?.Invoke();
 
-        // Update instance buffer counts (data already written via redirected pointers)
         instanceVertices.count = vertexCount;
         instanceUvs0.count = vertexCount;
         instanceUvs2.count = vertexCount;
@@ -526,12 +530,10 @@ public class UniTextMeshGenerator
                 mesh.SetUVs(1, instanceUvs2.data, segment.vertexStart, segment.vertexCount);
                 mesh.SetColors(instanceColors.data, segment.vertexStart, segment.vertexCount);
 
-                // Need to adjust triangle indices for this segment
                 var triStart = segment.triangleStart;
                 var triCount = segment.triangleCount;
                 var vertOffset = segment.vertexStart;
 
-                // Use pooled array to avoid allocation
                 var adjustedTris = UniTextArrayPool<int>.Rent(triCount);
                 for (var t = 0; t < triCount; t++)
                     adjustedTris[t] = instanceTriangles.data[triStart + t] - vertOffset;

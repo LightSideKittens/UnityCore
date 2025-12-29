@@ -62,15 +62,12 @@ public class EllipsisModifier : BaseModifier
 
     private void OnRectHeightChanged()
     {
-        // Вызываем SetDirty(Layout) только если Layout ещё не был запланирован
         if ((uniText.CurrentDirtyFlags & UniText.DirtyFlags.Layout) == 0)
             uniText.SetDirty(UniText.DirtyFlags.Layout);
     }
 
     private void OnDirtyFlagsChanged(UniText.DirtyFlags flags)
     {
-        // При изменении Alignment принудительно пересчитываем layout,
-        // но только если Layout ещё не был запланирован
         if ((flags & UniText.DirtyFlags.Alignment) != 0 &&
             (uniText.CurrentDirtyFlags & UniText.DirtyFlags.Layout) == 0)
         {
@@ -280,11 +277,9 @@ public class EllipsisModifier : BaseModifier
         if (glyphCount == 0)
             return;
 
-        // Конвертируем maxWidth в единицы шейпинга для корректного сравнения с line.width
         var glyphScale = buf.GetGlyphScale(uniText.CurrentFontSize);
         var maxWidthInShapingUnits = glyphScale > 0 ? maxWidth / glyphScale : maxWidth;
 
-        // ellipsisWidth измеряется в единицах отображения, конвертируем в единицы шейпинга
         var ellipsisWidthDisplay = MeasureEllipsisWidth();
         var ellipsisWidth = glyphScale > 0 ? ellipsisWidthDisplay / glyphScale : ellipsisWidthDisplay;
 

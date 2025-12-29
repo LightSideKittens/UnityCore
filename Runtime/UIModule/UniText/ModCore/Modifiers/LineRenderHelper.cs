@@ -24,11 +24,9 @@ public static class LineRenderHelper
         if (underscoreGlyph == null || underscoreGlyph.glyphRect.width == 0)
             return;
 
-        // Only render if underscore belongs to current font
         if (glyphFont != currentFont)
             return;
 
-        // Ensure buffer capacity before writing (12 vertices, 18 triangles for 3 quads)
         gen.EnsureCapacity(12, 18);
 
         var scale = gen.scale;

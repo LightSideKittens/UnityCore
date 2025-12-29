@@ -8,11 +8,9 @@ using Buffer = HarfBuzzSharp.Buffer;
 
 public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 {
-    // Shared font cache (thread-safe with lock) - fonts are expensive, share them
     private static readonly FastIntDictionary<HarfBuzzFontCache> fontCache = new();
     private static readonly object fontCacheLock = new();
 
-    // Per-thread working buffers
     [ThreadStatic] private static ShapedGlyph[] outputBuffer;
     [ThreadStatic] private static Stack<Buffer> bufferPool;
 

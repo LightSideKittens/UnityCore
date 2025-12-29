@@ -248,7 +248,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     public void SetDirty(DirtyFlags flags)
     {
         if (flags == DirtyFlags.None) return;
-
         dirtyFlags |= flags;
 
         if ((flags & DirtyFlags.Font) != 0)
@@ -558,7 +557,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     private void UpdateRendering()
     {
         Profiler.BeginSample("UniText.UpdateRendering");
-
+        
         canvasRenderer?.Clear();
 
         if (lastMeshPairs == null || lastMeshPairs.Count == 0)
@@ -614,7 +613,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     {
         base.RecalculateMasking();
         ReleaseSubMeshStencilMaterials();
-        SetVerticesDirty();
+        SetDirty(DirtyFlags.Material);
     }
 
     #endregion
@@ -769,7 +768,9 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
     #endregion
 
-    void ISerializationCallbackReceiver.OnBeforeSerialize() { }
+    void ISerializationCallbackReceiver.OnBeforeSerialize()
+    {
+    }
 
     void ISerializationCallbackReceiver.OnAfterDeserialize()
     {
@@ -778,7 +779,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         EditorApplication.update += OnUpdate;
 
         void OnUpdate()
-        { 
+        {
             if(this ==  null) return;
             EditorApplication.update -= OnUpdate;
             ReInitModifiers();

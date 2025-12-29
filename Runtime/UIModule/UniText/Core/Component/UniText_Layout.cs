@@ -20,7 +20,6 @@ public partial class UniText : ILayoutElement, ILayoutController
 
         cachedPreferredWidth = 0;
 
-        // FirstPass уже выполнен в preWillRenderCanvases (параллельно)
         if (!string.IsNullOrEmpty(text) && textProcessor != null && textProcessor.HasValidFirstPassData)
         {
             var effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
@@ -51,14 +50,10 @@ public partial class UniText : ILayoutElement, ILayoutController
             return;
         }
 
-        // Для AutoSize без WordWrap высота не должна ограничивать в preferred calculation,
-        // т.к. rect.height может быть устаревшим (flexible height в Layout Group)
         var height = (enableAutoSize && !enableWordWrap)
             ? TextProcessSettings.FloatMax
             : (rect.height > 0 ? rect.height : TextProcessSettings.FloatMax);
 
-        // Пропускаем перерасчёт если размеры не изменились
-        // Для AutoSize без WordWrap height всегда FloatMax, поэтому проверяем только width
         if (hasValidLayoutCache &&
             Mathf.Approximately(cachedLayoutWidth, rect.width) &&
             ((enableAutoSize && !enableWordWrap) || Mathf.Approximately(cachedLayoutHeight, height)))
@@ -74,7 +69,6 @@ public partial class UniText : ILayoutElement, ILayoutController
 
         textProcessor.EnsureLines(rect.width, cachedEffectiveFontSize, enableWordWrap);
 
-        // Кэшируем preferredHeight
         cachedPreferredHeight = (enableAutoSize && enableWordWrap)
             ? textProcessor.GetPreferredHeight(maxFontSize)
             : textProcessor.GetPreferredHeight(cachedEffectiveFontSize);
@@ -135,7 +129,6 @@ public partial class UniText : ILayoutElement, ILayoutController
         if (!enableAutoSize) return fontSize;
         if (enableWordWrap) return maxFontSize;
 
-        // Без word wrap — ищем размер по ширине И высоте
         var settings = new TextProcessSettings
         {
             MaxWidth = width,

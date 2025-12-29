@@ -42,7 +42,6 @@ public partial class UniText
     private static bool isSubscribed;
     private static bool useParallel;
 
-    // Heuristics for parallelism
     private const int ParallelCharacterThreshold = 500;
     private const int MinComponentsForParallel = 3;
 
@@ -58,14 +57,12 @@ public partial class UniText
     {
         EnsureSubscribed();
 
-        // Check if already registered
         for (var i = 0; i < componentsCount; i++)
         {
             if (componentsBuffer[i] == component)
                 return;
         }
 
-        // Grow buffer if needed
         if (componentsCount >= componentsBuffer.Length)
             Array.Resize(ref componentsBuffer, componentsBuffer.Length * 2);
 
@@ -78,7 +75,6 @@ public partial class UniText
         {
             if (componentsBuffer[i] == component)
             {
-                // Swap with last and shrink
                 componentsBuffer[i] = componentsBuffer[--componentsCount];
                 componentsBuffer[componentsCount] = null;
                 return;
@@ -119,7 +115,6 @@ public partial class UniText
         var count = componentsCount;
         var totalChars = 0;
 
-        // Prepare all components on main thread
         for (var i = 0; i < count; i++)
         {
             var comp = componentsBuffer[i];
@@ -136,7 +131,6 @@ public partial class UniText
                       count >= MinComponentsForParallel &&
                       UniTextWorkerPool.IsParallelSupported;
 
-        // Execute FirstPass (parallel or sequential)
         if (useParallel)
         {
             UniTextWorkerPool.Execute(componentsBuffer, count, static comp => comp.DoFirstPass());
@@ -166,7 +160,6 @@ public partial class UniText
 
         var count = componentsCount;
 
-        // Phase 1: Rasterization (main thread - FontEngine)
         Profiler.BeginSample("Rasterization");
         for (var i = 0; i < count; i++)
         {
@@ -175,7 +168,6 @@ public partial class UniText
         }
         Profiler.EndSample();
 
-        // Phase 2: Mesh data generation (parallel with same thread affinity as FirstPass)
         Profiler.BeginSample("MeshDataGeneration");
         if (useParallel)
         {
@@ -190,7 +182,6 @@ public partial class UniText
         }
         Profiler.EndSample();
 
-        // Phase 3: Apply meshes (main thread - Unity Mesh API)
         Profiler.BeginSample("ApplyMeshes");
         
         for (var i = 0; i < count; i++)
@@ -200,7 +191,6 @@ public partial class UniText
 
         Profiler.EndSample();
 
-        // Clear buffer
         for (var i = 0; i < count; i++)
         {
             componentsBuffer[i] = null;
@@ -252,17 +242,14 @@ public partial class UniText
         if (textProcessor == null || !textProcessor.HasValidFirstPassData) return;
         if (meshGenerator == null) return;
 
-        // Update modifier ThreadStatic buffers to point to this component's data
         Rebuilding?.Invoke();
 
-        // Use cached data (thread-safe)
         ref readonly var cached = ref cachedTransformData;
 
         var effectiveFontSize = enableAutoSize
             ? (cachedEffectiveFontSize > 0 ? cachedEffectiveFontSize : maxFontSize)
             : fontSize;
 
-        // EnsurePositions если ещё не сделано
         if (!textProcessor.HasValidPositionedGlyphs)
         {
             var settings = CreateProcessSettings(cached.rect, effectiveFontSize);
@@ -291,8 +278,7 @@ public partial class UniText
         ReleaseMeshes();
         lastMeshPairs = meshGenerator.ApplyMeshesToUnity(GetPooledMeshForText);
         meshGenerator.ReturnInstanceBuffers();
-
-        // Update last result metrics
+        
         if (textProcessor != null)
         {
             lastResultWidth = textProcessor.ResultWidth;
@@ -301,7 +287,6 @@ public partial class UniText
 
         UpdateRendering();
 
-        // Очищаем флаги после обработки
         dirtyFlags = DirtyFlags.None;
     }
 

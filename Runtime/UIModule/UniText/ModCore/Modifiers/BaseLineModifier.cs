@@ -20,7 +20,6 @@ public abstract class BaseLineModifier : BaseModifier
     private LineSegment[] lineSegments;
     private int lineSegmentsCapacity;
     private int lineSegmentCount;
-    private bool linesDrawnThisFrame;
 
 
     protected abstract string AttributeKey { get; }
@@ -37,15 +36,12 @@ public abstract class BaseLineModifier : BaseModifier
         lineSegments = UniTextArrayPool<LineSegment>.Rent(64);
         lineSegmentsCapacity = 64;
         lineSegmentCount = 0;
-        linesDrawnThisFrame = false;
     }
 
     protected sealed override void Subscribe()
     {
         uniText.Rebuilding += OnRebuilding;
-        var gen = uniText.MeshGenerator;
-        gen.OnRebuildStart += OnRebuildStart;
-        gen.OnAfterGlyphsPerFont += OnAfterGlyphs;
+        uniText.MeshGenerator.OnAfterGlyphsPerFont += OnAfterGlyphs;
     }
 
     protected sealed override void Unsubscribe()
@@ -53,10 +49,7 @@ public abstract class BaseLineModifier : BaseModifier
         uniText.Rebuilding -= OnRebuilding;
         var gen = uniText.MeshGenerator;
         if (gen != null)
-        {
-            gen.OnRebuildStart -= OnRebuildStart;
             gen.OnAfterGlyphsPerFont -= OnAfterGlyphs;
-        }
     }
 
     protected sealed override void ReleaseBuffers()
@@ -75,7 +68,6 @@ public abstract class BaseLineModifier : BaseModifier
     protected sealed override void ClearBuffers()
     {
         lineSegmentCount = 0;
-        linesDrawnThisFrame = false;
     }
 
     protected sealed override void OnApply(int start, int end, string parameter)
@@ -100,11 +92,6 @@ public abstract class BaseLineModifier : BaseModifier
     {
         flagsBuffer = buffers.GetAttributeArray<byte>(AttributeKey);
         SetStaticBuffer(flagsBuffer);
-    }
-
-    private void OnRebuildStart()
-    {
-        linesDrawnThisFrame = false;
     }
 
     private void AddSegment(float startX, float endX, float baselineY, Color32 color)
@@ -132,12 +119,17 @@ public abstract class BaseLineModifier : BaseModifier
     private void OnAfterGlyphs()
     {
         if (!isInitialized) return;
-        if (linesDrawnThisFrame) return;
-        linesDrawnThisFrame = true;
 
         var gen = UniTextMeshGenerator.Current;
-        var fontAsset = gen.currentFont;
-        if (fontAsset == null) return;
+        if (gen == null) return;
+
+        var currentFont = gen.currentFont;
+        if (currentFont == null) return;
+
+        var fontProvider = uniText.FontProvider;
+        var underscoreFontId = fontProvider.FindFontForCodepoint('_');
+        var underscoreFont = fontProvider.GetFontAsset(underscoreFontId);
+        if (underscoreFont != currentFont) return;
 
         if (!flagsBuffer.HasAnyFlags()) return;
 
@@ -250,9 +242,7 @@ public abstract class BaseLineModifier : BaseModifier
 
         if (lineSegmentCount == 0) return;
 
-        var lineOffset = GetLineOffset(fontAsset.FaceInfo, scale);
-
-        var fontProvider = uniText.FontProvider;
+        var lineOffset = GetLineOffset(currentFont.FaceInfo, scale);
         for (var i = 0; i < lineSegmentCount; i++)
         {
             ref var seg = ref lineSegments[i];

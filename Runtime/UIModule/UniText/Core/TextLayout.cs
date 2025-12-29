@@ -132,8 +132,6 @@ public sealed class TextLayout
                 var glyphStart = run.glyphStart;
                 var glyphLen = run.glyphCount;
 
-                Debug.Assert(glyphStart >= 0 && glyphStart + glyphLen <= glyphs.Length);
-
                 var fontId = run.fontId;
                 var glyphEnd = glyphStart + glyphLen;
 

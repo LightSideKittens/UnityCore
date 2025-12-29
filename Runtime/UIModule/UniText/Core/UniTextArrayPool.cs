@@ -32,14 +32,12 @@ public static class UniTextPoolStats
             Debug.Log($"[BidiEngine] ProcessInternal:{bidiProcessCallCount} BuildIsoRunSeq:{buildIsoRunSeqCallCount} BuildIsoRunSeqForParagraph:{buildIsoRunSeqForParagraphCallCount}");
         }
 
-        // Primitive types
         UniTextArrayPool<int>.LogStats();
         UniTextArrayPool<uint>.LogStats();
         UniTextArrayPool<byte>.LogStats();
         UniTextArrayPool<float>.LogStats();
         UniTextArrayPool<bool>.LogStats();
 
-        // Text processing types
         UniTextArrayPool<BidiParagraph>.LogStats();
         UniTextArrayPool<UnicodeScript>.LogStats();
         UniTextArrayPool<TextRun>.LogStats();
@@ -49,7 +47,6 @@ public static class UniTextPoolStats
         UniTextArrayPool<TextLine>.LogStats();
         UniTextArrayPool<PositionedGlyph>.LogStats();
 
-        // Mesh types
         UniTextArrayPool<Vector3>.LogStats();
         UniTextArrayPool<Vector4>.LogStats();
         UniTextArrayPool<Vector2>.LogStats();
@@ -89,34 +86,30 @@ public static class UniTextPoolStats
 
 public static class UniTextArrayPool<T>
 {
-    private const int BucketCount = 12;             // Supports up to 32 << 11 = 65536 elements
+    private const int BucketCount = 12;
     private const int MinBucketSize = 32;
-    private const int MaxArraysPerThreadLocal = 8;  // Small thread-local cache
-    private const int MaxArraysPerShared = 1024;    // Large shared pool for parallel scenarios
+    private const int MaxArraysPerThreadLocal = 8;
+    private const int MaxArraysPerShared = 1024;
 
-    // Thread-local fast path (no locking)
     [ThreadStatic] private static T[][] threadLocalArrays;
     [ThreadStatic] private static int[] threadLocalCounts;
 
-    // Shared pool for cross-thread returns (lock-free)
     private static readonly ConcurrentQueue<T[]>[] sharedBuckets;
-    private static readonly int[] sharedCounts;  // Approximate count to limit size
+    private static readonly int[] sharedCounts;
 
-    // Statistics (use Interlocked for thread-safety)
     public static int totalRents;
     public static int poolHits;
     public static int poolMisses;
     public static int sharedHits;
     public static int totalReturns;
-    public static int returnRejectedTooLarge;   // Array too large for pool (> 8192)
-    public static int returnRejectedWrongSize;  // Array size doesn't match bucket
-    public static int returnRejectedPoolFull;   // Shared pool full
+    public static int returnRejectedTooLarge;
+    public static int returnRejectedWrongSize;
+    public static int returnRejectedPoolFull;
 
-    // Leak tracking - cumulative counters (never reset)
     public static int cumulativeRents;
     public static int cumulativeReturns;
-    public static int cumulativeAllocations;  // new T[] calls
-    public static int largestRentRequested;   // Track largest array requested
+    public static int cumulativeAllocations;
+    public static int largestRentRequested;
 
     static UniTextArrayPool()
     {
@@ -137,7 +130,6 @@ public static class UniTextArrayPool<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T[] Rent(int minimumLength)
     {
-        // Track largest request for diagnostics
         int current;
         while ((current = largestRentRequested) < minimumLength)
             Interlocked.CompareExchange(ref largestRentRequested, minimumLength, current);
@@ -155,7 +147,6 @@ public static class UniTextArrayPool<T>
         Interlocked.Increment(ref cumulativeRents);
         var bucketSize = MinBucketSize << bucketIndex;
 
-        // Fast path: thread-local
         EnsureThreadLocalInitialized();
         if (threadLocalCounts[bucketIndex] > 0)
         {
@@ -166,7 +157,6 @@ public static class UniTextArrayPool<T>
             return arr;
         }
 
-        // Slow path: shared pool
         if (sharedBuckets[bucketIndex].TryDequeue(out var sharedArr))
         {
             Interlocked.Decrement(ref sharedCounts[bucketIndex]);
@@ -174,7 +164,6 @@ public static class UniTextArrayPool<T>
             return sharedArr;
         }
 
-        // Allocate new
         Interlocked.Increment(ref poolMisses);
         Interlocked.Increment(ref cumulativeAllocations);
         return new T[bucketSize];
@@ -203,7 +192,6 @@ public static class UniTextArrayPool<T>
 
         Interlocked.Increment(ref totalReturns);
 
-        // Fast path: thread-local (one slot per bucket)
         EnsureThreadLocalInitialized();
         if (threadLocalCounts[bucketIndex] == 0)
         {
@@ -212,7 +200,6 @@ public static class UniTextArrayPool<T>
             return;
         }
 
-        // Slow path: shared pool (with size limit)
         if (sharedCounts[bucketIndex] < MaxArraysPerShared)
         {
             sharedBuckets[bucketIndex].Enqueue(array);
@@ -244,14 +231,12 @@ public static class UniTextArrayPool<T>
 
     public static void Clear()
     {
-        // Clear thread-local
         if (threadLocalArrays != null)
         {
             Array.Clear(threadLocalArrays, 0, BucketCount);
             Array.Clear(threadLocalCounts, 0, BucketCount);
         }
 
-        // Clear shared buckets
         for (var i = 0; i < BucketCount; i++)
         {
             while (sharedBuckets[i].TryDequeue(out _)) { }
@@ -261,7 +246,6 @@ public static class UniTextArrayPool<T>
 
     public static void LogStats()
     {
-        // Atomically read and reset counters
         var rents = Interlocked.Exchange(ref totalRents, 0);
         var hits = Interlocked.Exchange(ref poolHits, 0);
         var shared = Interlocked.Exchange(ref sharedHits, 0);
@@ -273,7 +257,6 @@ public static class UniTextArrayPool<T>
 
         if (rents == 0 && misses == 0) return;
 
-        // Calculate current leak count (cumulative rents - cumulative returns)
         var activeRents = cumulativeRents - cumulativeReturns;
         var totalRejected = rejTooLarge + rejWrongSize + rejPoolFull;
 

@@ -10,7 +10,7 @@ using ThreadPriority = System.Threading.ThreadPriority;
 public static class UniTextWorkerPool
 {
     private static readonly int ThreadCount = Math.Max(1, Environment.ProcessorCount - 1);
-    private const int BarrierTimeoutMs = 5000; // 5 seconds timeout
+    private const int BarrierTimeoutMs = 5000;
 
     private static Thread[] workers;
     private static AutoResetEvent[] workReady;
@@ -18,11 +18,9 @@ public static class UniTextWorkerPool
     private static volatile bool isInitialized;
     private static volatile bool isShuttingDown;
 
-    // Editor domain reload handling
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     private static void OnDomainReload()
     {
-        // Force shutdown of any existing threads before domain reload
         ForceShutdown();
     }
 
@@ -41,10 +39,9 @@ public static class UniTextWorkerPool
             if (workers != null)
             {
                 for (var i = 0; i < workers.Length; i++)
-                    workers[i]?.Join(50); // Short timeout
+                    workers[i]?.Join(50);
             }
 
-            // Dispose resources
             if (workReady != null)
             {
                 for (var i = 0; i < workReady.Length; i++)
@@ -55,7 +52,6 @@ public static class UniTextWorkerPool
 
             try { barrier?.Dispose(); } catch { }
 
-            // Reset all state
             workers = null;
             workReady = null;
             barrier = null;
@@ -69,16 +65,13 @@ public static class UniTextWorkerPool
         }
     }
 
-    // Current work data (set before signaling workers)
     private static UniText[] currentComponents;
     private static int currentComponentCount;
     private static Action<UniText> currentAction;
 
-    // Per-thread component ranges (fixed distribution)
     private static int[] threadStartIndices;
     private static int[] threadEndIndices;
 
-    // Exception handling
     private static Exception[] threadExceptions;
     private static volatile int exceptionCount;
 
@@ -92,7 +85,7 @@ public static class UniTextWorkerPool
         {
             if (isInitialized || isShuttingDown) return;
 
-            isShuttingDown = false; // Ensure clean state
+            isShuttingDown = false;
 
             workers = new Thread[ThreadCount];
             workReady = new AutoResetEvent[ThreadCount];
@@ -126,11 +119,9 @@ public static class UniTextWorkerPool
 
         isShuttingDown = true;
 
-        // Wake up all workers to let them exit
         for (var i = 0; i < ThreadCount; i++)
             workReady[i].Set();
 
-        // Wait for workers to finish (with timeout)
         for (var i = 0; i < ThreadCount; i++)
             workers[i].Join(100);
 
@@ -205,10 +196,8 @@ public static class UniTextWorkerPool
     {
         if (count == 0) return;
 
-        // Fallback to sequential if shutting down or single component
         if (count == 1 || !IsParallelSupported || isShuttingDown)
         {
-            // Sequential fallback
             for (var i = 0; i < count; i++)
             {
                 var comp = components[i];
@@ -220,7 +209,6 @@ public static class UniTextWorkerPool
 
         EnsureInitialized();
 
-        // Double-check after initialization (might have failed due to shutdown)
         if (!isInitialized || isShuttingDown)
         {
             for (var i = 0; i < count; i++)
@@ -232,13 +220,11 @@ public static class UniTextWorkerPool
             return;
         }
 
-        // Setup work
         currentComponents = components;
         currentComponentCount = count;
         currentAction = action;
         exceptionCount = 0;
 
-        // Distribute components to threads (contiguous ranges for cache efficiency)
         var perThread = count / ThreadCount;
         var remainder = count % ThreadCount;
         var offset = 0;
@@ -252,19 +238,16 @@ public static class UniTextWorkerPool
             threadExceptions[i] = null;
         }
 
-        // Reset barrier and signal workers
         barrier.Reset(ThreadCount);
 
         for (var i = 0; i < ThreadCount; i++)
             workReady[i].Set();
 
-        // Wait for completion with polling to detect shutdown
         try
         {
             var localBarrier = barrier;
             if (localBarrier != null && !isShuttingDown)
             {
-                // Poll with short timeout to allow checking shutdown flag
                 const int pollIntervalMs = 10;
                 var elapsed = 0;
                 while (!localBarrier.Wait(pollIntervalMs) && !isShuttingDown && elapsed < BarrierTimeoutMs)
@@ -276,11 +259,9 @@ public static class UniTextWorkerPool
         catch (ObjectDisposedException) { }
         catch (InvalidOperationException) { }
 
-        // Clear references
         currentComponents = null;
         currentAction = null;
 
-        // Check for exceptions
         if (exceptionCount > 0)
         {
             for (var i = 0; i < ThreadCount; i++)
@@ -305,7 +286,6 @@ public static class UniTextWorkerPool
         var perThread = totalCount / ThreadCount;
         var remainder = totalCount % ThreadCount;
 
-        // Find which thread owns this index
         var offset = 0;
         for (var i = 0; i < ThreadCount; i++)
         {

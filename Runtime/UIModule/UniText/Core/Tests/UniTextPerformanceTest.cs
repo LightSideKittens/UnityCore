@@ -112,7 +112,6 @@ public class UniTextPerformanceTest : MonoBehaviour
         System.GC.WaitForPendingFinalizers();
         System.GC.Collect();
 
-        // Capture memory state BEFORE test
         var gcGen0Before = System.GC.CollectionCount(0);
         var gcGen1Before = System.GC.CollectionCount(1);
         var gcGen2Before = System.GC.CollectionCount(2);
@@ -191,7 +190,6 @@ public class UniTextPerformanceTest : MonoBehaviour
         totalStopwatch.Stop();
         totalTestTimeMs = (float)totalStopwatch.Elapsed.TotalMilliseconds;
 
-        // Capture memory state AFTER test
         totalAllocatedAfter = Profiler.GetTotalAllocatedMemoryLong();
         totalReservedAfter = Profiler.GetTotalReservedMemoryLong();
         monoHeapAfter = Profiler.GetMonoHeapSizeLong();
