@@ -94,6 +94,7 @@ public sealed class TextProcessor
     }
     
     public bool HasValidFirstPassData => hasValidFirstPassData;
+    public bool HasValidLinesData => hasValidLinesData;
     public bool HasValidPositionedGlyphs => hasValidPositionedGlyphs;
 
     public void InvalidateFirstPassData()

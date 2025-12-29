@@ -52,6 +52,7 @@ public class EllipsisModifier : BaseModifier
     protected override void Subscribe()
     {
         uniText.RectHeightChanged += OnRectHeightChanged;
+        uniText.DirtyFlagsChanged += OnDirtyFlagsChanged;
         uniText.TextProcessor.Shaped += OnShaped;
         uniText.TextProcessor.LayoutComplete += OnLayoutComplete;
         uniText.MeshGenerator.OnGlyph += OnGlyph;
@@ -61,12 +62,26 @@ public class EllipsisModifier : BaseModifier
 
     private void OnRectHeightChanged()
     {
-        uniText.SetDirty(UniText.DirtyFlags.Layout);
+        // Вызываем SetDirty(Layout) только если Layout ещё не был запланирован
+        if ((uniText.CurrentDirtyFlags & UniText.DirtyFlags.Layout) == 0)
+            uniText.SetDirty(UniText.DirtyFlags.Layout);
+    }
+
+    private void OnDirtyFlagsChanged(UniText.DirtyFlags flags)
+    {
+        // При изменении Alignment принудительно пересчитываем layout,
+        // но только если Layout ещё не был запланирован
+        if ((flags & UniText.DirtyFlags.Alignment) != 0 &&
+            (uniText.CurrentDirtyFlags & UniText.DirtyFlags.Layout) == 0)
+        {
+            uniText.SetDirty(UniText.DirtyFlags.Layout);
+        }
     }
 
     protected override void Unsubscribe()
     {
         uniText.RectHeightChanged -= OnRectHeightChanged;
+        uniText.DirtyFlagsChanged -= OnDirtyFlagsChanged;
         uniText.TextProcessor.Shaped -= OnShaped;
         uniText.TextProcessor.LayoutComplete -= OnLayoutComplete;
         uniText.MeshGenerator.OnGlyph -= OnGlyph;
@@ -265,7 +280,13 @@ public class EllipsisModifier : BaseModifier
         if (glyphCount == 0)
             return;
 
-        var ellipsisWidth = MeasureEllipsisWidth();
+        // Конвертируем maxWidth в единицы шейпинга для корректного сравнения с line.width
+        var glyphScale = buf.GetGlyphScale(uniText.CurrentFontSize);
+        var maxWidthInShapingUnits = glyphScale > 0 ? maxWidth / glyphScale : maxWidth;
+
+        // ellipsisWidth измеряется в единицах отображения, конвертируем в единицы шейпинга
+        var ellipsisWidthDisplay = MeasureEllipsisWidth();
+        var ellipsisWidth = glyphScale > 0 ? ellipsisWidthDisplay / glyphScale : ellipsisWidthDisplay;
 
         originalAdvances.EnsureCapacity(glyphCount);
         SaveOriginalAdvances(glyphs, glyphCount);
@@ -280,10 +301,10 @@ public class EllipsisModifier : BaseModifier
         for (var lineIdx = 0; lineIdx < lineCount; lineIdx++)
         {
             ref readonly var line = ref lines[lineIdx];
-            if (line.width <= maxWidth)
+            if (line.width <= maxWidthInShapingUnits)
                 continue;
 
-            var lineExcess = line.width - maxWidth;
+            var lineExcess = line.width - maxWidthInShapingUnits;
 
             var lineFirstGlyph = int.MaxValue;
             var lineLastGlyph = int.MinValue;

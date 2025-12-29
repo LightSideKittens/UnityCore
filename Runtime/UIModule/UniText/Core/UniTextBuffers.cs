@@ -152,6 +152,7 @@ public sealed class UniTextBuffers
         bidiLevels = UniTextArrayPool<byte>.Rent(codepointCapacity);
         scripts = UniTextArrayPool<UnicodeScript>.Rent(codepointCapacity);
         startMargins = UniTextArrayPool<float>.Rent(codepointCapacity);
+        startMargins.AsSpan().Clear(); // Очищаем сразу после рента - Reset() не сделает это при codepoints.count=0
         glyphDataCache = UniTextArrayPool<CachedGlyphData>.Rent(glyphCapacity);
 
         isRented = true;
@@ -316,7 +317,9 @@ public sealed class UniTextBuffers
         scripts = newScripts;
 
         var newMargins = UniTextArrayPool<float>.Rent(newSize);
-        startMargins.AsSpan(0, Math.Min(cpCount, startMargins.Length)).CopyTo(newMargins);
+        var copyCount = Math.Min(cpCount, startMargins.Length);
+        startMargins.AsSpan(0, copyCount).CopyTo(newMargins);
+        newMargins.AsSpan(copyCount).Clear(); // Очищаем остаток массива
         UniTextArrayPool<float>.Return(startMargins);
         startMargins = newMargins;
     }

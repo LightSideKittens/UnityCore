@@ -258,17 +258,19 @@ public partial class UniText
         // Use cached data (thread-safe)
         ref readonly var cached = ref cachedTransformData;
 
+        var effectiveFontSize = enableAutoSize
+            ? (cachedEffectiveFontSize > 0 ? cachedEffectiveFontSize : maxFontSize)
+            : fontSize;
+
         // EnsurePositions если ещё не сделано
         if (!textProcessor.HasValidPositionedGlyphs)
         {
-            var settings = CreateProcessSettings(cached.rect, cachedEffectiveFontSize);
+            var settings = CreateProcessSettings(cached.rect, effectiveFontSize);
             textProcessor.EnsurePositions(settings);
         }
 
         var glyphs = textProcessor.PositionedGlyphs;
         if (glyphs.IsEmpty) return;
-
-        var effectiveFontSize = enableAutoSize ? autoSizedFontSize : fontSize;
         meshGenerator.FontSize = effectiveFontSize;
         meshGenerator.DefaultColor = color;
         meshGenerator.SetCanvasParametersCached(cached.lossyScale, cached.hasWorldCamera);
@@ -298,6 +300,9 @@ public partial class UniText
         }
 
         UpdateRendering();
+
+        // Очищаем флаги после обработки
+        dirtyFlags = DirtyFlags.None;
     }
 
     #endregion

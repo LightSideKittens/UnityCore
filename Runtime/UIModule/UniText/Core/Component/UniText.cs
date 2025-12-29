@@ -55,11 +55,11 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     private UniTextBuffers buffers;
 
     private DirtyFlags dirtyFlags = DirtyFlags.All;
+    public DirtyFlags CurrentDirtyFlags => dirtyFlags;
     private bool textIsParsed;
 
     private float lastResultWidth;
     private float lastResultHeight;
-    private float autoSizedFontSize;
 
     private readonly List<CanvasRenderer> subMeshRenderers = new();
     private readonly List<Material> subMeshStencilMaterials = new();
@@ -75,6 +75,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
     public event Action Rebuilding;
     public event Action RectHeightChanged;
+    public event Action<DirtyFlags> DirtyFlagsChanged;
 
     #endregion
 
@@ -88,7 +89,9 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     public Vector2 LastResultSize => new(lastResultWidth, lastResultHeight);
     public ReadOnlySpan<PositionedGlyph> LastResultGlyphs => textProcessor != null ? textProcessor.PositionedGlyphs : ReadOnlySpan<PositionedGlyph>.Empty;
     public UniTextFont MainFont => fonts?.MainFont;
-    public float CurrentFontSize => enableAutoSize ? autoSizedFontSize : fontSize;
+    public float CurrentFontSize => enableAutoSize
+        ? (cachedEffectiveFontSize > 0 ? cachedEffectiveFontSize : maxFontSize)
+        : fontSize;
     public IReadOnlyList<ModRegister> ModRegisters => modRegisters;
 
     public string Text
@@ -280,6 +283,8 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         {
             LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
         }
+
+        DirtyFlagsChanged?.Invoke(flags);
     }
 
     #endregion
@@ -422,7 +427,9 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
             lastKnownWidth = width;
 
             var effectiveFontSize = enableAutoSize ? maxFontSize : fontSize;
-            if (textProcessor != null && textProcessor.CanReuseLines(width, effectiveFontSize, enableWordWrap))
+            var canReuse = textProcessor != null && textProcessor.CanReuseLines(width, effectiveFontSize, enableWordWrap);
+
+            if (canReuse)
             {
                 SetDirty(DirtyFlags.Alignment);
             }
