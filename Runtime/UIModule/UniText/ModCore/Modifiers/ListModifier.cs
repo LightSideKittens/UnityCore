@@ -159,8 +159,8 @@ public class ListModifier : BaseModifier
 
         var contentIndent = item.nestingLevel * indentPerLevel + MeasureMarkerWidthForLayout(item);
 
-        if (item.end > buf.startMargins.Length) buf.EnsureCodepointCapacity(item.end);
-        var margins = buf.startMargins;
+        if (item.end > buf.startMargins.Capacity) buf.EnsureCodepointCapacity(item.end);
+        var margins = buf.startMargins.data;
         var safeEnd = Math.Min(item.end, buf.codepoints.count);
         for (var i = item.start; i < safeEnd; i++)
             if (contentIndent > margins[i])
@@ -203,7 +203,7 @@ public class ListModifier : BaseModifier
         var dir = uniText.BaseDirection;
         if (dir == TextDirection.LeftToRight) return false;
         if (dir == TextDirection.RightToLeft) return true;
-        var levels = buffers.bidiLevels;
+        var levels = buffers.bidiLevels.data;
         return (uint)cluster < (uint)levels.Length && (levels[cluster] & 1) == 1;
     }
 
@@ -212,10 +212,10 @@ public class ListModifier : BaseModifier
         var buf = buffers;
         var gen = UniTextMeshGenerator.Current;
         for (var i = 0; i < buf.positionedGlyphs.count; i++)
-            if (buf.positionedGlyphs.data[i].cluster >= cluster)
+            if (buf.positionedGlyphs[i].cluster >= cluster)
             {
-                firstGlyphX = gen.offsetX + buf.positionedGlyphs.data[i].x;
-                return gen.offsetY - buf.positionedGlyphs.data[i].y;
+                firstGlyphX = gen.offsetX + buf.positionedGlyphs[i].x;
+                return gen.offsetY - buf.positionedGlyphs[i].y;
             }
 
         firstGlyphX = 0;
@@ -228,7 +228,7 @@ public class ListModifier : BaseModifier
         var buf = buffers;
         for (var i = 0; i < buf.lines.count; i++)
         {
-            ref readonly var line = ref buf.lines.data[i];
+            ref readonly var line = ref buf.lines[i];
             if (cluster >= line.range.start && cluster < line.range.start + line.range.length)
                 return line.width;
         }
@@ -306,6 +306,10 @@ public class ListModifier : BaseModifier
         }
     }
 
+    private static readonly int[] RomanValues = { 1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1 };
+    private static readonly string[] RomanLower = { "m", "cm", "d", "cd", "c", "xc", "l", "xl", "x", "ix", "v", "iv", "i" };
+    private static readonly string[] RomanUpper = { "M", "CM", "D", "CD", "C", "XC", "L", "XL", "X", "IX", "V", "IV", "I" };
+
     private static void AppendRoman(StringBuilder sb, int n, bool lower)
     {
         if (n <= 0 || n > 3999)
@@ -314,165 +318,13 @@ public class ListModifier : BaseModifier
             return;
         }
 
-        ReadOnlySpan<int> values = stackalloc int[] { 1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1 };
-        if (lower)
+        var symbols = lower ? RomanLower : RomanUpper;
+        for (var i = 0; i < RomanValues.Length; i++)
         {
-            while (n >= 1000)
+            while (n >= RomanValues[i])
             {
-                sb.Append('m');
-                n -= 1000;
-            }
-
-            if (n >= 900)
-            {
-                sb.Append("cm");
-                n -= 900;
-            }
-
-            if (n >= 500)
-            {
-                sb.Append('d');
-                n -= 500;
-            }
-
-            if (n >= 400)
-            {
-                sb.Append("cd");
-                n -= 400;
-            }
-
-            while (n >= 100)
-            {
-                sb.Append('c');
-                n -= 100;
-            }
-
-            if (n >= 90)
-            {
-                sb.Append("xc");
-                n -= 90;
-            }
-
-            if (n >= 50)
-            {
-                sb.Append('l');
-                n -= 50;
-            }
-
-            if (n >= 40)
-            {
-                sb.Append("xl");
-                n -= 40;
-            }
-
-            while (n >= 10)
-            {
-                sb.Append('x');
-                n -= 10;
-            }
-
-            if (n >= 9)
-            {
-                sb.Append("ix");
-                n -= 9;
-            }
-
-            if (n >= 5)
-            {
-                sb.Append('v');
-                n -= 5;
-            }
-
-            if (n >= 4)
-            {
-                sb.Append("iv");
-                n -= 4;
-            }
-
-            while (n >= 1)
-            {
-                sb.Append('i');
-                n -= 1;
-            }
-        }
-        else
-        {
-            while (n >= 1000)
-            {
-                sb.Append('M');
-                n -= 1000;
-            }
-
-            if (n >= 900)
-            {
-                sb.Append("CM");
-                n -= 900;
-            }
-
-            if (n >= 500)
-            {
-                sb.Append('D');
-                n -= 500;
-            }
-
-            if (n >= 400)
-            {
-                sb.Append("CD");
-                n -= 400;
-            }
-
-            while (n >= 100)
-            {
-                sb.Append('C');
-                n -= 100;
-            }
-
-            if (n >= 90)
-            {
-                sb.Append("XC");
-                n -= 90;
-            }
-
-            if (n >= 50)
-            {
-                sb.Append('L');
-                n -= 50;
-            }
-
-            if (n >= 40)
-            {
-                sb.Append("XL");
-                n -= 40;
-            }
-
-            while (n >= 10)
-            {
-                sb.Append('X');
-                n -= 10;
-            }
-
-            if (n >= 9)
-            {
-                sb.Append("IX");
-                n -= 9;
-            }
-
-            if (n >= 5)
-            {
-                sb.Append('V');
-                n -= 5;
-            }
-
-            if (n >= 4)
-            {
-                sb.Append("IV");
-                n -= 4;
-            }
-
-            while (n >= 1)
-            {
-                sb.Append('I');
-                n -= 1;
+                sb.Append(symbols[i]);
+                n -= RomanValues[i];
             }
         }
     }

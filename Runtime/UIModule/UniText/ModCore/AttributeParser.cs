@@ -234,7 +234,7 @@ public sealed class AttributeParser
             {
                 indexMap[i] = i - offset;
                 if (i < text.Length)
-                    cleanTextBuffer.data[cleanTextBuffer.count++] = text[i];
+                    cleanTextBuffer[cleanTextBuffer.count++] = text[i];
             }
         }
 

@@ -27,14 +27,14 @@ public sealed class UniTextBuffers
 
     public PooledBuffer<uint> virtualCodepoints;
 
-    public byte[] bidiLevels;
-    public UnicodeScript[] scripts;
-    public float[] startMargins;
+    public PooledBuffer<byte> bidiLevels;
+    public PooledBuffer<UnicodeScript> scripts;
+    public PooledBuffer<float> startMargins;
 
     public TextDirection baseDirection;
     public float shapingFontSize;
 
-    public CachedGlyphData[] glyphDataCache;
+    public PooledBuffer<CachedGlyphData> glyphDataCache;
     public bool hasValidGlyphCache;
 
     public bool isRented;
@@ -145,11 +145,11 @@ public sealed class UniTextBuffers
         positionedGlyphs.Rent(glyphCapacity);
         virtualCodepoints.Rent(MinCodepointCapacity);
 
-        bidiLevels = UniTextArrayPool<byte>.Rent(codepointCapacity);
-        scripts = UniTextArrayPool<UnicodeScript>.Rent(codepointCapacity);
-        startMargins = UniTextArrayPool<float>.Rent(codepointCapacity);
-        startMargins.AsSpan().Clear();
-        glyphDataCache = UniTextArrayPool<CachedGlyphData>.Rent(glyphCapacity);
+        bidiLevels.Rent(codepointCapacity);
+        scripts.Rent(codepointCapacity);
+        startMargins.Rent(codepointCapacity);
+        startMargins.Span.Clear();
+        glyphDataCache.Rent(glyphCapacity);
 
         isRented = true;
         Reset();
@@ -160,7 +160,7 @@ public sealed class UniTextBuffers
     {
         if (!isRented) return;
 
-        startMargins.AsSpan().Clear();
+        startMargins.Span.Clear();
         hasValidGlyphCache = false;
 
         codepoints.Return();
@@ -175,15 +175,10 @@ public sealed class UniTextBuffers
         positionedGlyphs.Return();
         virtualCodepoints.Return();
 
-        UniTextArrayPool<byte>.Return(bidiLevels);
-        UniTextArrayPool<UnicodeScript>.Return(scripts);
-        UniTextArrayPool<float>.Return(startMargins);
-        UniTextArrayPool<CachedGlyphData>.Return(glyphDataCache);
-
-        bidiLevels = null;
-        scripts = null;
-        startMargins = null;
-        glyphDataCache = null;
+        bidiLevels.Return();
+        scripts.Return();
+        startMargins.Return();
+        glyphDataCache.Return();
 
         ReturnAllAttributes();
 
@@ -194,8 +189,8 @@ public sealed class UniTextBuffers
     {
         var cpCount = codepoints.count;
 
-        if (startMargins != null && cpCount > 0)
-            startMargins.AsSpan(0, cpCount).Clear();
+        if (startMargins.Capacity > 0 && cpCount > 0)
+            startMargins.data.AsSpan(0, cpCount).Clear();
 
         ClearAllAttributes();
 
@@ -210,6 +205,9 @@ public sealed class UniTextBuffers
         orderedRuns.FakeClear();
         positionedGlyphs.FakeClear();
         virtualCodepoints.FakeClear();
+        bidiLevels.FakeClear();
+        scripts.FakeClear();
+        glyphDataCache.FakeClear();
 
         hasValidGlyphCache = false;
         baseDirection = TextDirection.LeftToRight;
@@ -222,102 +220,18 @@ public sealed class UniTextBuffers
             GrowCodepointBuffers(required);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureBidiCapacity(int required)
-    {
-        if (bidiLevels.Length < required)
-            Grow(ref bidiLevels, bidiLevels.Length, required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureBidiParagraphCapacity(int required)
-    {
-        bidiParagraphs.EnsureCapacity(required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureScriptCapacity(int required)
-    {
-        if (scripts.Length < required)
-            Grow(ref scripts, scripts.Length, required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureRunCapacity(int required)
-    {
-        runs.EnsureCapacity(required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureShapedRunCapacity(int required)
-    {
-        shapedRuns.EnsureCapacity(required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureShapedGlyphCapacity(int required)
-    {
-        shapedGlyphs.EnsureCapacity(required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureGlyphCacheCapacity(int required)
-    {
-        if (glyphDataCache == null || glyphDataCache.Length < required)
-            Grow(ref glyphDataCache, glyphDataCache?.Length ?? 0, required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureLineCapacity(int required)
-    {
-        lines.EnsureCapacity(required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureOrderedRunCapacity(int required)
-    {
-        orderedRuns.EnsureCapacity(required);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsurePositionedGlyphCapacity(int required)
-    {
-        positionedGlyphs.EnsureCapacity(required);
-    }
-
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private static void Grow<T>(ref T[] buffer, int count, int required)
-    {
-        var newSize = Math.Max(required, buffer.Length * 2);
-        var newBuffer = UniTextArrayPool<T>.Rent(newSize);
-        buffer.AsSpan(0, count).CopyTo(newBuffer);
-        UniTextArrayPool<T>.Return(buffer);
-        buffer = newBuffer;
-    }
-
     private void GrowCodepointBuffers(int required)
     {
         var newSize = Math.Max(required, codepoints.Capacity * 2);
-        var cpCount = codepoints.count;
 
         codepoints.EnsureCapacity(newSize);
+        bidiLevels.EnsureCapacity(newSize);
+        scripts.EnsureCapacity(newSize);
 
-        var newBidiLevels = UniTextArrayPool<byte>.Rent(newSize);
-        bidiLevels.AsSpan(0, Math.Min(cpCount, bidiLevels.Length)).CopyTo(newBidiLevels);
-        UniTextArrayPool<byte>.Return(bidiLevels);
-        bidiLevels = newBidiLevels;
-
-        var newScripts = UniTextArrayPool<UnicodeScript>.Rent(newSize);
-        scripts.AsSpan(0, Math.Min(cpCount, scripts.Length)).CopyTo(newScripts);
-        UniTextArrayPool<UnicodeScript>.Return(scripts);
-        scripts = newScripts;
-
-        var newMargins = UniTextArrayPool<float>.Rent(newSize);
-        var copyCount = Math.Min(cpCount, startMargins.Length);
-        startMargins.AsSpan(0, copyCount).CopyTo(newMargins);
-        newMargins.AsSpan(copyCount).Clear();
-        UniTextArrayPool<float>.Return(startMargins);
-        startMargins = newMargins;
+        var oldCapacity = startMargins.Capacity;
+        startMargins.EnsureCapacity(newSize);
+        if (startMargins.Capacity > oldCapacity)
+            startMargins.data.AsSpan(oldCapacity).Clear();
     }
 }
 
@@ -385,12 +299,9 @@ public static class SharedFontCache
 public static class SharedMeshPool
 {
     private static readonly List<Mesh> available = new(16);
-    private static bool initialized;
 
     public static Mesh Acquire(string name)
     {
-        EnsureInitialized();
-
         while (available.Count > 0)
         {
             var lastIndex = available.Count - 1;
@@ -410,49 +321,17 @@ public static class SharedMeshPool
         return newMesh;
     }
 
-    public static void Release(Mesh mesh)
-    {
-        if (mesh == null) return;
-        mesh.Clear();
-        available.Add(mesh);
-    }
-
     public static void Release(List<Mesh> meshes)
     {
         if (meshes == null) return;
 
         foreach (var mesh in meshes)
+        {
             if (mesh != null)
             {
                 mesh.Clear();
                 available.Add(mesh);
             }
-    }
-
-    public static void ClearUnused()
-    {
-        for (var i = available.Count - 1; i >= 0; i--)
-        {
-            var mesh = available[i];
-            if (mesh != null)
-                UnityEngine.Object.Destroy(mesh);
         }
-
-        available.Clear();
     }
-
-    public static int PoolSize => available.Count;
-
-    private static void EnsureInitialized()
-    {
-        if (initialized) return;
-        initialized = true;
-        SceneManager.sceneUnloaded += OnSceneUnloaded;
-    }
-
-    private static void OnSceneUnloaded(Scene scene)
-    {
-        ClearUnused();
-    }
-
 }

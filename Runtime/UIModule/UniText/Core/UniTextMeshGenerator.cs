@@ -228,7 +228,7 @@ public class UniTextMeshGenerator
                 }
                 lastList = list;
             }
-            lastList.buffer.data[lastList.buffer.count++] = i;
+            lastList.buffer[lastList.buffer.count++] = i;
         }
 
         var virtualCount = buf.virtualCodepoints.count;
@@ -236,7 +236,7 @@ public class UniTextMeshGenerator
         {
             for (var i = 0; i < virtualCount; i++)
             {
-                var cp = buf.virtualCodepoints.data[i];
+                var cp = buf.virtualCodepoints[i];
                 var vFontId = fontProvider.FindFontForCodepoint((int)cp);
                 if (!glyphsByFont.ContainsKey(vFontId))
                 {
@@ -295,7 +295,7 @@ public class UniTextMeshGenerator
                         atlasList.EnsureCapacity(count);
                         glyphsByAtlas[atlasIndex] = atlasList;
                     }
-                    atlasList.buffer.data[atlasList.buffer.count++] = glyphIndex;
+                    atlasList.buffer[atlasList.buffer.count++] = glyphIndex;
                 }
 
                 foreach (var atlasKvp in glyphsByAtlas)
@@ -364,8 +364,8 @@ public class UniTextMeshGenerator
 
         var glyphLookup = font.GlyphLookupTable;
 
-        buf.EnsureGlyphCacheCapacity(buf.shapedGlyphs.count);
-        var glyphCache = buf.glyphDataCache;
+        buf.glyphDataCache.EnsureCapacity(buf.shapedGlyphs.count);
+        var glyphCache = buf.glyphDataCache.data;
         var useCache = buf.hasValidGlyphCache;
 
         for (var i = 0; i < glyphCount; i++)
@@ -496,7 +496,7 @@ public class UniTextMeshGenerator
 
         for (var i = 0; i < generatedSegments.Count; i++)
         {
-            ref var segment = ref generatedSegments.buffer.data[i];
+            ref var segment = ref generatedSegments.buffer[i];
 
             var mesh = meshProvider();
             mesh.Clear();
@@ -516,7 +516,7 @@ public class UniTextMeshGenerator
 
                 var adjustedTris = UniTextArrayPool<int>.Rent(triCount);
                 for (var t = 0; t < triCount; t++)
-                    adjustedTris[t] = instanceTriangles.data[triStart + t] - vertOffset;
+                    adjustedTris[t] = instanceTriangles[triStart + t] - vertOffset;
 
                 mesh.SetTriangles(adjustedTris, 0, triCount, 0);
                 UniTextArrayPool<int>.Return(adjustedTris);

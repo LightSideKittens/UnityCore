@@ -277,7 +277,7 @@ public sealed class TextProcessor
 
         var codepoints = buf.codepoints.Span;
         var glyphs = buf.shapedGlyphs.Span;
-        var margins = buf.startMargins;
+        var margins = buf.startMargins.data;
 
         var maxWidth = 0f;
         var currentWidth = 0f;
@@ -338,7 +338,7 @@ public sealed class TextProcessor
             var currentLineWidth = 0f;
             var codepoints = buf.codepoints.Span;
             var glyphs = buf.shapedGlyphs.Span;
-            var margins = buf.startMargins;
+            var margins = buf.startMargins.data;
             var glyphIdx = 0;
             var lineStartIdx = 0;
 
@@ -511,7 +511,7 @@ public sealed class TextProcessor
     private void AnalyzeBidi(TextDirection requestedDirection)
     {
         var cpCount = buf.codepoints.count;
-        buf.EnsureBidiCapacity(cpCount);
+        buf.bidiLevels.EnsureCapacity(cpCount);
 
         var direction = requestedDirection switch
         {
@@ -520,22 +520,22 @@ public sealed class TextProcessor
             _ => BidiParagraphDirection.Auto
         };
 
-        var result = BidiEngine.ProcessPooled(buf.codepoints.data.AsSpan(0, cpCount), direction);
+        var result = BidiEngine.ProcessPooled(buf.codepoints.Span, direction);
 
         if (result.levels != null && result.levels.Length > 0)
         {
             var copyLen = Math.Min(result.levels.Length, cpCount);
-            result.levels.AsSpan(0, copyLen).CopyTo(buf.bidiLevels);
+            result.levels.AsSpan(0, copyLen).CopyTo(buf.bidiLevels.data);
         }
         else
         {
-            buf.bidiLevels.AsSpan(0, cpCount).Fill(0);
+            buf.bidiLevels.data.AsSpan(0, cpCount).Fill(0);
         }
 
         var paragraphCount = result.paragraphCount;
         if (paragraphCount > 0)
         {
-            buf.EnsureBidiParagraphCapacity(paragraphCount);
+            buf.bidiParagraphs.EnsureCapacity(paragraphCount);
             result.ParagraphsSpan.CopyTo(buf.bidiParagraphs.data);
         }
 
@@ -549,8 +549,8 @@ public sealed class TextProcessor
     private void AnalyzeScripts()
     {
         var cpCount = buf.codepoints.count;
-        buf.EnsureScriptCapacity(cpCount);
-        ScriptAnalyzer.Analyze(buf.codepoints.data.AsSpan(0, cpCount), buf.scripts);
+        buf.scripts.EnsureCapacity(cpCount);
+        ScriptAnalyzer.Analyze(buf.codepoints.Span, buf.scripts.data);
     }
 
     private void Itemize()
@@ -560,9 +560,9 @@ public sealed class TextProcessor
         var cpCount = buf.codepoints.count;
         if (cpCount == 0) return;
 
-        var cpSpan = buf.codepoints.data.AsSpan(0, cpCount);
-        var lvlSpan = buf.bidiLevels.AsSpan(0, cpCount);
-        var scrSpan = buf.scripts.AsSpan(0, cpCount);
+        var cpSpan = buf.codepoints.Span;
+        var lvlSpan = buf.bidiLevels.data.AsSpan(0, cpCount);
+        var scrSpan = buf.scripts.data.AsSpan(0, cpCount);
         var fp = fontProvider;
 
         if (fp == null)
@@ -642,7 +642,7 @@ public sealed class TextProcessor
     {
         var count = buf.runs.count;
         if (count >= buf.runs.Capacity)
-            buf.EnsureRunCapacity(count + 1);
+            buf.runs.EnsureCapacity(count + 1);
 
         buf.runs[count] = new TextRun
         {
@@ -661,7 +661,7 @@ public sealed class TextProcessor
 
         var cpCount = buf.codepoints.count;
         var runCnt = buf.runs.count;
-        var cp = buf.codepoints.data.AsSpan(0, cpCount);
+        var cp = buf.codepoints.Span;
         var runs = buf.runs;
 
         for (var i = 0; i < runCnt; i++)
@@ -698,7 +698,7 @@ public sealed class TextProcessor
         var count = buf.shapedGlyphs.count;
         var required = count + glyphs.Length;
         if (buf.shapedGlyphs.Capacity < required)
-            buf.EnsureShapedGlyphCapacity(required);
+            buf.shapedGlyphs.EnsureCapacity(required);
 
         glyphs.CopyTo(buf.shapedGlyphs.data.AsSpan(count));
         buf.shapedGlyphs.count = required;
@@ -709,7 +709,7 @@ public sealed class TextProcessor
     {
         var count = buf.shapedRuns.count;
         if (count >= buf.shapedRuns.Capacity)
-            buf.EnsureShapedRunCapacity(count + 1);
+            buf.shapedRuns.EnsureCapacity(count + 1);
 
         buf.shapedRuns[count] = run;
         buf.shapedRuns.count = count + 1;
@@ -843,7 +843,7 @@ public sealed class TextProcessor
             buf.bidiParagraphs.Span,
             ref linesArr, ref lineCnt,
             ref orderedRunsArr, ref orderedRunCnt,
-            buf.startMargins.AsSpan(0, buf.codepoints.count));
+            buf.startMargins.data.AsSpan(0, buf.codepoints.count));
 
         buf.lines.data = linesArr;
         buf.orderedRuns.data = orderedRunsArr;
@@ -856,7 +856,7 @@ public sealed class TextProcessor
     {
         UniTextDebug.BeginSample("TextProcessor.LayoutText");
         buf.positionedGlyphs.count = 0;
-        buf.EnsurePositionedGlyphCapacity(buf.shapedGlyphs.count);
+        buf.positionedGlyphs.EnsureCapacity(buf.shapedGlyphs.count);
 
         if (fontProvider != null)
         {

@@ -13,6 +13,8 @@ public abstract class BaseLineModifier : BaseModifier
         public Color32 color;
     }
 
+    // Max Y-difference between glyphs to consider them on the same line.
+    // Accounts for subscript/superscript variations while being much smaller than typical line height (20+px).
     private const float LineBreakThreshold = 5f;
 
     protected byte[] flagsBuffer;
@@ -182,7 +184,7 @@ public abstract class BaseLineModifier : BaseModifier
             {
                 var idx = glyph.shapedGlyphIndex;
 
-                if ((uint)idx < (uint)buf.shapedGlyphs.count && buf.glyphDataCache != null)
+                if ((uint)idx < (uint)buf.shapedGlyphs.count && buf.glyphDataCache.data != null)
                 {
                     ref var cached = ref buf.glyphDataCache[idx];
                     if (cached.isValid)

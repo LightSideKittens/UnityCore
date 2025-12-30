@@ -35,6 +35,7 @@ public class EllipsisModifier : BaseModifier
     private PooledBuffer<(int firstGlyph, int lastGlyph, int minCluster, int maxCluster)> rangeGlyphBoundsCache;
 
     private PooledBuffer<float> currentCpWidths;
+    private PooledBuffer<float> clusterWidthsBuffer;
     private PooledList<LineTruncation> lineTruncations;
 
     protected override void CreateBuffers()
@@ -44,6 +45,7 @@ public class EllipsisModifier : BaseModifier
         glyphToGlobalCluster.Rent(256);
         rangeGlyphBoundsCache.Rent(8);
         currentCpWidths.Rent(256);
+        clusterWidthsBuffer.Rent(256);
         lineTruncations = new PooledList<LineTruncation>(8);
         needsRestore = false;
         isProcessingRelayout = false;
@@ -94,6 +96,7 @@ public class EllipsisModifier : BaseModifier
         glyphToGlobalCluster.Return();
         rangeGlyphBoundsCache.Return();
         currentCpWidths.Return();
+        clusterWidthsBuffer.Return();
         lineTruncations?.Return();
         lineTruncations = null;
         needsRestore = false;
@@ -107,6 +110,7 @@ public class EllipsisModifier : BaseModifier
         glyphToGlobalCluster.FakeClear();
         rangeGlyphBoundsCache.FakeClear();
         currentCpWidths.FakeClear();
+        clusterWidthsBuffer.FakeClear();
         lineTruncations?.FakeClear();
         needsRestore = false;
         isProcessingRelayout = false;
@@ -208,30 +212,34 @@ public class EllipsisModifier : BaseModifier
         var clusterData = glyphToGlobalCluster.data;
         var boundsData = rangeGlyphBoundsCache.data;
 
+        // Initialize all ranges
         for (var r = 0; r < rangeCount; r++)
-        {
-            var range = ranges[r];
-            var firstGlyph = -1;
-            var lastGlyph = -1;
-            var minCluster = int.MaxValue;
-            var maxCluster = int.MinValue;
+            boundsData[r] = (-1, -1, int.MaxValue, int.MinValue);
 
-            for (var g = 0; g < glyphCount; g++)
+        // Single pass over glyphs
+        for (var g = 0; g < glyphCount; g++)
+        {
+            var cluster = clusterData[g];
+            for (var r = 0; r < rangeCount; r++)
             {
-                var cluster = clusterData[g];
+                var range = ranges[r];
                 if (cluster >= range.start && cluster < range.end)
                 {
-                    if (firstGlyph < 0) firstGlyph = g;
-                    lastGlyph = g;
-                    if (cluster < minCluster) minCluster = cluster;
-                    if (cluster > maxCluster) maxCluster = cluster;
+                    ref var bounds = ref boundsData[r];
+                    if (bounds.Item1 < 0) bounds.Item1 = g;
+                    bounds.Item2 = g;
+                    if (cluster < bounds.Item3) bounds.Item3 = cluster;
+                    if (cluster > bounds.Item4) bounds.Item4 = cluster;
                 }
             }
+        }
 
-            if (minCluster == int.MaxValue) minCluster = -1;
-            if (maxCluster == int.MinValue) maxCluster = -1;
-
-            boundsData[r] = (firstGlyph, lastGlyph, minCluster, maxCluster);
+        // Finalize
+        for (var r = 0; r < rangeCount; r++)
+        {
+            ref var bounds = ref boundsData[r];
+            if (bounds.Item3 == int.MaxValue) bounds.Item3 = -1;
+            if (bounds.Item4 == int.MinValue) bounds.Item4 = -1;
         }
 
         rangeGlyphBoundsCache.count = rangeCount;
@@ -368,9 +376,8 @@ public class EllipsisModifier : BaseModifier
                 var rangeWidthToRemove = lineWidthToRemove * (rangeWidth / lineRangeWidth);
 
                 var clusterCount = lineMaxCluster - lineMinCluster + 1;
-                Span<float> clusterWidths = clusterCount <= 256
-                    ? stackalloc float[clusterCount]
-                    : new float[clusterCount];
+                clusterWidthsBuffer.EnsureCapacity(clusterCount);
+                var clusterWidths = clusterWidthsBuffer.data.AsSpan(0, clusterCount);
                 clusterWidths.Clear();
                 BuildClusterWidths(lineRangeFirst, lineRangeLast, lineMinCluster, clusterWidths);
 
