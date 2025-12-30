@@ -1,8 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 public struct TextProcessSettings
 {
@@ -73,10 +71,6 @@ public sealed class TextProcessor
 
     private ReadOnlyMemory<char> lastText;
 
-    public static int processCallCount;
-    public static int ensureShapingCallCount;
-    public static int doFullShapingCallCount;
-
     public event Action Parsed;
     public event Action Shaped;
     public event Action LayoutComplete;
@@ -121,25 +115,25 @@ public sealed class TextProcessor
 
     public void EnsureFirstPass(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
-        Interlocked.Increment(ref ensureShapingCallCount);
+        UniTextDebug.Increment(ref UniTextDebug.TextProcessor_EnsureShapingCount);
 
         if (hasValidFirstPassData) return;
 
-        Profiler.BeginSample("TextProcessor.EnsureShaping");
+        UniTextDebug.BeginSample("TextProcessor.EnsureShaping");
 
         buf.Reset();
 
         if (text.IsEmpty)
         {
             hasValidFirstPassData = false;
-            Profiler.EndSample();
+            UniTextDebug.EndSample();
             return;
         }
 
         fontProvider.SetFontSize(settings.fontSize);
         DoFirstPass(text, settings);
 
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -167,9 +161,9 @@ public sealed class TextProcessor
         if (!hasValidFirstPassData) return;
         if (CanReuseLines(width, fontSize, wordWrap)) return;
 
-        Profiler.BeginSample("TextProcessor.EnsureLines");
+        UniTextDebug.BeginSample("TextProcessor.EnsureLines");
         EnsureLinesInternal(width, fontSize, wordWrap, buf.cpWidths.Span);
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
     
     public void EnsurePositions(TextProcessSettings settings)
@@ -177,7 +171,7 @@ public sealed class TextProcessor
         if (!hasValidLinesData) return;
         if (CanReusePositions(settings.MaxHeight, settings.HorizontalAlignment, settings.VerticalAlignment)) return;
 
-        Profiler.BeginSample("TextProcessor.EnsurePositions");
+        UniTextDebug.BeginSample("TextProcessor.EnsurePositions");
 
         lastSettings = settings;
         buf.positionedGlyphs.count = 0;
@@ -190,26 +184,26 @@ public sealed class TextProcessor
 
         LayoutComplete?.Invoke();
 
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
     
     private void DoFirstPass(ReadOnlySpan<char> text, TextProcessSettings settings)
     {
-        Interlocked.Increment(ref doFullShapingCallCount);
-        
+        UniTextDebug.Increment(ref UniTextDebug.TextProcessor_DoFullShapingCount);
+
         buf.shapingFontSize = settings.fontSize;
 
-        Profiler.BeginSample("TextProcessor.Parse");
+        UniTextDebug.BeginSample("TextProcessor.Parse");
         Parse(text);
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
-        Profiler.BeginSample("TextProcessor.ComputeBreakOpportunities");
+        UniTextDebug.BeginSample("TextProcessor.ComputeBreakOpportunities");
         ComputeBreakOpportunities();
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
-        Profiler.BeginSample("TextProcessor.Parsed?.Invoke()");
+        UniTextDebug.BeginSample("TextProcessor.Parsed?.Invoke()");
         Parsed?.Invoke();
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
         if (buf.codepoints.count == 0)
         {
@@ -219,29 +213,29 @@ public sealed class TextProcessor
             return;
         }
 
-        Profiler.BeginSample("TextProcessor.AnalyzeBidi");
+        UniTextDebug.BeginSample("TextProcessor.AnalyzeBidi");
         AnalyzeBidi(settings.baseDirection);
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
-        Profiler.BeginSample("TextProcessor.AnalyzeScripts");
+        UniTextDebug.BeginSample("TextProcessor.AnalyzeScripts");
         AnalyzeScripts();
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
-        Profiler.BeginSample("TextProcessor.Itemize");
+        UniTextDebug.BeginSample("TextProcessor.Itemize");
         Itemize();
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
-        Profiler.BeginSample("TextProcessor.Shape");
+        UniTextDebug.BeginSample("TextProcessor.Shape");
         Shape();
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
-        Profiler.BeginSample("TextProcessor.ComputeCpWidths");
+        UniTextDebug.BeginSample("TextProcessor.ComputeCpWidths");
         ComputeCpWidths();
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
-        Profiler.BeginSample("TextProcessor.Shaped?.Invoke()");
+        UniTextDebug.BeginSample("TextProcessor.Shaped?.Invoke()");
         Shaped?.Invoke();
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
         hasValidFirstPassData = true;
     }
@@ -830,7 +824,7 @@ public sealed class TextProcessor
 
     private void BreakLines(float maxWidth, ReadOnlySpan<float> cpWidths)
     {
-        Profiler.BeginSample("TextProcessor.BreakLines");
+        UniTextDebug.BeginSample("TextProcessor.BreakLines");
         buf.lines.count = 0;
         buf.orderedRuns.count = 0;
 
@@ -855,12 +849,12 @@ public sealed class TextProcessor
         buf.orderedRuns.data = orderedRunsArr;
         buf.lines.count = lineCnt;
         buf.orderedRuns.count = orderedRunCnt;
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
 
     private void LayoutText(TextProcessSettings settings)
     {
-        Profiler.BeginSample("TextProcessor.LayoutText");
+        UniTextDebug.BeginSample("TextProcessor.LayoutText");
         buf.positionedGlyphs.count = 0;
         buf.EnsurePositionedGlyphCapacity(buf.shapedGlyphs.count);
 
@@ -880,6 +874,6 @@ public sealed class TextProcessor
             buf.positionedGlyphs.data, ref glyphCnt,
             out resultWidth, out resultHeight);
         buf.positionedGlyphs.count = glyphCnt;
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
 }

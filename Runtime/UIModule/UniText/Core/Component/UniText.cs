@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Profiling;
 using UnityEngine.Rendering;
 
 
@@ -480,11 +479,11 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     
     private bool ValidateAndInitialize()
     {
-        Profiler.BeginSample("UniText.ValidateAndInitialize");
+        UniTextDebug.BeginSample("UniText.ValidateAndInitialize");
 
         if (!TryInitFontsAndAppearance())
         {
-            Profiler.EndSample();
+            UniTextDebug.EndSample();
             return false;
         }
 
@@ -504,7 +503,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
             textProcessor.SetFontProvider(fontProvider);
         }
 
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
         return true;
     }
 
@@ -528,13 +527,13 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     {
         if (!textIsParsed)
         {
-            Profiler.BeginSample("UniText.ParseAttributes");
+            UniTextDebug.BeginSample("UniText.ParseAttributes");
             attributeParser?.ResetModifiers();
             attributeParser?.Parse(text);
             textIsParsed = true;
-            Profiler.EndSample();
+            UniTextDebug.EndSample();
         }
-        
+
         return attributeParser != null ? attributeParser.CleanTextSpan : text.AsSpan();
     }
 
@@ -555,20 +554,20 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
     private void UpdateRendering()
     {
-        Profiler.BeginSample("UniText.UpdateRendering");
-        
+        UniTextDebug.BeginSample("UniText.UpdateRendering");
+
         canvasRenderer?.Clear();
 
         if (lastMeshPairs == null || lastMeshPairs.Count == 0)
         {
             ClearAllRenderers();
-            Profiler.EndSample();
+            UniTextDebug.EndSample();
             return;
         }
 
         UpdateSubMeshes();
 
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
 
     protected override void UpdateMaterial() { }
@@ -635,7 +634,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
     private void UpdateSubMeshes()
     {
-        Profiler.BeginSample("UniText.UpdateSubMeshes");
+        UniTextDebug.BeginSample("UniText.UpdateSubMeshes");
 
         var requiredCount = lastMeshPairs.Count;
         var existingCount = subMeshRenderers.Count;
@@ -668,7 +667,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
             else subMeshRenderers.Add(newR);
         }
 
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
 
     private void SetSubMeshRendererData(CanvasRenderer r, Mesh mesh, Material mat, Texture tex, int subMeshIndex)

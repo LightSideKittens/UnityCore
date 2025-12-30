@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 
 public partial class UniText
@@ -81,7 +80,7 @@ public partial class UniText
                 if (!UnicodeData.IsInitialized)
                 {
                     Debug.LogError("UniText: Unicode data not initialized.");
-                    Profiler.EndSample();
+                    UniTextDebug.EndSample();
                     return false;
                 }
             }
@@ -95,7 +94,7 @@ public partial class UniText
         if (componentsBuffer.count == 0) return;
         if (!CanWork) return;
 
-        Profiler.BeginSample("UniText.PreWillRender.FirstPass");
+        UniTextDebug.BeginSample("UniText.PreWillRender.FirstPass");
 
         var count = componentsBuffer.count;
         var totalChars = 0;
@@ -128,7 +127,7 @@ public partial class UniText
             }
         }
 
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
     
     private static void OnWillRenderCanvases()
@@ -136,19 +135,19 @@ public partial class UniText
         if (componentsBuffer.count == 0) return;
         if (!CanWork) return;
 
-        Profiler.BeginSample("UniText.WillRender.MeshGeneration");
+        UniTextDebug.BeginSample("UniText.WillRender.MeshGeneration");
 
         var count = componentsBuffer.count;
 
-        Profiler.BeginSample("Rasterization");
+        UniTextDebug.BeginSample("Rasterization");
         for (var i = 0; i < count; i++)
         {
             componentsBuffer[i].PrepareForParallel();
             componentsBuffer[i].DoEnsureGlyphsInAtlas();
         }
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
-        Profiler.BeginSample("MeshDataGeneration");
+        UniTextDebug.BeginSample("MeshDataGeneration");
         if (useParallel)
         {
             UniTextWorkerPool.Execute(componentsBuffer.data, count, static comp => comp.DoGenerateMeshData());
@@ -160,20 +159,20 @@ public partial class UniText
                 componentsBuffer[i].DoGenerateMeshData();
             }
         }
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
-        Profiler.BeginSample("ApplyMeshes");
+        UniTextDebug.BeginSample("ApplyMeshes");
 
         for (var i = 0; i < count; i++)
         {
             componentsBuffer[i].DoApplyMesh();
         }
 
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
 
         componentsBuffer.Clear();
 
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
 
     #endregion

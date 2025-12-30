@@ -816,14 +816,22 @@ public class EllipsisModifier : BaseModifier
             return;
 
         var gen = UniTextMeshGenerator.Current;
+        var shapedGlyphs = buffers.shapedGlyphs.data;
+        var glyphScale = buffers.GetGlyphScale(uniText.CurrentFontSize);
+
         for (var i = 0; i < positionedCount; i++)
         {
             if (positionedGlyphs[i].cluster == ellipsisCluster)
             {
                 ref readonly var pg = ref positionedGlyphs[i];
+                ref readonly var shapedGlyph = ref shapedGlyphs[pg.shapedGlyphIndex];
 
-                var x = gen.offsetX + pg.x;
-                var y = gen.offsetY - pg.y;
+                // Restore baseline position by removing the original glyph's offsets
+                var baselineX = pg.x - shapedGlyph.offsetX * glyphScale;
+                var baselineY = pg.y + shapedGlyph.offsetY * glyphScale;
+
+                var x = gen.offsetX + baselineX;
+                var y = gen.offsetY - baselineY;
                 GlyphRenderHelper.DrawString(fontProvider, EllipsisText, x, y, gen.defaultColor);
                 return;
             }

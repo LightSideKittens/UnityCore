@@ -164,10 +164,6 @@ public sealed class BidiEngine
 
     private const int MaxExplicitLevel = 125;
 
-    public static int processCallCount;
-    public static int buildIsoRunSeqCallCount;
-    public static int buildIsoRunSeqForParagraphCallCount;
-
     private readonly IUnicodeDataProvider unicodeData;
 
     [ThreadStatic] private static EmbeddingState[]? embeddingStack;
@@ -428,7 +424,7 @@ public sealed class BidiEngine
 
     private BidiResult ProcessInternal(ReadOnlySpan<int> codePoints, byte? forcedParagraphLevel, bool copyLevels = true)
     {
-        Interlocked.Increment(ref processCallCount);
+        UniTextDebug.Increment(ref UniTextDebug.Bidi_ProcessCount);
 
         var length = codePoints.Length;
         if (length == 0)
@@ -531,7 +527,7 @@ public sealed class BidiEngine
         BidiClass[] bidiClasses,
         byte[] levels)
     {
-        Interlocked.Increment(ref buildIsoRunSeqCallCount);
+        UniTextDebug.Increment(ref UniTextDebug.Bidi_BuildIsoRunSeqCount);
         SequencesBuffer.FakeClear();
         ResetSequenceIndices();
 
@@ -1664,7 +1660,7 @@ public sealed class BidiEngine
         int[] matchingIsolate,
         int[] runIndexByPosition)
     {
-        Interlocked.Increment(ref buildIsoRunSeqForParagraphCallCount);
+        UniTextDebug.Increment(ref UniTextDebug.Bidi_BuildIsoRunSeqForParagraphCount);
         sequences.FakeClear();
         ResetSequenceIndices();
 

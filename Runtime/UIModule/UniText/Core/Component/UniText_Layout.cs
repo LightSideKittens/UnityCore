@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Profiling;
 using UnityEngine.UI;
 
 
@@ -16,7 +15,7 @@ public partial class UniText : ILayoutElement, ILayoutController
 
     void ILayoutElement.CalculateLayoutInputHorizontal()
     {
-        Profiler.BeginSample("UniText.CalculateLayoutInputHorizontal");
+        UniTextDebug.BeginSample("UniText.CalculateLayoutInputHorizontal");
 
         cachedPreferredWidth = 0;
 
@@ -26,18 +25,18 @@ public partial class UniText : ILayoutElement, ILayoutController
             cachedPreferredWidth = textProcessor.GetPreferredWidth(effectiveFontSize);
         }
 
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
 
     void ILayoutElement.CalculateLayoutInputVertical()
     {
-        Profiler.BeginSample("UniText.CalculateLayoutInputVertical");
+        UniTextDebug.BeginSample("UniText.CalculateLayoutInputVertical");
 
         if (string.IsNullOrEmpty(text) || textProcessor == null || !textProcessor.HasValidFirstPassData)
         {
             hasValidLayoutCache = false;
             cachedPreferredHeight = 0;
-            Profiler.EndSample();
+            UniTextDebug.EndSample();
             return;
         }
 
@@ -46,7 +45,7 @@ public partial class UniText : ILayoutElement, ILayoutController
         {
             hasValidLayoutCache = false;
             cachedPreferredHeight = 0;
-            Profiler.EndSample();
+            UniTextDebug.EndSample();
             return;
         }
 
@@ -58,7 +57,7 @@ public partial class UniText : ILayoutElement, ILayoutController
             Mathf.Approximately(cachedLayoutWidth, rect.width) &&
             ((enableAutoSize && !enableWordWrap) || Mathf.Approximately(cachedLayoutHeight, height)))
         {
-            Profiler.EndSample();
+            UniTextDebug.EndSample();
             return;
         }
 
@@ -73,7 +72,7 @@ public partial class UniText : ILayoutElement, ILayoutController
             ? textProcessor.GetPreferredHeight(maxFontSize)
             : textProcessor.GetPreferredHeight(cachedEffectiveFontSize);
 
-        Profiler.EndSample();
+        UniTextDebug.EndSample();
     }
 
     public float minWidth => 0;

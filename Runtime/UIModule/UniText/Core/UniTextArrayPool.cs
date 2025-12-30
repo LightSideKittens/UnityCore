@@ -7,77 +7,19 @@ using UnityEngine;
 
 public static class UniTextPoolStats
 {
+    private static readonly List<Action> registeredLogActions = new();
+
+    public static void Register(Action logStats)
+    {
+        registeredLogActions.Add(logStats);
+    }
+
     public static void LogAll()
     {
-        var instanceCount = Interlocked.Exchange(ref UniTextBuffers.instanceCount, 0);
-        var rentBuffersCallCount = Interlocked.Exchange(ref UniTextBuffers.rentBuffersCallCount, 0);
-        if (instanceCount > 0 || rentBuffersCallCount > 0)
-        {
-            Debug.Log($"[CommonData] Instances:{instanceCount} RentBuffers:{rentBuffersCallCount}");
-        }
+        Debug.Log(UniTextDebug.GetReport());
 
-        var processCallCount = Interlocked.Exchange(ref TextProcessor.processCallCount, 0);
-        var ensureShapingCallCount = Interlocked.Exchange(ref TextProcessor.ensureShapingCallCount, 0);
-        var doFullShapingCallCount = Interlocked.Exchange(ref TextProcessor.doFullShapingCallCount, 0);
-        if (processCallCount > 0)
-        {
-            Debug.Log($"[TextProcessor] Process:{processCallCount} EnsureShaping:{ensureShapingCallCount} DoFullShaping:{doFullShapingCallCount}");
-        }
-
-        var bidiProcessCallCount = Interlocked.Exchange(ref BidiEngine.processCallCount, 0);
-        var buildIsoRunSeqCallCount = Interlocked.Exchange(ref BidiEngine.buildIsoRunSeqCallCount, 0);
-        var buildIsoRunSeqForParagraphCallCount = Interlocked.Exchange(ref BidiEngine.buildIsoRunSeqForParagraphCallCount, 0);
-        if (bidiProcessCallCount > 0 || buildIsoRunSeqCallCount > 0)
-        {
-            Debug.Log($"[BidiEngine] ProcessInternal:{bidiProcessCallCount} BuildIsoRunSeq:{buildIsoRunSeqCallCount} BuildIsoRunSeqForParagraph:{buildIsoRunSeqForParagraphCallCount}");
-        }
-
-        UniTextArrayPool<int>.LogStats();
-        UniTextArrayPool<uint>.LogStats();
-        UniTextArrayPool<byte>.LogStats();
-        UniTextArrayPool<float>.LogStats();
-        UniTextArrayPool<bool>.LogStats();
-
-        UniTextArrayPool<BidiParagraph>.LogStats();
-        UniTextArrayPool<UnicodeScript>.LogStats();
-        UniTextArrayPool<TextRun>.LogStats();
-        UniTextArrayPool<ShapedRun>.LogStats();
-        UniTextArrayPool<ShapedGlyph>.LogStats();
-        UniTextArrayPool<CachedGlyphData>.LogStats();
-        UniTextArrayPool<TextLine>.LogStats();
-        UniTextArrayPool<PositionedGlyph>.LogStats();
-
-        UniTextArrayPool<Vector3>.LogStats();
-        UniTextArrayPool<Vector4>.LogStats();
-        UniTextArrayPool<Vector2>.LogStats();
-        UniTextArrayPool<Color32>.LogStats();
-    }
-    
-    public static void LogLeaks()
-    {
-        Debug.Log("=== UniText Pool Leak Check ===");
-
-        UniTextArrayPool<int>.LogLeaks();
-        UniTextArrayPool<uint>.LogLeaks();
-        UniTextArrayPool<byte>.LogLeaks();
-        UniTextArrayPool<float>.LogLeaks();
-        UniTextArrayPool<bool>.LogLeaks();
-
-        UniTextArrayPool<BidiParagraph>.LogLeaks();
-        UniTextArrayPool<UnicodeScript>.LogLeaks();
-        UniTextArrayPool<TextRun>.LogLeaks();
-        UniTextArrayPool<ShapedRun>.LogLeaks();
-        UniTextArrayPool<ShapedGlyph>.LogLeaks();
-        UniTextArrayPool<CachedGlyphData>.LogLeaks();
-        UniTextArrayPool<TextLine>.LogLeaks();
-        UniTextArrayPool<PositionedGlyph>.LogLeaks();
-
-        UniTextArrayPool<Vector3>.LogLeaks();
-        UniTextArrayPool<Vector4>.LogLeaks();
-        UniTextArrayPool<Vector2>.LogLeaks();
-        UniTextArrayPool<Color32>.LogLeaks();
-
-        Debug.Log("=== End Leak Check ===");
+        foreach (var logAction in registeredLogActions)
+            logAction();
     }
 }
 
@@ -85,7 +27,6 @@ public static class UniTextArrayPool<T>
 {
     private const int BucketCount = 12;
     private const int MinBucketSize = 32;
-    private const int MaxArraysPerThreadLocal = 8;
     private const int MaxArraysPerShared = 1024;
 
     [ThreadStatic] private static T[][] threadLocalArrays;
@@ -114,6 +55,8 @@ public static class UniTextArrayPool<T>
         sharedCounts = new int[BucketCount];
         for (var i = 0; i < BucketCount; i++)
             sharedBuckets[i] = new ConcurrentQueue<T[]>();
+
+        UniTextPoolStats.Register(LogStats);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -127,21 +70,19 @@ public static class UniTextArrayPool<T>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T[] Rent(int minimumLength)
     {
-        int current;
-        while ((current = largestRentRequested) < minimumLength)
-            Interlocked.CompareExchange(ref largestRentRequested, minimumLength, current);
+        UniTextDebug.TrackLargest(ref largestRentRequested, minimumLength);
 
         var bucketIndex = GetBucketIndex(minimumLength);
         if (bucketIndex < 0)
         {
-            Interlocked.Increment(ref poolMisses);
-            Interlocked.Increment(ref cumulativeRents);
-            Interlocked.Increment(ref cumulativeAllocations);
+            UniTextDebug.Increment(ref poolMisses);
+            UniTextDebug.Increment(ref cumulativeRents);
+            UniTextDebug.Increment(ref cumulativeAllocations);
             return new T[minimumLength];
         }
 
-        Interlocked.Increment(ref totalRents);
-        Interlocked.Increment(ref cumulativeRents);
+        UniTextDebug.Increment(ref totalRents);
+        UniTextDebug.Increment(ref cumulativeRents);
         var bucketSize = MinBucketSize << bucketIndex;
 
         EnsureThreadLocalInitialized();
@@ -150,19 +91,19 @@ public static class UniTextArrayPool<T>
             threadLocalCounts[bucketIndex] = 0;
             var arr = threadLocalArrays[bucketIndex];
             threadLocalArrays[bucketIndex] = null;
-            Interlocked.Increment(ref poolHits);
+            UniTextDebug.Increment(ref poolHits);
             return arr;
         }
 
         if (sharedBuckets[bucketIndex].TryDequeue(out var sharedArr))
         {
             Interlocked.Decrement(ref sharedCounts[bucketIndex]);
-            Interlocked.Increment(ref sharedHits);
+            UniTextDebug.Increment(ref sharedHits);
             return sharedArr;
         }
 
-        Interlocked.Increment(ref poolMisses);
-        Interlocked.Increment(ref cumulativeAllocations);
+        UniTextDebug.Increment(ref poolMisses);
+        UniTextDebug.Increment(ref cumulativeAllocations);
         return new T[bucketSize];
     }
 
@@ -171,23 +112,23 @@ public static class UniTextArrayPool<T>
     {
         if (array == null) return;
 
-        Interlocked.Increment(ref cumulativeReturns);
+        UniTextDebug.Increment(ref cumulativeReturns);
 
         var bucketIndex = GetBucketIndex(array.Length);
         if (bucketIndex < 0)
         {
-            Interlocked.Increment(ref returnRejectedTooLarge);
+            UniTextDebug.Increment(ref returnRejectedTooLarge);
             return;
         }
 
         var bucketSize = MinBucketSize << bucketIndex;
         if (array.Length != bucketSize)
         {
-            Interlocked.Increment(ref returnRejectedWrongSize);
+            UniTextDebug.Increment(ref returnRejectedWrongSize);
             return;
         }
 
-        Interlocked.Increment(ref totalReturns);
+        UniTextDebug.Increment(ref totalReturns);
 
         EnsureThreadLocalInitialized();
         if (threadLocalCounts[bucketIndex] == 0)
@@ -204,7 +145,7 @@ public static class UniTextArrayPool<T>
         }
         else
         {
-            Interlocked.Increment(ref returnRejectedPoolFull);
+            UniTextDebug.Increment(ref returnRejectedPoolFull);
         }
     }
 
@@ -264,23 +205,6 @@ public static class UniTextArrayPool<T>
             msg += $" | LargestRequest:{largestRentRequested}";
 
         Debug.Log(msg);
-    }
-
-    public static void LogLeaks()
-    {
-        var activeRents = cumulativeRents - cumulativeReturns;
-        if (activeRents > 0)
-        {
-            Debug.LogWarning($"[Pool<{typeof(T).Name}>] LEAK: {activeRents} arrays not returned (Rents:{cumulativeRents} Returns:{cumulativeReturns} Allocations:{cumulativeAllocations})");
-        }
-    }
-
-    public static void ResetLeakTracking()
-    {
-        Interlocked.Exchange(ref cumulativeRents, 0);
-        Interlocked.Exchange(ref cumulativeReturns, 0);
-        Interlocked.Exchange(ref cumulativeAllocations, 0);
-        Interlocked.Exchange(ref largestRentRequested, 0);
     }
 
     public static string GetStats()
