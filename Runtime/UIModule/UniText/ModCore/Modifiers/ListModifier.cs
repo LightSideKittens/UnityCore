@@ -143,7 +143,7 @@ public class ListModifier : BaseModifier
         for (var i = 0; i < len; i++)
         {
             uint codepoint = sb[i];
-            if (HarfBuzzFontValidator.TryGetGlyphInfo(font, codepoint, fontSize, out _, out var advance))
+            if (HarfBuzzShapingEngine.TryGetGlyphInfo(font, codepoint, fontSize, out _, out var advance))
             {
                 totalWidth += advance;
                 buf.virtualCodepoints.Add(codepoint);

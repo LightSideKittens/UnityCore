@@ -21,7 +21,7 @@ public class UniTextFonts : ScriptableObject
             if (!searched.Add(font.GetCachedInstanceId()))
                 continue;
 
-            var glyphIndex = HarfBuzzFontValidator.GetGlyphIndex(font, unicode);
+            var glyphIndex = HarfBuzzShapingEngine.GetGlyphIndex(font, unicode);
             if (glyphIndex != 0) return font;
         }
 

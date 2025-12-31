@@ -98,6 +98,47 @@ public sealed class FastIntDictionary<T>
         return false;
     }
 
+    public bool Remove(int key)
+    {
+        var idx = key & mask;
+        var e = entries;
+
+        while (e[idx].hasValue)
+        {
+            if (e[idx].key == key)
+            {
+                // Found - now do backward shift deletion
+                count--;
+                var empty = idx;
+
+                while (true)
+                {
+                    idx = (idx + 1) & mask;
+
+                    if (!e[idx].hasValue)
+                    {
+                        e[empty].hasValue = false;
+                        e[empty].value = default;
+                        return true;
+                    }
+
+                    var ideal = e[idx].key & mask;
+
+                    // Check if this entry is in its ideal position or past it
+                    // If removing 'empty' would break the chain to 'idx', shift it
+                    if ((empty <= idx) ? (ideal <= empty || ideal > idx) : (ideal <= empty && ideal > idx))
+                    {
+                        e[empty] = e[idx];
+                        empty = idx;
+                    }
+                }
+            }
+            idx = (idx + 1) & mask;
+        }
+
+        return false;
+    }
+
     public void Clear()
     {
         Array.Clear(entries, 0, entries.Length);

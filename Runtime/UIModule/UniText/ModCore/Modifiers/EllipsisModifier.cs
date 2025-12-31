@@ -37,6 +37,7 @@ public class EllipsisModifier : BaseModifier
     private PooledBuffer<float> currentCpWidths;
     private PooledBuffer<float> clusterWidthsBuffer;
     private PooledList<LineTruncation> lineTruncations;
+    private PooledBuffer<byte> truncationFlags;
 
     protected override void CreateBuffers()
     {
@@ -47,6 +48,7 @@ public class EllipsisModifier : BaseModifier
         currentCpWidths.Rent(256);
         clusterWidthsBuffer.Rent(256);
         lineTruncations = new PooledList<LineTruncation>(8);
+        truncationFlags.Rent(256);
         needsRestore = false;
         isProcessingRelayout = false;
     }
@@ -99,6 +101,7 @@ public class EllipsisModifier : BaseModifier
         clusterWidthsBuffer.Return();
         lineTruncations?.Return();
         lineTruncations = null;
+        truncationFlags.Return();
         needsRestore = false;
         isProcessingRelayout = false;
     }
@@ -112,6 +115,7 @@ public class EllipsisModifier : BaseModifier
         currentCpWidths.FakeClear();
         clusterWidthsBuffer.FakeClear();
         lineTruncations?.FakeClear();
+        truncationFlags.FakeClear();
         needsRestore = false;
         isProcessingRelayout = false;
     }
@@ -137,6 +141,7 @@ public class EllipsisModifier : BaseModifier
     private void ClearEllipsisState()
     {
         lineTruncations?.FakeClear();
+        truncationFlags.FakeClear();
 
         if (ranges == null) return;
 
@@ -272,6 +277,51 @@ public class EllipsisModifier : BaseModifier
             ProcessNonWordWrapOverflow(maxWidth);
         else
             ProcessOverflowIterative(maxHeight);
+
+        BuildTruncationFlags();
+    }
+
+    private void BuildTruncationFlags()
+    {
+        var maxCluster = buffers.codepoints.count;
+        if (maxCluster == 0)
+        {
+            truncationFlags.count = 0;
+            return;
+        }
+
+        truncationFlags.EnsureCapacity(maxCluster);
+        truncationFlags.count = maxCluster;
+        truncationFlags.data.AsSpan(0, maxCluster).Clear();
+
+        var flagsData = truncationFlags.data;
+
+        if (lineTruncations != null)
+        {
+            for (var i = 0; i < lineTruncations.Count; i++)
+            {
+                var lt = lineTruncations[i];
+                var min = Math.Max(0, lt.truncateMinCluster);
+                var max = Math.Min(maxCluster - 1, lt.truncateMaxCluster);
+                for (var c = min; c <= max; c++)
+                    flagsData[c] = 1;
+            }
+        }
+
+        if (ranges != null)
+        {
+            for (var r = 0; r < ranges.Count; r++)
+            {
+                var range = ranges[r];
+                if (!range.needsEllipsis)
+                    continue;
+
+                var min = Math.Max(0, range.truncateMinCluster);
+                var max = Math.Min(maxCluster - 1, range.truncateMaxCluster);
+                for (var c = min; c <= max; c++)
+                    flagsData[c] = 1;
+            }
+        }
     }
 
     private void ProcessNonWordWrapOverflow(float maxWidth)
@@ -573,7 +623,278 @@ public class EllipsisModifier : BaseModifier
         RecalculateRunWidths(glyphs, runs, runCount);
         uniText.TextProcessor.ForceRelayout(currentCpWidths.Span);
 
+        var rect = uniText.cachedTransformData.rect;
+        var maxWidth = rect.width;
+        var glyphScale = buf.GetGlyphScale(uniText.CurrentFontSize);
+
+        if (OptimizeLineFill(glyphs, maxWidth, glyphScale))
+        {
+            RecalculateRunWidths(glyphs, runs, runCount);
+            RecalculateRunWidths(glyphs, buf.orderedRuns.data, buf.orderedRuns.count);
+            uniText.TextProcessor.ForceReposition();
+        }
+
         isProcessingRelayout = false;
+    }
+
+    private bool OptimizeLineFill(ShapedGlyph[] glyphs, float maxWidth, float glyphScale)
+    {
+        if (ranges == null || ranges.Count == 0)
+            return false;
+
+        var buf = buffers;
+        var lines = buf.lines.data;
+        var lineCount = buf.lines.count;
+        var clusterData = glyphToGlobalCluster.data;
+        var origAdvances = originalAdvances.data;
+        var boundsData = rangeGlyphBoundsCache.data;
+        var cpWidths = currentCpWidths.data;
+        var cpCount = currentCpWidths.count;
+
+        var ellipsisWidthDisplay = MeasureEllipsisWidth();
+        var ellipsisWidth = glyphScale > 0 ? ellipsisWidthDisplay / glyphScale : ellipsisWidthDisplay;
+
+        var anyChanges = false;
+
+        for (var r = 0; r < ranges.Count; r++)
+        {
+            var range = ranges[r];
+            if (!range.needsEllipsis || range.truncateMinCluster < 0)
+                continue;
+
+            // Find line containing ellipsis
+            var ellipsisLine = -1;
+            for (var li = 0; li < lineCount; li++)
+            {
+                ref readonly var line = ref lines[li];
+                if (range.ellipsisCluster >= line.range.start && range.ellipsisCluster < line.range.End)
+                {
+                    ellipsisLine = li;
+                    break;
+                }
+            }
+
+            if (ellipsisLine < 0)
+                continue;
+
+            ref readonly var targetLine = ref lines[ellipsisLine];
+            var availableWidth = (maxWidth - targetLine.width * glyphScale - targetLine.startMargin) / glyphScale;
+
+            if (availableWidth <= 0)
+                continue;
+
+            var (firstGlyph, lastGlyph, _, _) = boundsData[r];
+            if (firstGlyph < 0)
+                continue;
+
+            // Restore clusters from truncated range
+            var clustersRestored = RestoreClustersForMode(
+                range.mode, glyphs, firstGlyph, lastGlyph,
+                range.truncateMinCluster, range.truncateMaxCluster,
+                availableWidth, clusterData, origAdvances, ellipsisWidth, cpWidths, cpCount,
+                out var newTruncMin, out var newTruncMax, out var newEllipsisCluster);
+
+            if (clustersRestored > 0)
+            {
+                range.truncateMinCluster = newTruncMin;
+                range.truncateMaxCluster = newTruncMax;
+                range.ellipsisCluster = newEllipsisCluster;
+                range.needsEllipsis = newTruncMin <= newTruncMax;
+                ranges[r] = range;
+                anyChanges = true;
+            }
+        }
+
+        if (anyChanges)
+            BuildTruncationFlags();
+
+        return anyChanges;
+    }
+
+    private int RestoreClustersForMode(
+        TruncationMode mode, ShapedGlyph[] glyphs, int firstGlyph, int lastGlyph,
+        int truncMin, int truncMax, float availableWidth,
+        int[] clusterData, float[] origAdvances, float ellipsisWidth, float[] cpWidths, int cpCount,
+        out int newTruncMin, out int newTruncMax, out int newEllipsisCluster)
+    {
+        newTruncMin = truncMin;
+        newTruncMax = truncMax;
+        newEllipsisCluster = -1;
+        var restored = 0;
+
+        // First, remove ellipsis from its current position
+        var oldEllipsisCluster = mode switch
+        {
+            TruncationMode.End => truncMin,
+            TruncationMode.Start => truncMax,
+            _ => (truncMin + truncMax) / 2 // Middle
+        };
+        RemoveEllipsisFromCluster(glyphs, firstGlyph, lastGlyph, oldEllipsisCluster, clusterData, ellipsisWidth, cpWidths, cpCount);
+
+        if (mode == TruncationMode.End)
+        {
+            // End mode: restore from truncMin upward (closest to visible text)
+            var remaining = availableWidth;
+            for (var cluster = truncMin; cluster <= truncMax; cluster++)
+            {
+                var clusterWidth = GetClusterWidth(firstGlyph, lastGlyph, cluster, clusterData, origAdvances);
+                if (clusterWidth > remaining)
+                    break;
+
+                RestoreClusterGlyphs(glyphs, firstGlyph, lastGlyph, cluster, clusterData, origAdvances, cpWidths, cpCount);
+                remaining -= clusterWidth;
+                newTruncMin = cluster + 1;
+                restored++;
+            }
+
+            // Set ellipsis at new position if still needed
+            if (newTruncMin <= truncMax)
+            {
+                newEllipsisCluster = newTruncMin;
+                SetEllipsisAtCluster(glyphs, firstGlyph, lastGlyph, newEllipsisCluster, clusterData, ellipsisWidth, cpWidths, cpCount);
+            }
+        }
+        else if (mode == TruncationMode.Start)
+        {
+            // Start mode: restore from truncMax downward (closest to visible text)
+            var remaining = availableWidth;
+            for (var cluster = truncMax; cluster >= truncMin; cluster--)
+            {
+                var clusterWidth = GetClusterWidth(firstGlyph, lastGlyph, cluster, clusterData, origAdvances);
+                if (clusterWidth > remaining)
+                    break;
+
+                RestoreClusterGlyphs(glyphs, firstGlyph, lastGlyph, cluster, clusterData, origAdvances, cpWidths, cpCount);
+                remaining -= clusterWidth;
+                newTruncMax = cluster - 1;
+                restored++;
+            }
+
+            // Set ellipsis at new position if still needed
+            if (newTruncMax >= truncMin)
+            {
+                newEllipsisCluster = newTruncMax;
+                SetEllipsisAtCluster(glyphs, firstGlyph, lastGlyph, newEllipsisCluster, clusterData, ellipsisWidth, cpWidths, cpCount);
+            }
+        }
+        else // Middle mode
+        {
+            // Restore from both ends alternating
+            var remaining = availableWidth;
+            var left = truncMin;
+            var right = truncMax;
+            var fromLeft = true;
+
+            while (left <= right && remaining > 0)
+            {
+                var cluster = fromLeft ? left : right;
+                var clusterWidth = GetClusterWidth(firstGlyph, lastGlyph, cluster, clusterData, origAdvances);
+
+                if (clusterWidth > remaining)
+                {
+                    // Try the other side
+                    if (fromLeft && right > left)
+                    {
+                        fromLeft = false;
+                        continue;
+                    }
+                    break;
+                }
+
+                RestoreClusterGlyphs(glyphs, firstGlyph, lastGlyph, cluster, clusterData, origAdvances, cpWidths, cpCount);
+                remaining -= clusterWidth;
+                restored++;
+
+                if (fromLeft)
+                {
+                    newTruncMin = left + 1;
+                    left++;
+                }
+                else
+                {
+                    newTruncMax = right - 1;
+                    right--;
+                }
+
+                fromLeft = !fromLeft;
+            }
+
+            // Set ellipsis at new middle position if still needed
+            if (newTruncMin <= newTruncMax)
+            {
+                newEllipsisCluster = (newTruncMin + newTruncMax) / 2;
+                SetEllipsisAtCluster(glyphs, firstGlyph, lastGlyph, newEllipsisCluster, clusterData, ellipsisWidth, cpWidths, cpCount);
+            }
+        }
+
+        return restored;
+    }
+
+    private static void RemoveEllipsisFromCluster(ShapedGlyph[] glyphs, int firstGlyph, int lastGlyph,
+        int cluster, int[] clusterData, float ellipsisWidth, float[] cpWidths, int cpCount)
+    {
+        for (var g = firstGlyph; g <= lastGlyph; g++)
+        {
+            if (clusterData[g] == cluster && glyphs[g].advanceX > 0)
+            {
+                // This glyph had ellipsisWidth, remove it from cpWidths
+                if ((uint)cluster < (uint)cpCount)
+                    cpWidths[cluster] -= ellipsisWidth;
+                glyphs[g].advanceX = 0;
+                return;
+            }
+        }
+    }
+
+    private static void SetEllipsisAtCluster(ShapedGlyph[] glyphs, int firstGlyph, int lastGlyph,
+        int cluster, int[] clusterData, float ellipsisWidth, float[] cpWidths, int cpCount)
+    {
+        var found = false;
+        for (var g = firstGlyph; g <= lastGlyph; g++)
+        {
+            if (clusterData[g] == cluster)
+            {
+                if (!found)
+                {
+                    glyphs[g].advanceX = ellipsisWidth;
+                    if ((uint)cluster < (uint)cpCount)
+                        cpWidths[cluster] += ellipsisWidth;
+                    found = true;
+                }
+                else
+                {
+                    glyphs[g].advanceX = 0;
+                }
+            }
+        }
+    }
+
+    private static float GetClusterWidth(int firstGlyph, int lastGlyph, int cluster,
+        int[] clusterData, float[] origAdvances)
+    {
+        var width = 0f;
+        for (var g = firstGlyph; g <= lastGlyph; g++)
+        {
+            if (clusterData[g] == cluster)
+                width += origAdvances[g];
+        }
+        return width;
+    }
+
+    private static void RestoreClusterGlyphs(ShapedGlyph[] glyphs, int firstGlyph, int lastGlyph,
+        int cluster, int[] clusterData, float[] origAdvances, float[] cpWidths, int cpCount)
+    {
+        for (var g = firstGlyph; g <= lastGlyph; g++)
+        {
+            if (clusterData[g] == cluster)
+            {
+                var advance = origAdvances[g];
+                glyphs[g].advanceX = advance;
+
+                if ((uint)cluster < (uint)cpCount)
+                    cpWidths[cluster] += advance;
+            }
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -752,40 +1073,16 @@ public class EllipsisModifier : BaseModifier
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void OnGlyph()
     {
-        var gen = UniTextMeshGenerator.Current;
-        var cluster = gen.currentCluster;
+        var cluster = UniTextMeshGenerator.Current.currentCluster;
 
-        if (lineTruncations != null && lineTruncations.Count > 0)
+        if ((uint)cluster < (uint)truncationFlags.count && truncationFlags.data[cluster] != 0)
         {
-            for (var i = 0; i < lineTruncations.Count; i++)
-            {
-                var lt = lineTruncations[i];
-                if (cluster >= lt.truncateMinCluster && cluster <= lt.truncateMaxCluster)
-                {
-                    gen.vertexCount -= 4;
-                    gen.triangleCount -= 6;
-                    return;
-                }
-            }
-        }
-
-        if (ranges == null || ranges.Count == 0)
-            return;
-
-        for (var r = 0; r < ranges.Count; r++)
-        {
-            var range = ranges[r];
-            if (!range.needsEllipsis)
-                continue;
-
-            if (cluster >= range.truncateMinCluster && cluster <= range.truncateMaxCluster)
-            {
-                gen.vertexCount -= 4;
-                gen.triangleCount -= 6;
-                return;
-            }
+            var gen = UniTextMeshGenerator.Current;
+            gen.vertexCount -= 4;
+            gen.triangleCount -= 6;
         }
     }
 

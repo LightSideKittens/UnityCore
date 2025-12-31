@@ -44,7 +44,7 @@ public sealed class UniTextShapingEngine : IShapingEngine
                 uint glyphIndex;
                 float advance;
 
-                HarfBuzzFontValidator.TryGetGlyphInfo(font, (uint)glyphCodepoint, fontSize, out glyphIndex, out advance);
+                HarfBuzzShapingEngine.TryGetGlyphInfo(font, (uint)glyphCodepoint, fontSize, out glyphIndex, out advance);
                 
                 buffer[length - 1 - i] = new ShapedGlyph
                 {
@@ -65,7 +65,7 @@ public sealed class UniTextShapingEngine : IShapingEngine
                 uint glyphIndex;
                 float advance;
 
-                HarfBuzzFontValidator.TryGetGlyphInfo(font, (uint)codepoint, fontSize, out glyphIndex, out advance);
+                HarfBuzzShapingEngine.TryGetGlyphInfo(font, (uint)codepoint, fontSize, out glyphIndex, out advance);
                 
                 buffer[i] = new ShapedGlyph
                 {

@@ -9,6 +9,7 @@ using Buffer = HarfBuzzSharp.Buffer;
 public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
 {
     private static readonly FastIntDictionary<HarfBuzzFontCache> fontCache = new();
+    private static readonly FastIntDictionary<int> instanceIdToFontHash = new();
     private static readonly object fontCacheLock = new();
 
     [ThreadStatic] private static ShapedGlyph[] outputBuffer;
@@ -22,6 +23,7 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             foreach (var kvp in fontCache)
                 kvp.Value?.Dispose();
             fontCache.Clear();
+            instanceIdToFontHash.Clear();
         }
         outputBuffer = null;
         bufferPool = null;
@@ -93,6 +95,112 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             pool.Push(buffer);
         else
             buffer?.Dispose();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static HarfBuzzFontCache GetOrCreateCacheByInstanceId(UniTextFont font)
+    {
+        if (font == null || !font.HasFontData)
+            return null;
+
+        var instanceId = font.GetCachedInstanceId();
+
+        lock (fontCacheLock)
+        {
+            if (instanceIdToFontHash.TryGetValue(instanceId, out var fontHash))
+            {
+                if (fontCache.TryGetValue(fontHash, out var cached))
+                    return cached;
+            }
+
+            var fontData = font.FontData;
+            if (fontData == null || fontData.Length == 0)
+                return null;
+
+            fontHash = fontData.GetHashCode();
+            if (!fontCache.TryGetValue(fontHash, out var entry))
+            {
+                entry = new HarfBuzzFontCache(fontData);
+                fontCache[fontHash] = entry;
+            }
+
+            instanceIdToFontHash[instanceId] = fontHash;
+            return entry;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint GetGlyphIndex(UniTextFont font, uint codepoint)
+    {
+        var cache = GetOrCreateCacheByInstanceId(font);
+        if (cache == null)
+            return 0;
+
+        return cache.font.TryGetGlyph(codepoint, out var glyphIndex) ? glyphIndex : 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool TryGetGlyphInfo(UniTextFont font, uint codepoint, float fontSize,
+        out uint glyphIndex, out float advance)
+    {
+        glyphIndex = 0;
+        advance = 0;
+
+        var cache = GetOrCreateCacheByInstanceId(font);
+        if (cache == null)
+            return false;
+
+        if (!cache.font.TryGetGlyph(codepoint, out glyphIndex))
+            return false;
+
+        var advanceUnits = cache.font.GetHorizontalGlyphAdvance(glyphIndex);
+        advance = advanceUnits * fontSize / cache.upem;
+        return true;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int GetUnitsPerEm(UniTextFont font)
+    {
+        var cache = GetOrCreateCacheByInstanceId(font);
+        return cache?.upem ?? 1000;
+    }
+
+    public static void ClearCache(int fontAssetInstanceId)
+    {
+        lock (fontCacheLock)
+        {
+            if (instanceIdToFontHash.TryGetValue(fontAssetInstanceId, out var fontHash))
+            {
+                instanceIdToFontHash.Remove(fontAssetInstanceId);
+
+                var stillUsed = false;
+                foreach (var kvp in instanceIdToFontHash)
+                {
+                    if (kvp.Value == fontHash)
+                    {
+                        stillUsed = true;
+                        break;
+                    }
+                }
+
+                if (!stillUsed && fontCache.TryGetValue(fontHash, out var cache))
+                {
+                    cache.Dispose();
+                    fontCache.Remove(fontHash);
+                }
+            }
+        }
+    }
+
+    public static void ClearAllCaches()
+    {
+        lock (fontCacheLock)
+        {
+            foreach (var kvp in fontCache)
+                kvp.Value?.Dispose();
+            fontCache.Clear();
+            instanceIdToFontHash.Clear();
+        }
     }
 
     public ShapingResult Shape(
@@ -211,7 +319,7 @@ public sealed class HarfBuzzShapingEngine : IShapingEngine, IDisposable
             uint glyphIndex;
             float advance;
 
-            HarfBuzzFontValidator.TryGetGlyphInfo(font, (uint)codepoint, fontSize, out glyphIndex, out advance);
+            TryGetGlyphInfo(font, (uint)codepoint, fontSize, out glyphIndex, out advance);
 
             var outputIndex = isRtl ? length - 1 - i : i;
             outBuf[outputIndex] = new ShapedGlyph

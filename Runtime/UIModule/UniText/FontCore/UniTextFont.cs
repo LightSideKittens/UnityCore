@@ -366,7 +366,7 @@ public class UniTextFont : ScriptableObject
     {
         uint glyphIndex = 0;
 
-        if (HasFontData) glyphIndex = HarfBuzzFontValidator.GetGlyphIndex(this, unicode);
+        if (HasFontData) glyphIndex = HarfBuzzShapingEngine.GetGlyphIndex(this, unicode);
 
         if (glyphIndex == 0 && LoadFontFace() == FontEngineError.Success)
             glyphIndex = UniTextFontEngine.GetGlyphIndex(unicode);
@@ -384,7 +384,7 @@ public class UniTextFont : ScriptableObject
             if (specialCodepoint != 0)
             {
                 if (HasFontData)
-                    glyphIndex = HarfBuzzFontValidator.GetGlyphIndex(this, specialCodepoint);
+                    glyphIndex = HarfBuzzShapingEngine.GetGlyphIndex(this, specialCodepoint);
                 if (glyphIndex == 0 && LoadFontFace() == FontEngineError.Success)
                     glyphIndex = UniTextFontEngine.GetGlyphIndex(specialCodepoint);
             }

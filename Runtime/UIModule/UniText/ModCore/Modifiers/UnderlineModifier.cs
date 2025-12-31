@@ -24,11 +24,4 @@ public class UnderlineModifier : BaseLineModifier
     {
         return buffer.HasFlag(cluster);
     }
-
-
-    public static void SetFlagRange(int start, int end)
-    {
-        if (buffer == null) return;
-        buffer.SetFlagRange(start, Math.Min(end, buffer.Length));
-    }
 }
