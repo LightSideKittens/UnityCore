@@ -52,8 +52,12 @@ public sealed class UniTextFontProvider
 
         mainFontId = GetFontId(mainFont);
         RegisterFontAsset(mainFontId, mainFont);
-
         UpdateFontScale();
+
+        for (int i = 0; i < fonts.fonts.Count; i++)
+        {
+            fonts.fonts[i].GetCachedInstanceId();
+        }
     }
 
     private void UpdateFontScale()

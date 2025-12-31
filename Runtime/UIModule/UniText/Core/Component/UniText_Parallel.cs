@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 public partial class UniText
@@ -29,6 +30,7 @@ public partial class UniText
 
     #region Static Batch Processing
 
+    public static bool UseParallel { get; set; } = true;
     private static PooledBuffer<UniText> componentsBuffer;
     private static bool isSubscribed;
     private static bool useParallel;
@@ -39,6 +41,7 @@ public partial class UniText
     private static void EnsureSubscribed()
     {
         if (isSubscribed) return;
+        var d = CanvasUpdateRegistry.instance;
         Canvas.preWillRenderCanvases += OnPreWillRenderCanvases;
         Canvas.willRenderCanvases += OnWillRenderCanvases;
         componentsBuffer.EnsureCapacity(64);
@@ -115,7 +118,7 @@ public partial class UniText
                       count >= MinComponentsForParallel &&
                       UniTextWorkerPool.IsParallelSupported;
 
-        if (useParallel)
+        if (useParallel && UseParallel)
         {
             UniTextWorkerPool.Execute(componentsBuffer.data, count, static comp => comp.DoFirstPass());
         }
@@ -148,7 +151,7 @@ public partial class UniText
         UniTextDebug.EndSample();
 
         UniTextDebug.BeginSample("MeshDataGeneration");
-        if (useParallel)
+        if (useParallel && UseParallel)
         {
             UniTextWorkerPool.Execute(componentsBuffer.data, count, static comp => comp.DoGenerateMeshData());
         }

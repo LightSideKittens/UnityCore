@@ -7,6 +7,8 @@ using Debug = UnityEngine.Debug;
 
 public class UniTextPerformanceTest : MonoBehaviour
 {
+    public bool useParallel = true;
+    
     [Header("Test Settings")] [Tooltip("Prefab with UniText component to instantiate")]
     public GameObject prefab;
 
@@ -101,6 +103,7 @@ public class UniTextPerformanceTest : MonoBehaviour
 
     private IEnumerator RunTestCoroutine()
     {
+        UniText.UseParallel = useParallel;
         isRunning = true;
         totalInstantiateTime = 0;
         totalDestroyTime = 0;
@@ -245,6 +248,7 @@ public class UniTextPerformanceTest : MonoBehaviour
 
         instances = null;
         isRunning = false;
+        UniText.UseParallel = true;
     }
 
     private static string FormatBytes(long bytes)
