@@ -4,6 +4,8 @@ using UnityEngine.EventSystems;
 
 public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler
 {
+    private const float DefaultMaxClickDistance = 20;
+    
     private TextHitResult lastHoverResult;
     public event Action<TextHitResult> OnTextClick;
     public event Action<string> OnLinkClick;
@@ -18,7 +20,7 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
             ? canvas.worldCamera
             : null;
 
-        var result = HitTestScreen(eventData.position, camera, 5);
+        var result = HitTestScreen(eventData.position, camera);
         if (!result.hit) return;
 
         OnTextClick?.Invoke(result);
@@ -53,7 +55,7 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
             ? canvas.worldCamera
             : null;
 
-        var result = HitTestScreen(eventData.position, camera, 5);
+        var result = HitTestScreen(eventData.position, camera);
 
         var wasLink = lastHoverResult.hit && LinkModifier.IsLink(buffers, lastHoverResult.cluster);
         var isLink = result.hit && LinkModifier.IsLink(buffers, result.cluster);
@@ -68,7 +70,7 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
         lastHoverResult = result;
     }
     
-    public TextHitResult HitTest(Vector2 localPosition, float maxDistance = 0)
+    public TextHitResult HitTest(Vector2 localPosition, float maxDistance = DefaultMaxClickDistance)
     {
         if (textProcessor == null)
             return TextHitResult.None;
@@ -126,7 +128,7 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
     }
 
 
-    public TextHitResult HitTestScreen(Vector2 screenPosition, Camera eventCamera, float maxDistance = 0)
+    public TextHitResult HitTestScreen(Vector2 screenPosition, Camera eventCamera, float maxDistance = DefaultMaxClickDistance)
     {
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 rectTransform, screenPosition, eventCamera, out var localPos))
