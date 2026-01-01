@@ -107,7 +107,6 @@ public sealed class FastIntDictionary<T>
         {
             if (e[idx].key == key)
             {
-                // Found - now do backward shift deletion
                 count--;
                 var empty = idx;
 
@@ -124,8 +123,6 @@ public sealed class FastIntDictionary<T>
 
                     var ideal = e[idx].key & mask;
 
-                    // Check if this entry is in its ideal position or past it
-                    // If removing 'empty' would break the chain to 'idx', shift it
                     if ((empty <= idx) ? (ideal <= empty || ideal > idx) : (ideal <= empty && ideal > idx))
                     {
                         e[empty] = e[idx];

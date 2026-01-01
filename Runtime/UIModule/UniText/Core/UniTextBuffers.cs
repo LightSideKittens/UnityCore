@@ -5,6 +5,52 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 
+public interface IAttributeData
+{
+    void Reset();
+    void Release();
+}
+
+
+public sealed class PooledArrayAttribute<T> : IAttributeData
+{
+    public PooledBuffer<T> buffer;
+
+    public int Count
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => buffer.count;
+    }
+
+    public ref T this[int i]
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref buffer[i];
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Add(T item) => buffer.Add(item);
+
+    public void EnsureCapacity(int required)
+    {
+        var oldCapacity = buffer.Capacity;
+        buffer.EnsureCapacity(required);
+
+        if (buffer.Capacity > oldCapacity && buffer.data != null)
+            buffer.data.AsSpan(oldCapacity, buffer.Capacity - oldCapacity).Clear();
+    }
+
+    public void Reset()
+    {
+        if (buffer.data != null)
+            buffer.data.AsSpan(0, buffer.Capacity).Clear();
+        buffer.count = 0;
+    }
+
+    public void Release() => buffer.Return();
+}
+
+
 public sealed class UniTextBuffers
 {
     private const int MinCodepointCapacity = 32;
@@ -39,75 +85,49 @@ public sealed class UniTextBuffers
 
     public bool isRented;
 
-    private Dictionary<string, Array> attributeArrays;
+    private Dictionary<string, IAttributeData> attributeData;
 
-    public T[] GetOrCreateAttributeArray<T>(string key, int minCapacity) where T : unmanaged
+    public T GetOrCreateAttributeData<T>(string key) where T : class, IAttributeData, new()
     {
-        attributeArrays ??= new Dictionary<string, Array>(8);
+        attributeData ??= new Dictionary<string, IAttributeData>(8);
 
-        if (attributeArrays.TryGetValue(key, out var existing))
-            return (T[])existing;
+        if (attributeData.TryGetValue(key, out var existing))
+            return (T)existing;
 
-        var arr = UniTextArrayPool<T>.Rent(Math.Max(minCapacity, 32));
-        arr.AsSpan().Clear();
-        attributeArrays[key] = arr;
-        return arr;
+        var data = new T();
+        attributeData[key] = data;
+        return data;
     }
 
-    public T[] GetAttributeArray<T>(string key) where T : unmanaged
+    public T GetAttributeData<T>(string key) where T : class, IAttributeData
     {
-        if (attributeArrays != null && attributeArrays.TryGetValue(key, out var arr))
-            return (T[])arr;
+        if (attributeData != null && attributeData.TryGetValue(key, out var data))
+            return (T)data;
         return null;
     }
 
-    public T[] GrowAttributeArray<T>(string key, int required) where T : unmanaged
+    public void ReleaseAttributeData(string key)
     {
-        if (attributeArrays == null || !attributeArrays.TryGetValue(key, out var existing))
-            return GetOrCreateAttributeArray<T>(key, required);
-
-        var oldArray = (T[])existing;
-        if (oldArray.Length >= required)
-            return oldArray;
-
-        var newSize = Math.Max(required, oldArray.Length * 2);
-        var newArray = UniTextArrayPool<T>.Rent(newSize);
-        oldArray.AsSpan().CopyTo(newArray);
-        newArray.AsSpan(oldArray.Length).Clear();
-        UniTextArrayPool<T>.Return(oldArray);
-        attributeArrays[key] = newArray;
-        return newArray;
-    }
-
-    public void ReleaseAttributeArray(string key)
-    {
-        if (attributeArrays == null || !attributeArrays.TryGetValue(key, out var arr))
+        if (attributeData == null || !attributeData.TryGetValue(key, out var data))
             return;
 
-        if (arr is byte[] byteArr) UniTextArrayPool<byte>.Return(byteArr);
-        else if (arr is uint[] uintArr) UniTextArrayPool<uint>.Return(uintArr);
-        attributeArrays.Remove(key);
+        data.Release();
+        attributeData.Remove(key);
     }
 
-    private void ClearAllAttributes()
+    private void ResetAllAttributeData()
     {
-        if (attributeArrays == null) return;
-        foreach (var arr in attributeArrays.Values)
-        {
-            if (arr is byte[] byteArr) byteArr.AsSpan().Clear();
-            else if (arr is uint[] uintArr) uintArr.AsSpan().Clear();
-        }
+        if (attributeData == null) return;
+        foreach (var data in attributeData.Values)
+            data.Reset();
     }
 
-    private void ReturnAllAttributes()
+    private void ReleaseAllAttributeData()
     {
-        if (attributeArrays == null) return;
-        foreach (var arr in attributeArrays.Values)
-        {
-            if (arr is byte[] byteArr) UniTextArrayPool<byte>.Return(byteArr);
-            else if (arr is uint[] uintArr) UniTextArrayPool<uint>.Return(uintArr);
-        }
-        attributeArrays.Clear();
+        if (attributeData == null) return;
+        foreach (var data in attributeData.Values)
+            data.Release();
+        attributeData.Clear();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,7 +200,7 @@ public sealed class UniTextBuffers
         startMargins.Return();
         glyphDataCache.Return();
 
-        ReturnAllAttributes();
+        ReleaseAllAttributeData();
 
         isRented = false;
     }
@@ -192,7 +212,7 @@ public sealed class UniTextBuffers
         if (startMargins.Capacity > 0 && cpCount > 0)
             startMargins.data.AsSpan(0, cpCount).Clear();
 
-        ClearAllAttributes();
+        ResetAllAttributeData();
 
         codepoints.FakeClear();
         bidiParagraphs.FakeClear();

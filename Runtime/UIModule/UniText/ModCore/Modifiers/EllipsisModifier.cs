@@ -217,11 +217,9 @@ public class EllipsisModifier : BaseModifier
         var clusterData = glyphToGlobalCluster.data;
         var boundsData = rangeGlyphBoundsCache.data;
 
-        // Initialize all ranges
         for (var r = 0; r < rangeCount; r++)
             boundsData[r] = (-1, -1, int.MaxValue, int.MinValue);
 
-        // Single pass over glyphs
         for (var g = 0; g < glyphCount; g++)
         {
             var cluster = clusterData[g];
@@ -239,7 +237,6 @@ public class EllipsisModifier : BaseModifier
             }
         }
 
-        // Finalize
         for (var r = 0; r < rangeCount; r++)
         {
             ref var bounds = ref boundsData[r];
@@ -662,7 +659,6 @@ public class EllipsisModifier : BaseModifier
             if (!range.needsEllipsis || range.truncateMinCluster < 0)
                 continue;
 
-            // Find line containing ellipsis
             var ellipsisLine = -1;
             for (var li = 0; li < lineCount; li++)
             {
@@ -687,7 +683,6 @@ public class EllipsisModifier : BaseModifier
             if (firstGlyph < 0)
                 continue;
 
-            // Restore clusters from truncated range
             var clustersRestored = RestoreClustersForMode(
                 range.mode, glyphs, firstGlyph, lastGlyph,
                 range.truncateMinCluster, range.truncateMaxCluster,
@@ -722,18 +717,16 @@ public class EllipsisModifier : BaseModifier
         newEllipsisCluster = -1;
         var restored = 0;
 
-        // First, remove ellipsis from its current position
         var oldEllipsisCluster = mode switch
         {
             TruncationMode.End => truncMin,
             TruncationMode.Start => truncMax,
-            _ => (truncMin + truncMax) / 2 // Middle
+            _ => (truncMin + truncMax) / 2
         };
         RemoveEllipsisFromCluster(glyphs, firstGlyph, lastGlyph, oldEllipsisCluster, clusterData, ellipsisWidth, cpWidths, cpCount);
 
         if (mode == TruncationMode.End)
         {
-            // End mode: restore from truncMin upward (closest to visible text)
             var remaining = availableWidth;
             for (var cluster = truncMin; cluster <= truncMax; cluster++)
             {
@@ -747,7 +740,6 @@ public class EllipsisModifier : BaseModifier
                 restored++;
             }
 
-            // Set ellipsis at new position if still needed
             if (newTruncMin <= truncMax)
             {
                 newEllipsisCluster = newTruncMin;
@@ -756,7 +748,6 @@ public class EllipsisModifier : BaseModifier
         }
         else if (mode == TruncationMode.Start)
         {
-            // Start mode: restore from truncMax downward (closest to visible text)
             var remaining = availableWidth;
             for (var cluster = truncMax; cluster >= truncMin; cluster--)
             {
@@ -770,16 +761,14 @@ public class EllipsisModifier : BaseModifier
                 restored++;
             }
 
-            // Set ellipsis at new position if still needed
             if (newTruncMax >= truncMin)
             {
                 newEllipsisCluster = newTruncMax;
                 SetEllipsisAtCluster(glyphs, firstGlyph, lastGlyph, newEllipsisCluster, clusterData, ellipsisWidth, cpWidths, cpCount);
             }
         }
-        else // Middle mode
+        else
         {
-            // Restore from both ends alternating
             var remaining = availableWidth;
             var left = truncMin;
             var right = truncMax;
@@ -792,7 +781,6 @@ public class EllipsisModifier : BaseModifier
 
                 if (clusterWidth > remaining)
                 {
-                    // Try the other side
                     if (fromLeft && right > left)
                     {
                         fromLeft = false;
@@ -819,7 +807,6 @@ public class EllipsisModifier : BaseModifier
                 fromLeft = !fromLeft;
             }
 
-            // Set ellipsis at new middle position if still needed
             if (newTruncMin <= newTruncMax)
             {
                 newEllipsisCluster = (newTruncMin + newTruncMax) / 2;
@@ -837,7 +824,6 @@ public class EllipsisModifier : BaseModifier
         {
             if (clusterData[g] == cluster && glyphs[g].advanceX > 0)
             {
-                // This glyph had ellipsisWidth, remove it from cpWidths
                 if ((uint)cluster < (uint)cpCount)
                     cpWidths[cluster] -= ellipsisWidth;
                 glyphs[g].advanceX = 0;
@@ -1130,7 +1116,6 @@ public class EllipsisModifier : BaseModifier
                 ref readonly var pg = ref positionedGlyphs[i];
                 ref readonly var shapedGlyph = ref shapedGlyphs[pg.shapedGlyphIndex];
 
-                // Restore baseline position by removing the original glyph's offsets
                 var baselineX = pg.x - shapedGlyph.offsetX * glyphScale;
                 var baselineY = pg.y + shapedGlyph.offsetY * glyphScale;
 

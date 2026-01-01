@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -27,16 +26,14 @@ public readonly struct LinkData
 [Serializable]
 public class LinkModifier : BaseModifier
 {
-    [SerializeField] private Color32 linkColor = new(66, 133, 244, 255);
+    private const string AttributeKey = "links";
 
+    [SerializeField] private Color32 linkColor = new(66, 133, 244, 255);
     [SerializeField] private bool enableUnderline = true;
 
-    private readonly List<LinkData> links = new(8);
-    [ThreadStatic] private static LinkModifier current;
-
+    private PooledArrayAttribute<LinkData> linksAttribute;
     private ColorModifier colorModifier;
     private UnderlineModifier underlineModifier;
-
     private string cachedHexColor;
 
     public Color32 LinkColor
@@ -60,11 +57,9 @@ public class LinkModifier : BaseModifier
         set => enableUnderline = value;
     }
 
-    public IReadOnlyList<LinkData> Links => links;
-
     protected override void CreateBuffers()
     {
-        current = this;
+        linksAttribute = buffers.GetOrCreateAttributeData<PooledArrayAttribute<LinkData>>(AttributeKey);
         cachedHexColor = ColorToHex(linkColor);
 
         colorModifier = new ColorModifier();
@@ -76,42 +71,34 @@ public class LinkModifier : BaseModifier
 
     protected override void Subscribe()
     {
-        uniText.Rebuilding += OnRebuilding;
     }
 
     protected override void Unsubscribe()
     {
-        uniText.Rebuilding -= OnRebuilding;
     }
 
     protected override void ReleaseBuffers()
     {
-        if (current == this) current = null;
-
         colorModifier?.Deinitialize();
         colorModifier = null;
 
         underlineModifier?.Deinitialize();
         underlineModifier = null;
+
+        linksAttribute = null;
     }
 
     protected override void ClearBuffers()
     {
-        colorModifier.Reset();
-        underlineModifier.Reset();
-        links.Clear();
-    }
-
-    private void OnRebuilding()
-    {
-        current = this;
+        colorModifier?.Reset();
+        underlineModifier?.Reset();
     }
 
     protected override void OnApply(int start, int end, string parameter)
     {
         if (string.IsNullOrEmpty(parameter)) return;
 
-        links.Add(new LinkData(start, end, parameter));
+        linksAttribute.Add(new LinkData(start, end, parameter));
 
         colorModifier.Apply(start, end, cachedHexColor);
 
@@ -119,36 +106,38 @@ public class LinkModifier : BaseModifier
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string GetLinkUrl(int cluster)
+    public static string GetLinkUrl(UniTextBuffers buffers, int cluster)
     {
-        if (current == null) return null;
-        var links = current.links;
-        for (var i = 0; i < links.Count; i++)
-            if (links[i].Contains(cluster))
-                return links[i].url;
+        var attr = buffers?.GetAttributeData<PooledArrayAttribute<LinkData>>(AttributeKey);
+        if (attr == null) return null;
+
+        for (var i = 0; i < attr.Count; i++)
+            if (attr[i].Contains(cluster))
+                return attr[i].url;
         return null;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsLink(int cluster)
+    public static bool IsLink(UniTextBuffers buffers, int cluster)
     {
-        if (current == null) return false;
-        var links = current.links;
-        for (var i = 0; i < links.Count; i++)
-            if (links[i].Contains(cluster))
+        var attr = buffers?.GetAttributeData<PooledArrayAttribute<LinkData>>(AttributeKey);
+        if (attr == null) return false;
+
+        for (var i = 0; i < attr.Count; i++)
+            if (attr[i].Contains(cluster))
                 return true;
         return false;
     }
 
-    public static bool TryGetLinkData(int cluster, out LinkData linkData)
+    public static bool TryGetLinkData(UniTextBuffers buffers, int cluster, out LinkData linkData)
     {
-        if (current != null)
+        var attr = buffers?.GetAttributeData<PooledArrayAttribute<LinkData>>(AttributeKey);
+        if (attr != null)
         {
-            var links = current.links;
-            for (var i = 0; i < links.Count; i++)
-                if (links[i].Contains(cluster))
+            for (var i = 0; i < attr.Count; i++)
+                if (attr[i].Contains(cluster))
                 {
-                    linkData = links[i];
+                    linkData = attr[i];
                     return true;
                 }
         }

@@ -5,15 +5,16 @@ using System.Runtime.CompilerServices;
 [Serializable]
 public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
 {
-    protected T[] buffer;
+    protected PooledArrayAttribute<T> attribute;
 
     protected abstract string AttributeKey { get; }
 
     protected sealed override void CreateBuffers()
     {
+        attribute = buffers.GetOrCreateAttributeData<PooledArrayAttribute<T>>(AttributeKey);
         var cpCount = buffers.codepoints.count;
-        buffer = buffers.GetOrCreateAttributeArray<T>(AttributeKey, cpCount);
-        SetStaticBuffer(buffer);
+        attribute.EnsureCapacity(cpCount);
+        SetStaticBuffer(attribute.buffer.data);
     }
 
     protected sealed override void Subscribe()
@@ -31,8 +32,8 @@ public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
     protected sealed override void ReleaseBuffers()
     {
         SetStaticBuffer(null);
-        buffers.ReleaseAttributeArray(AttributeKey);
-        buffer = null;
+        buffers.ReleaseAttributeData(AttributeKey);
+        attribute = null;
     }
 
     protected sealed override void ClearBuffers()
@@ -41,16 +42,17 @@ public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
 
     private void OnRebuilding()
     {
-        buffer = buffers.GetAttributeArray<T>(AttributeKey);
-        SetStaticBuffer(buffer);
+        attribute = buffers.GetAttributeData<PooledArrayAttribute<T>>(AttributeKey);
+        SetStaticBuffer(attribute?.buffer.data);
     }
 
     protected void EnsureBufferCapacity(int required)
     {
-        if (buffer == null || buffer.Length < required)
+        if (attribute == null || attribute.buffer.Capacity < required)
         {
-            buffer = buffers.GrowAttributeArray<T>(AttributeKey, required);
-            SetStaticBuffer(buffer);
+            attribute ??= buffers.GetOrCreateAttributeData<PooledArrayAttribute<T>>(AttributeKey);
+            attribute.EnsureCapacity(required);
+            SetStaticBuffer(attribute.buffer.data);
         }
     }
 

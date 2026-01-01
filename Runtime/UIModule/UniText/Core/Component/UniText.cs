@@ -374,7 +374,9 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     protected override void OnEnable()
     {
         base.OnEnable();
+#if UNITY_EDITOR
         ListenConfigChanged();
+#endif
         CollectExistingSubMeshRenderers();
         SetDirty(DirtyFlags.All);
     }
@@ -394,7 +396,9 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     
     private void DeInit()
     {
+#if UNITY_EDITOR
         UnlistenConfigChanged();
+#endif
         UnregisterDirty(this);
         attributeParser?.DeinitializeModifiers();
         attributeParser?.Release();
@@ -465,6 +469,21 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
     {
         SetDirty(DirtyFlags.All);
     }
+    
+    private bool TryInitFontsAndAppearance()
+    {
+        if (fonts == null || appearance == null)
+        {
+            fonts = UniTextSettings.DefaultFonts;
+            appearance = UniTextSettings.DefaultAppearance;
+            if (fonts == null || appearance == null)
+            {
+                return false;
+            }
+        }    
+        
+        return true;
+    }
 #endif
 
     #endregion
@@ -473,19 +492,19 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
     private bool isRebuilding;
 
-    public override void Rebuild(CanvasUpdate update)
-    {
-    }
+    public override void Rebuild(CanvasUpdate update) { }
     
     private bool ValidateAndInitialize()
     {
         UniTextDebug.BeginSample("UniText.ValidateAndInitialize");
-
+        
+#if UNITY_EDITOR
         if (!TryInitFontsAndAppearance())
         {
             UniTextDebug.EndSample();
             return false;
         }
+#endif
 
         buffers ??= new UniTextBuffers();
         buffers.EnsureRentBuffers(text.Length);
@@ -506,22 +525,6 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         UniTextDebug.EndSample();
         return true;
     }
-
-    private bool TryInitFontsAndAppearance()
-    {
-        if (fonts == null || appearance == null)
-        {
-            fonts = UniTextSettings.DefaultFonts;
-            appearance = UniTextSettings.DefaultAppearance;
-            if (fonts == null || appearance == null)
-            {
-                return false;
-            }
-        }    
-        
-        return true;
-    }
-    
 
     private ReadOnlySpan<char> ParseOrGetParsedAttributes()
     {

@@ -30,21 +30,17 @@ public static class UniTextDebug
 
     #region Counters
 
-    // TextProcessor
     public static int TextProcessor_ProcessCount;
     public static int TextProcessor_EnsureShapingCount;
     public static int TextProcessor_DoFullShapingCount;
 
-    // UniTextBuffers
     public static int Buffers_InstanceCount;
     public static int Buffers_RentCount;
 
-    // BidiEngine
     public static int Bidi_ProcessCount;
     public static int Bidi_BuildIsoRunSeqCount;
     public static int Bidi_BuildIsoRunSeqForParagraphCount;
 
-    // UniTextArrayPool
     public static int Pool_TotalRents;
     public static int Pool_PoolHits;
     public static int Pool_PoolMisses;

@@ -13,11 +13,9 @@ public abstract class BaseLineModifier : BaseModifier
         public Color32 color;
     }
 
-    // Max Y-difference between glyphs to consider them on the same line.
-    // Accounts for subscript/superscript variations while being much smaller than typical line height (20+px).
     private const float LineBreakThreshold = 5f;
 
-    protected byte[] flagsBuffer;
+    protected PooledArrayAttribute<byte> flagsAttribute;
 
     private LineSegment[] lineSegments;
     private int lineSegmentsCapacity;
@@ -31,9 +29,10 @@ public abstract class BaseLineModifier : BaseModifier
 
     protected sealed override void CreateBuffers()
     {
+        flagsAttribute = buffers.GetOrCreateAttributeData<PooledArrayAttribute<byte>>(AttributeKey);
         var cpCount = buffers.codepoints.count;
-        flagsBuffer = buffers.GetOrCreateAttributeArray<byte>(AttributeKey, cpCount);
-        SetStaticBuffer(flagsBuffer);
+        flagsAttribute.EnsureCapacity(cpCount);
+        SetStaticBuffer(flagsAttribute.buffer.data);
 
         lineSegments = UniTextArrayPool<LineSegment>.Rent(64);
         lineSegmentsCapacity = 64;
@@ -57,8 +56,8 @@ public abstract class BaseLineModifier : BaseModifier
     protected sealed override void ReleaseBuffers()
     {
         SetStaticBuffer(null);
-        buffers.ReleaseAttributeArray(AttributeKey);
-        flagsBuffer = null;
+        buffers.ReleaseAttributeData(AttributeKey);
+        flagsAttribute = null;
 
         if (lineSegments != null)
         {
@@ -76,24 +75,25 @@ public abstract class BaseLineModifier : BaseModifier
     {
         var cpCount = buffers.codepoints.count;
         EnsureBufferCapacity(cpCount);
-        flagsBuffer.SetFlagRange(start, Math.Min(end, cpCount));
+        flagsAttribute.buffer.data.SetFlagRange(start, Math.Min(end, cpCount));
 
         buffers.virtualCodepoints.Add('_');
     }
 
     protected void EnsureBufferCapacity(int required)
     {
-        if (flagsBuffer == null || flagsBuffer.Length < required)
+        if (flagsAttribute == null || flagsAttribute.buffer.Capacity < required)
         {
-            flagsBuffer = buffers.GrowAttributeArray<byte>(AttributeKey, required);
-            SetStaticBuffer(flagsBuffer);
+            flagsAttribute ??= buffers.GetOrCreateAttributeData<PooledArrayAttribute<byte>>(AttributeKey);
+            flagsAttribute.EnsureCapacity(required);
+            SetStaticBuffer(flagsAttribute.buffer.data);
         }
     }
 
     private void OnRebuilding()
     {
-        flagsBuffer = buffers.GetAttributeArray<byte>(AttributeKey);
-        SetStaticBuffer(flagsBuffer);
+        flagsAttribute = buffers.GetAttributeData<PooledArrayAttribute<byte>>(AttributeKey);
+        SetStaticBuffer(flagsAttribute?.buffer.data);
     }
 
     private void AddSegment(float startX, float endX, float baselineY, Color32 color)
@@ -133,6 +133,7 @@ public abstract class BaseLineModifier : BaseModifier
         var underscoreFont = fontProvider.GetFontAsset(underscoreFontId);
         if (underscoreFont != currentFont) return;
 
+        var flagsBuffer = flagsAttribute?.buffer.data;
         if (!flagsBuffer.HasAnyFlags()) return;
 
         lineSegmentCount = 0;

@@ -10,7 +10,7 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
     public event Action<string> OnLinkEnter;
     public event Action OnLinkExit;
     public TextHitResult LastHoverResult => lastHoverResult;
-    public bool IsHoveringLink => lastHoverResult.hit && LinkModifier.IsLink(lastHoverResult.cluster);
+    public bool IsHoveringLink => lastHoverResult.hit && LinkModifier.IsLink(buffers, lastHoverResult.cluster);
 
     public void OnPointerClick(PointerEventData eventData)
     {
@@ -23,9 +23,9 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
 
         OnTextClick?.Invoke(result);
 
-        if (LinkModifier.IsLink(result.cluster))
+        if (LinkModifier.IsLink(buffers, result.cluster))
         {
-            var url = LinkModifier.GetLinkUrl(result.cluster);
+            var url = LinkModifier.GetLinkUrl(buffers, result.cluster);
             OnLinkClick?.Invoke(url);
             Application.OpenURL(url);
         }
@@ -38,7 +38,7 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (lastHoverResult.hit && LinkModifier.IsLink(lastHoverResult.cluster)) OnLinkExit?.Invoke();
+        if (lastHoverResult.hit && LinkModifier.IsLink(buffers, lastHoverResult.cluster)) OnLinkExit?.Invoke();
         lastHoverResult = TextHitResult.None;
     }
 
@@ -55,11 +55,11 @@ public partial class UniText : IPointerClickHandler, IPointerEnterHandler, IPoin
 
         var result = HitTestScreen(eventData.position, camera, 5);
 
-        var wasLink = lastHoverResult.hit && LinkModifier.IsLink(lastHoverResult.cluster);
-        var isLink = result.hit && LinkModifier.IsLink(result.cluster);
+        var wasLink = lastHoverResult.hit && LinkModifier.IsLink(buffers, lastHoverResult.cluster);
+        var isLink = result.hit && LinkModifier.IsLink(buffers, result.cluster);
 
-        var oldUrl = wasLink ? LinkModifier.GetLinkUrl(lastHoverResult.cluster) : null;
-        var newUrl = isLink ? LinkModifier.GetLinkUrl(result.cluster) : null;
+        var oldUrl = wasLink ? LinkModifier.GetLinkUrl(buffers, lastHoverResult.cluster) : null;
+        var newUrl = isLink ? LinkModifier.GetLinkUrl(buffers, result.cluster) : null;
 
         if (wasLink && (!isLink || oldUrl != newUrl)) OnLinkExit?.Invoke();
 
