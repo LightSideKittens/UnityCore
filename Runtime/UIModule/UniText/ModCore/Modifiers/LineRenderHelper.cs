@@ -53,7 +53,7 @@ public static class LineRenderHelper
 
         var verts = gen.Vertices;
         var uvs0 = gen.Uvs0;
-        var uvs2 = gen.Uvs2;
+        var uvs1 = gen.Uvs1;
         var colors = gen.Colors;
         var tris = gen.Triangles;
 
@@ -134,7 +134,7 @@ public static class LineRenderHelper
 
         #endregion
 
-        #region UV2 (SDF scale - normalized X position along line)
+        #region UV1 (SDF scale - normalized X position along line)
 
         var totalWidth = end.x - start.x;
         if (totalWidth < 0.001f) totalWidth = 1f;
@@ -144,20 +144,20 @@ public static class LineRenderHelper
         var maxUvX_Mid = (verts[vertIdx + 6].x - start.x) / totalWidth;
         var minUvX_Right = (verts[vertIdx + 8].x - start.x) / totalWidth;
 
-        uvs2[vertIdx + 0] = new Vector2(0, 0);
-        uvs2[vertIdx + 1] = new Vector2(0, 1);
-        uvs2[vertIdx + 2] = new Vector2(maxUvX_Left, 1);
-        uvs2[vertIdx + 3] = new Vector2(maxUvX_Left, 0);
+        uvs1[vertIdx + 0] = new Vector2(0, 0);
+        uvs1[vertIdx + 1] = new Vector2(0, 1);
+        uvs1[vertIdx + 2] = new Vector2(maxUvX_Left, 1);
+        uvs1[vertIdx + 3] = new Vector2(maxUvX_Left, 0);
 
-        uvs2[vertIdx + 4] = new Vector2(minUvX_Mid, 0);
-        uvs2[vertIdx + 5] = new Vector2(minUvX_Mid, 1);
-        uvs2[vertIdx + 6] = new Vector2(maxUvX_Mid, 1);
-        uvs2[vertIdx + 7] = new Vector2(maxUvX_Mid, 0);
+        uvs1[vertIdx + 4] = new Vector2(minUvX_Mid, 0);
+        uvs1[vertIdx + 5] = new Vector2(minUvX_Mid, 1);
+        uvs1[vertIdx + 6] = new Vector2(maxUvX_Mid, 1);
+        uvs1[vertIdx + 7] = new Vector2(maxUvX_Mid, 0);
 
-        uvs2[vertIdx + 8] = new Vector2(minUvX_Right, 0);
-        uvs2[vertIdx + 9] = new Vector2(minUvX_Right, 1);
-        uvs2[vertIdx + 10] = new Vector2(1, 1);
-        uvs2[vertIdx + 11] = new Vector2(1, 0);
+        uvs1[vertIdx + 8] = new Vector2(minUvX_Right, 0);
+        uvs1[vertIdx + 9] = new Vector2(minUvX_Right, 1);
+        uvs1[vertIdx + 10] = new Vector2(1, 1);
+        uvs1[vertIdx + 11] = new Vector2(1, 0);
 
         #endregion
 

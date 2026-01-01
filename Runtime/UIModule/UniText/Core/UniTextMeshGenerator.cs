@@ -55,13 +55,11 @@ public class UniTextMeshGenerator
 
     [ThreadStatic] private static FastIntDictionary<PooledList<int>> glyphsByAtlas;
 
-    private PooledBuffer<Vector3> instanceVertices;
-    private PooledBuffer<Vector4> instanceUvs0;
-    private PooledBuffer<Vector2> instanceUvs2;
-    private PooledBuffer<Color32> instanceColors;
-    private PooledBuffer<int> instanceTriangles;
-    private PooledBuffer<Vector3> instanceNormals;
-    private PooledBuffer<Vector4> instanceTangents;
+    private PooledBuffer<Vector3> vertices;
+    private PooledBuffer<Vector4> uvs0;
+    private PooledBuffer<Vector2> uvs1;
+    private PooledBuffer<Color32> colors;
+    private PooledBuffer<int> triangles;
     private PooledList<GeneratedMeshSegment> generatedSegments;
     private bool hasGeneratedData;
 
@@ -86,25 +84,35 @@ public class UniTextMeshGenerator
     public float FontSize { get; set; } = 36f;
     public bool HasGeneratedData => hasGeneratedData;
 
-    public Vector3[] Vertices => instanceVertices.data;
-    public Vector4[] Uvs0 => instanceUvs0.data;
-    public Vector2[] Uvs2 => instanceUvs2.data;
-    public Color32[] Colors => instanceColors.data;
-    public int[] Triangles => instanceTriangles.data;
-    public Vector3[] Normals => instanceNormals.data;
-    public Vector4[] Tangents => instanceTangents.data;
+    public Vector3[] Vertices => vertices.data;
+    public Vector4[] Uvs0 => uvs0.data;
+    public Color32[] Colors => colors.data;
+    public int[] Triangles => triangles.data;
+
+    public Vector2[] Uvs1
+    {
+        get
+        {
+            EnsureUvs1();
+            return uvs1.data;
+        }
+    }
+
+    private void EnsureUvs1()
+    {
+        if (uvs1.data != null) return;
+        uvs1.Rent(vertices.Capacity);
+        uvs1.count = vertexCount;
+    }
 
     #region Instance Buffer Management
 
     private void RentInstanceBuffers(int estimatedVertices, int estimatedTriangles)
     {
-        instanceVertices.Rent(estimatedVertices);
-        instanceUvs0.Rent(estimatedVertices);
-        instanceUvs2.Rent(estimatedVertices);
-        instanceColors.Rent(estimatedVertices);
-        instanceNormals.Rent(estimatedVertices);
-        instanceTangents.Rent(estimatedVertices);
-        instanceTriangles.Rent(estimatedTriangles);
+        vertices.Rent(estimatedVertices);
+        uvs0.Rent(estimatedVertices);
+        colors.Rent(estimatedVertices);
+        triangles.Rent(estimatedTriangles);
         generatedSegments ??= new PooledList<GeneratedMeshSegment>(4);
         generatedSegments.FakeClear();
 
@@ -115,13 +123,11 @@ public class UniTextMeshGenerator
     {
         current = null;
 
-        instanceVertices.Return();
-        instanceUvs0.Return();
-        instanceUvs2.Return();
-        instanceColors.Return();
-        instanceNormals.Return();
-        instanceTangents.Return();
-        instanceTriangles.Return();
+        vertices.Return();
+        uvs0.Return();
+        uvs1.Return();
+        colors.Return();
+        triangles.Return();
         hasGeneratedData = false;
     }
     
@@ -131,32 +137,30 @@ public class UniTextMeshGenerator
         var requiredVertices = vertexCount + additionalVertices;
         var requiredTriangles = triangleCount + additionalTriangles;
 
-        if (requiredVertices > instanceVertices.Capacity)
+        if (requiredVertices > vertices.Capacity)
             GrowVertexBuffers(requiredVertices);
 
-        if (requiredTriangles > instanceTriangles.Capacity)
+        if (requiredTriangles > triangles.Capacity)
             GrowTriangleBuffer(requiredTriangles);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void GrowVertexBuffers(int required)
     {
-        var newCapacity = Math.Max(required, instanceVertices.Capacity * 2);
+        var newCapacity = Math.Max(required, vertices.Capacity * 2);
         var currentCount = vertexCount;
 
-        GrowBuffer(ref instanceVertices, newCapacity, currentCount);
-        GrowBuffer(ref instanceUvs0, newCapacity, currentCount);
-        GrowBuffer(ref instanceUvs2, newCapacity, currentCount);
-        GrowBuffer(ref instanceColors, newCapacity, currentCount);
-        GrowBuffer(ref instanceNormals, newCapacity, currentCount);
-        GrowBuffer(ref instanceTangents, newCapacity, currentCount);
+        GrowBuffer(ref vertices, newCapacity, currentCount);
+        GrowBuffer(ref uvs0, newCapacity, currentCount);
+        GrowBuffer(ref colors, newCapacity, currentCount);
+        if (uvs1.data != null) GrowBuffer(ref uvs1, newCapacity, currentCount);
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void GrowTriangleBuffer(int required)
     {
-        var newCapacity = Math.Max(required, instanceTriangles.Capacity * 2);
-        GrowBuffer(ref instanceTriangles, newCapacity, triangleCount);
+        var newCapacity = Math.Max(required, triangles.Capacity * 2);
+        GrowBuffer(ref triangles, newCapacity, triangleCount);
     }
 
     private static void GrowBuffer<T>(ref PooledBuffer<T> buffer, int newCapacity, int currentCount)
@@ -258,8 +262,8 @@ public class UniTextMeshGenerator
 
             if (!hasMultipleAtlases)
             {
-                var vertexStart = instanceVertices.count;
-                var triangleStart = instanceTriangles.count;
+                var vertexStart = vertices.count;
+                var triangleStart = triangles.count;
 
                 GenerateMeshDataForFont(glyphIndices, positionedGlyphs, fontAsset);
 
@@ -268,9 +272,9 @@ public class UniTextMeshGenerator
                     fontId = fontId,
                     atlasIndex = 0,
                     vertexStart = vertexStart,
-                    vertexCount = instanceVertices.count - vertexStart,
+                    vertexCount = vertices.count - vertexStart,
                     triangleStart = triangleStart,
-                    triangleCount = instanceTriangles.count - triangleStart,
+                    triangleCount = triangles.count - triangleStart,
                     material = material,
                     texture = fontAsset.AtlasTexture
                 });
@@ -303,8 +307,8 @@ public class UniTextMeshGenerator
                     var atlasIndex = atlasKvp.Key;
                     var atlasIndices = atlasKvp.Value;
 
-                    var vertexStart = instanceVertices.count;
-                    var triangleStart = instanceTriangles.count;
+                    var vertexStart = vertices.count;
+                    var triangleStart = triangles.count;
 
                     GenerateMeshDataForFont(atlasIndices, positionedGlyphs, fontAsset);
 
@@ -317,9 +321,9 @@ public class UniTextMeshGenerator
                         fontId = fontId,
                         atlasIndex = atlasIndex,
                         vertexStart = vertexStart,
-                        vertexCount = instanceVertices.count - vertexStart,
+                        vertexCount = vertices.count - vertexStart,
                         triangleStart = triangleStart,
-                        triangleCount = instanceTriangles.count - triangleStart,
+                        triangleCount = triangles.count - triangleStart,
                         material = material,
                         texture = atlasTexture
                     });
@@ -357,8 +361,8 @@ public class UniTextMeshGenerator
         offsetX = offX;
         offsetY = offY;
         this.font = font;
-        vertexCount = instanceVertices.count;
-        triangleCount = instanceTriangles.count;
+        vertexCount = vertices.count;
+        triangleCount = triangles.count;
 
         OnBeforeMesh?.Invoke();
 
@@ -477,13 +481,11 @@ public class UniTextMeshGenerator
 
         OnAfterGlyphsPerFont?.Invoke();
 
-        instanceVertices.count = vertexCount;
-        instanceUvs0.count = vertexCount;
-        instanceUvs2.count = vertexCount;
-        instanceColors.count = vertexCount;
-        instanceNormals.count = vertexCount;
-        instanceTangents.count = vertexCount;
-        instanceTriangles.count = triangleCount;
+        vertices.count = vertexCount;
+        uvs0.count = vertexCount;
+        colors.count = vertexCount;
+        triangles.count = triangleCount;
+        if (uvs1.data != null) uvs1.count = vertexCount;
     }
     
     public PooledList<UniTextRenderData> ApplyMeshesToUnity(Func<Mesh> meshProvider)
@@ -503,12 +505,11 @@ public class UniTextMeshGenerator
 
             if (segment.vertexCount > 0)
             {
-                mesh.SetVertices(instanceVertices.data, segment.vertexStart, segment.vertexCount);
-                mesh.SetNormals(instanceNormals.data, segment.vertexStart, segment.vertexCount);
-                mesh.SetTangents(instanceTangents.data, segment.vertexStart, segment.vertexCount);
-                mesh.SetUVs(0, instanceUvs0.data, segment.vertexStart, segment.vertexCount);
-                mesh.SetUVs(1, instanceUvs2.data, segment.vertexStart, segment.vertexCount);
-                mesh.SetColors(instanceColors.data, segment.vertexStart, segment.vertexCount);
+                mesh.SetVertices(vertices.data, segment.vertexStart, segment.vertexCount);
+                mesh.SetUVs(0, uvs0.data, segment.vertexStart, segment.vertexCount);
+                if (uvs1.data != null)
+                    mesh.SetUVs(1, uvs1.data, segment.vertexStart, segment.vertexCount);
+                mesh.SetColors(colors.data, segment.vertexStart, segment.vertexCount);
 
                 var triStart = segment.triangleStart;
                 var triCount = segment.triangleCount;
@@ -516,7 +517,7 @@ public class UniTextMeshGenerator
 
                 var adjustedTris = UniTextArrayPool<int>.Rent(triCount);
                 for (var t = 0; t < triCount; t++)
-                    adjustedTris[t] = instanceTriangles[triStart + t] - vertOffset;
+                    adjustedTris[t] = triangles[triStart + t] - vertOffset;
 
                 mesh.SetTriangles(adjustedTris, 0, triCount, 0);
                 UniTextArrayPool<int>.Return(adjustedTris);
