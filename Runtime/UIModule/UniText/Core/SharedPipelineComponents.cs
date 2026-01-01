@@ -5,93 +5,58 @@ using UnityEngine;
 
 public static class SharedPipelineComponents
 {
-    #region Pipeline Components (lazy initialized, thread-safe or stateless)
+    #region Pipeline Components
 
-    private static BidiEngine bidiEngine;
-    private static ScriptAnalyzer scriptAnalyzer;
-    private static LineBreakAlgorithm lineBreakAlgorithm;
+    private static readonly Lazy<BidiEngine> bidiEngine = new(() => new BidiEngine());
+    private static readonly Lazy<ScriptAnalyzer> scriptAnalyzer = new(() => new ScriptAnalyzer());
+    private static readonly Lazy<LineBreakAlgorithm> lineBreakAlgorithm = new(() => new LineBreakAlgorithm());
+    private static readonly Lazy<HybridShapingEngine> shapingEngine = new(() =>
+    {
+        var harfBuzz = new HarfBuzzShapingEngine();
+        return new HybridShapingEngine(harfBuzz);
+    });
+
     [ThreadStatic] private static LineBreaker lineBreaker;
     [ThreadStatic] private static TextLayout textLayout;
-    private static HybridShapingEngine shapingEngine;
-    private static HarfBuzzShapingEngine harfBuzzEngine;
-    private static readonly object shapingEngineLock = new();
 
-    public static BidiEngine BidiEngine => bidiEngine ??= new BidiEngine();
-    public static ScriptAnalyzer ScriptAnalyzer => scriptAnalyzer ??= new ScriptAnalyzer();
-    public static LineBreakAlgorithm LineBreakAlgorithm => lineBreakAlgorithm ??= new LineBreakAlgorithm();
+    public static BidiEngine BidiEngine => bidiEngine.Value;
+    public static ScriptAnalyzer ScriptAnalyzer => scriptAnalyzer.Value;
+    public static LineBreakAlgorithm LineBreakAlgorithm => lineBreakAlgorithm.Value;
+    public static HybridShapingEngine ShapingEngine => shapingEngine.Value;
 
     public static LineBreaker LineBreaker => lineBreaker ??= new LineBreaker();
     public static TextLayout Layout => textLayout ??= new TextLayout();
 
-    public static HybridShapingEngine ShapingEngine
-    {
-        get
-        {
-            if (shapingEngine == null)
-            {
-                lock (shapingEngineLock)
-                {
-                    if (shapingEngine == null)
-                    {
-                        harfBuzzEngine = new HarfBuzzShapingEngine();
-                        shapingEngine = new HybridShapingEngine(harfBuzzEngine);
-                    }
-                }
-            }
-
-            return shapingEngine;
-        }
-    }
-
-    public static HarfBuzzShapingEngine HarfBuzzEngine => harfBuzzEngine;
-
     #endregion
-
-    #region Shaping Output Buffer (ThreadStatic)
-
-    [ThreadStatic] private static ShapedGlyph[] threadShapingOutputBuffer;
-
-    public static ShapedGlyph[] ShapingOutputBuffer
-    {
-        get
-        {
-            threadShapingOutputBuffer ??= new ShapedGlyph[256];
-            return threadShapingOutputBuffer;
-        }
-    }
-
-    public static void EnsureShapingOutputCapacity(int required)
-    {
-        if (threadShapingOutputBuffer == null)
-        {
-            threadShapingOutputBuffer = new ShapedGlyph[Math.Max(required, 256)];
-            return;
-        }
-        if (threadShapingOutputBuffer.Length < required)
-            threadShapingOutputBuffer = new ShapedGlyph[Math.Max(required, threadShapingOutputBuffer.Length * 2)];
-    }
-
-    #endregion
+    
+    [ThreadStatic] public static PooledBuffer<ShapedGlyph> shapingOutputBuffer;
 
     #region Glyph Grouping (ThreadStatic, for mesh generator)
 
-    [ThreadStatic] private static FastIntDictionary<PooledList<int>> threadGlyphsByFont;
-    [ThreadStatic] private static Stack<PooledList<int>> threadGlyphListPool;
-    [ThreadStatic] private static PooledList<UniTextRenderData> threadMeshResultBuffer;
+    [ThreadStatic] private static FastIntDictionary<PooledList<int>> glyphsByFont;
+    [ThreadStatic] private static Stack<PooledList<int>> glyphListPool;
+    [ThreadStatic] private static PooledList<UniTextRenderData> meshResultBuffer;
 
     public static FastIntDictionary<PooledList<int>> GlyphsByFont
-        => threadGlyphsByFont ??= new FastIntDictionary<PooledList<int>>();
+        => glyphsByFont ??= new FastIntDictionary<PooledList<int>>();
 
     public static Stack<PooledList<int>> GlyphListPool
-        => threadGlyphListPool ??= new Stack<PooledList<int>>();
+        => glyphListPool ??= new Stack<PooledList<int>>();
 
     public static PooledList<UniTextRenderData> MeshResultBuffer
-        => threadMeshResultBuffer ??= new PooledList<UniTextRenderData>(4);
+        => meshResultBuffer ??= new PooledList<UniTextRenderData>(4);
 
-    public static PooledList<int> AcquireGlyphIndexList()
+    public static PooledList<int> AcquireGlyphIndexList(int capacity)
     {
         var pool = GlyphListPool;
-        return pool.Count > 0 ? pool.Pop() : new PooledList<int>(64);
+        if (pool.Count > 0)
+        {
+            var result = pool.Pop();
+            result.EnsureCapacity(capacity);
+            return result;
+        }
+
+        return new PooledList<int>(capacity);
     }
 
     public static void ReleaseGlyphIndexList(PooledList<int> list)

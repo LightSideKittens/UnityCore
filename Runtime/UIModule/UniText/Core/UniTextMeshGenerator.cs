@@ -226,28 +226,12 @@ public class UniTextMeshGenerator
                 lastFontId = fontId;
                 if (!glyphsByFont.TryGetValue(fontId, out var list))
                 {
-                    list = SharedPipelineComponents.AcquireGlyphIndexList();
-                    list.EnsureCapacity(glyphLen);
+                    list = SharedPipelineComponents.AcquireGlyphIndexList(glyphLen);
                     glyphsByFont[fontId] = list;
                 }
                 lastList = list;
             }
             lastList.buffer[lastList.buffer.count++] = i;
-        }
-
-        var virtualCount = buf.virtualCodepoints.count;
-        if (virtualCount > 0)
-        {
-            for (var i = 0; i < virtualCount; i++)
-            {
-                var cp = buf.virtualCodepoints[i];
-                var vFontId = fontProvider.FindFontForCodepoint((int)cp);
-                if (!glyphsByFont.ContainsKey(vFontId))
-                {
-                    var list = SharedPipelineComponents.AcquireGlyphIndexList();
-                    glyphsByFont[vFontId] = list;
-                }
-            }
         }
 
         var positionedGlyphs = buf.positionedGlyphs.data;
@@ -295,8 +279,7 @@ public class UniTextMeshGenerator
 
                     if (!glyphsByAtlas.TryGetValue(atlasIndex, out var atlasList))
                     {
-                        atlasList = SharedPipelineComponents.AcquireGlyphIndexList();
-                        atlasList.EnsureCapacity(count);
+                        atlasList = SharedPipelineComponents.AcquireGlyphIndexList(count);
                         glyphsByAtlas[atlasIndex] = atlasList;
                     }
                     atlasList.buffer[atlasList.buffer.count++] = glyphIndex;

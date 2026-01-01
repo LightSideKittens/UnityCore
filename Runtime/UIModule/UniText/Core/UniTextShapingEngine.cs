@@ -16,9 +16,10 @@ public sealed class UniTextShapingEngine : IShapingEngine
         if (length == 0)
             return new ShapingResult(ReadOnlySpan<ShapedGlyph>.Empty, 0);
 
-        SharedPipelineComponents.EnsureShapingOutputCapacity(length);
+        ref var outputBuffer = ref SharedPipelineComponents.shapingOutputBuffer;
+        outputBuffer.EnsureCapacity(length);
 
-        var buffer = SharedPipelineComponents.ShapingOutputBuffer;
+        var buffer = outputBuffer.data;
         float totalAdvance = 0;
 
         var font = fontProvider.GetFontAsset(fontId);
@@ -78,7 +79,7 @@ public sealed class UniTextShapingEngine : IShapingEngine
             }
         }
 
-        return new ShapingResult(SharedPipelineComponents.ShapingOutputBuffer.AsSpan(0, length), totalAdvance);
+        return new ShapingResult(buffer.AsSpan(0, length), totalAdvance);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
