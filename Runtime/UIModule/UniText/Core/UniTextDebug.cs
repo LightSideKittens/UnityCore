@@ -2,29 +2,10 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using UnityEngine.Profiling;
 
-
-/// <summary>
-/// Centralized debug and profiling control for UniText.
-/// All debug features are disabled by default for zero overhead in production.
-/// </summary>
 public static class UniTextDebug
 {
-    /// <summary>
-    /// Master switch for all debug features.
-    /// When false, all debug methods become no-ops with zero overhead.
-    /// </summary>
     public static bool Enabled;
-
-    /// <summary>
-    /// Enable Unity Profiler markers (BeginSample/EndSample).
-    /// Only works when Enabled is also true.
-    /// </summary>
     public static bool ProfilerEnabled = true;
-
-    /// <summary>
-    /// Enable debug counters (Interlocked.Increment for statistics).
-    /// Only works when Enabled is also true.
-    /// </summary>
     public static bool CountersEnabled = true;
 
 

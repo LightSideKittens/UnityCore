@@ -569,6 +569,24 @@ public class UniTextInteractiveTest : MonoBehaviour
 
     #endregion
 
+    private List<ModRegister> last;
+    
+    [ContextMenu("Modifiers/Set")]
+    public void SetMods()
+    {
+        last ??= new((List<ModRegister>)target.ModRegisters);
+        target.ClearModifiers();
+        for (var i = 0; i < modifiers.Count; i++) target.RegisterModifier(modifiers[i]);
+    }
+    
+    [ContextMenu("Modifiers/Restore")]
+    public void RestoreMods()
+    {
+        if(last == null) return;
+        target.ClearModifiers();
+        for (var i = 0; i < last.Count; i++) target.RegisterModifier(last[i]);
+    }
+    
     [ContextMenu("Modifiers/Add")]
     public void AddMods()
     {

@@ -319,6 +319,26 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         }
     }
 
+    public void ClearModifiers()
+    {
+        if(modRegisters.Count == 0) return;
+
+        if (attributeParser != null)
+        {
+            for (var i = 0; i < modRegisters.Count; i++)
+            {
+                var register = modRegisters[i];
+                register.modifier.Deinitialize();
+                attributeParser.Unregister(register.modifier);
+            }
+            
+            SetDirty(DirtyFlags.Text);
+        }
+
+        modRegisters.Clear();
+        DestroyAttributeParser();
+    }
+
     public void ReInitModifiers()
     {
         DestroyAttributeParser();
