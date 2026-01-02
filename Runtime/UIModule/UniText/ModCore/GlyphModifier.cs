@@ -13,7 +13,7 @@ public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
     {
         attribute = buffers.GetOrCreateAttributeData<PooledArrayAttribute<T>>(AttributeKey);
         var cpCount = buffers.codepoints.count;
-        attribute.EnsureCapacity(cpCount);
+        attribute.EnsureCount(cpCount);
         SetStaticBuffer(attribute.buffer.data);
     }
 
@@ -46,14 +46,11 @@ public abstract class GlyphModifier<T> : BaseModifier where T : unmanaged
         SetStaticBuffer(attribute?.buffer.data);
     }
 
-    protected void EnsureBufferCapacity(int required)
+    protected void EnsureBufferCount(int required)
     {
-        if (attribute == null || attribute.buffer.Capacity < required)
-        {
-            attribute ??= buffers.GetOrCreateAttributeData<PooledArrayAttribute<T>>(AttributeKey);
-            attribute.EnsureCapacity(required);
-            SetStaticBuffer(attribute.buffer.data);
-        }
+        attribute ??= buffers.GetOrCreateAttributeData<PooledArrayAttribute<T>>(AttributeKey);
+        attribute.EnsureCount(required);
+        SetStaticBuffer(attribute.buffer.data);
     }
 
     protected abstract Action GetOnGlyphCallback();

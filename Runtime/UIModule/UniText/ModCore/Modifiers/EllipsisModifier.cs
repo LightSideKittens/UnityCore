@@ -287,8 +287,7 @@ public class EllipsisModifier : BaseModifier
             return;
         }
 
-        truncationFlags.EnsureCapacity(maxCluster);
-        truncationFlags.count = maxCluster;
+        truncationFlags.EnsureCount(maxCluster);
         truncationFlags.data.AsSpan(0, maxCluster).Clear();
 
         var flagsData = truncationFlags.data;

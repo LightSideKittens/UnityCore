@@ -31,7 +31,7 @@ public abstract class BaseLineModifier : BaseModifier
     {
         flagsAttribute = buffers.GetOrCreateAttributeData<PooledArrayAttribute<byte>>(AttributeKey);
         var cpCount = buffers.codepoints.count;
-        flagsAttribute.EnsureCapacity(cpCount);
+        flagsAttribute.EnsureCount(cpCount);
         SetStaticBuffer(flagsAttribute.buffer.data);
 
         lineSegments = UniTextArrayPool<LineSegment>.Rent(64);
@@ -85,7 +85,7 @@ public abstract class BaseLineModifier : BaseModifier
         if (flagsAttribute == null || flagsAttribute.buffer.Capacity < required)
         {
             flagsAttribute ??= buffers.GetOrCreateAttributeData<PooledArrayAttribute<byte>>(AttributeKey);
-            flagsAttribute.EnsureCapacity(required);
+            flagsAttribute.EnsureCount(required);
             SetStaticBuffer(flagsAttribute.buffer.data);
         }
     }

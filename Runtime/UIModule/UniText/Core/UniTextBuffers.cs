@@ -30,23 +30,17 @@ public sealed class PooledArrayAttribute<T> : IAttributeData
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Add(T item) => buffer.Add(item);
-
-    public void EnsureCapacity(int required)
+    public void EnsureCount(int required)
     {
-        var oldCapacity = buffer.Capacity;
-        buffer.EnsureCapacity(required);
-
-        if (buffer.Capacity > oldCapacity && buffer.data != null)
-            buffer.data.AsSpan(oldCapacity, buffer.Capacity - oldCapacity).Clear();
+        var needClear = buffer.data == null;
+        buffer.EnsureCount(required);
+        if (needClear)
+        { 
+            buffer.ClearData();
+        }
     }
 
-    public void Reset()
-    {
-        if (buffer.data != null)
-            buffer.data.AsSpan(0, buffer.Capacity).Clear();
-        buffer.count = 0;
-    }
-
+    public void Reset() => buffer.ClearData();
     public void Release() => buffer.Return();
 }
 
@@ -163,7 +157,6 @@ public sealed class UniTextBuffers
         lines.Rent(MinLineCapacity);
         orderedRuns.Rent(MinRunCapacity);
         positionedGlyphs.Rent(glyphCapacity);
-        virtualCodepoints.Rent(MinCodepointCapacity);
 
         bidiLevels.Rent(codepointCapacity);
         scripts.Rent(codepointCapacity);

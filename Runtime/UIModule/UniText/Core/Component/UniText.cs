@@ -23,6 +23,7 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
         Direction = 1 << 5,
         Text = 1 << 6,
         Material = 1 << 7,
+        LayoutRebuild = Layout | FontSize,
         FullRebuild = Text | Font | Direction,
         All = Color | Alignment | Layout | FontSize | FullRebuild
     }
@@ -257,11 +258,11 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
 
         if ((flags & DirtyFlags.FullRebuild) != 0)
         {
-            textProcessor?.InvalidateFirstPassData();
             textIsParsed = false;
+            textProcessor?.InvalidateFirstPassData();
             InvalidateLayoutCache();
         }
-        else if ((flags & (DirtyFlags.Layout | DirtyFlags.FontSize)) != 0)
+        else if ((flags & DirtyFlags.LayoutRebuild) != 0)
         {
             textProcessor?.InvalidateLayoutData();
             InvalidateLayoutCache();
@@ -276,12 +277,11 @@ public partial class UniText : MaskableGraphic, ISerializationCallbackReceiver
             RegisterDirty(this);
         }
 
-        if ((flags & (DirtyFlags.Text | DirtyFlags.Font | DirtyFlags.FontSize | DirtyFlags.Layout)) != 0)
+        DirtyFlagsChanged?.Invoke(flags);
+        if ((flags & (DirtyFlags.FullRebuild | DirtyFlags.LayoutRebuild)) != 0)
         {
             LayoutRebuilder.MarkLayoutForRebuild(rectTransform);
         }
-
-        DirtyFlagsChanged?.Invoke(flags);
     }
 
     #endregion

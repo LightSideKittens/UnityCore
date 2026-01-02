@@ -29,7 +29,7 @@ public class ColorModifier : GlyphModifier<uint>
             return;
 
         var cpCount = buffers.codepoints.count;
-        EnsureBufferCapacity(cpCount);
+        EnsureBufferCount(cpCount);
 
         var packed = PackColor(color);
         buffer.SetValueRange(start, Math.Min(end, cpCount), packed);

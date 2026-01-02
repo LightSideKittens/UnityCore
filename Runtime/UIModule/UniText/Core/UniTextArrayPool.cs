@@ -230,12 +230,6 @@ public struct PooledBuffer<T>
     public T[] data;
     public int count;
 
-    public int Count
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => count;
-    }
-
     public int Capacity
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -288,20 +282,27 @@ public struct PooledBuffer<T>
             count = 0;
         }
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ClearData()
+    {
+        if (count > 0)
+        {
+            data.AsSpan(0, count).Clear();
+        }
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureCapacity(int required)
     {
-        if (Capacity < required)
-            Grow(required);
+        if (Capacity < required) Grow(required);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void EnsureCapacityAndClear(int required)
+    public void EnsureCount(int required)
     {
-        if (Capacity < required)
-            GrowDirect(required);
-        count = 0;
+        EnsureCapacity(required);
+        if (count < required) count = required;
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
@@ -315,17 +316,6 @@ public struct PooledBuffer<T>
             data.AsSpan(0, count).CopyTo(newData);
             UniTextArrayPool<T>.Return(data);
         }
-        data = newData;
-    }
-    
-    [MethodImpl(MethodImplOptions.NoInlining)]
-    private void GrowDirect(int required)
-    {
-        var oldLen = data?.Length ?? 0;
-        var newSize = oldLen == 0 ? Math.Max(required, 64) : Math.Max(required, oldLen * 2);
-        var newData = new T[newSize];
-        if (oldLen > 0 && count > 0)
-            data.AsSpan(0, count).CopyTo(newData);
         data = newData;
     }
 
@@ -420,6 +410,9 @@ public sealed class PooledList<T>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void EnsureCapacity(int required) => buffer.EnsureCapacity(required);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EnsureCount(int required) => buffer.EnsureCount(required);
 
     public void RemoveRange(int index, int removeCount) => buffer.RemoveRange(index, removeCount);
 

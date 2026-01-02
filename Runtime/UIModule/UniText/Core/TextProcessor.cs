@@ -88,7 +88,6 @@ public sealed class TextProcessor
     }
     
     public bool HasValidFirstPassData => hasValidFirstPassData;
-    public bool HasValidLinesData => hasValidLinesData;
     public bool HasValidPositionedGlyphs => hasValidPositionedGlyphs;
 
     public void InvalidateFirstPassData()
@@ -719,8 +718,7 @@ public sealed class TextProcessor
     {
         var cpCount = buf.codepoints.count;
         var requiredLength = cpCount + 1;
-        buf.breakOpportunities.EnsureCapacity(requiredLength);
-        buf.breakOpportunities.count = requiredLength;
+        buf.breakOpportunities.EnsureCount(requiredLength);
 
         SharedPipelineComponents.LineBreakAlgorithm.GetBreakOpportunities(
             buf.codepoints.Span,
@@ -730,8 +728,7 @@ public sealed class TextProcessor
     private void ComputeCpWidths()
     {
         var cpCount = buf.codepoints.count;
-        buf.cpWidths.EnsureCapacity(cpCount);
-        buf.cpWidths.count = cpCount;
+        buf.cpWidths.EnsureCount(cpCount);
 
         var widths = buf.cpWidths.data;
         Array.Clear(widths, 0, cpCount);
