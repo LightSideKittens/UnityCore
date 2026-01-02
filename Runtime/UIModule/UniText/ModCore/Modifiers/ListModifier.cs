@@ -23,10 +23,9 @@ public enum OrderedMarkerStyle
 [Serializable]
 public class ListModifier : BaseModifier
 {
-    private PooledList<ListItemInfo> instanceItems;
+    private PooledList<ListItemInfo> items;
     private UniTextFontProvider instanceFontProvider;
-
-    [ThreadStatic] private static PooledList<ListItemInfo> items;
+    
     [ThreadStatic] private static UniTextFontProvider fontProviderRef;
     [ThreadStatic] private static StringBuilder sharedBuilder;
 
@@ -40,9 +39,8 @@ public class ListModifier : BaseModifier
 
     protected override void CreateBuffers()
     {
-        instanceItems = new PooledList<ListItemInfo>(32);
+        items = new PooledList<ListItemInfo>(32);
         instanceFontProvider = uniText.FontProvider;
-        items = instanceItems;
         fontProviderRef = instanceFontProvider;
         sharedBuilder ??= new StringBuilder(32);
     }
@@ -61,14 +59,14 @@ public class ListModifier : BaseModifier
 
     protected override void ReleaseBuffers()
     {
-        instanceItems?.Return();
-        instanceItems = null;
+        items?.Return();
+        items = null;
         instanceFontProvider = null;
     }
 
     protected override void ClearBuffers()
     {
-        instanceItems.FakeClear();
+        items.FakeClear();
     }
 
     protected override void OnApply(int start, int end, string parameter)
@@ -91,7 +89,7 @@ public class ListModifier : BaseModifier
 
     private void OnRebuilding()
     {
-        items = instanceItems;
+        items = items;
         fontProviderRef = instanceFontProvider;
     }
 
@@ -130,10 +128,10 @@ public class ListModifier : BaseModifier
         AppendOrderedNumber(sharedBuilder, item.displayNumber, orderedStyles[level]);
         sharedBuilder.Append('.');
 
-        return MeasureStringWithHarfBuzz(sharedBuilder, fontAsset, fontSize, buf) + markerToTextGap;
+        return MeasureString(sharedBuilder, fontAsset, fontSize, buf) + markerToTextGap;
     }
 
-    private static float MeasureStringWithHarfBuzz(StringBuilder sb, UniTextFont font, float fontSize, UniTextBuffers buf)
+    private static float MeasureString(StringBuilder sb, UniTextFont font, float fontSize, UniTextBuffers buf)
     {
         if (sb == null || sb.Length == 0) return 0f;
         if (!font.HasFontData) return 0f;

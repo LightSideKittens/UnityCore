@@ -160,8 +160,8 @@ public sealed class UniTextBuffers
 
         bidiLevels.Rent(codepointCapacity);
         scripts.Rent(codepointCapacity);
-        startMargins.Rent(codepointCapacity);
-        startMargins.Span.Clear();
+        startMargins.EnsureCount(codepointCapacity);
+        startMargins.ClearData();
         glyphDataCache.Rent(glyphCapacity);
 
         isRented = true;
@@ -172,8 +172,7 @@ public sealed class UniTextBuffers
     public void EnsureReturnBuffers()
     {
         if (!isRented) return;
-
-        startMargins.Span.Clear();
+        
         hasValidGlyphCache = false;
 
         codepoints.Return();
