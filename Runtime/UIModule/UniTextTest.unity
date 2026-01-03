@@ -801,6 +801,78 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 397460096}
   m_CullTransparentMesh: 1
+--- !u!1 &409885768
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 409885769}
+  - component: {fileID: 409885771}
+  - component: {fileID: 409885770}
+  m_Layer: 5
+  m_Name: RawImage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &409885769
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 409885768}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2035672421}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.0013428, y: 479}
+  m_SizeDelta: {x: 161.7, y: 161.7}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &409885770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 409885768}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RawImage
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 0}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+--- !u!222 &409885771
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 409885768}
+  m_CullTransparentMesh: 1
 --- !u!1 &597897573
 GameObject:
   m_ObjectHideFlags: 0
@@ -1061,6 +1133,210 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 597897573}
   m_CullTransparentMesh: 1
+--- !u!1 &615083814
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 615083815}
+  - component: {fileID: 615083817}
+  - component: {fileID: 615083816}
+  m_Layer: 5
+  m_Name: EmojiTest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &615083815
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 615083814}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2035672421}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 840.4, y: -80.2}
+  m_SizeDelta: {x: 1015.1, y: 111.9}
+  m_Pivot: {x: 0.79593015, y: 0.66504484}
+--- !u!114 &615083816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 615083814}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: beaa34cb0e58d624bb3a264b28600785, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.UIModule::UniText
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 1, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  text: "\U0001F468\u200D\U0001F469\u200D\U0001F467\u200D\U0001F466 "
+  fonts: {fileID: 11400000, guid: f1fb4d96c5ba77542999c02f0460bb35, type: 2}
+  appearance: {fileID: 11400000, guid: 366a003927a7b1d4c8978732eee3bd40, type: 2}
+  fontSize: 82.56
+  baseDirection: 2
+  enableWordWrap: 1
+  horizontalAlignment: 0
+  verticalAlignment: 0
+  enableAutoSize: 0
+  minFontSize: 10
+  maxFontSize: 72
+  modRegisters:
+  - rid: 2031797866453532871
+  - rid: 2031797866453532872
+  - rid: 2031797866453532873
+  - rid: 2031797866453532874
+  - rid: 2031797866453532875
+  - rid: 2031797866453532876
+  - rid: 2031797913714425945
+  references:
+    version: 2
+    RefIds:
+    - rid: 2031797866453532871
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532878
+        rule:
+          rid: 2031797866453532879
+    - rid: 2031797866453532872
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532880
+        rule:
+          rid: 2031797866453532881
+    - rid: 2031797866453532873
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532882
+        rule:
+          rid: 2031797866453532883
+    - rid: 2031797866453532874
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532884
+        rule:
+          rid: 2031797866453532885
+    - rid: 2031797866453532875
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532886
+        rule:
+          rid: 2031797866453532887
+    - rid: 2031797866453532876
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797866453532888
+        rule:
+          rid: 2031797866453532889
+    - rid: 2031797866453532878
+      type: {class: ColorModifier, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532879
+      type: {class: ColorParseRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532880
+      type: {class: BoldModifier, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532881
+      type: {class: BoldParseRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532882
+      type: {class: ItalicModifier, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532883
+      type: {class: ItalicParseRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532884
+      type: {class: UnderlineModifier, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532885
+      type: {class: UnderlineParseRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532886
+      type: {class: StrikethroughModifier, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532887
+      type: {class: StrikethroughParseRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797866453532888
+      type: {class: ListModifier, ns: , asm: LSCore.UniText}
+      data:
+        indentPerLevel: 20
+        markerToTextGap: 8
+        bulletMarkerWidth: 24
+        bulletMarkers:
+        - "\u2022"
+        - '-'
+        - "\xB7"
+        orderedStyles: 000000000100000003000000
+    - rid: 2031797866453532889
+      type: {class: MarkdownListParseRule, ns: , asm: LSCore.UniText}
+      data:
+        spacesPerLevel: 2
+    - rid: 2031797913714425945
+      type: {class: ModRegister, ns: , asm: LSCore.UniText}
+      data:
+        modifier:
+          rid: 2031797913714425946
+        rule:
+          rid: 2031797913714425947
+    - rid: 2031797913714425946
+      type: {class: LinkModifier, ns: , asm: LSCore.UniText}
+      data:
+        linkColor:
+          serializedVersion: 2
+          rgba: 4294214978
+        enableUnderline: 1
+    - rid: 2031797913714425947
+      type: {class: CompositeParseRule, ns: , asm: LSCore.UniText}
+      data:
+        rules:
+        - rid: 2031797913714425948
+        - rid: 2031797913714425949
+        - rid: 2031797913714425950
+    - rid: 2031797913714425948
+      type: {class: MarkdownLinkParseRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797913714425949
+      type: {class: RawUrlParseRule, ns: , asm: LSCore.UniText}
+      data: 
+    - rid: 2031797913714425950
+      type: {class: LinkTagParseRule, ns: , asm: LSCore.UniText}
+      data: 
+--- !u!222 &615083817
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 615083814}
+  m_CullTransparentMesh: 1
 --- !u!1 &636393882
 GameObject:
   m_ObjectHideFlags: 0
@@ -1073,6 +1349,7 @@ GameObject:
   - component: {fileID: 636393884}
   - component: {fileID: 636393883}
   - component: {fileID: 636393886}
+  - component: {fileID: 636393887}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1167,6 +1444,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: LSCore.ChatModule::ClubTest
   channels: []
+--- !u!114 &636393887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 636393882}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a2e4c8a849a49d4b5f92d0ca2320216, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: LSCore.UniText::EmojiTest
+  targetImage: {fileID: 409885770}
+  atlasContainer: {fileID: 2035672421}
+  fontPath: C:\C-UnityProjects\LittleLand\Assets\LightSideCore\Runtime\UIModule\UniText\EmojiCore\Editor\emoji.ttc
+  faceIndex: 0
+  pixelSize: 512
+  emojiCount: 30
 --- !u!1 &666491813
 GameObject:
   m_ObjectHideFlags: 0
@@ -1184,7 +1479,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &666491814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1259,18 +1554,18 @@ MonoBehaviour:
     \u0639\u0631\u0628\u064A\u0629 (with brackets).\u061F\n\nBrackets around RTL:
     (\u0645\u0631\u062D\u0628\u0627)\u060C [\u0633\u0644\u0627\u0645]\u060C {\u0634\u06A9\u0631\u06CC\u06C1}
     and around mixed [hello \u0645\u0631\u062D\u0628\u0627 123].</color>\n\nEmojis:
-    \U0001F600 \U0001F603 \U0001F601 \U0001F602 \U0001F914 \U0001F44D \u2764.\nRTL
-    with emojis: \u0645\u0631\u062D\u0628\u0627 \U0001F600 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\u060C
+    \U0001F600 \U0001F603 \U0001F601 \U0001F602 \U0001F914 \U0001F44D.\nRTL with
+    emojis: \u0645\u0631\u062D\u0628\u0627 \U0001F600 \u0628\u0627\u0644\u0639\u0627\u0644\u0645\u060C
     \u0631\u0642\u0645 \u0661\u0662\u0663\u060C \u0646\u0635 \U0001F603 \u0645\u062E\u062A\u0644\u0637
-    \U0001F44D.\nFamily ZWJ emoji: \U0001F468\u200D\U0001F469\u200D\U0001F467, flags:
-    \U0001F1EE\U0001F1F7 (IL), \U0001F1EA\U0001F1F8 (ES), \U0001F1FA\U0001F1F8 (US).\n\nBig
-    mixed line: \u0644\u0627 + \u0644\u064E\u0627 + \u0644\u0651\u064E\u0627 + \u0641\u0627\u0631\u0633\u06CC
-    \u067E\u0686\u0698\u06AF + \u0627\u064F\u0631\u062F\u0648 \u0679\u060C\u0688\u060C\u0691
-    + \u05E2\u05D1\u05E8\u05D9\u05EA \u05E9\u05DC\u05D5\u05DD + English TEXT 1234
-    ++ emoji \U0001F600 + brackets (\u0639\u0631\u0628\u064A [EN {\u05E2\u05D1\u05E8\u05D9\u05EA}
-    42]) + ZWNJ \u0645\u06CC\u200C\u0631\u0648\u0645 + ZWJ \u200D\u0628\u200D + bidi
-    controls  \u0639\u0631\u0628\u064A \u0645\u0639  EN  \u062F\u0627\u062E\u0644 
-    done."
+    \U0001F44D.\nFamily ZWJ emoji: \U0001F468\u200D\U0001F469\u200D\U0001F467\u200D\U0001F466,
+    flags: \U0001F1EE\U0001F1F7 (IL), \U0001F1EA\U0001F1F8 (ES), \U0001F1FA\U0001F1F8
+    (US).\n\nBig mixed line: \u0644\u0627 + \u0644\u064E\u0627 + \u0644\u0651\u064E\u0627
+    + \u0641\u0627\u0631\u0633\u06CC \u067E\u0686\u0698\u06AF + \u0627\u064F\u0631\u062F\u0648
+    \u0679\u060C\u0688\u060C\u0691 + \u05E2\u05D1\u05E8\u05D9\u05EA \u05E9\u05DC\u05D5\u05DD
+    + English TEXT 1234 ++ emoji \U0001F600 + brackets (\u0639\u0631\u0628\u064A
+    [EN {\u05E2\u05D1\u05E8\u05D9\u05EA} 42]) + ZWNJ \u0645\u06CC\u200C\u0631\u0648\u0645
+    + ZWJ \u200D\u0628\u200D + bidi controls  \u0639\u0631\u0628\u064A \u0645\u0639 
+    EN  \u062F\u0627\u062E\u0644  done."
   fonts: {fileID: 11400000, guid: f1fb4d96c5ba77542999c02f0460bb35, type: 2}
   appearance: {fileID: 11400000, guid: 366a003927a7b1d4c8978732eee3bd40, type: 2}
   fontSize: 28
@@ -2069,7 +2364,7 @@ GameObject:
   m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1020714941
 RectTransform:
   m_ObjectHideFlags: 0
@@ -3542,9 +3837,11 @@ RectTransform:
   - {fileID: 597897574}
   - {fileID: 769616320}
   - {fileID: 666491816}
+  - {fileID: 615083815}
   - {fileID: 1020714941}
   - {fileID: 397460097}
   - {fileID: 117761002}
+  - {fileID: 409885769}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
