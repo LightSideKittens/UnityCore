@@ -2,6 +2,7 @@
     "name": "LSCore.SceneGitModule",
     "rootNamespace": "",
     "references": [
+        "GUID:6572381e8157783499bf6ce8f56b9292",
         "GUID:247942eb90ec48b696028c8e4c1f8e20",
         "GUID:d426b638445cc2f428ed8ba7c1325767",
         "GUID:a6b7f487c8a89734f91e6aeb16bba6ca",

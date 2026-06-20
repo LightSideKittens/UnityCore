@@ -19,7 +19,7 @@ namespace LSCore
             set
             {
                 if(fundText == null) return;
-                fundText.text = value.ToString();
+                fundText.Number = value;
             }
         }
 

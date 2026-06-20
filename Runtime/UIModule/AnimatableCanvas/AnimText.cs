@@ -1,7 +1,7 @@
 ﻿using System;
 using DG.Tweening;
+using LightSide;
 using LSCore;
-using TMPro;
 using UnityEngine;
 using static Animatable.AnimatableCanvas;
 
@@ -10,12 +10,12 @@ namespace Animatable
     [Serializable]
     public class AnimText
     {
-        [SerializeField] private TMP_Text text;
+        [SerializeField] private UniTextBase text;
         [SerializeField] private Vector2 animOffset = new Vector2(0, 100);
         [SerializeField] private float duration = 1;
-        private OnOffPool<TMP_Text> pool;
+        private OnOffPool<UniTextBase> pool;
 
-        internal void Init() => pool = new OnOffPool<TMP_Text>(text, shouldStoreActive: true);
+        internal void Init() => pool = new OnOffPool<UniTextBase>(text, shouldStoreActive: true);
         internal void ReleaseAll() => pool.ReleaseAll();
 
         public static AnimText Create(string message, Vector2 pos = default, Vector2 offset = default, bool fromWorldSpace = false)
@@ -33,9 +33,11 @@ namespace Animatable
             textTransform.SetParent(AnimatableCanvas.SpawnPoint, true);
             textTransform.position = pos;
             textTransform.localScale = scale;
-            text.text = message;
+            text.Text = message;
             var rect = (RectTransform) text.transform;
-            text.alpha = 1;
+            var color = text.color;
+            color.a = 1;
+            text.color = color;
             rect.localScale = Vector3.zero;
             
             var sequence = DOTween.Sequence();

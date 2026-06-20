@@ -14,6 +14,7 @@ namespace LSCore.Editor
         [UsedImplicitly]
         private record FirebaseModules
         {
+            [SerializeField] private ModuleData sdk = FIREBASE;
             [SerializeField] private ModuleData auth = FIREBASE_AUTH;
             [SerializeField] private ModuleData analytics = FIREBASE_ANALYTICS;
             [SerializeField] private ModuleData realtimeDatabase = FIREBASE_REALTIME_DB;

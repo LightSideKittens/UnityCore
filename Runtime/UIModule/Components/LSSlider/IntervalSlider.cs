@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using LightSide;
 using LSCore;
 using LSCore.Extensions;
 using UnityEditor;
@@ -13,7 +14,7 @@ namespace LSCore
         public struct IntervalData
         {
             public RectTransform transform;
-            public LSText text;
+            public UniText text;
             public float value;
             public float proportion;
         }
@@ -83,7 +84,7 @@ namespace LSCore
                 var interval = intervals[i];
                 if (interval.text != null)
                 {
-                    interval.text.text = textGetter(interval.value);
+                    interval.text.Text = textGetter(interval.value);
                 }
             }
         }

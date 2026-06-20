@@ -1,7 +1,7 @@
 ﻿using System;
 using DG.Tweening;
+using LightSide;
 using LSCore;
-using TMPro;
 using UnityEngine;
 using static Animatable.AnimatableCanvas;
 using Object = UnityEngine.Object;
@@ -11,7 +11,7 @@ namespace Animatable
     [Serializable]
     public class PopupTextAction : DoIt
     {
-        public TMP_Text messagePrefab;
+        public UniTextBase messagePrefab;
             
         public override void Do()
         {
@@ -37,7 +37,7 @@ namespace Animatable
             pool.ReleaseAll();
         }
 
-        public static PopupText Create(TMP_Text message, Vector2 pos = default, Vector2 offset = default, bool fromWorldSpace = false)
+        public static PopupText Create(UniTextBase message, Vector2 pos = default, Vector2 offset = default, bool fromWorldSpace = false)
         {
             var template = AnimatableCanvas.PopupText;
 

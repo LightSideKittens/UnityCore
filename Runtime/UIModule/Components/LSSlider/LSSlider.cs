@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using LightSide;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -27,7 +28,7 @@ namespace LSCore
         }
         
         [field: SerializeField] public Image Icon { get; private set; }
-        [SerializeField] private LSText text; 
+        [SerializeField] private UniText text;
         [SerializeField] private TextMode textMode;
         [SerializeField] private NumberMode numberMode;
         [SerializeField] private bool onlyDiff;
@@ -127,7 +128,7 @@ namespace LSCore
 
         private void UpdateValueText(float val)
         {
-            text.text = textGetter(val);
+            text.Text = textGetter(val);
         }
 
         private void UpdateTextGetter()

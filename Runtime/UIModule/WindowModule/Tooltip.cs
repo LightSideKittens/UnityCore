@@ -1,5 +1,6 @@
 ﻿using System;
 using DG.Tweening;
+using LightSide;
 using LSCore.Extensions.Unity;
 using Sirenix.OdinInspector;
 using Sirenix.Utilities;
@@ -70,7 +71,7 @@ namespace LSCore
         
         [SerializeField] private bool useLocalization;
         [HideIf("useLocalization")] 
-        [SerializeField] private LSText tooltipText;
+        [SerializeField] private UniText tooltipText;
         [ShowIf("useLocalization")] 
         [SerializeField] private LocalizationText localizationTooltipText;
         
@@ -318,11 +319,11 @@ namespace LSCore
             PrepareToShow();
             if (useLocalization)
             {
-                localizationTooltipText.text = message;
+                localizationTooltipText.SetRawText(message);
             }
             else
             {
-                tooltipText.text = message;
+                tooltipText.Text = message;
             }
 
             return this;

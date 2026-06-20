@@ -1,11 +1,12 @@
-﻿using UnityEngine;
+﻿using LightSide;
+using UnityEngine;
 
 namespace LSCore
 {
     [ExecuteAlways]
     public class SliderToIntervalSyncer : MonoBehaviour
     {
-        [SerializeField] private LSText currentIntervalText;
+        [SerializeField] private UniText currentIntervalText;
         [SerializeField] private LSSlider slider;
         [SerializeField] private IntervalSlider intervalSlider;
 
@@ -35,7 +36,7 @@ namespace LSCore
             slider.value = value;
             if (currentIntervalText != null)
             {
-                currentIntervalText.text = $"{data.index + 1}";
+                currentIntervalText.Text = $"{data.index + 1}";
             }
         }
     }

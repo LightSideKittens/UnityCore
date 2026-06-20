@@ -11,7 +11,8 @@
             public const string DEBUGGER = nameof(DEBUGGER);
             public const string APPSFLYER = nameof(APPSFLYER);
             public const string ONE_SIGNAL = nameof(ONE_SIGNAL);
-            
+
+            public const string FIREBASE = nameof(FIREBASE);
             public const string FIREBASE_ANALYTICS = nameof(FIREBASE_ANALYTICS);
             public const string FIREBASE_REALTIME_DB = nameof(FIREBASE_REALTIME_DB);
             public const string FIREBASE_REMOTE_CONFIG = nameof(FIREBASE_REMOTE_CONFIG);

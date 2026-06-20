@@ -1,16 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using LightSide;
 using LSCore.Attributes;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.Localization.Tables;
-using UnityEngine.UI;
-#if UNITY_EDITOR
-using Sirenix.OdinInspector.Editor;
-using UnityEditor;
-#endif
 
 namespace LSCore
 {
@@ -24,7 +20,7 @@ namespace LSCore
             LocalizationSettings.SelectedLocale = locale;
         }
     }
-    
+
     [Serializable]
     [Unwrap]
     [HideReferenceObjectPicker]
@@ -35,47 +31,33 @@ namespace LSCore
     }
 
     public interface ILocalizationArgument { }
-    
-    //Example
-    /*public class HealthOfUnit : ILocalizationArgument
-    {
-        public Id id;
-        public LevelsManager levelsManager;
-        public int  level;
-        public override string ToString()
-        {
-            var unit = levelsManager.GetLevel<Unit>(id, level);
-            unit.RegisterComps();
-            return unit.GetComp<BaseHealthComp>().Health.ToString();
-        }
-    }*/
 
     [Serializable]
     public struct LocalizationData
     {
         public bool IsValid => id > 0;
         public SharedTableData tableData;
-        
+
         public string Key
         {
             get => tableData.GetKey(id);
             set => id = tableData.GetId(value);
         }
-        
+
         [ValueDropdown("LocalizationKeys")] public long id;
 
         [SerializeReference] private ILocalizationArgument[] arguments;
 #if UNITY_EDITOR
         [ReadOnly] [ShowInInspector] [HideLabel] [MultiLineProperty] internal string text;
 #endif
-        
+
         [ReadOnly]
         [ShowInInspector]
         [ShowIf("@rawArguments != null")]
         public object[] rawArguments;
-        
+
         public object[] Arguments => rawArguments ?? arguments;
-        
+
 #if UNITY_EDITOR
         public IEnumerable<ValueDropdownItem<long>> LocalizationKeys
         {
@@ -93,27 +75,40 @@ namespace LSCore
         }
 #endif
     }
-    
-    public class LocalizationText : LSText
+
+    [RequireComponent(typeof(UniText))]
+    public class LocalizationText : MonoBehaviour
     {
         [OnValueChanged("OnLocalizationKeyChanged", true)]
         [SerializeField]
         [BoxGroup]
         internal LocalizationData localizationData;
-        
+
+        private UniText text;
+        private UniText Target => text ? text : text = GetComponent<UniText>();
+
+        private StringTable table;
+        private string localizedText;
+        private Action releaseAction;
+        private bool isTableLoading;
+        private bool isAwake;
+
+        public bool IsLocalized => localizationData.IsValid;
+
         public void SetLocalizationData(LocalizationData data)
         {
             TableData = data.tableData;
             Localize(data.id, data.Arguments);
             if (!isTableLoading && table == null) UpdateTable();
         }
-        
-#if UNITY_EDITOR
-        private void OnLocalizationKeyChanged()
+
+        /// <summary>Sets literal (non-localized) text and clears the current localization key.</summary>
+        public void SetRawText(string value)
         {
-            UpdateLocalizedText();
+            localizationData.id = 0;
+            Target.Text = value;
         }
-#endif
+
         public SharedTableData TableData
         {
             get => localizationData.tableData;
@@ -126,8 +121,7 @@ namespace LSCore
                 }
             }
         }
-        
-        private StringTable table;
+
         public StringTable Table
         {
             get
@@ -161,89 +155,38 @@ namespace LSCore
 
         public void Localize(long id, params object[] args)
         {
-            m_text = string.Empty;
             localizationData.rawArguments = args;
             localizationData.id = id;
             UpdateLocalizedText();
         }
-        
+
         public void Localize(string key, params object[] args)
         {
-            m_text = string.Empty;
             localizationData.rawArguments = args;
             localizationData.Key = key;
             UpdateLocalizedText();
         }
-        
+
         public void LocalizeArguments(params object[] args) //TODO: Optimize. We don't need to translate whole text when only arguments were changed
         {
-            m_text = string.Empty;
             localizationData.rawArguments = args;
             UpdateLocalizedText();
         }
 
-        private string localizedText;
-        
         private void UpdateLocalizedText()
         {
-            if(!IsLocalized) return;
-            if(Table == null) return;
-            var lastText = m_text;
+            if (!IsLocalized) return;
+            if (Table == null) return;
             localizedText = localizationData.id.Translate(Table, localizationData.Arguments);
-            base.text = localizedText;
-            m_text = lastText;
+            Target.Text = localizedText;
         }
 
-        public bool IsLocalized => localizationData.IsValid;
-        
-        public override string text
+        private void Awake()
         {
-            get => IsLocalized ? localizedText : base.text;
-            set
-            {
-                localizationData.id = 0;
-                base.text = value;
-            }
-        }
-
-        public override void Rebuild(CanvasUpdate update)
-        {
-            var lastText = m_text;
-            m_text = text;
-            base.Rebuild(update);
-            m_text = lastText;
-        }
-
-        public override float preferredWidth
-        {
-            get
-            {
-                var lastText = m_text;
-                m_text = text;
-                var width = base.preferredWidth;
-                m_text = lastText;
-                return width;
-            }
-        }
-
-        public override float preferredHeight
-        {
-            get
-            {
-                var lastText = m_text;
-                m_text = text;
-                var height = base.preferredHeight;
-                m_text = lastText;
-                return height;
-            }
-        }
-        
-        protected override void Awake()
-        {
-            base.Awake();
+            isAwake = true;
             LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
             UpdateTable();
-            
+
 #if UNITY_EDITOR
             if (World.IsEditMode)
             {
@@ -252,24 +195,29 @@ namespace LSCore
 #endif
         }
 
-        protected override void OnDestroy()
+        private void OnDestroy()
         {
+            isAwake = false;
             LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
             releaseAction?.Invoke();
-            base.OnDestroy();
         }
+
 #if UNITY_EDITOR
-        protected override void OnValidate()
+        private void OnLocalizationKeyChanged()
         {
-            base.OnValidate();
-            if (didAwake)
+            UpdateLocalizedText();
+        }
+
+        private void OnValidate()
+        {
+            if (isAwake)
             {
-                LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
                 LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
                 LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
             }
         }
 #endif
+
         private void OnSelectedLocaleChanged(Locale _)
         {
 #if UNITY_EDITOR
@@ -281,23 +229,20 @@ namespace LSCore
 #endif
             UpdateTable();
         }
-        
-        private Action releaseAction;
-        private bool isTableLoading;
-        
+
         private void UpdateTable()
         {
 #if UNITY_EDITOR
             if (World.IsEditMode) return;
 #endif
-            
+
             if (isTableLoading) return;
             if (!IsLocalized) return;
-            
+
             isTableLoading = true;
             TableReference tableRef = default;
             Locale locale = null;
-            
+
             if (LocalizationSettings.SelectedLocaleAsync.IsDone)
             {
                 locale = LocalizationSettings.SelectedLocaleAsync.Result;
@@ -315,35 +260,4 @@ namespace LSCore
             });
         }
     }
-    
-
-#if UNITY_EDITOR
-    [CustomEditor(typeof(LocalizationText), true), CanEditMultipleObjects]
-    public class LocalizationTextEditor : LSTextEditor
-    {
-        private InspectorProperty localizationData;
-        private LocalizationText localizationText;
-        
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            localizationText = (LocalizationText)target;
-            localizationData = propertyTree.RootProperty.Children["#_DefaultBoxGroup"];
-        }
-        
-        public override void OnInspectorGUI()
-        {
-            TextOnInspector();
-        }
-
-        private void TextOnInspector()
-        {
-            propertyTree.BeginDraw(true);
-            localizationText.localizationData.text = text.text;
-            localizationData.Draw();
-            propertyTree.EndDraw();
-            base.OnInspectorGUI();
-        }
-    }
-#endif
 }

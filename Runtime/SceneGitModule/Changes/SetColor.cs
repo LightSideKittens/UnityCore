@@ -1,6 +1,6 @@
 ﻿using System;
+using LightSide;
 using Sirenix.OdinInspector;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,12 +23,12 @@ public class SetColor : BaseChange
 [Serializable]
 public class SetText : BaseChange
 {
-    [SerializeReference] public IKeyGet<TMP_Text> text;
+    [SerializeReference] public IKeyGet<UniTextBase> text;
     public string textString;
 
     public override void Do(Action onComplete)
     {
-        text.Data.text = textString;
+        text.Data.Text = textString;
         base.Do(onComplete);
     }
 }

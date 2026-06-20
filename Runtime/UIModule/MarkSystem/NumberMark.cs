@@ -1,16 +1,17 @@
-﻿using UnityEngine;
+﻿using LightSide;
+using UnityEngine;
 
 namespace LSCore
 {
     public class NumberMark : Mark<int>
     {
-        [SerializeField] private LSText text;
+        [SerializeField] private UniText text;
 
         protected override void HandleView()
         {
             var total = GetTotal();
             gameObject.SetActive(total > 0);
-            text.text = total.ToString();
+            text.Text = total.ToString();
         }
 
         private int GetTotal()

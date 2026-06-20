@@ -8,5 +8,8 @@
     "GUID:a8db40cbaf444aa3aedf3bb887de5433",
     "GUID:df777690502be44a7825066118f3550a",
     "GUID:06eadfe8d4d64d6d814988038dcf79eb"
+  ],
+  "defineConstraints": [
+    "FIREBASE"
   ]
 }

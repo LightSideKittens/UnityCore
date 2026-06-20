@@ -4,6 +4,7 @@ using LSCore.AnimationsModule;
 using LSCore.AnimationsModule.Animations;
 using LSCore.AnimationsModule.Animations.Options;
 using LSCore.Async;
+using LightSide;
 using UnityEngine;
 
 namespace LSCore
@@ -15,7 +16,7 @@ namespace LSCore
         [SerializeField] private CustomContentSizeFitter content;
         [SerializeField] private LSButton nextPage;
         [SerializeField] private LSButton previousPage;
-        [SerializeField] private LSText pagesCounter;
+        [SerializeField] private UniText pagesCounter;
         [SerializeField] private AnimSequencer anim;
         
         private int currentPage;
@@ -82,7 +83,7 @@ namespace LSCore
                 pivotPosXAnim.FirstTarget.pivot = pivot;
             }
             
-            pagesCounter.text = $"{page + 1}/{TotalPages}";
+            pagesCounter.Text = $"{page + 1}/{TotalPages}";
             previousPage.enabled = page > 0;
             nextPage.enabled = page < TotalPages - 1;
             
