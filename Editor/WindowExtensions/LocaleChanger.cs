@@ -1,4 +1,5 @@
-﻿using DG.DemiEditor;
+﻿#if LOCALIZATION_PRESENT
+using DG.DemiEditor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -56,3 +57,4 @@ public static class LocaleChanger
         }
     }
 }
+#endif

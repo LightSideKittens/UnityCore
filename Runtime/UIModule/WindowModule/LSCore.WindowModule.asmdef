@@ -2,6 +2,7 @@
     "name": "LSCore.WindowModule",
     "rootNamespace": "",
     "references": [
+        "GUID:6572381e8157783499bf6ce8f56b9292",
         "GUID:75992adb30bf51f40a7a0f3283432aa2",
         "GUID:3dd2cb52eff6e5743bdb8fcc64baed91",
         "GUID:c5a4bb4647048364bbcbbe6191a94727",
@@ -29,6 +30,12 @@
     "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.localization",
+            "expression": "",
+            "define": "LOCALIZATION_PRESENT"
+        }
+    ],
     "noEngineReferences": false
 }

@@ -64,7 +64,9 @@ public class DailyReward : ViewState.Switcher
         
         public LSButton button;
         public GameObject disableState;
+#if LOCALIZATION_PRESENT
         public LocalizationText text;
+#endif
         private Tween timer;
         private bool lastCan;
         
@@ -93,15 +95,19 @@ public class DailyReward : ViewState.Switcher
             if (can)
             {
                 timer?.Kill();
+#if LOCALIZATION_PRESENT
                 text.Localize("claim");
+#endif
             }
             else
             {
                 var nextDateTime = DailyRewardsSave.NextClaimDateTime;
-                
+
                 timer = nextDateTime.Seconder(time =>
                 {
+#if LOCALIZATION_PRESENT
                     text.Localize("nextRewardInX", time.Timelyze(Timely.Preset.Compact3));
+#endif
                     if (DailyRewardsSave.CanClaim.Yes)
                     {
                         DoEvent.Invoke("config_changed");
@@ -117,7 +123,6 @@ public class DailyReward : ViewState.Switcher
             if (DailyRewardsSave.TryClaim())
             {
                 claimActionsPerDay[claimedDay % 7].Do();
-                Analytic.LogEvent("daily_reward_claimed", ("day", claimedDay + 1));
             }
             
             buttonDid.Do();

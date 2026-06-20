@@ -19,9 +19,11 @@ namespace LSCore
         public Transform target;
         
         public bool useLocalization;
-        
+
+#if LOCALIZATION_PRESENT
         [ShowIf("useLocalization")]
         public LocalizationData localizationData;
+#endif
         [HideIf("useLocalization")]
         [MultiLineProperty] public string message;
 
@@ -30,11 +32,13 @@ namespace LSCore
         public override void Do()
         {
             Tooltip obj;
+#if LOCALIZATION_PRESENT
             if (useLocalization)
             {
                 obj = Tooltip.Show(prefab, target, localizationData);
             }
             else
+#endif
             {
                 obj = Tooltip.Show(prefab, target, message);
             }
@@ -70,11 +74,13 @@ namespace LSCore
         [SerializeField] private RectTransform tooltipContainer;
         
         [SerializeField] private bool useLocalization;
-        [HideIf("useLocalization")] 
+        [HideIf("useLocalization")]
         [SerializeField] private UniText tooltipText;
-        [ShowIf("useLocalization")] 
+#if LOCALIZATION_PRESENT
+        [ShowIf("useLocalization")]
         [SerializeField] private LocalizationText localizationTooltipText;
-        
+#endif
+
         [SerializeField] private Image pointerImage;
         [SerializeField] private PointerData pointerData;
         [SerializeField] private RectTransform pointer;
@@ -293,15 +299,17 @@ namespace LSCore
             return Get(prefab).Internal_Show(worldPoint, message);
         }
         
+#if LOCALIZATION_PRESENT
         public static Tooltip Show(Tooltip prefab, Transform worldPoint, LocalizationData data)
         {
             return Show(prefab, worldPoint.position, data);
         }
-        
+
         public static Tooltip Show(Tooltip prefab, Vector3 worldPoint, LocalizationData data)
         {
             return Get(prefab).Internal_Show(worldPoint, data);
         }
+#endif
 
         private static Tooltip Get(Tooltip prefab)
         {
@@ -311,24 +319,29 @@ namespace LSCore
         }
         
         public Tooltip Internal_Show(Transform worldPoint, string message) => Internal_Show(worldPoint.position, message);
+#if LOCALIZATION_PRESENT
         public Tooltip Internal_Show(Transform worldPoint, LocalizationData data) => Internal_Show(worldPoint.position, data);
+#endif
 
         public Tooltip Internal_Show(Vector3 worldPoint, string message)
         {
             this.worldPoint = worldPoint;
             PrepareToShow();
+#if LOCALIZATION_PRESENT
             if (useLocalization)
             {
                 localizationTooltipText.SetRawText(message);
             }
             else
+#endif
             {
                 tooltipText.Text = message;
             }
 
             return this;
         }
-        
+
+#if LOCALIZATION_PRESENT
         public Tooltip Internal_Show(Vector3 worldPoint, LocalizationData data)
         {
             this.worldPoint = worldPoint;
@@ -336,6 +349,7 @@ namespace LSCore
             localizationTooltipText.SetLocalizationData(data);
             return this;
         }
+#endif
 
         private void PrepareToShow()
         {

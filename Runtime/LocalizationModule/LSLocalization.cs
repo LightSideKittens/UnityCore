@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if LOCALIZATION_PRESENT
+using System;
 using System.Globalization;
 using UnityEngine;
 using UnityEngine.Localization;
@@ -148,3 +149,4 @@ namespace LSCore
         }
     }
 }
+#endif
